@@ -437,6 +437,392 @@ pub fn simd_linspace_f64(start: f64, end: f64, num: usize) -> Array1<f64> {
     result
 }
 
+/// Compute element-wise addition of two f32 arrays using SIMD
+///
+/// This function uses SIMD instructions for better performance when
+/// processing large arrays of f32 values.
+///
+/// # Arguments
+///
+/// * `a` - First array
+/// * `b` - Second array
+///
+/// # Returns
+///
+/// * Element-wise sum array
+#[cfg(feature = "simd")]
+pub fn simd_add_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    let n = a.len();
+    let mut result = Array1::zeros(n);
+
+    // Ensure arrays are the same length
+    assert_eq!(
+        a.len(),
+        b.len(),
+        "Arrays must have the same length for SIMD operations"
+    );
+
+    // Get raw pointers to the data for SIMD processing
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    // Process 8 elements at a time with SIMD
+    let mut i = 0;
+    let chunk_size = 8;
+
+    while i + chunk_size <= n {
+        let a_arr = [
+            a_slice[i],
+            a_slice[i + 1],
+            a_slice[i + 2],
+            a_slice[i + 3],
+            a_slice[i + 4],
+            a_slice[i + 5],
+            a_slice[i + 6],
+            a_slice[i + 7],
+        ];
+        let b_arr = [
+            b_slice[i],
+            b_slice[i + 1],
+            b_slice[i + 2],
+            b_slice[i + 3],
+            b_slice[i + 4],
+            b_slice[i + 5],
+            b_slice[i + 6],
+            b_slice[i + 7],
+        ];
+
+        let a_vec = f32x8::new(a_arr);
+        let b_vec = f32x8::new(b_arr);
+
+        // Compute element-wise addition
+        let sum_vec = a_vec + b_vec;
+
+        // Extract results
+        let result_arr: [f32; 8] = sum_vec.into();
+        result_slice[i..(chunk_size + i)].copy_from_slice(&result_arr[..chunk_size]);
+
+        i += chunk_size;
+    }
+
+    // Process remaining elements
+    for j in i..n {
+        result[j] = a[j] + b[j];
+    }
+
+    result
+}
+
+/// Compute element-wise addition of two f64 arrays using SIMD
+#[cfg(feature = "simd")]
+pub fn simd_add_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
+    let n = a.len();
+    let mut result = Array1::zeros(n);
+
+    assert_eq!(
+        a.len(),
+        b.len(),
+        "Arrays must have the same length for SIMD operations"
+    );
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let mut i = 0;
+    let chunk_size = 4;
+
+    while i + chunk_size <= n {
+        let a_arr = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+        let b_arr = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+
+        let a_vec = f64x4::new(a_arr);
+        let b_vec = f64x4::new(b_arr);
+        let sum_vec = a_vec + b_vec;
+
+        let result_arr: [f64; 4] = sum_vec.into();
+        result_slice[i..(chunk_size + i)].copy_from_slice(&result_arr[..chunk_size]);
+
+        i += chunk_size;
+    }
+
+    for j in i..n {
+        result[j] = a[j] + b[j];
+    }
+
+    result
+}
+
+/// Compute element-wise multiplication of two f32 arrays using SIMD
+#[cfg(feature = "simd")]
+pub fn simd_mul_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
+    let n = a.len();
+    let mut result = Array1::zeros(n);
+
+    assert_eq!(
+        a.len(),
+        b.len(),
+        "Arrays must have the same length for SIMD operations"
+    );
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let mut i = 0;
+    let chunk_size = 8;
+
+    while i + chunk_size <= n {
+        let a_arr = [
+            a_slice[i],
+            a_slice[i + 1],
+            a_slice[i + 2],
+            a_slice[i + 3],
+            a_slice[i + 4],
+            a_slice[i + 5],
+            a_slice[i + 6],
+            a_slice[i + 7],
+        ];
+        let b_arr = [
+            b_slice[i],
+            b_slice[i + 1],
+            b_slice[i + 2],
+            b_slice[i + 3],
+            b_slice[i + 4],
+            b_slice[i + 5],
+            b_slice[i + 6],
+            b_slice[i + 7],
+        ];
+
+        let a_vec = f32x8::new(a_arr);
+        let b_vec = f32x8::new(b_arr);
+        let mul_vec = a_vec * b_vec;
+
+        let result_arr: [f32; 8] = mul_vec.into();
+        result_slice[i..(chunk_size + i)].copy_from_slice(&result_arr[..chunk_size]);
+
+        i += chunk_size;
+    }
+
+    for j in i..n {
+        result[j] = a[j] * b[j];
+    }
+
+    result
+}
+
+/// Compute element-wise multiplication of two f64 arrays using SIMD
+#[cfg(feature = "simd")]
+pub fn simd_mul_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
+    let n = a.len();
+    let mut result = Array1::zeros(n);
+
+    assert_eq!(
+        a.len(),
+        b.len(),
+        "Arrays must have the same length for SIMD operations"
+    );
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let mut i = 0;
+    let chunk_size = 4;
+
+    while i + chunk_size <= n {
+        let a_arr = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+        let b_arr = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+
+        let a_vec = f64x4::new(a_arr);
+        let b_vec = f64x4::new(b_arr);
+        let mul_vec = a_vec * b_vec;
+
+        let result_arr: [f64; 4] = mul_vec.into();
+        result_slice[i..(chunk_size + i)].copy_from_slice(&result_arr[..chunk_size]);
+
+        i += chunk_size;
+    }
+
+    for j in i..n {
+        result[j] = a[j] * b[j];
+    }
+
+    result
+}
+
+/// Compute dot product of two f32 arrays using SIMD
+#[cfg(feature = "simd")]
+pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
+    let n = a.len();
+    assert_eq!(
+        a.len(),
+        b.len(),
+        "Arrays must have the same length for SIMD operations"
+    );
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+
+    let mut sum_vec = f32x8::splat(0.0);
+    let mut i = 0;
+    let chunk_size = 8;
+
+    while i + chunk_size <= n {
+        let a_arr = [
+            a_slice[i],
+            a_slice[i + 1],
+            a_slice[i + 2],
+            a_slice[i + 3],
+            a_slice[i + 4],
+            a_slice[i + 5],
+            a_slice[i + 6],
+            a_slice[i + 7],
+        ];
+        let b_arr = [
+            b_slice[i],
+            b_slice[i + 1],
+            b_slice[i + 2],
+            b_slice[i + 3],
+            b_slice[i + 4],
+            b_slice[i + 5],
+            b_slice[i + 6],
+            b_slice[i + 7],
+        ];
+
+        let a_vec = f32x8::new(a_arr);
+        let b_vec = f32x8::new(b_arr);
+        sum_vec += a_vec * b_vec;
+
+        i += chunk_size;
+    }
+
+    // Sum up the SIMD vector
+    let sum_arr: [f32; 8] = sum_vec.into();
+    let mut result = sum_arr.iter().sum::<f32>();
+
+    // Process remaining elements
+    for j in i..n {
+        result += a[j] * b[j];
+    }
+
+    result
+}
+
+/// Compute dot product of two f64 arrays using SIMD
+#[cfg(feature = "simd")]
+pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+    let n = a.len();
+    assert_eq!(
+        a.len(),
+        b.len(),
+        "Arrays must have the same length for SIMD operations"
+    );
+
+    let a_slice = a.as_slice().unwrap();
+    let b_slice = b.as_slice().unwrap();
+
+    let mut sum_vec = f64x4::splat(0.0);
+    let mut i = 0;
+    let chunk_size = 4;
+
+    while i + chunk_size <= n {
+        let a_arr = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+        let b_arr = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+
+        let a_vec = f64x4::new(a_arr);
+        let b_vec = f64x4::new(b_arr);
+        sum_vec += a_vec * b_vec;
+
+        i += chunk_size;
+    }
+
+    // Sum up the SIMD vector
+    let sum_arr: [f64; 4] = sum_vec.into();
+    let mut result = sum_arr.iter().sum::<f64>();
+
+    // Process remaining elements
+    for j in i..n {
+        result += a[j] * b[j];
+    }
+
+    result
+}
+
+/// Apply scalar multiplication to an f32 array using SIMD
+#[cfg(feature = "simd")]
+pub fn simd_scalar_mul_f32(a: &ArrayView1<f32>, scalar: f32) -> Array1<f32> {
+    let n = a.len();
+    let mut result = Array1::zeros(n);
+
+    let a_slice = a.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let scalar_vec = f32x8::splat(scalar);
+    let mut i = 0;
+    let chunk_size = 8;
+
+    while i + chunk_size <= n {
+        let a_arr = [
+            a_slice[i],
+            a_slice[i + 1],
+            a_slice[i + 2],
+            a_slice[i + 3],
+            a_slice[i + 4],
+            a_slice[i + 5],
+            a_slice[i + 6],
+            a_slice[i + 7],
+        ];
+
+        let a_vec = f32x8::new(a_arr);
+        let mul_vec = a_vec * scalar_vec;
+
+        let result_arr: [f32; 8] = mul_vec.into();
+        result_slice[i..(chunk_size + i)].copy_from_slice(&result_arr[..chunk_size]);
+
+        i += chunk_size;
+    }
+
+    for j in i..n {
+        result[j] = a[j] * scalar;
+    }
+
+    result
+}
+
+/// Apply scalar multiplication to an f64 array using SIMD
+#[cfg(feature = "simd")]
+pub fn simd_scalar_mul_f64(a: &ArrayView1<f64>, scalar: f64) -> Array1<f64> {
+    let n = a.len();
+    let mut result = Array1::zeros(n);
+
+    let a_slice = a.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().unwrap();
+
+    let scalar_vec = f64x4::splat(scalar);
+    let mut i = 0;
+    let chunk_size = 4;
+
+    while i + chunk_size <= n {
+        let a_arr = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+
+        let a_vec = f64x4::new(a_arr);
+        let mul_vec = a_vec * scalar_vec;
+
+        let result_arr: [f64; 4] = mul_vec.into();
+        result_slice[i..(chunk_size + i)].copy_from_slice(&result_arr[..chunk_size]);
+
+        i += chunk_size;
+    }
+
+    for j in i..n {
+        result[j] = a[j] * scalar;
+    }
+
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -529,5 +915,113 @@ mod tests {
         // Test endpoints
         assert_relative_eq!(result[0], 0.0, epsilon = 1e-14);
         assert_relative_eq!(result[4], 1.0, epsilon = 1e-14);
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_add_f32() {
+        let a = arr1(&[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+        let b = arr1(&[9.0f32, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]);
+
+        let result = simd_add_f32(&a.view(), &b.view());
+        let expected = arr1(&[10.0f32; 9]);
+
+        for (a, b) in result.iter().zip(expected.iter()) {
+            assert_relative_eq!(a, b, epsilon = 1e-5);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_add_f64() {
+        let a = arr1(&[1.0f64, 2.0, 3.0, 4.0, 5.0]);
+        let b = arr1(&[5.0f64, 4.0, 3.0, 2.0, 1.0]);
+
+        let result = simd_add_f64(&a.view(), &b.view());
+        let expected = arr1(&[6.0f64; 5]);
+
+        for (a, b) in result.iter().zip(expected.iter()) {
+            assert_relative_eq!(a, b, epsilon = 1e-10);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_mul_f32() {
+        let a = arr1(&[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+        let b = arr1(&[2.0f32, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+
+        let result = simd_mul_f32(&a.view(), &b.view());
+        let expected = arr1(&[2.0f32, 6.0, 12.0, 20.0, 30.0, 42.0, 56.0, 72.0]);
+
+        for (a, b) in result.iter().zip(expected.iter()) {
+            assert_relative_eq!(a, b, epsilon = 1e-5);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_mul_f64() {
+        let a = arr1(&[1.0f64, 2.0, 3.0, 4.0]);
+        let b = arr1(&[2.0f64, 3.0, 4.0, 5.0]);
+
+        let result = simd_mul_f64(&a.view(), &b.view());
+        let expected = arr1(&[2.0f64, 6.0, 12.0, 20.0]);
+
+        for (a, b) in result.iter().zip(expected.iter()) {
+            assert_relative_eq!(a, b, epsilon = 1e-10);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_dot_f32() {
+        let a = arr1(&[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+        let b = arr1(&[8.0f32, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]);
+
+        let result = simd_dot_f32(&a.view(), &b.view());
+        let expected = 120.0f32; // 1*8 + 2*7 + 3*6 + 4*5 + 5*4 + 6*3 + 7*2 + 8*1
+
+        assert_relative_eq!(result, expected, epsilon = 1e-5);
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_dot_f64() {
+        let a = arr1(&[1.0f64, 2.0, 3.0, 4.0]);
+        let b = arr1(&[4.0f64, 3.0, 2.0, 1.0]);
+
+        let result = simd_dot_f64(&a.view(), &b.view());
+        let expected = 20.0f64; // 1*4 + 2*3 + 3*2 + 4*1
+
+        assert_relative_eq!(result, expected, epsilon = 1e-10);
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_scalar_mul_f32() {
+        let a = arr1(&[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+        let scalar = 2.5f32;
+
+        let result = simd_scalar_mul_f32(&a.view(), scalar);
+        let expected = arr1(&[2.5f32, 5.0, 7.5, 10.0, 12.5, 15.0, 17.5, 20.0]);
+
+        for (a, b) in result.iter().zip(expected.iter()) {
+            assert_relative_eq!(a, b, epsilon = 1e-5);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_scalar_mul_f64() {
+        let a = arr1(&[1.0f64, 2.0, 3.0, 4.0]);
+        let scalar = 3.0f64;
+
+        let result = simd_scalar_mul_f64(&a.view(), scalar);
+        let expected = arr1(&[3.0f64, 6.0, 9.0, 12.0]);
+
+        for (a, b) in result.iter().zip(expected.iter()) {
+            assert_relative_eq!(a, b, epsilon = 1e-10);
+        }
     }
 }

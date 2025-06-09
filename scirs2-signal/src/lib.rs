@@ -59,6 +59,7 @@ pub mod error;
 pub use error::{SignalError, SignalResult};
 
 // Signal processing module structure
+pub mod adaptive;
 pub mod bss;
 pub mod convolve;
 pub mod cqt;
@@ -112,6 +113,7 @@ pub mod wpt2d;
 pub mod wvd;
 
 // Re-export commonly used functions
+pub use adaptive::{LmsFilter, NlmsFilter, RlsFilter};
 pub use bss::{
     calculate_correlation_matrix, calculate_mutual_information, estimate_source_count, ica,
     joint_bss, joint_diagonalization, kernel_ica, multivariate_emd, nmf, pca, sort_components,

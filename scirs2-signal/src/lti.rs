@@ -953,6 +953,303 @@ pub mod system {
             dt: true,
         })
     }
+
+    /// Connect two LTI systems in series
+    ///
+    /// For systems G1 and G2 in series: H(s) = G2(s) * G1(s)
+    ///
+    /// # Arguments
+    ///
+    /// * `g1` - First system (input side)
+    /// * `g2` - Second system (output side)
+    ///
+    /// # Returns
+    ///
+    /// * The series interconnection as a transfer function
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use scirs2_signal::lti::system::*;
+    ///
+    /// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
+    /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();
+    /// let series_sys = series(&g1, &g2).unwrap();
+    /// ```
+    pub fn series<T1: LtiSystem, T2: LtiSystem>(
+        g1: &T1,
+        g2: &T2,
+    ) -> SignalResult<TransferFunction> {
+        let tf1 = g1.to_tf()?;
+        let tf2 = g2.to_tf()?;
+
+        // Check compatibility
+        if tf1.dt != tf2.dt {
+            return Err(SignalError::ValueError(
+                "Systems must have the same time domain (continuous or discrete)".to_string(),
+            ));
+        }
+
+        // Series connection: H(s) = G2(s) * G1(s)
+        // Multiply numerators and denominators
+        let num = multiply_polynomials(&tf2.num, &tf1.num);
+        let den = multiply_polynomials(&tf2.den, &tf1.den);
+
+        TransferFunction::new(num, den, Some(tf1.dt))
+    }
+
+    /// Connect two LTI systems in parallel
+    ///
+    /// For systems G1 and G2 in parallel: H(s) = G1(s) + G2(s)
+    ///
+    /// # Arguments
+    ///
+    /// * `g1` - First system
+    /// * `g2` - Second system
+    ///
+    /// # Returns
+    ///
+    /// * The parallel interconnection as a transfer function
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use scirs2_signal::lti::system::*;
+    ///
+    /// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
+    /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();
+    /// let parallel_sys = parallel(&g1, &g2).unwrap();
+    /// ```
+    pub fn parallel<T1: LtiSystem, T2: LtiSystem>(
+        g1: &T1,
+        g2: &T2,
+    ) -> SignalResult<TransferFunction> {
+        let tf1 = g1.to_tf()?;
+        let tf2 = g2.to_tf()?;
+
+        // Check compatibility
+        if tf1.dt != tf2.dt {
+            return Err(SignalError::ValueError(
+                "Systems must have the same time domain (continuous or discrete)".to_string(),
+            ));
+        }
+
+        // Parallel connection: H(s) = G1(s) + G2(s)
+        // H(s) = (N1*D2 + N2*D1) / (D1*D2)
+        let num1_den2 = multiply_polynomials(&tf1.num, &tf2.den);
+        let num2_den1 = multiply_polynomials(&tf2.num, &tf1.den);
+        let num = add_polynomials(&num1_den2, &num2_den1);
+        let den = multiply_polynomials(&tf1.den, &tf2.den);
+
+        TransferFunction::new(num, den, Some(tf1.dt))
+    }
+
+    /// Connect two LTI systems in feedback configuration
+    ///
+    /// For systems G (forward) and H (feedback): T(s) = G(s) / (1 + G(s)*H(s))
+    /// If sign is -1: T(s) = G(s) / (1 - G(s)*H(s))
+    ///
+    /// # Arguments
+    ///
+    /// * `g` - Forward path system
+    /// * `h` - Feedback path system (optional, defaults to unity feedback)
+    /// * `sign` - Feedback sign (1 for negative feedback, -1 for positive feedback)
+    ///
+    /// # Returns
+    ///
+    /// * The closed-loop system as a transfer function
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use scirs2_signal::lti::system::*;
+    ///
+    /// let g = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
+    /// let h = tf(vec![1.0], vec![1.0], None).unwrap(); // Unity feedback
+    /// let closed_loop = feedback(&g, Some(&h), 1).unwrap();
+    /// ```
+    pub fn feedback<T1: LtiSystem>(
+        g: &T1,
+        h: Option<&dyn LtiSystem>,
+        sign: i32,
+    ) -> SignalResult<TransferFunction> {
+        let tf_g = g.to_tf()?;
+
+        let tf_h = if let Some(h_sys) = h {
+            h_sys.to_tf()?
+        } else {
+            // Unity feedback
+            TransferFunction::new(vec![1.0], vec![1.0], Some(tf_g.dt))?
+        };
+
+        // Check compatibility
+        if tf_g.dt != tf_h.dt {
+            return Err(SignalError::ValueError(
+                "Systems must have the same time domain (continuous or discrete)".to_string(),
+            ));
+        }
+
+        // Feedback connection: T(s) = G(s) / (1 + sign*G(s)*H(s))
+        // Numerator: N_g * D_h
+        let num = multiply_polynomials(&tf_g.num, &tf_h.den);
+
+        // Denominator: D_g * D_h + sign * N_g * N_h
+        let dg_dh = multiply_polynomials(&tf_g.den, &tf_h.den);
+        let ng_nh = multiply_polynomials(&tf_g.num, &tf_h.num);
+
+        let den = if sign > 0 {
+            // Negative feedback: 1 + G*H
+            add_polynomials(&dg_dh, &ng_nh)
+        } else {
+            // Positive feedback: 1 - G*H
+            subtract_polynomials(&dg_dh, &ng_nh)
+        };
+
+        TransferFunction::new(num, den, Some(tf_g.dt))
+    }
+
+    /// Get the sensitivity function for a feedback system
+    ///
+    /// Sensitivity S(s) = 1 / (1 + G(s)*H(s))
+    ///
+    /// # Arguments
+    ///
+    /// * `g` - Forward path system
+    /// * `h` - Feedback path system (optional, defaults to unity feedback)
+    ///
+    /// # Returns
+    ///
+    /// * The sensitivity function as a transfer function
+    pub fn sensitivity<T1: LtiSystem>(
+        g: &T1,
+        h: Option<&dyn LtiSystem>,
+    ) -> SignalResult<TransferFunction> {
+        let tf_g = g.to_tf()?;
+
+        let tf_h = if let Some(h_sys) = h {
+            h_sys.to_tf()?
+        } else {
+            // Unity feedback
+            TransferFunction::new(vec![1.0], vec![1.0], Some(tf_g.dt))?
+        };
+
+        // Check compatibility
+        if tf_g.dt != tf_h.dt {
+            return Err(SignalError::ValueError(
+                "Systems must have the same time domain (continuous or discrete)".to_string(),
+            ));
+        }
+
+        // Sensitivity: S(s) = 1 / (1 + G(s)*H(s))
+        // Numerator: D_g * D_h
+        let num = multiply_polynomials(&tf_g.den, &tf_h.den);
+
+        // Denominator: D_g * D_h + N_g * N_h
+        let dg_dh = multiply_polynomials(&tf_g.den, &tf_h.den);
+        let ng_nh = multiply_polynomials(&tf_g.num, &tf_h.num);
+        let den = add_polynomials(&dg_dh, &ng_nh);
+
+        TransferFunction::new(num, den, Some(tf_g.dt))
+    }
+
+    /// Get the complementary sensitivity function for a feedback system
+    ///
+    /// Complementary sensitivity T(s) = G(s)*H(s) / (1 + G(s)*H(s))
+    ///
+    /// # Arguments
+    ///
+    /// * `g` - Forward path system
+    /// * `h` - Feedback path system (optional, defaults to unity feedback)
+    ///
+    /// # Returns
+    ///
+    /// * The complementary sensitivity function as a transfer function
+    pub fn complementary_sensitivity<T1: LtiSystem>(
+        g: &T1,
+        h: Option<&dyn LtiSystem>,
+    ) -> SignalResult<TransferFunction> {
+        let tf_g = g.to_tf()?;
+
+        let tf_h = if let Some(h_sys) = h {
+            h_sys.to_tf()?
+        } else {
+            // Unity feedback
+            TransferFunction::new(vec![1.0], vec![1.0], Some(tf_g.dt))?
+        };
+
+        // Check compatibility
+        if tf_g.dt != tf_h.dt {
+            return Err(SignalError::ValueError(
+                "Systems must have the same time domain (continuous or discrete)".to_string(),
+            ));
+        }
+
+        // Complementary sensitivity: T(s) = G(s)*H(s) / (1 + G(s)*H(s))
+        // Numerator: N_g * N_h
+        let num = multiply_polynomials(&tf_g.num, &tf_h.num);
+
+        // Denominator: D_g * D_h + N_g * N_h
+        let dg_dh = multiply_polynomials(&tf_g.den, &tf_h.den);
+        let ng_nh = multiply_polynomials(&tf_g.num, &tf_h.num);
+        let den = add_polynomials(&dg_dh, &ng_nh);
+
+        TransferFunction::new(num, den, Some(tf_g.dt))
+    }
+}
+
+/// Helper functions for polynomial operations
+fn multiply_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
+    if p1.is_empty() || p2.is_empty() {
+        return vec![0.0];
+    }
+
+    let mut result = vec![0.0; p1.len() + p2.len() - 1];
+
+    for (i, &a) in p1.iter().enumerate() {
+        for (j, &b) in p2.iter().enumerate() {
+            result[i + j] += a * b;
+        }
+    }
+
+    result
+}
+
+fn add_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
+    let max_len = p1.len().max(p2.len());
+    let mut result = vec![0.0; max_len];
+
+    // Pad with zeros from the front and add
+    let p1_offset = max_len - p1.len();
+    let p2_offset = max_len - p2.len();
+
+    for (i, &val) in p1.iter().enumerate() {
+        result[p1_offset + i] += val;
+    }
+
+    for (i, &val) in p2.iter().enumerate() {
+        result[p2_offset + i] += val;
+    }
+
+    result
+}
+
+fn subtract_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
+    let max_len = p1.len().max(p2.len());
+    let mut result = vec![0.0; max_len];
+
+    // Pad with zeros from the front and subtract
+    let p1_offset = max_len - p1.len();
+    let p2_offset = max_len - p2.len();
+
+    for (i, &val) in p1.iter().enumerate() {
+        result[p1_offset + i] += val;
+    }
+
+    for (i, &val) in p2.iter().enumerate() {
+        result[p2_offset + i] -= val;
+    }
+
+    result
 }
 
 #[cfg(test)]
@@ -1103,5 +1400,156 @@ mod tests {
             ZerosPoleGain::new(Vec::new(), vec![Complex64::new(1.5, 0.0)], 1.0, Some(true))
                 .unwrap();
         assert!(!unstable_dt.is_stable().unwrap());
+    }
+
+    #[test]
+    fn test_series_connection() {
+        // Test series connection of two first-order systems
+        // G1(s) = 1/(s+1), G2(s) = 2/(s+2)
+        let g1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let g2 = TransferFunction::new(vec![2.0], vec![1.0, 2.0], None).unwrap();
+
+        let series_sys = system::series(&g1, &g2).unwrap();
+
+        // Series: H(s) = G2(s)*G1(s) = 2/((s+1)(s+2)) = 2/(s^2+3s+2)
+        assert_eq!(series_sys.num.len(), 1);
+        assert_eq!(series_sys.den.len(), 3);
+        assert_relative_eq!(series_sys.num[0], 2.0);
+        assert_relative_eq!(series_sys.den[0], 1.0);
+        assert_relative_eq!(series_sys.den[1], 3.0);
+        assert_relative_eq!(series_sys.den[2], 2.0);
+    }
+
+    #[test]
+    fn test_parallel_connection() {
+        // Test parallel connection of two first-order systems
+        // G1(s) = 1/(s+1), G2(s) = 1/(s+2)
+        let g1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let g2 = TransferFunction::new(vec![1.0], vec![1.0, 2.0], None).unwrap();
+
+        let parallel_sys = system::parallel(&g1, &g2).unwrap();
+
+        // Parallel: H(s) = G1(s)+G2(s) = 1/(s+1) + 1/(s+2) = (s+2+s+1)/((s+1)(s+2))
+        //         = (2s+3)/(s^2+3s+2)
+        assert_eq!(parallel_sys.num.len(), 2);
+        assert_eq!(parallel_sys.den.len(), 3);
+        assert_relative_eq!(parallel_sys.num[0], 2.0);
+        assert_relative_eq!(parallel_sys.num[1], 3.0);
+        assert_relative_eq!(parallel_sys.den[0], 1.0);
+        assert_relative_eq!(parallel_sys.den[1], 3.0);
+        assert_relative_eq!(parallel_sys.den[2], 2.0);
+    }
+
+    #[test]
+    fn test_feedback_connection() {
+        // Test feedback connection with unity feedback
+        // G(s) = 1/(s+1), unity feedback
+        let g = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+
+        let feedback_sys = system::feedback(&g, None, 1).unwrap();
+
+        // Feedback: T(s) = G(s)/(1+G(s)) = (1/(s+1))/(1+1/(s+1)) = 1/(s+2)
+        assert_eq!(feedback_sys.num.len(), 1);
+        assert_eq!(feedback_sys.den.len(), 2);
+        assert_relative_eq!(feedback_sys.num[0], 1.0);
+        assert_relative_eq!(feedback_sys.den[0], 1.0);
+        assert_relative_eq!(feedback_sys.den[1], 2.0);
+    }
+
+    #[test]
+    fn test_feedback_with_controller() {
+        // Test feedback connection with a controller
+        // G(s) = 1/(s+1), H(s) = 2 (proportional controller)
+        let g = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let h = TransferFunction::new(vec![2.0], vec![1.0], None).unwrap();
+
+        let feedback_sys = system::feedback(&g, Some(&h as &dyn LtiSystem), 1).unwrap();
+
+        // Feedback: T(s) = G(s)/(1+G(s)*H(s)) = (1/(s+1))/(1+2/(s+1)) = 1/(s+3)
+        assert_eq!(feedback_sys.num.len(), 1);
+        assert_eq!(feedback_sys.den.len(), 2);
+        assert_relative_eq!(feedback_sys.num[0], 1.0);
+        assert_relative_eq!(feedback_sys.den[0], 1.0);
+        assert_relative_eq!(feedback_sys.den[1], 3.0);
+    }
+
+    #[test]
+    fn test_sensitivity_function() {
+        // Test sensitivity function
+        // G(s) = 10/(s+1), unity feedback
+        let g = TransferFunction::new(vec![10.0], vec![1.0, 1.0], None).unwrap();
+
+        let sens = system::sensitivity(&g, None).unwrap();
+
+        // Sensitivity: S(s) = 1/(1+G(s)) = (s+1)/(s+11)
+        assert_eq!(sens.num.len(), 2);
+        assert_eq!(sens.den.len(), 2);
+        assert_relative_eq!(sens.num[0], 1.0);
+        assert_relative_eq!(sens.num[1], 1.0);
+        assert_relative_eq!(sens.den[0], 1.0);
+        assert_relative_eq!(sens.den[1], 11.0);
+    }
+
+    #[test]
+    fn test_complementary_sensitivity() {
+        // Test complementary sensitivity function
+        // G(s) = 10/(s+1), unity feedback
+        let g = TransferFunction::new(vec![10.0], vec![1.0, 1.0], None).unwrap();
+
+        let comp_sens = system::complementary_sensitivity(&g, None).unwrap();
+
+        // Complementary sensitivity: T(s) = G(s)/(1+G(s)) = 10/(s+11)
+        assert_eq!(comp_sens.num.len(), 1);
+        assert_eq!(comp_sens.den.len(), 2);
+        assert_relative_eq!(comp_sens.num[0], 10.0);
+        assert_relative_eq!(comp_sens.den[0], 1.0);
+        assert_relative_eq!(comp_sens.den[1], 11.0);
+    }
+
+    #[test]
+    fn test_polynomial_operations() {
+        // Test multiply_polynomials
+        let p1 = vec![1.0, 2.0]; // x + 2
+        let p2 = vec![1.0, 3.0]; // x + 3
+        let result = multiply_polynomials(&p1, &p2);
+        // (x + 2)(x + 3) = x^2 + 5x + 6
+        assert_eq!(result.len(), 3);
+        assert_relative_eq!(result[0], 1.0);
+        assert_relative_eq!(result[1], 5.0);
+        assert_relative_eq!(result[2], 6.0);
+
+        // Test add_polynomials
+        let p1 = vec![1.0, 2.0]; // x + 2
+        let p2 = vec![1.0, 3.0]; // x + 3
+        let result = add_polynomials(&p1, &p2);
+        // (x + 2) + (x + 3) = 2x + 5
+        assert_eq!(result.len(), 2);
+        assert_relative_eq!(result[0], 2.0);
+        assert_relative_eq!(result[1], 5.0);
+
+        // Test subtract_polynomials
+        let p1 = vec![2.0, 5.0]; // 2x + 5
+        let p2 = vec![1.0, 3.0]; // x + 3
+        let result = subtract_polynomials(&p1, &p2);
+        // (2x + 5) - (x + 3) = x + 2
+        assert_eq!(result.len(), 2);
+        assert_relative_eq!(result[0], 1.0);
+        assert_relative_eq!(result[1], 2.0);
+    }
+
+    #[test]
+    fn test_system_interconnection_errors() {
+        // Test error when connecting continuous and discrete-time systems
+        let g_ct = TransferFunction::new(vec![1.0], vec![1.0, 1.0], Some(false)).unwrap();
+        let g_dt = TransferFunction::new(vec![1.0], vec![1.0, 1.0], Some(true)).unwrap();
+
+        let result = system::series(&g_ct, &g_dt);
+        assert!(result.is_err());
+
+        let result = system::parallel(&g_ct, &g_dt);
+        assert!(result.is_err());
+
+        let result = system::feedback(&g_ct, Some(&g_dt as &dyn LtiSystem), 1);
+        assert!(result.is_err());
     }
 }

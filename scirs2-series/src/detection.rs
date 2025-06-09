@@ -506,7 +506,13 @@ pub fn detect_and_decompose<F>(
     method: DecompositionType,
 ) -> Result<AutoDecompositionResult<F>>
 where
-    F: Float + FromPrimitive + Debug + std::iter::Sum,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + std::iter::Sum
+        + ndarray_linalg::Lapack
+        + ndarray::ScalarOperand
+        + num_traits::NumCast,
 {
     // First, detect periods
     let period_result = detect_periods(ts, detection_options)?;

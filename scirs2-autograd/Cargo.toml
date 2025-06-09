@@ -46,10 +46,16 @@ intel-mkl = ["intel-mkl-src", "cblas-sys"]
 accelerate = ["blas-src/accelerate", "cblas-sys"]
 openblas = ["blas-src/openblas", "cblas-sys"]
 mkl = ["intel-mkl-src", "cblas-sys"]
+simd = ["scirs2-core/simd"]
 
 [[example]]
 name = "basic_autograd"
 path = "examples/basic_autograd.rs"
+
+[[example]]
+name = "simd_acceleration_test"
+path = "examples/simd_acceleration_test.rs"
+required-features = ["simd"]
 
 [lib]
 doctest = false

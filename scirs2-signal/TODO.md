@@ -52,12 +52,12 @@ This module provides signal processing functionality similar to SciPy's signal m
 
 ## Future Tasks
 
-- [ ] Implement advanced filter types and design methods
-  - [ ] Parks-McClellan optimal FIR filters (Remez exchange algorithm)
-  - [ ] Minimum phase filter conversion
+- [x] Implement advanced filter types and design methods
+  - [x] Parks-McClellan optimal FIR filters (Remez exchange algorithm)
+  - [x] Minimum phase filter conversion
   - [ ] Filter design in the Z-domain
-  - [ ] Matched filter implementation
-  - [ ] Adaptive filters (LMS, RLS, Kalman)
+  - [x] Matched filter implementation
+  - [x] Adaptive filters (LMS, RLS, Kalman)
   - [ ] Comb filters and notch filters
   - [ ] Filter bank design (QMF, wavelet filter banks)
   - [ ] IIR filter stabilization methods
@@ -76,7 +76,7 @@ This module provides signal processing functionality similar to SciPy's signal m
   - [x] Complete impulse response analysis
   - [x] Complete step response simulation
   - [x] Linear system simulation with arbitrary inputs
-  - [ ] System interconnection (series, parallel, feedback)
+  - [x] System interconnection (series, parallel, feedback)
   - [ ] Controllability and observability analysis
   - [ ] Laplace transform support
   - [ ] Conversion between discrete and continuous systems
@@ -205,7 +205,7 @@ This module provides signal processing functionality similar to SciPy's signal m
   - [x] Organize into dedicated namespace
   - [x] Extended window catalog
     - [x] Kaiser-Bessel derived
-    - [ ] DPSS (Slepian) windows
+    - [x] DPSS (Slepian) windows
     - [ ] Lanczos
     - [x] Flat-top windows
   - [ ] Window design tools

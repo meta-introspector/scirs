@@ -209,8 +209,9 @@ pub use result::OptimizeResults;
 // Convenience re-exports for common functions
 pub use constrained::minimize_constrained;
 pub use global::{
-    basinhopping, bayesian_optimization, differential_evolution, dual_annealing, multi_start,
-    particle_swarm, simulated_annealing,
+    basinhopping, bayesian_optimization, differential_evolution, dual_annealing,
+    generate_diverse_start_points, multi_start, multi_start_with_clustering, particle_swarm,
+    simulated_annealing,
 };
 pub use least_squares::{
     bounded_least_squares, least_squares, robust_least_squares, separable_least_squares,
@@ -227,10 +228,12 @@ pub mod prelude {
     pub use crate::error::{OptimizeError, OptimizeResult};
     pub use crate::global::{
         basinhopping, bayesian_optimization, differential_evolution, dual_annealing,
-        particle_swarm, simulated_annealing, AcquisitionFunctionType, BasinHoppingOptions,
-        BayesianOptimizationOptions, BayesianOptimizer, DifferentialEvolutionOptions,
-        DualAnnealingOptions, InitialPointGenerator, KernelType, Parameter, ParticleSwarmOptions,
-        SimulatedAnnealingOptions, Space,
+        generate_diverse_start_points, multi_start_with_clustering, particle_swarm,
+        simulated_annealing, AcquisitionFunctionType, BasinHoppingOptions,
+        BayesianOptimizationOptions, BayesianOptimizer, ClusterCentroid, ClusteringAlgorithm,
+        ClusteringOptions, ClusteringResult, DifferentialEvolutionOptions, DualAnnealingOptions,
+        InitialPointGenerator, KernelType, LocalMinimum, Parameter, ParticleSwarmOptions,
+        SimulatedAnnealingOptions, Space, StartPointStrategy,
     };
     pub use crate::least_squares::{
         bounded_least_squares, least_squares, robust_least_squares, separable_least_squares,

@@ -36,3 +36,18 @@ regex = { workspace = true }
 glob = { workspace = true }
 netcdf3 = { workspace = true }
 kamadak-exif = { workspace = true }
+hdf5 = { workspace = true, optional = true }
+thiserror = { workspace = true }
+
+[features]
+default = ["csv", "compression", "validation"]
+csv = []
+compression = []
+validation = []
+hdf5 = ["dep:hdf5"]
+all = ["csv", "compression", "validation", "hdf5"]
+
+[[example]]
+name = "hdf5_example"
+path = "examples/hdf5_example.rs"
+required-features = ["hdf5"]

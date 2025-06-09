@@ -44,11 +44,13 @@ use std::fmt;
 
 // Re-export optimization methods
 pub mod cobyla;
+pub mod interior_point;
 pub mod slsqp;
 pub mod trust_constr;
 
 // Re-export main functions
 pub use cobyla::minimize_cobyla;
+pub use interior_point::{minimize_interior_point, InteriorPointOptions, InteriorPointResult};
 pub use slsqp::minimize_slsqp;
 pub use trust_constr::minimize_trust_constr;
 
@@ -69,6 +71,9 @@ pub enum Method {
 
     /// Linear programming using the simplex algorithm
     COBYLA,
+
+    /// Interior point method
+    InteriorPoint,
 }
 
 impl fmt::Display for Method {
@@ -77,6 +82,7 @@ impl fmt::Display for Method {
             Method::SLSQP => write!(f, "SLSQP"),
             Method::TrustConstr => write!(f, "trust-constr"),
             Method::COBYLA => write!(f, "COBYLA"),
+            Method::InteriorPoint => write!(f, "interior-point"),
         }
     }
 }
@@ -242,5 +248,12 @@ where
         Method::SLSQP => minimize_slsqp(func, x0, constraints, &options),
         Method::TrustConstr => minimize_trust_constr(func, x0, constraints, &options),
         Method::COBYLA => minimize_cobyla(func, x0, constraints, &options),
+        Method::InteriorPoint => {
+            // Convert to interior point method format (simplified for now)
+            Err(crate::error::OptimizeError::NotImplementedError(
+                "Interior point method integration with minimize_constrained not yet implemented"
+                    .to_string(),
+            ))
+        }
     }
 }

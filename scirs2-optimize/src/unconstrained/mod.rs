@@ -7,14 +7,19 @@ use ndarray::{Array1, ArrayView1};
 use std::fmt;
 
 // Sub-modules
+pub mod adaptive_convergence;
 pub mod bfgs;
 pub mod conjugate_gradient;
 pub mod lbfgs;
 pub mod line_search;
+pub mod memory_efficient;
 pub mod nelder_mead;
 pub mod newton;
 pub mod powell;
+pub mod quasi_newton;
 pub mod result;
+pub mod sparse_optimization;
+pub mod strong_wolfe;
 pub mod trust_region;
 pub mod utils;
 
@@ -22,12 +27,27 @@ pub mod utils;
 pub use result::OptimizeResult;
 
 // Re-export commonly used items
+pub use adaptive_convergence::{
+    check_convergence_adaptive, create_adaptive_options_for_problem, AdaptationStats,
+    AdaptiveToleranceOptions, AdaptiveToleranceState, ConvergenceStatus,
+};
 pub use bfgs::minimize_bfgs;
 pub use conjugate_gradient::minimize_conjugate_gradient;
 pub use lbfgs::{minimize_lbfgs, minimize_lbfgsb};
+pub use memory_efficient::{
+    create_memory_efficient_optimizer, minimize_memory_efficient_lbfgs, MemoryOptions,
+};
 pub use nelder_mead::minimize_nelder_mead;
 pub use newton::minimize_newton_cg;
 pub use powell::minimize_powell;
+pub use quasi_newton::{minimize_dfp, minimize_quasi_newton, minimize_sr1, UpdateFormula};
+pub use sparse_optimization::{
+    auto_detect_sparsity, minimize_sparse_bfgs, SparseOptimizationOptions,
+};
+pub use strong_wolfe::{
+    create_strong_wolfe_options_for_method, strong_wolfe_line_search, StrongWolfeOptions,
+    StrongWolfeResult,
+};
 pub use trust_region::{minimize_trust_exact, minimize_trust_krylov, minimize_trust_ncg};
 
 /// Optimization methods for unconstrained minimization.
@@ -41,6 +61,10 @@ pub enum Method {
     CG,
     /// BFGS quasi-Newton method
     BFGS,
+    /// SR1 quasi-Newton method
+    SR1,
+    /// DFP quasi-Newton method
+    DFP,
     /// Limited-memory BFGS method
     LBFGS,
     /// Limited-memory BFGS method with bounds support
@@ -109,6 +133,8 @@ impl fmt::Display for Method {
             Method::Powell => write!(f, "Powell"),
             Method::CG => write!(f, "Conjugate Gradient"),
             Method::BFGS => write!(f, "BFGS"),
+            Method::SR1 => write!(f, "SR1"),
+            Method::DFP => write!(f, "DFP"),
             Method::LBFGS => write!(f, "L-BFGS"),
             Method::LBFGSB => write!(f, "L-BFGS-B"),
             Method::NewtonCG => write!(f, "Newton-CG"),
@@ -246,6 +272,8 @@ where
         Method::Powell => powell::minimize_powell(fun, x0, options),
         Method::CG => conjugate_gradient::minimize_conjugate_gradient(fun, x0, options),
         Method::BFGS => bfgs::minimize_bfgs(fun, x0, options),
+        Method::SR1 => quasi_newton::minimize_sr1(fun, x0, options),
+        Method::DFP => quasi_newton::minimize_dfp(fun, x0, options),
         Method::LBFGS => lbfgs::minimize_lbfgs(fun, x0, options),
         Method::LBFGSB => lbfgs::minimize_lbfgsb(fun, x0, options),
         Method::NewtonCG => newton::minimize_newton_cg(fun, x0, options),

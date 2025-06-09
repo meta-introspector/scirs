@@ -88,9 +88,9 @@ random = []  # Random number generation utilities
 types = []  # Type conversion utilities
 ufuncs = []  # Universal Functions (ufuncs) system
 linalg = ["ndarray-linalg"]  # Linear algebra with BLAS/LAPACK bindings
-openblas = ["ndarray-linalg/openblas-system"]  # Use OpenBLAS backend
-intel-mkl = ["ndarray-linalg/intel-mkl"]  # Use Intel MKL backend
-netlib = ["ndarray-linalg/netlib"]  # Use Netlib backend
+openblas = ["ndarray-linalg/openblas-static"]  # Use OpenBLAS backend (static linking)
+intel-mkl = ["ndarray-linalg/intel-mkl-static"]  # Use Intel MKL backend (static linking)  
+netlib = ["ndarray-linalg/netlib-static"]  # Use Netlib backend (static linking)
 array_protocol = []  # Array Protocol for third-party array implementations
 array_protocol_jit = ["array_protocol", "cranelift-module", "cranelift-jit", "cranelift-frontend"]  # JIT compilation for Array Protocol
 array_protocol_gpu = ["array_protocol", "gpu"]  # GPU support for Array Protocol
@@ -115,6 +115,16 @@ required-features = ["gpu"]
 [[example]]
 name = "gpu_kernel_library"
 path = "examples/gpu_kernel_library.rs"
+required-features = ["gpu"]
+
+[[example]]
+name = "gpu_foundation_example"
+path = "examples/gpu_foundation_example.rs"
+required-features = ["gpu"]
+
+[[example]]
+name = "gpu_detection_example"
+path = "examples/gpu_detection_example.rs"
 required-features = ["gpu"]
 
 [[example]]

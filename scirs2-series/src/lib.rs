@@ -9,6 +9,18 @@
 //!   - TBATS (Trigonometric, Box-Cox, ARMA, Trend, Seasonal)
 //!   - STR (Seasonal-Trend decomposition using Regression)
 //!   - Exponential smoothing decomposition
+//! - Change point detection
+//!   - PELT (Pruned Exact Linear Time) algorithm
+//!   - Binary segmentation
+//!   - CUSUM methods
+//!   - Bayesian online change point detection
+//!   - Kernel-based change detection
+//! - Anomaly detection
+//!   - Statistical process control (SPC)
+//!   - Isolation forest for time series
+//!   - Z-score and modified Z-score methods
+//!   - Interquartile range (IQR) detection
+//!   - Distance-based and prediction-based approaches
 //! - Automatic pattern detection
 //!   - Period detection using ACF, FFT, and wavelets
 //!   - Automatic seasonal decomposition with period detection
@@ -41,7 +53,9 @@
 
 #![warn(missing_docs)]
 
+pub mod anomaly;
 pub mod arima_models;
+pub mod change_point;
 pub mod decomposition; // Directory-based modular structure
 pub mod decomposition_compat; // For backward compatibility
 pub mod detection;

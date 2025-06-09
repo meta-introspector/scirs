@@ -53,8 +53,8 @@ fn run_gpu_example() -> Result<(), Box<dyn std::error::Error>> {
         "#,
         )?;
 
-        kernel.set_buffer(0, &mut buffer);
-        kernel.dispatch([data_size, 1, 1]);
+        kernel.set_buffer("a", &buffer);
+        kernel.dispatch([data_size as u32, 1, 1]);
 
         Ok(())
     })?;

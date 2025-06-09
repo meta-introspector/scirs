@@ -6,6 +6,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
+pub mod backends;
 pub mod kernels;
 
 /// GPU backend type
@@ -23,31 +24,41 @@ pub enum GpuBackend {
     Cpu,
 }
 
+impl Default for GpuBackend {
+    fn default() -> Self {
+        Self::preferred()
+    }
+}
+
 impl GpuBackend {
     /// Get the preferred GPU backend for the current system
     pub fn preferred() -> Self {
-        // In a real implementation, we would detect the available
-        // backends and choose the most appropriate one.
-        // For now, just return a default.
-        #[cfg(target_os = "macos")]
-        return GpuBackend::Metal;
+        // Use the backend detection system to find the optimal backend
+        match backends::initialize_optimal_backend() {
+            Ok(backend) => backend,
+            Err(_) => {
+                // Fallback to platform-specific defaults if detection fails
+                #[cfg(target_os = "macos")]
+                return GpuBackend::Metal;
 
-        #[cfg(target_os = "windows")]
-        return GpuBackend::Cuda;
+                #[cfg(target_os = "windows")]
+                return GpuBackend::Cuda;
 
-        #[cfg(target_os = "linux")]
-        return GpuBackend::Cuda;
+                #[cfg(target_os = "linux")]
+                return GpuBackend::Cuda;
 
-        #[cfg(target_arch = "wasm32")]
-        return GpuBackend::Wgpu;
+                #[cfg(target_arch = "wasm32")]
+                return GpuBackend::Wgpu;
 
-        #[cfg(not(any(
-            target_os = "macos",
-            target_os = "windows",
-            target_os = "linux",
-            target_arch = "wasm32"
-        )))]
-        return GpuBackend::OpenCL;
+                #[cfg(not(any(
+                    target_os = "macos",
+                    target_os = "windows",
+                    target_os = "linux",
+                    target_arch = "wasm32"
+                )))]
+                return GpuBackend::Cpu;
+            }
+        }
     }
 
     /// Check if this backend is available on the current system

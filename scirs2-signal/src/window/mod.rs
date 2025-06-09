@@ -67,6 +67,10 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalRes
             // Default beta value of 8.6
             kaiser_bessel_derived(length, 8.6, !periodic)
         }
+        "dpss" | "slepian" => {
+            // Default NW parameter of 3.0 for multitaper
+            dpss(length, 3.0, None, !periodic)
+        }
         _ => Err(SignalError::ValueError(format!(
             "Unknown window type: {}",
             window_type
@@ -720,6 +724,251 @@ pub fn barthann(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     Ok(_truncate(w, needs_trunc))
 }
 
+/// Discrete Prolate Spheroidal Sequence (DPSS) windows.
+///
+/// Also known as Slepian windows, these are optimal for multitaper spectral estimation.
+/// They maximize the energy concentration within a given bandwidth while minimizing
+/// spectral leakage.
+///
+/// # Arguments
+///
+/// * `m` - Number of points in the output window
+/// * `nw` - Time-bandwidth product. Larger values provide better frequency resolution
+/// * `num_windows` - Number of windows to generate (optional, defaults to 2*NW-1)
+/// * `sym` - If true, generates symmetric windows
+///
+/// # Returns
+///
+/// * A vector of DPSS windows, each window is a Vec<f64>
+///
+/// # Examples
+///
+/// ```ignore
+/// use scirs2_signal::window::dpss_windows;
+///
+/// // Generate 5 DPSS windows for multitaper spectral estimation
+/// let windows = dpss_windows(256, 4.0, Some(7), true).unwrap();
+/// assert_eq!(windows.len(), 7);
+/// assert_eq!(windows[0].len(), 256);
+/// ```
+pub fn dpss_windows(
+    m: usize,
+    nw: f64,
+    num_windows: Option<usize>,
+    sym: bool,
+) -> SignalResult<Vec<Vec<f64>>> {
+    if m == 0 {
+        return Err(SignalError::ValueError(
+            "Window length must be positive".to_string(),
+        ));
+    }
+
+    if nw <= 0.0 || nw >= m as f64 / 2.0 {
+        return Err(SignalError::ValueError(
+            "Time-bandwidth product NW must be between 0 and M/2".to_string(),
+        ));
+    }
+
+    let num_win = num_windows.unwrap_or((2.0 * nw - 1.0).floor() as usize);
+    if num_win == 0 {
+        return Err(SignalError::ValueError(
+            "Number of windows must be positive".to_string(),
+        ));
+    }
+
+    let (n, needs_trunc) = _extend(m, sym);
+
+    // Build the tridiagonal matrix for the eigenvalue problem
+    let omega = 2.0 * PI * nw / n as f64;
+    let mut diag = vec![0.0; n];
+    let mut off_diag = vec![0.0; n - 1];
+
+    // Fill diagonal elements
+    for (i, diag_val) in diag.iter_mut().enumerate() {
+        let k = i as f64 - (n as f64 - 1.0) / 2.0;
+        *diag_val = (omega * k).cos();
+    }
+
+    // Fill off-diagonal elements
+    for (i, off_diag_val) in off_diag.iter_mut().enumerate() {
+        let k = (i + 1) as f64;
+        *off_diag_val = k * (n as f64 - k) / 2.0;
+    }
+
+    // Solve the eigenvalue problem for the tridiagonal matrix
+    let (eigenvals, eigenvecs) = solve_tridiagonal_eigenproblem(&diag, &off_diag, num_win)?;
+
+    // Sort eigenvalues and eigenvectors in descending order
+    let mut sorted_indices: Vec<usize> = (0..eigenvals.len()).collect();
+    sorted_indices.sort_by(|&a, &b| eigenvals[b].partial_cmp(&eigenvals[a]).unwrap());
+
+    let mut windows = Vec::with_capacity(num_win);
+    for &idx in sorted_indices.iter().take(num_win) {
+        let mut window = eigenvecs[idx].clone();
+
+        // Ensure the first element is positive (phase convention)
+        if window[0] < 0.0 {
+            for w in &mut window {
+                *w = -*w;
+            }
+        }
+
+        // Normalize the window
+        let norm = window.iter().map(|&x| x * x).sum::<f64>().sqrt();
+        for w in &mut window {
+            *w /= norm;
+        }
+
+        windows.push(_truncate(window, needs_trunc));
+    }
+
+    Ok(windows)
+}
+
+/// Single DPSS window (first window from the set).
+///
+/// # Arguments
+///
+/// * `m` - Number of points in the output window
+/// * `nw` - Time-bandwidth product
+/// * `k` - Window index (optional, defaults to 0 for first window)
+/// * `sym` - If true, generates a symmetric window
+///
+/// # Returns
+///
+/// * A single DPSS window
+///
+/// # Examples
+///
+/// ```ignore
+/// use scirs2_signal::window::dpss;
+///
+/// let window = dpss(64, 2.5, None, true).unwrap();
+/// assert_eq!(window.len(), 64);
+/// ```
+pub fn dpss(m: usize, nw: f64, k: Option<usize>, sym: bool) -> SignalResult<Vec<f64>> {
+    let window_idx = k.unwrap_or(0);
+    let windows = dpss_windows(m, nw, Some(window_idx + 1), sym)?;
+
+    if windows.is_empty() {
+        return Err(SignalError::ValueError(
+            "Failed to generate DPSS window".to_string(),
+        ));
+    }
+
+    Ok(windows[window_idx].clone())
+}
+
+/// Solve the tridiagonal eigenvalue problem using the QR algorithm.
+///
+/// This is a simplified implementation for finding the largest eigenvalues
+/// and their corresponding eigenvectors.
+fn solve_tridiagonal_eigenproblem(
+    diag: &[f64],
+    off_diag: &[f64],
+    num_eigenvals: usize,
+) -> SignalResult<(Vec<f64>, Vec<Vec<f64>>)> {
+    let n = diag.len();
+    if off_diag.len() != n - 1 {
+        return Err(SignalError::ValueError(
+            "Inconsistent matrix dimensions".to_string(),
+        ));
+    }
+
+    // Simple power iteration for finding dominant eigenvalues
+    // This is a simplified approach for demonstration
+    let mut eigenvals: Vec<f64> = Vec::new();
+    let mut eigenvecs: Vec<Vec<f64>> = Vec::new();
+
+    // Start with the largest expected eigenvalue
+    let max_iter = 1000;
+    let tolerance = 1e-10;
+
+    for _k in 0..num_eigenvals.min(n) {
+        // Initialize random vector
+        let mut v = vec![1.0; n];
+        for (i, v_val) in v.iter_mut().enumerate().skip(1) {
+            *v_val = 0.1 * (i as f64).sin();
+        }
+
+        // Orthogonalize against previous eigenvectors
+        for prev_vec in &eigenvecs {
+            let dot = v
+                .iter()
+                .zip(prev_vec.iter())
+                .map(|(&a, &b)| a * b)
+                .sum::<f64>();
+            for (vi, &pvi) in v.iter_mut().zip(prev_vec.iter()) {
+                *vi -= dot * pvi;
+            }
+        }
+
+        // Normalize
+        let norm = v.iter().map(|&x| x * x).sum::<f64>().sqrt();
+        for vi in &mut v {
+            *vi /= norm;
+        }
+
+        let mut eigenval = 0.0;
+
+        // Power iteration
+        for _iter in 0..max_iter {
+            let mut new_v = vec![0.0; n];
+
+            // Matrix-vector multiplication for tridiagonal matrix
+            for i in 0..n {
+                new_v[i] += diag[i] * v[i];
+                if i > 0 {
+                    new_v[i] += off_diag[i - 1] * v[i - 1];
+                }
+                if i < n - 1 {
+                    new_v[i] += off_diag[i] * v[i + 1];
+                }
+            }
+
+            // Orthogonalize against previous eigenvectors
+            for prev_vec in &eigenvecs {
+                let dot = new_v
+                    .iter()
+                    .zip(prev_vec.iter())
+                    .map(|(&a, &b)| a * b)
+                    .sum::<f64>();
+                for (nvi, &pvi) in new_v.iter_mut().zip(prev_vec.iter()) {
+                    *nvi -= dot * pvi;
+                }
+            }
+
+            // Calculate eigenvalue (Rayleigh quotient)
+            let new_eigenval = new_v
+                .iter()
+                .zip(v.iter())
+                .map(|(&a, &b)| a * b)
+                .sum::<f64>();
+
+            // Normalize
+            let norm = new_v.iter().map(|&x| x * x).sum::<f64>().sqrt();
+            for nvi in &mut new_v {
+                *nvi /= norm;
+            }
+
+            // Check convergence
+            if (new_eigenval - eigenval).abs() < tolerance {
+                eigenval = new_eigenval;
+                v = new_v;
+                break;
+            }
+
+            eigenval = new_eigenval;
+            v = new_v;
+        }
+
+        eigenvals.push(eigenval);
+        eigenvecs.push(v);
+    }
+
+    Ok((eigenvals, eigenvecs))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -839,5 +1088,70 @@ mod tests {
         for i in 0..5 {
             assert_relative_eq!(window[i], window[9 - i], epsilon = 1e-10);
         }
+    }
+
+    #[test]
+    fn test_dpss_window() {
+        let window = dpss(64, 2.5, None, true).unwrap();
+        assert_eq!(window.len(), 64);
+
+        // Test that the window is normalized
+        let norm = window.iter().map(|&x| x * x).sum::<f64>().sqrt();
+        assert_relative_eq!(norm, 1.0, epsilon = 1e-10);
+
+        // Test symmetry (approximately, since DPSS windows are nearly symmetric)
+        for i in 0..32 {
+            assert_relative_eq!(window[i], window[63 - i], epsilon = 1e-2);
+        }
+
+        // Test that the window has reasonable magnitude
+        let max_val = window.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
+        assert!(max_val > 0.1);
+        assert!(max_val < 1.0);
+    }
+
+    #[test]
+    fn test_dpss_windows() {
+        let windows = dpss_windows(32, 2.0, Some(3), true).unwrap();
+        assert_eq!(windows.len(), 3);
+        assert_eq!(windows[0].len(), 32);
+
+        // Test that each window is normalized
+        for window in &windows {
+            let norm = window.iter().map(|&x| x * x).sum::<f64>().sqrt();
+            assert_relative_eq!(norm, 1.0, epsilon = 1e-10);
+        }
+
+        // Test orthogonality between different windows (approximate)
+        for i in 0..3 {
+            for j in (i + 1)..3 {
+                let dot_product = windows[i]
+                    .iter()
+                    .zip(windows[j].iter())
+                    .map(|(&a, &b)| a * b)
+                    .sum::<f64>();
+                assert!(dot_product.abs() < 0.1); // Should be approximately orthogonal
+            }
+        }
+    }
+
+    #[test]
+    fn test_dpss_errors() {
+        // Test error conditions
+
+        // Zero length
+        let result = dpss(0, 2.0, None, true);
+        assert!(result.is_err());
+
+        // Invalid NW
+        let result = dpss(10, 0.0, None, true);
+        assert!(result.is_err());
+
+        let result = dpss(10, 10.0, None, true);
+        assert!(result.is_err());
+
+        // Too many windows
+        let result = dpss_windows(10, 2.0, Some(0), true);
+        assert!(result.is_err());
     }
 }

@@ -32,22 +32,22 @@ This module provides time series analysis functionality similar to the time seri
 
 ## Time Series Decomposition
 
-- [ ] Enhanced decomposition methods
+- [x] Enhanced decomposition methods
   - [ ] Robust decomposition variants
-  - [ ] Singular Spectrum Analysis (SSA)
-  - [ ] TBATS decomposition (Trigonometric seasonality, Box-Cox transformation, ARMA errors, Trend and Seasonal components)
-  - [ ] MSTL (Multiple Seasonal-Trend decomposition using LOESS)
-  - [ ] STR (Seasonal-Trend decomposition using Regularization)
+  - [x] Singular Spectrum Analysis (SSA)
+  - [x] TBATS decomposition (Trigonometric seasonality, Box-Cox transformation, ARMA errors, Trend and Seasonal components)
+  - [x] MSTL (Multiple Seasonal-Trend decomposition using LOESS)
+  - [x] STR (Seasonal-Trend decomposition using Regularization)
 - [ ] Multi-seasonal decomposition
   - [ ] Multiple nested seasonal patterns
   - [ ] Complex seasonality identification
   - [ ] Automatic period detection
   - [ ] Flexible seasonal representation
-- [ ] Non-linear trend components
-  - [ ] Spline-based trend estimation
-  - [ ] Robust trend filtering
-  - [ ] Piecewise trends with breakpoints
-  - [ ] Trend confidence intervals
+- [x] Non-linear trend components
+  - [x] Spline-based trend estimation
+  - [x] Robust trend filtering
+  - [x] Piecewise trends with breakpoints
+  - [x] Trend confidence intervals
 
 ## Statistical Modeling
 
@@ -141,18 +141,20 @@ This module provides time series analysis functionality similar to the time seri
 
 ## Change Point Detection and Anomaly Detection
 
-- [ ] Change point detection
-  - [ ] PELT algorithm
-  - [ ] Binary segmentation
-  - [ ] Bayesian online changepoint detection
-  - [ ] CUSUM methods
-  - [ ] Kernel-based change detection
-- [ ] Anomaly detection
-  - [ ] Statistical process control
-  - [ ] Isolation forest for time series
-  - [ ] One-class SVM for time series
-  - [ ] Distance-based approaches
-  - [ ] Prediction-based approaches
+- [x] Change point detection
+  - [x] PELT algorithm
+  - [x] Binary segmentation
+  - [x] Bayesian online changepoint detection
+  - [x] CUSUM methods
+  - [x] Kernel-based change detection
+- [x] Anomaly detection
+  - [x] Statistical process control
+  - [x] Isolation forest for time series
+  - [x] One-class SVM for time series (simplified implementation)
+  - [x] Distance-based approaches
+  - [x] Prediction-based approaches
+  - [x] Z-score and modified Z-score methods
+  - [x] Interquartile range (IQR) detection
 - [ ] Advanced detection utilities
   - [ ] Multi-dimensional change detection
   - [ ] Group anomaly detection

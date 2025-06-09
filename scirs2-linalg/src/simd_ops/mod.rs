@@ -9,7 +9,11 @@ use crate::error::{LinalgError, LinalgResult};
 #[allow(unused_imports)]
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 #[allow(unused_imports)]
-use scirs2_core::simd::{simd_maximum_f32, simd_maximum_f64, simd_minimum_f32, simd_minimum_f64};
+use scirs2_core::simd::{
+    simd_add_f32, simd_add_f64, simd_dot_f32 as core_simd_dot_f32,
+    simd_dot_f64 as core_simd_dot_f64, simd_maximum_f32, simd_maximum_f64, simd_minimum_f32,
+    simd_minimum_f64, simd_mul_f32, simd_mul_f64, simd_scalar_mul_f32, simd_scalar_mul_f64,
+};
 #[allow(unused_imports)]
 use wide::{f32x8, f64x4};
 
@@ -952,6 +956,276 @@ pub fn simd_frobenius_norm_f64(a: &ArrayView2<f64>) -> f64 {
     sum_sq.sqrt()
 }
 
+/// SIMD accelerated element-wise addition of two f32 matrices
+///
+/// This is a convenience wrapper around core SIMD operations for matrix addition.
+///
+/// # Arguments
+///
+/// * `a` - First matrix
+/// * `b` - Second matrix
+///
+/// # Returns
+///
+/// * Matrix containing element-wise sum
+#[cfg(feature = "simd")]
+pub fn simd_matrix_add_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
+    if a.shape() != b.shape() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix dimensions must match for element-wise operations: {:?} vs {:?}",
+            a.shape(),
+            b.shape()
+        )));
+    }
+
+    // Create result matrix
+    let mut result = Array2::zeros(a.dim());
+
+    // For each row of the matrix, use SIMD on slices where possible
+    for i in 0..a.shape()[0] {
+        let a_row = a.slice(s![i, ..]);
+        let b_row = b.slice(s![i, ..]);
+
+        if let (Some(_), Some(_)) = (a_row.as_slice(), b_row.as_slice()) {
+            // Use the core SIMD implementation for the row
+            let add_row = simd_add_f32(&a_row.view(), &b_row.view());
+
+            for (j, &val) in add_row.iter().enumerate() {
+                result[[i, j]] = val;
+            }
+        } else {
+            // Fallback for non-contiguous data
+            for j in 0..a.shape()[1] {
+                result[[i, j]] = a[[i, j]] + b[[i, j]];
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// SIMD accelerated element-wise addition of two f64 matrices
+///
+/// This is a convenience wrapper around core SIMD operations for matrix addition.
+///
+/// # Arguments
+///
+/// * `a` - First matrix
+/// * `b` - Second matrix
+///
+/// # Returns
+///
+/// * Matrix containing element-wise sum
+#[cfg(feature = "simd")]
+pub fn simd_matrix_add_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
+    if a.shape() != b.shape() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix dimensions must match for element-wise operations: {:?} vs {:?}",
+            a.shape(),
+            b.shape()
+        )));
+    }
+
+    // Create result matrix
+    let mut result = Array2::zeros(a.dim());
+
+    // For each row of the matrix, use SIMD on slices where possible
+    for i in 0..a.shape()[0] {
+        let a_row = a.slice(s![i, ..]);
+        let b_row = b.slice(s![i, ..]);
+
+        if let (Some(_), Some(_)) = (a_row.as_slice(), b_row.as_slice()) {
+            // Use the core SIMD implementation for the row
+            let add_row = simd_add_f64(&a_row.view(), &b_row.view());
+
+            for (j, &val) in add_row.iter().enumerate() {
+                result[[i, j]] = val;
+            }
+        } else {
+            // Fallback for non-contiguous data
+            for j in 0..a.shape()[1] {
+                result[[i, j]] = a[[i, j]] + b[[i, j]];
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// SIMD accelerated element-wise multiplication of two f32 matrices
+///
+/// This is a convenience wrapper around core SIMD operations for matrix multiplication.
+///
+/// # Arguments
+///
+/// * `a` - First matrix
+/// * `b` - Second matrix
+///
+/// # Returns
+///
+/// * Matrix containing element-wise product
+#[cfg(feature = "simd")]
+pub fn simd_matrix_mul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
+    if a.shape() != b.shape() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix dimensions must match for element-wise operations: {:?} vs {:?}",
+            a.shape(),
+            b.shape()
+        )));
+    }
+
+    // Create result matrix
+    let mut result = Array2::zeros(a.dim());
+
+    // For each row of the matrix, use SIMD on slices where possible
+    for i in 0..a.shape()[0] {
+        let a_row = a.slice(s![i, ..]);
+        let b_row = b.slice(s![i, ..]);
+
+        if let (Some(_), Some(_)) = (a_row.as_slice(), b_row.as_slice()) {
+            // Use the core SIMD implementation for the row
+            let mul_row = simd_mul_f32(&a_row.view(), &b_row.view());
+
+            for (j, &val) in mul_row.iter().enumerate() {
+                result[[i, j]] = val;
+            }
+        } else {
+            // Fallback for non-contiguous data
+            for j in 0..a.shape()[1] {
+                result[[i, j]] = a[[i, j]] * b[[i, j]];
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// SIMD accelerated element-wise multiplication of two f64 matrices
+///
+/// This is a convenience wrapper around core SIMD operations for matrix multiplication.
+///
+/// # Arguments
+///
+/// * `a` - First matrix
+/// * `b` - Second matrix
+///
+/// # Returns
+///
+/// * Matrix containing element-wise product
+#[cfg(feature = "simd")]
+pub fn simd_matrix_mul_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
+    if a.shape() != b.shape() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix dimensions must match for element-wise operations: {:?} vs {:?}",
+            a.shape(),
+            b.shape()
+        )));
+    }
+
+    // Create result matrix
+    let mut result = Array2::zeros(a.dim());
+
+    // For each row of the matrix, use SIMD on slices where possible
+    for i in 0..a.shape()[0] {
+        let a_row = a.slice(s![i, ..]);
+        let b_row = b.slice(s![i, ..]);
+
+        if let (Some(_), Some(_)) = (a_row.as_slice(), b_row.as_slice()) {
+            // Use the core SIMD implementation for the row
+            let mul_row = simd_mul_f64(&a_row.view(), &b_row.view());
+
+            for (j, &val) in mul_row.iter().enumerate() {
+                result[[i, j]] = val;
+            }
+        } else {
+            // Fallback for non-contiguous data
+            for j in 0..a.shape()[1] {
+                result[[i, j]] = a[[i, j]] * b[[i, j]];
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// SIMD accelerated scalar multiplication of an f32 matrix
+///
+/// This is a convenience wrapper around core SIMD operations for scalar multiplication.
+///
+/// # Arguments
+///
+/// * `a` - Input matrix
+/// * `scalar` - Scalar value
+///
+/// # Returns
+///
+/// * Matrix containing scalar-multiplied values
+#[cfg(feature = "simd")]
+pub fn simd_matrix_scalar_mul_f32(a: &ArrayView2<f32>, scalar: f32) -> LinalgResult<Array2<f32>> {
+    // Create result matrix
+    let mut result = Array2::zeros(a.dim());
+
+    // For each row of the matrix, use SIMD on slices where possible
+    for i in 0..a.shape()[0] {
+        let a_row = a.slice(s![i, ..]);
+
+        if a_row.as_slice().is_some() {
+            // Use the core SIMD implementation for the row
+            let mul_row = simd_scalar_mul_f32(&a_row.view(), scalar);
+
+            for (j, &val) in mul_row.iter().enumerate() {
+                result[[i, j]] = val;
+            }
+        } else {
+            // Fallback for non-contiguous data
+            for j in 0..a.shape()[1] {
+                result[[i, j]] = a[[i, j]] * scalar;
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// SIMD accelerated scalar multiplication of an f64 matrix
+///
+/// This is a convenience wrapper around core SIMD operations for scalar multiplication.
+///
+/// # Arguments
+///
+/// * `a` - Input matrix
+/// * `scalar` - Scalar value
+///
+/// # Returns
+///
+/// * Matrix containing scalar-multiplied values
+#[cfg(feature = "simd")]
+pub fn simd_matrix_scalar_mul_f64(a: &ArrayView2<f64>, scalar: f64) -> LinalgResult<Array2<f64>> {
+    // Create result matrix
+    let mut result = Array2::zeros(a.dim());
+
+    // For each row of the matrix, use SIMD on slices where possible
+    for i in 0..a.shape()[0] {
+        let a_row = a.slice(s![i, ..]);
+
+        if a_row.as_slice().is_some() {
+            // Use the core SIMD implementation for the row
+            let mul_row = simd_scalar_mul_f64(&a_row.view(), scalar);
+
+            for (j, &val) in mul_row.iter().enumerate() {
+                result[[i, j]] = val;
+            }
+        } else {
+            // Fallback for non-contiguous data
+            for j in 0..a.shape()[1] {
+                result[[i, j]] = a[[i, j]] * scalar;
+            }
+        }
+    }
+
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     // Import only what is needed when tests are run
@@ -1127,5 +1401,105 @@ mod tests {
 
         // Verify correctness
         assert_relative_eq!(result, expected, epsilon = 1e-6);
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_matrix_add_f32() {
+        // Create test matrices
+        let a = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0]];
+        let b = array![[6.0f32, 5.0, 4.0], [3.0, 2.0, 1.0]];
+
+        // Compute using SIMD
+        let result = simd_matrix_add_f32(&a.view(), &b.view()).unwrap();
+
+        // Expected result is element-wise addition
+        let expected = array![[7.0f32, 7.0, 7.0], [7.0, 7.0, 7.0]];
+
+        // Verify correctness
+        assert_eq!(result.shape(), expected.shape());
+        for ((i, j), &val) in result.indexed_iter() {
+            assert_relative_eq!(val, expected[[i, j]], epsilon = 1e-6);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_matrix_mul_element_wise_f32() {
+        // Create test matrices
+        let a = array![[2.0f32, 3.0, 4.0], [5.0, 6.0, 7.0]];
+        let b = array![[3.0f32, 2.0, 1.0], [2.0, 3.0, 4.0]];
+
+        // Compute using SIMD
+        let result = simd_matrix_mul_f32(&a.view(), &b.view()).unwrap();
+
+        // Expected result is element-wise multiplication
+        let expected = array![[6.0f32, 6.0, 4.0], [10.0, 18.0, 28.0]];
+
+        // Verify correctness
+        assert_eq!(result.shape(), expected.shape());
+        for ((i, j), &val) in result.indexed_iter() {
+            assert_relative_eq!(val, expected[[i, j]], epsilon = 1e-6);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_matrix_scalar_mul_f32() {
+        // Create test matrix
+        let a = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0]];
+        let scalar = 2.5f32;
+
+        // Compute using SIMD
+        let result = simd_matrix_scalar_mul_f32(&a.view(), scalar).unwrap();
+
+        // Expected result is scalar multiplication
+        let expected = array![[2.5f32, 5.0, 7.5], [10.0, 12.5, 15.0]];
+
+        // Verify correctness
+        assert_eq!(result.shape(), expected.shape());
+        for ((i, j), &val) in result.indexed_iter() {
+            assert_relative_eq!(val, expected[[i, j]], epsilon = 1e-6);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_matrix_add_f64() {
+        // Create test matrices
+        let a = array![[1.0f64, 2.0, 3.0], [4.0, 5.0, 6.0]];
+        let b = array![[6.0f64, 5.0, 4.0], [3.0, 2.0, 1.0]];
+
+        // Compute using SIMD
+        let result = simd_matrix_add_f64(&a.view(), &b.view()).unwrap();
+
+        // Expected result is element-wise addition
+        let expected = array![[7.0f64, 7.0, 7.0], [7.0, 7.0, 7.0]];
+
+        // Verify correctness
+        assert_eq!(result.shape(), expected.shape());
+        for ((i, j), &val) in result.indexed_iter() {
+            assert_relative_eq!(val, expected[[i, j]], epsilon = 1e-12);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_matrix_scalar_mul_f64() {
+        // Create test matrix
+        let a = array![[1.0f64, 2.0, 3.0], [4.0, 5.0, 6.0]];
+        let scalar = 3.0f64;
+
+        // Compute using SIMD
+        let result = simd_matrix_scalar_mul_f64(&a.view(), scalar).unwrap();
+
+        // Expected result is scalar multiplication
+        let expected = array![[3.0f64, 6.0, 9.0], [12.0, 15.0, 18.0]];
+
+        // Verify correctness
+        assert_eq!(result.shape(), expected.shape());
+        for ((i, j), &val) in result.indexed_iter() {
+            assert_relative_eq!(val, expected[[i, j]], epsilon = 1e-12);
+        }
     }
 }

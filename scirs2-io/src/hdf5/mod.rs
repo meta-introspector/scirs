@@ -17,6 +17,9 @@ use ndarray::{ArrayBase, ArrayD, IxDyn};
 use std::collections::HashMap;
 use std::path::Path;
 
+#[cfg(feature = "hdf5")]
+use hdf5::File;
+
 /// HDF5 data type enumeration
 #[derive(Debug, Clone, PartialEq)]
 pub enum HDF5DataType {
@@ -101,6 +104,9 @@ pub struct HDF5File {
     /// File access mode
     #[allow(dead_code)]
     mode: FileMode,
+    /// Native HDF5 file handle (when feature is enabled)
+    #[cfg(feature = "hdf5")]
+    native_file: Option<File>,
 }
 
 /// File access mode
@@ -213,22 +219,72 @@ pub enum AttributeValue {
 impl HDF5File {
     /// Create a new HDF5 file
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Ok(Self {
-            path: path.as_ref().to_string_lossy().to_string(),
-            root: Group::new("/".to_string()),
-            mode: FileMode::Create,
-        })
+        let path_str = path.as_ref().to_string_lossy().to_string();
+
+        #[cfg(feature = "hdf5")]
+        {
+            let native_file = File::create(&path_str)
+                .map_err(|e| IoError::FormatError(format!("Failed to create HDF5 file: {}", e)))?;
+
+            Ok(Self {
+                path: path_str,
+                root: Group::new("/".to_string()),
+                mode: FileMode::Create,
+                native_file: Some(native_file),
+            })
+        }
+
+        #[cfg(not(feature = "hdf5"))]
+        {
+            Ok(Self {
+                path: path_str,
+                root: Group::new("/".to_string()),
+                mode: FileMode::Create,
+            })
+        }
     }
 
     /// Open an existing HDF5 file
     pub fn open<P: AsRef<Path>>(path: P, mode: FileMode) -> Result<Self> {
-        // TODO: Implement actual HDF5 file reading
-        // This is a placeholder implementation
-        Ok(Self {
-            path: path.as_ref().to_string_lossy().to_string(),
-            root: Group::new("/".to_string()),
-            mode,
-        })
+        let path_str = path.as_ref().to_string_lossy().to_string();
+
+        #[cfg(feature = "hdf5")]
+        {
+            let native_file = match mode {
+                FileMode::ReadOnly => File::open(&path_str).map_err(|e| {
+                    IoError::FormatError(format!("Failed to open HDF5 file: {}", e))
+                })?,
+                FileMode::ReadWrite => File::open_rw(&path_str).map_err(|e| {
+                    IoError::FormatError(format!("Failed to open HDF5 file: {}", e))
+                })?,
+                FileMode::Create => File::create(&path_str).map_err(|e| {
+                    IoError::FormatError(format!("Failed to create HDF5 file: {}", e))
+                })?,
+                FileMode::Truncate => File::create(&path_str).map_err(|e| {
+                    IoError::FormatError(format!("Failed to create HDF5 file: {}", e))
+                })?,
+            };
+
+            // Load existing structure from the file
+            let mut root = Group::new("/".to_string());
+            Self::load_group_structure(&native_file, &mut root)?;
+
+            Ok(Self {
+                path: path_str,
+                root,
+                mode,
+                native_file: Some(native_file),
+            })
+        }
+
+        #[cfg(not(feature = "hdf5"))]
+        {
+            Ok(Self {
+                path: path_str,
+                root: Group::new("/".to_string()),
+                mode,
+            })
+        }
     }
 
     /// Get the root group
@@ -239,6 +295,22 @@ impl HDF5File {
     /// Get the root group mutably
     pub fn root_mut(&mut self) -> &mut Group {
         &mut self.root
+    }
+
+    /// Load group structure from native HDF5 file
+    #[cfg(feature = "hdf5")]
+    fn load_group_structure(_file: &File, _group: &mut Group) -> Result<()> {
+        // For now, implement a simplified version that loads basic structure
+        // In a production implementation, you would recursively traverse the HDF5 hierarchy
+        // and read actual dataset metadata and shapes
+
+        // This is a placeholder - in a real implementation you would:
+        // 1. Use file.group_names() to get group names
+        // 2. Use file.dataset_names() to get dataset names
+        // 3. Recursively traverse groups
+        // 4. Read dataset metadata (shape, datatype, etc.)
+
+        Ok(())
     }
 
     /// Create a dataset from an ndarray
@@ -273,8 +345,8 @@ impl HDF5File {
         let dataset = Dataset {
             name: dataset_name.to_string(),
             dtype: HDF5DataType::Float { size: 8 },
-            shape,
-            data: DataArray::Float(flat_data),
+            shape: shape.clone(),
+            data: DataArray::Float(flat_data.clone()),
             attributes: HashMap::new(),
             options: options.unwrap_or_default(),
         };
@@ -282,6 +354,31 @@ impl HDF5File {
         current_group
             .datasets
             .insert(dataset_name.to_string(), dataset);
+
+        // Also write to the native HDF5 file if available
+        #[cfg(feature = "hdf5")]
+        {
+            if let Some(ref file) = self.native_file {
+                // For now, implement a simplified write that creates the dataset directly
+                // In production, you would handle nested groups properly
+
+                // For now, write all datasets as 1D arrays to avoid shape complexity
+                // In production, you would properly handle multidimensional arrays
+                let total_size: usize = shape.iter().product();
+                let h5_dataset = file
+                    .new_dataset::<f64>()
+                    .shape(total_size)
+                    .create(*dataset_name)
+                    .map_err(|e| {
+                        IoError::FormatError(format!("Failed to create HDF5 dataset: {}", e))
+                    })?;
+
+                h5_dataset.write(&flat_data).map_err(|e| {
+                    IoError::FormatError(format!("Failed to write HDF5 dataset: {}", e))
+                })?;
+            }
+        }
+
         Ok(())
     }
 
@@ -308,7 +405,26 @@ impl HDF5File {
             .get(*dataset_name)
             .ok_or_else(|| IoError::FormatError(format!("Dataset '{}' not found", dataset_name)))?;
 
-        // Convert to ndarray
+        // Try to read from native HDF5 file first if available
+        #[cfg(feature = "hdf5")]
+        {
+            if let Some(ref file) = self.native_file {
+                // For now, implement simplified reading for datasets at root level
+                // In production, you would handle nested groups properly
+
+                if let Ok(h5_dataset) = file.dataset(dataset_name) {
+                    let data: Vec<f64> = h5_dataset.read_raw().map_err(|e| {
+                        IoError::FormatError(format!("Failed to read HDF5 dataset: {}", e))
+                    })?;
+
+                    let shape = IxDyn(&dataset.shape);
+                    return ArrayD::from_shape_vec(shape, data)
+                        .map_err(|e| IoError::FormatError(e.to_string()));
+                }
+            }
+        }
+
+        // Fall back to in-memory data
         match &dataset.data {
             DataArray::Float(data) => {
                 let shape = IxDyn(&dataset.shape);
@@ -329,16 +445,36 @@ impl HDF5File {
 
     /// Write the file to disk
     pub fn write(&self) -> Result<()> {
-        // TODO: Implement actual HDF5 file writing
-        // This is a placeholder implementation
-        println!("Writing HDF5 file to: {}", self.path);
+        #[cfg(feature = "hdf5")]
+        {
+            if let Some(ref _file) = self.native_file {
+                // For HDF5, writing happens automatically when datasets are created
+                // So we just need to flush any pending operations
+                _file.flush().map_err(|e| {
+                    IoError::FormatError(format!("Failed to flush HDF5 file: {}", e))
+                })?;
+            }
+        }
+
+        #[cfg(not(feature = "hdf5"))]
+        {
+            // Placeholder implementation
+            println!("Writing HDF5 file to: {} (placeholder)", self.path);
+        }
+
         Ok(())
     }
 
     /// Close the file
     pub fn close(self) -> Result<()> {
-        // TODO: Implement actual file closing
-        // This is a placeholder implementation
+        #[cfg(feature = "hdf5")]
+        {
+            if let Some(file) = self.native_file {
+                // File is automatically closed when dropped
+                drop(file);
+            }
+        }
+
         Ok(())
     }
 }
@@ -434,8 +570,13 @@ where
     Ok(())
 }
 
+// Include tests module
 #[cfg(test)]
-mod tests {
+mod tests;
+
+// Legacy inline tests for backward compatibility
+#[cfg(test)]
+mod legacy_tests {
     use super::*;
 
     #[test]
