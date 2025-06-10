@@ -8,16 +8,20 @@ use std::fmt;
 
 // Sub-modules
 pub mod adaptive_convergence;
+pub mod advanced_line_search;
 pub mod bfgs;
 pub mod conjugate_gradient;
+pub mod efficient_sparse;
 pub mod lbfgs;
 pub mod line_search;
 pub mod memory_efficient;
+pub mod memory_efficient_sparse;
 pub mod nelder_mead;
 pub mod newton;
 pub mod powell;
 pub mod quasi_newton;
 pub mod result;
+pub mod robust_convergence;
 pub mod simd_bfgs;
 pub mod sparse_optimization;
 pub mod strong_wolfe;
@@ -34,16 +38,30 @@ pub use adaptive_convergence::{
     check_convergence_adaptive, create_adaptive_options_for_problem, AdaptationStats,
     AdaptiveToleranceOptions, AdaptiveToleranceState, ConvergenceStatus,
 };
+pub use advanced_line_search::{
+    advanced_line_search, create_non_monotone_state, AdvancedLineSearchOptions,
+    InterpolationStrategy, LineSearchMethod, LineSearchResult, LineSearchStats,
+};
 pub use bfgs::minimize_bfgs;
 pub use conjugate_gradient::minimize_conjugate_gradient;
+pub use efficient_sparse::{
+    minimize_efficient_sparse_newton, EfficientSparseOptions, SparsityInfo,
+};
 pub use lbfgs::{minimize_lbfgs, minimize_lbfgsb};
 pub use memory_efficient::{
     create_memory_efficient_optimizer, minimize_memory_efficient_lbfgs, MemoryOptions,
+};
+pub use memory_efficient_sparse::{
+    create_ultra_scale_optimizer, minimize_ultra_scale, UltraScaleOptions,
 };
 pub use nelder_mead::minimize_nelder_mead;
 pub use newton::minimize_newton_cg;
 pub use powell::minimize_powell;
 pub use quasi_newton::{minimize_dfp, minimize_quasi_newton, minimize_sr1, UpdateFormula};
+pub use robust_convergence::{
+    create_robust_options_for_problem, RobustConvergenceOptions, RobustConvergenceResult,
+    RobustConvergenceState,
+};
 pub use simd_bfgs::{minimize_simd_bfgs, minimize_simd_bfgs_default, SimdBfgsOptions};
 pub use sparse_optimization::{
     auto_detect_sparsity, minimize_sparse_bfgs, SparseOptimizationOptions,

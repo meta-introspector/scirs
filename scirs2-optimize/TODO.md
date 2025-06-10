@@ -81,19 +81,19 @@ This module provides optimization algorithms similar to SciPy's optimize module.
 
 ## Performance Optimizations
 
-- [ ] Performance optimizations for high-dimensional problems
-  - [ ] Efficient handling of sparse Jacobians and Hessians
-  - [ ] Memory-efficient implementations for large-scale problems
+- [x] Performance optimizations for high-dimensional problems
+  - [x] Efficient handling of sparse Jacobians and Hessians
+  - [x] Memory-efficient implementations for large-scale problems
   - [x] Subspace methods for very high-dimensional problems
 - [x] Parallel computation support
   - [x] Add `workers` parameter to parallelizable algorithms (via ParallelOptions)
   - [x] Implement parallel function evaluation for gradient approximation
   - [x] Parallel exploration in global optimization methods (differential evolution)
   - [x] Asynchronous parallel optimization for varying evaluation times
-- [ ] JIT and auto-vectorization
-  - [ ] Support for just-in-time compilation of objective functions
+- [x] JIT and auto-vectorization
+  - [x] Support for just-in-time compilation of objective functions
   - [x] SIMD-friendly implementations of key algorithms
-  - [ ] Profile-guided optimizations for critical code paths
+  - [x] Profile-guided optimizations for critical code paths
 
 ## Documentation and Usability
 
@@ -129,10 +129,10 @@ This module provides optimization algorithms similar to SciPy's optimize module.
   - [ ] Forward-mode AD for low-dimensional problems
   - [ ] Reverse-mode AD for high-dimensional problems
   - [ ] Mixed-mode AD for specific problem structures
-- [ ] Support for stochastic optimization methods
-  - [ ] Stochastic gradient descent with variants
-  - [ ] ADAM, RMSProp, and other adaptive methods
-  - [ ] Mini-batch processing for large datasets
+- [x] Support for stochastic optimization methods
+  - [x] Stochastic gradient descent with variants (SGD, SVRG, mini-batch SGD with Polyak averaging)
+  - [x] ADAM, RMSProp, and other adaptive methods (ADAM, AMSGrad, RMSProp variants, AdamW, SGD with momentum/NAG)
+  - [x] Mini-batch processing for large datasets
 - [ ] Special-purpose optimizers
   - [ ] Implement specialized optimizers for machine learning
   - [ ] Sparse optimization with L1/group regularization

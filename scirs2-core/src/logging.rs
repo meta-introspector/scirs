@@ -381,30 +381,39 @@ impl Logger {
     pub fn critical(&self, message: &str) {
         self.log(LogLevel::Critical, message);
     }
-    
+
     /// Create an enhanced progress tracker using the logger's context
-    pub fn track_progress(&self, description: &str, total: u64) -> progress::EnhancedProgressTracker {
+    pub fn track_progress(
+        &self,
+        description: &str,
+        total: u64,
+    ) -> progress::EnhancedProgressTracker {
         use progress::{ProgressBuilder, ProgressStyle};
-        
+
         let builder = ProgressBuilder::new(description, total)
             .style(ProgressStyle::DetailedBar)
             .show_statistics(true);
-            
+
         let mut tracker = builder.build();
-        
+
         // Log the start of progress tracking
         self.info(&format!("Starting progress tracking: {}", description));
-        
+
         tracker.start();
         tracker
     }
-    
+
     /// Log a message with progress update
-    pub fn info_with_progress(&self, message: &str, progress: &mut progress::EnhancedProgressTracker, update: u64) {
+    pub fn info_with_progress(
+        &self,
+        message: &str,
+        progress: &mut progress::EnhancedProgressTracker,
+        update: u64,
+    ) {
         self.info(message);
         progress.update(update);
     }
-    
+
     /// Execute an operation with progress tracking
     pub fn with_progress<F, R>(&self, description: &str, total: u64, operation: F) -> R
     where
@@ -413,7 +422,7 @@ impl Logger {
         let mut progress = self.track_progress(description, total);
         let result = operation(&mut progress);
         progress.finish();
-        
+
         // Log completion
         let stats = progress.stats();
         self.info(&format!(
@@ -421,7 +430,7 @@ impl Logger {
             description,
             stats.elapsed.as_secs_f64()
         ));
-        
+
         result
     }
 }

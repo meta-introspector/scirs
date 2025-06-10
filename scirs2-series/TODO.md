@@ -103,11 +103,11 @@ This module provides time series analysis functionality similar to the time seri
   - [x] Expanded statistical features
   - [x] Window-based aggregations
   - [x] Entropy measures
-  - [ ] Complexity measures (approximate entropy, sample entropy)
-  - [ ] Turning points analysis
-- [ ] Frequency domain features
-  - [ ] Spectral analysis utilities
-  - [ ] Periodogram enhancements
+  - [x] Complexity measures (approximate entropy, sample entropy)
+  - [x] Turning points analysis
+- [x] Frequency domain features
+  - [x] Spectral analysis utilities
+  - [x] Periodogram enhancements
   - [x] Wavelet-based features
   - [x] Hilbert-Huang transform (EMD)
 - [x] Temporal pattern mining
@@ -133,11 +133,11 @@ This module provides time series analysis functionality similar to the time seri
   - [x] Min-max scaling
   - [x] Robust scaling
   - [x] Adaptive normalization
-- [ ] Dimensionality reduction
-  - [ ] PCA for time series
-  - [ ] Functional PCA
-  - [ ] Dynamic time warping barycenter averaging
-  - [ ] Symbolic approximation
+- [x] Dimensionality reduction
+  - [x] PCA for time series
+  - [x] Functional PCA
+  - [x] Dynamic time warping barycenter averaging
+  - [x] Symbolic approximation
 
 ## Change Point Detection and Anomaly Detection
 

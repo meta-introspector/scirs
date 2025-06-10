@@ -1,7 +1,7 @@
 //! Affine registration algorithms
 
 use crate::error::Result;
-use crate::registration::{RegistrationResult, RegistrationParams};
+use crate::registration::{RegistrationParams, RegistrationResult};
 
 /// Affine registration placeholder
 pub fn register_affine_points(

@@ -10,7 +10,9 @@
 mod adaptive_chunking;
 mod adaptive_prefetch;
 mod chunked;
+#[cfg(feature = "memory_compression")]
 mod compressed_memmap;
+#[cfg(feature = "gpu")]
 mod cross_device;
 mod cross_file_prefetch;
 mod fusion;
@@ -22,9 +24,12 @@ mod out_of_core;
 mod pattern_recognition;
 mod prefetch;
 mod resource_aware;
+#[cfg(feature = "parallel")]
 mod streaming;
 mod validation;
 mod views;
+#[cfg(feature = "parallel")]
+mod zero_copy_streaming;
 mod zero_serialization;
 mod zerocopy;
 
@@ -39,9 +44,11 @@ pub use chunked::{
     chunk_wise_binary_op, chunk_wise_op, chunk_wise_reduce, ChunkedArray, ChunkingStrategy,
     OPTIMAL_CHUNK_SIZE,
 };
+#[cfg(feature = "memory_compression")]
 pub use compressed_memmap::{
     CompressedFileMetadata, CompressedMemMapBuilder, CompressedMemMappedArray, CompressionAlgorithm,
 };
+#[cfg(feature = "gpu")]
 pub use cross_device::{
     create_cpu_array, create_cross_device_manager, create_gpu_array, to_best_device,
     CrossDeviceManager, DeviceArray, DeviceBuffer, DeviceMemoryManager, DeviceMemoryPool,
@@ -63,91 +70,53 @@ pub use out_of_core::{create_disk_array, load_chunks, DiskBackedArray, OutOfCore
 pub use pattern_recognition::{
     ComplexPattern, Confidence, PatternRecognitionConfig, PatternRecognizer, RecognizedPattern,
 };
+#[cfg(feature = "memory_compression")]
+pub use prefetch::PrefetchingCompressedArray;
 pub use prefetch::{
     AccessPattern, PrefetchConfig, PrefetchConfigBuilder, PrefetchStats, Prefetching,
-    PrefetchingCompressedArray,
 };
 pub use resource_aware::{
     ResourceAwareConfig, ResourceAwareConfigBuilder, ResourceAwarePrefetcher, ResourceMonitor,
     ResourceSnapshot, ResourceSummary, ResourceType,
 };
+#[cfg(feature = "parallel")]
 pub use streaming::{
     create_pipeline, create_stream_processor, Pipeline, PipelineBuilder, PipelineStats,
     StreamConfig, StreamConfigBuilder, StreamMode, StreamProcessor, StreamSource, StreamState,
     StreamStats,
 };
 pub use views::{diagonal_view, transpose_view, view_as, view_mut_as, ArrayView, ViewMut};
+#[cfg(feature = "parallel")]
+pub use zero_copy_streaming::{
+    create_zero_copy_processor, BufferPool, BufferPoolStats, LockFreeQueue, NumaTopology,
+    ProcessingMode, WorkStealingScheduler, WorkStealingTask, ZeroCopyBuffer, ZeroCopyConfig,
+    ZeroCopyStats, ZeroCopyStreamProcessor,
+};
 pub use zero_serialization::{ZeroCopySerializable, ZeroCopySerialization};
 pub use zerocopy::{ArithmeticOps, BroadcastOps, ZeroCopyOps};
 
 // Re-export commonly used items in a prelude module for convenience
 pub mod prelude {
+    // Core functionality always available
     pub use super::{
-        chunk_wise_binary_op,
-        chunk_wise_op,
-        chunk_wise_reduce,
-        create_cpu_array,
-        create_cross_device_manager,
-        create_gpu_array,
-        create_mmap,
-        create_temp_mmap,
-        evaluate,
-        open_mmap,
-        to_best_device,
-        view_as,
-        view_mut_as,
-        AccessMode,
-        AdaptiveChunking,
-        AdaptiveChunkingBuilder,
-        // Advanced prefetching
-        AdaptivePatternTracker,
-        AdaptivePrefetchConfig,
-        ArithmeticOps,
-        ArrayView,
-        BroadcastOps,
-        ChunkIter,
-        ChunkedArray,
-        ComplexPattern,
-        CompressedMemMapBuilder,
-        CompressionAlgorithm,
-        CrossDeviceManager,
-        CrossFilePrefetchManager,
-        DatasetId,
-        DatasetPrefetcher,
-        DeviceArray,
-        DeviceBuffer,
-        DeviceType,
-        LazyArray,
-        MemoryMappedArray,
-        MemoryMappedChunkIter,
-        MemoryMappedChunks,
-        MemoryMappedSlice,
-        MemoryMappedSlicing,
-        OutOfCoreArray,
-        PatternRecognizer,
-        PrefetchConfig,
-        PrefetchConfigBuilder,
-        PrefetchStrategy,
-        Prefetching,
-        PrefetchingCompressedArray,
-        ResourceAwareConfig,
-        ResourceAwarePrefetcher,
-        StreamConfig,
-        StreamConfigBuilder,
-        StreamMode,
-        StreamProcessor,
-        StreamState,
-        ToDevice,
-        ToHost,
-        TransferMode,
-        TransferOptions,
-        TransferOptionsBuilder,
-        ViewMut,
-        ZeroCopyOps,
-        ZeroCopySerializable,
+        chunk_wise_binary_op, chunk_wise_op, chunk_wise_reduce, create_mmap, create_temp_mmap,
+        evaluate, open_mmap, view_as, view_mut_as, AccessMode, AdaptiveChunking,
+        AdaptiveChunkingBuilder, AdaptivePatternTracker, AdaptivePrefetchConfig, ArithmeticOps,
+        ArrayView, BroadcastOps, ChunkIter, ChunkedArray, ComplexPattern, CrossFilePrefetchManager,
+        DatasetId, DatasetPrefetcher, LazyArray, MemoryMappedArray, MemoryMappedChunkIter,
+        MemoryMappedChunks, MemoryMappedSlice, MemoryMappedSlicing, OutOfCoreArray,
+        PatternRecognizer, PrefetchConfig, PrefetchConfigBuilder, PrefetchStrategy, Prefetching,
+        ResourceAwareConfig, ResourceAwarePrefetcher, ViewMut, ZeroCopyOps, ZeroCopySerializable,
         ZeroCopySerialization,
     };
 
+    // GPU-specific exports
+    #[cfg(feature = "gpu")]
+    pub use super::{
+        create_cpu_array, create_cross_device_manager, create_gpu_array, to_best_device,
+    };
+
+    // Parallel processing exports
     #[cfg(feature = "parallel")]
     pub use super::MemoryMappedChunksParallel;
 }

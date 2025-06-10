@@ -11,6 +11,9 @@
 //! - Multiple datatypes (integers, floats, strings, compound types)
 //! - Chunking and compression support
 //! - Integration with ndarray for efficient array operations
+//! - Enhanced functionality with compression and parallel I/O (see `enhanced` module)
+//! - Extended data type support including complex numbers and boolean types
+//! - Performance optimizations for large datasets
 
 use crate::error::{IoError, Result};
 use ndarray::{ArrayBase, ArrayD, IxDyn};
@@ -569,6 +572,15 @@ where
     file.close()?;
     Ok(())
 }
+
+/// Enhanced HDF5 functionality with compression and parallel I/O
+pub mod enhanced;
+
+// Re-export enhanced functionality for convenience
+pub use enhanced::{
+    create_optimal_compression_options, read_hdf5_enhanced, write_hdf5_enhanced, CompressionStats,
+    EnhancedHDF5File, ExtendedDataType, ParallelConfig,
+};
 
 // Include tests module
 #[cfg(test)]

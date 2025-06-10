@@ -60,6 +60,7 @@ pub use error::{SignalError, SignalResult};
 
 // Signal processing module structure
 pub mod adaptive;
+pub mod advanced_filter;
 pub mod bss;
 pub mod convolve;
 pub mod cqt;
@@ -82,6 +83,7 @@ pub use dwt::{
 pub mod filter;
 pub mod filter_banks;
 pub mod higher_order;
+pub mod hr_spectral;
 pub mod interpolate;
 pub mod kalman;
 pub mod lombscargle;
@@ -90,9 +92,11 @@ pub mod lti_response;
 pub mod median;
 pub mod multitaper;
 pub mod nlm;
+pub mod parallel_spectral;
 pub mod parametric;
 pub mod peak;
 pub mod phase_vocoder;
+pub mod realtime;
 pub mod reassigned;
 pub mod resample;
 pub mod savgol;
@@ -116,7 +120,14 @@ pub mod wpt2d;
 pub mod wvd;
 
 // Re-export commonly used functions
-pub use adaptive::{LmsFilter, NlmsFilter, RlsFilter};
+pub use adaptive::{
+    ApaFilter, FdlmsFilter, LmfFilter, LmsFilter, NlmsFilter, RlsFilter, SmLmsFilter, VsLmsFilter,
+};
+pub use advanced_filter::{
+    arbitrary_magnitude_design, constrained_least_squares_design, least_squares_design,
+    minimax_design, parks_mcclellan, ArbitraryResponse, FilterDesignResult, FilterSpec,
+    FilterType, ParksMcClellanConfig,
+};
 pub use bss::{
     calculate_correlation_matrix, calculate_mutual_information, estimate_source_count, ica,
     joint_bss, joint_diagonalization, kernel_ica, multivariate_emd, nmf, pca, sort_components,
@@ -148,11 +159,24 @@ pub use higher_order::{
     biamplitude, bicoherence, bispectrum, cumulative_bispectrum, detect_phase_coupling,
     skewness_spectrum, trispectrum, BispecEstimator, HigherOrderConfig,
 };
+pub use hr_spectral::{
+    esprit, minimum_variance, music, pisarenko, prony, HrSpectralConfig, HrSpectralMethod,
+    HrSpectralResult,
+};
 pub use interpolate::{
     auto_interpolate, cubic_hermite_interpolate, cubic_spline_interpolate,
     gaussian_process_interpolate, interpolate, interpolate_2d, kriging_interpolate,
-    linear_interpolate, minimum_energy_interpolate, nearest_neighbor_interpolate, rbf_functions,
-    rbf_interpolate, sinc_interpolate, spectral_interpolate, variogram_models, InterpolationConfig,
+    linear_interpolate, minimum_energy_interpolate, nearest_neighbor_interpolate,
+    polynomial::{
+        chebyshev_interpolate, chebyshev_nodes, lagrange_interpolate, newton_interpolate,
+        piecewise_polynomial_interpolate,
+    },
+    rbf_functions, rbf_interpolate,
+    resampling::{
+        allpass_fractional_delay, bandlimited_interpolation, fractional_delay, polyphase_resample,
+        sinc_resample, variable_rate_resample, ResamplingConfig,
+    },
+    sinc_interpolate, spectral_interpolate, variogram_models, InterpolationConfig,
     InterpolationMethod,
 };
 pub use kalman::{
@@ -171,11 +195,16 @@ pub use nlm::{
     nlm_block_matching_2d, nlm_color_image, nlm_denoise_1d, nlm_denoise_2d, nlm_multiscale_2d,
     NlmConfig,
 };
+pub use parallel_spectral::{parallel_welch, ParallelSpectralConfig, ParallelSpectralProcessor};
 pub use parametric::{
     ar_spectrum, arma_spectrum, estimate_ar, estimate_arma, select_ar_order, ARMethod,
     OrderSelection,
 };
 pub use peak::{find_peaks, peak_prominences, peak_widths};
+pub use realtime::{
+    CircularBuffer, GainProcessor, LockFreeRingBuffer, MovingAverageProcessor, RealtimeConfig,
+    RealtimeProcessor, RealtimeStats, StreamBlock, StreamProcessor, ZeroLatencyLimiter,
+};
 pub use reassigned::{reassigned_spectrogram, smoothed_reassigned_spectrogram, ReassignedConfig};
 pub use sparse::{
     basis_pursuit, compressed_sensing_recover, cosamp, estimate_rip_constant, fista, iht,
@@ -184,7 +213,10 @@ pub use sparse::{
     SparseRecoveryConfig, SparseRecoveryMethod, SparseTransform,
 };
 pub use spectral::{periodogram, spectrogram, stft as spectral_stft, welch};
-pub use stft::{closest_stft_dual_window, create_cola_window, ShortTimeFft};
+pub use stft::{
+    closest_stft_dual_window, create_cola_window, MemoryEfficientStft, MemoryEfficientStftConfig,
+    ShortTimeFft,
+};
 pub use streaming_stft::{
     RealTimeStft, RealTimeStftStatistics, StreamingStft, StreamingStftConfig,
     StreamingStftStatistics,
@@ -218,6 +250,9 @@ pub use swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct, Swt2dResult};
 pub use wavelets::{
     complex_gaussian, complex_morlet, cwt, cwt_magnitude, cwt_phase, fbsp, morlet, paul, ricker,
     scale_to_frequency, scalogram, shannon,
+    // Dual-Tree Complex Wavelet Transform
+    BoundaryMode, DtcwtConfig, DtcwtFilters, DtcwtProcessor, 
+    Dtcwt1dResult, Dtcwt2dResult, FilterSet,
 };
 pub use wpt::{
     get_level_coefficients, reconstruct_from_nodes, wp_decompose, WaveletPacket, WaveletPacketTree,
@@ -307,8 +342,11 @@ pub use utilities::spectral::{
 
 // Window functions
 pub use window::{
+    analysis::{analyze_window, compare_windows, design_window_with_constraints, WindowAnalysis},
     barthann, bartlett, blackman, blackmanharris, bohman, boxcar, cosine, exponential, flattop,
-    get_window, hamming, hann, lanczos, nuttall, parzen, triang, tukey,
+    get_window, hamming, hann,
+    kaiser::{kaiser, kaiser_bessel_derived},
+    lanczos, nuttall, parzen, triang, tukey,
 };
 
 // B-spline functions

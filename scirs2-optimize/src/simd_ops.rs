@@ -208,6 +208,7 @@ impl SimdVectorOps {
 
     #[cfg(target_arch = "x86_64")]
     fn avx2_dot_product(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>, simd_len: usize) -> f64 {
+        #[allow(unused_assignments)]
         let mut sum = 0.0;
 
         unsafe {
@@ -244,6 +245,7 @@ impl SimdVectorOps {
 
     #[cfg(target_arch = "x86_64")]
     fn sse_dot_product(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>, simd_len: usize) -> f64 {
+        #[allow(unused_assignments)]
         let mut sum = 0.0;
 
         unsafe {

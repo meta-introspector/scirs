@@ -257,18 +257,15 @@ fn display_entropy_features(name: &str, features: &scirs2_series::features::Entr
         "     Lempel-Ziv complexity: {:.4}",
         features.lempel_ziv_complexity
     );
-    println!("     Effective complexity: {:.4}", features.effective_complexity);
+    println!(
+        "     Effective complexity: {:.4}",
+        features.effective_complexity
+    );
 
     // Fractal entropies
     println!("   Fractal & Scaling Entropies:");
-    println!(
-        "     Fractal entropy: {:.4}",
-        features.fractal_entropy
-    );
-    println!(
-        "     DFA entropy: {:.4}",
-        features.dfa_entropy
-    );
+    println!("     Fractal entropy: {:.4}", features.fractal_entropy);
+    println!("     DFA entropy: {:.4}", features.dfa_entropy);
     println!(
         "     Multifractal entropy width: {:.4}",
         features.multifractal_entropy_width
@@ -277,11 +274,13 @@ fn display_entropy_features(name: &str, features: &scirs2_series::features::Entr
     // Cross-scale entropies
     println!("   Cross-scale & Multi-resolution Entropies:");
     if !features.cross_scale_entropy.is_empty() {
-        let avg_cross_scale = features.cross_scale_entropy.iter().sum::<f64>() / features.cross_scale_entropy.len() as f64;
+        let avg_cross_scale = features.cross_scale_entropy.iter().sum::<f64>()
+            / features.cross_scale_entropy.len() as f64;
         println!("     Average cross-scale entropy: {:.4}", avg_cross_scale);
     }
     if !features.hierarchical_entropy.is_empty() {
-        let avg_hierarchical = features.hierarchical_entropy.iter().sum::<f64>() / features.hierarchical_entropy.len() as f64;
+        let avg_hierarchical = features.hierarchical_entropy.iter().sum::<f64>()
+            / features.hierarchical_entropy.len() as f64;
         println!("     Average hierarchical entropy: {:.4}", avg_hierarchical);
     }
     println!(
@@ -398,9 +397,9 @@ fn demonstrate_entropy_configurations(ts: &Array1<f64>) -> Result<(), Box<dyn st
         calculate_complexity_measures: true,
         calculate_fractal_entropy: true,
         calculate_crossscale_entropy: true,
-        permutation_order: 5, // Higher order for more detail
-        n_bins: 20,           // Higher resolution
-        n_scales: 8, // More scales
+        permutation_order: 5,     // Higher order for more detail
+        n_bins: 20,               // Higher resolution
+        n_scales: 8,              // More scales
         tolerance_fraction: 0.15, // Tighter tolerance
         ..Default::default()
     };
@@ -413,13 +412,19 @@ fn demonstrate_entropy_configurations(ts: &Array1<f64>) -> Result<(), Box<dyn st
     );
     println!(
         "     Cross-scale entropy: {:.4}",
-        comprehensive_features.entropy_features.cross_scale_entropy.iter().sum::<f64>() / comprehensive_features.entropy_features.cross_scale_entropy.len() as f64
+        comprehensive_features
+            .entropy_features
+            .cross_scale_entropy
+            .iter()
+            .sum::<f64>()
+            / comprehensive_features
+                .entropy_features
+                .cross_scale_entropy
+                .len() as f64
     );
     println!(
         "     Fractal entropy: {:.4}",
-        comprehensive_features
-            .entropy_features
-            .fractal_entropy
+        comprehensive_features.entropy_features.fractal_entropy
     );
 
     Ok(())

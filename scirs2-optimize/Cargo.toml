@@ -76,3 +76,27 @@ required-features = ["async"]
 name = "multi_objective_optimization"
 path = "examples/multi_objective_optimization.rs"
 
+[[example]]
+name = "jit_optimization"
+path = "examples/jit_optimization.rs"
+
+[[example]]
+name = "interior_point_example"
+path = "examples/interior_point_example.rs"
+
+[[example]]
+name = "memory_efficient_example"
+path = "examples/memory_efficient_example.rs"
+
+[[example]]
+name = "efficient_sparse_example"
+path = "examples/efficient_sparse_example.rs"
+
+[[example]]
+name = "robust_convergence_example"
+path = "examples/robust_convergence_example.rs"
+
+[[example]]
+name = "automatic_differentiation_example"
+path = "examples/automatic_differentiation_example.rs"
+

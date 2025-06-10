@@ -1,7 +1,7 @@
 //! Homography registration algorithms
 
 use crate::error::Result;
-use crate::registration::{RegistrationResult, RegistrationParams};
+use crate::registration::{RegistrationParams, RegistrationResult};
 
 /// Homography registration placeholder
 pub fn register_homography_points(

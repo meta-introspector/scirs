@@ -10,6 +10,7 @@
 //! - Asynchronous data transfer with event-based synchronization
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+#[cfg(feature = "gpu")]
 use crate::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuDataType, GpuError};
 use ndarray::{Array, ArrayBase, Dimension, Ix1, Ix2, IxDyn, RawData, RawDataClone};
 use std::any::TypeId;

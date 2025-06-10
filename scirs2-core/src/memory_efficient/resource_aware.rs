@@ -8,6 +8,12 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
+#[cfg(feature = "memory_compression")]
+use libc;
+
+#[cfg(feature = "memory_compression")]
+use num_cpus;
+
 use super::prefetch::{PrefetchConfig, PrefetchStats};
 use crate::error::{CoreError, CoreResult, ErrorContext};
 
@@ -528,7 +534,7 @@ impl SystemInfo for DefaultSystemInfo {
         #[cfg(not(feature = "sysinfo"))]
         {
             // Without sysinfo, use getloadavg() if on Unix-like
-            #[cfg(target_family = "unix")]
+            #[cfg(all(target_family = "unix", feature = "memory_compression"))]
             {
                 let mut loadavg = [0.0, 0.0, 0.0];
                 if unsafe { libc::getloadavg(loadavg.as_mut_ptr(), 3) } == 3 {

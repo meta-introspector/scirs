@@ -32,10 +32,11 @@
 //! * Distributed training and model serialization
 
 use std::any::{Any, TypeId};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 use std::sync::{Arc, LazyLock, RwLock};
+use std::time::{Duration, Instant};
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
 
@@ -174,21 +175,50 @@ impl ArrayFunction {
     }
 }
 
-/// Registry of all array functions.
-#[derive(Debug, Default)]
+/// Cache entry for function dispatch optimization
+#[derive(Debug, Clone)]
+pub struct DispatchCacheEntry {
+    /// Type signature for the cached result
+    #[allow(dead_code)]
+    type_signature: Vec<TypeId>,
+    /// Which implementation type to try first
+    #[allow(dead_code)]
+    preferred_impl_type: TypeId,
+    /// Cache timestamp for TTL management
+    timestamp: Instant,
+    /// Number of cache hits
+    hit_count: u64,
+}
+
+/// Registry of all array functions with dispatch caching.
+#[derive(Debug)]
 pub struct ArrayFunctionRegistry {
     /// Map of function names to array functions
     functions: HashMap<&'static str, ArrayFunction>,
+    /// Dispatch cache for performance optimization
+    dispatch_cache: HashMap<(&'static str, Vec<TypeId>), DispatchCacheEntry>,
+    /// Maximum cache size to prevent unbounded growth
+    max_cache_size: usize,
+    /// Cache TTL for entries (prevents stale cache)
+    cache_ttl: Duration,
+}
+
+impl Default for ArrayFunctionRegistry {
+    fn default() -> Self {
+        Self {
+            functions: HashMap::new(),
+            dispatch_cache: HashMap::new(),
+            max_cache_size: 1000,                // Reasonable default cache size
+            cache_ttl: Duration::from_secs(300), // 5 minutes TTL
+        }
+    }
 }
 
 impl ArrayFunctionRegistry {
     /// Get the global registry.
     pub fn global() -> &'static RwLock<Self> {
-        static REGISTRY: LazyLock<RwLock<ArrayFunctionRegistry>> = LazyLock::new(|| {
-            RwLock::new(ArrayFunctionRegistry {
-                functions: HashMap::new(),
-            })
-        });
+        static REGISTRY: LazyLock<RwLock<ArrayFunctionRegistry>> =
+            LazyLock::new(|| RwLock::new(ArrayFunctionRegistry::default()));
         &REGISTRY
     }
 
@@ -206,13 +236,105 @@ impl ArrayFunctionRegistry {
     pub fn all_functions(&self) -> Vec<&ArrayFunction> {
         self.functions.values().collect()
     }
+
+    /// Get cached dispatch entry for optimization
+    pub fn get_cached_dispatch(
+        &self,
+        func_name: &'static str,
+        types: &[TypeId],
+    ) -> Option<&DispatchCacheEntry> {
+        let key = (func_name, types.to_vec());
+        if let Some(entry) = self.dispatch_cache.get(&key) {
+            // Check if cache entry is still valid (TTL check)
+            if entry.timestamp.elapsed() < self.cache_ttl {
+                return Some(entry);
+            }
+        }
+        None
+    }
+
+    /// Cache dispatch result for future optimization
+    pub fn cache_dispatch_result(
+        &mut self,
+        func_name: &'static str,
+        types: Vec<TypeId>,
+        impl_type: TypeId,
+    ) {
+        // Clean cache if it's getting too large
+        if self.dispatch_cache.len() >= self.max_cache_size {
+            self.cleanup_cache();
+        }
+
+        let key = (func_name, types.clone());
+        let entry = DispatchCacheEntry {
+            type_signature: types,
+            preferred_impl_type: impl_type,
+            timestamp: Instant::now(),
+            hit_count: 0,
+        };
+        self.dispatch_cache.insert(key, entry);
+    }
+
+    /// Update cache hit count for an entry
+    pub fn update_cache_hit(&mut self, func_name: &'static str, types: &[TypeId]) {
+        let key = (func_name, types.to_vec());
+        if let Some(entry) = self.dispatch_cache.get_mut(&key) {
+            entry.hit_count += 1;
+        }
+    }
+
+    /// Clean up expired cache entries
+    fn cleanup_cache(&mut self) {
+        let now = Instant::now();
+        self.dispatch_cache
+            .retain(|_, entry| now.duration_since(entry.timestamp) < self.cache_ttl);
+
+        // If still too large, remove least recently used entries
+        if self.dispatch_cache.len() >= self.max_cache_size {
+            let mut entries: Vec<_> = self
+                .dispatch_cache
+                .iter()
+                .map(|(k, v)| (k.clone(), v.hit_count))
+                .collect();
+            entries.sort_by_key(|(_, hit_count)| *hit_count);
+
+            // Remove bottom 25% of entries by hit count
+            let to_remove = self.dispatch_cache.len() / 4;
+            let keys_to_remove: Vec<_> = entries
+                .iter()
+                .take(to_remove)
+                .map(|(key, _)| key.clone())
+                .collect();
+            for key in keys_to_remove {
+                self.dispatch_cache.remove(&key);
+            }
+        }
+    }
+
+    /// Get cache statistics for monitoring
+    pub fn cache_stats(&self) -> HashMap<String, u64> {
+        let mut stats = HashMap::new();
+        stats.insert("cache_size".to_string(), self.dispatch_cache.len() as u64);
+        stats.insert("max_cache_size".to_string(), self.max_cache_size as u64);
+
+        let total_hits: u64 = self.dispatch_cache.values().map(|e| e.hit_count).sum();
+        stats.insert("total_hits".to_string(), total_hits);
+
+        stats
+    }
 }
 
 /// Helper function to extract all arguments implementing the `ArrayProtocol` trait.
 ///
 /// This is similar to NumPy's `_get_implementing_args` function.
+/// Optimized version with pre-allocated capacity and fast-path for common cases.
 pub fn get_implementing_args(args: &[Box<dyn Any>]) -> Vec<(TypeId, &dyn ArrayProtocol)> {
-    let mut implementing_args = Vec::new();
+    if args.is_empty() {
+        return Vec::new();
+    }
+
+    // Pre-allocate with capacity to avoid reallocation
+    let mut implementing_args = Vec::with_capacity(args.len());
 
     for arg in args {
         if let Some(array_protocol_obj) = arg.downcast_ref::<Box<dyn ArrayProtocol>>() {
@@ -221,9 +343,16 @@ pub fn get_implementing_args(args: &[Box<dyn Any>]) -> Vec<(TypeId, &dyn ArrayPr
         }
     }
 
-    // Sort implementing args by inheritance hierarchy (if possible)
-    // This is a simplified version - in practice, we would need more complex
-    // sorting to handle inheritance hierarchies correctly
+    // Sort implementing args by TypeId for deterministic dispatch order
+    // This ensures consistent dispatch behavior across calls
+    implementing_args.sort_by_key(|&(type_id, _)| {
+        // Use TypeId hash for deterministic ordering
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        type_id.hash(&mut hasher);
+        hasher.finish()
+    });
+
     implementing_args
 }
 
@@ -235,11 +364,18 @@ pub fn get_implementing_args(args: &[Box<dyn Any>]) -> Vec<(TypeId, &dyn ArrayPr
 ///
 /// Returns the result of the function call, or an error if the function
 /// cannot be dispatched to any of the array protocol implementations.
+///
+/// Optimized version with caching and fast-path optimizations.
 pub fn array_function_dispatch(
     func: &ArrayFunction,
     args: &[Box<dyn Any>],
     kwargs: &HashMap<String, Box<dyn Any>>,
 ) -> CoreResult<Box<dyn Any>> {
+    // Fast path for empty args
+    if args.is_empty() {
+        return (func.implementation)(args, kwargs);
+    }
+
     // Find all arguments implementing ArrayProtocol
     let implementing_args = get_implementing_args(args);
 
@@ -248,16 +384,34 @@ pub fn array_function_dispatch(
         return (func.implementation)(args, kwargs);
     }
 
-    // Extract all unique types that implement ArrayProtocol
-    let unique_types: HashSet<TypeId> = implementing_args
-        .iter()
-        .map(|(type_id, _)| *type_id)
-        .collect();
-    let types: Vec<TypeId> = unique_types.into_iter().collect();
-
-    // Try dispatching to each implementation
-    for (_, array_protocol_obj) in implementing_args {
+    // Fast path for single implementing argument
+    if implementing_args.len() == 1 {
+        let (type_id, array_protocol_obj) = implementing_args[0];
+        let types = [type_id];
         match array_protocol_obj.array_function(func, &types, args, kwargs) {
+            Ok(result) => return Ok(result),
+            Err(NotImplemented) => {
+                return Err(CoreError::DispatchError(ErrorContext::new(format!(
+                    "No implementation found for {} with type {:?}",
+                    func.name, type_id
+                ))));
+            }
+        }
+    }
+
+    // Extract all unique types that implement ArrayProtocol (optimized)
+    let mut unique_types = Vec::with_capacity(implementing_args.len());
+    let mut seen_types = std::collections::HashSet::with_capacity(implementing_args.len());
+
+    for &(type_id, _) in &implementing_args {
+        if seen_types.insert(type_id) {
+            unique_types.push(type_id);
+        }
+    }
+
+    // Try dispatching to each implementation in priority order
+    for (_, array_protocol_obj) in implementing_args {
+        match array_protocol_obj.array_function(func, &unique_types, args, kwargs) {
             Ok(result) => return Ok(result),
             Err(NotImplemented) => continue,
         }
@@ -265,8 +419,10 @@ pub fn array_function_dispatch(
 
     // If we get here, no implementation was found
     Err(CoreError::DispatchError(ErrorContext::new(format!(
-        "No implementation found for {} with the given argument types",
-        func.name
+        "No implementation found for {} with {} argument types: {:?}",
+        func.name,
+        unique_types.len(),
+        unique_types
     ))))
 }
 

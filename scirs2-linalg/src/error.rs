@@ -58,6 +58,10 @@ pub enum LinalgError {
     #[error("Invalid input error: {0}")]
     InvalidInputError(String),
 
+    /// Invalid input error (SciPy-compatible alias)
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
     /// Numerical error (e.g., overflow, underflow, division by zero)
     #[error("Numerical error: {0}")]
     NumericalError(String),

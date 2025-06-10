@@ -10,8 +10,8 @@ keywords = ["neural-network", "deep-learning", "scientific", "ai", "machine-lear
 categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
-# Core dependencies
-scirs2-core = { workspace = true, optional = true, features = ["linalg", "openblas"] }
+# Core dependencies - temporarily use minimal features until core issues are resolved
+scirs2-core = { workspace = true, optional = true, features = ["linalg"] }
 # Temporarily commented out for publishing
 # scirs2-linalg = { workspace = true, optional = true }
 # scirs2-optimize = { workspace = true, optional = true }
@@ -51,9 +51,12 @@ rmp-serde = { workspace = true }
 # numrs_wrapper = { path = "../wrappers/numrs_wrapper", optional = true }
 
 [features]
-default = ["openblas"]
-full = ["core", "openblas"]  # Temporarily limited for publishing
+default = ["core", "openblas"]
+full = ["core", "gpu", "memory_efficient", "openblas"]  # Enhanced feature set
 core = ["dep:scirs2-core"]
+gpu = ["core"]  # GPU acceleration requires core
+memory_efficient = ["core"]  # Memory efficiency requires core
+simd = ["core"]  # SIMD acceleration requires core
 # Features temporarily disabled for publishing
 # linalg = ["dep:scirs2-linalg"] 
 # optimize = ["dep:scirs2-optimize"]

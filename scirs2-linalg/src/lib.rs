@@ -344,6 +344,13 @@ pub mod prelude {
         simd_frobenius_norm_f64, simd_matmul_f32, simd_matmul_f64, simd_matrix_max_f32,
         simd_matrix_max_f64, simd_matrix_min_f32, simd_matrix_min_f64, simd_matvec_f32,
         simd_matvec_f64,
+        // GEMM operations
+        simd_gemm_f32, simd_gemm_f64, simd_gemv_f32, simd_gemv_f64,
+        simd_matmul_optimized_f32, simd_matmul_optimized_f64, GemmBlockSizes,
+        // Transpose operations
+        simd_transpose_f32, simd_transpose_f64,
+        // Vector norm operations
+        simd_vector_norm_f32, simd_vector_norm_f64,
     };
     pub use super::solve::{lstsq, solve, solve_multiple, solve_triangular};
     pub use super::sparse_dense::{
@@ -386,6 +393,47 @@ pub mod prelude {
         pub use super::super::lapack_accelerated::{
             cholesky as fast_cholesky, eig as fast_eig, eigh as fast_eigh, lu as fast_lu,
             qr as fast_qr, svd as fast_svd,
+        };
+    }
+
+    // SciPy-compatible API
+    pub mod scipy_compat {
+        //! SciPy-compatible linear algebra functions
+        //! 
+        //! This module provides functions with the same signatures and behavior
+        //! as SciPy's linalg module, making migration from Python to Rust easier.
+        //! 
+        //! # Examples
+        //! 
+        //! ```
+        //! use ndarray::array;
+        //! use scirs2_linalg::prelude::scipy_compat;
+        //! 
+        //! let a = array![[4.0, 2.0], [2.0, 3.0]];
+        //! 
+        //! // SciPy-style determinant computation
+        //! let det = scipy_compat::det(&a.view(), false, true).unwrap();
+        //! 
+        //! // SciPy-style matrix norm
+        //! let norm = scipy_compat::norm(&a.view(), Some("fro"), None, false, true).unwrap();
+        //! ```
+        
+        pub use super::super::compat::{
+            // Basic matrix operations
+            det, inv, pinv, norm, vector_norm, cond, matrix_rank,
+            // Matrix decompositions
+            lu, qr, svd, cholesky, rq, polar, schur,
+            // Eigenvalue problems
+            eig, eigh, eigvals, eigvalsh,
+            eig_banded, eigvals_banded, eigh_tridiagonal, eigvalsh_tridiagonal,
+            // Linear system solvers
+            compat_solve as solve, lstsq, solve_triangular, solve_banded,
+            // Matrix functions
+            expm, logm, sqrtm, fractional_matrix_power, funm, cosm, sinm, tanm,
+            // Utilities
+            block_diag,
+            // Type aliases
+            SvdResult,
         };
     }
 }

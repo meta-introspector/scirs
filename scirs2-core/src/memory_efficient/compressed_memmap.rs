@@ -9,8 +9,12 @@
 //! partial loading of the data.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
+use ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
+
+#[cfg(feature = "memory_compression")]
 use lz4::{Decoder, EncoderBuilder};
-use ndarray::{Array, ArrayBase, Dimension, IxDyn, OwnedRepr, RawData};
+
+#[cfg(feature = "memory_compression")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};

@@ -21,9 +21,14 @@ pub mod callbacks;
 pub mod data;
 pub mod error;
 pub mod evaluation;
+/// GPU acceleration module (currently CPU fallback)
+pub mod gpu;
 pub mod layers;
 pub mod linalg;
 pub mod losses;
+/// Memory-efficient operations module
+#[cfg(feature = "memory_efficient")]
+pub mod memory_efficient;
 pub mod models;
 pub mod optimizers;
 pub mod prelude;

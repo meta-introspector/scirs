@@ -68,6 +68,8 @@
 #[cfg(feature = "array")]
 pub mod array;
 pub mod array_protocol;
+#[cfg(feature = "types")]
+pub mod batch_conversions;
 #[cfg(feature = "cache")]
 pub mod cache;
 pub mod config;
@@ -166,6 +168,11 @@ pub use crate::memory::metrics::{
     TrackedChunkProcessor2D,
 };
 
+#[cfg(feature = "types")]
+pub use crate::batch_conversions::{
+    utils as batch_utils, BatchConversionConfig, BatchConversionResult, BatchConverter,
+    ElementConversionError,
+};
 #[cfg(all(feature = "memory_metrics", feature = "gpu"))]
 pub use crate::memory::metrics::{setup_gpu_memory_tracking, TrackedGpuBuffer, TrackedGpuContext};
 pub use crate::numeric::*;

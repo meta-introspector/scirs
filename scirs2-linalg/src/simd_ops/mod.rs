@@ -4,6 +4,21 @@
 //! operations for improved performance on modern CPUs. These implementations
 //! leverage core SIMD support through the scirs2-core::simd module.
 
+pub mod transpose;
+pub mod norms;
+pub mod gemm;
+
+// Re-export commonly used SIMD operations
+#[cfg(feature = "simd")]
+pub use gemm::{
+    simd_gemm_f32, simd_gemm_f64, simd_gemv_f32, simd_gemv_f64,
+    simd_matmul_optimized_f32, simd_matmul_optimized_f64, GemmBlockSizes,
+};
+#[cfg(feature = "simd")]
+pub use norms::{simd_frobenius_norm_f32, simd_frobenius_norm_f64, simd_vector_norm_f32, simd_vector_norm_f64};
+#[cfg(feature = "simd")]
+pub use transpose::{simd_transpose_f32, simd_transpose_f64};
+
 #[allow(unused_imports)]
 use crate::error::{LinalgError, LinalgResult};
 #[allow(unused_imports)]
@@ -859,102 +874,6 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> LinalgResult<f6
     Ok(sum)
 }
 
-/// Compute Frobenius norm of matrix using SIMD acceleration (squared sum of all elements)
-///
-/// # Arguments
-///
-/// * `a` - Input matrix
-///
-/// # Returns
-///
-/// * Frobenius norm
-#[cfg(feature = "simd")]
-pub fn simd_frobenius_norm_f32(a: &ArrayView2<f32>) -> f32 {
-    let n = a.len();
-    let a_flat = a.as_slice().unwrap();
-
-    // Process 8 elements at a time with SIMD
-    let mut i = 0;
-    let chunk_size = 8;
-    let mut sum_vec = f32x8::splat(0.0);
-
-    while i + chunk_size <= n {
-        // Load chunks
-        let a_chunk = [
-            a_flat[i],
-            a_flat[i + 1],
-            a_flat[i + 2],
-            a_flat[i + 3],
-            a_flat[i + 4],
-            a_flat[i + 5],
-            a_flat[i + 6],
-            a_flat[i + 7],
-        ];
-
-        // Convert to SIMD vector
-        let a_vec = f32x8::new(a_chunk);
-
-        // Square and accumulate
-        sum_vec += a_vec * a_vec;
-
-        i += chunk_size;
-    }
-
-    // Extract and sum the SIMD vector components
-    let sum_arr: [f32; 8] = sum_vec.into();
-    let mut sum_sq = sum_arr.iter().sum::<f32>();
-
-    // Process remaining elements
-    for &val in a_flat.iter().skip(i).take(n - i) {
-        sum_sq += val * val;
-    }
-
-    sum_sq.sqrt()
-}
-
-/// Compute Frobenius norm of matrix using SIMD acceleration (squared sum of all elements)
-///
-/// # Arguments
-///
-/// * `a` - Input matrix
-///
-/// # Returns
-///
-/// * Frobenius norm
-#[cfg(feature = "simd")]
-pub fn simd_frobenius_norm_f64(a: &ArrayView2<f64>) -> f64 {
-    let n = a.len();
-    let a_flat = a.as_slice().unwrap();
-
-    // Process 4 elements at a time with SIMD
-    let mut i = 0;
-    let chunk_size = 4;
-    let mut sum_vec = f64x4::splat(0.0);
-
-    while i + chunk_size <= n {
-        // Load chunks
-        let a_chunk = [a_flat[i], a_flat[i + 1], a_flat[i + 2], a_flat[i + 3]];
-
-        // Convert to SIMD vector
-        let a_vec = f64x4::new(a_chunk);
-
-        // Square and accumulate
-        sum_vec += a_vec * a_vec;
-
-        i += chunk_size;
-    }
-
-    // Extract and sum the SIMD vector components
-    let sum_arr: [f64; 4] = sum_vec.into();
-    let mut sum_sq = sum_arr.iter().sum::<f64>();
-
-    // Process remaining elements
-    for &val in a_flat.iter().skip(i).take(n - i) {
-        sum_sq += val * val;
-    }
-
-    sum_sq.sqrt()
-}
 
 /// SIMD accelerated element-wise addition of two f32 matrices
 ///

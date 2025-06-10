@@ -11,6 +11,7 @@
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use crate::memory_efficient::chunked::{ChunkedArray, ChunkingStrategy};
 use crate::memory_efficient::prefetch::{AccessPattern, PrefetchConfig};
+#[cfg(feature = "parallel")]
 use crate::parallel;
 use ndarray::{Array, ArrayBase, Dimension, Ix1, Ix2, IxDyn, RawData};
 use std::collections::{BTreeMap, VecDeque};
@@ -1369,6 +1370,10 @@ impl<I: Clone + Send + 'static, O: Clone + Send + 'static> AnyStage for StageWra
         self.stage.stats()
     }
 
+    fn clone_box_impl(&self) -> Box<dyn AnyStage> {
+        Box::new(self.clone())
+    }
+
     fn is_empty(&self) -> bool {
         self.stage.processor.lock().unwrap().is_empty()
     }
@@ -1422,12 +1427,6 @@ impl<I: Clone + Send + 'static, O: Clone + Send + 'static> Clone for StageWrappe
         };
 
         Self { stage }
-    }
-}
-
-impl<T: Clone + AnyStage> AnyStage for T {
-    fn clone_box_impl(&self) -> Box<dyn AnyStage> {
-        Box::new(self.clone())
     }
 }
 

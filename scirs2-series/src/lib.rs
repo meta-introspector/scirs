@@ -51,6 +51,11 @@
 //!   - Stationarity tests (ADF, KPSS)
 //!   - Normalization and scaling (Z-score, Min-Max, Robust)
 //!   - Detrending and stationarity transformations
+//! - Dimensionality reduction for time series
+//!   - Principal Component Analysis (PCA) for time series
+//!   - Functional PCA for functional time series data
+//!   - Dynamic Time Warping barycenter averaging
+//!   - Symbolic approximation methods (SAX, APCA, PLA)
 //! - Forecasting methods (ARIMA, exponential smoothing)
 //!   - Automatic model selection
 //!   - Seasonal and non-seasonal models
@@ -71,6 +76,7 @@ pub mod decomposition; // Directory-based modular structure
 pub mod decomposition_compat; // For backward compatibility
 pub mod detection;
 pub mod diagnostics;
+pub mod dimensionality_reduction;
 pub mod error;
 pub mod feature_selection;
 pub mod features;

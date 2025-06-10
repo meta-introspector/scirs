@@ -7,6 +7,7 @@
 use crate::csr::CsrMatrix;
 use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
+#[cfg(test)]
 use crate::sparray::SparseArray;
 use num_traits::Float;
 use std::fmt::Debug;

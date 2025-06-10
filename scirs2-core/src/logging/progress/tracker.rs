@@ -88,7 +88,12 @@ impl Default for ProgressSymbols {
             end: "]".to_string(),
             fill: "=".to_string(),
             empty: " ".to_string(),
-            spinner: vec!["-".to_string(), "\\".to_string(), "|".to_string(), "/".to_string()],
+            spinner: vec![
+                "-".to_string(),
+                "\\".to_string(),
+                "|".to_string(),
+                "/".to_string(),
+            ],
         }
     }
 }
@@ -101,9 +106,18 @@ impl ProgressSymbols {
             end: "│".to_string(),
             fill: "█".to_string(),
             empty: " ".to_string(),
-            spinner: vec!["⠋".to_string(), "⠙".to_string(), "⠹".to_string(), "⠸".to_string(), 
-                          "⠼".to_string(), "⠴".to_string(), "⠦".to_string(), "⠧".to_string(), 
-                          "⠇".to_string(), "⠏".to_string()],
+            spinner: vec![
+                "⠋".to_string(),
+                "⠙".to_string(),
+                "⠹".to_string(),
+                "⠸".to_string(),
+                "⠼".to_string(),
+                "⠴".to_string(),
+                "⠦".to_string(),
+                "⠧".to_string(),
+                "⠇".to_string(),
+                "⠏".to_string(),
+            ],
         }
     }
 }
@@ -132,7 +146,7 @@ impl EnhancedProgressTracker {
         let config = ProgressConfig::default();
         let stats = Arc::new(Mutex::new(ProgressStats::new(total)));
         let renderer = ProgressRenderer::new();
-        
+
         Self {
             description: description.to_string(),
             config,
@@ -143,97 +157,97 @@ impl EnhancedProgressTracker {
             renderer,
         }
     }
-    
+
     /// Configure the progress tracker
     pub fn with_config(mut self, config: ProgressConfig) -> Self {
         self.config = config;
         self
     }
-    
+
     /// Use a specific progress style
     pub fn with_style(mut self, style: ProgressStyle) -> Self {
         self.config.style = style;
         self
     }
-    
+
     /// Set custom symbols
     pub fn with_symbols(mut self, symbols: ProgressSymbols) -> Self {
         self.config.symbols = Some(symbols);
         self
     }
-    
+
     /// Show or hide ETA
     pub fn with_eta(mut self, show: bool) -> Self {
         self.config.show_eta = show;
         self
     }
-    
+
     /// Show or hide statistics
     pub fn with_statistics(mut self, show: bool) -> Self {
         self.config.show_statistics = show;
         self
     }
-    
+
     /// Start tracking progress
     pub fn start(&mut self) {
         self.active = true;
         self.start_time = Instant::now();
-        
+
         // Initialize terminal if needed
         if !self.hidden {
             self.renderer.init();
             self.render();
         }
     }
-    
+
     /// Update progress with current count
     pub fn update(&mut self, processed: u64) {
         if !self.active {
             return;
         }
-        
+
         let now = Instant::now();
-        
+
         // Update statistics
         {
             let mut stats = self.stats.lock().unwrap();
             stats.update(processed, now);
         }
-        
+
         // Determine if we should render an update
         let should_render = if self.config.adaptive_rate {
             self.should_update_adaptive()
         } else {
             self.should_update_fixed()
         };
-        
+
         if should_render && !self.hidden {
             self.render();
         }
     }
-    
+
     /// Increment progress by a specified amount
     pub fn increment(&mut self, amount: u64) {
         if !self.active {
             return;
         }
-        
+
         let processed = {
             let stats = self.stats.lock().unwrap();
             stats.processed + amount
         };
-        
+
         self.update(processed);
     }
-    
+
     /// Finish progress tracking
     pub fn finish(&mut self) {
         if !self.active {
             return;
         }
-        
+
         self.active = false;
-        
+
         // Set processed to total
         {
             let mut stats = self.stats.lock().unwrap();
@@ -243,50 +257,50 @@ impl EnhancedProgressTracker {
             stats.eta = Duration::from_secs(0);
             stats.update(total, Instant::now());
         }
-        
+
         // Final render
         if !self.hidden {
             self.render();
             self.renderer.finalize();
         }
     }
-    
+
     /// Hide the progress bar (useful for non-interactive environments)
     pub fn hide(&mut self) {
         self.hidden = true;
     }
-    
+
     /// Show the progress bar
     pub fn show(&mut self) {
         self.hidden = false;
-        
+
         if self.active {
             self.render();
         }
     }
-    
+
     /// Get the current progress statistics
     pub fn stats(&self) -> ProgressStats {
         self.stats.lock().unwrap().clone()
     }
-    
+
     /// Determine if we should update based on fixed interval
     fn should_update_fixed(&self) -> bool {
         let stats = self.stats.lock().unwrap();
         let elapsed = stats.last_update.elapsed();
         elapsed >= self.config.min_update_interval
     }
-    
+
     /// Determine if we should update based on adaptive interval
     fn should_update_adaptive(&self) -> bool {
         let stats = self.stats.lock().unwrap();
         let elapsed = stats.last_update.elapsed();
-        
+
         // Always update if we've exceeded the maximum interval
         if elapsed >= self.config.max_update_interval {
             return true;
         }
-        
+
         // Always update if we've exceeded the minimum interval and progress has changed significantly
         if elapsed >= self.config.min_update_interval {
             // Calculate how much progress has been made
@@ -295,71 +309,73 @@ impl EnhancedProgressTracker {
             } else {
                 0.0
             };
-            
+
             // Adaptive update logic:
             // - Update more frequently at the beginning and end
             // - Update less frequently in the middle
             let position_factor = 4.0 * progress_ratio * (1.0 - progress_ratio);
-            let threshold = self.config.min_update_interval.as_secs_f64() 
-                + position_factor * (self.config.max_update_interval.as_secs_f64() - self.config.min_update_interval.as_secs_f64());
-            
+            let threshold = self.config.min_update_interval.as_secs_f64()
+                + position_factor
+                    * (self.config.max_update_interval.as_secs_f64()
+                        - self.config.min_update_interval.as_secs_f64());
+
             elapsed.as_secs_f64() >= threshold
         } else {
             false
         }
     }
-    
+
     /// Render the progress bar
     fn render(&mut self) {
         if self.hidden {
             return;
         }
-        
+
         let stats = self.stats.lock().unwrap();
         let symbols = self.config.symbols.clone().unwrap_or_default();
-        
+
         match self.config.style {
             ProgressStyle::Percentage => {
                 self.renderer.render_percentage(&self.description, &stats);
-            },
+            }
             ProgressStyle::Bar => {
                 self.renderer.render_bar(
-                    &self.description, 
-                    &stats, 
+                    &self.description,
+                    &stats,
                     self.config.width,
                     self.config.show_eta,
                     &symbols,
                 );
-            },
+            }
             ProgressStyle::BlockBar => {
                 let block_symbols = ProgressSymbols::blocks();
                 self.renderer.render_bar(
-                    &self.description, 
-                    &stats, 
+                    &self.description,
+                    &stats,
                     self.config.width,
                     self.config.show_eta,
                     &block_symbols,
                 );
-            },
+            }
             ProgressStyle::Spinner => {
                 self.renderer.render_spinner(
-                    &self.description, 
-                    &stats, 
+                    &self.description,
+                    &stats,
                     &symbols,
                     self.config.show_eta,
                 );
-            },
+            }
             ProgressStyle::DetailedBar => {
                 self.renderer.render_detailed_bar(
-                    &self.description, 
-                    &stats, 
+                    &self.description,
+                    &stats,
                     self.config.width,
                     self.config.show_eta,
                     self.config.show_statistics,
                     self.config.show_speed,
                     &symbols,
                 );
-            },
+            }
         }
     }
 }
@@ -400,73 +416,73 @@ impl ProgressBuilder {
             hidden: false,
         }
     }
-    
+
     /// Set the progress style
     pub fn style(mut self, style: ProgressStyle) -> Self {
         self.style = style;
         self
     }
-    
+
     /// Set the progress bar width
     pub fn width(mut self, width: usize) -> Self {
         self.width = width;
         self
     }
-    
+
     /// Show or hide ETA
     pub fn show_eta(mut self, show: bool) -> Self {
         self.show_eta = show;
         self
     }
-    
+
     /// Show or hide statistics
     pub fn show_statistics(mut self, show: bool) -> Self {
         self.show_statistics = show;
         self
     }
-    
+
     /// Show or hide speed
     pub fn show_speed(mut self, show: bool) -> Self {
         self.show_speed = show;
         self
     }
-    
+
     /// Enable or disable adaptive update rate
     pub fn adaptive_rate(mut self, enable: bool) -> Self {
         self.adaptive_rate = enable;
         self
     }
-    
+
     /// Set the minimum update interval
     pub fn min_update_interval(mut self, interval: Duration) -> Self {
         self.min_update_interval = interval;
         self
     }
-    
+
     /// Set the maximum update interval
     pub fn max_update_interval(mut self, interval: Duration) -> Self {
         self.max_update_interval = interval;
         self
     }
-    
+
     /// Set a custom template
     pub fn template(mut self, template: &str) -> Self {
         self.template = Some(template.to_string());
         self
     }
-    
+
     /// Set custom symbols
     pub fn symbols(mut self, symbols: ProgressSymbols) -> Self {
         self.symbols = Some(symbols);
         self
     }
-    
+
     /// Hide the progress bar
     pub fn hidden(mut self, hidden: bool) -> Self {
         self.hidden = hidden;
         self
     }
-    
+
     /// Build the progress tracker
     pub fn build(self) -> EnhancedProgressTracker {
         let config = ProgressConfig {
@@ -481,14 +497,14 @@ impl ProgressBuilder {
             template: self.template,
             symbols: self.symbols,
         };
-        
-        let mut tracker = EnhancedProgressTracker::new(&self.description, self.total)
-            .with_config(config);
-            
+
+        let mut tracker =
+            EnhancedProgressTracker::new(&self.description, self.total).with_config(config);
+
         if self.hidden {
             tracker.hide();
         }
-        
+
         tracker
     }
 }

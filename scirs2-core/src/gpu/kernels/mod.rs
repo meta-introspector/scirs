@@ -234,6 +234,8 @@ impl KernelRegistry {
 
         // Register transform kernels
         registry.register(Box::new(transform::fft::FftKernel::new()));
+        registry.register(Box::new(transform::convolution::Conv1dKernel::new()));
+        registry.register(Box::new(transform::convolution::Conv2dKernel::new()));
 
         // Register reduction kernels
         registry.register(Box::new(reduction::sum::SumKernel::new()));

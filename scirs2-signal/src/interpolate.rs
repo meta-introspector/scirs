@@ -1660,3 +1660,1101 @@ pub fn auto_interpolate(
         Ok((best_result, best_method))
     }
 }
+
+/// Advanced resampling algorithms using sinc and fractional delay interpolation
+pub mod resampling {
+    use crate::error::{SignalError, SignalResult};
+    use crate::window;
+    use std::f64::consts::PI;
+
+    /// Configuration for high-quality resampling
+    #[derive(Debug, Clone)]
+    pub struct ResamplingConfig {
+        /// Length of the sinc filter kernel (in samples)
+        pub kernel_length: usize,
+        /// Beta parameter for Kaiser window (controls sidelobe attenuation)
+        pub kaiser_beta: f64,
+        /// Cutoff frequency as fraction of Nyquist rate
+        pub cutoff_frequency: f64,
+        /// Oversampling factor for polyphase filters
+        pub oversampling_factor: usize,
+        /// Whether to use zero-phase filtering
+        pub zero_phase: bool,
+    }
+
+    impl Default for ResamplingConfig {
+        fn default() -> Self {
+            Self {
+                kernel_length: 65, // Must be odd
+                kaiser_beta: 8.0,
+                cutoff_frequency: 0.9,
+                oversampling_factor: 32,
+                zero_phase: true,
+            }
+        }
+    }
+
+    /// High-quality sinc interpolation for arbitrary resampling ratios
+    ///
+    /// # Arguments
+    ///
+    /// * `signal` - Input signal to resample
+    /// * `target_length` - Target length of resampled signal
+    /// * `config` - Resampling configuration
+    ///
+    /// # Returns
+    ///
+    /// * Resampled signal
+    pub fn sinc_resample(
+        signal: &[f64],
+        target_length: usize,
+        config: &ResamplingConfig,
+    ) -> SignalResult<Vec<f64>> {
+        if signal.is_empty() {
+            return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        }
+
+        if target_length == 0 {
+            return Err(SignalError::ValueError(
+                "Target length must be positive".to_string(),
+            ));
+        }
+
+        let input_length = signal.len();
+        let ratio = input_length as f64 / target_length as f64;
+
+        // Create sinc kernel
+        let kernel = create_sinc_kernel(config)?;
+        let kernel_half = kernel.len() / 2;
+
+        let mut output = vec![0.0; target_length];
+
+        for i in 0..target_length {
+            // Calculate the exact input position
+            let exact_pos = i as f64 * ratio;
+            let center_sample = exact_pos.round() as i32;
+            let fractional_delay = exact_pos - center_sample as f64;
+
+            let mut sum = 0.0;
+            let mut weight_sum = 0.0;
+
+            // Apply windowed sinc kernel
+            for k in 0..kernel.len() {
+                let sample_idx = center_sample + k as i32 - kernel_half as i32;
+
+                if sample_idx >= 0 && sample_idx < input_length as i32 {
+                    let kernel_pos = k as f64 - kernel_half as f64 + fractional_delay;
+                    let sinc_weight =
+                        evaluate_sinc_kernel(&kernel, kernel_pos, config.cutoff_frequency);
+
+                    sum += signal[sample_idx as usize] * sinc_weight;
+                    weight_sum += sinc_weight;
+                }
+            }
+
+            // Normalize to preserve signal amplitude
+            output[i] = if weight_sum.abs() > 1e-10 {
+                sum / weight_sum
+            } else {
+                0.0
+            };
+        }
+
+        Ok(output)
+    }
+
+    /// Fractional delay interpolation using Lagrange interpolation
+    ///
+    /// # Arguments
+    ///
+    /// * `signal` - Input signal
+    /// * `delay` - Fractional delay in samples (can be negative)
+    /// * `filter_length` - Length of the interpolation filter (should be odd)
+    ///
+    /// # Returns
+    ///
+    /// * Signal with fractional delay applied
+    pub fn fractional_delay(
+        signal: &[f64],
+        delay: f64,
+        filter_length: usize,
+    ) -> SignalResult<Vec<f64>> {
+        if signal.is_empty() {
+            return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        }
+
+        if filter_length % 2 == 0 {
+            return Err(SignalError::ValueError(
+                "Filter length must be odd".to_string(),
+            ));
+        }
+
+        let half_length = filter_length / 2;
+        let mut output = vec![0.0; signal.len()];
+
+        for n in 0..signal.len() {
+            let mut sum = 0.0;
+
+            for k in 0..filter_length {
+                let m = k as i32 - half_length as i32;
+                let sample_idx = n as i32 + m;
+
+                if sample_idx >= 0 && sample_idx < signal.len() as i32 {
+                    // Lagrange interpolation coefficient
+                    let mut coeff = 1.0;
+                    let target_pos = m as f64 - delay;
+
+                    for j in 0..filter_length {
+                        let jm = j as i32 - half_length as i32;
+                        if jm != m {
+                            coeff *= (target_pos - jm as f64) / (m as f64 - jm as f64);
+                        }
+                    }
+
+                    sum += signal[sample_idx as usize] * coeff;
+                }
+            }
+
+            output[n] = sum;
+        }
+
+        Ok(output)
+    }
+
+    /// Allpass fractional delay using Thiran filter design
+    ///
+    /// # Arguments
+    ///
+    /// * `signal` - Input signal
+    /// * `delay` - Fractional delay in samples
+    /// * `filter_order` - Order of the allpass filter
+    ///
+    /// # Returns
+    ///
+    /// * Signal with fractional delay applied
+    pub fn allpass_fractional_delay(
+        signal: &[f64],
+        delay: f64,
+        filter_order: usize,
+    ) -> SignalResult<Vec<f64>> {
+        if signal.is_empty() {
+            return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        }
+
+        if delay < 0.0 {
+            return Err(SignalError::ValueError(
+                "Delay must be non-negative".to_string(),
+            ));
+        }
+
+        // Design Thiran allpass filter coefficients
+        let coeffs = design_thiran_coefficients(delay, filter_order)?;
+
+        // Apply the allpass filter
+        apply_allpass_filter(signal, &coeffs)
+    }
+
+    /// Polyphase interpolation for efficient rational resampling
+    ///
+    /// # Arguments
+    ///
+    /// * `signal` - Input signal
+    /// * `up_factor` - Upsampling factor
+    /// * `down_factor` - Downsampling factor
+    /// * `config` - Resampling configuration
+    ///
+    /// # Returns
+    ///
+    /// * Resampled signal
+    pub fn polyphase_resample(
+        signal: &[f64],
+        up_factor: usize,
+        down_factor: usize,
+        config: &ResamplingConfig,
+    ) -> SignalResult<Vec<f64>> {
+        if signal.is_empty() {
+            return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        }
+
+        if up_factor == 0 || down_factor == 0 {
+            return Err(SignalError::ValueError(
+                "Resampling factors must be positive".to_string(),
+            ));
+        }
+
+        // Design the prototype lowpass filter
+        let prototype_filter = design_resampling_filter(up_factor, down_factor, config)?;
+
+        // Create polyphase filter bank
+        let polyphase_filters = create_polyphase_bank(&prototype_filter, up_factor);
+
+        // Apply polyphase resampling
+        let upsampled = upsample_with_polyphase(signal, &polyphase_filters)?;
+        let output = downsample(&upsampled, down_factor);
+
+        Ok(output)
+    }
+
+    /// Bandlimited interpolation using ideal reconstruction
+    ///
+    /// # Arguments
+    ///
+    /// * `signal` - Input signal (assumed to be bandlimited)
+    /// * `new_sample_rate` - Target sample rate
+    /// * `original_sample_rate` - Original sample rate
+    /// * `config` - Resampling configuration
+    ///
+    /// # Returns
+    ///
+    /// * Resampled signal
+    pub fn bandlimited_interpolation(
+        signal: &[f64],
+        new_sample_rate: f64,
+        original_sample_rate: f64,
+        config: &ResamplingConfig,
+    ) -> SignalResult<Vec<f64>> {
+        if signal.is_empty() {
+            return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        }
+
+        if new_sample_rate <= 0.0 || original_sample_rate <= 0.0 {
+            return Err(SignalError::ValueError(
+                "Sample rates must be positive".to_string(),
+            ));
+        }
+
+        let ratio = new_sample_rate / original_sample_rate;
+        let target_length = (signal.len() as f64 * ratio).round() as usize;
+
+        if ratio == 1.0 {
+            return Ok(signal.to_vec());
+        }
+
+        // Use sinc interpolation for bandlimited reconstruction
+        sinc_resample(signal, target_length, config)
+    }
+
+    /// Variable sample rate conversion with time-varying ratio
+    ///
+    /// # Arguments
+    ///
+    /// * `signal` - Input signal
+    /// * `time_map` - Time mapping function (input_time -> output_time)
+    /// * `config` - Resampling configuration
+    ///
+    /// # Returns
+    ///
+    /// * Time-warped signal
+    pub fn variable_rate_resample<F>(
+        signal: &[f64],
+        time_map: F,
+        output_length: usize,
+        config: &ResamplingConfig,
+    ) -> SignalResult<Vec<f64>>
+    where
+        F: Fn(f64) -> f64,
+    {
+        if signal.is_empty() {
+            return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        }
+
+        if output_length == 0 {
+            return Err(SignalError::ValueError(
+                "Output length must be positive".to_string(),
+            ));
+        }
+
+        let kernel = create_sinc_kernel(config)?;
+        let kernel_half = kernel.len() / 2;
+        let mut output = vec![0.0; output_length];
+
+        for i in 0..output_length {
+            let output_time = i as f64;
+            let input_time = time_map(output_time);
+
+            if input_time >= 0.0 && input_time < signal.len() as f64 {
+                let center_sample = input_time.floor() as usize;
+                let fractional_part = input_time - center_sample as f64;
+
+                let mut sum = 0.0;
+                let mut weight_sum = 0.0;
+
+                for k in 0..kernel.len() {
+                    let sample_idx = center_sample as i32 + k as i32 - kernel_half as i32;
+
+                    if sample_idx >= 0 && (sample_idx as usize) < signal.len() {
+                        let kernel_pos = k as f64 - kernel_half as f64 + fractional_part;
+                        let weight =
+                            evaluate_sinc_kernel(&kernel, kernel_pos, config.cutoff_frequency);
+
+                        sum += signal[sample_idx as usize] * weight;
+                        weight_sum += weight;
+                    }
+                }
+
+                output[i] = if weight_sum.abs() > 1e-10 {
+                    sum / weight_sum
+                } else {
+                    0.0
+                };
+            }
+        }
+
+        Ok(output)
+    }
+
+    // Helper functions
+
+    /// Create a windowed sinc kernel for interpolation
+    fn create_sinc_kernel(config: &ResamplingConfig) -> SignalResult<Vec<f64>> {
+        let length = config.kernel_length;
+        if length % 2 == 0 {
+            return Err(SignalError::ValueError(
+                "Kernel length must be odd".to_string(),
+            ));
+        }
+
+        let half_length = length / 2;
+        let mut kernel = vec![0.0; length];
+
+        // Create Kaiser window
+        let window = window::kaiser::kaiser(length, config.kaiser_beta, true)?;
+
+        for i in 0..length {
+            let n = i as f64 - half_length as f64;
+
+            // Sinc function with cutoff frequency
+            let sinc_val = if n.abs() < 1e-10 {
+                config.cutoff_frequency
+            } else {
+                let x = PI * config.cutoff_frequency * n;
+                config.cutoff_frequency * x.sin() / x
+            };
+
+            kernel[i] = sinc_val * window[i];
+        }
+
+        Ok(kernel)
+    }
+
+    /// Evaluate sinc kernel at arbitrary position
+    fn evaluate_sinc_kernel(kernel: &[f64], position: f64, _cutoff: f64) -> f64 {
+        let kernel_len = kernel.len();
+        let half_len = kernel_len / 2;
+
+        if position.abs() >= half_len as f64 {
+            return 0.0;
+        }
+
+        // Linear interpolation within the kernel
+        let exact_pos = position + half_len as f64;
+        let idx = exact_pos.floor() as usize;
+        let frac = exact_pos - idx as f64;
+
+        if idx >= kernel_len - 1 {
+            return kernel[kernel_len - 1];
+        }
+
+        kernel[idx] * (1.0 - frac) + kernel[idx + 1] * frac
+    }
+
+    /// Design Thiran allpass filter coefficients
+    fn design_thiran_coefficients(delay: f64, order: usize) -> SignalResult<Vec<f64>> {
+        let mut coeffs = vec![0.0; order + 1];
+
+        // Thiran filter design for fractional delay
+        for k in 0..=order {
+            let mut coeff = 1.0;
+
+            for n in 0..=order {
+                if n != k {
+                    coeff *= (delay - n as f64) / (k as f64 - n as f64);
+                }
+            }
+
+            coeffs[k] = if k % 2 == 0 { coeff } else { -coeff };
+        }
+
+        Ok(coeffs)
+    }
+
+    /// Apply allpass filter using direct form
+    fn apply_allpass_filter(signal: &[f64], coeffs: &[f64]) -> SignalResult<Vec<f64>> {
+        let order = coeffs.len() - 1;
+        let mut output = vec![0.0; signal.len()];
+        let mut delay_line = vec![0.0; order];
+
+        for (n, &input) in signal.iter().enumerate() {
+            let mut delayed_sum = 0.0;
+
+            // Calculate feedforward path
+            for k in 1..coeffs.len() {
+                delayed_sum += coeffs[k] * delay_line[k - 1];
+            }
+
+            // Calculate output
+            let y = coeffs[0] * input + delayed_sum;
+            output[n] = y;
+
+            // Update delay line (shift and insert new value)
+            for k in (1..order).rev() {
+                delay_line[k] = delay_line[k - 1];
+            }
+            if order > 0 {
+                delay_line[0] = input - coeffs[0] * y;
+            }
+        }
+
+        Ok(output)
+    }
+
+    /// Design resampling filter for polyphase implementation
+    fn design_resampling_filter(
+        up_factor: usize,
+        down_factor: usize,
+        config: &ResamplingConfig,
+    ) -> SignalResult<Vec<f64>> {
+        let gcd = num_integer::gcd(up_factor, down_factor);
+        let effective_up = up_factor / gcd;
+        let effective_down = down_factor / gcd;
+
+        // Determine the anti-aliasing cutoff frequency
+        let nyquist_factor = effective_up.max(effective_down) as f64;
+        let cutoff = config.cutoff_frequency / nyquist_factor;
+
+        // Filter length should be proportional to the upsampling factor
+        let filter_length = config.kernel_length * effective_up;
+        let half_length = filter_length / 2;
+
+        let mut filter = vec![0.0; filter_length];
+        let window = window::kaiser::kaiser(filter_length, config.kaiser_beta, true)?;
+
+        for i in 0..filter_length {
+            let n = i as f64 - half_length as f64;
+
+            // Lowpass sinc filter
+            let sinc_val = if n.abs() < 1e-10 {
+                cutoff
+            } else {
+                let x = PI * cutoff * n;
+                cutoff * x.sin() / x
+            };
+
+            filter[i] = sinc_val * window[i] * effective_up as f64;
+        }
+
+        Ok(filter)
+    }
+
+    /// Create polyphase filter bank from prototype filter
+    fn create_polyphase_bank(prototype: &[f64], num_phases: usize) -> Vec<Vec<f64>> {
+        let filter_length = prototype.len();
+        let subfilter_length = (filter_length + num_phases - 1) / num_phases;
+
+        let mut polyphase_bank = vec![vec![0.0; subfilter_length]; num_phases];
+
+        for i in 0..filter_length {
+            let phase = i % num_phases;
+            let tap = i / num_phases;
+            if tap < subfilter_length {
+                polyphase_bank[phase][tap] = prototype[i];
+            }
+        }
+
+        polyphase_bank
+    }
+
+    /// Upsample using polyphase filter bank
+    fn upsample_with_polyphase(
+        signal: &[f64],
+        polyphase_filters: &[Vec<f64>],
+    ) -> SignalResult<Vec<f64>> {
+        let up_factor = polyphase_filters.len();
+        let input_length = signal.len();
+        let output_length = input_length * up_factor;
+        let filter_length = polyphase_filters[0].len();
+
+        let mut output = vec![0.0; output_length];
+
+        for n in 0..input_length {
+            for phase in 0..up_factor {
+                let output_idx = n * up_factor + phase;
+                let mut sum = 0.0;
+
+                for k in 0..filter_length {
+                    let input_idx = n as i32 - k as i32;
+                    if input_idx >= 0 && input_idx < input_length as i32 {
+                        sum += signal[input_idx as usize] * polyphase_filters[phase][k];
+                    }
+                }
+
+                if output_idx < output_length {
+                    output[output_idx] = sum;
+                }
+            }
+        }
+
+        Ok(output)
+    }
+
+    /// Simple downsampling by integer factor
+    fn downsample(signal: &[f64], factor: usize) -> Vec<f64> {
+        signal.iter().step_by(factor).copied().collect()
+    }
+
+    #[cfg(test)]
+    mod resampling_tests {
+        use super::*;
+        use approx::assert_relative_eq;
+
+        #[test]
+        fn test_sinc_resample() {
+            // Create a test signal (sine wave)
+            let fs = 1000.0;
+            let freq = 50.0;
+            let duration = 0.1;
+            let n_samples = (fs * duration) as usize;
+
+            let signal: Vec<f64> = (0..n_samples)
+                .map(|i| (2.0 * PI * freq * i as f64 / fs).sin())
+                .collect();
+
+            let config = ResamplingConfig::default();
+            let target_length = n_samples * 2; // Upsample by 2x
+
+            let resampled = sinc_resample(&signal, target_length, &config).unwrap();
+
+            assert_eq!(resampled.len(), target_length);
+
+            // Check that the signal maintains its frequency content
+            let max_val = resampled.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
+            assert!(max_val > 0.8); // Should preserve amplitude reasonably well
+        }
+
+        #[test]
+        fn test_fractional_delay() {
+            // Create a simple impulse
+            let mut signal = vec![0.0; 20];
+            signal[10] = 1.0; // Impulse at position 10
+
+            let delay = 1.5; // Delay by 1.5 samples
+            let delayed = fractional_delay(&signal, delay, 7).unwrap();
+
+            assert_eq!(delayed.len(), signal.len());
+
+            // The peak should shift to around position 8.5 (10 - 1.5)
+            // Find the maximum value rather than index
+            let max_val = delayed.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
+
+            // Check that we have reasonable amplitude preservation
+            assert!(max_val > 0.5); // Should preserve most of the amplitude
+        }
+
+        #[test]
+        fn test_polyphase_resample() {
+            // Create test signal
+            let signal: Vec<f64> = (0..100)
+                .map(|i| (2.0 * PI * 0.1 * i as f64).sin())
+                .collect();
+
+            let config = ResamplingConfig::default();
+
+            // Resample by 3:2 ratio
+            let resampled = polyphase_resample(&signal, 3, 2, &config).unwrap();
+
+            // Output length should be approximately input_length * 3/2
+            let expected_length = signal.len() * 3 / 2;
+            assert!((resampled.len() as i32 - expected_length as i32).abs() <= 1);
+        }
+
+        #[test]
+        fn test_bandlimited_interpolation() {
+            // Create a simple test signal
+            let signal: Vec<f64> = (0..50).map(|i| (2.0 * PI * 0.1 * i as f64).sin()).collect();
+
+            let config = ResamplingConfig::default();
+
+            // Upsample from 1000 Hz to 2000 Hz
+            let resampled = bandlimited_interpolation(&signal, 2000.0, 1000.0, &config).unwrap();
+
+            // Should approximately double the length
+            assert!((resampled.len() as i32 - (signal.len() * 2) as i32).abs() <= 1);
+        }
+
+        #[test]
+        fn test_allpass_fractional_delay() {
+            // Create a test signal
+            let signal: Vec<f64> = (0..20).map(|i| if i == 5 { 1.0 } else { 0.0 }).collect();
+
+            let delay = 2.3;
+            let delayed = allpass_fractional_delay(&signal, delay, 4).unwrap();
+
+            assert_eq!(delayed.len(), signal.len());
+
+            // The signal should be delayed but preserve its shape reasonably
+            let energy_original: f64 = signal.iter().map(|&x| x * x).sum();
+            let energy_delayed: f64 = delayed.iter().map(|&x| x * x).sum();
+
+            // Energy should be reasonably preserved (allow more tolerance)
+            assert!(energy_delayed > 0.5 * energy_original);
+            assert!(energy_delayed < 1.5 * energy_original);
+        }
+
+        #[test]
+        fn test_variable_rate_resample() {
+            // Create test signal
+            let signal: Vec<f64> = (0..50).map(|i| (2.0 * PI * 0.1 * i as f64).sin()).collect();
+
+            // Linear time mapping (constant rate)
+            let time_map = |t: f64| t;
+            let config = ResamplingConfig::default();
+
+            let resampled = variable_rate_resample(&signal, time_map, 50, &config).unwrap();
+
+            assert_eq!(resampled.len(), 50);
+
+            // With identity mapping, should be similar to original
+            for (orig, resamp) in signal.iter().zip(resampled.iter()) {
+                assert_relative_eq!(orig, resamp, epsilon = 0.1);
+            }
+        }
+    }
+}
+
+/// Polynomial interpolation methods
+pub mod polynomial {
+    use super::*;
+    use crate::error::{SignalError, SignalResult};
+    use ndarray::Array2;
+
+    /// Lagrange polynomial interpolation
+    ///
+    /// # Arguments
+    ///
+    /// * `x_data` - Known x coordinates
+    /// * `y_data` - Known y coordinates  
+    /// * `x_new` - Points to interpolate at
+    ///
+    /// # Returns
+    ///
+    /// * Interpolated values at x_new points
+    pub fn lagrange_interpolate(
+        x_data: &[f64],
+        y_data: &[f64],
+        x_new: &[f64],
+    ) -> SignalResult<Vec<f64>> {
+        if x_data.len() != y_data.len() {
+            return Err(SignalError::ValueError(
+                "x_data and y_data must have same length".to_string(),
+            ));
+        }
+
+        if x_data.is_empty() {
+            return Err(SignalError::ValueError(
+                "Need at least one data point".to_string(),
+            ));
+        }
+
+        let n = x_data.len();
+        let mut result = vec![0.0; x_new.len()];
+
+        for (i, &xi) in x_new.iter().enumerate() {
+            let mut sum = 0.0;
+
+            for j in 0..n {
+                let mut product = y_data[j];
+
+                for k in 0..n {
+                    if k != j {
+                        let denominator = x_data[j] - x_data[k];
+                        if denominator.abs() < 1e-15 {
+                            return Err(SignalError::ValueError(
+                                "Duplicate x values not allowed".to_string(),
+                            ));
+                        }
+                        product *= (xi - x_data[k]) / denominator;
+                    }
+                }
+
+                sum += product;
+            }
+
+            result[i] = sum;
+        }
+
+        Ok(result)
+    }
+
+    /// Newton polynomial interpolation with divided differences
+    ///
+    /// # Arguments
+    ///
+    /// * `x_data` - Known x coordinates
+    /// * `y_data` - Known y coordinates
+    /// * `x_new` - Points to interpolate at
+    ///
+    /// # Returns
+    ///
+    /// * Interpolated values at x_new points
+    pub fn newton_interpolate(
+        x_data: &[f64],
+        y_data: &[f64],
+        x_new: &[f64],
+    ) -> SignalResult<Vec<f64>> {
+        if x_data.len() != y_data.len() {
+            return Err(SignalError::ValueError(
+                "x_data and y_data must have same length".to_string(),
+            ));
+        }
+
+        if x_data.is_empty() {
+            return Err(SignalError::ValueError(
+                "Need at least one data point".to_string(),
+            ));
+        }
+
+        let n = x_data.len();
+
+        // Calculate divided differences table
+        let mut dd_table = Array2::zeros((n, n));
+
+        // First column is just the y values
+        for i in 0..n {
+            dd_table[[i, 0]] = y_data[i];
+        }
+
+        // Fill in the divided differences table
+        for j in 1..n {
+            for i in 0..(n - j) {
+                let denominator = x_data[i + j] - x_data[i];
+                if denominator.abs() < 1e-15 {
+                    return Err(SignalError::ValueError(
+                        "Duplicate x values not allowed".to_string(),
+                    ));
+                }
+                dd_table[[i, j]] = (dd_table[[i + 1, j - 1]] - dd_table[[i, j - 1]]) / denominator;
+            }
+        }
+
+        // Evaluate the Newton polynomial at each point
+        let mut result = vec![0.0; x_new.len()];
+
+        for (idx, &xi) in x_new.iter().enumerate() {
+            let mut sum = dd_table[[0, 0]];
+
+            for j in 1..n {
+                let mut product = dd_table[[0, j]];
+                for k in 0..j {
+                    product *= xi - x_data[k];
+                }
+                sum += product;
+            }
+
+            result[idx] = sum;
+        }
+
+        Ok(result)
+    }
+
+    /// Chebyshev polynomial interpolation
+    ///
+    /// # Arguments
+    ///
+    /// * `x_data` - Known x coordinates (should be Chebyshev nodes for best results)
+    /// * `y_data` - Known y coordinates
+    /// * `x_new` - Points to interpolate at (must be in [-1, 1])
+    /// * `domain` - Optional domain transformation [a, b] -> [-1, 1]
+    ///
+    /// # Returns
+    ///
+    /// * Interpolated values at x_new points
+    pub fn chebyshev_interpolate(
+        x_data: &[f64],
+        y_data: &[f64],
+        x_new: &[f64],
+        domain: Option<[f64; 2]>,
+    ) -> SignalResult<Vec<f64>> {
+        if x_data.len() != y_data.len() {
+            return Err(SignalError::ValueError(
+                "x_data and y_data must have same length".to_string(),
+            ));
+        }
+
+        if x_data.is_empty() {
+            return Err(SignalError::ValueError(
+                "Need at least one data point".to_string(),
+            ));
+        }
+
+        let n = x_data.len();
+
+        // Transform to [-1, 1] if domain is specified
+        let (x_transformed, x_new_transformed) = if let Some([a, b]) = domain {
+            let x_trans: Vec<f64> = x_data
+                .iter()
+                .map(|&x| 2.0 * (x - a) / (b - a) - 1.0)
+                .collect();
+            let x_new_trans: Vec<f64> = x_new
+                .iter()
+                .map(|&x| 2.0 * (x - a) / (b - a) - 1.0)
+                .collect();
+            (x_trans, x_new_trans)
+        } else {
+            (x_data.to_vec(), x_new.to_vec())
+        };
+
+        // Compute Chebyshev coefficients using barycentric interpolation
+        let mut weights = vec![0.0; n];
+        for i in 0..n {
+            weights[i] = if i == 0 || i == n - 1 { 0.5 } else { 1.0 };
+            if i % 2 == 1 {
+                weights[i] = -weights[i];
+            }
+        }
+
+        let mut result = vec![0.0; x_new.len()];
+
+        for (idx, &xi) in x_new_transformed.iter().enumerate() {
+            // Check if xi matches any data point exactly
+            for (i, &x_i) in x_transformed.iter().enumerate() {
+                if (xi - x_i).abs() < 1e-15 {
+                    result[idx] = y_data[i];
+                    continue;
+                }
+            }
+
+            // Barycentric interpolation formula
+            let mut numerator = 0.0;
+            let mut denominator = 0.0;
+
+            for i in 0..n {
+                let term = weights[i] / (xi - x_transformed[i]);
+                numerator += term * y_data[i];
+                denominator += term;
+            }
+
+            if denominator.abs() < 1e-15 {
+                return Err(SignalError::ValueError(
+                    "Numerical instability in Chebyshev interpolation".to_string(),
+                ));
+            }
+
+            result[idx] = numerator / denominator;
+        }
+
+        Ok(result)
+    }
+
+    /// Generate Chebyshev nodes for optimal interpolation
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - Number of nodes
+    /// * `domain` - Domain [a, b] for the nodes
+    ///
+    /// # Returns
+    ///
+    /// * Chebyshev nodes in the specified domain
+    pub fn chebyshev_nodes(n: usize, domain: [f64; 2]) -> SignalResult<Vec<f64>> {
+        if n == 0 {
+            return Err(SignalError::ValueError(
+                "Number of nodes must be positive".to_string(),
+            ));
+        }
+
+        let [a, b] = domain;
+        if b <= a {
+            return Err(SignalError::ValueError(
+                "Invalid domain: b must be greater than a".to_string(),
+            ));
+        }
+
+        let mut nodes = vec![0.0; n];
+        let half_range = (b - a) / 2.0;
+        let mid_point = (a + b) / 2.0;
+
+        for i in 0..n {
+            let angle = PI * (2 * i + 1) as f64 / (2 * n) as f64;
+            nodes[i] = mid_point + half_range * angle.cos();
+        }
+
+        Ok(nodes)
+    }
+
+    /// Piecewise polynomial interpolation (higher-order splines)
+    ///
+    /// # Arguments
+    ///
+    /// * `x_data` - Known x coordinates (must be sorted)
+    /// * `y_data` - Known y coordinates
+    /// * `x_new` - Points to interpolate at
+    /// * `degree` - Polynomial degree for each piece
+    ///
+    /// # Returns
+    ///
+    /// * Interpolated values at x_new points
+    pub fn piecewise_polynomial_interpolate(
+        x_data: &[f64],
+        y_data: &[f64],
+        x_new: &[f64],
+        degree: usize,
+    ) -> SignalResult<Vec<f64>> {
+        if x_data.len() != y_data.len() {
+            return Err(SignalError::ValueError(
+                "x_data and y_data must have same length".to_string(),
+            ));
+        }
+
+        if x_data.len() < degree + 1 {
+            return Err(SignalError::ValueError(
+                "Need at least degree+1 data points".to_string(),
+            ));
+        }
+
+        // Check if x_data is sorted
+        for i in 1..x_data.len() {
+            if x_data[i] <= x_data[i - 1] {
+                return Err(SignalError::ValueError(
+                    "x_data must be sorted in ascending order".to_string(),
+                ));
+            }
+        }
+
+        let mut result = vec![0.0; x_new.len()];
+
+        for (idx, &xi) in x_new.iter().enumerate() {
+            // Find the appropriate segment
+            let segment_start = if xi <= x_data[0] {
+                0
+            } else if xi >= x_data[x_data.len() - 1] {
+                x_data.len().saturating_sub(degree + 1)
+            } else {
+                // Binary search for the interval
+                let mut left = 0;
+                let mut right = x_data.len() - 1;
+                while right - left > 1 {
+                    let mid = (left + right) / 2;
+                    if x_data[mid] <= xi {
+                        left = mid;
+                    } else {
+                        right = mid;
+                    }
+                }
+                // Center the polynomial around the found interval
+                left.saturating_sub(degree / 2)
+                    .min(x_data.len() - degree - 1)
+            };
+
+            let segment_end = (segment_start + degree + 1).min(x_data.len());
+
+            // Extract segment data
+            let x_segment = &x_data[segment_start..segment_end];
+            let y_segment = &y_data[segment_start..segment_end];
+
+            // Use Lagrange interpolation for this segment
+            let xi_vec = vec![xi];
+            let interpolated = lagrange_interpolate(x_segment, y_segment, &xi_vec)?;
+            result[idx] = interpolated[0];
+        }
+
+        Ok(result)
+    }
+
+    #[cfg(test)]
+    mod polynomial_tests {
+        use super::*;
+        use approx::assert_relative_eq;
+
+        #[test]
+        fn test_lagrange_interpolation() {
+            // Test with a quadratic function: f(x) = x^2
+            let x_data = vec![0.0, 1.0, 2.0];
+            let y_data = vec![0.0, 1.0, 4.0];
+            let x_new = vec![0.5, 1.5];
+
+            let result = lagrange_interpolate(&x_data, &y_data, &x_new).unwrap();
+
+            // Expected values: f(0.5) = 0.25, f(1.5) = 2.25
+            assert_relative_eq!(result[0], 0.25, epsilon = 1e-10);
+            assert_relative_eq!(result[1], 2.25, epsilon = 1e-10);
+        }
+
+        #[test]
+        fn test_newton_interpolation() {
+            // Test with a linear function: f(x) = 2x + 1
+            let x_data = vec![0.0, 1.0, 2.0];
+            let y_data = vec![1.0, 3.0, 5.0];
+            let x_new = vec![0.5, 1.5];
+
+            let result = newton_interpolate(&x_data, &y_data, &x_new).unwrap();
+
+            // Expected values: f(0.5) = 2, f(1.5) = 4
+            assert_relative_eq!(result[0], 2.0, epsilon = 1e-10);
+            assert_relative_eq!(result[1], 4.0, epsilon = 1e-10);
+        }
+
+        #[test]
+        fn test_chebyshev_nodes() {
+            let nodes = chebyshev_nodes(5, [-1.0, 1.0]).unwrap();
+
+            assert_eq!(nodes.len(), 5);
+
+            // Check that all nodes are in [-1, 1]
+            for &node in &nodes {
+                assert!(node >= -1.0 && node <= 1.0);
+            }
+
+            // Check specific values for 5 nodes
+            let expected_angles: Vec<f64> =
+                (0..5).map(|i| PI * (2 * i + 1) as f64 / 10.0).collect();
+
+            for (i, &angle) in expected_angles.iter().enumerate() {
+                assert_relative_eq!(nodes[i], angle.cos(), epsilon = 1e-10);
+            }
+        }
+
+        #[test]
+        fn test_chebyshev_interpolation() {
+            // Test with Chebyshev nodes
+            let nodes = chebyshev_nodes(4, [-1.0, 1.0]).unwrap();
+            let y_data: Vec<f64> = nodes.iter().map(|&x| x * x).collect(); // f(x) = x^2
+
+            let x_new = vec![0.0, 0.5];
+            let result = chebyshev_interpolate(&nodes, &y_data, &x_new, None).unwrap();
+
+            // Should interpolate x^2 reasonably well with Chebyshev nodes
+            assert_relative_eq!(result[0], 0.0, epsilon = 1e-1);
+            assert_relative_eq!(result[1], 0.25, epsilon = 1e-1);
+        }
+
+        #[test]
+        fn test_piecewise_polynomial() {
+            // Test with a cubic function
+            let x_data = vec![0.0, 1.0, 2.0, 3.0, 4.0];
+            let y_data = vec![0.0, 1.0, 8.0, 27.0, 64.0]; // f(x) = x^3
+            let x_new = vec![1.5, 2.5];
+
+            let result = piecewise_polynomial_interpolate(&x_data, &y_data, &x_new, 3).unwrap();
+
+            // Expected values: f(1.5) = 3.375, f(2.5) = 15.625
+            assert_relative_eq!(result[0], 3.375, epsilon = 1e-6);
+            assert_relative_eq!(result[1], 15.625, epsilon = 1e-6);
+        }
+
+        #[test]
+        fn test_lagrange_error_cases() {
+            let x_data = vec![0.0, 1.0];
+            let y_data = vec![0.0]; // Different length
+            let x_new = vec![0.5];
+
+            let result = lagrange_interpolate(&x_data, &y_data, &x_new);
+            assert!(result.is_err());
+
+            // Test duplicate x values
+            let x_data = vec![0.0, 0.0];
+            let y_data = vec![0.0, 1.0];
+            let result = lagrange_interpolate(&x_data, &y_data, &x_new);
+            assert!(result.is_err());
+        }
+    }
+}

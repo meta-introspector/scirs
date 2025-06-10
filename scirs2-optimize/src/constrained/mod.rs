@@ -39,7 +39,7 @@
 
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
-use ndarray::{ArrayBase, Data, Ix1};
+use ndarray::{Array1, ArrayBase, Data, Ix1};
 use std::fmt;
 
 // Re-export optimization methods
@@ -55,7 +55,10 @@ pub use augmented_lagrangian::{
     AugmentedLagrangianOptions, AugmentedLagrangianResult,
 };
 pub use cobyla::minimize_cobyla;
-pub use interior_point::{minimize_interior_point, InteriorPointOptions, InteriorPointResult};
+pub use interior_point::{
+    minimize_interior_point, minimize_interior_point_constrained, InteriorPointOptions,
+    InteriorPointResult,
+};
 pub use slsqp::minimize_slsqp;
 pub use trust_constr::minimize_trust_constr;
 
@@ -247,7 +250,7 @@ pub fn minimize_constrained<F, S>(
     options: Option<Options>,
 ) -> OptimizeResult<OptimizeResults<f64>>
 where
-    F: Fn(&[f64]) -> f64,
+    F: Fn(&[f64]) -> f64 + Clone,
     S: Data<Elem = f64>,
 {
     let options = options.unwrap_or_default();
@@ -258,11 +261,39 @@ where
         Method::TrustConstr => minimize_trust_constr(func, x0, constraints, &options),
         Method::COBYLA => minimize_cobyla(func, x0, constraints, &options),
         Method::InteriorPoint => {
-            // Convert to interior point method format (simplified for now)
-            Err(crate::error::OptimizeError::NotImplementedError(
-                "Interior point method integration with minimize_constrained not yet implemented"
-                    .to_string(),
-            ))
+            // Convert constraints to interior point format
+            let x0_arr = Array1::from_vec(x0.to_vec());
+
+            // Create interior point options from general options
+            let ip_options = InteriorPointOptions {
+                max_iter: options.maxiter.unwrap_or(100),
+                tol: options.gtol.unwrap_or(1e-8),
+                feas_tol: options.ctol.unwrap_or(1e-8),
+                ..Default::default()
+            };
+
+            // Convert to OptimizeResults format
+            match minimize_interior_point_constrained(func, x0_arr, constraints, Some(ip_options)) {
+                Ok(result) => {
+                    let opt_result = OptimizeResults {
+                        x: result.x,
+                        fun: result.fun,
+                        nit: result.nit,
+                        nfev: result.nfev,
+                        success: result.success,
+                        message: result.message,
+                        jac: None,
+                        hess: None,
+                        constr: None,
+                        njev: 0,  // Not tracked by interior point method
+                        nhev: 0,  // Not tracked by interior point method
+                        maxcv: 0, // Not applicable for interior point
+                        status: if result.success { 0 } else { 1 },
+                    };
+                    Ok(opt_result)
+                }
+                Err(e) => Err(e),
+            }
         }
         Method::AugmentedLagrangian => {
             // Convert to augmented Lagrangian method format (simplified for now)

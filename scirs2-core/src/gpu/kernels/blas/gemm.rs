@@ -41,6 +41,7 @@ impl fmt::Display for GemmImpl {
 /// General matrix-matrix multiplication kernel
 pub struct GemmKernel {
     base: BaseKernel,
+    #[allow(dead_code)]
     implementation: GemmImpl,
 }
 

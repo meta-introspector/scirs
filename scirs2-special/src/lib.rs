@@ -7,6 +7,8 @@
 //!
 //! * Gamma and Beta functions
 //! * Bessel functions
+//! * Combinatorial functions (factorials, binomial coefficients, Stirling numbers, etc.)
+//! * Statistical functions (logistic, softmax, log-softmax, sinc, etc.)
 //! * Orthogonal polynomials
 //! * Error functions
 //! * Airy functions
@@ -36,6 +38,7 @@ pub use error::{SpecialError, SpecialResult};
 // Modules
 mod airy;
 pub mod bessel;
+mod combinatorial;
 mod constants;
 mod coulomb;
 mod elliptic;
@@ -49,8 +52,10 @@ mod mathieu;
 mod optimizations;
 mod orthogonal;
 mod parabolic;
+mod precision;
 mod spherical_harmonics;
 mod spheroidal;
+mod statistical;
 mod struve;
 mod wright;
 mod wright_bessel;
@@ -88,6 +93,10 @@ pub use bessel::{
     yn,
     yn_prime,
 };
+pub use combinatorial::{
+    bell_number, bernoulli_number, binomial, double_factorial, euler_number, factorial,
+    permutations, stirling_first, stirling_second,
+};
 pub use coulomb::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
 pub use elliptic::{
     elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn,
@@ -115,6 +124,10 @@ pub use spherical_harmonics::{sph_harm, sph_harm_complex};
 pub use spheroidal::{
     obl_ang1, obl_cv, obl_cv_seq, obl_rad1, obl_rad2, pro_ang1, pro_cv, pro_cv_seq, pro_rad1,
     pro_rad2,
+};
+pub use statistical::{
+    expm1_array, log1p_array, log_abs_gamma, log_softmax, logistic, logistic_derivative, logsumexp,
+    sinc, sinc_array, softmax,
 };
 pub use struve::{it2_struve0, it_mod_struve0, it_struve0, mod_struve, struve};
 pub use wright::{wright_omega_optimized, wright_omega_real_optimized};

@@ -8,7 +8,7 @@ use crate::error::{SignalError, SignalResult};
 use std::f64::consts::PI;
 
 // Import specialized window implementations
-mod kaiser;
+pub mod kaiser;
 pub use kaiser::{kaiser, kaiser_bessel_derived};
 
 /// Create a window function of a specified type and length.
@@ -1309,5 +1309,304 @@ mod lanczos_tests {
         let result = lanczos(0, 2, true);
         // Should handle gracefully (return empty or error)
         assert!(result.is_ok() || result.is_err());
+    }
+}
+
+/// Window analysis and design utilities
+pub mod analysis {
+    use super::*;
+    use crate::error::{SignalError, SignalResult};
+    use std::f64::consts::PI;
+
+    /// Window analysis results
+    #[derive(Debug, Clone)]
+    pub struct WindowAnalysis {
+        /// Coherent gain (sum of window values)
+        pub coherent_gain: f64,
+        /// Power gain (sum of squared window values)
+        pub power_gain: f64,
+        /// Normalized effective noise bandwidth (NENBW)
+        pub nenbw: f64,
+        /// Scalloping loss in dB
+        pub scalloping_loss_db: f64,
+        /// Maximum sidelobe level in dB
+        pub max_sidelobe_db: f64,
+        /// 3dB bandwidth in bins
+        pub bandwidth_3db: f64,
+        /// 6dB bandwidth in bins
+        pub bandwidth_6db: f64,
+        /// Processing gain in dB
+        pub processing_gain_db: f64,
+    }
+
+    /// Analyze a window function's spectral properties
+    ///
+    /// # Arguments
+    ///
+    /// * `window` - Window function to analyze
+    /// * `fft_size` - FFT size for analysis (default: 8 times window length)
+    ///
+    /// # Returns
+    ///
+    /// * Window analysis results
+    pub fn analyze_window(window: &[f64], fft_size: Option<usize>) -> SignalResult<WindowAnalysis> {
+        if window.is_empty() {
+            return Err(SignalError::ValueError(
+                "Window cannot be empty".to_string(),
+            ));
+        }
+
+        let n = window.len();
+        let fft_len = fft_size.unwrap_or(n * 8).max(n);
+
+        // Calculate basic gains
+        let coherent_gain = window.iter().sum::<f64>();
+        let power_gain = window.iter().map(|&x| x * x).sum::<f64>();
+
+        // Normalized Effective Noise Bandwidth
+        let nenbw = n as f64 * power_gain / (coherent_gain * coherent_gain);
+
+        // Zero-pad window for FFT analysis
+        let mut padded_window = vec![0.0; fft_len];
+        for (i, &val) in window.iter().enumerate() {
+            padded_window[i] = val;
+        }
+
+        // Compute FFT magnitude (simplified implementation)
+        let freq_response = compute_window_fft_magnitude(&padded_window)?;
+
+        // Find peak (should be at DC)
+        let peak_value = freq_response[0];
+        let peak_db = 20.0 * peak_value.log10();
+
+        // Calculate scalloping loss (at bin 0.5)
+        let bin_05_idx = fft_len / (2 * n);
+        let scalloping_response = if bin_05_idx < freq_response.len() {
+            freq_response[bin_05_idx]
+        } else {
+            // Interpolate
+            let frac_idx = 0.5 * fft_len as f64 / n as f64;
+            let idx1 = frac_idx.floor() as usize;
+            let idx2 = (idx1 + 1).min(freq_response.len() - 1);
+            let frac = frac_idx - idx1 as f64;
+
+            if idx2 < freq_response.len() {
+                freq_response[idx1] * (1.0 - frac) + freq_response[idx2] * frac
+            } else {
+                freq_response[idx1]
+            }
+        };
+        let scalloping_loss_db = 20.0 * scalloping_response.log10() - peak_db;
+
+        // Find maximum sidelobe
+        let main_lobe_end = find_main_lobe_end(&freq_response, fft_len, n)?;
+        let max_sidelobe: f64 = freq_response
+            .iter()
+            .skip(main_lobe_end)
+            .fold(0.0_f64, |acc, &x| acc.max(x));
+        let max_sidelobe_db = if max_sidelobe > 0.0 {
+            20.0 * max_sidelobe.log10() - peak_db
+        } else {
+            -120.0 // Very low sidelobe
+        };
+
+        // Calculate bandwidth measurements
+        let half_peak = peak_value / 2.0; // -3dB point
+        let quarter_peak = peak_value / 4.0; // -6dB point
+
+        let bandwidth_3db = find_bandwidth(&freq_response, half_peak, fft_len, n)?;
+        let bandwidth_6db = find_bandwidth(&freq_response, quarter_peak, fft_len, n)?;
+
+        // Processing gain
+        let processing_gain_db = 10.0 * (n as f64).log10();
+
+        Ok(WindowAnalysis {
+            coherent_gain,
+            power_gain,
+            nenbw,
+            scalloping_loss_db,
+            max_sidelobe_db,
+            bandwidth_3db,
+            bandwidth_6db,
+            processing_gain_db,
+        })
+    }
+
+    /// Design a window with specified characteristics
+    pub fn design_window_with_constraints(
+        length: usize,
+        sidelobe_db: f64,
+        _bandwidth_bins: Option<f64>,
+    ) -> SignalResult<Vec<f64>> {
+        if length == 0 {
+            return Err(SignalError::ValueError(
+                "Length must be positive".to_string(),
+            ));
+        }
+
+        // Choose window type based on sidelobe requirement
+        if sidelobe_db >= -13.0 {
+            // Use Hann window for moderate sidelobe suppression
+            hann(length, true)
+        } else if sidelobe_db >= -18.0 {
+            // Use Hamming window
+            hamming(length, true)
+        } else if sidelobe_db >= -58.0 {
+            // Use Blackman window
+            blackman(length, true)
+        } else {
+            // Use Kaiser window for high sidelobe suppression
+            let beta = if sidelobe_db <= -50.0 {
+                0.1102 * (sidelobe_db.abs() - 8.7)
+            } else if sidelobe_db <= -21.0 {
+                0.5842 * (sidelobe_db.abs() - 21.0).powf(0.4) + 0.07886 * (sidelobe_db.abs() - 21.0)
+            } else {
+                0.0
+            };
+
+            super::kaiser::kaiser(length, beta, true)
+        }
+    }
+
+    /// Compare multiple windows
+    pub fn compare_windows(
+        windows: &[(&str, &[f64])],
+    ) -> SignalResult<Vec<(String, WindowAnalysis)>> {
+        let mut results = Vec::new();
+
+        for &(name, window) in windows {
+            let analysis = analyze_window(window, None)?;
+            results.push((name.to_string(), analysis));
+        }
+
+        Ok(results)
+    }
+
+    // Helper functions
+
+    fn compute_window_fft_magnitude(window: &[f64]) -> SignalResult<Vec<f64>> {
+        let n = window.len();
+        let mut magnitude = vec![0.0; n / 2 + 1];
+
+        // Simple DFT computation for magnitude spectrum
+        for k in 0..magnitude.len() {
+            let mut real = 0.0;
+            let mut imag = 0.0;
+
+            for (i, &w) in window.iter().enumerate() {
+                let angle = -2.0 * PI * k as f64 * i as f64 / n as f64;
+                real += w * angle.cos();
+                imag += w * angle.sin();
+            }
+
+            magnitude[k] = (real * real + imag * imag).sqrt();
+        }
+
+        Ok(magnitude)
+    }
+
+    fn find_main_lobe_end(
+        freq_response: &[f64],
+        fft_len: usize,
+        window_len: usize,
+    ) -> SignalResult<usize> {
+        let peak_value = freq_response[0];
+        let threshold = peak_value * 0.01; // -40dB below peak
+
+        // Look for first null or significant drop
+        for i in 1..freq_response.len().min(fft_len / window_len * 4) {
+            if freq_response[i] < threshold {
+                return Ok(i);
+            }
+        }
+
+        // Default to 4 bins if no clear null found
+        Ok(4.min(freq_response.len() - 1))
+    }
+
+    fn find_bandwidth(
+        freq_response: &[f64],
+        threshold: f64,
+        fft_len: usize,
+        window_len: usize,
+    ) -> SignalResult<f64> {
+        // Find points where response drops below threshold
+        let _left_point = 0.0;
+        let mut right_point = 0.0;
+
+        // Search to the right of peak
+        for i in 1..freq_response.len() {
+            if freq_response[i] < threshold {
+                right_point = i as f64;
+                break;
+            }
+        }
+
+        // For symmetric windows, bandwidth is 2 * right_point
+        let bandwidth_bins = 2.0 * right_point * window_len as f64 / fft_len as f64;
+
+        Ok(bandwidth_bins)
+    }
+
+    #[cfg(test)]
+    mod analysis_tests {
+        use super::*;
+
+        #[test]
+        fn test_window_analysis() {
+            let window = hann(64, true).unwrap();
+            let analysis = analyze_window(&window, Some(1024)).unwrap();
+
+            // Check that we get reasonable results
+            assert!(analysis.coherent_gain > 0.0);
+            assert!(analysis.power_gain > 0.0);
+            assert!(analysis.nenbw > 1.0);
+            assert!(analysis.scalloping_loss_db < 0.0); // Should be negative
+            assert!(analysis.processing_gain_db > 0.0);
+        }
+
+        #[test]
+        fn test_compare_windows() {
+            let hann_win = hann(32, true).unwrap();
+            let hamming_win = hamming(32, true).unwrap();
+
+            let windows = [
+                ("hann", hann_win.as_slice()),
+                ("hamming", hamming_win.as_slice()),
+            ];
+
+            let comparison = compare_windows(&windows).unwrap();
+            assert_eq!(comparison.len(), 2);
+
+            // Hamming should have lower sidelobes than Hann
+            let hann_analysis = &comparison
+                .iter()
+                .find(|(name, _)| name == "hann")
+                .unwrap()
+                .1;
+            let hamming_analysis = &comparison
+                .iter()
+                .find(|(name, _)| name == "hamming")
+                .unwrap()
+                .1;
+            assert!(hamming_analysis.max_sidelobe_db < hann_analysis.max_sidelobe_db);
+        }
+
+        #[test]
+        fn test_design_window_with_constraints() {
+            // Test different sidelobe requirements
+            let window1 = design_window_with_constraints(64, -10.0, None).unwrap();
+            let window2 = design_window_with_constraints(64, -25.0, None).unwrap();
+            let window3 = design_window_with_constraints(64, -60.0, None).unwrap();
+
+            assert_eq!(window1.len(), 64);
+            assert_eq!(window2.len(), 64);
+            assert_eq!(window3.len(), 64);
+
+            // All windows should be normalized to peak of 1.0
+            assert!(window1.iter().fold(0.0_f64, |acc, &x| acc.max(x)) <= 1.0);
+            assert!(window2.iter().fold(0.0_f64, |acc, &x| acc.max(x)) <= 1.0);
+            assert!(window3.iter().fold(0.0_f64, |acc, &x| acc.max(x)) <= 1.0);
+        }
     }
 }

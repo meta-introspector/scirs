@@ -3,7 +3,7 @@
 //! This module provides rigid transformation registration (translation + rotation only).
 
 use crate::error::Result;
-use crate::registration::{RegistrationResult, RegistrationParams};
+use crate::registration::{RegistrationParams, RegistrationResult};
 
 /// Rigid registration using point matches
 pub fn register_rigid_points(

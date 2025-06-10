@@ -274,7 +274,7 @@ where
 }
 
 /// Compute sparse gradient using sparse numerical differentiation
-fn compute_sparse_gradient<F, S>(
+pub fn compute_sparse_gradient<F, S>(
     fun: &F,
     x: &ArrayView1<f64>,
     options: &SparseFiniteDiffOptions,

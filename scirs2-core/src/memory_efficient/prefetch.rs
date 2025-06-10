@@ -15,6 +15,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
+#[cfg(feature = "memory_compression")]
 use super::compressed_memmap::CompressedMemMappedArray;
 use super::memmap::MemoryMappedArray;
 use crate::error::{CoreError, CoreResult, ErrorContext};
@@ -421,6 +422,7 @@ pub trait Prefetching {
 }
 
 // Extended CompressedMemMappedArray struct with prefetching support
+#[cfg(feature = "memory_compression")]
 #[derive(Debug)]
 pub struct PrefetchingCompressedArray<A: Clone + Copy + 'static> {
     /// The underlying compressed memory-mapped array
@@ -442,6 +444,7 @@ pub struct PrefetchingCompressedArray<A: Clone + Copy + 'static> {
 }
 
 /// Commands for the prefetching thread
+#[cfg(feature = "memory_compression")]
 enum PrefetchCommand {
     /// Prefetch a specific block
     Prefetch(usize),
@@ -450,6 +453,7 @@ enum PrefetchCommand {
     Stop,
 }
 
+#[cfg(feature = "memory_compression")]
 impl<A: Clone + Copy + 'static> PrefetchingCompressedArray<A> {
     /// Create a new prefetching compressed array from an existing compressed memory-mapped array.
     pub fn new(array: CompressedMemMappedArray<A>) -> Self {
@@ -609,6 +613,7 @@ impl<A: Clone + Copy + 'static> PrefetchingCompressedArray<A> {
     }
 }
 
+#[cfg(feature = "memory_compression")]
 impl<A: Clone + Copy + 'static> Prefetching for PrefetchingCompressedArray<A> {
     fn enable_prefetching(&mut self, config: PrefetchConfig) -> CoreResult<()> {
         // Already enabled with the same config?
@@ -773,6 +778,7 @@ impl<A: Clone + Copy + 'static> Prefetching for PrefetchingCompressedArray<A> {
 }
 
 // Extension methods for CompressedMemMappedArray to add prefetching support
+#[cfg(feature = "memory_compression")]
 impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     /// Convert into a prefetching compressed array.
     pub fn with_prefetching(self) -> PrefetchingCompressedArray<A> {
@@ -789,6 +795,7 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
 }
 
 // For transparent pass-through to underlying array methods
+#[cfg(feature = "memory_compression")]
 impl<A: Clone + Copy + 'static> std::ops::Deref for PrefetchingCompressedArray<A> {
     type Target = CompressedMemMappedArray<A>;
 
@@ -798,6 +805,7 @@ impl<A: Clone + Copy + 'static> std::ops::Deref for PrefetchingCompressedArray<A
 }
 
 // Implement wrapper method for get that records accesses
+#[cfg(feature = "memory_compression")]
 impl<A: Clone + Copy + 'static> PrefetchingCompressedArray<A> {
     /// Get a specific element from the array, with prefetching support.
     pub fn get(&self, indices: &[usize]) -> CoreResult<A> {

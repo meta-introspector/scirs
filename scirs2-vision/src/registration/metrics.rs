@@ -21,17 +21,11 @@ pub fn compute_registration_metrics(
 }
 
 /// Compute Mean Squared Error
-pub fn compute_mse_metric(
-    _image1: &GrayImage,
-    _image2: &GrayImage,
-) -> Result<f64> {
+pub fn compute_mse_metric(_image1: &GrayImage, _image2: &GrayImage) -> Result<f64> {
     todo!("MSE metric not yet implemented")
 }
 
 /// Compute Peak Signal-to-Noise Ratio
-pub fn compute_psnr_metric(
-    _image1: &GrayImage,
-    _image2: &GrayImage,
-) -> Result<f64> {
+pub fn compute_psnr_metric(_image1: &GrayImage, _image2: &GrayImage) -> Result<f64> {
     todo!("PSNR metric not yet implemented")
 }

@@ -660,7 +660,9 @@ where
     let tol = tol.unwrap_or(1e-8);
 
     let mut x = x0.unwrap_or_else(|| Array1::zeros(n));
+    #[allow(unused_assignments)]
     let mut beta = 0.0;
+    #[allow(unused_assignments)]
     let mut u = Array1::zeros(m);
 
     // Initialize

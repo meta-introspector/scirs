@@ -1,7 +1,7 @@
 //! Non-rigid (deformable) registration algorithms
 
 use crate::error::Result;
-use crate::registration::{RegistrationResult, RegistrationParams};
+use crate::registration::{RegistrationParams, RegistrationResult};
 
 /// Non-rigid registration placeholder
 pub fn register_non_rigid_points(

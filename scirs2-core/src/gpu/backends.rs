@@ -159,6 +159,7 @@ fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
 
 /// Detect Metal devices (non-macOS - not available)
 #[cfg(not(target_os = "macos"))]
+#[allow(dead_code)]
 fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
     Err(GpuError::BackendNotAvailable(
         "Metal (not macOS)".to_string(),
