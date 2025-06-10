@@ -112,13 +112,7 @@
 /// re-exported for convenience and version-compatibility
 pub extern crate ndarray;
 
-#[cfg(all(feature = "blas", feature = "intel-mkl"))]
-extern crate intel_mkl_src;
-
-#[cfg(all(feature = "blas", not(feature = "intel-mkl")))]
-extern crate blas_src;
-#[cfg(feature = "blas")]
-extern crate cblas_sys;
+// BLAS dependencies now handled through scirs2-core
 
 extern crate approx;
 extern crate libc;

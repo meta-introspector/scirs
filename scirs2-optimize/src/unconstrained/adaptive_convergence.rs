@@ -441,7 +441,6 @@ pub fn check_convergence_adaptive(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
 
     #[test]
     fn test_adaptive_tolerance_initialization() {

@@ -130,6 +130,7 @@ fn main() {
         let mut max_side_lobe = 0.0f64;
         let exclude_range = main_lobe_width / 2;
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..n {
             if (i < center - exclude_range) || (i > center + exclude_range) {
                 max_side_lobe = max_side_lobe.max(window[i].abs());
@@ -153,6 +154,7 @@ fn main() {
     let nfft = 256;
     let mut freq_response = vec![0.0; nfft];
 
+    #[allow(clippy::needless_range_loop)]
     for k in 0..nfft {
         let mut real_sum = 0.0;
         let mut imag_sum = 0.0;
@@ -171,6 +173,7 @@ fn main() {
     let threshold_3db = max_response / 2.0_f64.sqrt(); // -3dB
 
     let mut bandwidth_3db = 0;
+    #[allow(clippy::needless_range_loop)]
     for i in 1..nfft / 2 {
         if freq_response[i] < threshold_3db {
             bandwidth_3db = i;

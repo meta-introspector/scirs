@@ -20,7 +20,7 @@ scirs2-core = { workspace = true, optional = true, features = ["linalg", "openbl
 scirs2-metrics = { workspace = true, optional = true, default-features = false, features = ["neural_common"] }
 ndarray = { workspace = true }
 ndarray-stats-05 = { workspace = true }
-ndarray-linalg = { workspace = true }
+ndarray-linalg = { workspace = true, default-features = false }
 ndarray-rand = { workspace = true }
 num-integer = { workspace = true }
 approx = { workspace = true }
@@ -58,9 +58,9 @@ core = ["dep:scirs2-core"]
 # linalg = ["dep:scirs2-linalg"] 
 # optimize = ["dep:scirs2-optimize"]
 optim = [] # Empty feature for compatibility with existing code
-openblas = ["ndarray-linalg/openblas-static"]
-netlib = ["ndarray-linalg/netlib"]
-intel-mkl = ["ndarray-linalg/intel-mkl"]
+openblas = ["ndarray-linalg/openblas-system"]
+netlib = ["ndarray-linalg/netlib-system"]
+intel-mkl = ["ndarray-linalg/intel-mkl-system"]
 # Integration with other modules
 metrics_integration = ["dep:scirs2-metrics"]
 

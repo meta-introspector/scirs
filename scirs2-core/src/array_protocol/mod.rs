@@ -55,6 +55,7 @@ pub mod grad;
 pub mod mixed_precision;
 pub mod ml_ops;
 pub mod neural;
+#[cfg(feature = "serialization")]
 pub mod serialization;
 pub mod training;
 

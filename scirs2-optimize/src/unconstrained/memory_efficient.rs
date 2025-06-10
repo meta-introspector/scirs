@@ -184,7 +184,7 @@ where
 
     // Initialize counters
     let mut iter = 0;
-    let mut nfev = 1 + (n + options.chunk_size - 1) / options.chunk_size; // Initial function evaluations
+    let mut nfev = 1 + n.div_ceil(options.chunk_size); // Initial function evaluations
 
     // Main loop
     while iter < base_opts.max_iter {
@@ -262,7 +262,7 @@ where
 
         // Calculate new gradient using streaming approach
         let g_new = streaming_grad.compute(&mut fun, &x_new.view())?;
-        nfev += (n + options.chunk_size - 1) / options.chunk_size;
+        nfev += n.div_ceil(options.chunk_size);
 
         // Gradient difference
         let y = get_array_from_pool(&mut memory_pool, n, |_| &g_new - &g);

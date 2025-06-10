@@ -43,6 +43,7 @@ fn main() {
 }
 
 /// Generate various test signals for the examples
+#[allow(clippy::type_complexity)]
 fn generate_test_signals() -> (
     Array1<f64>,
     Array1<f64>,

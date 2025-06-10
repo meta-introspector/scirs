@@ -23,10 +23,13 @@ pub use self::features::{
 
 // Filters module exports
 pub use self::filters::{
-    convolve, gaussian_filter, gaussian_filter_f32, gaussian_filter_f64, laplace, maximum_filter,
-    median_filter, minimum_filter, percentile_filter, rank_filter, sobel, uniform_filter,
-    BorderMode,
+    bilateral_filter, convolve, gaussian_filter, gaussian_filter_f32, gaussian_filter_f64, laplace,
+    maximum_filter, median_filter, minimum_filter, percentile_filter, rank_filter, sobel,
+    uniform_filter, BorderMode,
 };
+
+#[cfg(feature = "simd")]
+pub use self::filters::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
 // Segmentation module exports
 pub use self::segmentation::{

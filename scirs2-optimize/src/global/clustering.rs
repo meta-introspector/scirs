@@ -120,7 +120,7 @@ pub fn multi_start_with_clustering<F, S>(
 ) -> Result<ClusteringResult<S>, OptimizeError>
 where
     F: FnMut(&ArrayView1<f64>) -> S + Clone,
-    S: Into<f64> + Clone,
+    S: Into<f64> + Clone + From<f64>,
 {
     let clustering_opts = clustering_options.unwrap_or_default();
     let mut minima = Vec::new();
@@ -232,8 +232,8 @@ where
     let mut next_cluster_id = n;
 
     // Initialize: each point is its own cluster
-    for i in 0..n {
-        cluster_assignments[i] = Some(i);
+    for (i, assignment) in cluster_assignments.iter_mut().enumerate().take(n) {
+        *assignment = Some(i);
     }
 
     // Build hierarchy by merging closest clusters
@@ -279,9 +279,9 @@ where
 
         // Remove old clusters and add merged one
         let mut new_clusters = Vec::new();
-        for k in 0..active_clusters.len() {
+        for (k, cluster) in active_clusters.iter().enumerate() {
             if k != i && k != j {
-                new_clusters.push(active_clusters[k].clone());
+                new_clusters.push(cluster.clone());
             }
         }
         new_clusters.push(merged_cluster);
@@ -293,12 +293,10 @@ where
     let mut cluster_map = HashMap::new();
     let mut final_cluster_id = 0;
 
-    for assignment in &cluster_assignments {
-        if let Some(cluster_id) = assignment {
-            if !cluster_map.contains_key(cluster_id) {
-                cluster_map.insert(*cluster_id, final_cluster_id);
-                final_cluster_id += 1;
-            }
+    for cluster_id in cluster_assignments.iter().flatten() {
+        if !cluster_map.contains_key(cluster_id) {
+            cluster_map.insert(*cluster_id, final_cluster_id);
+            final_cluster_id += 1;
         }
     }
 
@@ -358,7 +356,7 @@ where
         let mut changed = false;
 
         // Assign points to nearest centroids
-        for i in 0..n {
+        for (i, assignment) in assignments.iter_mut().enumerate().take(n) {
             let mut min_dist = f64::INFINITY;
             let mut best_cluster = 0;
 
@@ -370,8 +368,8 @@ where
                 }
             }
 
-            if assignments[i] != best_cluster {
-                assignments[i] = best_cluster;
+            if *assignment != best_cluster {
+                *assignment = best_cluster;
                 changed = true;
             }
         }
@@ -690,12 +688,12 @@ fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f6
         let mut distances = vec![f64::INFINITY; n];
 
         // Compute distance to nearest centroid for each point
-        for i in 0..n {
+        for (i, distance) in distances.iter_mut().enumerate().take(n) {
             let point = features.row(i);
             for j in 0..c {
                 let centroid = centroids.row(j);
                 let dist = euclidean_distance(&point, &centroid);
-                distances[i] = distances[i].min(dist);
+                *distance = distance.min(dist);
             }
         }
 
@@ -734,10 +732,7 @@ where
 
     for minimum in minima {
         if let Some(cluster_id) = minimum.cluster_id {
-            clusters
-                .entry(cluster_id)
-                .or_insert_with(Vec::new)
-                .push(minimum);
+            clusters.entry(cluster_id).or_default().push(minimum);
         }
     }
 

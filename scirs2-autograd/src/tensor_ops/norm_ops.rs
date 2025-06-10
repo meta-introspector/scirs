@@ -29,17 +29,45 @@ impl<F: Float> Op<F> for FrobeniusNormOp {
     fn grad(&self, ctx: &mut GradientContext<F>) {
         let grad_output = ctx.output_grad();
         let input = ctx.input(0);
-        let output = ctx.output();
         let g = ctx.graph();
 
-        // Use tensor operations to maintain gradient flow
-        let epsilon = tensor_ops::scalar(F::epsilon() * F::from(10.0).unwrap(), g);
-        let safe_norm = tensor_ops::maximum(&output, &epsilon);
+        // Evaluate the values we need for gradient computation
+        let input_array = match input.eval(g) {
+            Ok(arr) => arr,
+            Err(_) => {
+                ctx.append_input_grad(0, None);
+                return;
+            }
+        };
 
-        // Compute gradient: (input / norm) * grad_output
-        let grad_input = tensor_ops::mul(&tensor_ops::div(&input, &safe_norm), &grad_output);
+        let grad_output_array = match grad_output.eval(g) {
+            Ok(arr) => arr,
+            Err(_) => {
+                ctx.append_input_grad(0, None);
+                return;
+            }
+        };
 
-        ctx.append_input_grad(0, Some(grad_input));
+        // Compute the norm for gradient calculation
+        let mut sum_squared = F::zero();
+        for &elem in input_array.iter() {
+            sum_squared += elem * elem;
+        }
+        let norm = sum_squared.sqrt();
+
+        // Avoid division by zero
+        if norm < F::epsilon() * F::from(10.0).unwrap() {
+            ctx.append_input_grad(0, None);
+            return;
+        }
+
+        // Compute gradient: input / norm * grad_output
+        let grad_scalar = grad_output_array[[]];
+        let grad_array = input_array.mapv(|x| x / norm * grad_scalar);
+
+        // Convert back to tensor
+        let grad_tensor = tensor_ops::convert_to_tensor(grad_array, g);
+        ctx.append_input_grad(0, Some(grad_tensor));
     }
 }
 
@@ -429,7 +457,7 @@ fn compute_nuclear_norm_improved<F: Float + ndarray::ScalarOperand>(matrix: &Arr
     // For larger matrices, use power iteration to estimate singular values
     let mut working_matrix = matrix.to_owned();
     let mut nuclear_norm = F::zero();
-    let max_rank = (min_dim.min(5)) as usize; // Limit iterations for performance
+    let max_rank = min_dim.min(5); // Limit iterations for performance
 
     for _ in 0..max_rank {
         let (u, sigma) =
@@ -488,7 +516,7 @@ fn compute_nuclear_norm_gradient_improved<F: Float + ndarray::ScalarOperand>(
     let mut grad_matrix = Array2::zeros((m, n));
     let mut working_matrix = matrix.to_owned();
     let min_dim = m.min(n);
-    let max_rank = (min_dim.min(3)) as usize; // Limit for performance
+    let max_rank = min_dim.min(3); // Limit for performance
 
     for _ in 0..max_rank {
         let (u, sigma) =

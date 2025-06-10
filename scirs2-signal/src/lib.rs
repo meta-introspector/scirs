@@ -80,6 +80,7 @@ pub use dwt::{
     dwt_decompose, dwt_reconstruct, extend_signal, wavedec, waverec, Wavelet, WaveletFilters,
 };
 pub mod filter;
+pub mod filter_banks;
 pub mod higher_order;
 pub mod interpolate;
 pub mod kalman;
@@ -100,8 +101,10 @@ pub mod spectral;
 pub mod spline;
 pub mod sswt;
 pub mod stft;
+pub mod streaming_stft;
 pub mod swt;
 pub mod swt2d;
+pub mod sysid;
 pub mod tv;
 pub mod waveforms;
 pub mod wavelet_vis;
@@ -130,7 +133,17 @@ pub use deconvolution::{
     wiener_deconvolution_1d, wiener_deconvolution_2d, wiener_deconvolution_color,
     DeconvolutionConfig, DeconvolutionMethod,
 };
-pub use filter::{bessel, butter, cheby1, cheby2, ellip, filtfilt, firwin, lfilter};
+pub use filter::{
+    allpass_filter, allpass_filter_zpk, analyze_filter, bessel, butter, cheby1, cheby2,
+    check_filter_stability, comb_filter, comb_filter_zpk, ellip, filtfilt, firwin, lfilter,
+    matched_filter, matched_filter_bank, matched_filter_bank_detect, matched_filter_detect,
+    minimum_phase, notch_filter, notch_filter_zpk, peak_filter, peak_filter_zpk, remez,
+    z_domain_transform, zpk_design, FilterAnalysis, FilterStability,
+};
+pub use filter_banks::{
+    CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
+    QmfBank, StabilizationMethod, WaveletFilterBank,
+};
 pub use higher_order::{
     biamplitude, bicoherence, bispectrum, cumulative_bispectrum, detect_phase_coupling,
     skewness_spectrum, trispectrum, BispecEstimator, HigherOrderConfig,
@@ -172,11 +185,18 @@ pub use sparse::{
 };
 pub use spectral::{periodogram, spectrogram, stft as spectral_stft, welch};
 pub use stft::{closest_stft_dual_window, create_cola_window, ShortTimeFft};
+pub use streaming_stft::{
+    RealTimeStft, RealTimeStftStatistics, StreamingStft, StreamingStftConfig,
+    StreamingStftStatistics,
+};
 pub use tv::{
     tv_bregman_1d, tv_bregman_2d, tv_denoise_1d, tv_denoise_2d, tv_denoise_color, tv_inpaint,
     TvConfig, TvVariant,
 };
-pub use waveforms::{chirp, gausspulse, sawtooth, square};
+pub use waveforms::{
+    brown_noise, chirp, exponential_sweep, gausspulse, golomb_ruler, mls_sequence,
+    perfect_binary_sequence, pink_noise, prbs_sequence, sawtooth, square, synchronized_sweep,
+};
 pub use wiener::{
     iterative_wiener_filter, kalman_wiener_filter, psd_wiener_filter, spectral_subtraction,
     wiener_filter, wiener_filter_2d, wiener_filter_freq, wiener_filter_time, WienerConfig,
@@ -206,7 +226,24 @@ pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D, WaveletPacketTree2
 
 // LTI systems functions
 pub use lti::system::{c2d, ss, tf, zpk};
-pub use lti::{bode, LtiSystem, StateSpace, TransferFunction, ZerosPoleGain};
+pub use lti::{
+    analyze_control_observability, analyze_controllability, analyze_observability, bode,
+    matrix_condition_number, systems_equivalent, ControlObservabilityAnalysis,
+    ControllabilityAnalysis, KalmanStructure, LtiSystem, ObservabilityAnalysis, StateSpace,
+    TransferFunction, ZerosPoleGain,
+};
+
+// Laplace transform functions for continuous-time analysis
+pub use lti::laplace::{
+    evaluate_laplace, find_dominant_poles, inverse_laplace_transform, overshoot_percentage,
+    rise_time, settling_time,
+};
+
+// System reduction and minimal realization functions
+pub use lti::reduction::{
+    balanced_truncation, minimal_realization, modal_truncation, CanonicalForm, HsvMethod,
+    ReductionConfig, ReductionResult,
+};
 pub use lti_response::{impulse_response, lsim, step_response};
 
 // Chirp Z-Transform functions
@@ -271,13 +308,21 @@ pub use utilities::spectral::{
 // Window functions
 pub use window::{
     barthann, bartlett, blackman, blackmanharris, bohman, boxcar, cosine, exponential, flattop,
-    get_window, hamming, hann, nuttall, parzen, triang, tukey,
+    get_window, hamming, hann, lanczos, nuttall, parzen, triang, tukey,
 };
 
 // B-spline functions
 pub use spline::{
     bspline_basis, bspline_coefficients, bspline_derivative, bspline_evaluate, bspline_filter,
     bspline_smooth, SplineOrder,
+};
+
+// System identification functions
+pub use sysid::{
+    estimate_frequency_response, estimate_transfer_function, identify_ar_model,
+    identify_arma_model, n4sid_identification, validate_model, FreqResponseMethod,
+    FreqResponseResult, ModelValidation, ParametricResult, RecursiveLeastSquares, SysIdConfig,
+    TfEstimationMethod, TfEstimationResult,
 };
 
 // Synchrosqueezed wavelet transform functions

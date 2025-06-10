@@ -32,20 +32,15 @@ special = { workspace = true }
 array-init = { workspace = true }
 scirs2-core = { workspace = true }
 # Remove dependency on scirs2-linalg to avoid circular dependency
-ndarray-linalg = { workspace = true }
-
-# BLAS dependencies - feature-gated
-blas-src = { workspace = true, optional = true }
-intel-mkl-src = { workspace = true, optional = true }
-cblas-sys = { workspace = true, optional = true }
+ndarray-linalg = { workspace = true, default-features = false }
 
 [features]
 default = []
-blas = []
-intel-mkl = ["intel-mkl-src", "cblas-sys"]
-accelerate = ["blas-src/accelerate", "cblas-sys"]
-openblas = ["blas-src/openblas", "cblas-sys"]
-mkl = ["intel-mkl-src", "cblas-sys"]
+blas = ["scirs2-core/linalg"]
+openblas = ["scirs2-core/openblas"] 
+netlib = ["scirs2-core/netlib"]
+intel-mkl = ["scirs2-core/intel-mkl"]  # Legacy feature compatibility
+mkl = ["intel-mkl"]  # Legacy feature compatibility
 simd = ["scirs2-core/simd"]
 
 [[example]]

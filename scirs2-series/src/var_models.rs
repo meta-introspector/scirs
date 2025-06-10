@@ -398,7 +398,7 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     let n = xtx.nrows();
-    let k = xty.ncols();
+    let _k = xty.ncols();
 
     if n != xtx.ncols() {
         return Err(TimeSeriesError::InvalidInput(

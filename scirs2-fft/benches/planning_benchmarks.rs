@@ -5,7 +5,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use num_complex::Complex64;
-use scirs2_fft::{
+use scirs2_fft::planning::{
     AdvancedFftPlanner, FftPlanExecutor, PlanBuilder, PlanningConfig, PlanningStrategy,
 };
 use std::time::Duration;
@@ -109,9 +109,7 @@ fn bench_serialized(c: &mut Criterion) {
             let mut planner = AdvancedFftPlanner::with_config(config);
 
             // Pre-create plans to simulate previous runs
-            let _ = planner
-                .plan_fft(&[*size], true, Default::default())
-                .unwrap();
+            let _ = planner.plan_fft(&[size], true, Default::default()).unwrap();
             planner.save_plans().unwrap();
 
             b.iter_with_setup(
@@ -239,9 +237,7 @@ fn bench_cache_sizes(c: &mut Criterion) {
                     for _ in 0..repetitions {
                         for (size, signal) in sizes.iter().zip(signals.iter()) {
                             let mut output = vec![Complex64::default(); *size];
-                            let plan = planner
-                                .plan_fft(&[*size], true, Default::default())
-                                .unwrap();
+                            let plan = planner.plan_fft(&[size], true, Default::default()).unwrap();
                             let executor = FftPlanExecutor::new(plan);
                             executor
                                 .execute(black_box(signal), black_box(&mut output))

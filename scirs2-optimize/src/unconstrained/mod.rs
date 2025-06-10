@@ -18,8 +18,11 @@ pub mod newton;
 pub mod powell;
 pub mod quasi_newton;
 pub mod result;
+pub mod simd_bfgs;
 pub mod sparse_optimization;
 pub mod strong_wolfe;
+pub mod subspace_methods;
+pub mod truncated_newton;
 pub mod trust_region;
 pub mod utils;
 
@@ -41,12 +44,21 @@ pub use nelder_mead::minimize_nelder_mead;
 pub use newton::minimize_newton_cg;
 pub use powell::minimize_powell;
 pub use quasi_newton::{minimize_dfp, minimize_quasi_newton, minimize_sr1, UpdateFormula};
+pub use simd_bfgs::{minimize_simd_bfgs, minimize_simd_bfgs_default, SimdBfgsOptions};
 pub use sparse_optimization::{
     auto_detect_sparsity, minimize_sparse_bfgs, SparseOptimizationOptions,
 };
 pub use strong_wolfe::{
     create_strong_wolfe_options_for_method, strong_wolfe_line_search, StrongWolfeOptions,
     StrongWolfeResult,
+};
+pub use subspace_methods::{
+    minimize_adaptive_subspace, minimize_block_coordinate_descent,
+    minimize_cyclical_coordinate_descent, minimize_random_coordinate_descent,
+    minimize_random_subspace, minimize_subspace, SubspaceMethod, SubspaceOptions,
+};
+pub use truncated_newton::{
+    minimize_truncated_newton, minimize_trust_region_newton, Preconditioner, TruncatedNewtonOptions,
 };
 pub use trust_region::{minimize_trust_exact, minimize_trust_krylov, minimize_trust_ncg};
 
@@ -77,6 +89,10 @@ pub enum Method {
     TrustKrylov,
     /// Trust-region method with exact subproblem solver
     TrustExact,
+    /// Truncated Newton method
+    TruncatedNewton,
+    /// Trust-region Newton method with truncated CG
+    TrustRegionNewton,
 }
 
 /// Bounds for optimization variables
@@ -141,6 +157,8 @@ impl fmt::Display for Method {
             Method::TrustNCG => write!(f, "Trust-NCG"),
             Method::TrustKrylov => write!(f, "Trust-Krylov"),
             Method::TrustExact => write!(f, "Trust-Exact"),
+            Method::TruncatedNewton => write!(f, "Truncated Newton"),
+            Method::TrustRegionNewton => write!(f, "Trust-Region Newton"),
         }
     }
 }
@@ -253,7 +271,7 @@ pub fn minimize<F, S>(
 ) -> Result<OptimizeResult<S>, OptimizeError>
 where
     F: FnMut(&ArrayView1<f64>) -> S + Clone,
-    S: Into<f64> + Clone,
+    S: Into<f64> + Clone + From<f64>,
 {
     let options = &options.unwrap_or_default();
     let x0 = Array1::from_vec(x0.to_vec());
@@ -280,7 +298,96 @@ where
         Method::TrustNCG => trust_region::minimize_trust_ncg(fun, x0, options),
         Method::TrustKrylov => trust_region::minimize_trust_krylov(fun, x0, options),
         Method::TrustExact => trust_region::minimize_trust_exact(fun, x0, options),
+        Method::TruncatedNewton => truncated_newton_wrapper(fun, x0, options),
+        Method::TrustRegionNewton => trust_region_newton_wrapper(fun, x0, options),
     }
+}
+
+/// Wrapper function for truncated Newton method
+fn truncated_newton_wrapper<F, S>(
+    fun: F,
+    x0: Array1<f64>,
+    options: &Options,
+) -> Result<OptimizeResult<S>, OptimizeError>
+where
+    F: FnMut(&ArrayView1<f64>) -> S + Clone,
+    S: Into<f64> + Clone + From<f64>,
+{
+    let mut fun_clone = fun.clone();
+    let fun_f64 = move |x: &ArrayView1<f64>| fun_clone(x).into();
+
+    let truncated_options = TruncatedNewtonOptions {
+        max_iter: options.max_iter,
+        tol: options.gtol,
+        max_cg_iter: options.trust_max_iter.unwrap_or(100),
+        cg_tol: options.trust_tol.unwrap_or(0.1),
+        ..Default::default()
+    };
+
+    // Convert result back to generic type
+    let result = truncated_newton::minimize_truncated_newton(
+        fun_f64,
+        None::<fn(&ArrayView1<f64>) -> Array1<f64>>,
+        x0,
+        Some(truncated_options),
+    )?;
+
+    Ok(OptimizeResult {
+        x: result.x,
+        fun: result.fun.into(),
+        iterations: result.iterations,
+        nit: result.nit,
+        func_evals: result.func_evals,
+        nfev: result.nfev,
+        jacobian: result.jacobian,
+        hessian: result.hessian,
+        success: result.success,
+        message: result.message,
+    })
+}
+
+/// Wrapper function for trust-region Newton method
+fn trust_region_newton_wrapper<F, S>(
+    fun: F,
+    x0: Array1<f64>,
+    options: &Options,
+) -> Result<OptimizeResult<S>, OptimizeError>
+where
+    F: FnMut(&ArrayView1<f64>) -> S + Clone,
+    S: Into<f64> + Clone + From<f64>,
+{
+    let mut fun_clone = fun.clone();
+    let fun_f64 = move |x: &ArrayView1<f64>| fun_clone(x).into();
+
+    let truncated_options = TruncatedNewtonOptions {
+        max_iter: options.max_iter,
+        tol: options.gtol,
+        max_cg_iter: options.trust_max_iter.unwrap_or(100),
+        cg_tol: options.trust_tol.unwrap_or(0.1),
+        trust_radius: options.trust_radius,
+        ..Default::default()
+    };
+
+    // Convert result back to generic type
+    let result = truncated_newton::minimize_trust_region_newton(
+        fun_f64,
+        None::<fn(&ArrayView1<f64>) -> Array1<f64>>,
+        x0,
+        Some(truncated_options),
+    )?;
+
+    Ok(OptimizeResult {
+        x: result.x,
+        fun: result.fun.into(),
+        iterations: result.iterations,
+        nit: result.nit,
+        func_evals: result.func_evals,
+        nfev: result.nfev,
+        jacobian: result.jacobian,
+        hessian: result.hessian,
+        success: result.success,
+        message: result.message,
+    })
 }
 
 #[cfg(test)]

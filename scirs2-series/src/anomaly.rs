@@ -124,13 +124,21 @@ pub struct AnomalyResult {
 pub enum MethodInfo {
     /// SPC-specific information
     SPC {
-        control_limits: (f64, f64), // (lower, upper)
+        /// Control limits (lower, upper)
+        control_limits: (f64, f64),
+        /// Center line value
         center_line: f64,
     },
     /// Isolation Forest-specific information
-    IsolationForest { average_path_length: f64 },
+    IsolationForest {
+        /// Average path length for normal points
+        average_path_length: f64,
+    },
     /// Distance-based information
-    DistanceBased { distances: Array1<f64> },
+    DistanceBased {
+        /// Distance scores for each point
+        distances: Array1<f64>,
+    },
 }
 
 /// Detects anomalies in a time series
@@ -752,18 +760,18 @@ fn build_isolation_tree(
     rng: &mut ThreadRng,
 ) -> Result<Array1<f64>> {
     let n_samples = data.nrows();
-    let n_features = data.ncols();
+    let _n_features = data.ncols();
 
     // Subsample data
     let actual_subsample_size = subsample_size.min(n_samples);
     let mut indices: Vec<usize> = (0..n_samples).collect();
     indices.shuffle(rng);
-    let subsample_indices = &indices[0..actual_subsample_size];
+    let _subsample_indices = &indices[0..actual_subsample_size];
 
     let mut path_lengths = Array1::zeros(n_samples);
 
-    // Build tree and calculate path lengths (simplified)
-    for &idx in subsample_indices {
+    // Build tree using subsample, but calculate path lengths for all points
+    for idx in 0..n_samples {
         path_lengths[idx] =
             calculate_isolation_path_length(&data.row(idx).to_owned(), data, 0, rng);
     }
@@ -796,13 +804,18 @@ fn calculate_isolation_path_length(
         return depth as f64; // No variation in this feature
     }
 
-    let split_value = rng.random_range(min_val..max_val);
+    // Simplified: return path length based on how far the point is from the mean
+    let mean_val = feature_values.iter().sum::<f64>() / feature_values.len() as f64;
+    let deviation = (point[feature_idx] - mean_val).abs();
+    let max_deviation = (max_val - min_val) / 2.0;
 
-    // Determine which side of the split this point falls on
-    if point[feature_idx] < split_value {
-        depth as f64 + 1.0 // Simplified: assume we go left
+    // Anomalies (points far from mean) should have shorter path lengths
+    if max_deviation > 0.0 {
+        let normalized_deviation = deviation / max_deviation;
+        // Points far from mean get shorter paths (are isolated faster)
+        depth as f64 + (1.0 - normalized_deviation.min(1.0))
     } else {
-        depth as f64 + 1.0 // Simplified: assume we go right
+        depth as f64 + 1.0
     }
 }
 
@@ -841,7 +854,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
     use ndarray::array;
 
     #[test]

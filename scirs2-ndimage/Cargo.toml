@@ -20,6 +20,10 @@ ndarray-rand = { workspace = true }
 approx = { workspace = true }
 cached = { workspace = true }
 
+[features]
+default = []
+simd = ["scirs2-core/simd"]
+
 [dev-dependencies]
 criterion = { workspace = true }
 

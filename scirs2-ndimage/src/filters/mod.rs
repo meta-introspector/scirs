@@ -5,6 +5,12 @@
 
 use std::fmt::Debug;
 
+// Bilateral module exports
+pub use bilateral::bilateral_filter;
+#[cfg(feature = "simd")]
+pub use bilateral::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
+
+mod bilateral;
 mod convolve;
 mod edge;
 mod extrema;

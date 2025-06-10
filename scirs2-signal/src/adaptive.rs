@@ -565,7 +565,7 @@ mod tests {
         let mut lms = LmsFilter::new(3, 0.01, 0.0).unwrap();
 
         // Target system: h = [0.5, -0.3, 0.2]
-        let target_system = vec![0.5, -0.3, 0.2];
+        let target_system = [0.5, -0.3, 0.2];
 
         // Generate training data
         let mut inputs = Vec::new();
@@ -670,7 +670,7 @@ mod tests {
     #[test]
     fn test_convergence_comparison() {
         // Compare LMS and RLS convergence for the same problem
-        let target_system = vec![0.8, -0.4];
+        let target_system = [0.8, -0.4];
         let num_samples = 50;
 
         let mut lms = LmsFilter::new(2, 0.05, 0.0).unwrap();

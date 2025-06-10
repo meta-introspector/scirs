@@ -43,12 +43,17 @@ use ndarray::{ArrayBase, Data, Ix1};
 use std::fmt;
 
 // Re-export optimization methods
+pub mod augmented_lagrangian;
 pub mod cobyla;
 pub mod interior_point;
 pub mod slsqp;
 pub mod trust_constr;
 
 // Re-export main functions
+pub use augmented_lagrangian::{
+    minimize_augmented_lagrangian, minimize_equality_constrained, minimize_inequality_constrained,
+    AugmentedLagrangianOptions, AugmentedLagrangianResult,
+};
 pub use cobyla::minimize_cobyla;
 pub use interior_point::{minimize_interior_point, InteriorPointOptions, InteriorPointResult};
 pub use slsqp::minimize_slsqp;
@@ -74,6 +79,9 @@ pub enum Method {
 
     /// Interior point method
     InteriorPoint,
+
+    /// Augmented Lagrangian method
+    AugmentedLagrangian,
 }
 
 impl fmt::Display for Method {
@@ -83,6 +91,7 @@ impl fmt::Display for Method {
             Method::TrustConstr => write!(f, "trust-constr"),
             Method::COBYLA => write!(f, "COBYLA"),
             Method::InteriorPoint => write!(f, "interior-point"),
+            Method::AugmentedLagrangian => write!(f, "augmented-lagrangian"),
         }
     }
 }
@@ -252,6 +261,13 @@ where
             // Convert to interior point method format (simplified for now)
             Err(crate::error::OptimizeError::NotImplementedError(
                 "Interior point method integration with minimize_constrained not yet implemented"
+                    .to_string(),
+            ))
+        }
+        Method::AugmentedLagrangian => {
+            // Convert to augmented Lagrangian method format (simplified for now)
+            Err(crate::error::OptimizeError::NotImplementedError(
+                "Augmented Lagrangian method integration with minimize_constrained not yet implemented"
                     .to_string(),
             ))
         }

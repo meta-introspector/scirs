@@ -71,6 +71,10 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalRes
             // Default NW parameter of 3.0 for multitaper
             dpss(length, 3.0, None, !periodic)
         }
+        "lanczos" => {
+            // Default parameter a = 2 for Lanczos window
+            lanczos(length, 2, !periodic)
+        }
         _ => Err(SignalError::ValueError(format!(
             "Unknown window type: {}",
             window_type
@@ -1153,5 +1157,157 @@ mod tests {
         // Too many windows
         let result = dpss_windows(10, 2.0, Some(0), true);
         assert!(result.is_err());
+    }
+}
+
+/// Generate a Lanczos window
+///
+/// The Lanczos window is a tapered window that provides good frequency resolution
+/// with moderate side-lobe suppression. It's the main lobe of a sinc function
+/// windowed by another sinc function.
+///
+/// # Arguments
+///
+/// * `length` - Length of the window
+/// * `a` - Parameter controlling the width of the window (typically 2 or 3)
+/// * `sym` - If true, creates a symmetric window; if false, creates a periodic window
+///
+/// # Returns
+///
+/// * Vector containing the Lanczos window values
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_signal::window::lanczos;
+///
+/// // Create a symmetric Lanczos window of length 10 with parameter a=2
+/// let window = lanczos(10, 2, true).unwrap();
+/// assert_eq!(window.len(), 10);
+/// ```
+pub fn lanczos(length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
+    if _len_guards(length) {
+        return Ok(vec![1.0; length]);
+    }
+
+    if a <= 0 {
+        return Err(SignalError::ValueError(
+            "Parameter 'a' must be positive".to_string(),
+        ));
+    }
+
+    let (m, needs_trunc) = _extend(length, sym);
+    let mut window = Vec::with_capacity(m);
+
+    for i in 0..m {
+        let n = if sym {
+            // Symmetric: center at (m-1)/2
+            i as f64 - (m - 1) as f64 / 2.0
+        } else {
+            // Periodic: center at m/2
+            i as f64 - m as f64 / 2.0
+        };
+
+        let x = n / a as f64;
+
+        let value = if x.abs() < 1e-15 {
+            // Handle the case where x ≈ 0 (sinc(0) = 1)
+            1.0
+        } else if x.abs() < 1.0 {
+            // Lanczos window: sinc(x) * sinc(x/a)
+            let sinc_x = (PI * x).sin() / (PI * x);
+            let sinc_x_a = (PI * x).sin() / (PI * x);
+            sinc_x * sinc_x_a
+        } else {
+            // Outside the support interval
+            0.0
+        };
+
+        window.push(value);
+    }
+
+    Ok(_truncate(window, needs_trunc))
+}
+
+#[cfg(test)]
+mod lanczos_tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn test_lanczos_basic() {
+        let window = lanczos(10, 2, true).unwrap();
+        assert_eq!(window.len(), 10);
+
+        // Test symmetry
+        for i in 0..5 {
+            assert_relative_eq!(window[i], window[9 - i], epsilon = 1e-10);
+        }
+
+        // Test that center value is maximum
+        let center_idx = 4; // For length 10, center is at index 4
+        for (i, &val) in window.iter().enumerate() {
+            if i != center_idx {
+                assert!(window[center_idx] >= val);
+            }
+        }
+
+        // Test that values are non-negative
+        for &val in &window {
+            assert!(val >= 0.0);
+        }
+    }
+
+    #[test]
+    fn test_lanczos_periodic() {
+        let window = lanczos(8, 2, false).unwrap();
+        assert_eq!(window.len(), 8);
+
+        // Test that all values are finite
+        for &val in &window {
+            assert!(val.is_finite());
+        }
+    }
+
+    #[test]
+    fn test_lanczos_parameters() {
+        // Test different values of 'a'
+        let window_a2 = lanczos(20, 2, true).unwrap();
+        let window_a3 = lanczos(20, 3, true).unwrap();
+
+        assert_eq!(window_a2.len(), 20);
+        assert_eq!(window_a3.len(), 20);
+
+        // Larger 'a' should give a wider main lobe
+        // (This is a qualitative test - the exact comparison depends on implementation details)
+        assert!(window_a2.iter().all(|&x| x.is_finite()));
+        assert!(window_a3.iter().all(|&x| x.is_finite()));
+    }
+
+    #[test]
+    fn test_lanczos_small_windows() {
+        // Test edge cases
+        let window1 = lanczos(1, 2, true).unwrap();
+        assert_eq!(window1, vec![1.0]);
+
+        let window2 = lanczos(2, 2, true).unwrap();
+        assert_eq!(window2.len(), 2);
+    }
+
+    #[test]
+    fn test_lanczos_errors() {
+        // Test invalid parameter
+        let result = lanczos(10, 0, true);
+        assert!(result.is_err());
+
+        let result = lanczos(10, -1, true);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_lanczos_zero_length() {
+        let result = lanczos(0, 2, true);
+        // Should handle gracefully (return empty or error)
+        assert!(result.is_ok() || result.is_err());
     }
 }

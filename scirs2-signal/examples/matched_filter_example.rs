@@ -252,7 +252,7 @@ mod fastrand {
     use std::cell::Cell;
 
     thread_local! {
-        static RNG: Cell<u64> = Cell::new(1);
+        static RNG: Cell<u64> = const { Cell::new(1) };
     }
 
     pub fn f64() -> f64 {

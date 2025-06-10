@@ -238,10 +238,18 @@ impl KernelRegistry {
         // Register reduction kernels
         registry.register(Box::new(reduction::sum::SumKernel::new()));
         registry.register(Box::new(reduction::norm::NormKernel::new()));
+        registry.register(Box::new(reduction::min_max::MinKernel::new()));
+        registry.register(Box::new(reduction::min_max::MaxKernel::new()));
+        registry.register(Box::new(reduction::mean::MeanKernel::new()));
+        registry.register(Box::new(reduction::std_dev::StdDevKernel::new()));
 
         // Register ML kernels
         registry.register(Box::new(ml::activation::ReluKernel::new()));
         registry.register(Box::new(ml::activation::SigmoidKernel::new()));
+        registry.register(Box::new(ml::activation::TanhKernel::new()));
+        registry.register(Box::new(ml::softmax::SoftmaxKernel::new()));
+        registry.register(Box::new(ml::pooling::MaxPoolKernel::new()));
+        registry.register(Box::new(ml::pooling::AvgPoolKernel::new()));
 
         registry
     }

@@ -261,8 +261,7 @@ where
         let mut best_split = None;
         let mut best_score = penalty;
 
-        for i in 0..segments.len() {
-            let (start, end) = segments[i];
+        for (i, &(start, end)) in segments.iter().enumerate() {
             if end - start < 2 * min_len {
                 continue;
             }
@@ -621,7 +620,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
     use ndarray::array;
 
     #[test]

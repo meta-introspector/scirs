@@ -64,3 +64,15 @@ path = "examples/non_rigid_transformations.rs"
 [[example]]
 name = "noise_reduction"
 path = "examples/noise_reduction.rs"
+
+[[example]]
+name = "feature_tracking"
+path = "examples/feature_tracking.rs"
+
+[[example]]
+name = "image_registration"
+path = "examples/image_registration.rs"
+
+[[example]]
+name = "simple_registration"
+path = "examples/simple_registration.rs"

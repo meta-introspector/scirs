@@ -5,14 +5,17 @@
 //! ## Features
 //!
 //! * Structured logging for scientific computing
-//! * Progress tracking for long computations
+//! * Enhanced progress tracking with multiple visualization styles
 //! * Performance metrics collection
 //! * Log filtering and formatting
+//! * Multi-progress tracking for parallel operations
+//! * Adaptive update rates and predictive ETA calculations
 //!
 //! ## Usage
 //!
 //! ```rust,no_run
 //! use scirs2_core::logging::{Logger, LogLevel, ProgressTracker};
+//! use scirs2_core::logging::progress::{ProgressBuilder, ProgressStyle};
 //!
 //! // Create a logger
 //! let logger = Logger::new("matrix_operations");
@@ -21,8 +24,13 @@
 //! logger.info("Starting matrix multiplication");
 //! logger.debug("Using algorithm: Standard");
 //!
-//! // Create a progress tracker for a long computation
-//! let mut progress = ProgressTracker::new("Matrix multiplication", 1000);
+//! // Create an enhanced progress tracker
+//! let mut progress = ProgressBuilder::new("Matrix multiplication", 1000)
+//!     .style(ProgressStyle::DetailedBar)
+//!     .show_statistics(true)
+//!     .build();
+//!
+//! progress.start();
 //!
 //! for i in 0..1000 {
 //!     // Perform computation
@@ -37,7 +45,7 @@
 //! }
 //!
 //! // Complete the progress tracking
-//! progress.complete();
+//! progress.finish();
 //!
 //! logger.info("Matrix multiplication completed");
 //! ```
@@ -47,6 +55,9 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+
+// Enhanced progress tracking module
+pub mod progress;
 
 /// Log level enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -369,6 +380,49 @@ impl Logger {
     /// Log a message at critical level
     pub fn critical(&self, message: &str) {
         self.log(LogLevel::Critical, message);
+    }
+    
+    /// Create an enhanced progress tracker using the logger's context
+    pub fn track_progress(&self, description: &str, total: u64) -> progress::EnhancedProgressTracker {
+        use progress::{ProgressBuilder, ProgressStyle};
+        
+        let builder = ProgressBuilder::new(description, total)
+            .style(ProgressStyle::DetailedBar)
+            .show_statistics(true);
+            
+        let mut tracker = builder.build();
+        
+        // Log the start of progress tracking
+        self.info(&format!("Starting progress tracking: {}", description));
+        
+        tracker.start();
+        tracker
+    }
+    
+    /// Log a message with progress update
+    pub fn info_with_progress(&self, message: &str, progress: &mut progress::EnhancedProgressTracker, update: u64) {
+        self.info(message);
+        progress.update(update);
+    }
+    
+    /// Execute an operation with progress tracking
+    pub fn with_progress<F, R>(&self, description: &str, total: u64, operation: F) -> R
+    where
+        F: FnOnce(&mut progress::EnhancedProgressTracker) -> R,
+    {
+        let mut progress = self.track_progress(description, total);
+        let result = operation(&mut progress);
+        progress.finish();
+        
+        // Log completion
+        let stats = progress.stats();
+        self.info(&format!(
+            "Completed progress tracking: {} - {:.1}s elapsed",
+            description,
+            stats.elapsed.as_secs_f64()
+        ));
+        
+        result
     }
 }
 

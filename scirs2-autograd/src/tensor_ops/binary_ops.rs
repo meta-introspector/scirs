@@ -10,10 +10,7 @@ use std::mem;
 
 // Import SIMD operations from scirs2-core
 #[cfg(feature = "simd")]
-use scirs2_core::simd::{
-    simd_add_f32, simd_add_f64, simd_mul_f32, simd_mul_f64, simd_scalar_mul_f32,
-    simd_scalar_mul_f64,
-};
+use scirs2_core::simd::{simd_add_f32, simd_add_f64, simd_mul_f32, simd_mul_f64};
 
 pub struct AddOp;
 pub struct SubOp;
@@ -354,15 +351,29 @@ macro_rules! impl_bin_op_forward {
                         {
                             use crate::same_type;
                             if same_type::<T, f32>() {
-                                let x0_f32 = unsafe { std::mem::transmute::<&NdArrayView<'v, T>, &ndarray::ArrayView1<f32>>(x0) };
-                                let x1_f32 = unsafe { std::mem::transmute::<&NdArrayView<'v, T>, &ndarray::ArrayView1<f32>>(x1) };
-                                let result_f32 = $simd_f32(x0_f32, x1_f32);
-                                return unsafe { std::mem::transmute::<ndarray::Array1<f32>, NdArray<T>>(result_f32) };
+                                // SIMD acceleration for f32
+                                if let (Ok(x0_1d), Ok(x1_1d)) = (
+                                    x0.clone().into_dimensionality::<ndarray::Ix1>(),
+                                    x1.clone().into_dimensionality::<ndarray::Ix1>()
+                                ) {
+                                    let x0_f32 = unsafe { std::mem::transmute::<ndarray::ArrayView1<T>, ndarray::ArrayView1<f32>>(x0_1d.view()) };
+                                    let x1_f32 = unsafe { std::mem::transmute::<ndarray::ArrayView1<T>, ndarray::ArrayView1<f32>>(x1_1d.view()) };
+                                    let result_f32 = $simd_f32(&x0_f32, &x1_f32);
+                                    let result_dyn = result_f32.into_dyn();
+                                    return unsafe { std::mem::transmute::<ndarray::Array<f32, ndarray::IxDyn>, NdArray<T>>(result_dyn) };
+                                }
                             } else if same_type::<T, f64>() {
-                                let x0_f64 = unsafe { std::mem::transmute::<&NdArrayView<'v, T>, &ndarray::ArrayView1<f64>>(x0) };
-                                let x1_f64 = unsafe { std::mem::transmute::<&NdArrayView<'v, T>, &ndarray::ArrayView1<f64>>(x1) };
-                                let result_f64 = $simd_f64(x0_f64, x1_f64);
-                                return unsafe { std::mem::transmute::<ndarray::Array1<f64>, NdArray<T>>(result_f64) };
+                                // SIMD acceleration for f64
+                                if let (Ok(x0_1d), Ok(x1_1d)) = (
+                                    x0.clone().into_dimensionality::<ndarray::Ix1>(),
+                                    x1.clone().into_dimensionality::<ndarray::Ix1>()
+                                ) {
+                                    let x0_f64 = unsafe { std::mem::transmute::<ndarray::ArrayView1<T>, ndarray::ArrayView1<f64>>(x0_1d.view()) };
+                                    let x1_f64 = unsafe { std::mem::transmute::<ndarray::ArrayView1<T>, ndarray::ArrayView1<f64>>(x1_1d.view()) };
+                                    let result_f64 = $simd_f64(&x0_f64, &x1_f64);
+                                    let result_dyn = result_f64.into_dyn();
+                                    return unsafe { std::mem::transmute::<ndarray::Array<f64, ndarray::IxDyn>, NdArray<T>>(result_dyn) };
+                                }
                             }
                         }
                     }

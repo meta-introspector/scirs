@@ -9,6 +9,9 @@ use crate::unconstrained::utils::clip_step;
 use crate::unconstrained::Bounds;
 use ndarray::{Array1, ArrayView1};
 
+/// Type alias for zoom search result to reduce type complexity
+type ZoomSearchResult = ((f64, f64, Array1<f64>), usize, usize);
+
 /// Strong Wolfe line search options
 #[derive(Debug, Clone)]
 pub struct StrongWolfeOptions {
@@ -117,17 +120,15 @@ where
     ngev += gev1;
 
     match interval_result {
-        IntervalResult::Found(alpha, f_alpha, g_alpha) => {
-            return Ok(StrongWolfeResult {
-                alpha,
-                f_new: f_alpha,
-                g_new: g_alpha,
-                nfev,
-                ngev,
-                success: true,
-                message: "Strong Wolfe conditions satisfied in interval search".to_string(),
-            });
-        }
+        IntervalResult::Found(alpha, f_alpha, g_alpha) => Ok(StrongWolfeResult {
+            alpha,
+            f_new: f_alpha,
+            g_new: g_alpha,
+            nfev,
+            ngev,
+            success: true,
+            message: "Strong Wolfe conditions satisfied in interval search".to_string(),
+        }),
         IntervalResult::Bracket(alpha_lo, alpha_hi, f_lo, f_hi, g_lo) => {
             // Phase 2: Zoom to find exact step
             let (zoom_result, fev2, gev2) = zoom_search(
@@ -138,7 +139,7 @@ where
             nfev += fev2;
             ngev += gev2;
 
-            return Ok(StrongWolfeResult {
+            Ok(StrongWolfeResult {
                 alpha: zoom_result.0,
                 f_new: zoom_result.1,
                 g_new: zoom_result.2,
@@ -146,19 +147,17 @@ where
                 ngev,
                 success: true,
                 message: "Strong Wolfe conditions satisfied in zoom phase".to_string(),
-            });
+            })
         }
-        IntervalResult::Failed => {
-            return Ok(StrongWolfeResult {
-                alpha: options.min_step,
-                f_new: f0,
-                g_new: g0.to_owned(),
-                nfev,
-                ngev,
-                success: false,
-                message: "Failed to find acceptable interval".to_string(),
-            });
-        }
+        IntervalResult::Failed => Ok(StrongWolfeResult {
+            alpha: options.min_step,
+            f_new: f0,
+            g_new: g0.to_owned(),
+            nfev,
+            ngev,
+            success: false,
+            message: "Failed to find acceptable interval".to_string(),
+        }),
     }
 }
 
@@ -282,7 +281,7 @@ fn zoom_search<F, G, S>(
     mut derphi_lo: f64,
     options: &StrongWolfeOptions,
     _bounds: Option<&Bounds>,
-) -> Result<((f64, f64, Array1<f64>), usize, usize), OptimizeError>
+) -> Result<ZoomSearchResult, OptimizeError>
 where
     F: FnMut(&ArrayView1<f64>) -> S,
     G: FnMut(&ArrayView1<f64>) -> Array1<f64>,

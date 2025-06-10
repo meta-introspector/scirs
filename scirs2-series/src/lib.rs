@@ -45,10 +45,21 @@
 //!   - Stepwise and grid search optimization
 //!   - Seasonal ARIMA (SARIMA) support
 //!   - Model diagnostics and information criteria
+//! - Time series transformations
+//!   - Box-Cox transformations with automatic lambda estimation
+//!   - Differencing and seasonal differencing
+//!   - Stationarity tests (ADF, KPSS)
+//!   - Normalization and scaling (Z-score, Min-Max, Robust)
+//!   - Detrending and stationarity transformations
 //! - Forecasting methods (ARIMA, exponential smoothing)
 //!   - Automatic model selection
 //!   - Seasonal and non-seasonal models
 //! - Feature extraction for time series
+//! - Feature selection methods for time series
+//!   - Filter methods (correlation, variance, mutual information, statistical tests)
+//!   - Wrapper methods (forward selection, backward elimination, recursive elimination)
+//!   - Embedded methods (LASSO, Ridge, tree-based importance)
+//!   - Time series specific methods (lag-based, seasonal, cross-correlation, Granger causality)
 //! - Utility functions for time series operations
 
 #![warn(missing_docs)]
@@ -61,12 +72,14 @@ pub mod decomposition_compat; // For backward compatibility
 pub mod detection;
 pub mod diagnostics;
 pub mod error;
+pub mod feature_selection;
 pub mod features;
 pub mod forecasting;
 pub mod optimization;
 pub mod sarima_models;
 pub mod state_space;
 pub mod tests;
+pub mod transformations;
 pub mod trends;
 pub mod utils;
 pub mod validation;

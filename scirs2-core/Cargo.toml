@@ -43,7 +43,7 @@ snap = { workspace = true, optional = true }   # Snappy compression
 libc = { workspace = true, optional = true }  # System calls for resource monitoring
 
 # BLAS/LAPACK dependencies for linear algebra operations
-ndarray-linalg = { workspace = true, optional = true }  # LAPACK bindings for ndarray
+ndarray-linalg = { workspace = true, optional = true, default-features = false }  # LAPACK bindings for ndarray
 
 # JIT compilation for Array Protocol
 cranelift-module = { workspace = true, optional = true }  # JIT compilation module
@@ -87,10 +87,10 @@ profiling = []  # Performance profiling tools
 random = []  # Random number generation utilities
 types = []  # Type conversion utilities
 ufuncs = []  # Universal Functions (ufuncs) system
-linalg = ["ndarray-linalg"]  # Linear algebra with BLAS/LAPACK bindings
-openblas = ["ndarray-linalg/openblas-static"]  # Use OpenBLAS backend (static linking)
-intel-mkl = ["ndarray-linalg/intel-mkl-static"]  # Use Intel MKL backend (static linking)  
-netlib = ["ndarray-linalg/netlib-static"]  # Use Netlib backend (static linking)
+linalg = ["ndarray-linalg/blas"]  # Linear algebra with BLAS/LAPACK bindings
+openblas = ["linalg", "ndarray-linalg/openblas-system"]  # Use OpenBLAS backend (system)
+intel-mkl = ["linalg", "ndarray-linalg/intel-mkl-system"]  # Use Intel MKL backend (system)  
+netlib = ["linalg", "ndarray-linalg/netlib-system"]  # Use Netlib backend (system)
 array_protocol = []  # Array Protocol for third-party array implementations
 array_protocol_jit = ["array_protocol", "cranelift-module", "cranelift-jit", "cranelift-frontend"]  # JIT compilation for Array Protocol
 array_protocol_gpu = ["array_protocol", "gpu"]  # GPU support for Array Protocol
@@ -317,3 +317,8 @@ required-features = ["array_protocol_cuda"]
 name = "custom_array_protocol"
 path = "examples/custom_array_protocol.rs"
 required-features = ["array_protocol"]
+
+[[example]]
+name = "progress_visualization_example"
+path = "examples/progress_visualization_example.rs"
+required-features = ["logging"]

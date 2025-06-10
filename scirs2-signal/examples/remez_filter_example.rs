@@ -67,6 +67,7 @@ fn main() {
 
     println!("Bandpass filter coefficients (center 11):");
     let center = numtaps / 2;
+    #[allow(clippy::needless_range_loop)]
     for i in (center - 5)..=(center + 5) {
         println!("  h[{}] = {:.6}", i, h_bp[i]);
     }
@@ -111,8 +112,8 @@ fn main() {
     println!("-----------------------------");
 
     let _numtaps = 81; // Must be odd for Type III filter
-    let _bands = vec![0.05, 0.95]; // Avoid DC and Nyquist
-    let _desired = vec![1.0, 1.0]; // Constant magnitude
+    let _bands = [0.05, 0.95]; // Avoid DC and Nyquist
+    let _desired = [1.0, 1.0]; // Constant magnitude
 
     // For Hilbert transformer, we need to design an antisymmetric filter
     // This is a simplified version - a full implementation would need Type III/IV support
