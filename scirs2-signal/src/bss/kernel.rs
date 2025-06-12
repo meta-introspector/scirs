@@ -211,7 +211,7 @@ pub fn kernel_ica(
     let unmixing = w.dot(&pca_mixing.slice(s![.., 0..n_components]).t());
 
     // Calculate mixing matrix (pseudoinverse of unmixing)
-    let (u, s, vt) = match svd(&unmixing.view(), false) {
+    let (u, s, vt) = match svd(&unmixing.view(), false, None) {
         Ok((u, s, vt)) => (u, s, vt),
         Err(_) => {
             return Err(SignalError::Compute(

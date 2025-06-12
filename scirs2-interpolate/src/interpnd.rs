@@ -27,8 +27,6 @@ pub enum ExtrapolateMode {
     Error,
     /// Extrapolate based on the nearest edge points
     Extrapolate,
-    /// Use constant extrapolation (nearest edge value)
-    Constant,
 }
 
 /// N-dimensional interpolation object for rectilinear grids
@@ -311,7 +309,7 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
                             // Point is before the first grid point
                             if self.extrapolate == ExtrapolateMode::Extrapolate {
                                 idx = 0;
-                            } else if self.extrapolate == ExtrapolateMode::Constant {
+                            } else if self.extrapolate == ExtrapolateMode::Extrapolate {
                                 // Create index coordinates (all zeros)
                                 let idx = vec![0; self.points.len()];
                                 return Ok(self.values[idx.as_slice()]);

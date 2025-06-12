@@ -18,6 +18,8 @@ pub mod autograd;
 pub mod callbacks;
 // Temporarily disabled due to model config field mismatches
 // pub mod config;
+/// Data augmentation module
+pub mod augmentation;
 pub mod data;
 pub mod error;
 pub mod evaluation;
@@ -31,6 +33,8 @@ pub mod losses;
 pub mod memory_efficient;
 pub mod models;
 pub mod optimizers;
+/// Performance optimization module
+pub mod performance;
 pub mod prelude;
 pub mod serialization;
 pub mod training;

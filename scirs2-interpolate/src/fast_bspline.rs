@@ -147,7 +147,7 @@ where
         let knot_diffs = Self::precompute_knot_differences(spline);
 
         Self {
-            spline: spline.clone(),
+            spline: Arc::new(spline.clone()),
             knot_diffs,
             cache: Some(cache),
             chunk_size: 64,

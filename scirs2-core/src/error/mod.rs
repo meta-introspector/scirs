@@ -164,6 +164,7 @@ pub mod prelude {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error_context;
     use std::time::Duration;
 
     #[test]

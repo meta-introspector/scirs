@@ -6,7 +6,7 @@
 
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, FromPrimitive, Zero};
+use num_traits::{Float, FromPrimitive};
 use rayon::prelude::*;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};

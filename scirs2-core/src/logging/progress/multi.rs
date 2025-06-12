@@ -177,17 +177,21 @@ impl MultiProgress {
             })
             .collect();
 
-        if active_trackers.len() == 1 {
-            let (_, tracker) = active_trackers[0];
-            let stats = tracker.stats();
-            print!(
-                "{}: {:.1}% ({}/{})",
-                tracker.description, stats.percentage, stats.processed, stats.total
-            );
-        } else if active_trackers.len() > 1 {
-            print!("{} active tasks", active_trackers.len());
-        } else {
-            print!("All tasks complete");
+        match active_trackers.len() {
+            1 => {
+                let (_, tracker) = active_trackers[0];
+                let stats = tracker.stats();
+                print!(
+                    "{}: {:.1}% ({}/{})",
+                    tracker.description, stats.percentage, stats.processed, stats.total
+                );
+            }
+            n if n > 1 => {
+                print!("{} active tasks", active_trackers.len());
+            }
+            _ => {
+                print!("All tasks complete");
+            }
         }
 
         use std::io::{self, Write};

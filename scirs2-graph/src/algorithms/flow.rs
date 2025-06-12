@@ -326,9 +326,9 @@ impl<N: Node + Clone + Hash + Eq> DinicResidualGraph<N> {
 
         // Add edges to residual graph
         for node in graph.nodes() {
-            if let Ok(successors) = graph.successors(&node) {
+            if let Ok(successors) = graph.successors(node) {
                 for successor in successors {
-                    if let Ok(weight) = graph.edge_weight(&node, &successor) {
+                    if let Ok(weight) = graph.edge_weight(node, &successor) {
                         let capacity: f64 = weight.into();
 
                         // Forward edge
@@ -340,7 +340,7 @@ impl<N: Node + Clone + Hash + Eq> DinicResidualGraph<N> {
                         ));
 
                         // Backward edge (initially 0 capacity)
-                        let backward_idx = adj.get(&node).map(|v| v.len() - 1).unwrap_or(0);
+                        let backward_idx = adj.get(node).map(|v| v.len() - 1).unwrap_or(0);
                         adj.entry(successor.clone()).or_default().push((
                             node.clone(),
                             0.0,
@@ -513,8 +513,8 @@ where
     loop {
         // Find active node (excess > 0 and not source or sink)
         let mut active_node = None;
-        for i in 0..n {
-            if i != source_idx && i != sink_idx && excess[i] > 0.0 {
+        for (i, &excess_val) in excess.iter().enumerate().take(n) {
+            if i != source_idx && i != sink_idx && excess_val > 0.0 {
                 active_node = Some(i);
                 break;
             }
@@ -542,9 +542,9 @@ where
             // If no push was possible, relabel
             if !pushed {
                 let mut min_height = usize::MAX;
-                for v in 0..n {
+                for (v, &height_val) in height.iter().enumerate().take(n) {
                     if capacity[u][v] - flow[u][v] > 0.0 {
-                        min_height = min_height.min(height[v]);
+                        min_height = min_height.min(height_val);
                     }
                 }
                 if min_height < usize::MAX {

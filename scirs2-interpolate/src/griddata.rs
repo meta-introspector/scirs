@@ -27,7 +27,8 @@ use crate::advanced::rbf::{RBFInterpolator, RBFKernel};
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
+use std::ops::AddAssign;
 
 /// Interpolation methods available for griddata
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -128,7 +129,15 @@ pub fn griddata<F>(
     fill_value: Option<F>,
 ) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Display
+        + AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp
+        + 'static,
 {
     // Validate inputs
     validate_griddata_inputs(points, values, xi)?;
@@ -207,7 +216,17 @@ pub fn griddata_parallel<F>(
     workers: Option<usize>,
 ) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug + Clone + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + Display
+        + AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp
+        + 'static,
 {
     // Import parallel processing utilities
     use crate::parallel::ParallelConfig;
@@ -361,14 +380,26 @@ fn griddata_rbf_parallel<F>(
     config: &crate::parallel::ParallelConfig,
 ) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug + Clone + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + Display
+        + AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp
+        + 'static,
 {
     use rayon::prelude::*;
 
     // First, set up the RBF interpolator (this is not parallelized)
     let rbf_interpolator = RBFInterpolator::new(
-        points, values, kernel, 1.0,  // epsilon
-        None, // smoothing
+        points,
+        values,
+        kernel,
+        F::from_f64(1.0).unwrap(), // epsilon
     )?;
 
     let n_queries = xi.nrows();
@@ -382,7 +413,7 @@ where
             let query_point = xi.slice(ndarray::s![i, ..]);
             let query_2d = query_point.to_shape((1, query_point.len())).unwrap();
 
-            match rbf_interpolator.interpolate(&query_2d) {
+            match rbf_interpolator.interpolate(&query_2d.view()) {
                 Ok(result) => Ok(result[0]),
                 Err(_) => Ok(fill_value.unwrap_or_else(|| F::nan())),
             }
@@ -412,7 +443,7 @@ fn interpolate_single_nearest<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
     query: &ndarray::ArrayView1<F>,
-    fill_value: Option<F>,
+    _fill_value: Option<F>,
 ) -> Result<F, InterpolateError>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -499,7 +530,7 @@ fn griddata_linear<F>(
     fill_value: Option<F>,
 ) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float + FromPrimitive + Debug + Clone + AddAssign,
 {
     let n_dims = points.ncols();
     let n_queries = xi.nrows();
@@ -657,7 +688,7 @@ fn griddata_linear_2d<F>(
     result: &mut Array1<F>,
 ) -> InterpolateResult<()>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float + FromPrimitive + Debug + Clone + AddAssign,
 {
     let n_queries = xi.nrows();
     let n_points = points.nrows();
@@ -690,7 +721,7 @@ fn griddata_linear_nd<F>(
     result: &mut Array1<F>,
 ) -> InterpolateResult<()>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float + FromPrimitive + Debug + Clone + AddAssign,
 {
     let n_queries = xi.nrows();
     let _default_fill = fill_value.unwrap_or_else(|| F::nan());
@@ -801,7 +832,7 @@ fn interpolate_natural_neighbor_2d<F>(
     default_fill: F,
 ) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float + FromPrimitive + Debug + Clone + AddAssign,
 {
     let n_points = points.nrows();
 
@@ -852,7 +883,7 @@ fn interpolate_idw_linear<F>(
     default_fill: F,
 ) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float + FromPrimitive + Debug + Clone + AddAssign,
 {
     let n_points = points.nrows();
     let n_dims = points.ncols();
@@ -898,7 +929,15 @@ fn griddata_cubic<F>(
     fill_value: Option<F>,
 ) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Display
+        + AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp
+        + 'static,
 {
     // For now, fall back to RBF with cubic kernel
     // TODO: Implement proper Clough-Tocher interpolation
@@ -914,7 +953,15 @@ fn griddata_rbf<F>(
     _fill_value: Option<F>,
 ) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug + Clone,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Display
+        + AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp
+        + 'static,
 {
     // Determine appropriate epsilon based on data scale
     let epsilon = estimate_rbf_epsilon(points);
@@ -1024,7 +1071,7 @@ where
     let mut grid = Array2::zeros((total_points, n_dims));
 
     // Generate coordinates for each point
-    for (point_idx, mut indices) in (0..total_points)
+    for (point_idx, (_, indices)) in (0..total_points)
         .map(|i| {
             let mut coords = vec![0; n_dims];
             let mut temp = i;

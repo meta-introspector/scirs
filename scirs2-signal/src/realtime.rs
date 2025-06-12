@@ -467,10 +467,10 @@ impl LockFreeRingBuffer {
         let samples_to_read = data.len().min(available_data);
 
         // Read data
-        for i in 0..samples_to_read {
+        for (i, datum) in data.iter_mut().enumerate().take(samples_to_read) {
             let pos = (current_read + i) % self.capacity;
             let bits = self.buffer[pos].load(Ordering::Acquire);
-            data[i] = f64::from_bits(bits);
+            *datum = f64::from_bits(bits);
         }
 
         // Update read position
@@ -496,7 +496,7 @@ impl LockFreeRingBuffer {
 }
 
 /// Example real-time processors
-
+///
 /// Simple gain processor
 pub struct GainProcessor {
     gain: f64,
@@ -670,8 +670,6 @@ impl RealtimeProcessor for ZeroLatencyLimiter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::thread;
-    use std::time::Duration;
 
     #[test]
     fn test_circular_buffer() {

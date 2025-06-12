@@ -286,14 +286,6 @@ impl<T: Float + std::fmt::Display> TensionSpline<T> {
                         self.x[n - 1]
                     )));
                 }
-                ExtrapolateMode::Constant => {
-                    // Return the nearest endpoint value
-                    if x_val < self.x[0] {
-                        return Ok(self.y[0]);
-                    } else {
-                        return Ok(self.y[n - 1]);
-                    }
-                }
                 ExtrapolateMode::Nan => {
                     // Return NaN for points outside the interpolation domain
                     return Ok(T::nan());
@@ -394,10 +386,6 @@ impl<T: Float + std::fmt::Display> TensionSpline<T> {
                         self.x[0],
                         self.x[n - 1]
                     )));
-                }
-                ExtrapolateMode::Constant => {
-                    // For derivatives, return zero at boundaries when using nearest value
-                    return Ok(T::zero());
                 }
                 ExtrapolateMode::Nan => {
                     // Return NaN for points outside the interpolation domain
@@ -608,7 +596,7 @@ mod tests {
 
         // Test nearest value mode
         let spline_nearest =
-            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Constant).unwrap();
+            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Extrapolate).unwrap();
         let val = spline_nearest.evaluate_single(-1.0).unwrap();
         assert_abs_diff_eq!(val, y[0], epsilon = 1e-6);
     }

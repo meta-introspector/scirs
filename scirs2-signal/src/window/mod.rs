@@ -1489,7 +1489,7 @@ pub mod analysis {
         let mut magnitude = vec![0.0; n / 2 + 1];
 
         // Simple DFT computation for magnitude spectrum
-        for k in 0..magnitude.len() {
+        for (k, mag) in magnitude.iter_mut().enumerate() {
             let mut real = 0.0;
             let mut imag = 0.0;
 
@@ -1499,7 +1499,7 @@ pub mod analysis {
                 imag += w * angle.sin();
             }
 
-            magnitude[k] = (real * real + imag * imag).sqrt();
+            *mag = (real * real + imag * imag).sqrt();
         }
 
         Ok(magnitude)
@@ -1514,6 +1514,7 @@ pub mod analysis {
         let threshold = peak_value * 0.01; // -40dB below peak
 
         // Look for first null or significant drop
+        #[allow(clippy::needless_range_loop)]
         for i in 1..freq_response.len().min(fft_len / window_len * 4) {
             if freq_response[i] < threshold {
                 return Ok(i);
@@ -1535,6 +1536,7 @@ pub mod analysis {
         let mut right_point = 0.0;
 
         // Search to the right of peak
+        #[allow(clippy::needless_range_loop)]
         for i in 1..freq_response.len() {
             if freq_response[i] < threshold {
                 right_point = i as f64;

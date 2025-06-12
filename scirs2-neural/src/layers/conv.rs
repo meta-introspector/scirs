@@ -13,6 +13,9 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
 
+// Type aliases for complex types
+type MaxIndicesCache = Arc<RwLock<Option<Array<(usize, usize), IxDyn>>>>;
+
 /// Padding mode for convolutional layers
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PaddingMode {
@@ -1355,14 +1358,18 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> AdaptiveAvgPool2D
     }
 
     /// Calculate adaptive pooling parameters
-    fn calculate_pooling_params(&self, input_size: usize, output_size: usize) -> (usize, usize, usize) {
+    fn calculate_pooling_params(
+        &self,
+        input_size: usize,
+        output_size: usize,
+    ) -> (usize, usize, usize) {
         // Calculate stride as floor division
         let stride = input_size / output_size;
         // Calculate kernel size to ensure complete coverage
         let kernel_size = input_size - (output_size - 1) * stride;
         // Calculate padding to center the pooling
         let padding = 0; // No padding for adaptive pooling
-        
+
         (kernel_size, stride, padding)
     }
 }
@@ -1493,7 +1500,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Adap
                         let w_end = (w_start + kernel_w).min(in_width);
 
                         let pool_size = (h_end - h_start) * (w_end - w_start);
-                        let grad_per_elem = grad_output[[b, c, oh, ow]] / F::from(pool_size).unwrap();
+                        let grad_per_elem =
+                            grad_output[[b, c, oh, ow]] / F::from(pool_size).unwrap();
 
                         for h in h_start..h_end {
                             for w in w_start..w_end {
@@ -1565,7 +1573,7 @@ pub struct AdaptiveMaxPool2D<F: Float + Debug + Send + Sync> {
     /// Input cache for backward pass
     input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
     /// Indices of max values for backward pass
-    max_indices: Arc<RwLock<Option<Array<(usize, usize), IxDyn>>>>,
+    max_indices: MaxIndicesCache,
     /// Phantom data for generic type
     _phantom: PhantomData<F>,
 }
@@ -1603,14 +1611,18 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> AdaptiveMaxPool2D
     }
 
     /// Calculate adaptive pooling parameters
-    fn calculate_pooling_params(&self, input_size: usize, output_size: usize) -> (usize, usize, usize) {
+    fn calculate_pooling_params(
+        &self,
+        input_size: usize,
+        output_size: usize,
+    ) -> (usize, usize, usize) {
         // Calculate stride as floor division
         let stride = input_size / output_size;
         // Calculate kernel size to ensure complete coverage
         let kernel_size = input_size - (output_size - 1) * stride;
         // Calculate padding to center the pooling
         let padding = 0; // No padding for adaptive pooling
-        
+
         (kernel_size, stride, padding)
     }
 }
@@ -1658,7 +1670,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Adap
 
         // Create output array and max indices
         let mut output = Array::<F, _>::zeros((batch_size, channels, out_height, out_width));
-        let mut indices = Array::<(usize, usize), _>::zeros((batch_size, channels, out_height, out_width));
+        let mut indices = Array::<(usize, usize), _>::from_elem(
+            (batch_size, channels, out_height, out_width),
+            (0, 0),
+        );
 
         // Perform adaptive max pooling
         for b in 0..batch_size {

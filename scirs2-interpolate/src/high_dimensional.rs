@@ -103,7 +103,7 @@ pub enum SparseStrategy {
 #[derive(Debug)]
 pub struct HighDimensionalInterpolator<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
 {
     /// Training data points
     points: Array2<F>,
@@ -155,7 +155,7 @@ pub struct InterpolatorStats {
 #[derive(Debug)]
 pub struct HighDimensionalInterpolatorBuilder<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
 {
     dimension_reduction: DimensionReductionMethod,
     local_method: LocalMethod,
@@ -179,7 +179,7 @@ pub enum SpatialIndexType {
 
 impl<F> Default for HighDimensionalInterpolatorBuilder<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
 {
     fn default() -> Self {
         Self {
@@ -197,7 +197,7 @@ where
 
 impl<F> HighDimensionalInterpolatorBuilder<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
 {
     /// Create a new builder with default settings
     ///
@@ -447,7 +447,7 @@ where
             SpatialIndexType::KdTree => {
                 if n_dims <= 10 && n_points >= 20 {
                     // Try to build KdTree for moderate dimensions and sufficient points
-                    match KdTree::new(points) {
+                    match KdTree::new(points.view()) {
                         Ok(kdtree) => Ok(SpatialIndex::KdTree(kdtree)),
                         Err(_) => {
                             // Fall back to brute force if KdTree construction fails
@@ -462,7 +462,7 @@ where
             SpatialIndexType::BallTree => {
                 if n_points >= 50 {
                     // Try to build BallTree for larger datasets
-                    match BallTree::new(points) {
+                    match BallTree::new(points.clone()) {
                         Ok(balltree) => Ok(SpatialIndex::BallTree(balltree)),
                         Err(_) => {
                             // Fall back to brute force if BallTree construction fails
@@ -482,13 +482,13 @@ where
                     Ok(SpatialIndex::BruteForce(points.clone()))
                 } else if n_dims <= 5 && n_points >= 100 {
                     // Low-dimensional, large datasets: prefer KdTree
-                    match KdTree::new(points) {
+                    match KdTree::new(points.view()) {
                         Ok(kdtree) => Ok(SpatialIndex::KdTree(kdtree)),
                         Err(_) => Ok(SpatialIndex::BruteForce(points.clone())),
                     }
                 } else if n_dims <= 15 && n_points >= 50 {
                     // Medium-dimensional datasets: prefer BallTree
-                    match BallTree::new(points) {
+                    match BallTree::new(points.clone()) {
                         Ok(balltree) => Ok(SpatialIndex::BallTree(balltree)),
                         Err(_) => Ok(SpatialIndex::BruteForce(points.clone())),
                     }
@@ -503,7 +503,17 @@ where
 
 impl<F> HighDimensionalInterpolator<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + AddAssign
+        + ScalarOperand
+        + 'static
+        + std::marker::Send
+        + std::marker::Sync,
 {
     /// Create a new builder for high-dimensional interpolation
     ///
@@ -870,7 +880,7 @@ where
                 let query = queries.slice(ndarray::s![i, ..]);
                 self.interpolate(&query.view())
             })
-            .collect();
+            .collect::<Result<Vec<F>, InterpolateError>>();
 
         Ok(Array1::from_vec(results?))
     }
@@ -935,7 +945,7 @@ pub fn make_knn_interpolator<F>(
     k: usize,
 ) -> InterpolateResult<HighDimensionalInterpolator<F>>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
 {
     HighDimensionalInterpolator::new()
         .with_local_method(LocalMethod::KNearestNeighbors {
@@ -990,7 +1000,7 @@ pub fn make_pca_interpolator<F>(
     k: usize,
 ) -> InterpolateResult<HighDimensionalInterpolator<F>>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
 {
     HighDimensionalInterpolator::new()
         .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims })
@@ -1044,7 +1054,7 @@ pub fn make_local_rbf_interpolator<F>(
     radius: f64,
 ) -> InterpolateResult<HighDimensionalInterpolator<F>>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
 {
     HighDimensionalInterpolator::new()
         .with_local_method(LocalMethod::LocalRBF {

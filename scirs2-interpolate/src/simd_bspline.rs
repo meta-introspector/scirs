@@ -10,14 +10,27 @@
 use wide::f64x4;
 
 use crate::bspline::{BSpline, BSplineWorkspace};
-use crate::error::{InterpolateError, InterpolateResult};
+use crate::error::InterpolateResult;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::{Debug, Display};
 
 /// SIMD-optimized B-spline evaluator
-#[derive(Debug)]
-pub struct SimdBSplineEvaluator<T> {
+pub struct SimdBSplineEvaluator<T>
+where
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + std::ops::AddAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign
+        + std::ops::SubAssign
+        + std::ops::RemAssign
+        + 'static,
+{
     /// Reference to the B-spline
     spline: BSpline<T>,
     /// Workspace for scalar fallback operations
@@ -36,7 +49,8 @@ where
         + std::ops::MulAssign
         + std::ops::DivAssign
         + std::ops::SubAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + 'static,
 {
     /// Create a new SIMD-optimized evaluator
     pub fn new(spline: BSpline<T>) -> Self {
@@ -300,10 +314,11 @@ where
 
         // Extract results
         let final_result = d[degree];
-        results[0] = final_result.as_array()[0];
-        results[1] = final_result.as_array()[1];
-        results[2] = final_result.as_array()[2];
-        results[3] = final_result.as_array()[3];
+        let result_array = final_result.to_array();
+        results[0] = result_array[0];
+        results[1] = result_array[1];
+        results[2] = result_array[2];
+        results[3] = result_array[3];
 
         Ok(())
     }
@@ -322,7 +337,7 @@ where
         // For different spans, we need separate processing
         // but can still vectorize some operations
 
-        for (i, (&point, &span)) in points.iter().zip(spans.iter()).enumerate() {
+        for (i, (&point, &_span)) in points.iter().zip(spans.iter()).enumerate() {
             results[i] = self.scalar_de_boor_f64(point, knots, coeffs, degree)?;
         }
 
@@ -415,7 +430,7 @@ where
 
         // Process points in chunks of 4 for SIMD
         let chunks = n_points / 4;
-        let remainder = n_points % 4;
+        let _remainder = n_points % 4;
 
         for chunk in 0..chunks {
             let base_idx = chunk * 4;
@@ -441,10 +456,11 @@ where
 
             // Store results
             let results = dist_sq.sqrt();
-            distances[base_idx] = results[0];
-            distances[base_idx + 1] = results[1];
-            distances[base_idx + 2] = results[2];
-            distances[base_idx + 3] = results[3];
+            let result_array = results.to_array();
+            distances[base_idx] = result_array[0];
+            distances[base_idx + 1] = result_array[1];
+            distances[base_idx + 2] = result_array[2];
+            distances[base_idx + 3] = result_array[3];
         }
 
         // Handle remaining points with scalar operations
@@ -458,11 +474,6 @@ where
         }
 
         distances
-    }
-
-    /// Get access to the underlying B-spline
-    pub fn spline(&self) -> &BSpline<T> {
-        &self.spline
     }
 }
 
@@ -590,7 +601,12 @@ mod tests {
     fn test_edge_cases() -> InterpolateResult<()> {
         let knots = Array1::linspace(0.0, 1.0, 8);
         let coeffs = Array1::linspace(0.0, 1.0, 5);
-        let spline = BSpline::new(&knots.view(), &coeffs.view(), 3, ExtrapolateMode::Constant)?;
+        let spline = BSpline::new(
+            &knots.view(),
+            &coeffs.view(),
+            3,
+            ExtrapolateMode::Extrapolate,
+        )?;
 
         let evaluator = SimdBSplineEvaluator::new(spline);
 

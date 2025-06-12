@@ -8,8 +8,7 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
     distance::{euclidean, pdist},
     simd_distance::{
-        parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch,
-        simd_knn_search,
+        parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch, simd_knn_search,
     },
     KDTree,
 };
@@ -18,15 +17,16 @@ use std::time::Instant;
 /// Generate random points for testing
 fn generate_points(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::from_shape_fn((n_points, dimensions), |_| {
-        rng.random_range(-10.0..10.0)
-    })
+    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
 /// Test SIMD vs scalar distance calculations
 fn test_simd_vs_scalar() {
     println!("=== SIMD vs Scalar Distance Performance ===");
-    println!("{:>8} {:>15} {:>15} {:>12}", "Dim", "Scalar (ns)", "SIMD (ns)", "Speedup");
+    println!(
+        "{:>8} {:>15} {:>15} {:>12}",
+        "Dim", "Scalar (ns)", "SIMD (ns)", "Speedup"
+    );
     println!("{}", "-".repeat(55));
 
     for &dim in &[4, 8, 16, 32, 64] {
@@ -63,7 +63,10 @@ fn test_simd_vs_scalar() {
 /// Test distance matrix computation performance
 fn test_distance_matrix_performance() {
     println!("=== Distance Matrix Performance ===");
-    println!("{:>8} {:>15} {:>15} {:>12} {:>15}", "Size", "Sequential", "Parallel", "Speedup", "Ops/sec");
+    println!(
+        "{:>8} {:>15} {:>15} {:>12} {:>15}",
+        "Size", "Sequential", "Parallel", "Speedup", "Ops/sec"
+    );
     println!("{}", "-".repeat(75));
 
     for &size in &[50, 100, 200, 500] {
@@ -98,7 +101,10 @@ fn test_distance_matrix_performance() {
 /// Test SIMD batch operations
 fn test_simd_batch_operations() {
     println!("=== SIMD Batch Operations ===");
-    println!("{:>8} {:>15} {:>15} {:>12}", "Size", "Individual", "Batch", "Speedup");
+    println!(
+        "{:>8} {:>15} {:>15} {:>12}",
+        "Size", "Individual", "Batch", "Speedup"
+    );
     println!("{}", "-".repeat(55));
 
     for &size in &[100, 500, 1000] {
@@ -108,16 +114,15 @@ fn test_simd_batch_operations() {
         // Individual SIMD calls timing
         let start = Instant::now();
         for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
-            let _ = simd_euclidean_distance(
-                row1.as_slice().unwrap(),
-                row2.as_slice().unwrap(),
-            ).unwrap();
+            let _ = simd_euclidean_distance(row1.as_slice().unwrap(), row2.as_slice().unwrap())
+                .unwrap();
         }
         let individual_time = start.elapsed();
 
         // Batch SIMD timing
         let start = Instant::now();
-        let _batch_distances = simd_euclidean_distance_batch(&points1.view(), &points2.view()).unwrap();
+        let _batch_distances =
+            simd_euclidean_distance_batch(&points1.view(), &points2.view()).unwrap();
         let batch_time = start.elapsed();
 
         let speedup = individual_time.as_secs_f64() / batch_time.as_secs_f64();
@@ -144,12 +149,8 @@ fn test_knn_performance() {
 
     for &k in &[1, 5, 10, 20] {
         let start = Instant::now();
-        let (_indices, _distances) = simd_knn_search(
-            &query_points.view(),
-            &data_points.view(),
-            k,
-            "euclidean"
-        ).unwrap();
+        let (_indices, _distances) =
+            simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean").unwrap();
         let time = start.elapsed();
 
         let queries_per_sec = query_points.nrows() as f64 / time.as_secs_f64();

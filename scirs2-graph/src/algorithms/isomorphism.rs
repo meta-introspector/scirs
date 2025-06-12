@@ -153,6 +153,228 @@ where
     true
 }
 
+/// Check if two graphs are isomorphic
+///
+/// Two graphs are isomorphic if there exists a bijection between their vertices
+/// that preserves the edge-adjacency relationship.
+///
+/// # Arguments
+/// * `graph1` - The first graph
+/// * `graph2` - The second graph
+///
+/// # Returns
+/// * `bool` - True if the graphs are isomorphic, false otherwise
+pub fn are_graphs_isomorphic<N1, N2, E, Ix>(
+    graph1: &Graph<N1, E, Ix>,
+    graph2: &Graph<N2, E, Ix>,
+) -> bool
+where
+    N1: Node + Clone + Hash + Eq,
+    N2: Node + Clone + Hash + Eq,
+    E: EdgeWeight,
+    Ix: IndexType,
+{
+    // Quick checks first
+    if graph1.node_count() != graph2.node_count() || graph1.edge_count() != graph2.edge_count() {
+        return false;
+    }
+
+    // Check degree sequence
+    if !have_same_degree_sequence(graph1, graph2) {
+        return false;
+    }
+
+    // If either graph is empty, they're isomorphic
+    if graph1.node_count() == 0 {
+        return true;
+    }
+
+    // Try to find an isomorphism
+    find_isomorphism(graph1, graph2).is_some()
+}
+
+/// Find an isomorphism between two graphs if one exists
+///
+/// # Arguments
+/// * `graph1` - The first graph
+/// * `graph2` - The second graph
+///
+/// # Returns
+/// * `Option<HashMap<N1, N2>>` - Mapping from graph1 nodes to graph2 nodes if isomorphic
+pub fn find_isomorphism<N1, N2, E, Ix>(
+    graph1: &Graph<N1, E, Ix>,
+    graph2: &Graph<N2, E, Ix>,
+) -> Option<HashMap<N1, N2>>
+where
+    N1: Node + Clone + Hash + Eq,
+    N2: Node + Clone + Hash + Eq,
+    E: EdgeWeight,
+    Ix: IndexType,
+{
+    let nodes1: Vec<N1> = graph1.nodes().into_iter().cloned().collect();
+    let nodes2: Vec<N2> = graph2.nodes().into_iter().cloned().collect();
+
+    if nodes1.len() != nodes2.len() {
+        return None;
+    }
+
+    let mut mapping = HashMap::new();
+    if backtrack_isomorphism(&nodes1, &nodes2, graph1, graph2, &mut mapping, 0) {
+        Some(mapping)
+    } else {
+        None
+    }
+}
+
+/// Check if two graphs have the same degree sequence
+fn have_same_degree_sequence<N1, N2, E, Ix>(
+    graph1: &Graph<N1, E, Ix>,
+    graph2: &Graph<N2, E, Ix>,
+) -> bool
+where
+    N1: Node,
+    N2: Node,
+    E: EdgeWeight,
+    Ix: IndexType,
+{
+    let mut degrees1: Vec<usize> = graph1
+        .nodes()
+        .iter()
+        .map(|node| {
+            graph1
+                .neighbors(node)
+                .map_or(0, |neighbors| neighbors.len())
+        })
+        .collect();
+
+    let mut degrees2: Vec<usize> = graph2
+        .nodes()
+        .iter()
+        .map(|node| {
+            graph2
+                .neighbors(node)
+                .map_or(0, |neighbors| neighbors.len())
+        })
+        .collect();
+
+    degrees1.sort_unstable();
+    degrees2.sort_unstable();
+
+    degrees1 == degrees2
+}
+
+/// Backtracking algorithm to find isomorphism
+fn backtrack_isomorphism<N1, N2, E, Ix>(
+    nodes1: &[N1],
+    nodes2: &[N2],
+    graph1: &Graph<N1, E, Ix>,
+    graph2: &Graph<N2, E, Ix>,
+    mapping: &mut HashMap<N1, N2>,
+    depth: usize,
+) -> bool
+where
+    N1: Node + Clone + Hash + Eq,
+    N2: Node + Clone + Hash + Eq,
+    E: EdgeWeight,
+    Ix: IndexType,
+{
+    // Base case: all nodes mapped
+    if depth == nodes1.len() {
+        return is_valid_isomorphism(graph1, graph2, mapping);
+    }
+
+    let node1 = &nodes1[depth];
+
+    for node2 in nodes2 {
+        // Skip if this node2 is already mapped
+        if mapping.values().any(|mapped| mapped == node2) {
+            continue;
+        }
+
+        // Check degree compatibility
+        let degree1 = graph1
+            .neighbors(node1)
+            .map_or(0, |neighbors| neighbors.len());
+        let degree2 = graph2
+            .neighbors(node2)
+            .map_or(0, |neighbors| neighbors.len());
+
+        if degree1 != degree2 {
+            continue;
+        }
+
+        // Try this mapping
+        mapping.insert(node1.clone(), node2.clone());
+
+        // Check if current partial mapping is consistent
+        if is_partial_mapping_valid(graph1, graph2, mapping, depth + 1) 
+            && backtrack_isomorphism(nodes1, nodes2, graph1, graph2, mapping, depth + 1) {
+            return true;
+        }
+
+        // Backtrack
+        mapping.remove(node1);
+    }
+
+    false
+}
+
+/// Check if a partial mapping is valid (preserves edges among mapped nodes)
+fn is_partial_mapping_valid<N1, N2, E, Ix>(
+    graph1: &Graph<N1, E, Ix>,
+    graph2: &Graph<N2, E, Ix>,
+    mapping: &HashMap<N1, N2>,
+    _mapped_count: usize,
+) -> bool
+where
+    N1: Node + Hash + Eq,
+    N2: Node + Hash + Eq,
+    E: EdgeWeight,
+    Ix: IndexType,
+{
+    for (n1, n2) in mapping {
+        for (m1, m2) in mapping {
+            if n1 != m1 {
+                let edge1_exists = graph1.has_edge(n1, m1);
+                let edge2_exists = graph2.has_edge(n2, m2);
+
+                if edge1_exists != edge2_exists {
+                    return false;
+                }
+            }
+        }
+    }
+    true
+}
+
+/// Check if a complete mapping is a valid isomorphism
+fn is_valid_isomorphism<N1, N2, E, Ix>(
+    graph1: &Graph<N1, E, Ix>,
+    graph2: &Graph<N2, E, Ix>,
+    mapping: &HashMap<N1, N2>,
+) -> bool
+where
+    N1: Node + Hash + Eq,
+    N2: Node + Hash + Eq,
+    E: EdgeWeight,
+    Ix: IndexType,
+{
+    // Check that the mapping preserves all edges
+    for (n1, n2) in mapping {
+        for (m1, m2) in mapping {
+            if n1 != m1 {
+                let edge1_exists = graph1.has_edge(n1, m1);
+                let edge2_exists = graph2.has_edge(n2, m2);
+
+                if edge1_exists != edge2_exists {
+                    return false;
+                }
+            }
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -213,5 +435,68 @@ mod tests {
         assert_eq!(matches.len(), 0);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_isomorphic_graphs() -> GraphResult<()> {
+        // Create two isomorphic triangles with different node labels
+        let mut graph1 = create_graph::<&str, ()>();
+        graph1.add_edge("A", "B", ())?;
+        graph1.add_edge("B", "C", ())?;
+        graph1.add_edge("C", "A", ())?;
+
+        let mut graph2 = create_graph::<i32, ()>();
+        graph2.add_edge(1, 2, ())?;
+        graph2.add_edge(2, 3, ())?;
+        graph2.add_edge(3, 1, ())?;
+
+        assert!(are_graphs_isomorphic(&graph1, &graph2));
+
+        let isomorphism = find_isomorphism(&graph1, &graph2);
+        assert!(isomorphism.is_some());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_non_isomorphic_graphs() -> GraphResult<()> {
+        // Triangle vs path
+        let mut triangle = create_graph::<i32, ()>();
+        triangle.add_edge(1, 2, ())?;
+        triangle.add_edge(2, 3, ())?;
+        triangle.add_edge(3, 1, ())?;
+
+        let mut path = create_graph::<i32, ()>();
+        path.add_edge(1, 2, ())?;
+        path.add_edge(2, 3, ())?;
+
+        assert!(!are_graphs_isomorphic(&triangle, &path));
+        assert!(find_isomorphism(&triangle, &path).is_none());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_different_size_graphs() -> GraphResult<()> {
+        let mut small = create_graph::<i32, ()>();
+        small.add_edge(1, 2, ())?;
+
+        let mut large = create_graph::<i32, ()>();
+        large.add_edge(1, 2, ())?;
+        large.add_edge(2, 3, ())?;
+
+        assert!(!are_graphs_isomorphic(&small, &large));
+        assert!(find_isomorphism(&small, &large).is_none());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_empty_graphs() {
+        let graph1 = create_graph::<i32, ()>();
+        let graph2 = create_graph::<&str, ()>();
+
+        assert!(are_graphs_isomorphic(&graph1, &graph2));
+        assert!(find_isomorphism(&graph1, &graph2).is_some());
     }
 }

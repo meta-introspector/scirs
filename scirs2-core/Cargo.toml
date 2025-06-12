@@ -92,6 +92,7 @@ random = []  # Random number generation utilities
 types = []  # Type conversion utilities
 ufuncs = []  # Universal Functions (ufuncs) system
 linalg = ["ndarray-linalg/blas"]  # Linear algebra with BLAS/LAPACK bindings
+# LAPACK backends - these are mutually exclusive, use only one at a time
 openblas = ["linalg", "ndarray-linalg/openblas-system"]  # Use OpenBLAS backend (system)
 intel-mkl = ["linalg", "ndarray-linalg/intel-mkl-system"]  # Use Intel MKL backend (system)  
 netlib = ["linalg", "ndarray-linalg/netlib-system"]  # Use Netlib backend (system)
@@ -107,9 +108,9 @@ array_protocol_all = ["array_protocol", "array_protocol_jit", "array_protocol_cu
 all = [
     "simd", "parallel", "cache", "validation", "logging",
     "gpu", "cuda", "memory_management", "memory_efficient", "memory_compression",
-    "array", "profiling", "random", "types", "linalg", "ufuncs",
+    "array", "profiling", "random", "types", "openblas", "ufuncs",
     "array_protocol_all"
-]  # Enable all features except backend-specific ones
+]  # Enable all features with default openblas backend
 
 [[example]]
 name = "gpu_example"

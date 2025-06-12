@@ -176,7 +176,8 @@ where
     }
 
     let n_queries = queries.nrows();
-    let n_centers = centers.nrows();
+    let _n_centers = centers.nrows();
+    #[allow(unused_variables)]
     let dims = queries.ncols();
 
     let mut results = Array1::zeros(n_queries);
@@ -254,7 +255,9 @@ fn simd_rbf_evaluate_f64_vectorized(
     epsilon: f64,
 ) -> InterpolateResult<Array1<f64>> {
     let n_queries = queries.nrows();
+    #[allow(unused_variables)]
     let n_centers = centers.nrows();
+    #[allow(unused_variables)]
     let dims = queries.ncols();
     let mut results = Array1::zeros(n_queries);
 

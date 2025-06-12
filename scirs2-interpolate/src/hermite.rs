@@ -355,14 +355,6 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
                     // Return NaN for points outside the interpolation domain
                     return Ok(T::nan());
                 }
-                ExtrapolateMode::Constant => {
-                    // Return the nearest endpoint value
-                    if x_val < self.x[0] {
-                        return Ok(self.y[0]);
-                    } else {
-                        return Ok(self.y[n - 1]);
-                    }
-                }
             }
         }
 
@@ -454,10 +446,6 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
                 ExtrapolateMode::Nan => {
                     // Return NaN for points outside the interpolation domain
                     return Ok(T::nan());
-                }
-                ExtrapolateMode::Constant => {
-                    // For derivatives, return zero at boundaries when using constant value
-                    return Ok(T::zero());
                 }
             }
         }

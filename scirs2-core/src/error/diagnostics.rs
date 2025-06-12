@@ -644,6 +644,7 @@ macro_rules! diagnostic_error {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ErrorContext;
 
     #[test]
     fn test_environment_info() {

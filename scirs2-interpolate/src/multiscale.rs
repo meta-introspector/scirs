@@ -146,8 +146,6 @@ impl<
             ExtrapolateMode::Error => BSplineExtrapolateMode::Error,
             ExtrapolateMode::Extrapolate => BSplineExtrapolateMode::Extrapolate,
             ExtrapolateMode::Nan => BSplineExtrapolateMode::Nan,
-            // Default to Extrapolate for ExtrapolateMode::Constant since BSplineExtrapolateMode doesn't have Constant
-            ExtrapolateMode::Constant => BSplineExtrapolateMode::Extrapolate,
         };
 
         let initial_spline = make_lsq_bspline(
@@ -251,8 +249,6 @@ impl<
             ExtrapolateMode::Error => BSplineExtrapolateMode::Error,
             ExtrapolateMode::Extrapolate => BSplineExtrapolateMode::Extrapolate,
             ExtrapolateMode::Nan => BSplineExtrapolateMode::Nan,
-            // Default to Extrapolate for ExtrapolateMode::Constant since BSplineExtrapolateMode doesn't have Constant
-            ExtrapolateMode::Constant => BSplineExtrapolateMode::Extrapolate,
         };
 
         let refined_spline = BSpline::new(

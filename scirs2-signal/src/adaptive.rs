@@ -731,12 +731,15 @@ impl ApaFilter {
 
         // Compute input correlation matrix X^T * X
         let mut correlation_matrix = vec![vec![0.0; self.projection_order]; self.projection_order];
-        for i in 0..self.projection_order {
-            for j in 0..self.projection_order {
-                correlation_matrix[i][j] =
-                    dot_product(&self.input_matrix[i], &self.input_matrix[j]);
+        for (i, row) in correlation_matrix
+            .iter_mut()
+            .enumerate()
+            .take(self.projection_order)
+        {
+            for (j, cell) in row.iter_mut().enumerate().take(self.projection_order) {
+                *cell = dot_product(&self.input_matrix[i], &self.input_matrix[j]);
                 if i == j {
-                    correlation_matrix[i][j] += self.delta; // Regularization
+                    *cell += self.delta; // Regularization
                 }
             }
         }
@@ -745,9 +748,14 @@ impl ApaFilter {
         let step_vector = solve_linear_system_small(&correlation_matrix, &errors)?;
 
         // Update weights: w = w + mu * X^T * alpha
-        for k in 0..self.projection_order {
-            for i in 0..self.weights.len() {
-                self.weights[i] += self.step_size * step_vector[k] * self.input_matrix[k][i];
+        for (k, input_row) in self
+            .input_matrix
+            .iter()
+            .enumerate()
+            .take(self.projection_order)
+        {
+            for (i, weight) in self.weights.iter_mut().enumerate() {
+                *weight += self.step_size * step_vector[k] * input_row[i];
             }
         }
 

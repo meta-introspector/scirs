@@ -34,7 +34,7 @@ impl AdaptiveController {
 
     /// Set the target update frequency
     pub fn set_target_frequency(&mut self, frequency: f64) {
-        self.target_frequency = frequency.max(0.1).min(10.0); // Clamp between 0.1 and 10 Hz
+        self.target_frequency = frequency.clamp(0.1, 10.0); // Clamp between 0.1 and 10 Hz
     }
 
     /// Record an update interval
@@ -73,7 +73,7 @@ impl AdaptiveController {
     fn calculate_position_factor(&self, progress: f64) -> f64 {
         // Update more frequently at start and end, less in the middle
         // This creates a U-shaped curve
-        let normalized_progress = progress.max(0.0).min(1.0);
+        let normalized_progress = progress.clamp(0.0, 1.0);
         let middle_distance = (0.5 - normalized_progress).abs() * 2.0; // 0 at middle, 1 at edges
 
         // Factor ranges from 0.5 (at middle) to 1.0 (at edges)
@@ -107,7 +107,7 @@ impl AdaptiveController {
         // If processing is stable (low CV), we can update less frequently
         // If processing is unstable (high CV), we should update more frequently
         // Factor ranges from 0.5 (very stable) to 2.0 (very unstable)
-        (1.0 + cv).max(0.5).min(2.0)
+        (1.0 + cv).clamp(0.5, 2.0)
     }
 
     /// Get average processing speed
@@ -274,7 +274,7 @@ impl PredictiveETA {
             return Duration::from_secs(0);
         }
 
-        let recent_count = (self.speed_history.len() / 2).max(1).min(10);
+        let recent_count = (self.speed_history.len() / 2).clamp(1, 10);
         let recent_speeds: Vec<_> = self.speed_history.iter().rev().take(recent_count).collect();
 
         let avg_speed: f64 =

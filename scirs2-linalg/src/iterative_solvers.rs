@@ -171,12 +171,12 @@ where
     }
 
     // Failed to converge - return error with suggestions
-    return Err(LinalgError::convergence_with_suggestions(
+    Err(LinalgError::convergence_with_suggestions(
         "Conjugate Gradient",
         max_iter,
         tol.to_f64().unwrap_or(1e-10),
         final_residual,
-    ));
+    ))
 }
 
 /// Solve a linear system Ax = b using Jacobi iteration.
@@ -292,12 +292,12 @@ where
     }
 
     // Failed to converge - return error with suggestions
-    return Err(LinalgError::convergence_with_suggestions(
+    Err(LinalgError::convergence_with_suggestions(
         "Jacobi iteration",
         max_iter,
         tol.to_f64().unwrap_or(1e-10),
         final_residual,
-    ));
+    ))
 }
 
 /// Solve a linear system Ax = b using Gauss-Seidel iteration.
@@ -419,12 +419,12 @@ where
     }
 
     // Failed to converge - return error with suggestions
-    return Err(LinalgError::convergence_with_suggestions(
+    Err(LinalgError::convergence_with_suggestions(
         "Gauss-Seidel iteration",
         max_iter,
         tol.to_f64().unwrap_or(1e-10),
         final_residual,
-    ));
+    ))
 }
 
 /// Solve a linear system Ax = b using Successive Over-Relaxation (SOR).

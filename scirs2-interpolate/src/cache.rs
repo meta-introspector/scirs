@@ -209,6 +209,7 @@ struct FloatKey<F: Float> {
 }
 
 impl<F: Float> FloatKey<F> {
+    #[allow(dead_code)]
     fn new(value: F, tolerance: F) -> Self {
         Self { value, tolerance }
     }
@@ -244,6 +245,7 @@ pub struct BSplineCache<F: Float> {
     /// Statistics
     stats: CacheStats,
     /// Access counter for LRU/LFU tracking
+    #[allow(dead_code)]
     access_counter: usize,
 }
 
@@ -251,14 +253,19 @@ pub struct BSplineCache<F: Float> {
 #[derive(Debug, Clone)]
 struct CacheEntry<T> {
     /// The cached value
+    #[allow(dead_code)]
     value: T,
     /// Last access time (for LRU)
+    #[allow(dead_code)]
     last_access: usize,
     /// Access frequency (for LFU)
+    #[allow(dead_code)]
     access_count: usize,
     /// Insertion time (for FIFO)
+    #[allow(dead_code)]
     insertion_time: usize,
     /// Estimated memory size in bytes
+    #[allow(dead_code)]
     memory_size: usize,
 }
 
@@ -289,7 +296,7 @@ impl<T> CacheEntry<T> {
             EvictionPolicy::FIFO => -(self.insertion_time as f64),
             EvictionPolicy::Random => {
                 // Simple linear congruential generator for randomness
-                let mut x = (self.insertion_time * 1103515245 + 12345) & 0x7fffffff;
+                let x = (self.insertion_time * 1103515245 + 12345) & 0x7fffffff;
                 x as f64 / 0x7fffffff as f64
             }
             EvictionPolicy::Adaptive => {

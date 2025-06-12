@@ -406,7 +406,6 @@ where
     H: Float + Clone + NumCast + Debug + ToPrimitive + AddAssign + Zero + Send + Sync,
 {
     use ndarray::Zip;
-    use rayon::prelude::*;
 
     // Check dimensions
     let a_shape = a.shape();
@@ -517,7 +516,7 @@ where
     Zip::from(c_high.rows_mut())
         .and(a_high.rows())
         .par_for_each(|mut c_row, a_row| {
-            for (j, mut c_val) in c_row.iter_mut().enumerate() {
+            for (j, c_val) in c_row.iter_mut().enumerate() {
                 let mut sum = H::zero();
                 for (l, &a_val) in a_row.iter().enumerate() {
                     sum += a_val * b_high[[l, j]];

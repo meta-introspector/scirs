@@ -202,7 +202,8 @@ where
 /// Estimate condition number using different methods based on availability
 fn estimate_condition_number<F>(
     matrix: &ArrayView2<F>,
-    _diagnostics: &mut StabilityDiagnostics<F>,
+    #[cfg_attr(not(feature = "linalg"), allow(unused_variables))]
+    diagnostics: &mut StabilityDiagnostics<F>,
 ) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
@@ -354,7 +355,13 @@ where
 /// Check if a division operation is numerically safe
 pub fn check_safe_division<F>(numerator: F, denominator: F) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp,
 {
     let eps = machine_epsilon::<F>();
     let safe_threshold = eps * F::from_f64(1e6).unwrap();
@@ -372,7 +379,7 @@ where
 /// Check if reciprocal operation is numerically safe
 pub fn safe_reciprocal<F>(value: F) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign + std::fmt::LowerExp,
 {
     check_safe_division(F::one(), value)
 }
@@ -409,7 +416,14 @@ pub fn solve_with_stability_monitoring<F>(
     rhs: &Array1<F>,
 ) -> InterpolateResult<(Array1<F>, ConditionReport<F>)>
 where
-    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + AddAssign
+        + SubAssign
+        + std::fmt::LowerExp
+        + 'static,
 {
     // Assess matrix condition first
     let condition_report = assess_matrix_condition(&matrix.view())?;
@@ -557,12 +571,12 @@ mod tests {
 
         assert!(eps_f32 > 0.0);
         assert!(eps_f64 > 0.0);
-        assert!(eps_f32 > eps_f64); // f32 has larger epsilon
+        assert!(eps_f32 > eps_f64 as f32); // f32 has larger epsilon
     }
 
     #[test]
     fn test_condition_assessment_identity() {
-        let matrix = Array2::eye(3);
+        let matrix = Array2::<f64>::eye(3);
         let report = assess_matrix_condition(&matrix.view()).unwrap();
 
         assert_relative_eq!(report.condition_number, 1.0, epsilon = 1e-10);

@@ -80,6 +80,12 @@ pub struct ComputationGraph {
     gradients: Vec<f64>,
 }
 
+impl Default for ComputationGraph {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ComputationGraph {
     /// Create a new computation graph
     pub fn new() -> Self {

@@ -247,7 +247,7 @@ impl MemoryAnalytics {
         let alloc_history = self
             .allocation_history
             .entry(component.clone())
-            .or_insert_with(VecDeque::new);
+            .or_default();
         alloc_history.push_back((timestamp, event.size, event.event_type));
 
         // Limit history size

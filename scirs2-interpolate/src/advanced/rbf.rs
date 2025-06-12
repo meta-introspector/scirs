@@ -53,8 +53,16 @@ pub struct RBFInterpolator<
     condition_report: Option<ConditionReport<F>>,
 }
 
-impl<F: Float + FromPrimitive + Debug + Display + AddAssign + std::ops::SubAssign + 'static>
-    RBFInterpolator<F>
+impl<
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + std::ops::SubAssign
+            + std::fmt::LowerExp
+            + 'static,
+    > RBFInterpolator<F>
 {
     /// Create a new RBF interpolator
     ///
@@ -162,7 +170,7 @@ impl<F: Float + FromPrimitive + Debug + Display + AddAssign + std::ops::SubAssig
         }
 
         // Solve the linear system with stability monitoring
-        let (coefficients, _solve_report) = solve_with_stability_monitoring(&a_matrix, values)
+        let (coefficients, _solve_report) = solve_with_stability_monitoring(&a_matrix, &values.to_owned())
             .or_else(|_| {
                 eprintln!("Warning: Stability-monitored solve failed. Falling back to basic solver with regularization.");
 
@@ -373,7 +381,15 @@ impl<F: Float + FromPrimitive + Debug + Display + AddAssign + std::ops::SubAssig
 // Enhanced solver for the linear system Ax = b with numerical stability checks
 // This implements Gaussian elimination with basic pivoting and safe division
 // Now includes numerical stability monitoring to detect potential issues
-fn self_solve_linear_system<F: Float + FromPrimitive + Debug + Display>(
+fn self_solve_linear_system<
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + std::ops::SubAssign
+        + std::fmt::LowerExp
+        + std::ops::AddAssign,
+>(
     a: &Array2<F>,
     b: &ArrayView1<F>,
 ) -> InterpolateResult<Array1<F>> {

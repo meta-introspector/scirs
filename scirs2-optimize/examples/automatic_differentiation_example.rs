@@ -5,7 +5,7 @@
 
 use ndarray::{Array1, ArrayView1};
 use scirs2_optimize::automatic_differentiation::{
-    autodiff, create_ad_gradient, create_ad_hessian, optimize_ad_mode, ADMode, AutoDiffOptions,
+    autodiff, create_ad_gradient, optimize_ad_mode, ADMode, AutoDiffOptions,
 };
 use scirs2_optimize::unconstrained::{minimize, Method, Options};
 use std::time::Instant;

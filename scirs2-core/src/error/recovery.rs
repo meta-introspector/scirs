@@ -851,7 +851,7 @@ mod tests {
         let cb = CircuitBreaker::new(2, Duration::from_millis(100), Duration::from_millis(500));
 
         // First failure
-        let result =
+        let result: std::result::Result<(), _> =
             cb.execute(|| Err(CoreError::ComputationError(ErrorContext::new("Test error"))));
         assert!(result.is_err());
 

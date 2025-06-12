@@ -164,9 +164,10 @@ pub struct BlockAccessTracker {
 impl BlockAccessTracker {
     /// Create a new block access tracker with the given configuration.
     pub fn new(config: PrefetchConfig) -> Self {
+        let history_size = config.history_size;
         Self {
             config,
-            history: VecDeque::with_capacity(config.history_size),
+            history: VecDeque::with_capacity(history_size),
             current_pattern: AccessPattern::Random,
             stride: None,
             last_update: Instant::now(),

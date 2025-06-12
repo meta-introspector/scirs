@@ -403,7 +403,7 @@ where
     let mut temp = initial_temp;
     let mut rng = rand::rng();
 
-    for iteration in 0..max_iterations {
+    for _iteration in 0..max_iterations {
         // Choose a random node to move
         use rand::Rng;
         let node_idx = rng.random_range(0..n);
@@ -445,7 +445,7 @@ where
         } else {
             // Accept with probability exp(delta / temp)
             let prob = (delta / temp).exp();
-            rng.gen::<f64>() < prob
+            rng.random::<f64>() < prob
         };
 
         if accept {

@@ -146,62 +146,62 @@ fn test_complex_matrix_operations() {
 
     assert_abs_diff_eq!(
         exp_non_trivial[[0, 0]].re,
-        0.9999218760172473575,
+        0.999921876017247,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[0, 0]].im,
-        -0.01249967448170978893,
+        -0.012499674481710,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[1, 1]].re,
-        0.9996094167054230262,
+        0.999609416705423,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[1, 1]].im,
-        0.01249576853687523956,
+        0.012495768536875,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[2, 2]].re,
-        0.9996094167054230262,
+        0.999609416705423,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[2, 2]].im,
-        0.01249576853687523956,
+        0.012495768536875,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[3, 3]].re,
-        0.9999218760172473575,
+        0.999921876017247,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[3, 3]].im,
-        -0.01249967448170978893,
+        -0.012499674481710,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[1, 2]].re,
-        0.0003124593118243262999,
+        0.000312459311824,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[1, 2]].im,
-        -0.02499544301858503295,
+        -0.024995443018585,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[2, 1]].re,
-        0.0003124593118243262999,
+        0.000312459311824,
         epsilon = 1e-10
     );
     assert_abs_diff_eq!(
         exp_non_trivial[[2, 1]].im,
-        -0.02499544301858502848,
+        -0.024995443018585,
         epsilon = 1e-10
     );
 }

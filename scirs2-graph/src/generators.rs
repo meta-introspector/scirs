@@ -276,6 +276,182 @@ pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     Ok(graph)
 }
 
+/// Generates a 3D grid/lattice graph
+///
+/// # Arguments
+/// * `x_dim` - Size in x dimension
+/// * `y_dim` - Size in y dimension  
+/// * `z_dim` - Size in z dimension
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - A 3D grid graph where node ID = z*x_dim*y_dim + y*x_dim + x
+pub fn grid_3d_graph(x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<usize, f64>> {
+    if x_dim == 0 || y_dim == 0 || z_dim == 0 {
+        return Err(GraphError::InvalidGraph(
+            "Grid dimensions must be positive".to_string(),
+        ));
+    }
+
+    let mut graph = Graph::new();
+
+    // Add all nodes
+    for i in 0..(x_dim * y_dim * z_dim) {
+        graph.add_node(i);
+    }
+
+    // Connect neighbors in 3D grid
+    for z in 0..z_dim {
+        for y in 0..y_dim {
+            for x in 0..x_dim {
+                let node_id = z * x_dim * y_dim + y * x_dim + x;
+
+                // Connect to right neighbor
+                if x + 1 < x_dim {
+                    let right_neighbor = z * x_dim * y_dim + y * x_dim + (x + 1);
+                    graph.add_edge(node_id, right_neighbor, 1.0)?;
+                }
+
+                // Connect to front neighbor
+                if y + 1 < y_dim {
+                    let front_neighbor = z * x_dim * y_dim + (y + 1) * x_dim + x;
+                    graph.add_edge(node_id, front_neighbor, 1.0)?;
+                }
+
+                // Connect to top neighbor
+                if z + 1 < z_dim {
+                    let top_neighbor = (z + 1) * x_dim * y_dim + y * x_dim + x;
+                    graph.add_edge(node_id, top_neighbor, 1.0)?;
+                }
+            }
+        }
+    }
+
+    Ok(graph)
+}
+
+/// Generates a triangular lattice graph
+///
+/// # Arguments
+/// * `rows` - Number of rows
+/// * `cols` - Number of columns
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - A triangular lattice where each node has up to 6 neighbors
+pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
+    if rows == 0 || cols == 0 {
+        return Err(GraphError::InvalidGraph(
+            "Lattice dimensions must be positive".to_string(),
+        ));
+    }
+
+    let mut graph = Graph::new();
+
+    // Add all nodes
+    for i in 0..(rows * cols) {
+        graph.add_node(i);
+    }
+
+    for row in 0..rows {
+        for col in 0..cols {
+            let node_id = row * cols + col;
+
+            // Standard grid connections (4-connected)
+            // Right neighbor
+            if col + 1 < cols {
+                let right_neighbor = row * cols + (col + 1);
+                graph.add_edge(node_id, right_neighbor, 1.0)?;
+            }
+
+            // Bottom neighbor
+            if row + 1 < rows {
+                let bottom_neighbor = (row + 1) * cols + col;
+                graph.add_edge(node_id, bottom_neighbor, 1.0)?;
+            }
+
+            // Diagonal connections for triangular lattice
+            // Bottom-right diagonal
+            if row + 1 < rows && col + 1 < cols {
+                let diag_neighbor = (row + 1) * cols + (col + 1);
+                graph.add_edge(node_id, diag_neighbor, 1.0)?;
+            }
+
+            // Bottom-left diagonal (for even rows)
+            if row + 1 < rows && col > 0 && row % 2 == 0 {
+                let diag_neighbor = (row + 1) * cols + (col - 1);
+                graph.add_edge(node_id, diag_neighbor, 1.0)?;
+            }
+        }
+    }
+
+    Ok(graph)
+}
+
+/// Generates a hexagonal lattice graph (honeycomb structure)
+///
+/// # Arguments
+/// * `rows` - Number of rows
+/// * `cols` - Number of columns
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - A hexagonal lattice where each node has exactly 3 neighbors
+pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
+    if rows == 0 || cols == 0 {
+        return Err(GraphError::InvalidGraph(
+            "Lattice dimensions must be positive".to_string(),
+        ));
+    }
+
+    let mut graph = Graph::new();
+
+    // Add all nodes
+    for i in 0..(rows * cols) {
+        graph.add_node(i);
+    }
+
+    for row in 0..rows {
+        for col in 0..cols {
+            let node_id = row * cols + col;
+
+            // Hexagonal lattice connections (3 neighbors per node in honeycomb pattern)
+            // This creates a simplified hexagonal structure
+
+            // Right neighbor (horizontal)
+            if col + 1 < cols {
+                let right_neighbor = row * cols + (col + 1);
+                graph.add_edge(node_id, right_neighbor, 1.0)?;
+            }
+
+            // Connect in honeycomb pattern
+            if row % 2 == 0 {
+                // Even rows: connect down-left and down-right
+                if row + 1 < rows {
+                    if col > 0 {
+                        let down_left = (row + 1) * cols + (col - 1);
+                        graph.add_edge(node_id, down_left, 1.0)?;
+                    }
+                    if col < cols {
+                        let down_right = (row + 1) * cols + col;
+                        graph.add_edge(node_id, down_right, 1.0)?;
+                    }
+                }
+            } else {
+                // Odd rows: connect down-left and down-right with offset
+                if row + 1 < rows {
+                    let down_left = (row + 1) * cols + col;
+                    graph.add_edge(node_id, down_left, 1.0)?;
+
+                    if col + 1 < cols {
+                        let down_right = (row + 1) * cols + (col + 1);
+                        graph.add_edge(node_id, down_right, 1.0)?;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(graph)
+}
+
 /// Generates a Watts-Strogatz small-world graph
 ///
 /// # Arguments
@@ -497,8 +673,8 @@ pub fn planted_partition_model<R: Rng>(
 
     // Create block matrix
     let mut block_matrix = vec![vec![p_out; k]; k];
-    for i in 0..k {
-        block_matrix[i][i] = p_in;
+    for (i, row) in block_matrix.iter_mut().enumerate().take(k) {
+        row[i] = p_in;
     }
 
     stochastic_block_model(&block_sizes, &block_matrix, rng)
@@ -560,6 +736,34 @@ mod tests {
 
         assert_eq!(graph.node_count(), 12); // 3*4 = 12 nodes
         assert_eq!(graph.edge_count(), 17); // (3-1)*4 + 3*(4-1) = 8 + 9 = 17 edges
+    }
+
+    #[test]
+    fn test_grid_3d_graph() {
+        let graph = grid_3d_graph(2, 2, 2).unwrap();
+
+        assert_eq!(graph.node_count(), 8); // 2*2*2 = 8 nodes
+                                           // Each internal node connects to 3 neighbors in 3D grid
+                                           // Expected edges: 3 faces × 2 edges per face + 3 additional connections = 12 edges
+        assert_eq!(graph.edge_count(), 12);
+    }
+
+    #[test]
+    fn test_triangular_lattice_graph() {
+        let graph = triangular_lattice_graph(3, 3).unwrap();
+
+        assert_eq!(graph.node_count(), 9); // 3*3 = 9 nodes
+                                           // Triangular lattice has more edges than regular grid due to diagonal connections
+        assert!(graph.edge_count() > 12); // More than standard 2D grid edges
+    }
+
+    #[test]
+    fn test_hexagonal_lattice_graph() {
+        let graph = hexagonal_lattice_graph(3, 3).unwrap();
+
+        assert_eq!(graph.node_count(), 9); // 3*3 = 9 nodes
+                                           // Hexagonal lattice should have fewer edges than triangular due to honeycomb structure
+        assert!(graph.edge_count() >= 6);
     }
 
     #[test]

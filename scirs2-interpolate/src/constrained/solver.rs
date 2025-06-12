@@ -5,9 +5,7 @@
 
 use crate::bspline::{BSpline, ExtrapolateMode};
 use crate::error::{InterpolateError, InterpolateResult};
-use crate::numerical_stability::{
-    assess_matrix_condition, solve_with_stability_monitoring, StabilityLevel,
-};
+use crate::numerical_stability::{assess_matrix_condition, solve_with_stability_monitoring, StabilityLevel};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
@@ -32,7 +30,8 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + 'static,
+        + 'static
+        + std::fmt::LowerExp,
 {
     // For now, we'll provide a simplified implementation that uses a quadratic program
     // to approximate the interpolation problem
@@ -70,7 +69,8 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + 'static,
+        + 'static
+        + std::fmt::LowerExp,
 {
     // Form the normal equations: A'A*c = A'y
     let a_transpose = design_matrix.t();
@@ -287,7 +287,8 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + 'static,
+        + 'static
+        + std::fmt::LowerExp,
 {
     // Form the penalized objective: A'A*c + λ*P*c = A'y
     let a_transpose = design_matrix.t();
@@ -420,7 +421,8 @@ where
         + std::ops::MulAssign
         + std::ops::DivAssign
         + std::ops::RemAssign
-        + 'static,
+        + 'static
+        + std::fmt::LowerExp,
 {
     let n_coeffs = knots.len() - degree - 1;
 
@@ -465,7 +467,8 @@ where
         + std::ops::MulAssign
         + std::ops::DivAssign
         + std::ops::RemAssign
-        + 'static,
+        + 'static
+        + std::fmt::LowerExp,
 {
     let n_coeffs = knots.len() - degree - 1;
 
@@ -549,7 +552,8 @@ where
         + std::ops::MulAssign
         + std::ops::DivAssign
         + std::ops::RemAssign
-        + 'static,
+        + 'static
+        + std::fmt::LowerExp,
 {
     let n_coeffs = knots.len() - degree - 1;
     let x_min = x[0];

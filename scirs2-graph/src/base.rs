@@ -897,9 +897,9 @@ mod tests {
         let mut graph: MultiGraph<&str, f64> = MultiGraph::new();
 
         // Add parallel edges between A and B
-        let edge1 = graph.add_edge("A", "B", 1.0);
+        let _edge1 = graph.add_edge("A", "B", 1.0);
         let edge2 = graph.add_edge("A", "B", 2.0);
-        let edge3 = graph.add_edge("A", "B", 3.0);
+        let _edge3 = graph.add_edge("A", "B", 3.0);
 
         assert_eq!(graph.node_count(), 2);
         assert_eq!(graph.edge_count(), 3);
@@ -930,10 +930,10 @@ mod tests {
 
         // Add parallel directed edges from A to B
         let edge1 = graph.add_edge("A", "B", 1.0);
-        let edge2 = graph.add_edge("A", "B", 2.0);
+        let _edge2 = graph.add_edge("A", "B", 2.0);
 
         // Add edge in opposite direction
-        let edge3 = graph.add_edge("B", "A", 3.0);
+        let _edge3 = graph.add_edge("B", "A", 3.0);
 
         assert_eq!(graph.node_count(), 2);
         assert_eq!(graph.edge_count(), 3);
@@ -964,8 +964,8 @@ mod tests {
         let mut graph: MultiGraph<i32, f64> = MultiGraph::new();
 
         // Add self loops
-        let edge1 = graph.add_edge(1, 1, 10.0);
-        let edge2 = graph.add_edge(1, 1, 20.0);
+        let _edge1 = graph.add_edge(1, 1, 10.0);
+        let _edge2 = graph.add_edge(1, 1, 20.0);
 
         assert_eq!(graph.node_count(), 1);
         assert_eq!(graph.edge_count(), 2);

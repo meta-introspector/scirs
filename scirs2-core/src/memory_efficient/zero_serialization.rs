@@ -837,7 +837,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         let mmap = super::memmap::create_temp_mmap(data, AccessMode::ReadWrite, 0)?;
 
         // Save to the specified file with zero-copy serialization
-        mmap.save_zero_copy(file_path, metadata)?;
+        mmap.save_zero_copy(&file_path, metadata)?;
 
         // Open the file we just created with read-write access
         Self::load_zero_copy(file_path, AccessMode::ReadWrite)

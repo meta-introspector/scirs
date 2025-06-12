@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &knots_osc.view(),
         &coeffs_osc.view(),
         3,
-        ExtrapolateMode::Constant,
+        ExtrapolateMode::Extrapolate,
     )?;
 
     println!(

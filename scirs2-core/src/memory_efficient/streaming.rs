@@ -1014,6 +1014,8 @@ pub trait AnyStage: Send + Sync {
     fn push_raw(&self, data: Box<dyn std::any::Any + Send>) -> Result<(), CoreError>;
     /// Pop raw data from the stage
     fn pop_raw(&self) -> Result<Box<dyn std::any::Any + Send>, CoreError>;
+    /// Clone the stage into a new Box
+    fn clone_box_impl(&self) -> Box<dyn AnyStage>;
 }
 
 /// Pipeline builder
@@ -1412,9 +1414,6 @@ impl dyn AnyStage {
     fn clone_box(&self) -> Box<dyn AnyStage> {
         self.clone_box_impl()
     }
-
-    /// Implementation for clone_box
-    fn clone_box_impl(&self) -> Box<dyn AnyStage>;
 }
 
 impl<I: Clone + Send + 'static, O: Clone + Send + 'static> Clone for StageWrapper<I, O> {
@@ -1495,14 +1494,21 @@ where
             + 'static,
         A: Send + Sync,
     {
-        let workers = config
-            .workers
-            .unwrap_or_else(|| parallel::get_num_workers());
+        let workers = config.workers.unwrap_or_else(|| num_cpus::get());
 
         let process_fn_clone = process_fn.clone();
         let parallel_fn = move |arrays: Vec<ArrayBase<Vec<A>, D>>| -> Result<Vec<ArrayBase<Vec<A>, D>>, CoreError> {
-            // Process arrays in parallel
-            parallel::with_workers(workers, || {
+            // Process arrays in parallel using rayon
+            use rayon::prelude::*;
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(workers)
+                .build()
+                .map_err(|e| CoreError::StreamError(
+                    ErrorContext::new(format!("Failed to create thread pool: {}", e))
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                ))?;
+            
+            pool.install(|| {
                 let results: Result<Vec<_>, _> = arrays
                     .par_iter()
                     .map(|array| process_fn_clone(array))

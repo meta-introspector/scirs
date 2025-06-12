@@ -1217,7 +1217,7 @@ fn ljung_box_test(residuals: &Array1<f64>, max_lag: usize) -> f64 {
 
 /// Solve linear system using LU decomposition
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    match scirs2_linalg::solve(&a.view(), &b.view()) {
+    match scirs2_linalg::solve(&a.view(), &b.view(), None) {
         Ok(solution) => Ok(solution),
         Err(_) => Err(SignalError::ComputationError(
             "Failed to solve linear system - matrix may be singular".to_string(),

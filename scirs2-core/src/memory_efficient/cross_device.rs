@@ -509,50 +509,35 @@ impl DeviceMemoryManager {
 
         let mut cache = self.cache.lock().unwrap();
 
-        // Sort entries by last access time (oldest first)
-        let mut entries: Vec<_> = cache.iter().collect();
-        entries.sort_by(|a, b| {
-            // This is unsafe because we're downcasting without checking,
-            // but we should never have different types in the cache for the same key
-            // Get last_access for the first entry
-            let a_time = match a.1.downcast_ref::<CacheEntry<f32>>() {
-                Some(entry) => entry.last_access,
-                None => match a.1.downcast_ref::<CacheEntry<f64>>() {
+        // Collect keys with their access times to avoid borrow conflicts
+        let mut key_times: Vec<_> = cache
+            .iter()
+            .map(|(key, value)| {
+                let access_time = match value.downcast_ref::<CacheEntry<f32>>() {
                     Some(entry) => entry.last_access,
-                    None => match a.1.downcast_ref::<CacheEntry<i32>>() {
+                    None => match value.downcast_ref::<CacheEntry<f64>>() {
                         Some(entry) => entry.last_access,
-                        None => match a.1.downcast_ref::<CacheEntry<u32>>() {
+                        None => match value.downcast_ref::<CacheEntry<i32>>() {
                             Some(entry) => entry.last_access,
-                            None => std::time::Instant::now(), // Fallback, shouldn't happen
+                            None => match value.downcast_ref::<CacheEntry<u32>>() {
+                                Some(entry) => entry.last_access,
+                                None => std::time::Instant::now(), // Fallback, shouldn't happen
+                            },
                         },
                     },
-                },
-            };
+                };
+                (key.clone(), access_time)
+            })
+            .collect();
 
-            // Get last_access for the second entry
-            let b_time = match b.1.downcast_ref::<CacheEntry<f32>>() {
-                Some(entry) => entry.last_access,
-                None => match b.1.downcast_ref::<CacheEntry<f64>>() {
-                    Some(entry) => entry.last_access,
-                    None => match b.1.downcast_ref::<CacheEntry<i32>>() {
-                        Some(entry) => entry.last_access,
-                        None => match b.1.downcast_ref::<CacheEntry<u32>>() {
-                            Some(entry) => entry.last_access,
-                            None => std::time::Instant::now(), // Fallback, shouldn't happen
-                        },
-                    },
-                },
-            };
-
-            a_time.cmp(&b_time)
-        });
+        // Sort by access time (oldest first)
+        key_times.sort_by(|a, b| a.1.cmp(&b.1));
 
         // Remove entries until we're under the limit
         let mut removed_size = 0;
         let target_size = current_size - self.max_cache_size / 2; // Remove enough to get below half the limit
 
-        for (key, _) in entries {
-            let key = key.clone();
+        for (key, _) in key_times {
             let entry = cache.remove(&key).unwrap();
 
             // Calculate the size of the entry based on its type

@@ -63,7 +63,7 @@ impl<F: Float + FromPrimitive> SIMDDistanceCalculator<F> {
     #[cfg(target_arch = "x86_64")]
     pub fn batch_squared_distances_simd(&self, query: &[F], points: &ArrayView2<F>) -> Array1<F> {
         let n_points = points.nrows();
-        let n_dims = points.ncols();
+        let _n_dims = points.ncols();
         let mut distances = Array1::zeros(n_points);
 
         // For f64, try to use AVX2 if available
@@ -153,7 +153,7 @@ where
         let mut points_soa = vec![Vec::with_capacity(n_points); dim];
         let indices: Vec<usize> = (0..n_points).collect();
 
-        for (i, point) in points.axis_iter(Axis(0)).enumerate() {
+        for (_i, point) in points.axis_iter(Axis(0)).enumerate() {
             for (d, &coord) in point.iter().enumerate() {
                 points_soa[d].push(coord);
             }
@@ -214,7 +214,7 @@ where
 }
 
 /// Adaptive search strategy that chooses the best method based on query characteristics
-pub struct AdaptiveSearchStrategy<F: Float> {
+pub struct AdaptiveSearchStrategy<F: Float + FromPrimitive + Debug + std::cmp::PartialOrd> {
     cache_friendly_index: CacheFriendlyIndex<F>,
     simd_calculator: SIMDDistanceCalculator<F>,
     stats: SearchStats,
@@ -341,7 +341,7 @@ enum SearchStrategy {
 }
 
 /// Batch query processor for efficient processing of multiple queries
-pub struct BatchQueryProcessor<F: Float> {
+pub struct BatchQueryProcessor<F: Float + FromPrimitive + Debug + std::cmp::PartialOrd> {
     adaptive_strategy: AdaptiveSearchStrategy<F>,
     batch_size: usize,
 }

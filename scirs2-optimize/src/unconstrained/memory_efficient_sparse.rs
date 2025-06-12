@@ -197,7 +197,7 @@ impl UltraScaleState {
             }
             VariableStorage::Disk {
                 file_path,
-                size,
+                size: _,
                 buffer: _,
                 active_indices: _,
             } => {

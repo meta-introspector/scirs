@@ -253,7 +253,7 @@ pub fn cubic_spline_interpolate(
     }
 
     // Solve the system to get second derivatives at each point
-    let second_derivatives = match solve(&matrix.view(), &rhs.view()) {
+    let second_derivatives = match solve(&matrix.view(), &rhs.view(), None) {
         Ok(solution) => solution,
         Err(_) => {
             return Err(SignalError::Compute(
@@ -581,7 +581,7 @@ pub fn gaussian_process_interpolate(
     }
 
     // Compute the Cholesky decomposition of K_xx
-    let l = match cholesky(&k_xx.view()) {
+    let l = match cholesky(&k_xx.view(), None) {
         Ok(l) => l,
         Err(_) => {
             return Err(SignalError::Compute(
@@ -896,7 +896,7 @@ pub fn minimum_energy_interpolate(
     }
 
     // Solve the system to get the unknown values
-    let y_unknown = match solve(&a_reg.view(), &b.view()) {
+    let y_unknown = match solve(&a_reg.view(), &b.view(), None) {
         Ok(solution) => -solution, // Negative because of how we set up the system
         Err(_) => {
             return Err(SignalError::Compute(
@@ -1003,7 +1003,7 @@ where
         rhs[n_valid] = 1.0;
 
         // Solve the Kriging system
-        let weights = match solve(&gamma.view(), &rhs.view()) {
+        let weights = match solve(&gamma.view(), &rhs.view(), None) {
             Ok(w) => w,
             Err(_) => {
                 return Err(SignalError::Compute(
@@ -1092,7 +1092,7 @@ where
 
     // Solve for RBF weights
     let y = Array1::from_vec(valid_values);
-    let weights = match solve(&phi.view(), &y.view()) {
+    let weights = match solve(&phi.view(), &y.view(), None) {
         Ok(w) => w,
         Err(_) => {
             return Err(SignalError::Compute(
@@ -1729,7 +1729,7 @@ pub mod resampling {
 
         let mut output = vec![0.0; target_length];
 
-        for i in 0..target_length {
+        for (i, output_sample) in output.iter_mut().enumerate() {
             // Calculate the exact input position
             let exact_pos = i as f64 * ratio;
             let center_sample = exact_pos.round() as i32;
@@ -1753,7 +1753,7 @@ pub mod resampling {
             }
 
             // Normalize to preserve signal amplitude
-            output[i] = if weight_sum.abs() > 1e-10 {
+            *output_sample = if weight_sum.abs() > 1e-10 {
                 sum / weight_sum
             } else {
                 0.0
@@ -1792,7 +1792,7 @@ pub mod resampling {
         let half_length = filter_length / 2;
         let mut output = vec![0.0; signal.len()];
 
-        for n in 0..signal.len() {
+        for (n, output_sample) in output.iter_mut().enumerate() {
             let mut sum = 0.0;
 
             for k in 0..filter_length {
@@ -1815,7 +1815,7 @@ pub mod resampling {
                 }
             }
 
-            output[n] = sum;
+            *output_sample = sum;
         }
 
         Ok(output)
@@ -1968,7 +1968,7 @@ pub mod resampling {
         let kernel_half = kernel.len() / 2;
         let mut output = vec![0.0; output_length];
 
-        for i in 0..output_length {
+        for (i, output_sample) in output.iter_mut().enumerate() {
             let output_time = i as f64;
             let input_time = time_map(output_time);
 
@@ -1992,7 +1992,7 @@ pub mod resampling {
                     }
                 }
 
-                output[i] = if weight_sum.abs() > 1e-10 {
+                *output_sample = if weight_sum.abs() > 1e-10 {
                     sum / weight_sum
                 } else {
                     0.0
@@ -2063,7 +2063,7 @@ pub mod resampling {
         let mut coeffs = vec![0.0; order + 1];
 
         // Thiran filter design for fractional delay
-        for k in 0..=order {
+        for (k, coeff_ref) in coeffs.iter_mut().enumerate() {
             let mut coeff = 1.0;
 
             for n in 0..=order {
@@ -2072,7 +2072,7 @@ pub mod resampling {
                 }
             }
 
-            coeffs[k] = if k % 2 == 0 { coeff } else { -coeff };
+            *coeff_ref = if k % 2 == 0 { coeff } else { -coeff };
         }
 
         Ok(coeffs)
@@ -2149,15 +2149,15 @@ pub mod resampling {
     /// Create polyphase filter bank from prototype filter
     fn create_polyphase_bank(prototype: &[f64], num_phases: usize) -> Vec<Vec<f64>> {
         let filter_length = prototype.len();
-        let subfilter_length = (filter_length + num_phases - 1) / num_phases;
+        let subfilter_length = filter_length.div_ceil(num_phases);
 
         let mut polyphase_bank = vec![vec![0.0; subfilter_length]; num_phases];
 
-        for i in 0..filter_length {
+        for (i, &proto_val) in prototype.iter().enumerate() {
             let phase = i % num_phases;
             let tap = i / num_phases;
             if tap < subfilter_length {
-                polyphase_bank[phase][tap] = prototype[i];
+                polyphase_bank[phase][tap] = proto_val;
             }
         }
 
@@ -2177,6 +2177,7 @@ pub mod resampling {
         let mut output = vec![0.0; output_length];
 
         for n in 0..input_length {
+            #[allow(clippy::needless_range_loop)]
             for phase in 0..up_factor {
                 let output_idx = n * up_factor + phase;
                 let mut sum = 0.0;
@@ -2444,6 +2445,7 @@ pub mod polynomial {
 
             for j in 1..n {
                 let mut product = dd_table[[0, j]];
+                #[allow(clippy::needless_range_loop)]
                 for k in 0..j {
                     product *= xi - x_data[k];
                 }
@@ -2505,10 +2507,10 @@ pub mod polynomial {
 
         // Compute Chebyshev coefficients using barycentric interpolation
         let mut weights = vec![0.0; n];
-        for i in 0..n {
-            weights[i] = if i == 0 || i == n - 1 { 0.5 } else { 1.0 };
+        for (i, weight) in weights.iter_mut().enumerate().take(n) {
+            *weight = if i == 0 || i == n - 1 { 0.5 } else { 1.0 };
             if i % 2 == 1 {
-                weights[i] = -weights[i];
+                *weight = -*weight;
             }
         }
 
@@ -2573,9 +2575,9 @@ pub mod polynomial {
         let half_range = (b - a) / 2.0;
         let mid_point = (a + b) / 2.0;
 
-        for i in 0..n {
+        for (i, node) in nodes.iter_mut().enumerate().take(n) {
             let angle = PI * (2 * i + 1) as f64 / (2 * n) as f64;
-            nodes[i] = mid_point + half_range * angle.cos();
+            *node = mid_point + half_range * angle.cos();
         }
 
         Ok(nodes)

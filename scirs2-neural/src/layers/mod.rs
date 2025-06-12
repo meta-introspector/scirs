@@ -94,17 +94,23 @@ mod dropout;
 mod embedding;
 mod normalization;
 pub mod recurrent;
+mod regularization;
 mod rnn_thread_safe;
 
 // Re-export layer types
 pub use attention::{AttentionConfig, AttentionMask, MultiHeadAttention, SelfAttention};
-pub use conv::{AdaptiveAvgPool2D, AdaptiveMaxPool2D, Conv2D, GlobalAvgPool2D, MaxPool2D, PaddingMode};
+pub use conv::{
+    AdaptiveAvgPool2D, AdaptiveMaxPool2D, Conv2D, GlobalAvgPool2D, MaxPool2D, PaddingMode,
+};
 pub use dense::Dense;
 pub use dropout::Dropout;
 pub use embedding::{Embedding, EmbeddingConfig, PatchEmbedding, PositionalEmbedding};
 pub use normalization::{BatchNorm, LayerNorm, LayerNorm2D};
 pub use recurrent::{
     Bidirectional, GRUConfig, LSTMConfig, RNNConfig, RecurrentActivation, GRU, LSTM, RNN,
+};
+pub use regularization::{
+    ActivityRegularization, L1ActivityRegularization, L2ActivityRegularization,
 };
 pub use rnn_thread_safe::{
     RecurrentActivation as ThreadSafeRecurrentActivation, ThreadSafeBidirectional, ThreadSafeRNN,

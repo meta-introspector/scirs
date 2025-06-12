@@ -1,4 +1,6 @@
 //! Perfect Reconstruction Filter Banks and Multirate Processing
+#![allow(non_snake_case)]
+#![allow(clippy::needless_range_loop)]
 //!
 //! This module provides comprehensive multirate signal processing capabilities including:
 //! - Perfect reconstruction (PR) filter banks

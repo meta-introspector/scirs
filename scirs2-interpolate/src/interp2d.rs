@@ -4,7 +4,7 @@
 //! SciPy's interp2d function for interpolating data on regular grids.
 
 use crate::error::{InterpolateError, InterpolateResult};
-use crate::interp1d::{linear_interpolate, InterpolationMethod};
+use crate::interp1d::linear_interpolate;
 use crate::spline::CubicSpline;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
@@ -228,11 +228,11 @@ where
         let result = if y_idx == 0 && y_new < self.y[0] {
             // Extrapolate below
             let row = self.z.slice(ndarray::s![0, ..]);
-            linear_interpolate(&self.x.view(), &row, x_new)?
+            linear_interpolate(&self.x.view(), &row, &Array1::from_vec(vec![x_new]).view())?[0]
         } else if y_idx >= self.y.len() - 1 && y_new > self.y[self.y.len() - 1] {
             // Extrapolate above
             let row = self.z.slice(ndarray::s![self.y.len() - 1, ..]);
-            linear_interpolate(&self.x.view(), &row, x_new)?
+            linear_interpolate(&self.x.view(), &row, &Array1::from_vec(vec![x_new]).view())?[0]
         } else {
             // Interpolate between two y values
             let y_idx = y_idx.min(self.y.len() - 2);
@@ -241,8 +241,12 @@ where
             let row0 = self.z.slice(ndarray::s![y_idx, ..]);
             let row1 = self.z.slice(ndarray::s![y_idx + 1, ..]);
 
-            let val0 = linear_interpolate(&self.x.view(), &row0, x_new)?;
-            let val1 = linear_interpolate(&self.x.view(), &row1, x_new)?;
+            let val0 =
+                linear_interpolate(&self.x.view(), &row0, &Array1::from_vec(vec![x_new]).view())?
+                    [0];
+            let val1 =
+                linear_interpolate(&self.x.view(), &row1, &Array1::from_vec(vec![x_new]).view())?
+                    [0];
 
             // Interpolate along y
             let y0 = self.y[y_idx];
@@ -278,12 +282,19 @@ where
 
 /// Check if array is sorted in ascending order
 fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
-    arr.windows(2).all(|w| w[0] <= w[1])
+    for window in arr.windows(2) {
+        if window[0] > window[1] {
+            return false;
+        }
+    }
+    true
 }
 
 /// Find interval containing the value using binary search
 fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
-    match arr.binary_search_by(|x| x.partial_cmp(&value).unwrap()) {
+    // Convert to slice to use binary_search_by
+    let slice: &[F] = arr.as_slice().unwrap();
+    match slice.binary_search_by(|x| x.partial_cmp(&value).unwrap()) {
         Ok(idx) => idx,
         Err(idx) => {
             if idx == 0 {

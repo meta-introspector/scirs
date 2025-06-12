@@ -4,9 +4,7 @@
 //! in optimization problems with advanced sparsity detection and specialized algorithms.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_optimize::unconstrained::{
-    minimize_efficient_sparse_newton, EfficientSparseOptions, SparsityInfo,
-};
+use scirs2_optimize::unconstrained::{minimize_efficient_sparse_newton, EfficientSparseOptions};
 use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -82,8 +80,8 @@ fn simple_sparse_example() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let max_active_error = active_errors.iter().fold(0.0, |a, &b| a.max(b));
-    let max_inactive_value = inactive_values.iter().fold(0.0, |a, &b| a.max(b));
+    let max_active_error = active_errors.iter().fold(0.0f64, |a, &b| a.max(b));
+    let max_inactive_value = inactive_values.iter().fold(0.0f64, |a, &b| a.max(b));
 
     println!("  Max error in active variables: {:.6e}", max_active_error);
     println!(
@@ -170,7 +168,7 @@ fn large_scale_sparse_example() -> Result<(), Box<dyn std::error::Error>> {
 
     // Analyze solution structure
     let solution_norm = result.x.mapv(|x| x.abs()).sum() / n as f64;
-    let max_abs_value = result.x.mapv(|x| x.abs()).fold(0.0, |a, b| a.max(b));
+    let max_abs_value = result.x.mapv(|x| x.abs()).fold(0.0f64, |a, b| a.max(b));
 
     println!("  Average |x_i|: {:.6e}", solution_norm);
     println!("  Max |x_i|: {:.6e}", max_abs_value);

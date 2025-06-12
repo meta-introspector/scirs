@@ -235,25 +235,25 @@ impl PatternRecognizer {
         self.detect_basic_patterns();
 
         // Complex patterns based on dimensions
-        if let Some(ref dims) = self.dimensions {
+        if let Some(dims) = self.dimensions.clone() {
             // Detect matrix traversal patterns
             if dims.len() >= 2 {
-                self.detect_matrix_patterns(dims);
+                self.detect_matrix_patterns(&dims);
             }
 
             // Detect block patterns
             if self.config.detect_block && dims.len() >= 2 {
-                self.detect_block_patterns(dims);
+                self.detect_block_patterns(&dims);
             }
 
             // Detect diagonal patterns
             if self.config.detect_diagonal && dims.len() == 2 {
-                self.detect_diagonal_patterns(dims);
+                self.detect_diagonal_patterns(&dims);
             }
 
             // Detect stencil patterns
             if self.config.detect_stencil && dims.len() >= 2 {
-                self.detect_stencil_patterns(dims);
+                self.detect_stencil_patterns(&dims);
             }
         }
 

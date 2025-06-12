@@ -9,11 +9,14 @@ pub use crate::callbacks::{
 };
 pub use crate::error::{Error, Result};
 pub use crate::evaluation::{
-    CrossValidationConfig, CrossValidationStrategy, CrossValidator, EarlyStoppingConfig,
+    CrossValidationConfig, CrossValidator, EarlyStoppingConfig,
     EarlyStoppingMode, EvaluationConfig, Evaluator, Metric, MetricType, TestConfig, TestEvaluator,
     ValidationConfig, ValidationHandler,
 };
-pub use crate::layers::{Dense, Dropout, Layer, LayerConfig, Sequential};
+pub use crate::layers::{
+    ActivityRegularization, AdaptiveAvgPool2D, AdaptiveMaxPool2D, Dense, Dropout,
+    L1ActivityRegularization, L2ActivityRegularization, Layer, LayerConfig, Sequential,
+};
 pub use crate::losses::{ContrastiveLoss, CrossEntropyLoss, FocalLoss, Loss, TripletLoss};
 pub use crate::models::Model;
 pub use crate::optimizers::{Adam, Optimizer, RMSprop, SGD};
@@ -23,6 +26,22 @@ pub use crate::training::{
 };
 pub use crate::transformer::{TransformerDecoderLayer, TransformerEncoderLayer};
 pub use crate::utils::positional_encoding::{PositionalEncoding, SinusoidalPositionalEncoding};
+
+// Performance optimizations
+pub use crate::performance::{
+    OptimizationCapabilities, PerformanceOptimizer, PerformanceProfiler, ThreadPoolManager,
+};
+
+// Data augmentation
+pub use crate::augmentation::{
+    AugmentationManager, AugmentationPipelineBuilder, ImageAugmentation, MixAugmentation,
+    TextAugmentation, AudioAugmentation, FillMode,
+};
+
+// Enhanced evaluation tools - alias to avoid conflict
+pub use crate::evaluation::{
+    Evaluator as ModelEvaluator,
+};
 
 // Architecture specific imports
 pub use crate::models::architectures::{

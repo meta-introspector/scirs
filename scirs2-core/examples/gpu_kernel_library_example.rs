@@ -3,9 +3,12 @@
 //! Demonstrates the usage of the comprehensive GPU kernel library for
 //! common scientific computing operations across different GPU backends.
 
+#[cfg(feature = "gpu")]
 use scirs2_core::gpu::kernels::{DataType, KernelParams};
+#[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext};
 
+#[cfg(feature = "gpu")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== GPU Kernel Library Demonstration ===");
 
@@ -46,7 +49,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(not(feature = "gpu"))]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("=== GPU Kernel Library Example ===");
+    println!("This example requires the 'gpu' feature to be enabled.");
+    println!("Please run with: cargo run --example gpu_kernel_library_example --features gpu");
+    Ok(())
+}
+
 /// Demonstrate BLAS operations (GEMM, AXPY)
+#[cfg(feature = "gpu")]
 fn demo_blas_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 1: BLAS Operations");
     println!("-----------------------");
@@ -125,6 +137,7 @@ fn demo_blas_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::
 }
 
 /// Demonstrate reduction operations (sum, min, max, mean, std)
+#[cfg(feature = "gpu")]
 fn demo_reduction_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 2: Reduction Operations");
     println!("----------------------------");
@@ -196,6 +209,7 @@ fn demo_reduction_operations(context: &GpuContext) -> Result<(), Box<dyn std::er
 }
 
 /// Demonstrate machine learning operations (activations, pooling, softmax)
+#[cfg(feature = "gpu")]
 fn demo_ml_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 3: Machine Learning Operations");
     println!("----------------------------------");
@@ -267,6 +281,7 @@ fn demo_ml_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Er
 }
 
 /// Demonstrate transform operations (FFT)
+#[cfg(feature = "gpu")]
 fn demo_transform_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 4: Transform Operations");
     println!("---------------------------");
@@ -319,6 +334,7 @@ fn demo_transform_operations(context: &GpuContext) -> Result<(), Box<dyn std::er
 }
 
 /// Demonstrate kernel specialization capabilities
+#[cfg(feature = "gpu")]
 fn demo_kernel_specialization(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 5: Kernel Specialization");
     println!("-----------------------------");

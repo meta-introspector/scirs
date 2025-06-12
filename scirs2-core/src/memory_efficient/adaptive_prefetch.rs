@@ -631,8 +631,8 @@ impl AdaptivePatternTracker {
         }
 
         // Check for custom dimensional patterns
-        if let Some(dims) = &self.dimensions {
-            if !self.detect_dimensional_patterns(dims).is_empty() {
+        if let Some(dims) = self.dimensions.clone() {
+            if !self.detect_dimensional_patterns(&dims).is_empty() {
                 self.current_pattern = AccessPattern::Custom;
                 return;
             }

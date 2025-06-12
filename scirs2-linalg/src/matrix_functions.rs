@@ -555,12 +555,12 @@ where
     }
 
     // Failed to converge - return error with suggestions
-    return Err(LinalgError::convergence_with_suggestions(
+    Err(LinalgError::convergence_with_suggestions(
         "Matrix square root (Denman-Beavers iteration)",
         max_iter,
         tol.to_f64().unwrap_or(1e-12),
         final_error,
-    ));
+    ))
 }
 
 /// Compute the matrix cosine using eigendecomposition.

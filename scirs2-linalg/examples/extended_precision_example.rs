@@ -163,7 +163,7 @@ fn main() -> LinalgResult<()> {
     }
 
     // Calculate determinant with standard precision
-    let det_std = match det(&hilbert_det_f32.view()) {
+    let det_std = match det(&hilbert_det_f32.view(), None) {
         Ok(d) => d,
         Err(e) => {
             println!("Error calculating standard precision determinant: {}", e);
@@ -175,7 +175,7 @@ fn main() -> LinalgResult<()> {
     let det_ext = extended_det::<_, f64>(&hilbert_det_f32.view())?;
 
     // Calculate f64 reference
-    let det_f64 = det(&hilbert_det.view())?;
+    let det_f64 = det(&hilbert_det.view(), None)?;
     let det_f64_as_f32 = det_f64 as f32;
 
     println!(

@@ -177,15 +177,17 @@ pub struct AnimationSettings {
     pub animate_bar: bool,
 }
 
-impl ProgressTheme {
-    /// Default theme
-    pub fn default() -> Self {
+impl Default for ProgressTheme {
+    fn default() -> Self {
         Self {
             symbols: ProgressSymbols::default(),
             colors: ColorScheme::default(),
             animation: AnimationSettings::default(),
         }
     }
+}
+
+impl ProgressTheme {
 
     /// Modern theme with Unicode blocks
     pub fn modern() -> Self {
@@ -237,9 +239,8 @@ impl ProgressTheme {
     }
 }
 
-impl ColorScheme {
-    /// Default color scheme (no colors)
-    pub fn default() -> Self {
+impl Default for ColorScheme {
+    fn default() -> Self {
         Self {
             fill_color: None,
             empty_color: None,
@@ -248,6 +249,9 @@ impl ColorScheme {
             eta_color: None,
         }
     }
+}
+
+impl ColorScheme {
 
     /// Colorful scheme with ANSI colors
     pub fn colorful() -> Self {
@@ -304,15 +308,17 @@ pub enum ColorType {
     ETA,
 }
 
-impl AnimationSettings {
-    /// Default animation settings
-    pub fn default() -> Self {
+impl Default for AnimationSettings {
+    fn default() -> Self {
         Self {
             fps: 2.0,
             animate_spinner: true,
             animate_bar: false,
         }
     }
+}
+
+impl AnimationSettings {
 
     /// Smooth animation settings
     pub fn smooth() -> Self {

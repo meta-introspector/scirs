@@ -119,7 +119,7 @@ where
 
     for (i, cov_i) in group_covs.iter().enumerate() {
         let weight = F::from(sample_sizes[i] - 1).unwrap() / F::from(total_dof).unwrap();
-        pooled_cov = pooled_cov + &(cov_i * weight);
+        pooled_cov += &(cov_i * weight);
     }
 
     let log_det_pooled = det::<F>(&pooled_cov.view(), None)?.ln();
@@ -128,7 +128,7 @@ where
     let mut m_statistic = F::from(total_dof).unwrap() * log_det_pooled;
 
     for (i, &log_det_i) in log_dets.iter().enumerate() {
-        m_statistic = m_statistic - F::from(sample_sizes[i] - 1).unwrap() * log_det_i;
+        m_statistic -= F::from(sample_sizes[i] - 1).unwrap() * log_det_i;
     }
 
     // Convert to chi-square statistic using Box's correction
@@ -285,7 +285,7 @@ where
             let _temp_j = centered_j.dot(&cov_inv);
 
             let cross_term = temp_i.dot(&centered_j);
-            skewness_sum = skewness_sum + cross_term.powi(3);
+            skewness_sum += cross_term.powi(3);
         }
     }
 
@@ -483,7 +483,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
     use ndarray::array;
 
     #[test]

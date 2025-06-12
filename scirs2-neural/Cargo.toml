@@ -1,6 +1,6 @@
 [package]
 name = "scirs2-neural"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 edition = "2021"
 authors = ["SciRS2 Team"]
 license = "MIT OR Apache-2.0"
@@ -31,6 +31,7 @@ rand = { workspace = true }
 rand_distr = { workspace = true }
 blas = { workspace = true }
 openblas-src = { workspace = true }
+rayon = { workspace = true, optional = true }
 
 # AI/ML specific dependencies
 autograd = { workspace = true }
@@ -57,6 +58,7 @@ core = ["dep:scirs2-core"]
 gpu = ["core"]  # GPU acceleration requires core
 memory_efficient = ["core"]  # Memory efficiency requires core
 simd = ["core"]  # SIMD acceleration requires core
+rayon = ["dep:rayon"]  # Parallel processing support
 # Features temporarily disabled for publishing
 # linalg = ["dep:scirs2-linalg"] 
 # optimize = ["dep:scirs2-optimize"]

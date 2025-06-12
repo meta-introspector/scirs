@@ -362,11 +362,9 @@ impl RobustConvergenceState {
         }
 
         // Progress-based convergence
-        if self.options.enable_progress_based {
-            if self.progress_state.progress_rate.abs() < self.options.min_progress_rate {
-                convergence_reasons.push("Insufficient progress".to_string());
-                criteria_met += 1;
-            }
+        if self.options.enable_progress_based && self.progress_state.progress_rate.abs() < self.options.min_progress_rate {
+            convergence_reasons.push("Insufficient progress".to_string());
+            criteria_met += 1;
         }
 
         // Time limit check
