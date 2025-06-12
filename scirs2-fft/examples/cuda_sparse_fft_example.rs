@@ -2,10 +2,11 @@ use num_complex::Complex64;
 use plotly::common::Title;
 use plotly::{common::Mode, layout::Axis, Layout, Plot, Scatter};
 use scirs2_fft::{
-    cuda_sparse_fft, get_cuda_devices, is_cuda_available, sparse_fft,
+    sparse_fft,
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::GPUBackend,
-    sparse_fft_gpu_memory::init_global_memory_manager,
+    sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
+    sparse_fft_gpu_memory::{init_global_memory_manager, is_cuda_available},
 };
 use std::f64::consts::PI;
 

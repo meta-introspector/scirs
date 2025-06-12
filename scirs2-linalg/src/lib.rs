@@ -125,6 +125,7 @@ pub mod matrixfree;
 pub mod mixed_precision;
 mod norm;
 pub mod optim;
+pub mod parallel;
 pub mod perf_opt;
 pub mod projection;
 /// Quantization-aware linear algebra operations
@@ -153,6 +154,7 @@ pub mod autograd;
 
 // SciPy-compatible API wrappers
 pub mod compat;
+pub mod compat_wrappers;
 
 // Accelerated implementations using BLAS/LAPACK
 pub mod blas_accelerated;
@@ -186,7 +188,10 @@ pub use self::complex::enhanced_ops::{
     schur as complex_schur, skew_hermitian_part, trace,
 };
 pub use self::complex::{complex_inverse, complex_matmul, hermitian_transpose};
-pub use self::decomposition::*;
+// Main decomposition functions with workers parameter
+pub use self::decomposition::{cholesky, lu, qr, svd};
+// Backward compatibility versions (deprecated)
+pub use self::decomposition::{cholesky_default, lu_default, qr_default, svd_default};
 // Eigen module exports included in other use statements
 pub use self::eigen_specialized::*;
 pub use self::extended_precision::*;
@@ -195,6 +200,7 @@ pub use self::matrix_calculus::*;
 pub use self::matrix_factorization::{
     cur_decomposition, interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
 };
+pub use self::matrix_functions::{cosm, expm, logm, sinm, sqrtm, tanm};
 pub use self::matrixfree::{
     block_diagonal_operator, conjugate_gradient as matrix_free_conjugate_gradient,
     diagonal_operator, gmres as matrix_free_gmres, jacobi_preconditioner,
@@ -202,7 +208,10 @@ pub use self::matrixfree::{
     LinearOperator, MatrixFreeOp,
 };
 pub use self::norm::*;
-pub use self::solve::*;
+// Main solve functions with workers parameter
+pub use self::solve::{lstsq, solve, solve_multiple, solve_triangular, LstsqResult};
+// Backward compatibility versions (deprecated)
+pub use self::solve::{lstsq_default, solve_default, solve_multiple_default};
 pub use self::specialized::{
     specialized_to_operator, BandedMatrix, SpecializedMatrix, SymmetricMatrix, TridiagonalMatrix,
 };
@@ -249,7 +258,7 @@ pub mod prelude {
         conv2d_backward_kernel, conv2d_im2col, conv_transpose2d, im2col, max_pool2d,
         max_pool2d_backward,
     };
-    pub use super::decomposition::{cholesky, lu, qr, svd};
+    pub use super::decomposition::{cholesky, lu, qr, schur, svd};
     pub use super::eigen::{eig, eigh, eigvals, eigvalsh, power_iteration};
     pub use super::eigen_specialized::banded::{banded_eigh, banded_eigvalsh};
     pub use super::eigen_specialized::sparse::{largest_k_eigh, smallest_k_eigh};
@@ -280,7 +289,7 @@ pub mod prelude {
     pub use super::matrix_factorization::{
         cur_decomposition, interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
     };
-    pub use super::matrix_functions::{expm, logm, matrix_power, sqrtm};
+    pub use super::matrix_functions::{cosm, expm, logm, matrix_power, sinm, sqrtm, tanm};
     pub use super::matrixfree::{
         block_diagonal_operator, conjugate_gradient as matrix_free_conjugate_gradient,
         diagonal_operator, gmres as matrix_free_gmres, jacobi_preconditioner,
@@ -340,17 +349,34 @@ pub mod prelude {
     };
     #[cfg(feature = "simd")]
     pub use super::simd_ops::{
-        simd_axpy_f32, simd_axpy_f64, simd_dot_f32, simd_dot_f64, simd_frobenius_norm_f32,
-        simd_frobenius_norm_f64, simd_matmul_f32, simd_matmul_f64, simd_matrix_max_f32,
-        simd_matrix_max_f64, simd_matrix_min_f32, simd_matrix_min_f64, simd_matvec_f32,
-        simd_matvec_f64,
+        simd_axpy_f32,
+        simd_axpy_f64,
+        simd_dot_f32,
+        simd_dot_f64,
+        simd_frobenius_norm_f32,
+        simd_frobenius_norm_f64,
         // GEMM operations
-        simd_gemm_f32, simd_gemm_f64, simd_gemv_f32, simd_gemv_f64,
-        simd_matmul_optimized_f32, simd_matmul_optimized_f64, GemmBlockSizes,
+        simd_gemm_f32,
+        simd_gemm_f64,
+        simd_gemv_f32,
+        simd_gemv_f64,
+        simd_matmul_f32,
+        simd_matmul_f64,
+        simd_matmul_optimized_f32,
+        simd_matmul_optimized_f64,
+        simd_matrix_max_f32,
+        simd_matrix_max_f64,
+        simd_matrix_min_f32,
+        simd_matrix_min_f64,
+        simd_matvec_f32,
+        simd_matvec_f64,
         // Transpose operations
-        simd_transpose_f32, simd_transpose_f64,
+        simd_transpose_f32,
+        simd_transpose_f64,
         // Vector norm operations
-        simd_vector_norm_f32, simd_vector_norm_f64,
+        simd_vector_norm_f32,
+        simd_vector_norm_f64,
+        GemmBlockSizes,
     };
     pub use super::solve::{lstsq, solve, solve_multiple, solve_triangular};
     pub use super::sparse_dense::{
@@ -399,39 +425,67 @@ pub mod prelude {
     // SciPy-compatible API
     pub mod scipy_compat {
         //! SciPy-compatible linear algebra functions
-        //! 
+        //!
         //! This module provides functions with the same signatures and behavior
         //! as SciPy's linalg module, making migration from Python to Rust easier.
-        //! 
+        //!
         //! # Examples
-        //! 
+        //!
         //! ```
         //! use ndarray::array;
         //! use scirs2_linalg::prelude::scipy_compat;
-        //! 
+        //!
         //! let a = array![[4.0, 2.0], [2.0, 3.0]];
-        //! 
+        //!
         //! // SciPy-style determinant computation
         //! let det = scipy_compat::det(&a.view(), false, true).unwrap();
-        //! 
+        //!
         //! // SciPy-style matrix norm
         //! let norm = scipy_compat::norm(&a.view(), Some("fro"), None, false, true).unwrap();
         //! ```
-        
+
         pub use super::super::compat::{
-            // Basic matrix operations
-            det, inv, pinv, norm, vector_norm, cond, matrix_rank,
-            // Matrix decompositions
-            lu, qr, svd, cholesky, rq, polar, schur,
-            // Eigenvalue problems
-            eig, eigh, eigvals, eigvalsh,
-            eig_banded, eigvals_banded, eigh_tridiagonal, eigvalsh_tridiagonal,
-            // Linear system solvers
-            compat_solve as solve, lstsq, solve_triangular, solve_banded,
-            // Matrix functions
-            expm, logm, sqrtm, fractional_matrix_power, funm, cosm, sinm, tanm,
             // Utilities
             block_diag,
+            cholesky,
+            // Linear system solvers
+            compat_solve as solve,
+            cond,
+            cosm,
+            // Basic matrix operations
+            det,
+            // Eigenvalue problems
+            eig,
+            eig_banded,
+            eigh,
+            eigh_tridiagonal,
+            eigvals,
+            eigvals_banded,
+            eigvalsh,
+            eigvalsh_tridiagonal,
+            // Matrix functions
+            expm,
+            fractional_matrix_power,
+            funm,
+            inv,
+            logm,
+            lstsq,
+            // Matrix decompositions
+            lu,
+            matrix_rank,
+            norm,
+            pinv,
+            polar,
+            qr,
+            rq,
+            schur,
+            sinm,
+            solve_banded,
+            solve_triangular,
+            sqrtm,
+            svd,
+            tanm,
+            vector_norm,
             // Type aliases
             SvdResult,
         };

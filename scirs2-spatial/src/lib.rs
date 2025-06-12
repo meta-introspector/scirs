@@ -307,7 +307,7 @@
 //! // SIMD batch distance calculation between corresponding points
 //! let points1 = array![[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]];
 //! let points2 = array![[1.0, 0.0], [2.0, 1.0], [3.0, 2.0]];
-//! 
+//!
 //! let distances = simd_euclidean_distance_batch(&points1.view(), &points2.view()).unwrap();
 //! println!("Batch distances: {:?}", distances);
 //!

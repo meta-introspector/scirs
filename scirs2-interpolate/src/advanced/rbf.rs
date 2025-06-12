@@ -3,9 +3,12 @@
 //! This module provides RBF interpolation methods for scattered data.
 
 use crate::error::{InterpolateError, InterpolateResult};
+use crate::numerical_stability::{
+    assess_matrix_condition, solve_with_stability_monitoring, StabilityLevel, ConditionReport,
+};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::ops::AddAssign;
 
 /// RBF kernel functions
@@ -31,8 +34,11 @@ pub enum RBFKernel {
 ///
 /// This interpolator uses radial basis functions to interpolate values at
 /// arbitrary points based on a set of known sample points.
+///
+/// The interpolator now includes numerical stability monitoring to detect
+/// and warn about ill-conditioned matrices during construction.
 #[derive(Debug, Clone)]
-pub struct RBFInterpolator<F: Float> {
+pub struct RBFInterpolator<F: Float + Display + FromPrimitive> {
     /// Coordinates of sample points
     points: Array2<F>,
     /// Coefficients for the RBF interpolation
@@ -41,9 +47,11 @@ pub struct RBFInterpolator<F: Float> {
     kernel: RBFKernel,
     /// Shape parameter for the kernel
     epsilon: F,
+    /// Condition assessment of the RBF matrix
+    condition_report: Option<ConditionReport<F>>,
 }
 
-impl<F: Float + FromPrimitive + Debug + AddAssign> RBFInterpolator<F> {
+impl<F: Float + FromPrimitive + Debug + Display + AddAssign + 'static> RBFInterpolator<F> {
     /// Create a new RBF interpolator
     ///
     /// # Arguments
@@ -91,14 +99,22 @@ impl<F: Float + FromPrimitive + Debug + AddAssign> RBFInterpolator<F> {
     ) -> InterpolateResult<Self> {
         // Check inputs
         if points.shape()[0] != values.len() {
-            return Err(InterpolateError::ValueError(
-                "number of points must match number of values".to_string(),
+            return Err(InterpolateError::shape_mismatch(
+                format!(
+                    "points.shape()[0] = {} to match values.len()",
+                    points.shape()[0]
+                ),
+                format!("values.len() = {}", values.len()),
+                "RBF interpolator input data",
             ));
         }
 
         if epsilon <= F::zero() {
-            return Err(InterpolateError::ValueError(
-                "epsilon must be positive".to_string(),
+            return Err(InterpolateError::invalid_parameter(
+                "epsilon",
+                "positive value",
+                format!("{:?}", epsilon),
+                "RBF interpolation",
             ));
         }
 
@@ -117,21 +133,61 @@ impl<F: Float + FromPrimitive + Debug + AddAssign> RBFInterpolator<F> {
             }
         }
 
-        // Add a small regularization term to the diagonal for stability
-        let regularization = F::from_f64(1e-10).unwrap();
-        for i in 0..n_points {
-            a_matrix[[i, i]] += regularization;
+        // Assess matrix condition before solving
+        let condition_report = assess_matrix_condition(&a_matrix.view()).ok();
+        
+        // Warn about potential numerical issues
+        if let Some(ref report) = condition_report {
+            match report.stability_level {
+                StabilityLevel::Poor => {
+                    eprintln!(
+                        "Warning: RBF matrix is poorly conditioned (condition number: {:.2e}). \
+                         Results may be unreliable. Consider increasing epsilon parameter or using regularization.",
+                        report.condition_number
+                    );
+                }
+                StabilityLevel::Marginal => {
+                    eprintln!(
+                        "Warning: RBF matrix has marginal conditioning (condition number: {:.2e}). \
+                         Consider monitoring interpolation accuracy.",
+                        report.condition_number
+                    );
+                }
+                _ => {}
+            }
         }
 
-        // Solve the linear system A * coefficients = values to find the coefficients
-        // For simplicity, we'll use a direct matrix decomposition approach
-        let coefficients = self_solve_linear_system(&a_matrix, values)?;
+        // Solve the linear system with stability monitoring
+        let (coefficients, _solve_report) = solve_with_stability_monitoring(&a_matrix, values)
+            .or_else(|_| {
+                eprintln!("Warning: Stability-monitored solve failed. Falling back to basic solver with regularization.");
+                
+                // Fall back to regularized version
+                let mut regularized_matrix = a_matrix.clone();
+                let regularization = F::from_f64(1e-6).unwrap();
+                for i in 0..n_points {
+                    regularized_matrix[[i, i]] += regularization;
+                }
+                
+                self_solve_linear_system(&regularized_matrix, values)
+                    .map(|coeffs| (coeffs, condition_report.clone().unwrap_or_else(|| {
+                        // Create a default report for fallback case
+                        ConditionReport {
+                            condition_number: F::from_f64(1e16).unwrap(),
+                            is_well_conditioned: false,
+                            recommended_regularization: Some(regularization),
+                            stability_level: StabilityLevel::Poor,
+                            diagnostics: crate::numerical_stability::StabilityDiagnostics::default(),
+                        }
+                    })))
+            })?;
 
         Ok(RBFInterpolator {
             points: points.to_owned(),
             coefficients,
             kernel,
             epsilon,
+            condition_report,
         })
     }
 
@@ -167,15 +223,51 @@ impl<F: Float + FromPrimitive + Debug + AddAssign> RBFInterpolator<F> {
         }
     }
 
-    /// Interpolate at new points
+    /// Interpolate at new points using the trained RBF model.
+    ///
+    /// Evaluates the radial basis function at each query point by computing:
+    /// f(x) = Σᵢ wᵢ φ(||x - xᵢ||)
+    /// where wᵢ are the computed weights and φ is the chosen kernel function.
     ///
     /// # Arguments
     ///
-    /// * `query_points` - Points at which to interpolate
+    /// * `query_points` - Points at which to interpolate as (n_queries, n_dims) array
     ///
     /// # Returns
     ///
-    /// Interpolated values at the query points
+    /// Array of interpolated values with length n_queries
+    ///
+    /// # Errors
+    ///
+    /// * `ValueError` - If query points have different dimension than training points
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    ///
+    /// // Training data: function z = x² + y²
+    /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
+    /// let values = array![0.0, 1.0, 1.0, 2.0];
+    ///
+    /// // Create interpolator
+    /// let interp = RBFInterpolator::new(&points.view(), &values.view(),
+    ///                                   RBFKernel::Gaussian, 1.0)?;
+    ///
+    /// // Interpolate at new points
+    /// let query_points = array![[0.5, 0.5], [0.25, 0.75]];
+    /// let result = interp.interpolate(&query_points.view())?;
+    ///
+    /// println!("Interpolated values: {:?}", result);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// # Performance
+    ///
+    /// - Time complexity: O(n_queries × n_training_points)
+    /// - Memory complexity: O(n_queries)
+    /// - For repeated evaluations, consider caching distance computations
     pub fn interpolate(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check dimensions
         if query_points.shape()[1] != self.points.shape()[1] {
@@ -219,12 +311,63 @@ impl<F: Float + FromPrimitive + Debug + AddAssign> RBFInterpolator<F> {
     pub fn coefficients(&self) -> &Array1<F> {
         &self.coefficients
     }
+
+    /// Get the numerical condition report for the RBF matrix
+    ///
+    /// This provides information about the numerical stability of the
+    /// interpolation matrix, including condition number and stability level.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(ConditionReport)` - If condition assessment was successful
+    /// * `None` - If condition assessment failed or was not performed
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::Array2;
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2_interpolate::numerical_stability::StabilityLevel;
+    ///
+    /// // Create interpolator (example data)
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let values = ndarray::array![0.0, 1.0, 1.0];
+    /// let interp = RBFInterpolator::new(&points.view(), &values.view(), 
+    ///                                   RBFKernel::Gaussian, 1.0).unwrap();
+    ///
+    /// // Check numerical stability
+    /// if let Some(report) = interp.condition_report() {
+    ///     match report.stability_level {
+    ///         StabilityLevel::Excellent | StabilityLevel::Good => {
+    ///             println!("Interpolation is numerically stable");
+    ///         }
+    ///         StabilityLevel::Marginal | StabilityLevel::Poor => {
+    ///             println!("Warning: Numerical instability detected");
+    ///             println!("Condition number: {:.2e}", report.condition_number);
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    pub fn condition_report(&self) -> Option<&ConditionReport<F>> {
+        self.condition_report.as_ref()
+    }
+
+    /// Check if the RBF interpolation matrix is well-conditioned
+    ///
+    /// # Returns
+    ///
+    /// * `Some(true)` - Matrix is well-conditioned (reliable results expected)
+    /// * `Some(false)` - Matrix is poorly conditioned (results may be unreliable)  
+    /// * `None` - Condition assessment was not performed or failed
+    pub fn is_well_conditioned(&self) -> Option<bool> {
+        self.condition_report.as_ref().map(|report| report.is_well_conditioned)
+    }
 }
 
-// Simplified solver for the linear system Ax = b, where A is a square matrix and b is a vector
-// This is a basic implementation of Gaussian elimination without pivoting
-// In a production system, you would use a more robust linear algebra library
-fn self_solve_linear_system<F: Float + FromPrimitive + Debug>(
+// Enhanced solver for the linear system Ax = b with numerical stability checks
+// This implements Gaussian elimination with basic pivoting and safe division
+// Now includes numerical stability monitoring to detect potential issues
+fn self_solve_linear_system<F: Float + FromPrimitive + Debug + Display>(
     a: &Array2<F>,
     b: &ArrayView1<F>,
 ) -> InterpolateResult<Array1<F>> {
@@ -240,16 +383,42 @@ fn self_solve_linear_system<F: Float + FromPrimitive + Debug>(
     let mut b_copy = b.to_owned();
     let mut x = Array1::<F>::zeros(n);
 
-    // Forward elimination
+    // Forward elimination with safe division
     for k in 0..n - 1 {
+        // Find pivot to improve numerical stability
+        let mut max_row = k;
         for i in k + 1..n {
-            if a_copy[[k, k]] == F::zero() {
-                return Err(InterpolateError::ComputationError(
-                    "division by zero in linear solver".to_string(),
-                ));
+            if a_copy[[i, k]].abs() > a_copy[[max_row, k]].abs() {
+                max_row = i;
             }
-
-            let factor = a_copy[[i, k]] / a_copy[[k, k]];
+        }
+        
+        // Swap rows if a better pivot was found
+        if max_row != k {
+            for j in k..n {
+                let temp = a_copy[[k, j]];
+                a_copy[[k, j]] = a_copy[[max_row, j]];
+                a_copy[[max_row, j]] = temp;
+            }
+            let temp = b_copy[k];
+            b_copy[k] = b_copy[max_row];
+            b_copy[max_row] = temp;
+        }
+        
+        for i in k + 1..n {
+            // Use safe division to detect numerical issues
+            let factor = match crate::numerical_stability::check_safe_division(
+                a_copy[[i, k]], 
+                a_copy[[k, k]]
+            ) {
+                Ok(f) => f,
+                Err(_) => {
+                    return Err(InterpolateError::NumericalError(format!(
+                        "Pivot element at row {} is too small for stable division: {:.2e}",
+                        k, a_copy[[k, k]]
+                    )));
+                }
+            };
 
             // Update matrix A
             for j in k + 1..n {
@@ -264,20 +433,26 @@ fn self_solve_linear_system<F: Float + FromPrimitive + Debug>(
         }
     }
 
-    // Back substitution
+    // Back substitution with safe division
     for i in (0..n).rev() {
         let mut sum = F::zero();
         for j in i + 1..n {
             sum = sum + a_copy[[i, j]] * x[j];
         }
 
-        if a_copy[[i, i]] == F::zero() {
-            return Err(InterpolateError::ComputationError(
-                "division by zero in linear solver".to_string(),
-            ));
-        }
-
-        x[i] = (b_copy[i] - sum) / a_copy[[i, i]];
+        // Use safe division for back substitution
+        x[i] = match crate::numerical_stability::check_safe_division(
+            b_copy[i] - sum,
+            a_copy[[i, i]]
+        ) {
+            Ok(result) => result,
+            Err(_) => {
+                return Err(InterpolateError::NumericalError(format!(
+                    "Diagonal element at row {} is too small for stable division: {:.2e}",
+                    i, a_copy[[i, i]]
+                )));
+            }
+        };
     }
 
     Ok(x)

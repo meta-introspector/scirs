@@ -26,11 +26,11 @@ pub struct GemmBlockSizes {
 impl Default for GemmBlockSizes {
     fn default() -> Self {
         Self {
-            mc: 64,   // L2 cache friendly
-            kc: 256,  // L1 cache friendly for B panel
-            nc: 512,  // L3 cache friendly
-            mr: 8,    // SIMD width considerations
-            nr: 8,    // SIMD width considerations
+            mc: 64,  // L2 cache friendly
+            kc: 256, // L1 cache friendly for B panel
+            nc: 512, // L3 cache friendly
+            mr: 8,   // SIMD width considerations
+            nr: 8,   // SIMD width considerations
         }
     }
 }
@@ -96,19 +96,19 @@ pub fn simd_gemm_f32(
     // 3-level blocked GEMM algorithm
     for jc in (0..n).step_by(bs.nc) {
         let nc = (bs.nc).min(n - jc);
-        
+
         for pc in (0..k).step_by(bs.kc) {
             let kc = (bs.kc).min(k - pc);
-            
+
             // Pack B panel for better cache locality
             let b_panel = b.slice(s![pc..pc + kc, jc..jc + nc]);
-            
+
             for ic in (0..m).step_by(bs.mc) {
                 let mc = (bs.mc).min(m - ic);
-                
+
                 // Pack A panel for better cache locality
                 let a_panel = a.slice(s![ic..ic + mc, pc..pc + kc]);
-                
+
                 // Call micro-kernel for this block
                 simd_gemm_micro_kernel_f32(
                     alpha,
@@ -180,22 +180,22 @@ pub fn simd_gemm_f64(
         }
     }
 
-    // 3-level blocked GEMM algorithm  
+    // 3-level blocked GEMM algorithm
     for jc in (0..n).step_by(bs.nc) {
         let nc = (bs.nc).min(n - jc);
-        
+
         for pc in (0..k).step_by(bs.kc) {
             let kc = (bs.kc).min(k - pc);
-            
+
             // Pack B panel for better cache locality
             let b_panel = b.slice(s![pc..pc + kc, jc..jc + nc]);
-            
+
             for ic in (0..m).step_by(bs.mc) {
                 let mc = (bs.mc).min(m - ic);
-                
+
                 // Pack A panel for better cache locality
                 let a_panel = a.slice(s![ic..ic + mc, pc..pc + kc]);
-                
+
                 // Call micro-kernel for this block
                 simd_gemm_micro_kernel_f64(
                     alpha,
@@ -239,13 +239,13 @@ fn simd_gemm_micro_kernel_f32(
     // Process in micro-tiles of size MR x NR
     for ir in (0..mc).step_by(mr) {
         let mr_actual = mr.min(mc - ir);
-        
+
         for jr in (0..nc).step_by(nr) {
             let nr_actual = nr.min(nc - jr);
-            
+
             // Initialize accumulator registers
             let mut c_regs = vec![f32x8::splat(0.0); (mr_actual * nr_actual + 7) / 8];
-            
+
             // Inner product loop over K dimension
             for p in 0..kc {
                 // Load column vector from A
@@ -253,32 +253,38 @@ fn simd_gemm_micro_kernel_f32(
                 for i in 0..mr_actual {
                     a_vec.push(a[[ir + i, p]]);
                 }
-                
+
                 // Load row vector from B and broadcast, then multiply-accumulate
                 for j in 0..nr_actual {
                     let b_val = b[[p, jr + j]];
                     let b_broadcast = f32x8::splat(b_val);
-                    
+
                     // Process A elements in chunks of 8
                     let mut a_idx = 0;
                     while a_idx + 8 <= mr_actual {
                         let a_chunk = [
-                            a_vec[a_idx], a_vec[a_idx + 1], a_vec[a_idx + 2], a_vec[a_idx + 3],
-                            a_vec[a_idx + 4], a_vec[a_idx + 5], a_vec[a_idx + 6], a_vec[a_idx + 7]
+                            a_vec[a_idx],
+                            a_vec[a_idx + 1],
+                            a_vec[a_idx + 2],
+                            a_vec[a_idx + 3],
+                            a_vec[a_idx + 4],
+                            a_vec[a_idx + 5],
+                            a_vec[a_idx + 6],
+                            a_vec[a_idx + 7],
                         ];
                         let a_simd = f32x8::new(a_chunk);
-                        
+
                         let reg_idx = (j * mr_actual + a_idx) / 8;
                         c_regs[reg_idx] += a_simd * b_broadcast;
-                        
+
                         a_idx += 8;
                     }
-                    
+
                     // Handle remaining elements
                     for i in a_idx..mr_actual {
                         let reg_idx = (j * mr_actual + i) / 8;
                         let lane = (j * mr_actual + i) % 8;
-                        
+
                         // For simplicity, accumulate remaining elements separately
                         let mut temp_array: [f32; 8] = c_regs[reg_idx].into();
                         temp_array[lane] += a_vec[i] * b_val;
@@ -286,13 +292,13 @@ fn simd_gemm_micro_kernel_f32(
                     }
                 }
             }
-            
+
             // Store results back to C with alpha scaling
             for j in 0..nr_actual {
                 for i in 0..mr_actual {
                     let reg_idx = (j * mr_actual + i) / 8;
                     let lane = (j * mr_actual + i) % 8;
-                    
+
                     let temp_array: [f32; 8] = c_regs[reg_idx].into();
                     let result = alpha * temp_array[lane];
                     c[[ir + i, jr + j]] += result;
@@ -300,7 +306,7 @@ fn simd_gemm_micro_kernel_f32(
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -332,13 +338,13 @@ fn simd_gemm_micro_kernel_f64(
     // Process in micro-tiles of size MR x NR
     for ir in (0..mc).step_by(mr) {
         let mr_actual = mr.min(mc - ir);
-        
+
         for jr in (0..nc).step_by(nr) {
             let nr_actual = nr.min(nc - jr);
-            
+
             // Initialize accumulator registers (4-wide for f64)
             let mut c_regs = vec![f64x4::splat(0.0); (mr_actual * nr_actual + 3) / 4];
-            
+
             // Inner product loop over K dimension
             for p in 0..kc {
                 // Load column vector from A
@@ -346,31 +352,34 @@ fn simd_gemm_micro_kernel_f64(
                 for i in 0..mr_actual {
                     a_vec.push(a[[ir + i, p]]);
                 }
-                
+
                 // Load row vector from B and broadcast, then multiply-accumulate
                 for j in 0..nr_actual {
                     let b_val = b[[p, jr + j]];
                     let b_broadcast = f64x4::splat(b_val);
-                    
+
                     // Process A elements in chunks of 4
                     let mut a_idx = 0;
                     while a_idx + 4 <= mr_actual {
                         let a_chunk = [
-                            a_vec[a_idx], a_vec[a_idx + 1], a_vec[a_idx + 2], a_vec[a_idx + 3]
+                            a_vec[a_idx],
+                            a_vec[a_idx + 1],
+                            a_vec[a_idx + 2],
+                            a_vec[a_idx + 3],
                         ];
                         let a_simd = f64x4::new(a_chunk);
-                        
+
                         let reg_idx = (j * mr_actual + a_idx) / 4;
                         c_regs[reg_idx] += a_simd * b_broadcast;
-                        
+
                         a_idx += 4;
                     }
-                    
+
                     // Handle remaining elements
                     for i in a_idx..mr_actual {
                         let reg_idx = (j * mr_actual + i) / 4;
                         let lane = (j * mr_actual + i) % 4;
-                        
+
                         // For simplicity, accumulate remaining elements separately
                         let mut temp_array: [f64; 4] = c_regs[reg_idx].into();
                         temp_array[lane] += a_vec[i] * b_val;
@@ -378,13 +387,13 @@ fn simd_gemm_micro_kernel_f64(
                     }
                 }
             }
-            
+
             // Store results back to C with alpha scaling
             for j in 0..nr_actual {
                 for i in 0..mr_actual {
                     let reg_idx = (j * mr_actual + i) / 4;
                     let lane = (j * mr_actual + i) % 4;
-                    
+
                     let temp_array: [f64; 4] = c_regs[reg_idx].into();
                     let result = alpha * temp_array[lane];
                     c[[ir + i, jr + j]] += result;
@@ -392,7 +401,7 @@ fn simd_gemm_micro_kernel_f64(
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -408,12 +417,12 @@ fn simd_gemm_micro_kernel_f64(
 /// * Result matrix C (M x N)
 #[cfg(feature = "simd")]
 pub fn simd_matmul_optimized_f32(
-    a: &ArrayView2<f32>, 
-    b: &ArrayView2<f32>
+    a: &ArrayView2<f32>,
+    b: &ArrayView2<f32>,
 ) -> LinalgResult<Array2<f32>> {
     let (m, _) = a.dim();
     let (_, n) = b.dim();
-    
+
     let mut c = Array2::zeros((m, n));
     simd_gemm_f32(1.0, a, b, 0.0, &mut c, None)?;
     Ok(c)
@@ -431,12 +440,12 @@ pub fn simd_matmul_optimized_f32(
 /// * Result matrix C (M x N)
 #[cfg(feature = "simd")]
 pub fn simd_matmul_optimized_f64(
-    a: &ArrayView2<f64>, 
-    b: &ArrayView2<f64>
+    a: &ArrayView2<f64>,
+    b: &ArrayView2<f64>,
 ) -> LinalgResult<Array2<f64>> {
     let (m, _) = a.dim();
     let (_, n) = b.dim();
-    
+
     let mut c = Array2::zeros((m, n));
     simd_gemm_f64(1.0, a, b, 0.0, &mut c, None)?;
     Ok(c)
@@ -466,31 +475,33 @@ pub fn simd_gemv_f32(
     y: &mut Array1<f32>,
 ) -> LinalgResult<()> {
     let (m, n) = a.dim();
-    
+
     if x.len() != n {
         return Err(LinalgError::ShapeError(format!(
             "Vector x length ({}) must match matrix columns ({})",
-            x.len(), n
+            x.len(),
+            n
         )));
     }
     if y.len() != m {
         return Err(LinalgError::ShapeError(format!(
             "Vector y length ({}) must match matrix rows ({})",
-            y.len(), m
+            y.len(),
+            m
         )));
     }
 
     // Reshape x as a column vector for GEMM
     let x_matrix = x.insert_axis(Axis(1));
     let mut y_matrix = y.view().insert_axis(Axis(1)).to_owned();
-    
+
     simd_gemm_f32(alpha, a, &x_matrix.view(), beta, &mut y_matrix, None)?;
-    
+
     // Copy results back to y
     for (i, &val) in y_matrix.column(0).iter().enumerate() {
         y[i] = val;
     }
-    
+
     Ok(())
 }
 
@@ -518,31 +529,33 @@ pub fn simd_gemv_f64(
     y: &mut Array1<f64>,
 ) -> LinalgResult<()> {
     let (m, n) = a.dim();
-    
+
     if x.len() != n {
         return Err(LinalgError::ShapeError(format!(
             "Vector x length ({}) must match matrix columns ({})",
-            x.len(), n
+            x.len(),
+            n
         )));
     }
     if y.len() != m {
         return Err(LinalgError::ShapeError(format!(
             "Vector y length ({}) must match matrix rows ({})",
-            y.len(), m
+            y.len(),
+            m
         )));
     }
 
     // Reshape x as a column vector for GEMM
     let x_matrix = x.insert_axis(Axis(1));
     let mut y_matrix = y.view().insert_axis(Axis(1)).to_owned();
-    
+
     simd_gemm_f64(alpha, a, &x_matrix.view(), beta, &mut y_matrix, None)?;
-    
+
     // Copy results back to y
     for (i, &val) in y_matrix.column(0).iter().enumerate() {
         y[i] = val;
     }
-    
+
     Ok(())
 }
 
@@ -670,7 +683,7 @@ mod tests {
 
         // Verify with reference implementation (naive multiplication)
         let c_ref = a.dot(&b);
-        
+
         for ((i, j), &val) in c.indexed_iter() {
             assert_relative_eq!(val, c_ref[[i, j]], epsilon = 1e-4);
         }

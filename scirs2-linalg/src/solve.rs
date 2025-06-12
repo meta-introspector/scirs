@@ -28,6 +28,7 @@ pub struct LstsqResult<F: Float> {
 ///
 /// * `a` - Coefficient matrix
 /// * `b` - Ordinate or "dependent variable" values
+/// * `workers` - Number of worker threads (None = use default)
 ///
 /// # Returns
 ///
@@ -41,11 +42,15 @@ pub struct LstsqResult<F: Float> {
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 1.0]];
 /// let b = array![2.0_f64, 3.0];
-/// let x = solve(&a.view(), &b.view()).unwrap();
+/// let x = solve(&a.view(), &b.view(), None).unwrap();
 /// assert!((x[0] - 2.0).abs() < 1e-10);
 /// assert!((x[1] - 3.0).abs() < 1e-10);
 /// ```
-pub fn solve<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<Array1<F>>
+pub fn solve<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView1<F>,
+    workers: Option<usize>,
+) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + One + Sum,
 {
@@ -77,8 +82,13 @@ where
         return Ok(x);
     }
 
+    // Configure OpenMP thread count if workers specified
+    if let Some(num_workers) = workers {
+        std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
+    }
+
     // For larger systems, use LU decomposition
-    let (p, l, u) = match lu(a) {
+    let (p, l, u) = match lu(a, workers) {
         Err(LinalgError::SingularMatrixError(msg)) => {
             return Err(LinalgError::SingularMatrixError(format!(
                 "{}\nMatrix shape: {:?}\nOperation: solve linear system",
@@ -212,6 +222,7 @@ where
 ///
 /// * `a` - Coefficient matrix
 /// * `b` - Ordinate or "dependent variable" values
+/// * `workers` - Number of worker threads (None = use default)
 ///
 /// # Returns
 ///
@@ -229,10 +240,14 @@ where
 ///
 /// let a = array![[1.0_f64, 1.0], [1.0, 2.0], [1.0, 3.0]];
 /// let b = array![6.0_f64, 9.0, 12.0];
-/// let result = lstsq(&a.view(), &b.view()).unwrap();
+/// let result = lstsq(&a.view(), &b.view(), None).unwrap();
 /// // result.x should be approximately [3.0, 3.0]
 /// ```
-pub fn lstsq<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<LstsqResult<F>>
+pub fn lstsq<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView1<F>,
+    workers: Option<usize>,
+) -> LinalgResult<LstsqResult<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
 {
@@ -244,10 +259,15 @@ where
         )));
     }
 
+    // Configure OpenMP thread count if workers specified
+    if let Some(num_workers) = workers {
+        std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
+    }
+
     // For underdetermined systems with full rank, use the normal equation approach
     if a.nrows() >= a.ncols() {
         // QR decomposition approach
-        let (q, r) = qr(a)?;
+        let (q, r) = qr(a, workers)?;
 
         // Compute Q^T * b
         let qt = q.t().to_owned();
@@ -290,7 +310,7 @@ where
         })
     } else {
         // Underdetermined system, use SVD
-        let (u, s, vt) = svd(a, false)?;
+        let (u, s, vt) = svd(a, false, workers)?;
 
         // Determine effective rank by thresholding singular values
         let threshold = s[0] * F::from(a.nrows().max(a.ncols())).unwrap() * F::epsilon();
@@ -342,6 +362,7 @@ where
 ///
 /// * `a` - Coefficient matrix
 /// * `b` - Matrix of right-hand sides where each column is a different right-hand side
+/// * `workers` - Number of worker threads (None = use default)
 ///
 /// # Returns
 ///
@@ -355,11 +376,15 @@ where
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 1.0]];
 /// let b = array![[2.0_f64, 4.0], [3.0, 5.0]];
-/// let x = solve_multiple(&a.view(), &b.view()).unwrap();
+/// let x = solve_multiple(&a.view(), &b.view(), None).unwrap();
 /// // First column of x should be [2.0, 3.0]
 /// // Second column of x should be [4.0, 5.0]
 /// ```
-pub fn solve_multiple<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+pub fn solve_multiple<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView2<F>,
+    workers: Option<usize>,
+) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + One + Sum,
 {
@@ -378,8 +403,13 @@ where
         )));
     }
 
+    // Configure OpenMP thread count if workers specified
+    if let Some(num_workers) = workers {
+        std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
+    }
+
     // For efficiency, perform LU decomposition once
-    let (p, l, u) = match lu(a) {
+    let (p, l, u) = match lu(a, workers) {
         Err(LinalgError::SingularMatrixError(msg)) => {
             return Err(LinalgError::SingularMatrixError(format!(
                 "{}\nMatrix shape: {:?}\nOperation: solve multiple linear systems",
@@ -422,6 +452,32 @@ where
     Ok(x)
 }
 
+// Convenience wrapper functions for backward compatibility
+
+/// Solve linear system using default thread count
+pub fn solve_default<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<Array1<F>>
+where
+    F: Float + NumAssign + One + Sum,
+{
+    solve(a, b, None)
+}
+
+/// Compute least-squares solution using default thread count
+pub fn lstsq_default<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<LstsqResult<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    lstsq(a, b, None)
+}
+
+/// Solve multiple linear systems using default thread count
+pub fn solve_multiple_default<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + One + Sum,
+{
+    solve_multiple(a, b, None)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -433,14 +489,14 @@ mod tests {
         // Identity matrix
         let a = array![[1.0, 0.0], [0.0, 1.0]];
         let b = array![2.0, 3.0];
-        let x = solve(&a.view(), &b.view()).unwrap();
+        let x = solve(&a.view(), &b.view(), None).unwrap();
         assert_relative_eq!(x[0], 2.0);
         assert_relative_eq!(x[1], 3.0);
 
         // General 2x2 matrix
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![5.0, 11.0];
-        let x = solve(&a.view(), &b.view()).unwrap();
+        let x = solve(&a.view(), &b.view(), None).unwrap();
         assert_relative_eq!(x[0], 1.0);
         assert_relative_eq!(x[1], 2.0);
     }

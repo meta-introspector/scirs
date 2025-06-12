@@ -4,18 +4,20 @@
 //! operations for improved performance on modern CPUs. These implementations
 //! leverage core SIMD support through the scirs2-core::simd module.
 
-pub mod transpose;
-pub mod norms;
 pub mod gemm;
+pub mod norms;
+pub mod transpose;
 
 // Re-export commonly used SIMD operations
 #[cfg(feature = "simd")]
 pub use gemm::{
-    simd_gemm_f32, simd_gemm_f64, simd_gemv_f32, simd_gemv_f64,
-    simd_matmul_optimized_f32, simd_matmul_optimized_f64, GemmBlockSizes,
+    simd_gemm_f32, simd_gemm_f64, simd_gemv_f32, simd_gemv_f64, simd_matmul_optimized_f32,
+    simd_matmul_optimized_f64, GemmBlockSizes,
 };
 #[cfg(feature = "simd")]
-pub use norms::{simd_frobenius_norm_f32, simd_frobenius_norm_f64, simd_vector_norm_f32, simd_vector_norm_f64};
+pub use norms::{
+    simd_frobenius_norm_f32, simd_frobenius_norm_f64, simd_vector_norm_f32, simd_vector_norm_f64,
+};
 #[cfg(feature = "simd")]
 pub use transpose::{simd_transpose_f32, simd_transpose_f64};
 
@@ -873,7 +875,6 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> LinalgResult<f6
 
     Ok(sum)
 }
-
 
 /// SIMD accelerated element-wise addition of two f32 matrices
 ///

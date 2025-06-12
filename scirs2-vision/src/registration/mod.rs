@@ -35,7 +35,7 @@ pub type TransformMatrix = Array2<f64>;
 pub struct Point2D {
     /// X coordinate
     pub x: f64,
-    /// Y coordinate 
+    /// Y coordinate
     pub y: f64,
 }
 

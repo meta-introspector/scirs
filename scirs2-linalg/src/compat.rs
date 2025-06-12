@@ -51,7 +51,7 @@ use num_traits::{Float, NumAssign, Zero};
 use std::iter::Sum;
 
 use crate::error::{LinalgError, LinalgResult};
-use crate::{basic, decomposition, eigen, solve, norm as norm_mod, matrix_functions};
+use crate::{basic, decomposition, eigen, matrix_functions, norm as norm_mod, solve};
 
 /// Type alias for SVD decomposition result
 pub type SvdResult<F> = (Option<Array2<F>>, Array1<F>, Option<Array2<F>>);
@@ -294,7 +294,7 @@ where
     }
 
     // Note: _overwrite_a is ignored in our implementation
-    decomposition::lu(a)
+    decomposition::lu(a, None)
 }
 
 /// QR decomposition (SciPy-compatible interface)
@@ -339,11 +339,11 @@ where
     // Note: overwrite_a and lwork are ignored in our implementation
     match mode {
         "full" | "economic" => {
-            let (q, r) = decomposition::qr(a)?;
+            let (q, r) = decomposition::qr(a, None)?;
             Ok((Some(q), r))
         }
         "r" => {
-            let (_, r) = decomposition::qr(a)?;
+            let (_, r) = decomposition::qr(a, None)?;
             Ok((None, r))
         }
         "raw" => Err(LinalgError::NotImplementedError(
@@ -391,7 +391,7 @@ where
 
     // Note: overwrite_a and lapack_driver are ignored in our implementation
     if compute_uv {
-        let (u, s, vt) = decomposition::svd(a, !full_matrices)?;
+        let (u, s, vt) = decomposition::svd(a, !full_matrices, None)?;
         Ok((Some(u), s, Some(vt)))
     } else {
         Err(LinalgError::NotImplementedError(
@@ -430,7 +430,7 @@ where
     }
 
     // Note: _overwrite_a is ignored in our implementation
-    let l = decomposition::cholesky(a)?;
+    let l = decomposition::cholesky(a, None)?;
 
     if lower {
         Ok(l)
@@ -492,7 +492,7 @@ where
     }
 
     // Note: _overwrite_a, _overwrite_b are ignored in our implementation
-    solve::solve_multiple(a, b)
+    solve::solve_multiple(a, b, None)
 }
 
 // Eigenvalue functions that match SciPy naming
@@ -507,7 +507,35 @@ pub use crate::eigen_specialized::tridiagonal_eigvalsh as eigvalsh_tridiagonal;
 pub use crate::basic::matrix_power as fractional_matrix_power;
 pub use crate::matrix_functions::expm;
 pub use crate::matrix_functions::logm;
-pub use crate::matrix_functions::sqrtm;
+// Re-export with SciPy-compatible wrapper
+// pub use crate::matrix_functions::sqrtm;
+
+/// Matrix square root (SciPy-compatible interface)
+///
+/// # Arguments
+/// * `a` - Input matrix
+/// * `check_finite` - Whether to check that input contains only finite numbers (optional, defaults to true)
+///
+/// # Returns
+/// * Matrix square root of a
+pub fn sqrtm<F>(a: &ArrayView2<F>, check_finite: Option<bool>) -> LinalgResult<Array2<F>>
+where
+    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+{
+    let check = check_finite.unwrap_or(true);
+    if check {
+        for &elem in a.iter() {
+            if !elem.is_finite() {
+                return Err(LinalgError::ValueError(
+                    "Matrix contains non-finite values".to_string(),
+                ));
+            }
+        }
+    }
+
+    // Use default parameters: max_iter=100, tol=1e-12
+    matrix_functions::sqrtm(a, 100, F::from(1e-12).unwrap())
+}
 
 /// Compute matrix or vector norm (SciPy-compatible interface)
 ///
@@ -566,11 +594,7 @@ where
 ///
 /// # Returns
 /// * Norm of the vector
-pub fn vector_norm<F>(
-    a: &ArrayView1<F>,
-    ord: Option<f64>,
-    check_finite: bool,
-) -> LinalgResult<F>
+pub fn vector_norm<F>(a: &ArrayView1<F>, ord: Option<f64>, check_finite: bool) -> LinalgResult<F>
 where
     F: Float + Sum + NumAssign,
 {
@@ -604,7 +628,8 @@ where
         }
         Some(p) => {
             // General p-norm
-            let sum: F = a.iter()
+            let sum: F = a
+                .iter()
                 .map(|&x| x.abs().powf(F::from(p).unwrap()))
                 .fold(F::zero(), |acc, x| acc + x);
             Ok(sum.powf(F::one() / F::from(p).unwrap()))
@@ -642,14 +667,14 @@ where
     }
 
     // Use SVD to compute pseudoinverse
-    let (u, s, vt) = decomposition::svd(a, false)?;
-    
+    let (u, s, vt) = decomposition::svd(a, false, None)?;
+
     // Determine cutoff threshold
     let threshold = rcond.unwrap_or_else(|| {
         let max_singular_value = s.iter().cloned().fold(F::zero(), F::max);
         max_singular_value * F::from(1e-15).unwrap() * F::from(a.dim().0.max(a.dim().1)).unwrap()
     });
-    
+
     // Compute reciprocal of singular values above threshold
     let s_inv: Array1<F> = s.mapv(|val| {
         if val > threshold {
@@ -658,7 +683,7 @@ where
             F::zero()
         }
     });
-    
+
     // Reconstruct pseudoinverse: A+ = V * S+ * U^T
     let vs_inv = vt.t().dot(&Array2::from_diag(&s_inv));
     Ok(vs_inv.dot(&u.t()))
@@ -697,7 +722,8 @@ where
             Ok(norm_a * norm_inv_a)
         }
         _ => Err(LinalgError::InvalidInput(format!(
-            "Unsupported norm type for condition number: {:?}", p
+            "Unsupported norm type for condition number: {:?}",
+            p
         ))),
     }
 }
@@ -782,36 +808,39 @@ where
         b.column(0).to_owned()
     } else {
         return Err(LinalgError::InvalidInput(
-            "Multiple right-hand sides not yet supported".to_string()
+            "Multiple right-hand sides not yet supported".to_string(),
         ));
     };
-    let lstsq_result = solve::lstsq(a, &b_1d.view())?;
-    
+    let lstsq_result = solve::lstsq(a, &b_1d.view(), None)?;
+
     // Compute SVD to get rank and singular values
-    let (_, s, _) = decomposition::svd(a, false)?;
-    
+    let (_, s, _) = decomposition::svd(a, false, None)?;
+
     // Determine rank based on condition number
     let threshold = cond.unwrap_or_else(|| {
         let max_sv = s.iter().cloned().fold(F::zero(), F::max);
         max_sv * F::from(1e-15).unwrap() * F::from(a.dim().0.max(a.dim().1)).unwrap()
     });
-    
+
     let rank = s.iter().filter(|&&val| val > threshold).count();
-    
+
     // Clone the solution before moving it
     let solution_1d = lstsq_result.x.clone();
     let solution_2d = lstsq_result.x.insert_axis(Axis(1));
-    
+
     // Compute residuals if overdetermined system
     let residuals = if a.nrows() > a.ncols() {
         let ax = a.dot(&solution_1d);
         let residual_vec = &b_1d - &ax;
-        let residual_sum = residual_vec.iter().map(|&x| x * x).fold(F::zero(), |acc, x| acc + x);
+        let residual_sum = residual_vec
+            .iter()
+            .map(|&x| x * x)
+            .fold(F::zero(), |acc, x| acc + x);
         Some(Array1::from_elem(1, residual_sum))
     } else {
         None
     };
-    
+
     Ok((solution_2d, residuals, rank, s))
 }
 
@@ -869,10 +898,10 @@ where
         b.column(0).to_owned()
     } else {
         return Err(LinalgError::InvalidInput(
-            "Multiple right-hand sides not yet supported for triangular solve".to_string()
+            "Multiple right-hand sides not yet supported for triangular solve".to_string(),
         ));
     };
-    
+
     let result_1d = solve::solve_triangular(a, &b_1d.view(), lower, false)?;
     Ok(result_1d.insert_axis(Axis(1)))
 }
@@ -910,19 +939,20 @@ where
 
     if mode != "full" && mode != "economic" {
         return Err(LinalgError::InvalidInput(format!(
-            "Invalid RQ mode: {}", mode
+            "Invalid RQ mode: {}",
+            mode
         )));
     }
 
     // RQ decomposition can be computed as QR of the reversed matrix
     // A = RQ => flip(A) = flip(Q)flip(R) = QR decomposition of flip(A)
     let a_flipped = a.slice(ndarray::s![.., ..;-1]).to_owned();
-    let (q_temp, r_temp) = decomposition::qr(&a_flipped.view())?;
-    
+    let (q_temp, r_temp) = decomposition::qr(&a_flipped.view(), None)?;
+
     // Flip back to get R and Q
     let r = r_temp.slice(ndarray::s![..;-1, ..;-1]).to_owned();
     let q = q_temp.slice(ndarray::s![..;-1, ..]).to_owned();
-    
+
     Ok((r, q))
 }
 
@@ -934,30 +964,28 @@ where
 ///
 /// # Returns
 /// * Tuple of (U, P) for right polar or (P, U) for left polar
-pub fn polar<F>(
-    a: &ArrayView2<F>,
-    side: &str,
-) -> LinalgResult<(Array2<F>, Array2<F>)>
+pub fn polar<F>(a: &ArrayView2<F>, side: &str) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
     F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {
     match side {
         "right" => {
             // A = UP where U is unitary and P is positive semidefinite
-            let (u, s, vt) = decomposition::svd(a, false)?;
+            let (u, s, vt) = decomposition::svd(a, false, None)?;
             let unitary = u.dot(&vt);
             let positive = vt.t().dot(&Array2::from_diag(&s)).dot(&vt);
             Ok((unitary, positive))
         }
         "left" => {
             // A = PU where P is positive semidefinite and U is unitary
-            let (u, s, vt) = decomposition::svd(a, false)?;
+            let (u, s, vt) = decomposition::svd(a, false, None)?;
             let unitary = u.dot(&vt);
             let positive = u.dot(&Array2::from_diag(&s)).dot(&u.t());
             Ok((positive, unitary))
         }
         _ => Err(LinalgError::InvalidInput(format!(
-            "Invalid polar decomposition side: {}", side
+            "Invalid polar decomposition side: {}",
+            side
         ))),
     }
 }
@@ -971,11 +999,7 @@ where
 ///
 /// # Returns
 /// * Matrix function result
-pub fn funm<F>(
-    a: &ArrayView2<F>,
-    func: &str,
-    _disp: bool,
-) -> LinalgResult<Array2<F>>
+pub fn funm<F>(a: &ArrayView2<F>, func: &str, _disp: bool) -> LinalgResult<Array2<F>>
 where
     F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {
@@ -987,44 +1011,34 @@ where
         "sin" => sinm(a),
         "tan" => tanm(a),
         _ => Err(LinalgError::NotImplementedError(format!(
-            "Matrix function '{}' not yet implemented", func
+            "Matrix function '{}' not yet implemented",
+            func
         ))),
     }
 }
 
 /// Matrix cosine (SciPy-compatible interface)
-pub fn cosm<F>(_a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+pub fn cosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {
-    // cos(A) = (exp(iA) + exp(-iA))/2
-    // For real matrices, we can use the series expansion or eigendecomposition
-    Err(LinalgError::NotImplementedError(
-        "Matrix cosine not yet implemented".to_string(),
-    ))
+    matrix_functions::cosm(a)
 }
 
 /// Matrix sine (SciPy-compatible interface)
-pub fn sinm<F>(_a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+pub fn sinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {
-    // sin(A) = (exp(iA) - exp(-iA))/(2i)
-    // For real matrices, we can use the series expansion or eigendecomposition
-    Err(LinalgError::NotImplementedError(
-        "Matrix sine not yet implemented".to_string(),
-    ))
+    matrix_functions::sinm(a)
 }
 
 /// Matrix tangent (SciPy-compatible interface)
-pub fn tanm<F>(_a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+pub fn tanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {
-    // tan(A) = sin(A) * cos(A)^(-1)
-    Err(LinalgError::NotImplementedError(
-        "Matrix tangent not yet implemented".to_string(),
-    ))
+    matrix_functions::tanm(a)
 }
 
 /// Schur decomposition (SciPy-compatible interface)
@@ -1049,7 +1063,7 @@ pub fn schur<F>(
     check_finite: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + Sum + NumAssign,
+    F: Float + Sum + NumAssign + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -1063,12 +1077,12 @@ where
 
     match output {
         "real" | "complex" => {
-            Err(LinalgError::NotImplementedError(
-                "Schur decomposition not yet implemented".to_string(),
-            ))
+            // Use the actual schur decomposition implementation
+            decomposition::schur(a)
         }
         _ => Err(LinalgError::InvalidInput(format!(
-            "Invalid Schur output type: {}", output
+            "Invalid Schur output type: {}",
+            output
         ))),
     }
 }
@@ -1093,20 +1107,24 @@ where
     // Calculate total dimensions
     let total_rows: usize = arrays.iter().map(|a| a.nrows()).sum();
     let total_cols: usize = arrays.iter().map(|a| a.ncols()).sum();
-    
+
     let mut result = Array2::zeros((total_rows, total_cols));
-    
+
     let mut row_offset = 0;
     let mut col_offset = 0;
-    
+
     for array in arrays {
         let (rows, cols) = array.dim();
-        result.slice_mut(ndarray::s![row_offset..row_offset+rows, col_offset..col_offset+cols])
+        result
+            .slice_mut(ndarray::s![
+                row_offset..row_offset + rows,
+                col_offset..col_offset + cols
+            ])
             .assign(array);
         row_offset += rows;
         col_offset += cols;
     }
-    
+
     Ok(result)
 }
 
@@ -1134,7 +1152,7 @@ where
     if check_finite {
         // Check would go here
     }
-    
+
     Err(LinalgError::NotImplementedError(
         "Banded matrix solver not yet implemented".to_string(),
     ))

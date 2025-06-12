@@ -262,7 +262,7 @@ pub fn gsolve<T: LinalgScalar + Float>(
     a: &ArrayView2<T>,
     b: &ArrayView2<T>,
 ) -> LinalgResult<Array2<T>> {
-    crate::solve::solve_multiple(a, b)
+    crate::solve::solve_multiple(a, b, None)
 }
 
 /// Precision trait for automatic precision selection

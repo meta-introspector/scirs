@@ -16,8 +16,9 @@ use scirs2_optimize::{
         MomentumOptions, RMSPropOptions, SGDOptions, StochasticGradientFunction,
     },
     unconstrained::{
-        minimize_bfgs, minimize_conjugate_gradient, minimize_lbfgs, minimize_newton, minimize_powell,
-        BfgsOptions, ConjugateGradientOptions, LbfgsOptions, NewtonOptions, PowellOptions,
+        minimize_bfgs, minimize_conjugate_gradient, minimize_lbfgs, minimize_newton,
+        minimize_powell, BfgsOptions, ConjugateGradientOptions, LbfgsOptions, NewtonOptions,
+        PowellOptions,
     },
     OptimizeResult,
 };
@@ -51,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Benchmark unconstrained optimization methods
 fn benchmark_unconstrained_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Benchmarking Unconstrained Optimization Methods");
-    println!("=" .repeat(60));
+    println!("=".repeat(60));
 
     let problems = [
         ("Quadratic", create_quadratic_problem()),
@@ -74,7 +75,8 @@ fn benchmark_unconstrained_methods() -> Result<(), Box<dyn std::error::Error>> {
 
         for (method_name, method_type) in &methods {
             let start = Instant::now();
-            let result = run_unconstrained_method(*method_type, func.clone(), grad.clone(), x0.clone())?;
+            let result =
+                run_unconstrained_method(*method_type, func.clone(), grad.clone(), x0.clone())?;
             let duration = start.elapsed();
 
             println!(
@@ -95,7 +97,7 @@ fn benchmark_unconstrained_methods() -> Result<(), Box<dyn std::error::Error>> {
 /// Benchmark stochastic optimization methods
 fn benchmark_stochastic_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Benchmarking Stochastic Optimization Methods");
-    println!("=" .repeat(60));
+    println!("=".repeat(60));
 
     let problems = [
         ("Quadratic ML", create_ml_quadratic_problem()),
@@ -139,7 +141,7 @@ fn benchmark_stochastic_methods() -> Result<(), Box<dyn std::error::Error>> {
 /// Benchmark global optimization methods
 fn benchmark_global_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Benchmarking Global Optimization Methods");
-    println!("=" .repeat(60));
+    println!("=".repeat(60));
 
     let problems = [
         ("Ackley", create_ackley_problem()),
@@ -148,7 +150,10 @@ fn benchmark_global_methods() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     let methods = [
-        ("Differential Evolution", GlobalMethodType::DifferentialEvolution),
+        (
+            "Differential Evolution",
+            GlobalMethodType::DifferentialEvolution,
+        ),
         ("Dual Annealing", GlobalMethodType::DualAnnealing),
     ];
 
@@ -179,7 +184,7 @@ fn benchmark_global_methods() -> Result<(), Box<dyn std::error::Error>> {
 /// Benchmark least squares methods
 fn benchmark_least_squares_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Benchmarking Least Squares Methods");
-    println!("=" .repeat(60));
+    println!("=".repeat(60));
 
     let problems = [
         ("Linear Fit", create_linear_least_squares()),
@@ -193,7 +198,12 @@ fn benchmark_least_squares_methods() -> Result<(), Box<dyn std::error::Error>> {
 
         let start = Instant::now();
         let options = LeastSquaresOptions::default();
-        let result = minimize_least_squares(residual.clone(), Some(jacobian.clone()), x0.clone(), options)?;
+        let result = minimize_least_squares(
+            residual.clone(),
+            Some(jacobian.clone()),
+            x0.clone(),
+            options,
+        )?;
         let duration = start.elapsed();
 
         println!(
@@ -212,7 +222,7 @@ fn benchmark_least_squares_methods() -> Result<(), Box<dyn std::error::Error>> {
 /// Perform scalability analysis
 fn perform_scalability_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Scalability Analysis");
-    println!("=" .repeat(60));
+    println!("=".repeat(60));
 
     let dimensions = [10, 50, 100, 500, 1000];
     let methods = [
@@ -230,7 +240,7 @@ fn perform_scalability_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
         for (method_name, method_type) in &methods {
             let start = Instant::now();
-            
+
             let result = match method_type {
                 MethodType::AdamStochastic => {
                     let grad_func = HighDimQuadraticML { dim };
@@ -243,9 +253,11 @@ fn perform_scalability_analysis() -> Result<(), Box<dyn std::error::Error>> {
                     };
                     minimize_adam(grad_func, x0.clone(), data_provider, options)?
                 }
-                _ => run_unconstrained_method(*method_type, func.clone(), grad.clone(), x0.clone())?
+                _ => {
+                    run_unconstrained_method(*method_type, func.clone(), grad.clone(), x0.clone())?
+                }
             };
-            
+
             let duration = start.elapsed();
 
             println!(
@@ -265,7 +277,7 @@ fn perform_scalability_analysis() -> Result<(), Box<dyn std::error::Error>> {
 /// Perform cross-algorithm comparison on challenging problems
 fn perform_cross_algorithm_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Cross-Algorithm Comparison Summary");
-    println!("=" .repeat(60));
+    println!("=".repeat(60));
 
     // Test on the notorious Rosenbrock function
     println!("Challenge Problem: Rosenbrock Function (2D)");
@@ -273,13 +285,16 @@ fn perform_cross_algorithm_comparison() -> Result<(), Box<dyn std::error::Error>
     println!("-".repeat(65));
 
     let (func, grad, x0) = create_rosenbrock_problem();
-    
+
     let test_methods = [
         ("BFGS", TestMethodType::BFGS),
         ("L-BFGS", TestMethodType::LBFGS),
         ("Newton", TestMethodType::Newton),
         ("Adam", TestMethodType::Adam),
-        ("Differential Evolution", TestMethodType::DifferentialEvolution),
+        (
+            "Differential Evolution",
+            TestMethodType::DifferentialEvolution,
+        ),
     ];
 
     let mut results = Vec::new();
@@ -287,9 +302,18 @@ fn perform_cross_algorithm_comparison() -> Result<(), Box<dyn std::error::Error>
     for (name, method) in &test_methods {
         let start = Instant::now();
         let result = match method {
-            TestMethodType::BFGS => run_unconstrained_method(MethodType::BFGS, func.clone(), grad.clone(), x0.clone())?,
-            TestMethodType::LBFGS => run_unconstrained_method(MethodType::LBFGS, func.clone(), grad.clone(), x0.clone())?,
-            TestMethodType::Newton => run_unconstrained_method(MethodType::Newton, func.clone(), grad.clone(), x0.clone())?,
+            TestMethodType::BFGS => {
+                run_unconstrained_method(MethodType::BFGS, func.clone(), grad.clone(), x0.clone())?
+            }
+            TestMethodType::LBFGS => {
+                run_unconstrained_method(MethodType::LBFGS, func.clone(), grad.clone(), x0.clone())?
+            }
+            TestMethodType::Newton => run_unconstrained_method(
+                MethodType::Newton,
+                func.clone(),
+                grad.clone(),
+                x0.clone(),
+            )?,
             TestMethodType::Adam => {
                 let grad_func = SimpleRosenbrock;
                 let data_provider = Box::new(InMemoryDataProvider::new(vec![1.0; 100]));
@@ -303,45 +327,74 @@ fn perform_cross_algorithm_comparison() -> Result<(), Box<dyn std::error::Error>
             }
             TestMethodType::DifferentialEvolution => {
                 let bounds = vec![(-2.0, 2.0), (-2.0, 2.0)];
-                run_global_method(GlobalMethodType::DifferentialEvolution, func.clone(), bounds)?
+                run_global_method(
+                    GlobalMethodType::DifferentialEvolution,
+                    func.clone(),
+                    bounds,
+                )?
             }
         };
         let duration = start.elapsed();
 
         // Calculate a performance rating
         let rating = calculate_performance_rating(&result, duration.as_millis() as f64);
-        
-        results.push((*name, result.fun, duration.as_millis(), result.iterations, rating));
-        
+
+        results.push((
+            *name,
+            result.fun,
+            duration.as_millis(),
+            result.iterations,
+            rating,
+        ));
+
         println!(
             "{:18}  {:.2e}     {:5}        {:4}     {:4.1}/5",
-            name, result.fun, duration.as_millis(), result.iterations, rating
+            name,
+            result.fun,
+            duration.as_millis(),
+            result.iterations,
+            rating
         );
     }
 
     // Find the best performer
     results.sort_by(|a, b| b.4.partial_cmp(&a.4).unwrap());
-    println!("\n🏆 Best performer: {} (Rating: {:.1}/5)", results[0].0, results[0].4);
+    println!(
+        "\n🏆 Best performer: {} (Rating: {:.1}/5)",
+        results[0].0, results[0].4
+    );
 
     Ok(())
 }
 
 // Helper function to calculate performance rating
 fn calculate_performance_rating(result: &OptimizeResult<f64>, time_ms: f64) -> f64 {
-    let accuracy_score = if result.fun < 1e-10 { 5.0 } 
-                        else if result.fun < 1e-6 { 4.0 }
-                        else if result.fun < 1e-3 { 3.0 }
-                        else if result.fun < 1e-1 { 2.0 }
-                        else { 1.0 };
-    
-    let speed_score = if time_ms < 10.0 { 5.0 }
-                     else if time_ms < 50.0 { 4.0 }
-                     else if time_ms < 200.0 { 3.0 }
-                     else if time_ms < 1000.0 { 2.0 }
-                     else { 1.0 };
-    
+    let accuracy_score = if result.fun < 1e-10 {
+        5.0
+    } else if result.fun < 1e-6 {
+        4.0
+    } else if result.fun < 1e-3 {
+        3.0
+    } else if result.fun < 1e-1 {
+        2.0
+    } else {
+        1.0
+    };
+
+    let speed_score = if time_ms < 10.0 {
+        5.0
+    } else if time_ms < 50.0 {
+        4.0
+    } else if time_ms < 200.0 {
+        3.0
+    } else if time_ms < 1000.0 {
+        2.0
+    } else {
+        1.0
+    };
+
     let success_score = if result.success { 5.0 } else { 1.0 };
-    
+
     (accuracy_score + speed_score + success_score) / 3.0
 }
 
@@ -391,14 +444,10 @@ type DataProviderFactory = Box<dyn Fn() -> Box<dyn DataProvider> + Send + Sync>;
 
 // Problem creation functions
 fn create_quadratic_problem() -> (ObjectiveFunction, GradientFunction, Array1<f64>) {
-    let func = Box::new(|x: &ArrayView1<f64>| -> f64 {
-        x.mapv(|xi| xi * xi).sum()
-    });
-    
-    let grad = Box::new(|x: &ArrayView1<f64>| -> Array1<f64> {
-        x.mapv(|xi| 2.0 * xi)
-    });
-    
+    let func = Box::new(|x: &ArrayView1<f64>| -> f64 { x.mapv(|xi| xi * xi).sum() });
+
+    let grad = Box::new(|x: &ArrayView1<f64>| -> Array1<f64> { x.mapv(|xi| 2.0 * xi) });
+
     let x0 = Array1::from_vec(vec![2.0, -1.5]);
     (func, grad, x0)
 }
@@ -409,7 +458,7 @@ fn create_rosenbrock_problem() -> (ObjectiveFunction, GradientFunction, Array1<f
         let x2 = x[1];
         (1.0 - x1).powi(2) + 100.0 * (x2 - x1 * x1).powi(2)
     });
-    
+
     let grad = Box::new(|x: &ArrayView1<f64>| -> Array1<f64> {
         let x1 = x[0];
         let x2 = x[1];
@@ -418,7 +467,7 @@ fn create_rosenbrock_problem() -> (ObjectiveFunction, GradientFunction, Array1<f
             200.0 * (x2 - x1 * x1),
         ])
     });
-    
+
     let x0 = Array1::from_vec(vec![-1.2, 1.0]);
     (func, grad, x0)
 }
@@ -429,7 +478,7 @@ fn create_himmelblau_problem() -> (ObjectiveFunction, GradientFunction, Array1<f
         let x2 = x[1];
         (x1 * x1 + x2 - 11.0).powi(2) + (x1 + x2 * x2 - 7.0).powi(2)
     });
-    
+
     let grad = Box::new(|x: &ArrayView1<f64>| -> Array1<f64> {
         let x1 = x[0];
         let x2 = x[1];
@@ -438,7 +487,7 @@ fn create_himmelblau_problem() -> (ObjectiveFunction, GradientFunction, Array1<f
             2.0 * (x1 * x1 + x2 - 11.0) + 4.0 * x2 * (x1 + x2 * x2 - 7.0),
         ])
     });
-    
+
     let x0 = Array1::from_vec(vec![0.0, 0.0]);
     (func, grad, x0)
 }
@@ -447,14 +496,19 @@ fn create_rastrigin_problem() -> (ObjectiveFunction, GradientFunction, Array1<f6
     let func = Box::new(|x: &ArrayView1<f64>| -> f64 {
         let n = x.len() as f64;
         let a = 10.0;
-        a * n + x.iter().map(|&xi| xi * xi - a * (2.0 * std::f64::consts::PI * xi).cos()).sum::<f64>()
+        a * n
+            + x.iter()
+                .map(|&xi| xi * xi - a * (2.0 * std::f64::consts::PI * xi).cos())
+                .sum::<f64>()
     });
-    
+
     let grad = Box::new(|x: &ArrayView1<f64>| -> Array1<f64> {
         let a = 10.0;
-        x.mapv(|xi| 2.0 * xi + a * 2.0 * std::f64::consts::PI * (2.0 * std::f64::consts::PI * xi).sin())
+        x.mapv(|xi| {
+            2.0 * xi + a * 2.0 * std::f64::consts::PI * (2.0 * std::f64::consts::PI * xi).sin()
+        })
     });
-    
+
     let x0 = Array1::from_vec(vec![2.0, 2.0]);
     (func, grad, x0)
 }
@@ -463,11 +517,16 @@ fn create_ackley_problem() -> (ObjectiveFunction, Vec<(f64, f64)>) {
     let func = Box::new(|x: &ArrayView1<f64>| -> f64 {
         let n = x.len() as f64;
         let sum_sq = x.iter().map(|&xi| xi * xi).sum::<f64>();
-        let sum_cos = x.iter().map(|&xi| (2.0 * std::f64::consts::PI * xi).cos()).sum::<f64>();
-        
-        -20.0 * (-0.2 * (sum_sq / n).sqrt()).exp() - (sum_cos / n).exp() + 20.0 + std::f64::consts::E
+        let sum_cos = x
+            .iter()
+            .map(|&xi| (2.0 * std::f64::consts::PI * xi).cos())
+            .sum::<f64>();
+
+        -20.0 * (-0.2 * (sum_sq / n).sqrt()).exp() - (sum_cos / n).exp()
+            + 20.0
+            + std::f64::consts::E
     });
-    
+
     let bounds = vec![(-5.0, 5.0), (-5.0, 5.0)];
     (func, bounds)
 }
@@ -475,10 +534,14 @@ fn create_ackley_problem() -> (ObjectiveFunction, Vec<(f64, f64)>) {
 fn create_griewank_problem() -> (ObjectiveFunction, Vec<(f64, f64)>) {
     let func = Box::new(|x: &ArrayView1<f64>| -> f64 {
         let sum_sq = x.iter().map(|&xi| xi * xi).sum::<f64>() / 4000.0;
-        let prod_cos = x.iter().enumerate().map(|(i, &xi)| (xi / ((i + 1) as f64).sqrt()).cos()).product::<f64>();
+        let prod_cos = x
+            .iter()
+            .enumerate()
+            .map(|(i, &xi)| (xi / ((i + 1) as f64).sqrt()).cos())
+            .product::<f64>();
         sum_sq - prod_cos + 1.0
     });
-    
+
     let bounds = vec![(-10.0, 10.0), (-10.0, 10.0)];
     (func, bounds)
 }
@@ -488,55 +551,54 @@ fn create_multimodal_problem() -> (ObjectiveFunction, Vec<(f64, f64)>) {
         // Modified Himmelblau with multiple minima
         let x1 = x[0];
         let x2 = x[1];
-        (x1 * x1 + x2 - 11.0).powi(2) + (x1 + x2 * x2 - 7.0).powi(2) + 
-        0.1 * ((5.0 * x1).sin() * (5.0 * x2).sin()).powi(2)
+        (x1 * x1 + x2 - 11.0).powi(2)
+            + (x1 + x2 * x2 - 7.0).powi(2)
+            + 0.1 * ((5.0 * x1).sin() * (5.0 * x2).sin()).powi(2)
     });
-    
+
     let bounds = vec![(-5.0, 5.0), (-5.0, 5.0)];
     (func, bounds)
 }
 
-fn create_high_dimensional_quadratic(dim: usize) -> (ObjectiveFunction, GradientFunction, Array1<f64>) {
-    let func = Box::new(move |x: &ArrayView1<f64>| -> f64 {
-        x.mapv(|xi| xi * xi).sum()
-    });
-    
-    let grad = Box::new(|x: &ArrayView1<f64>| -> Array1<f64> {
-        x.mapv(|xi| 2.0 * xi)
-    });
-    
+fn create_high_dimensional_quadratic(
+    dim: usize,
+) -> (ObjectiveFunction, GradientFunction, Array1<f64>) {
+    let func = Box::new(move |x: &ArrayView1<f64>| -> f64 { x.mapv(|xi| xi * xi).sum() });
+
+    let grad = Box::new(|x: &ArrayView1<f64>| -> Array1<f64> { x.mapv(|xi| 2.0 * xi) });
+
     let x0 = Array1::from_elem(dim, 1.0);
     (func, grad, x0)
 }
 
 // Stochastic problem factories
 fn create_ml_quadratic_problem() -> (StochasticGradientFactory, Array1<f64>, DataProviderFactory) {
-    let grad_func_factory = Box::new(|| -> Box<dyn StochasticGradientFunction> {
-        Box::new(QuadraticML)
-    });
-    
+    let grad_func_factory =
+        Box::new(|| -> Box<dyn StochasticGradientFunction> { Box::new(QuadraticML) });
+
     let x0 = Array1::from_vec(vec![2.0, -1.5, 1.0]);
-    
+
     let data_provider_factory = Box::new(|| -> Box<dyn DataProvider> {
         Box::new(InMemoryDataProvider::new(vec![1.0; 100]))
     });
-    
+
     (grad_func_factory, x0, data_provider_factory)
 }
 
-fn create_logistic_regression_problem() -> (StochasticGradientFactory, Array1<f64>, DataProviderFactory) {
+fn create_logistic_regression_problem(
+) -> (StochasticGradientFactory, Array1<f64>, DataProviderFactory) {
     let grad_func_factory = Box::new(|| -> Box<dyn StochasticGradientFunction> {
         Box::new(LogisticRegressionML::new())
     });
-    
+
     let x0 = Array1::zeros(4); // 4 features
-    
+
     let data_provider_factory = Box::new(|| -> Box<dyn DataProvider> {
         // Generate synthetic dataset indices
         let indices: Vec<f64> = (0..200).map(|i| i as f64).collect();
         Box::new(InMemoryDataProvider::new(indices))
     });
-    
+
     (grad_func_factory, x0, data_provider_factory)
 }
 
@@ -547,13 +609,15 @@ fn create_linear_least_squares() -> (ResidualFunction, JacobianFunction, Array1<
         let b = x[1];
         let x_data = [1.0, 2.0, 3.0, 4.0, 5.0];
         let y_data = [2.1, 4.0, 6.1, 8.0, 9.9]; // roughly y = 2x with noise
-        
-        x_data.iter().zip(y_data.iter())
+
+        x_data
+            .iter()
+            .zip(y_data.iter())
             .map(|(&x_i, &y_i)| m * x_i + b - y_i)
             .collect::<Vec<f64>>()
             .into()
     });
-    
+
     let jacobian = Box::new(|_x: &ArrayView1<f64>| -> Array2<f64> {
         let x_data = [1.0, 2.0, 3.0, 4.0, 5.0];
         let mut jac = Array2::zeros((5, 2));
@@ -563,7 +627,7 @@ fn create_linear_least_squares() -> (ResidualFunction, JacobianFunction, Array1<
         }
         jac
     });
-    
+
     let x0 = Array1::from_vec(vec![1.0, 0.0]);
     (residual, jacobian, x0)
 }
@@ -574,13 +638,15 @@ fn create_exponential_least_squares() -> (ResidualFunction, JacobianFunction, Ar
         let b = x[1];
         let x_data = [0.0, 1.0, 2.0, 3.0, 4.0];
         let y_data = [1.0, 2.7, 7.4, 20.1, 54.6]; // roughly y = e^x
-        
-        x_data.iter().zip(y_data.iter())
+
+        x_data
+            .iter()
+            .zip(y_data.iter())
             .map(|(&x_i, &y_i)| a * (b * x_i).exp() - y_i)
             .collect::<Vec<f64>>()
             .into()
     });
-    
+
     let jacobian = Box::new(|x: &ArrayView1<f64>| -> Array2<f64> {
         let a = x[0];
         let b = x[1];
@@ -593,7 +659,7 @@ fn create_exponential_least_squares() -> (ResidualFunction, JacobianFunction, Ar
         }
         jac
     });
-    
+
     let x0 = Array1::from_vec(vec![1.0, 1.0]);
     (residual, jacobian, x0)
 }
@@ -605,13 +671,15 @@ fn create_polynomial_least_squares() -> (ResidualFunction, JacobianFunction, Arr
         let c = x[2];
         let x_data = [-2.0, -1.0, 0.0, 1.0, 2.0];
         let y_data = [6.1, 2.1, 0.9, 2.1, 6.1]; // roughly y = x^2 + 1
-        
-        x_data.iter().zip(y_data.iter())
+
+        x_data
+            .iter()
+            .zip(y_data.iter())
             .map(|(&x_i, &y_i)| a * x_i * x_i + b * x_i + c - y_i)
             .collect::<Vec<f64>>()
             .into()
     });
-    
+
     let jacobian = Box::new(|_x: &ArrayView1<f64>| -> Array2<f64> {
         let x_data = [-2.0, -1.0, 0.0, 1.0, 2.0];
         let mut jac = Array2::zeros((5, 3));
@@ -622,7 +690,7 @@ fn create_polynomial_least_squares() -> (ResidualFunction, JacobianFunction, Arr
         }
         jac
     });
-    
+
     let x0 = Array1::from_vec(vec![1.0, 0.0, 1.0]);
     (residual, jacobian, x0)
 }
@@ -685,20 +753,20 @@ impl LogisticRegressionML {
         let mut rng = rand::thread_rng();
         let n_samples = 200;
         let n_features = 4;
-        
+
         let mut features = Array2::zeros((n_samples, n_features));
         let mut labels = Array1::zeros(n_samples);
         let true_weights = Array1::from_vec(vec![0.5, -0.3, 0.8, -0.2]);
-        
+
         for i in 0..n_samples {
             for j in 0..n_features {
                 features[[i, j]] = rng.gen_range(-2.0..2.0);
             }
-            
+
             let z = features.row(i).dot(&true_weights) + rng.gen_range(-0.1..0.1);
             labels[i] = if z > 0.0 { 1.0 } else { 0.0 };
         }
-        
+
         Self { features, labels }
     }
 }
@@ -707,41 +775,41 @@ impl StochasticGradientFunction for LogisticRegressionML {
     fn compute_gradient(&mut self, params: &ArrayView1<f64>, batch_indices: &[f64]) -> Array1<f64> {
         let indices: Vec<usize> = batch_indices.iter().map(|&x| x as usize).collect();
         let mut gradient = Array1::zeros(params.len());
-        
+
         for &i in &indices {
             if i < self.labels.len() {
                 let x_i = self.features.row(i);
                 let y_i = self.labels[i];
-                
+
                 let z = x_i.dot(params);
                 let prediction = 1.0 / (1.0 + (-z).exp());
                 let error = prediction - y_i;
-                
+
                 for (j, &x_ij) in x_i.iter().enumerate() {
                     gradient[j] += error * x_ij;
                 }
             }
         }
-        
+
         gradient / indices.len() as f64
     }
 
     fn compute_value(&mut self, params: &ArrayView1<f64>, batch_indices: &[f64]) -> f64 {
         let indices: Vec<usize> = batch_indices.iter().map(|&x| x as usize).collect();
         let mut loss = 0.0;
-        
+
         for &i in &indices {
             if i < self.labels.len() {
                 let x_i = self.features.row(i);
                 let y_i = self.labels[i];
-                
+
                 let z = x_i.dot(params);
                 let prediction = 1.0 / (1.0 + (-z).exp());
-                
+
                 loss += -y_i * prediction.ln() - (1.0 - y_i) * (1.0 - prediction).ln();
             }
         }
-        
+
         loss / indices.len() as f64
     }
 }
@@ -758,34 +826,19 @@ fn run_unconstrained_method(
             let options = BfgsOptions::default();
             let mut f = func;
             let mut g = grad;
-            Ok(minimize_bfgs(
-                |x| f(x),
-                |x| g(x),
-                x0,
-                options,
-            )?)
+            Ok(minimize_bfgs(|x| f(x), |x| g(x), x0, options)?)
         }
         MethodType::LBFGS => {
             let options = LbfgsOptions::default();
             let mut f = func;
             let mut g = grad;
-            Ok(minimize_lbfgs(
-                |x| f(x),
-                |x| g(x),
-                x0,
-                options,
-            )?)
+            Ok(minimize_lbfgs(|x| f(x), |x| g(x), x0, options)?)
         }
         MethodType::Newton => {
             let options = NewtonOptions::default();
             let mut f = func;
             let mut g = grad;
-            Ok(minimize_newton(
-                |x| f(x),
-                |x| g(x),
-                x0,
-                options,
-            )?)
+            Ok(minimize_newton(|x| f(x), |x| g(x), x0, options)?)
         }
         MethodType::ConjugateGradient => {
             let options = ConjugateGradientOptions::default();
@@ -801,11 +854,7 @@ fn run_unconstrained_method(
         MethodType::Powell => {
             let options = PowellOptions::default();
             let mut f = func;
-            Ok(minimize_powell(
-                |x| f(x),
-                x0,
-                options,
-            )?)
+            Ok(minimize_powell(|x| f(x), x0, options)?)
         }
         _ => unreachable!(),
     }
@@ -835,7 +884,12 @@ fn run_stochastic_method(
                 tol: 1e-6,
                 ..Default::default()
             };
-            Ok(minimize_sgd_momentum(*grad_func, x0, data_provider, options)?)
+            Ok(minimize_sgd_momentum(
+                *grad_func,
+                x0,
+                data_provider,
+                options,
+            )?)
         }
         StochasticMethodType::RMSProp => {
             let options = RMSPropOptions {
@@ -880,11 +934,7 @@ fn run_global_method(
                 ..Default::default()
             };
             let mut f = func;
-            Ok(minimize_differential_evolution(
-                |x| f(x),
-                bounds,
-                options,
-            )?)
+            Ok(minimize_differential_evolution(|x| f(x), bounds, options)?)
         }
         GlobalMethodType::DualAnnealing => {
             let options = DualAnnealingOptions {
@@ -892,11 +942,7 @@ fn run_global_method(
                 ..Default::default()
             };
             let mut f = func;
-            Ok(minimize_dual_annealing(
-                |x| f(x),
-                bounds,
-                options,
-            )?)
+            Ok(minimize_dual_annealing(|x| f(x), bounds, options)?)
         }
     }
 }

@@ -61,9 +61,18 @@ pub enum VariogramModel {
     /// Linear variogram: γ(h) = c₀ + c₁h (unbounded)
     Linear { slope: f64, nugget: f64 },
     /// Power variogram: γ(h) = c₀ + c₁h^α for 0 < α < 2
-    Power { coefficient: f64, exponent: f64, nugget: f64 },
+    Power {
+        coefficient: f64,
+        exponent: f64,
+        nugget: f64,
+    },
     /// Matérn variogram with parameter ν
-    Matern { range: f64, sill: f64, nugget: f64, nu: f64 },
+    Matern {
+        range: f64,
+        sill: f64,
+        nugget: f64,
+        nu: f64,
+    },
 }
 
 impl VariogramModel {
@@ -74,17 +83,29 @@ impl VariogramModel {
     /// * `sill` - Sill parameter (maximum variance)
     /// * `nugget` - Nugget parameter (variance at zero distance)
     pub fn spherical(range: f64, sill: f64, nugget: f64) -> Self {
-        Self::Spherical { range, sill, nugget }
+        Self::Spherical {
+            range,
+            sill,
+            nugget,
+        }
     }
 
     /// Create an exponential variogram model
     pub fn exponential(range: f64, sill: f64, nugget: f64) -> Self {
-        Self::Exponential { range, sill, nugget }
+        Self::Exponential {
+            range,
+            sill,
+            nugget,
+        }
     }
 
     /// Create a Gaussian variogram model
     pub fn gaussian(range: f64, sill: f64, nugget: f64) -> Self {
-        Self::Gaussian { range, sill, nugget }
+        Self::Gaussian {
+            range,
+            sill,
+            nugget,
+        }
     }
 
     /// Create a linear variogram model
@@ -94,12 +115,21 @@ impl VariogramModel {
 
     /// Create a power variogram model
     pub fn power(coefficient: f64, exponent: f64, nugget: f64) -> Self {
-        Self::Power { coefficient, exponent, nugget }
+        Self::Power {
+            coefficient,
+            exponent,
+            nugget,
+        }
     }
 
     /// Create a Matérn variogram model
     pub fn matern(range: f64, sill: f64, nugget: f64, nu: f64) -> Self {
-        Self::Matern { range, sill, nugget, nu }
+        Self::Matern {
+            range,
+            sill,
+            nugget,
+            nu,
+        }
     }
 
     /// Evaluate the variogram at distance h
@@ -126,7 +156,11 @@ impl VariogramModel {
         }
 
         match self {
-            Self::Spherical { range, sill, nugget } => {
+            Self::Spherical {
+                range,
+                sill,
+                nugget,
+            } => {
                 if h >= *range {
                     nugget + sill
                 } else {
@@ -134,15 +168,28 @@ impl VariogramModel {
                     nugget + sill * (1.5 * h_r - 0.5 * h_r.powi(3))
                 }
             }
-            Self::Exponential { range, sill, nugget } => {
-                nugget + sill * (1.0 - (-h / range).exp())
-            }
-            Self::Gaussian { range, sill, nugget } => {
-                nugget + sill * (1.0 - (-(h / range).powi(2)).exp())
-            }
+            Self::Exponential {
+                range,
+                sill,
+                nugget,
+            } => nugget + sill * (1.0 - (-h / range).exp()),
+            Self::Gaussian {
+                range,
+                sill,
+                nugget,
+            } => nugget + sill * (1.0 - (-(h / range).powi(2)).exp()),
             Self::Linear { slope, nugget } => nugget + slope * h,
-            Self::Power { coefficient, exponent, nugget } => nugget + coefficient * h.powf(*exponent),
-            Self::Matern { range, sill, nugget, nu } => {
+            Self::Power {
+                coefficient,
+                exponent,
+                nugget,
+            } => nugget + coefficient * h.powf(*exponent),
+            Self::Matern {
+                range,
+                sill,
+                nugget,
+                nu,
+            } => {
                 let h_r = h / range;
                 if h_r < 1e-10 {
                     *nugget
@@ -156,7 +203,8 @@ impl VariogramModel {
                         (1.0 + 3.0_f64.sqrt() * h_r) * (-3.0_f64.sqrt() * h_r).exp()
                     } else if (nu - 2.5).abs() < 1e-10 {
                         // ν = 2.5
-                        (1.0 + 5.0_f64.sqrt() * h_r + 5.0 * h_r.powi(2) / 3.0) * (-5.0_f64.sqrt() * h_r).exp()
+                        (1.0 + 5.0_f64.sqrt() * h_r + 5.0 * h_r.powi(2) / 3.0)
+                            * (-5.0_f64.sqrt() * h_r).exp()
                     } else {
                         // General case approximation
                         1.0 - ((-h_r).exp() * (1.0 + h_r))
@@ -277,7 +325,7 @@ impl OrdinaryKriging {
             ));
         }
 
-        if ndim < 1 || ndim > 3 {
+        if !(1..=3).contains(&ndim) {
             return Err(SpatialError::ValueError(
                 "Kriging supports 1D, 2D, and 3D points only".to_string(),
             ));
@@ -375,7 +423,10 @@ impl OrdinaryKriging {
     ///
     /// # Returns
     /// * Vector of KrigingPrediction results
-    pub fn predict_batch(&self, locations: &ArrayView2<f64>) -> SpatialResult<Vec<KrigingPrediction>> {
+    pub fn predict_batch(
+        &self,
+        locations: &ArrayView2<f64>,
+    ) -> SpatialResult<Vec<KrigingPrediction>> {
         if locations.ncols() != self.ndim {
             return Err(SpatialError::ValueError(
                 "Location dimension must match data dimension".to_string(),
@@ -469,14 +520,14 @@ impl OrdinaryKriging {
 
         // Create augmented matrix [A | I]
         let mut aug = Array2::zeros((n, 2 * n));
-        
+
         // Fill A part
         for i in 0..n {
             for j in 0..n {
                 aug[[i, j]] = matrix[[i, j]];
             }
         }
-        
+
         // Fill identity part
         for i in 0..n {
             aug[[i, n + i]] = 1.0;
@@ -567,7 +618,7 @@ impl OrdinaryKriging {
             // Create subset without point i
             let mut subset_points = Array2::zeros((self.n_points - 1, self.ndim));
             let mut subset_values = Array1::zeros(self.n_points - 1);
-            
+
             let mut idx = 0;
             for j in 0..self.n_points {
                 if j != i {
@@ -587,7 +638,7 @@ impl OrdinaryKriging {
             // Predict at point i
             let location: Vec<f64> = self.points.row(i).to_vec();
             let prediction = subset_kriging.predict(&location)?;
-            
+
             errors[i] = prediction.value - self.values[i];
         }
 
@@ -716,7 +767,7 @@ impl SimpleKriging {
     /// Solve linear system using Gaussian elimination
     fn solve_linear_system(&self, a: &Array2<f64>, b: &Array1<f64>) -> SpatialResult<Array1<f64>> {
         let n = a.nrows();
-        
+
         // Create augmented matrix
         let mut aug = Array2::zeros((n, n + 1));
         for i in 0..n {
@@ -784,13 +835,13 @@ mod tests {
     #[test]
     fn test_variogram_models() {
         let spherical = VariogramModel::spherical(1.0, 0.5, 0.1);
-        
+
         // At distance 0, should return nugget
         assert_relative_eq!(spherical.evaluate(0.0), 0.1, epsilon = 1e-10);
-        
+
         // At range, should approach sill + nugget
         assert_relative_eq!(spherical.evaluate(1.0), 0.6, epsilon = 1e-10);
-        
+
         // Beyond range, should be sill + nugget
         assert_relative_eq!(spherical.evaluate(2.0), 0.6, epsilon = 1e-10);
 
@@ -811,24 +862,22 @@ mod tests {
     #[test]
     fn test_ordinary_kriging_basic() {
         // Simple 2D case
-        let points = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0],
-        ).unwrap();
+        let points =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
         let values = arr1(&[1.0, 2.0, 3.0, 4.0]);
-        
+
         let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
         let mut kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
         kriging.fit().unwrap();
 
         // Predict at center
         let prediction = kriging.predict(&[0.5, 0.5]).unwrap();
-        
+
         // Should be close to the average of surrounding points
         assert!(prediction.value > 1.0);
         assert!(prediction.value < 4.0);
         assert!(prediction.variance >= 0.0);
-        
+
         // Weights should sum to 1 (unbiasedness)
         let weight_sum: f64 = prediction.weights.sum();
         assert_relative_eq!(weight_sum, 1.0, epsilon = 1e-10);
@@ -837,37 +886,31 @@ mod tests {
     #[test]
     fn test_ordinary_kriging_exact_interpolation() {
         // Test that predictions at data locations are exact
-        let points = Array2::from_shape_vec(
-            (3, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
-        ).unwrap();
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
         let values = arr1(&[1.0, 2.0, 3.0]);
-        
+
         let variogram = VariogramModel::spherical(1.0, 0.5, 0.01); // Small nugget
         let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
 
         // Predict at first data point
         let prediction = kriging.predict(&[0.0, 0.0]).unwrap();
         assert_relative_eq!(prediction.value, 1.0, epsilon = 1e-6);
-        
+
         // Variance should be small at data locations
         assert!(prediction.variance < 0.1);
     }
 
     #[test]
     fn test_simple_kriging() {
-        let points = Array2::from_shape_vec(
-            (3, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
-        ).unwrap();
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
         let values = arr1(&[1.5, 2.5, 3.5]);
         let mean = 2.0;
-        
+
         let variogram = VariogramModel::exponential(1.0, 0.8, 0.1);
         let kriging = SimpleKriging::new(&points.view(), &values.view(), mean, variogram).unwrap();
 
         let prediction = kriging.predict(&[0.5, 0.5]).unwrap();
-        
+
         // Should give reasonable prediction
         assert!(prediction.value > 1.0);
         assert!(prediction.value < 4.0);
@@ -876,28 +919,24 @@ mod tests {
 
     #[test]
     fn test_batch_prediction() {
-        let points = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0],
-        ).unwrap();
+        let points =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
         let values = arr1(&[1.0, 2.0, 3.0, 4.0]);
-        
+
         let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
         let mut kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
         kriging.fit().unwrap();
 
-        let test_points = Array2::from_shape_vec(
-            (3, 2),
-            vec![0.25, 0.25, 0.5, 0.5, 0.75, 0.75],
-        ).unwrap();
+        let test_points =
+            Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.5, 0.5, 0.75, 0.75]).unwrap();
 
         let predictions = kriging.predict_batch(&test_points.view()).unwrap();
-        
+
         assert_eq!(predictions.len(), 3);
         for prediction in &predictions {
             assert!(prediction.value > 0.0);
             assert!(prediction.variance >= 0.0);
-            
+
             // Weights should sum to 1
             let weight_sum: f64 = prediction.weights.sum();
             assert_relative_eq!(weight_sum, 1.0, epsilon = 1e-10);
@@ -909,16 +948,17 @@ mod tests {
         let points = Array2::from_shape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
-        ).unwrap();
+        )
+        .unwrap();
         let values = arr1(&[1.0, 2.0, 3.0, 4.0, 2.5]);
-        
+
         let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
         let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
 
         let errors = kriging.cross_validate().unwrap();
-        
+
         assert_eq!(errors.len(), 5);
-        
+
         // Errors should be reasonable (not too large)
         for &error in errors.iter() {
             assert!(error.abs() < 5.0); // Reasonable bound for this test case
@@ -928,7 +968,7 @@ mod tests {
     #[test]
     fn test_variogram_properties() {
         let spherical = VariogramModel::spherical(2.0, 1.0, 0.2);
-        
+
         assert_relative_eq!(spherical.effective_range(), 2.0, epsilon = 1e-10);
         assert_relative_eq!(spherical.sill(), 1.2, epsilon = 1e-10);
         assert_relative_eq!(spherical.nugget(), 0.2, epsilon = 1e-10);

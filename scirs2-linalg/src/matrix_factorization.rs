@@ -348,7 +348,7 @@ where
                         let cta = ct.dot(&a_j.view());
 
                         // Using SVD for pseudoinverse (more stable)
-                        let (u, s, vt) = svd(&ctc.view(), false)?;
+                        let (u, s, vt) = svd(&ctc.view(), false, None)?;
 
                         // Apply pseudoinverse
                         let mut s_inv = s.clone();
@@ -384,7 +384,7 @@ where
         "svd" => {
             // SVD-based approach
             // First, compute the truncated SVD
-            let (u, s, vt) = svd(a, false)?;
+            let (u, s, vt) = svd(a, false, None)?;
 
             // Truncate to rank k
             let u_k = u.slice(s![.., ..k]).to_owned();
@@ -576,7 +576,7 @@ where
             }
 
             // Compute pseudoinverse of W using SVD
-            let (u_w, s_w, vt_w) = svd(&w.view(), true)?;
+            let (u_w, s_w, vt_w) = svd(&w.view(), true, None)?;
 
             // Truncate to numerical rank
             let mut effective_rank = 0;
@@ -620,14 +620,14 @@ where
             let y = a.dot(&omega);
 
             // QR factorization of Y
-            let (q, _) = qr(&y.view())?;
+            let (q, _) = qr(&y.view(), None)?;
 
             // Small matrix B = Q^T * A
             let qt = q.t();
             let b = qt.dot(a);
 
             // SVD of B
-            let (_, s, vt) = svd(&b.view(), false)?;
+            let (_, s, vt) = svd(&b.view(), false, None)?;
 
             // Truncate to rank k
             let s_k = s.slice(s![..k]).to_owned();
@@ -732,8 +732,8 @@ where
             }
 
             // Compute U using pseudoinverse of C and R
-            let (c_u, c_s, c_vt) = svd(&c.view(), false)?;
-            let (r_u, r_s, r_vt) = svd(&r.view(), false)?;
+            let (c_u, c_s, c_vt) = svd(&c.view(), false, None)?;
+            let (r_u, r_s, r_vt) = svd(&r.view(), false, None)?;
 
             // Truncate to rank k
             let c_u_k = c_u.slice(s![.., ..k]).to_owned();
@@ -1059,7 +1059,7 @@ where
             let (m, n) = (a.nrows(), a.ncols());
 
             // First, compute QR: A = QR
-            let (q, r) = qr(a)?;
+            let (q, r) = qr(a, None)?;
 
             // Determine numerical rank from R diagonal
             let mut rank = 0;
@@ -1080,7 +1080,7 @@ where
             let r11 = r.slice(s![..rank, ..rank]).to_owned();
 
             // SVD of R11: R11 = U11 * S11 * V11^T
-            let (u11, s11, v11t) = svd(&r11.view(), true)?;
+            let (u11, s11, v11t) = svd(&r11.view(), true, None)?;
 
             // Create S11 as diagonal matrix
             let mut s11_diag = Array2::zeros((rank, rank));

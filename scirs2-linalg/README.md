@@ -38,6 +38,28 @@ Linear algebra module for SciRS2, providing functionality comparable to NumPy/Sc
 - **Mixed Precision**: Operations across different numeric types
 - **Sparse-Dense Operations**: Efficient handling of sparse matrices
 
+## Performance
+
+SciRS2 is designed for high performance with multiple optimization strategies:
+
+- **BLAS/LAPACK Integration**: Native acceleration through optimized libraries
+- **SIMD Vectorization**: Hand-tuned SIMD kernels for critical operations  
+- **Memory Efficiency**: Cache-friendly algorithms and reduced allocations
+- **Parallel Processing**: Multi-core acceleration for large matrices
+- **SciPy API Compatibility**: Zero-overhead wrappers maintaining familiar interfaces
+
+### Performance Highlights
+
+| Operation | Small Matrices | Medium Matrices | Large Matrices |
+|-----------|---------------|----------------|----------------|
+| Basic Ops | 0.1-1 μs | 10-100 μs | 1-10 ms |
+| Decompositions | 1-10 μs | 100 μs-1 ms | 10-100 ms |
+| Eigenvalues | 5-50 μs | 500 μs-5 ms | 50-500 ms |
+
+For detailed performance analysis, benchmarking guides, and optimization tips:
+- **[Performance Guide](docs/PERFORMANCE_GUIDE.md)** - Comprehensive performance analysis and best practices
+- **[Benchmarking Guide](docs/BENCHMARKING.md)** - Instructions for running and creating custom benchmarks
+
 ## Installation
 
 Add scirs2-linalg to your Cargo.toml:

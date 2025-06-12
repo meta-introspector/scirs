@@ -29,7 +29,7 @@
 //! // SIMD batch distance calculation
 //! let points1 = array![[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]];
 //! let points2 = array![[1.0, 0.0], [2.0, 1.0], [3.0, 2.0]];
-//! 
+//!
 //! let distances = simd_euclidean_distance_batch(&points1.view(), &points2.view()).unwrap();
 //! println!("Batch distances: {:?}", distances);
 //!
@@ -39,7 +39,9 @@
 //! println!("Distance matrix shape: {:?}", dist_matrix.shape());
 //! ```
 
-use crate::distance::{euclidean, manhattan};
+use crate::distance::euclidean;
+#[cfg(test)]
+use crate::distance::manhattan;
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView2};
 use rayon::prelude::*;
@@ -49,6 +51,7 @@ use std::arch::x86_64::*;
 
 /// SIMD vector size for different architectures
 #[cfg(target_arch = "x86_64")]
+#[allow(dead_code)]
 const SIMD_WIDTH: usize = 8; // AVX 256-bit / f32
 
 #[cfg(target_arch = "aarch64")]
@@ -75,7 +78,7 @@ impl SimdMetric {
     pub fn name(&self) -> &'static str {
         match self {
             SimdMetric::Euclidean => "euclidean",
-            SimdMetric::Manhattan => "manhattan", 
+            SimdMetric::Manhattan => "manhattan",
             SimdMetric::SquaredEuclidean => "sqeuclidean",
             SimdMetric::Chebyshev => "chebyshev",
         }
@@ -368,38 +371,46 @@ pub fn simd_knn_search(
         .zip(distances.outer_iter_mut())
         .enumerate()
         .par_bridge()
-        .try_for_each(|(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
-            let query_point = query_points.row(query_idx).to_vec();
+        .try_for_each(
+            |(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
+                let query_point = query_points.row(query_idx).to_vec();
 
-            // Compute all distances for this query
-            let mut all_distances: Vec<(f64, usize)> = (0..n_data)
-                .map(|data_idx| {
-                    let data_point = data_points.row(data_idx).to_vec();
-                    let dist = match metric_enum {
-                        SimdMetric::Euclidean => simd_euclidean_distance(&query_point, &data_point),
-                        SimdMetric::Manhattan => simd_manhattan_distance(&query_point, &data_point),
-                        SimdMetric::SquaredEuclidean => {
-                            simd_squared_euclidean_distance(&query_point, &data_point)
+                // Compute all distances for this query
+                let mut all_distances: Vec<(f64, usize)> = (0..n_data)
+                    .map(|data_idx| {
+                        let data_point = data_points.row(data_idx).to_vec();
+                        let dist = match metric_enum {
+                            SimdMetric::Euclidean => {
+                                simd_euclidean_distance(&query_point, &data_point)
+                            }
+                            SimdMetric::Manhattan => {
+                                simd_manhattan_distance(&query_point, &data_point)
+                            }
+                            SimdMetric::SquaredEuclidean => {
+                                simd_squared_euclidean_distance(&query_point, &data_point)
+                            }
+                            SimdMetric::Chebyshev => {
+                                simd_chebyshev_distance(&query_point, &data_point)
+                            }
                         }
-                        SimdMetric::Chebyshev => simd_chebyshev_distance(&query_point, &data_point),
-                    }
-                    .unwrap_or(f64::INFINITY);
-                    (dist, data_idx)
-                })
-                .collect();
+                        .unwrap_or(f64::INFINITY);
+                        (dist, data_idx)
+                    })
+                    .collect();
 
-            // Partial sort to get k smallest
-            all_distances.select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
-            all_distances[..k].sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                // Partial sort to get k smallest
+                all_distances.select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
+                all_distances[..k].sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
-            // Fill result arrays
-            for (i, (dist, idx)) in all_distances[..k].iter().enumerate() {
-                dist_row[i] = *dist;
-                idx_row[i] = *idx;
-            }
+                // Fill result arrays
+                for (i, (dist, idx)) in all_distances[..k].iter().enumerate() {
+                    dist_row[i] = *dist;
+                    idx_row[i] = *idx;
+                }
 
-            Ok(())
-        })?;
+                Ok(())
+            },
+        )?;
 
     Ok((indices, distances))
 }
@@ -589,11 +600,7 @@ fn scalar_squared_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64>
 }
 
 fn scalar_manhattan_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    let sum = a
-        .iter()
-        .zip(b.iter())
-        .map(|(x, y)| (x - y).abs())
-        .sum();
+    let sum = a.iter().zip(b.iter()).map(|(x, y)| (x - y).abs()).sum();
     Ok(sum)
 }
 
@@ -674,7 +681,10 @@ pub mod bench {
 
         #[cfg(target_arch = "aarch64")]
         {
-            println!("  NEON: {}", std::arch::is_aarch64_feature_detected!("neon"));
+            println!(
+                "  NEON: {}",
+                std::arch::is_aarch64_feature_detected!("neon")
+            );
         }
 
         #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
@@ -768,22 +778,11 @@ mod tests {
 
     #[test]
     fn test_simd_knn_search() {
-        let data_points = array![
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [0.0, 1.0],
-            [1.0, 1.0],
-            [2.0, 2.0]
-        ];
+        let data_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [2.0, 2.0]];
         let query_points = array![[0.5, 0.5], [1.5, 1.5]];
 
-        let (indices, distances) = simd_knn_search(
-            &query_points.view(),
-            &data_points.view(),
-            3,
-            "euclidean",
-        )
-        .unwrap();
+        let (indices, distances) =
+            simd_knn_search(&query_points.view(), &data_points.view(), 3, "euclidean").unwrap();
 
         assert_eq!(indices.shape(), &[2, 3]);
         assert_eq!(distances.shape(), &[2, 3]);
@@ -819,7 +818,7 @@ mod tests {
         let b = vec![4.0, 5.0, 1.0];
 
         let dist = simd_chebyshev_distance(&a, &b).unwrap();
-        
+
         // Max difference should be |2 - 5| = 3
         assert_relative_eq!(dist, 3.0, epsilon = 1e-10);
     }
@@ -833,7 +832,7 @@ mod tests {
         for metric in &metrics {
             let distances = parallel_pdist(&points.view(), metric).unwrap();
             assert_eq!(distances.len(), 3); // n*(n-1)/2 = 3
-            
+
             for &dist in distances.iter() {
                 assert!(dist >= 0.0);
                 assert!(dist.is_finite());
@@ -864,7 +863,7 @@ mod tests {
 
         // Expected: sqrt(3 * 1^2) = sqrt(3) ≈ 1.732
         assert_relative_eq!(simd_dist, scalar_dist, epsilon = 1e-10);
-        
+
         // Test with larger vectors
         let dim = 1000; // Restore original size
         let a: Vec<f64> = (0..dim).map(|i| i as f64).collect();

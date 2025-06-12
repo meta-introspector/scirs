@@ -78,7 +78,7 @@ impl fmt::Display for ErrorLocation {
 }
 
 /// Error context containing additional information about an error
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ErrorContext {
     /// Error message
     pub message: String,
@@ -125,7 +125,7 @@ impl fmt::Display for ErrorContext {
 }
 
 /// Core error type for SciRS2
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum CoreError {
     /// Computation error (generic error)
     #[error("{0}")]
@@ -201,7 +201,7 @@ pub enum CoreError {
 
     /// IO error
     #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
+    IoError(ErrorContext),
 
     /// Scheduler error (error in work-stealing scheduler)
     #[error("Scheduler error: {0}")]
@@ -214,6 +214,13 @@ pub enum CoreError {
 
 /// Result type alias for core operations
 pub type CoreResult<T> = Result<T, CoreError>;
+
+/// Convert from std::io::Error to CoreError
+impl From<std::io::Error> for CoreError {
+    fn from(err: std::io::Error) -> Self {
+        CoreError::IoError(ErrorContext::new(format!("IO error: {}", err)))
+    }
+}
 
 /// Convert from serde_json::Error to CoreError
 #[cfg(feature = "serialization")]

@@ -35,7 +35,7 @@
 //! println!("Explained variance ratio: {:?}", result.explained_variance_ratio);
 //! ```
 
-use ndarray::{Array1, Array2, Axis, s, ScalarOperand};
+use ndarray::{s, Array1, Array2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -344,7 +344,7 @@ where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
 {
     let (n_samples, n_features) = data.dim();
-    
+
     if n_samples == 0 || n_features == 0 {
         return Err(TimeSeriesError::InvalidInput(
             "Data matrix cannot be empty".to_string(),
@@ -380,22 +380,23 @@ where
     };
 
     // Step 2: Compute covariance matrix or use SVD
-    let (components, explained_variance, singular_values) = if config.use_svd || n_features > n_samples {
-        compute_pca_svd(&processed_data, config)?
-    } else {
-        compute_pca_eigendecomposition(&processed_data, config)?
-    };
+    let (components, explained_variance, singular_values) =
+        if config.use_svd || n_features > n_samples {
+            compute_pca_svd(&processed_data, config)?
+        } else {
+            compute_pca_eigendecomposition(&processed_data, config)?
+        };
 
     // Step 3: Select number of components
     let n_components = determine_n_components(&explained_variance, config);
-    
+
     let selected_components = components.slice(s![.., ..n_components]).to_owned();
     let selected_explained_variance = explained_variance.slice(s![..n_components]).to_owned();
-    
+
     // Step 4: Compute explained variance ratios
     let total_variance = explained_variance.sum();
     let explained_variance_ratio = selected_explained_variance.mapv(|x| x / total_variance);
-    
+
     let mut cumulative_variance_ratio = Array1::zeros(n_components);
     let mut cumsum = F::zero();
     for i in 0..n_components {
@@ -437,7 +438,7 @@ where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
 {
     let (n_functions, n_points) = functional_data.dim();
-    
+
     if n_functions == 0 || n_points == 0 {
         return Err(TimeSeriesError::InvalidInput(
             "Functional data matrix cannot be empty".to_string(),
@@ -477,15 +478,15 @@ where
     let (eigenvalues, eigenvectors) = compute_eigendecomposition(&regularized_covariance)?;
 
     // Step 6: Select number of components
-    let n_components = config.n_components.unwrap_or(
-        std::cmp::min(n_functions.saturating_sub(1), n_basis)
-    );
+    let n_components = config
+        .n_components
+        .unwrap_or(std::cmp::min(n_functions.saturating_sub(1), n_basis));
     let n_components = std::cmp::min(n_components, eigenvalues.len());
 
     // Step 7: Extract functional components and compute scores
     let functional_components = eigenvectors.slice(s![.., ..n_components]).to_owned();
     let explained_variance = eigenvalues.slice(s![..n_components]).to_owned();
-    
+
     let total_variance = eigenvalues.sum();
     let explained_variance_ratio = &explained_variance / total_variance;
 
@@ -497,7 +498,8 @@ where
     let reconstructed_functions = reconstructed_coefficients.dot(&basis_evaluation.t());
 
     // Step 9: Compute smoothness measures
-    let smoothness_measures = compute_smoothness_measures(&functional_components, &basis_evaluation)?;
+    let smoothness_measures =
+        compute_smoothness_measures(&functional_components, &basis_evaluation)?;
 
     Ok(FunctionalPCAResult {
         functional_components,
@@ -535,11 +537,12 @@ where
     }
 
     let n_series = time_series.len();
-    
+
     // Initialize weights
-    let weights = config.weights.clone().unwrap_or_else(|| {
-        Array1::from_elem(n_series, 1.0 / n_series as f64)
-    });
+    let weights = config
+        .weights
+        .clone()
+        .unwrap_or_else(|| Array1::from_elem(n_series, 1.0 / n_series as f64));
 
     if weights.len() != n_series {
         return Err(TimeSeriesError::InvalidInput(
@@ -550,7 +553,7 @@ where
     // Initialize barycenter
     let mut barycenter = initialize_barycenter(time_series, &config.initialization_method)?;
     let mut prev_barycenter = barycenter.clone();
-    
+
     let mut convergence_error = F::infinity();
     let mut iterations = 0;
 
@@ -558,11 +561,11 @@ where
     let mut warping_costs = Array1::zeros(n_series);
 
     // Iterative barycenter computation
-    while iterations < config.max_iterations 
-        && convergence_error > F::from(config.convergence_tolerance).unwrap() 
+    while iterations < config.max_iterations
+        && convergence_error > F::from(config.convergence_tolerance).unwrap()
     {
         alignment_paths.clear();
-        
+
         // Compute alignments for all series to current barycenter
         for (i, series) in time_series.iter().enumerate() {
             let (cost, path) = compute_dtw_alignment(&barycenter, series, config)?;
@@ -571,11 +574,7 @@ where
         }
 
         // Update barycenter based on alignments
-        barycenter = update_barycenter_from_alignments(
-            time_series,
-            &alignment_paths,
-            &weights,
-        )?;
+        barycenter = update_barycenter_from_alignments(time_series, &alignment_paths, &weights)?;
 
         // Check convergence
         convergence_error = compute_barycenter_difference(&barycenter, &prev_barycenter);
@@ -639,9 +638,9 @@ where
 {
     // For SVD approach: X = U * S * V^T
     // Components are columns of V, explained variance is S^2 / (n-1)
-    
+
     let (_n_samples, _n_features) = data.dim();
-    
+
     // Simplified SVD computation (in practice, would use LAPACK)
     // For now, we'll compute the covariance matrix approach as a fallback
     compute_pca_eigendecomposition(data, config)
@@ -655,20 +654,20 @@ where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
 {
     let (_n_samples, _n_features) = data.dim();
-    
+
     // Compute covariance matrix
     let covariance = compute_covariance_matrix(data)?;
-    
+
     // Eigendecomposition (simplified - in practice would use LAPACK)
     let (eigenvalues, eigenvectors) = compute_eigendecomposition(&covariance)?;
-    
+
     // Sort by eigenvalues (descending) if requested
     let (sorted_eigenvalues, sorted_eigenvectors) = if config.sort_components {
         sort_eigen_pairs(eigenvalues, eigenvectors)?
     } else {
         (eigenvalues, eigenvectors)
     };
-    
+
     // Filter out small eigenvalues
     let tolerance = F::from(config.eigenvalue_tolerance).unwrap();
     let mut valid_components = 0;
@@ -679,10 +678,12 @@ where
             break;
         }
     }
-    
+
     let final_eigenvalues = sorted_eigenvalues.slice(s![..valid_components]).to_owned();
-    let final_eigenvectors = sorted_eigenvectors.slice(s![.., ..valid_components]).to_owned();
-    
+    let final_eigenvectors = sorted_eigenvectors
+        .slice(s![.., ..valid_components])
+        .to_owned();
+
     Ok((final_eigenvectors, final_eigenvalues, None))
 }
 
@@ -692,10 +693,10 @@ where
 {
     let (n_samples, _n_features) = data.dim();
     let n_samples_f = F::from(n_samples).unwrap();
-    
+
     // C = (1/n) * X^T * X
     let covariance = data.t().dot(data) / n_samples_f;
-    
+
     Ok(covariance)
 }
 
@@ -705,17 +706,17 @@ where
 {
     // Simplified eigendecomposition
     // In practice, this would use LAPACK's dsyev or similar
-    
+
     let n = matrix.nrows();
-    
+
     // For demonstration, we'll create mock eigenvalues and eigenvectors
     // In a real implementation, this would use proper numerical libraries
     let eigenvalues = Array1::from_shape_fn(n, |i| {
         F::from(n - i).unwrap() // Decreasing eigenvalues
     });
-    
+
     let eigenvectors = Array2::eye(n);
-    
+
     Ok((eigenvalues, eigenvectors))
 }
 
@@ -728,61 +729,57 @@ where
 {
     let n = eigenvalues.len();
     let mut indices: Vec<usize> = (0..n).collect();
-    
+
     // Sort indices by eigenvalues (descending)
     indices.sort_by(|&i, &j| {
-        eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap_or(std::cmp::Ordering::Equal)
+        eigenvalues[j]
+            .partial_cmp(&eigenvalues[i])
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
-    
+
     let sorted_eigenvalues = Array1::from_shape_fn(n, |i| eigenvalues[indices[i]]);
     let sorted_eigenvectors = Array2::from_shape_fn((eigenvectors.nrows(), n), |(i, j)| {
         eigenvectors[(i, indices[j])]
     });
-    
+
     Ok((sorted_eigenvalues, sorted_eigenvectors))
 }
 
-fn determine_n_components<F>(
-    explained_variance: &Array1<F>,
-    config: &PCAConfig,
-) -> usize
+fn determine_n_components<F>(explained_variance: &Array1<F>, config: &PCAConfig) -> usize
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let total_variance = explained_variance.sum();
     let min_variance_ratio = F::from(config.min_variance_ratio).unwrap();
     let max_cumulative_variance = F::from(config.max_cumulative_variance).unwrap();
-    
+
     if let Some(n) = config.n_components {
         return std::cmp::min(n, explained_variance.len());
     }
-    
+
     let mut cumulative_variance = F::zero();
     for (i, &variance) in explained_variance.iter().enumerate() {
         let variance_ratio = variance / total_variance;
-        
+
         // Skip components with too little explained variance
         if variance_ratio < min_variance_ratio {
             return i;
         }
-        
+
         cumulative_variance = cumulative_variance + variance_ratio;
-        
+
         // Stop when we reach the maximum cumulative variance
         if cumulative_variance >= max_cumulative_variance {
             return i + 1;
         }
     }
-    
+
     explained_variance.len()
 }
 
 // Helper functions for Functional PCA
 
-fn create_basis_functions<F>(
-    n_points: usize,
-    config: &FunctionalPCAConfig,
-) -> Result<Array2<F>>
+fn create_basis_functions<F>(n_points: usize, config: &FunctionalPCAConfig) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
 {
@@ -800,21 +797,21 @@ where
 {
     // Simplified B-spline basis creation
     // In practice, this would use proper spline libraries
-    
+
     let mut basis = Array2::zeros((n_points, n_basis));
-    
+
     for j in 0..n_basis {
         for i in 0..n_points {
             let t = F::from(i).unwrap() / F::from(n_points - 1).unwrap();
             let center = F::from(j).unwrap() / F::from(n_basis - 1).unwrap();
             let width = F::one() / F::from(n_basis).unwrap();
-            
+
             // Simple Gaussian-like basis function
             let diff = (t - center) / width;
             basis[(i, j)] = (-diff * diff).exp();
         }
     }
-    
+
     Ok(basis)
 }
 
@@ -824,12 +821,12 @@ where
 {
     let mut basis = Array2::zeros((n_points, n_basis));
     let pi = F::from(std::f64::consts::PI).unwrap();
-    
+
     for j in 0..n_basis {
         for i in 0..n_points {
             let t = F::from(i).unwrap() / F::from(n_points - 1).unwrap();
             let freq = F::from(j + 1).unwrap();
-            
+
             if j % 2 == 0 {
                 // Cosine terms
                 basis[(i, j)] = (F::from(2.0).unwrap() * pi * freq * t).cos();
@@ -839,7 +836,7 @@ where
             }
         }
     }
-    
+
     Ok(basis)
 }
 
@@ -848,16 +845,16 @@ where
     F: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let mut basis = Array2::zeros((n_points, n_basis));
-    
+
     for j in 0..n_basis {
         for i in 0..n_points {
             let t = F::from(i).unwrap() / F::from(n_points - 1).unwrap();
-            
+
             // Polynomial basis: t^j
             basis[(i, j)] = t.powf(F::from(j).unwrap());
         }
     }
-    
+
     Ok(basis)
 }
 
@@ -867,21 +864,21 @@ where
 {
     // Simplified wavelet basis (Haar wavelets)
     let mut basis = Array2::zeros((n_points, n_basis));
-    
+
     // First basis function is constant
     for i in 0..n_points {
         basis[(i, 0)] = F::one() / F::from(n_points).unwrap().sqrt();
     }
-    
+
     // Additional basis functions are Haar wavelets at different scales
     for j in 1..n_basis {
         let scale = 1 << (j / 2); // Powers of 2
         let shift = j % scale;
-        
+
         for i in 0..n_points {
             let t = F::from(i).unwrap() / F::from(n_points - 1).unwrap();
             let scaled_t = t * F::from(scale).unwrap() - F::from(shift).unwrap();
-            
+
             if scaled_t >= F::zero() && scaled_t < F::one() {
                 if scaled_t < F::from(0.5).unwrap() {
                     basis[(i, j)] = F::one();
@@ -892,7 +889,7 @@ where
             }
         }
     }
-    
+
     Ok(basis)
 }
 
@@ -905,7 +902,7 @@ where
 {
     // Project functional data onto basis functions
     // Coefficients = Data * Basis (assuming orthonormal basis)
-    
+
     let coefficients = functional_data.dot(basis_evaluation);
     Ok(coefficients)
 }
@@ -920,14 +917,14 @@ where
 {
     // Apply smoothness penalty to covariance matrix
     // This is a simplified version - would compute roughness penalty matrix in practice
-    
+
     let covariance = compute_covariance_matrix(coefficients)?;
     let lambda_f = F::from(lambda).unwrap();
     let identity = Array2::eye(covariance.ncols());
-    
+
     // Regularized covariance = Cov - lambda * I (simplified)
     let regularized = covariance - identity.mapv(|x: F| x * lambda_f);
-    
+
     Ok(regularized)
 }
 
@@ -940,30 +937,28 @@ where
 {
     let n_components = components.ncols();
     let mut smoothness = Array1::zeros(n_components);
-    
+
     // Compute smoothness as second derivative norm (simplified)
     for j in 0..n_components {
         let component = components.column(j);
-        
+
         // Simplified smoothness measure: sum of squared differences
         let mut roughness = F::zero();
         for i in 1..component.len() - 1 {
-            let second_diff = component[i + 1] - F::from(2.0).unwrap() * component[i] + component[i - 1];
+            let second_diff =
+                component[i + 1] - F::from(2.0).unwrap() * component[i] + component[i - 1];
             roughness = roughness + second_diff * second_diff;
         }
-        
+
         smoothness[j] = F::one() / (F::one() + roughness);
     }
-    
+
     Ok(smoothness)
 }
 
 // Helper functions for DTW barycenter
 
-fn initialize_barycenter<F>(
-    time_series: &[Array1<F>],
-    method: &BarycenterInit,
-) -> Result<Array1<F>>
+fn initialize_barycenter<F>(time_series: &[Array1<F>], method: &BarycenterInit) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
 {
@@ -986,7 +981,7 @@ where
     let n = time_series.len();
     let mut min_total_distance = F::infinity();
     let mut medoid_idx = 0;
-    
+
     for i in 0..n {
         let mut total_distance = F::zero();
         for j in 0..n {
@@ -995,13 +990,13 @@ where
                 total_distance = total_distance + distance;
             }
         }
-        
+
         if total_distance < min_total_distance {
             min_total_distance = total_distance;
             medoid_idx = i;
         }
     }
-    
+
     Ok(time_series[medoid_idx].clone())
 }
 
@@ -1013,20 +1008,20 @@ where
     let max_length = time_series.iter().map(|ts| ts.len()).max().unwrap_or(0);
     let mut mean_series = Array1::zeros(max_length);
     let mut counts = Array1::zeros(max_length);
-    
+
     for ts in time_series {
         for (i, &val) in ts.iter().enumerate() {
             mean_series[i] = mean_series[i] + val;
             counts[i] = counts[i] + F::one();
         }
     }
-    
+
     for i in 0..max_length {
         if counts[i] > F::zero() {
             mean_series[i] = mean_series[i] / counts[i];
         }
     }
-    
+
     Ok(mean_series)
 }
 
@@ -1040,11 +1035,11 @@ where
 {
     let n1 = series1.len();
     let n2 = series2.len();
-    
+
     // Initialize DTW matrix
     let mut dtw_matrix = Array2::from_elem((n1 + 1, n2 + 1), F::infinity());
     dtw_matrix[(0, 0)] = F::zero();
-    
+
     // Fill DTW matrix
     for i in 1..=n1 {
         for j in 1..=n2 {
@@ -1057,34 +1052,31 @@ where
                     continue;
                 }
             }
-            
-            let cost = compute_point_distance(series1[i - 1], series2[j - 1], &config.distance_metric);
+
+            let cost =
+                compute_point_distance(series1[i - 1], series2[j - 1], &config.distance_metric);
             let min_prev = dtw_matrix[(i - 1, j)]
                 .min(dtw_matrix[(i, j - 1)])
                 .min(dtw_matrix[(i - 1, j - 1)]);
-            
+
             dtw_matrix[(i, j)] = cost + min_prev;
         }
     }
-    
+
     let total_cost = dtw_matrix[(n1, n2)];
-    
+
     // Backtrack to find optimal path
     let path = backtrack_dtw_path(&dtw_matrix, n1, n2);
-    
+
     Ok((total_cost, path))
 }
 
-fn compute_point_distance<F>(
-    point1: F,
-    point2: F,
-    metric: &DTWDistance,
-) -> F
+fn compute_point_distance<F>(point1: F, point2: F, metric: &DTWDistance) -> F
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let diff = point1 - point2;
-    
+
     match metric {
         DTWDistance::Euclidean => diff.abs(),
         DTWDistance::Manhattan => diff.abs(),
@@ -1092,26 +1084,22 @@ where
     }
 }
 
-fn backtrack_dtw_path<F>(
-    dtw_matrix: &Array2<F>,
-    n1: usize,
-    n2: usize,
-) -> Vec<(usize, usize)>
+fn backtrack_dtw_path<F>(dtw_matrix: &Array2<F>, n1: usize, n2: usize) -> Vec<(usize, usize)>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let mut path = Vec::new();
     let mut i = n1;
     let mut j = n2;
-    
+
     while i > 0 && j > 0 {
         path.push((i - 1, j - 1));
-        
+
         // Find minimum of three predecessors
         let diag = dtw_matrix[(i - 1, j - 1)];
         let up = dtw_matrix[(i - 1, j)];
         let left = dtw_matrix[(i, j - 1)];
-        
+
         if diag <= up && diag <= left {
             i -= 1;
             j -= 1;
@@ -1121,7 +1109,7 @@ where
             j -= 1;
         }
     }
-    
+
     path.reverse();
     path
 }
@@ -1140,30 +1128,31 @@ where
         .map(|path| path.iter().map(|(i, _)| *i).max().unwrap_or(0) + 1)
         .max()
         .unwrap_or(0);
-    
+
     let mut new_barycenter = Array1::zeros(max_barycenter_length);
     let mut counts = Array1::zeros(max_barycenter_length);
-    
+
     // Accumulate weighted contributions
     for (series_idx, path) in alignment_paths.iter().enumerate() {
         let weight = F::from(weights[series_idx]).unwrap();
         let series = &time_series[series_idx];
-        
+
         for &(barycenter_idx, series_idx_in_path) in path {
             if barycenter_idx < max_barycenter_length && series_idx_in_path < series.len() {
-                new_barycenter[barycenter_idx] = new_barycenter[barycenter_idx] + weight * series[series_idx_in_path];
+                new_barycenter[barycenter_idx] =
+                    new_barycenter[barycenter_idx] + weight * series[series_idx_in_path];
                 counts[barycenter_idx] = counts[barycenter_idx] + weight;
             }
         }
     }
-    
+
     // Normalize by counts
     for i in 0..max_barycenter_length {
         if counts[i] > F::zero() {
             new_barycenter[i] = new_barycenter[i] / counts[i];
         }
     }
-    
+
     Ok(new_barycenter)
 }
 
@@ -1173,12 +1162,12 @@ where
 {
     let min_len = std::cmp::min(barycenter1.len(), barycenter2.len());
     let mut sum_sq_diff = F::zero();
-    
+
     for i in 0..min_len {
         let diff = barycenter1[i] - barycenter2[i];
         sum_sq_diff = sum_sq_diff + diff * diff;
     }
-    
+
     sum_sq_diff.sqrt()
 }
 
@@ -1188,12 +1177,12 @@ where
 {
     let min_len = std::cmp::min(series1.len(), series2.len());
     let mut sum_sq_diff = F::zero();
-    
+
     for i in 0..min_len {
         let diff = series1[i] - series2[i];
         sum_sq_diff = sum_sq_diff + diff * diff;
     }
-    
+
     sum_sq_diff.sqrt()
 }
 
@@ -1209,24 +1198,25 @@ fn apply_sax(
     } else {
         time_series.clone()
     };
-    
+
     // Step 2: Piecewise Aggregate Approximation (PAA)
     let paa_values = compute_paa(&normalized_data, config.n_segments)?;
-    
+
     // Step 3: Determine breakpoints
-    let breakpoints = config.breakpoints.clone().unwrap_or_else(|| {
-        compute_gaussian_breakpoints(config.alphabet_size)
-    });
-    
+    let breakpoints = config
+        .breakpoints
+        .clone()
+        .unwrap_or_else(|| compute_gaussian_breakpoints(config.alphabet_size));
+
     // Step 4: Convert PAA to symbols
     let symbolic_sequence = paa_to_symbols(&paa_values, &breakpoints)?;
-    
+
     // Step 5: Compute reconstruction error (placeholder for now)
     let reconstruction_error = 0.0; // Would compute actual reconstruction error in full implementation
-    
+
     // Step 6: Compute compression ratio
     let compression_ratio = time_series.len() as f64 / symbolic_sequence.len() as f64;
-    
+
     Ok(SymbolicApproximationResult {
         symbolic_sequence,
         breakpoints,
@@ -1270,44 +1260,41 @@ fn apply_persist(
 fn normalize_time_series(time_series: &Array1<f64>) -> Result<Array1<f64>> {
     let mean = time_series.mean().unwrap_or(0.0);
     let std = time_series.std(0.0);
-    
+
     if std == 0.0 {
         return Ok(Array1::zeros(time_series.len()));
     }
-    
+
     let normalized = time_series.mapv(|x| (x - mean) / std);
     Ok(normalized)
 }
 
-fn compute_paa(
-    time_series: &Array1<f64>,
-    n_segments: usize,
-) -> Result<Array1<f64>> {
+fn compute_paa(time_series: &Array1<f64>, n_segments: usize) -> Result<Array1<f64>> {
     let n = time_series.len();
     let segment_size = n as f64 / n_segments as f64;
-    
+
     let mut paa_values = Array1::zeros(n_segments);
-    
+
     for i in 0..n_segments {
         let start = (i as f64 * segment_size) as usize;
         let end = ((i + 1) as f64 * segment_size) as usize;
         let end = std::cmp::min(end, n);
-        
+
         if start < end {
             let segment_mean = time_series.slice(s![start..end]).mean().unwrap_or(0.0);
             paa_values[i] = segment_mean;
         }
     }
-    
+
     Ok(paa_values)
 }
 
 fn compute_gaussian_breakpoints(alphabet_size: usize) -> Array1<f64> {
     // Compute breakpoints based on Gaussian distribution
     // This is a simplified version - would use proper quantile function
-    
+
     let mut breakpoints = Array1::zeros(alphabet_size - 1);
-    
+
     for i in 0..alphabet_size - 1 {
         let quantile = (i + 1) as f64 / alphabet_size as f64;
         // Simplified inverse normal - in practice would use proper implementation
@@ -1318,20 +1305,17 @@ fn compute_gaussian_breakpoints(alphabet_size: usize) -> Array1<f64> {
         };
         breakpoints[i] = breakpoint;
     }
-    
+
     breakpoints
 }
 
-fn paa_to_symbols(
-    paa_values: &Array1<f64>,
-    breakpoints: &Array1<f64>,
-) -> Result<Vec<char>> {
+fn paa_to_symbols(paa_values: &Array1<f64>, breakpoints: &Array1<f64>) -> Result<Vec<char>> {
     let alphabet_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
     let mut symbols = Vec::new();
-    
+
     for &value in paa_values.iter() {
         let mut symbol_idx = 0;
-        
+
         for &breakpoint in breakpoints.iter() {
             if value > breakpoint {
                 symbol_idx += 1;
@@ -1339,11 +1323,11 @@ fn paa_to_symbols(
                 break;
             }
         }
-        
+
         let symbol = alphabet_chars.get(symbol_idx).copied().unwrap_or('z');
         symbols.push(symbol);
     }
-    
+
     Ok(symbols)
 }
 
@@ -1359,10 +1343,7 @@ fn reconstruct_from_sax(
     ))
 }
 
-fn compute_reconstruction_error(
-    _original: &Array1<f64>,
-    _reconstructed: &Array1<f64>,
-) -> f64 {
+fn compute_reconstruction_error(_original: &Array1<f64>, _reconstructed: &Array1<f64>) -> f64 {
     // Placeholder for reconstruction error computation
     0.0
 }
@@ -1376,9 +1357,9 @@ mod tests {
     fn test_pca_basic() {
         let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
         let config = PCAConfig::default();
-        
+
         let result = apply_pca(&data, &config).unwrap();
-        
+
         assert_eq!(result.transformed_data.nrows(), 10);
         assert!(result.n_components_selected > 0);
         assert!(result.explained_variance.len() > 0);
@@ -1387,16 +1368,16 @@ mod tests {
     #[test]
     fn test_pca_configuration() {
         let data = Array2::from_shape_vec((20, 10), (0..200).map(|x| x as f64).collect()).unwrap();
-        
+
         let config = PCAConfig {
             n_components: Some(3),
             center_data: true,
             scale_data: true,
             ..Default::default()
         };
-        
+
         let result = apply_pca(&data, &config).unwrap();
-        
+
         assert_eq!(result.n_components_selected, 3);
         assert_eq!(result.transformed_data.ncols(), 3);
         assert_eq!(result.components.ncols(), 3);
@@ -1404,14 +1385,13 @@ mod tests {
 
     #[test]
     fn test_functional_pca_basic() {
-        let functional_data = Array2::from_shape_vec(
-            (5, 20),
-            (0..100).map(|x| (x as f64 * 0.1).sin()).collect()
-        ).unwrap();
-        
+        let functional_data =
+            Array2::from_shape_vec((5, 20), (0..100).map(|x| (x as f64 * 0.1).sin()).collect())
+                .unwrap();
+
         let config = FunctionalPCAConfig::default();
         let result = apply_functional_pca(&functional_data, &config).unwrap();
-        
+
         assert!(result.functional_components.nrows() > 0);
         assert!(result.explained_variance.len() > 0);
     }
@@ -1421,10 +1401,10 @@ mod tests {
         let ts1 = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
         let ts2 = Array1::from_vec(vec![0.5, 1.5, 2.5, 1.5, 0.5]);
         let time_series = vec![ts1, ts2];
-        
+
         let config = DTWBarycenterConfig::default();
         let result = compute_dtw_barycenter(&time_series, &config).unwrap();
-        
+
         assert!(result.barycenter.len() > 0);
         assert_eq!(result.distances.len(), 2);
         assert!(result.iterations > 0);
@@ -1434,9 +1414,9 @@ mod tests {
     fn test_symbolic_approximation_sax() {
         let time_series = Array1::from_shape_fn(100, |i| (i as f64 * 0.1).sin());
         let config = SymbolicApproximationConfig::default();
-        
+
         let result = apply_symbolic_approximation(&time_series, &config).unwrap();
-        
+
         assert!(!result.symbolic_sequence.is_empty());
         assert!(result.compression_ratio > 1.0);
     }
@@ -1446,7 +1426,7 @@ mod tests {
         // Test with minimal data
         let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let config = PCAConfig::default();
-        
+
         let result = apply_pca(&data, &config).unwrap();
         assert!(result.n_components_selected <= 2);
     }
@@ -1455,10 +1435,10 @@ mod tests {
     fn test_dtw_single_series() {
         let ts = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let time_series = vec![ts];
-        
+
         let config = DTWBarycenterConfig::default();
         let result = compute_dtw_barycenter(&time_series, &config).unwrap();
-        
+
         assert_eq!(result.barycenter.len(), 3);
         assert_eq!(result.distances.len(), 1);
     }

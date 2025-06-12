@@ -503,8 +503,11 @@ where
             if i == j {
                 let val = a[[i, i]] - sum;
                 if val <= F::zero() {
-                    return Err(LinalgError::ComputationError(
-                        "Matrix is not positive definite".to_string(),
+                    // Use enhanced error with regularization suggestions
+                    return Err(LinalgError::non_positive_definite_with_suggestions(
+                        "Cholesky decomposition",
+                        a.dim(),
+                        None, // Could analyze eigenvalues to count negative ones
                     ));
                 }
                 l[[i, j]] = val.sqrt();

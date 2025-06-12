@@ -11,7 +11,8 @@ use scirs2_fft::{
     sparse_fft_cuda_kernels::execute_cuda_sublinear_sparse_fft,
     sparse_fft_cuda_kernels_iterative::execute_cuda_iterative_sparse_fft,
     sparse_fft_gpu::GPUBackend,
-    sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices, is_cuda_available},
+    sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
+    sparse_fft_gpu_memory::is_cuda_available,
     sparse_fft_gpu_memory::{init_global_memory_manager, AllocationStrategy},
 };
 use std::f64::consts::PI;

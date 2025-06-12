@@ -30,7 +30,7 @@ pub fn simd_transpose_f32(matrix: &ArrayView2<f32>) -> LinalgResult<Array2<f32>>
     // Process matrix in blocks for cache efficiency
     for i0 in (0..rows).step_by(BLOCK_SIZE) {
         let i_end = (i0 + BLOCK_SIZE).min(rows);
-        
+
         for j0 in (0..cols).step_by(BLOCK_SIZE) {
             let j_end = (j0 + BLOCK_SIZE).min(cols);
 
@@ -65,7 +65,7 @@ pub fn simd_transpose_f64(matrix: &ArrayView2<f64>) -> LinalgResult<Array2<f64>>
     // Process matrix in blocks for cache efficiency
     for i0 in (0..rows).step_by(BLOCK_SIZE) {
         let i_end = (i0 + BLOCK_SIZE).min(rows);
-        
+
         for j0 in (0..cols).step_by(BLOCK_SIZE) {
             let j_end = (j0 + BLOCK_SIZE).min(cols);
 
@@ -82,8 +82,10 @@ pub fn simd_transpose_f64(matrix: &ArrayView2<f64>) -> LinalgResult<Array2<f64>>
 fn transpose_block_f32(
     src: &ArrayView2<f32>,
     dst: &mut Array2<f32>,
-    i0: usize, i_end: usize,
-    j0: usize, j_end: usize,
+    i0: usize,
+    i_end: usize,
+    j0: usize,
+    j_end: usize,
 ) -> LinalgResult<()> {
     // For small blocks, use vectorized 8x8 transpose when possible
     if i_end - i0 >= 8 && j_end - j0 >= 8 {
@@ -119,8 +121,10 @@ fn transpose_block_f32(
 fn transpose_block_f64(
     src: &ArrayView2<f64>,
     dst: &mut Array2<f64>,
-    i0: usize, i_end: usize,
-    j0: usize, j_end: usize,
+    i0: usize,
+    i_end: usize,
+    j0: usize,
+    j_end: usize,
 ) -> LinalgResult<()> {
     // For small blocks, use vectorized 4x4 transpose when possible
     if i_end - i0 >= 4 && j_end - j0 >= 4 {
@@ -161,13 +165,13 @@ fn transpose_8x8_f32(
 ) -> LinalgResult<()> {
     // Load 8 rows as SIMD vectors
     let mut rows = Vec::with_capacity(8);
-    
+
     for i in 0..8 {
         if let Some(row_slice) = src.row(start_i + i).as_slice() {
             let row_data = [
                 row_slice[start_j],
                 row_slice[start_j + 1],
-                row_slice[start_j + 2], 
+                row_slice[start_j + 2],
                 row_slice[start_j + 3],
                 row_slice[start_j + 4],
                 row_slice[start_j + 5],
@@ -210,7 +214,7 @@ fn transpose_8x8_f32(
             row_arrays[6][i],
             row_arrays[7][i],
         ];
-        
+
         // Store the transposed column
         for (j, &val) in col_data.iter().enumerate() {
             dst[[start_j + i, start_i + j]] = val;
@@ -230,13 +234,13 @@ fn transpose_4x4_f64(
 ) -> LinalgResult<()> {
     // Load 4 rows as SIMD vectors
     let mut rows = Vec::with_capacity(4);
-    
+
     for i in 0..4 {
         if let Some(row_slice) = src.row(start_i + i).as_slice() {
             let row_data = [
                 row_slice[start_j],
                 row_slice[start_j + 1],
-                row_slice[start_j + 2], 
+                row_slice[start_j + 2],
                 row_slice[start_j + 3],
             ];
             rows.push(f64x4::new(row_data));
@@ -265,7 +269,7 @@ fn transpose_4x4_f64(
             row_arrays[2][i],
             row_arrays[3][i],
         ];
-        
+
         // Store the transposed column
         for (j, &val) in col_data.iter().enumerate() {
             dst[[start_j + i, start_i + j]] = val;
@@ -290,7 +294,7 @@ fn transpose_4x4_f64(
 #[cfg(feature = "simd")]
 pub fn simd_transpose_inplace_f32(matrix: &mut Array2<f32>) -> LinalgResult<()> {
     let (rows, cols) = matrix.dim();
-    
+
     if rows != cols {
         return Err(LinalgError::ShapeError(format!(
             "In-place transpose requires square matrix, got shape ({}, {})",
@@ -304,7 +308,7 @@ pub fn simd_transpose_inplace_f32(matrix: &mut Array2<f32>) -> LinalgResult<()> 
     // Process in blocks along the diagonal
     for i0 in (0..n).step_by(BLOCK_SIZE) {
         let i_end = (i0 + BLOCK_SIZE).min(n);
-        
+
         for j0 in (i0..n).step_by(BLOCK_SIZE) {
             let j_end = (j0 + BLOCK_SIZE).min(n);
 
@@ -336,7 +340,7 @@ pub fn simd_transpose_inplace_f32(matrix: &mut Array2<f32>) -> LinalgResult<()> 
 #[cfg(feature = "simd")]
 pub fn simd_transpose_inplace_f64(matrix: &mut Array2<f64>) -> LinalgResult<()> {
     let (rows, cols) = matrix.dim();
-    
+
     if rows != cols {
         return Err(LinalgError::ShapeError(format!(
             "In-place transpose requires square matrix, got shape ({}, {})",
@@ -350,7 +354,7 @@ pub fn simd_transpose_inplace_f64(matrix: &mut Array2<f64>) -> LinalgResult<()> 
     // Process in blocks along the diagonal
     for i0 in (0..n).step_by(BLOCK_SIZE) {
         let i_end = (i0 + BLOCK_SIZE).min(n);
-        
+
         for j0 in (i0..n).step_by(BLOCK_SIZE) {
             let j_end = (j0 + BLOCK_SIZE).min(n);
 
@@ -369,7 +373,11 @@ pub fn simd_transpose_inplace_f64(matrix: &mut Array2<f64>) -> LinalgResult<()> 
 
 /// Transpose a diagonal block in-place for f32
 #[cfg(feature = "simd")]
-fn transpose_diagonal_block_f32(matrix: &mut Array2<f32>, start: usize, end: usize) -> LinalgResult<()> {
+fn transpose_diagonal_block_f32(
+    matrix: &mut Array2<f32>,
+    start: usize,
+    end: usize,
+) -> LinalgResult<()> {
     for i in start..end {
         for j in (i + 1)..end {
             let temp = matrix[[i, j]];
@@ -382,7 +390,11 @@ fn transpose_diagonal_block_f32(matrix: &mut Array2<f32>, start: usize, end: usi
 
 /// Transpose a diagonal block in-place for f64
 #[cfg(feature = "simd")]
-fn transpose_diagonal_block_f64(matrix: &mut Array2<f64>, start: usize, end: usize) -> LinalgResult<()> {
+fn transpose_diagonal_block_f64(
+    matrix: &mut Array2<f64>,
+    start: usize,
+    end: usize,
+) -> LinalgResult<()> {
     for i in start..end {
         for j in (i + 1)..end {
             let temp = matrix[[i, j]];
@@ -397,8 +409,10 @@ fn transpose_diagonal_block_f64(matrix: &mut Array2<f64>, start: usize, end: usi
 #[cfg(feature = "simd")]
 fn swap_blocks_f32(
     matrix: &mut Array2<f32>,
-    i0: usize, i_end: usize,
-    j0: usize, j_end: usize,
+    i0: usize,
+    i_end: usize,
+    j0: usize,
+    j_end: usize,
 ) -> LinalgResult<()> {
     for i in i0..i_end {
         for j in j0..j_end {
@@ -414,8 +428,10 @@ fn swap_blocks_f32(
 #[cfg(feature = "simd")]
 fn swap_blocks_f64(
     matrix: &mut Array2<f64>,
-    i0: usize, i_end: usize,
-    j0: usize, j_end: usize,
+    i0: usize,
+    i_end: usize,
+    j0: usize,
+    j_end: usize,
 ) -> LinalgResult<()> {
     for i in i0..i_end {
         for j in j0..j_end {
@@ -443,7 +459,7 @@ mod tests {
         ];
 
         let result = simd_transpose_f32(&matrix.view()).unwrap();
-        
+
         let expected = array![
             [1.0f32, 5.0, 9.0],
             [2.0, 6.0, 10.0],
@@ -460,18 +476,11 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     fn test_simd_transpose_f64() {
-        let matrix = array![
-            [1.0f64, 2.0, 3.0],
-            [4.0, 5.0, 6.0]
-        ];
+        let matrix = array![[1.0f64, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
         let result = simd_transpose_f64(&matrix.view()).unwrap();
-        
-        let expected = array![
-            [1.0f64, 4.0],
-            [2.0, 5.0],
-            [3.0, 6.0]
-        ];
+
+        let expected = array![[1.0f64, 4.0], [2.0, 5.0], [3.0, 6.0]];
 
         assert_eq!(result.shape(), expected.shape());
         for ((i, j), &val) in result.indexed_iter() {
@@ -482,19 +491,11 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     fn test_simd_transpose_inplace_f32() {
-        let mut matrix = array![
-            [1.0f32, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
+        let mut matrix = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
         simd_transpose_inplace_f32(&mut matrix).unwrap();
-        
-        let expected = array![
-            [1.0f32, 4.0, 7.0],
-            [2.0, 5.0, 8.0],
-            [3.0, 6.0, 9.0]
-        ];
+
+        let expected = array![[1.0f32, 4.0, 7.0], [2.0, 5.0, 8.0], [3.0, 6.0, 9.0]];
 
         assert_eq!(matrix.shape(), expected.shape());
         for ((i, j), &val) in matrix.indexed_iter() {
@@ -508,7 +509,7 @@ mod tests {
         // Test with larger matrix to exercise blocking
         let size = 100;
         let mut matrix = Array2::zeros((size, size));
-        
+
         // Fill with test pattern
         for i in 0..size {
             for j in 0..size {
@@ -517,7 +518,7 @@ mod tests {
         }
 
         let result = simd_transpose_f32(&matrix.view()).unwrap();
-        
+
         // Verify transpose correctness
         for i in 0..size {
             for j in 0..size {

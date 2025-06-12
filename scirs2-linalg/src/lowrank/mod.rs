@@ -69,7 +69,7 @@ where
     }
 
     // Compute full SVD
-    let (u, s, vh) = svd(a, false)?;
+    let (u, s, vh) = svd(a, false, None)?;
 
     // Extract top-k components
     let u_k = u.slice_axis(Axis(1), ndarray::Slice::from(0..k)).to_owned();
@@ -146,7 +146,7 @@ where
     let cov = x_t.dot(&x_centered) / F::from(n_samples - 1).unwrap();
 
     // Perform SVD on the covariance matrix
-    let (_, s, vh) = svd(&cov.view(), false)?;
+    let (_, s, vh) = svd(&cov.view(), false, None)?;
 
     // Keep only the top n_components
     let components = vh
@@ -263,7 +263,7 @@ where
     let b = q.t().dot(a);
 
     // SVD on the smaller matrix B
-    let (u_b, s, vh) = svd(&b.view(), false)?;
+    let (u_b, s, vh) = svd(&b.view(), false, None)?;
 
     // Compute final U = Q * U_B
     let u_full = q.dot(&u_b);
@@ -287,7 +287,7 @@ where
 {
     use crate::decomposition::qr;
 
-    let (q, _) = qr(a)?;
+    let (q, _) = qr(a, None)?;
     Ok(q)
 }
 

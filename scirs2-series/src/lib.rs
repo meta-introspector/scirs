@@ -77,6 +77,7 @@ pub mod decomposition_compat; // For backward compatibility
 pub mod detection;
 pub mod diagnostics;
 pub mod dimensionality_reduction;
+pub mod enhanced_arma;
 pub mod error;
 pub mod feature_selection;
 pub mod features;

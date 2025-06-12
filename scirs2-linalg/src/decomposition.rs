@@ -22,6 +22,7 @@ type CODResult<F> = LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>;
 /// # Arguments
 ///
 /// * `a` - Symmetric, positive-definite matrix
+/// * `workers` - Number of worker threads (None = use default)
 ///
 /// # Returns
 ///
@@ -34,13 +35,19 @@ type CODResult<F> = LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>;
 /// use scirs2_linalg::cholesky;
 ///
 /// let a = array![[4.0, 2.0], [2.0, 5.0]];
-/// let l = cholesky(&a.view()).unwrap();
+/// let l = cholesky(&a.view(), None).unwrap();
 /// // l should be [[2.0, 0.0], [1.0, 2.0]]
 /// ```
-pub fn cholesky<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+pub fn cholesky<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum,
 {
+    // Configure OpenMP thread count if workers specified
+    // Note: This affects BLAS/LAPACK operations that use OpenMP
+    if let Some(num_workers) = workers {
+        std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
+    }
+
     // Use the LAPACK implementation
     lapack_cholesky(a)
 }
@@ -53,6 +60,7 @@ where
 /// # Arguments
 ///
 /// * `a` - Input matrix
+/// * `workers` - Number of worker threads (None = use default)
 ///
 /// # Returns
 ///
@@ -66,13 +74,21 @@ where
 ///
 /// // Non-singular matrix example
 /// let a = array![[2.0_f64, 1.0], [4.0, 3.0]];
-/// let (p, l, u) = lu(&a.view()).unwrap();
+/// let (p, l, u) = lu(&a.view(), None).unwrap();
 /// // Result should be a valid LU decomposition where P*L*U = A
 /// ```
-pub fn lu<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
+pub fn lu<F>(
+    a: &ArrayView2<F>,
+    workers: Option<usize>,
+) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + One + Sum,
 {
+    // Configure OpenMP thread count if workers specified
+    if let Some(num_workers) = workers {
+        std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
+    }
+
     let lu_result = lu_factor(a)?;
 
     let n = a.nrows();
@@ -113,6 +129,7 @@ where
 /// # Arguments
 ///
 /// * `a` - Input matrix
+/// * `workers` - Number of worker threads (None = use default)
 ///
 /// # Returns
 ///
@@ -125,13 +142,18 @@ where
 /// use scirs2_linalg::qr;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
-/// let (q, r) = qr(&a.view()).unwrap();
+/// let (q, r) = qr(&a.view(), None).unwrap();
 /// // Result should be a valid QR decomposition where Q*R = A
 /// ```
-pub fn qr<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
+pub fn qr<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum,
 {
+    // Configure OpenMP thread count if workers specified
+    if let Some(num_workers) = workers {
+        std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
+    }
+
     let qr_result = qr_factor(a)?;
     Ok((qr_result.q, qr_result.r))
 }
@@ -145,6 +167,7 @@ where
 ///
 /// * `a` - Input matrix
 /// * `full_matrices` - Whether to return full U and V matrices
+/// * `workers` - Number of worker threads (None = use default)
 ///
 /// # Returns
 ///
@@ -158,18 +181,60 @@ where
 /// use scirs2_linalg::svd;
 ///
 /// let a = array![[1.0, 0.0], [0.0, 1.0]];
-/// let (u, s, vh) = svd(&a.view(), false).unwrap();
+/// let (u, s, vh) = svd(&a.view(), false, None).unwrap();
 /// // Result should be a valid SVD where U*diag(S)*Vh = A
 /// ```
 pub fn svd<F>(
+    a: &ArrayView2<F>,
+    full_matrices: bool,
+    workers: Option<usize>,
+) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
+where
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+{
+    // Configure OpenMP thread count if workers specified
+    if let Some(num_workers) = workers {
+        std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
+    }
+
+    let svd_result = lapack_svd(a, full_matrices)?;
+    Ok((svd_result.u, svd_result.s, svd_result.vt))
+}
+
+// Convenience wrapper functions for backward compatibility
+/// Compute Cholesky decomposition using default thread count
+pub fn cholesky_default<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum,
+{
+    cholesky(a, None)
+}
+
+/// Compute LU decomposition using default thread count
+pub fn lu_default<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
+where
+    F: Float + NumAssign + One + Sum,
+{
+    lu(a, None)
+}
+
+/// Compute QR decomposition using default thread count
+pub fn qr_default<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
+where
+    F: Float + NumAssign + Sum,
+{
+    qr(a, None)
+}
+
+/// Compute SVD using default thread count
+pub fn svd_default<F>(
     a: &ArrayView2<F>,
     full_matrices: bool,
 ) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand,
 {
-    let svd_result = lapack_svd(a, full_matrices)?;
-    Ok((svd_result.u, svd_result.s, svd_result.vt))
+    svd(a, full_matrices, None)
 }
 
 /// Compute the Schur decomposition of a matrix.
@@ -219,7 +284,7 @@ where
     // or directly call LAPACK's DGEES/SGEES function
     let max_iter = 100;
     for _ in 0..max_iter {
-        let (q, r) = qr(&t.view())?;
+        let (q, r) = qr(&t.view(), None)?;
         t = r.dot(&q); // T = R*Q gives the upper triangular form
         z = z.dot(&q); // Accumulate the transformation
     }
@@ -293,7 +358,7 @@ where
     let max_iter = 30;
     for _ in 0..max_iter {
         // QR factorization of B
-        let (q1, r1) = qr(&b_temp.view())?;
+        let (q1, r1) = qr(&b_temp.view(), None)?;
 
         // Apply to both matrices
         let q1t = q1.t();
@@ -301,7 +366,7 @@ where
         let b1 = r1; // q1t.dot(&b_temp) = r1
 
         // RQ factorization (via QR of transpose)
-        let (q2t, r2t) = qr(&a1.t().view())?;
+        let (q2t, r2t) = qr(&a1.t().view(), None)?;
         let q2 = q2t.t();
         let r2 = r2t.t().to_owned();
 
@@ -569,7 +634,7 @@ mod tests {
     fn test_cholesky_2x2() {
         // Simple positive definite matrix
         let a = array![[4.0, 2.0], [2.0, 5.0]];
-        let l = cholesky(&a.view()).unwrap();
+        let l = cholesky(&a.view(), None).unwrap();
 
         assert!((l[[0, 0]] - 2.0).abs() < 1e-10);
         assert!((l[[0, 1]] - 0.0).abs() < 1e-10);
@@ -590,7 +655,7 @@ mod tests {
     #[test]
     fn test_lu() {
         let a = array![[2.0, 1.0], [4.0, 3.0]];
-        let (p, l, u) = lu(&a.view()).unwrap();
+        let (p, l, u) = lu(&a.view(), None).unwrap();
 
         // Verify that P*A = L*U
         let pa = p.dot(&a);
@@ -605,7 +670,7 @@ mod tests {
     #[test]
     fn test_qr() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let (q, r) = qr(&a.view()).unwrap();
+        let (q, r) = qr(&a.view(), None).unwrap();
 
         // Verify that Q is orthogonal
         let qt = q.t();

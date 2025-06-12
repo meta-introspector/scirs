@@ -227,7 +227,7 @@ where
 
     for _ in 0..max_iter {
         // Compute X_inv
-        let x_inv = match solve_multiple(&x.view(), &identity.view()) {
+        let x_inv = match solve_multiple(&x.view(), &identity.view(), None) {
             Ok(inv) => inv,
             Err(_) => {
                 return Err(LinalgError::InvalidInputError(

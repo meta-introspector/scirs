@@ -115,7 +115,7 @@ impl AlphaShape {
         let npoints = points.nrows();
         let ndim = points.ncols();
 
-        if ndim < 2 || ndim > 3 {
+        if !(2..=3).contains(&ndim) {
             return Err(SpatialError::ValueError(
                 "Alpha shapes only support 2D and 3D points".to_string(),
             ));
@@ -201,7 +201,7 @@ impl AlphaShape {
         let npoints = points.nrows();
         let ndim = points.ncols();
 
-        if ndim < 2 || ndim > 3 {
+        if !(2..=3).contains(&ndim) {
             return Err(SpatialError::ValueError(
                 "Alpha shapes only support 2D and 3D points".to_string(),
             ));

@@ -68,7 +68,9 @@ fn basic_ordinary_kriging_example() -> Result<(), Box<dyn std::error::Error>> {
     for i in 0..points.nrows() {
         println!(
             "  ({:.1}, {:.1}) = {:.1}°C",
-            points[[i, 0]], points[[i, 1]], values[i]
+            points[[i, 0]],
+            points[[i, 1]],
+            values[i]
         );
     }
 
@@ -125,7 +127,10 @@ fn variogram_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
         ("Linear", VariogramModel::linear(1.0, 0.3)),
     ];
 
-    println!("Comparing variogram models at point ({:.1}, {:.1}):", test_point[0], test_point[1]);
+    println!(
+        "Comparing variogram models at point ({:.1}, {:.1}):",
+        test_point[0], test_point[1]
+    );
 
     for (name, variogram) in variograms {
         let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram)?;
@@ -144,13 +149,7 @@ fn variogram_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn simple_kriging_example() -> Result<(), Box<dyn std::error::Error>> {
     // Dataset with known global mean
-    let points = array![
-        [0.0, 0.0],
-        [1.0, 0.0],
-        [0.0, 1.0],
-        [1.0, 1.0],
-        [0.5, 0.5]
-    ];
+    let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
 
     // Data with anomalies around known mean of 100
     let values = array![98.5, 101.2, 99.8, 102.1, 100.3];
@@ -182,9 +181,15 @@ fn simple_kriging_example() -> Result<(), Box<dyn std::error::Error>> {
 fn batch_prediction_example() -> Result<(), Box<dyn std::error::Error>> {
     // Regular grid of data points
     let points = array![
-        [0.0, 0.0], [1.0, 0.0], [2.0, 0.0],
-        [0.0, 1.0], [1.0, 1.0], [2.0, 1.0],
-        [0.0, 2.0], [1.0, 2.0], [2.0, 2.0]
+        [0.0, 0.0],
+        [1.0, 0.0],
+        [2.0, 0.0],
+        [0.0, 1.0],
+        [1.0, 1.0],
+        [2.0, 1.0],
+        [0.0, 2.0],
+        [1.0, 2.0],
+        [2.0, 2.0]
     ];
 
     // Elevation data
@@ -245,26 +250,39 @@ fn batch_prediction_example() -> Result<(), Box<dyn std::error::Error>> {
 fn cross_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create more substantial dataset for cross-validation
     let points = array![
-        [0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0],
-        [0.0, 1.0], [1.0, 1.0], [2.0, 1.0], [3.0, 1.0],
-        [0.0, 2.0], [1.0, 2.0], [2.0, 2.0], [3.0, 2.0],
-        [0.5, 0.5], [1.5, 1.5], [2.5, 0.5]
+        [0.0, 0.0],
+        [1.0, 0.0],
+        [2.0, 0.0],
+        [3.0, 0.0],
+        [0.0, 1.0],
+        [1.0, 1.0],
+        [2.0, 1.0],
+        [3.0, 1.0],
+        [0.0, 2.0],
+        [1.0, 2.0],
+        [2.0, 2.0],
+        [3.0, 2.0],
+        [0.5, 0.5],
+        [1.5, 1.5],
+        [2.5, 0.5]
     ];
 
     // Synthetic data with spatial trend
-    let values = array![
-        5.0, 7.0, 9.0, 11.0,
-        6.0, 8.0, 10.0, 12.0,
-        7.0, 9.0, 11.0, 13.0,
-        6.5, 9.5, 10.5
-    ];
+    let values =
+        array![5.0, 7.0, 9.0, 11.0, 6.0, 8.0, 10.0, 12.0, 7.0, 9.0, 11.0, 13.0, 6.5, 9.5, 10.5];
 
     println!("Cross-validation with {} data points", points.nrows());
 
     // Test different variogram models
     let variograms = vec![
-        ("Spherical (range=2.0)", VariogramModel::spherical(2.0, 4.0, 0.5)),
-        ("Spherical (range=3.0)", VariogramModel::spherical(3.0, 4.0, 0.5)),
+        (
+            "Spherical (range=2.0)",
+            VariogramModel::spherical(2.0, 4.0, 0.5),
+        ),
+        (
+            "Spherical (range=3.0)",
+            VariogramModel::spherical(3.0, 4.0, 0.5),
+        ),
         ("Exponential", VariogramModel::exponential(2.0, 4.0, 0.5)),
         ("Gaussian", VariogramModel::gaussian(1.5, 4.0, 0.5)),
     ];
@@ -280,7 +298,10 @@ fn cross_validation_example() -> Result<(), Box<dyn std::error::Error>> {
         println!("  {}:", name);
         println!("    Mean error: {:.4}", mean_error);
         println!("    RMSE: {:.4}", rmse);
-        println!("    Max absolute error: {:.4}", errors.iter().map(|e| e.abs()).fold(0.0f64, f64::max));
+        println!(
+            "    Max absolute error: {:.4}",
+            errors.iter().map(|e| e.abs()).fold(0.0f64, f64::max)
+        );
     }
 
     Ok(())
@@ -288,9 +309,7 @@ fn cross_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn kriging_1d_example() -> Result<(), Box<dyn std::error::Error>> {
     // 1D example: measurements along a transect
-    let points = array![
-        [0.0], [1.0], [2.0], [4.0], [6.0], [8.0], [10.0]
-    ];
+    let points = array![[0.0], [1.0], [2.0], [4.0], [6.0], [8.0], [10.0]];
 
     // Measured values along the transect
     let values = array![2.1, 3.8, 4.2, 5.9, 4.8, 3.1, 1.7];
@@ -323,13 +342,7 @@ fn kriging_1d_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn uncertainty_example() -> Result<(), Box<dyn std::error::Error>> {
     // Sparse data to highlight uncertainty
-    let points = array![
-        [0.0, 0.0],
-        [5.0, 0.0],
-        [0.0, 5.0],
-        [5.0, 5.0],
-        [2.5, 2.5]
-    ];
+    let points = array![[0.0, 0.0], [5.0, 0.0], [0.0, 5.0], [5.0, 5.0], [2.5, 2.5]];
 
     let values = array![10.0, 15.0, 12.0, 18.0, 14.0];
 
@@ -354,12 +367,17 @@ fn uncertainty_example() -> Result<(), Box<dyn std::error::Error>> {
         let std_dev = prediction.variance.sqrt();
         let confidence_95 = 1.96 * std_dev; // Approximate 95% confidence interval
 
-        println!("  {} at ({:.1}, {:.1}):", description, location[0], location[1]);
+        println!(
+            "  {} at ({:.1}, {:.1}):",
+            description, location[0], location[1]
+        );
         println!("    Prediction: {:.2} ± {:.2}", prediction.value, std_dev);
-        println!("    95% CI: [{:.2}, {:.2}]", 
-                 prediction.value - confidence_95, 
-                 prediction.value + confidence_95);
-        
+        println!(
+            "    95% CI: [{:.2}, {:.2}]",
+            prediction.value - confidence_95,
+            prediction.value + confidence_95
+        );
+
         // Classify uncertainty level
         let uncertainty_level = if std_dev < 1.0 {
             "Low"
@@ -380,23 +398,23 @@ fn uncertainty_example() -> Result<(), Box<dyn std::error::Error>> {
 fn create_synthetic_data(n_points: usize, noise_level: f64) -> (Array2<f64>, Array1<f64>) {
     use rand::Rng;
     let mut rng = rand::rng();
-    
+
     let mut points = Array2::zeros((n_points, 2));
     let mut values = Array1::zeros(n_points);
-    
+
     for i in 0..n_points {
         let x = rng.random_range(0.0..10.0);
         let y = rng.random_range(0.0..10.0);
-        
+
         points[[i, 0]] = x;
         points[[i, 1]] = y;
-        
+
         // Synthetic function with spatial correlation
         let true_value = 10.0 + 2.0 * x + 0.5 * y + 3.0 * (0.5 * x).sin() * (0.3 * y).cos();
         let noise = rng.random_range(-noise_level..noise_level);
         values[i] = true_value + noise;
     }
-    
+
     (points, values)
 }
 
@@ -408,11 +426,15 @@ fn display_variogram_info(variogram: &VariogramModel) {
     println!("  Effective range: {:.2}", variogram.effective_range());
     println!("  Sill: {:.2}", variogram.sill());
     println!("  Nugget: {:.2}", variogram.nugget());
-    
+
     // Sample variogram values at different distances
     println!("  Values at distances:");
     let distances = [0.0, 0.5, 1.0, 2.0, 5.0];
     for &dist in &distances {
-        println!("    h = {:.1}: γ(h) = {:.3}", dist, variogram.evaluate(dist));
+        println!(
+            "    h = {:.1}: γ(h) = {:.3}",
+            dist,
+            variogram.evaluate(dist)
+        );
     }
 }

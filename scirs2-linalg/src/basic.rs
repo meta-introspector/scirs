@@ -51,7 +51,7 @@ where
             // For larger matrices, use LU decomposition
             use crate::decomposition::lu;
 
-            match lu(a) {
+            match lu(a, None) {
                 Ok((p, _l, u)) => {
                     // Calculate the determinant as the product of diagonal elements of U
                     let mut det_u = F::one();
@@ -122,10 +122,23 @@ where
     if a.nrows() == 2 {
         let det_val = det(a)?;
         if det_val.abs() < F::epsilon() {
-            return Err(LinalgError::SingularMatrixError(format!(
-                "Matrix is singular, cannot compute inverse\nMatrix shape: {:?}\nHint: Check if the matrix is singular or nearly singular",
-                a.shape()
-            )));
+            // Calculate condition number estimate for 2x2 matrix
+            let norm_a = (a[[0, 0]] * a[[0, 0]]
+                + a[[0, 1]] * a[[0, 1]]
+                + a[[1, 0]] * a[[1, 0]]
+                + a[[1, 1]] * a[[1, 1]])
+            .sqrt();
+            let cond_estimate = if det_val.abs() > F::zero() {
+                Some((norm_a / det_val.abs()).to_f64().unwrap_or(1e16))
+            } else {
+                None
+            };
+
+            return Err(LinalgError::singular_matrix_with_suggestions(
+                "matrix inverse",
+                a.dim(),
+                cond_estimate,
+            ));
         }
 
         let inv_det = F::one() / det_val;
@@ -147,15 +160,14 @@ where
     }
 
     // Solve A * X = I to get X = A^(-1)
-    match solve_multiple(a, &identity.view()) {
-        Err(LinalgError::SingularMatrixError(msg)) => {
-            // Add diagnostic information to error message
-            let diagnostic_msg = format!(
-                "{}\nMatrix shape: {:?}\nHint: Check if the matrix is singular or nearly singular",
-                msg,
-                a.shape()
-            );
-            Err(LinalgError::SingularMatrixError(diagnostic_msg))
+    match solve_multiple(a, &identity.view(), None) {
+        Err(LinalgError::SingularMatrixError(_)) => {
+            // Use enhanced error with regularization suggestions
+            Err(LinalgError::singular_matrix_with_suggestions(
+                "matrix inverse via solve",
+                a.dim(),
+                None, // Could compute condition number here for better diagnostics
+            ))
         }
         other => other,
     }
@@ -369,4 +381,43 @@ mod tests {
         let d = det(&c.view()).unwrap();
         assert_relative_eq!(d, 0.0, epsilon = 1e-10);
     }
+}
+
+/// Compute the trace of a square matrix (sum of diagonal elements).
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Trace of the matrix
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::basic::trace;
+///
+/// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
+/// let tr = trace(&a.view()).unwrap();
+/// assert!((tr - 5.0).abs() < 1e-10);
+/// ```
+pub fn trace<F>(a: &ArrayView2<F>) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Sum,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::DimensionError(format!(
+            "Matrix must be square to compute trace, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let mut tr = F::zero();
+    for i in 0..a.nrows() {
+        tr = tr + a[[i, i]];
+    }
+
+    Ok(tr)
 }

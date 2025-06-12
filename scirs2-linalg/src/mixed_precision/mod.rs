@@ -465,8 +465,8 @@ where
         let block_n = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
         let block_k = (k + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-        // Blocked matrix multiplication algorithm with parallel outer loop
-        (0..block_m).into_par_iter().for_each(|bi| {
+        // Blocked matrix multiplication algorithm - compute blocks sequentially to avoid borrowing issues
+        for bi in 0..block_m {
             let i_start = bi * BLOCK_SIZE;
             let i_end = min(i_start + BLOCK_SIZE, m);
 
@@ -494,7 +494,7 @@ where
                     }
                 }
             }
-        });
+        }
 
         // Convert back to desired output precision
         let mut c = Array2::<C>::zeros((m, n));
@@ -512,16 +512,19 @@ where
     // For very large matrices, use multi-level parallel approach
     let mut c_high = Array2::<H>::zeros((m, n));
 
-    // Parallelize by rows for large matrices
-    (0..m).into_par_iter().for_each(|i| {
-        for j in 0..n {
-            let mut sum = H::zero();
-            for l in 0..k {
-                sum += a_high[[i, l]] * b_high[[l, j]];
+    // Compute matrix multiplication with parallel row processing using proper synchronization
+    // Use a safer approach to avoid borrowing conflicts
+    Zip::from(c_high.rows_mut())
+        .and(a_high.rows())
+        .par_for_each(|mut c_row, a_row| {
+            for (j, mut c_val) in c_row.iter_mut().enumerate() {
+                let mut sum = H::zero();
+                for (l, &a_val) in a_row.iter().enumerate() {
+                    sum += a_val * b_high[[l, j]];
+                }
+                *c_val = sum;
             }
-            c_high[[i, j]] = sum;
-        }
-    });
+        });
 
     // Convert back to desired output precision in parallel
     let mut c = Array2::<C>::zeros((m, n));

@@ -43,12 +43,13 @@
 //! ```
 
 use ndarray::{Array1, Array2};
-use num_traits::{Float, FromPrimitive, NumAssign};
+use num_traits::{Float, FromPrimitive, NumAssign, One, Zero};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::iter::Sum;
 
 use crate::decomposition::qr;
+use crate::error::LinalgResult;
 
 /// Generate a random matrix with elements from a uniform distribution
 ///
@@ -133,6 +134,25 @@ where
 /// let rand_mat = normal::<f32>(2, 2, 5.0, 2.0, None);
 /// assert_eq!(rand_mat.shape(), &[2, 2]);
 /// ```
+/// Generate a random matrix with standard normal distribution (mean=0, std=1)
+///
+/// This is a convenience function equivalent to `normal(shape.0, shape.1, 0.0, 1.0, seed)`
+///
+/// # Arguments
+///
+/// * `shape` - Shape of the matrix (rows, cols)
+/// * `seed` - Optional seed for the random number generator
+///
+/// # Returns
+///
+/// A rows×cols matrix with standard normal distribution
+pub fn random_normal_matrix<F>(shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
+where
+    F: Float + Zero + One + Copy + num_traits::FromPrimitive,
+{
+    Ok(normal(shape.0, shape.1, F::zero(), F::one(), seed))
+}
+
 pub fn normal<F>(rows: usize, cols: usize, mean: F, std: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
@@ -208,7 +228,7 @@ where
     let a = normal(n, n, F::zero(), F::one(), seed);
 
     // Perform QR decomposition
-    let (q, _) = qr(&a.view()).unwrap();
+    let (q, _) = qr(&a.view(), None).unwrap();
 
     // Return the orthogonal matrix Q
     q
@@ -1167,10 +1187,10 @@ mod tests {
         }
 
         // Check positive definiteness (via Cholesky decomposition)
-        let chol_a = cholesky(&a.view());
+        let chol_a = cholesky(&a.view(), None);
         assert!(chol_a.is_ok());
 
-        let chol_b = cholesky(&b.view());
+        let chol_b = cholesky(&b.view(), None);
         assert!(chol_b.is_ok());
     }
 
@@ -1391,7 +1411,7 @@ mod tests {
         }
 
         // Check positive definiteness
-        let chol = cholesky(&h.view());
+        let chol = cholesky(&h.view(), None);
         assert!(chol.is_ok());
     }
 

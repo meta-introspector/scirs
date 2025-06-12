@@ -184,7 +184,7 @@ where
 
     for _iter in 0..max_iter {
         // QR decomposition
-        let (q, r) = qr(&a_k.view())?;
+        let (q, r) = qr(&a_k.view(), None)?;
 
         // Update A_k+1 = R*Q (reversed order gives better convergence)
         let a_next = r.dot(&q);
@@ -888,3 +888,6 @@ mod tests {
         );
     }
 }
+
+/// Alias for `eigh` to match the naming convention in some other libraries
+pub use eigh as eigen_symmetric;

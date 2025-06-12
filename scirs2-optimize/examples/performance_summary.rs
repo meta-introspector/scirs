@@ -126,7 +126,7 @@ fn print_performance_characteristics() {
 
     println!("TYPICAL PERFORMANCE RANGES:");
     println!();
-    
+
     println!("Problem Size     | Method          | Time/Iteration");
     println!("-----------------|-----------------|----------------");
     println!("Small (< 100)    | BFGS           | < 1ms");
@@ -166,7 +166,7 @@ fn print_usage_recommendations() {
 
     println!("CHOOSE YOUR ALGORITHM:");
     println!();
-    
+
     println!("Smooth, unconstrained problems:");
     println!("   → BFGS for small-medium problems (< 1000 variables)");
     println!("   → L-BFGS for large problems (> 1000 variables)");

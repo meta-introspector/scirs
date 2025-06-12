@@ -27,6 +27,8 @@ members = [
     "scirs2-vision",
     "scirs2-series",
     "scirs2-autograd",
+    # Benchmarking suite
+    "benches",
 ]
 resolver = "2"
 

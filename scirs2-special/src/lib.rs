@@ -37,6 +37,7 @@ pub use error::{SpecialError, SpecialResult};
 
 // Modules
 mod airy;
+pub mod array_ops;
 pub mod bessel;
 mod combinatorial;
 mod constants;
@@ -49,10 +50,11 @@ mod kelvin;
 mod lambert;
 mod logint;
 mod mathieu;
-mod optimizations;
+pub mod optimizations;
 mod orthogonal;
 mod parabolic;
-mod precision;
+pub mod precision;
+mod property_tests;
 mod spherical_harmonics;
 mod spheroidal;
 mod statistical;
@@ -66,6 +68,8 @@ mod zeta;
 // Note: These functions require various trait bounds in their implementation,
 // including Float, FromPrimitive, Debug, AddAssign, etc.
 pub use airy::{ai, aip, bi, bip};
+// Complex Airy functions
+pub use airy::complex::{ai_complex, aip_complex, bi_complex, bip_complex};
 pub use bessel::{
     // Regular Bessel functions
     i0,
@@ -108,6 +112,12 @@ pub use fresnel::{
 pub use gamma::{
     beta, betainc, betainc_regularized, betaincinv, betaln, digamma, gamma, gammaln, loggamma,
 };
+// Complex gamma functions
+pub use gamma::complex::{beta_complex, digamma_complex, gamma_complex, loggamma_complex};
+// Complex Bessel functions
+pub use bessel::complex::{i0_complex, j0_complex, j1_complex, jn_complex, jv_complex, k0_complex};
+// Complex error functions
+pub use erf::complex::{erf_complex, erfc_complex, erfcx_complex, faddeeva_complex};
 pub use hypergeometric::{hyp1f1, hyp2f1, ln_pochhammer, pochhammer};
 pub use kelvin::{bei, beip, ber, berp, kei, keip, kelvin, ker, kerp};
 pub use lambert::{lambert_w, lambert_w_real};

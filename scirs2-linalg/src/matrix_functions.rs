@@ -201,7 +201,7 @@ where
     }
 
     // Solve the system D*X = N for X
-    let result = solve_multiple(&d_pade.view(), &n_pade.view())?;
+    let result = solve_multiple(&d_pade.view(), &n_pade.view(), None)?;
 
     // Undo the scaling by squaring the result s times
     let mut exp_a = result;
@@ -494,7 +494,7 @@ where
         // and Z_next = 0.5 * (Z + Y^-1)
 
         // First, compute Z^-1 and Y^-1
-        let z_inv = match solve_multiple(&z.view(), &Array2::eye(n).view()) {
+        let z_inv = match solve_multiple(&z.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
             Err(_) => {
                 return Err(LinalgError::InvalidInputError(
@@ -503,7 +503,7 @@ where
             }
         };
 
-        let y_inv = match solve_multiple(&y.view(), &Array2::eye(n).view()) {
+        let y_inv = match solve_multiple(&y.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
             Err(_) => {
                 return Err(LinalgError::InvalidInputError(
@@ -548,6 +548,269 @@ where
 
     // Return the current approximation if max iterations reached
     Ok(y)
+}
+
+/// Compute the matrix cosine using eigendecomposition.
+///
+/// The matrix cosine is defined using the matrix exponential:
+/// cos(A) = (exp(iA) + exp(-iA))/2
+///
+/// For real matrices, this can be computed using eigendecomposition or
+/// series expansion. This implementation uses a series expansion approach
+/// for numerically stable computation.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Matrix cosine of a
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::cosm;
+///
+/// let a = array![[0.0_f64, 0.0], [0.0, 0.0]];
+/// let cos_a = cosm(&a.view()).unwrap();
+/// // cos(0) = I
+/// assert!((cos_a[[0, 0]] - 1.0).abs() < 1e-10);
+/// assert!((cos_a[[1, 1]] - 1.0).abs() < 1e-10);
+/// ```
+pub fn cosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute cosine, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        result[[0, 0]] = a[[0, 0]].cos();
+        return Ok(result);
+    }
+
+    // For cos(A), we use the series expansion:
+    // cos(A) = I - A²/2! + A⁴/4! - A⁶/6! + A⁸/8! - ...
+    // This converges for all matrices but we'll use a finite number of terms
+
+    let mut result = Array2::eye(n); // Start with identity matrix
+    let mut a_power = Array2::eye(n); // A^0 = I
+    let mut factorial = F::one();
+    let mut sign = F::one();
+
+    // We'll compute up to the 16th power (A^16) for good accuracy
+    for k in 1..=8 {
+        // Compute A^(2k) by squaring A^(k) twice
+        // First: A^k -> A^(2k-1)
+        let mut temp = Array2::<F>::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for l in 0..n {
+                    temp[[i, j]] += a_power[[i, l]] * a[[l, j]];
+                }
+            }
+        }
+        a_power = temp;
+
+        // Second: A^(2k-1) -> A^(2k)
+        let mut temp = Array2::<F>::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for l in 0..n {
+                    temp[[i, j]] += a_power[[i, l]] * a[[l, j]];
+                }
+            }
+        }
+        a_power = temp;
+
+        // Update factorial: (2k)!
+        factorial *= F::from(2 * k - 1).unwrap() * F::from(2 * k).unwrap();
+
+        // Alternate signs: (-1)^k
+        sign = -sign;
+
+        // Add the term: (-1)^k * A^(2k) / (2k)!
+        for i in 0..n {
+            for j in 0..n {
+                result[[i, j]] += sign * a_power[[i, j]] / factorial;
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Compute the matrix sine using eigendecomposition.
+///
+/// The matrix sine is defined using the matrix exponential:
+/// sin(A) = (exp(iA) - exp(-iA))/(2i)
+///
+/// For real matrices, this can be computed using eigendecomposition or
+/// series expansion. This implementation uses a series expansion approach
+/// for numerically stable computation.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Matrix sine of a
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::sinm;
+///
+/// let a = array![[0.0_f64, 0.0], [0.0, 0.0]];
+/// let sin_a = sinm(&a.view()).unwrap();
+/// // sin(0) = 0
+/// assert!((sin_a[[0, 0]]).abs() < 1e-10);
+/// assert!((sin_a[[1, 1]]).abs() < 1e-10);
+/// ```
+pub fn sinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute sine, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        result[[0, 0]] = a[[0, 0]].sin();
+        return Ok(result);
+    }
+
+    // For sin(A), we use the series expansion:
+    // sin(A) = A - A³/3! + A⁵/5! - A⁷/7! + A⁹/9! - ...
+    // This converges for all matrices but we'll use a finite number of terms
+
+    let mut result = Array2::zeros((n, n));
+    let mut a_power = a.to_owned(); // Start with A^1
+    let mut factorial = F::one();
+    let mut sign = F::one();
+
+    // Add the first term: A
+    for i in 0..n {
+        for j in 0..n {
+            result[[i, j]] = a_power[[i, j]];
+        }
+    }
+
+    // We'll compute up to the 15th power (A^15) for good accuracy
+    for k in 1..=7 {
+        // Compute A^(2k+1) from A^(2k-1)
+        // First: A^(2k-1) -> A^(2k)
+        let mut temp = Array2::<F>::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for l in 0..n {
+                    temp[[i, j]] += a_power[[i, l]] * a[[l, j]];
+                }
+            }
+        }
+
+        // Second: A^(2k) -> A^(2k+1)
+        let mut temp2 = Array2::<F>::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for l in 0..n {
+                    temp2[[i, j]] += temp[[i, l]] * a[[l, j]];
+                }
+            }
+        }
+        a_power = temp2;
+
+        // Update factorial: (2k+1)!
+        factorial *= F::from(2 * k).unwrap() * F::from(2 * k + 1).unwrap();
+
+        // Alternate signs: (-1)^k
+        sign = -sign;
+
+        // Add the term: (-1)^k * A^(2k+1) / (2k+1)!
+        for i in 0..n {
+            for j in 0..n {
+                result[[i, j]] += sign * a_power[[i, j]] / factorial;
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Compute the matrix tangent.
+///
+/// The matrix tangent is defined as tan(A) = sin(A) * cos(A)^(-1)
+///
+/// This function computes both sin(A) and cos(A), then solves the linear
+/// system cos(A) * X = sin(A) to find tan(A) = X.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Matrix tangent of a
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::tanm;
+///
+/// let a = array![[0.0_f64, 0.0], [0.0, 0.0]];
+/// let tan_a = tanm(&a.view()).unwrap();
+/// // tan(0) = 0
+/// assert!((tan_a[[0, 0]]).abs() < 1e-10);
+/// assert!((tan_a[[1, 1]]).abs() < 1e-10);
+/// ```
+pub fn tanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute tangent, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        result[[0, 0]] = a[[0, 0]].tan();
+        return Ok(result);
+    }
+
+    // Compute sin(A) and cos(A)
+    let sin_a = sinm(a)?;
+    let cos_a = cosm(a)?;
+
+    // Solve cos(A) * X = sin(A) for X = tan(A)
+    let tan_a = solve_multiple(&cos_a.view(), &sin_a.view(), None)?;
+
+    Ok(tan_a)
 }
 
 /// Compute a matrix raised to a real power using eigendecomposition.
@@ -842,5 +1105,102 @@ mod tests {
         assert_relative_eq!(a_squared[[0, 1]], 10.0, epsilon = 1e-10);
         assert_relative_eq!(a_squared[[1, 0]], 15.0, epsilon = 1e-10);
         assert_relative_eq!(a_squared[[1, 1]], 22.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_cosm_zero_matrix() {
+        // cos(0) = I
+        let a = array![[0.0, 0.0], [0.0, 0.0]];
+        let cos_a = cosm(&a.view()).unwrap();
+
+        assert_relative_eq!(cos_a[[0, 0]], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(cos_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(cos_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(cos_a[[1, 1]], 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_cosm_diagonal() {
+        // For diagonal matrix, cos(D) = diag(cos(d_1), cos(d_2), ...)
+        let a = array![[std::f64::consts::PI, 0.0], [0.0, 0.0]];
+        let cos_a = cosm(&a.view()).unwrap();
+
+        // cos(π) = -1, cos(0) = 1
+        assert_relative_eq!(cos_a[[0, 0]], -1.0, epsilon = 1e-6);
+        assert_relative_eq!(cos_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(cos_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(cos_a[[1, 1]], 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_sinm_zero_matrix() {
+        // sin(0) = 0
+        let a = array![[0.0, 0.0], [0.0, 0.0]];
+        let sin_a = sinm(&a.view()).unwrap();
+
+        assert_relative_eq!(sin_a[[0, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sin_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sin_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sin_a[[1, 1]], 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_sinm_diagonal() {
+        // For diagonal matrix, sin(D) = diag(sin(d_1), sin(d_2), ...)
+        let a = array![[std::f64::consts::FRAC_PI_2, 0.0], [0.0, 0.0]];
+        let sin_a = sinm(&a.view()).unwrap();
+
+        // sin(π/2) = 1, sin(0) = 0
+        assert_relative_eq!(sin_a[[0, 0]], 1.0, epsilon = 1e-6);
+        assert_relative_eq!(sin_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sin_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sin_a[[1, 1]], 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_tanm_zero_matrix() {
+        // tan(0) = 0
+        let a = array![[0.0, 0.0], [0.0, 0.0]];
+        let tan_a = tanm(&a.view()).unwrap();
+
+        assert_relative_eq!(tan_a[[0, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(tan_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(tan_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(tan_a[[1, 1]], 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_tanm_diagonal() {
+        // For diagonal matrix, tan(D) = diag(tan(d_1), tan(d_2), ...)
+        let a = array![[std::f64::consts::FRAC_PI_4, 0.0], [0.0, 0.0]];
+        let tan_a = tanm(&a.view()).unwrap();
+
+        // tan(π/4) = 1, tan(0) = 0
+        assert_relative_eq!(tan_a[[0, 0]], 1.0, epsilon = 1e-6);
+        assert_relative_eq!(tan_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(tan_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(tan_a[[1, 1]], 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_trigonometric_identity() {
+        // Test the fundamental trigonometric identity: sin²(A) + cos²(A) = I
+        let a = array![[0.1, 0.05], [0.05, 0.1]];
+
+        let sin_a = sinm(&a.view()).unwrap();
+        let cos_a = cosm(&a.view()).unwrap();
+
+        // Compute sin²(A) and cos²(A)
+        let sin_squared = sin_a.dot(&sin_a);
+        let cos_squared = cos_a.dot(&cos_a);
+
+        // sin²(A) + cos²(A) should equal I
+        let sum = &sin_squared + &cos_squared;
+        let identity = Array2::eye(2);
+
+        assert_relative_eq!(sum[[0, 0]], identity[[0, 0]], epsilon = 1e-8);
+        assert_relative_eq!(sum[[0, 1]], identity[[0, 1]], epsilon = 1e-8);
+        assert_relative_eq!(sum[[1, 0]], identity[[1, 0]], epsilon = 1e-8);
+        assert_relative_eq!(sum[[1, 1]], identity[[1, 1]], epsilon = 1e-8);
     }
 }

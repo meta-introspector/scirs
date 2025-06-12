@@ -90,17 +90,30 @@ pub mod bezier;
 pub mod bivariate;
 pub mod boundarymode;
 pub mod bspline;
+pub mod cache;
 pub mod constrained;
 pub mod extrapolation;
+pub mod fast_bspline;
 pub mod grid;
+pub mod griddata;
 pub mod hermite;
+pub mod high_dimensional;
 pub mod interp1d;
+pub mod interp2d;
 pub mod interpnd;
 pub mod local;
 pub mod multiscale;
+pub mod numerical_stability;
 pub mod nurbs;
 pub mod parallel;
 pub mod penalized;
+pub mod simd_optimized;
+
+// SIMD-optimized interpolation methods (optional)
+#[cfg(feature = "simd")]
+pub mod simd_bspline;
+pub mod smoothing;
+pub mod sparse_grid;
 pub mod spatial;
 pub mod spline;
 pub mod tension;
@@ -143,6 +156,10 @@ pub use bspline::{
     generate_knots, make_interp_bspline, make_lsq_bspline, BSpline,
     ExtrapolateMode as BSplineExtrapolateMode,
 };
+pub use cache::{
+    make_cached_bspline, make_cached_bspline_with_config, BSplineCache, CacheConfig, CacheStats,
+    CachedBSpline, DistanceMatrixCache,
+};
 pub use constrained::{
     ConstrainedSpline, Constraint, ConstraintRegion, ConstraintType, FittingMethod,
 };
@@ -151,6 +168,10 @@ pub use extrapolation::{
     make_periodic_extrapolator, make_reflection_extrapolator, ExtrapolationMethod,
     ExtrapolationParameters, Extrapolator,
 };
+pub use fast_bspline::{
+    make_cached_fast_bspline_evaluator, make_fast_bspline_evaluator, FastBSplineEvaluator,
+    TensorProductFastEvaluator,
+};
 pub use grid::{
     create_regular_grid, map_grid_to_points, resample_grid_to_grid, resample_to_grid,
     GridTransformMethod,
@@ -158,6 +179,11 @@ pub use grid::{
 pub use hermite::{
     make_hermite_spline, make_hermite_spline_with_derivatives, make_natural_hermite_spline,
     make_periodic_hermite_spline, make_quintic_hermite_spline, DerivativeSpec, HermiteSpline,
+};
+pub use high_dimensional::{
+    make_knn_interpolator, make_local_rbf_interpolator, make_pca_interpolator,
+    DimensionReductionMethod, HighDimensionalInterpolator, HighDimensionalInterpolatorBuilder,
+    InterpolatorStats, LocalMethod, LocalRBFType, SparseStrategy, SpatialIndexType,
 };
 pub use interp1d::{
     cubic_interpolate,
@@ -185,12 +211,30 @@ pub use local::polynomial::{
     RegressionResult,
 };
 pub use multiscale::{make_adaptive_bspline, MultiscaleBSpline, RefinementCriterion};
+pub use numerical_stability::{
+    assess_matrix_condition, apply_tikhonov_regularization, check_safe_division, machine_epsilon,
+    safe_reciprocal, solve_with_stability_monitoring, ConditionReport, StabilityDiagnostics,
+    StabilityLevel,
+};
 pub use nurbs::{make_nurbs_circle, make_nurbs_sphere, NurbsCurve, NurbsSurface};
 pub use parallel::{
     make_parallel_loess, make_parallel_mls, make_parallel_robust_loess, ParallelConfig,
     ParallelEvaluate, ParallelLocalPolynomialRegression, ParallelMovingLeastSquares,
 };
 pub use penalized::{cross_validate_lambda, pspline_with_custom_penalty, PSpline, PenaltyType};
+pub use simd_optimized::{
+    get_simd_config, is_simd_available, simd_bspline_batch_evaluate, simd_distance_matrix,
+    simd_rbf_evaluate, RBFKernel as SimdRBFKernel, SimdConfig,
+};
+pub use smoothing::{
+    make_adaptive_smoothing_spline, make_error_based_smoothing_spline,
+    make_optimized_smoothing_spline, KnotStrategy, VariableKnotSpline,
+};
+pub use sparse_grid::{
+    make_adaptive_sparse_grid_interpolator, make_sparse_grid_from_data,
+    make_sparse_grid_interpolator, GridPoint, MultiIndex, SparseGridBuilder,
+    SparseGridInterpolator, SparseGridStats,
+};
 pub use spatial::balltree::BallTree;
 pub use spatial::kdtree::KdTree;
 pub use spline::{make_interp_spline, BoundaryCondition, CubicSpline};
@@ -207,7 +251,7 @@ pub use voronoi::{
     Extrapolation, ExtrapolationMethod as VoronoiExtrapolationMethod, ExtrapolationParams,
     GradientEstimation, InterpolateWithGradient, InterpolateWithGradientResult,
     InterpolationMethod as VoronoiInterpolationMethod, NaturalNeighborInterpolator,
-    ParallelConfig as VoronoiParallelConfig, ParallelNaturalNeighborInterpolator,
+    ParallelNaturalNeighborInterpolator,
 };
 
 #[cfg(test)]

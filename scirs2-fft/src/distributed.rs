@@ -380,7 +380,7 @@ impl DistributedFFT {
         if input.ndim() == 1 {
             // 1D case
             for i in my_start..actual_end {
-                let val: Complex64 = NumCast::from(input[i]).unwrap_or(Complex64::new(0.0, 0.0));
+                let val: Complex64 = NumCast::from(input[[i]]).unwrap_or(Complex64::new(0.0, 0.0));
                 output[[i - my_start]] = val;
             }
         } else if input.ndim() == 2 {

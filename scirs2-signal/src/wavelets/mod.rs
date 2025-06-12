@@ -19,8 +19,8 @@ mod utils;
 pub use complex_wavelets::{complex_gaussian, complex_morlet, fbsp, morlet, paul, shannon};
 pub use cwt::{convolve_complex_same_complex, convolve_complex_same_real};
 pub use dual_tree_complex::{
-    BoundaryMode, DtcwtConfig, DtcwtFilters, DtcwtProcessor, 
-    Dtcwt1dResult, Dtcwt2dResult, FilterSet
+    BoundaryMode, Dtcwt1dResult, Dtcwt2dResult, DtcwtConfig, DtcwtFilters, DtcwtProcessor,
+    FilterSet,
 };
 pub use real_wavelets::ricker;
 pub use scalogram::{cwt_magnitude, cwt_phase, scale_to_frequency, scalogram};

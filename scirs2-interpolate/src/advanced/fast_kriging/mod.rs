@@ -30,6 +30,84 @@ const DEFAULT_MAX_NEIGHBORS: usize = 50;
 /// Default radius multiplier for local neighborhood search
 const DEFAULT_RADIUS_MULTIPLIER: f64 = 3.0;
 
+/// Result of a fast kriging prediction
+#[derive(Debug, Clone)]
+pub struct FastPredictionResult<F>
+where
+    F: Float + FromPrimitive + Debug + Display,
+{
+    /// Predicted values at query points
+    pub value: Array1<F>,
+    
+    /// Prediction variances at query points
+    pub variance: Array1<F>,
+    
+    /// Approximation method used
+    pub method: FastKrigingMethod,
+    
+    /// Computation time in milliseconds (if measured)
+    pub computation_time_ms: Option<f64>,
+}
+
+impl<F> FastPredictionResult<F>
+where
+    F: Float + FromPrimitive + Debug + Display,
+{
+    /// Get the number of predictions
+    pub fn len(&self) -> usize {
+        self.value.len()
+    }
+
+    /// Check if the result is empty
+    pub fn is_empty(&self) -> bool {
+        self.value.is_empty()
+    }
+
+    /// Get the predicted values
+    pub fn values(&self) -> &Array1<F> {
+        &self.value
+    }
+
+    /// Get the prediction variances
+    pub fn variances(&self) -> &Array1<F> {
+        &self.variance
+    }
+
+    /// Get the standard deviations (sqrt of variances)
+    pub fn standard_deviations(&self) -> Array1<F> {
+        self.variance.mapv(|v| v.sqrt())
+    }
+
+    /// Get confidence intervals for the predictions
+    pub fn confidence_intervals(&self, confidence_level: f64) -> InterpolateResult<Array2<F>> {
+        if confidence_level <= 0.0 || confidence_level >= 1.0 {
+            return Err(InterpolateError::InvalidValue(
+                "Confidence level must be between 0 and 1".to_string(),
+            ));
+        }
+
+        // Approximate z-score for normal distribution
+        let z_score = F::from_f64(match confidence_level {
+            level if level > 0.99 => 2.576,  // 99%
+            level if level > 0.95 => 1.96,   // 95%
+            level if level > 0.90 => 1.645,  // 90%
+            level if level > 0.80 => 1.282,  // 80%
+            _ => 1.96,  // Default to 95%
+        }).unwrap();
+
+        let std_devs = self.standard_deviations();
+        let mut intervals = Array2::zeros((self.len(), 2));
+
+        for i in 0..self.len() {
+            let margin = z_score * std_devs[i];
+            intervals[[i, 0]] = self.value[i] - margin; // Lower bound
+            intervals[[i, 1]] = self.value[i] + margin; // Upper bound
+        }
+
+        Ok(intervals)
+    }
+}
+
 // Import submodules
 pub mod ordinary;
 pub mod universal;
@@ -271,16 +349,27 @@ where
     /// This is used internally by the builder and shouldn't be called directly.
     /// Use `FastKrigingBuilder::build()` instead.
     pub(crate) fn from_builder(builder: FastKrigingBuilder<F>) -> InterpolateResult<Self> {
-        // Basic validation will be implemented in the ordinary and universal modules
-        Ok(Self {
-            points: builder.points.ok_or(InterpolateError::MissingPoints)?,
-            values: builder.values.ok_or(InterpolateError::MissingValues)?,
-            anisotropic_cov: AnisotropicCovariance::new(
-                builder.cov_fn,
-                builder.length_scales.unwrap_or_else(|| Array1::from_elem(1, F::one())),
-                builder.sigma_sq,
-                builder.nugget,
-            ),
+        let points = builder.points.ok_or(InterpolateError::MissingPoints)?;
+        let values = builder.values.ok_or(InterpolateError::MissingValues)?;
+        
+        if points.nrows() != values.len() {
+            return Err(InterpolateError::DimensionMismatch(
+                "Number of points must match number of values".to_string(),
+            ));
+        }
+
+        // Create anisotropic covariance
+        let anisotropic_cov = AnisotropicCovariance::new(
+            builder.cov_fn,
+            builder.length_scales.unwrap_or_else(|| Array1::from_elem(points.ncols(), F::one())),
+            builder.sigma_sq,
+            builder.nugget,
+        );
+
+        let mut kriging = Self {
+            points,
+            values,
+            anisotropic_cov,
             trend_fn: builder.trend_fn,
             approx_method: builder.approx_method,
             max_neighbors: builder.max_neighbors,
@@ -293,7 +382,83 @@ where
             optimize_parameters: false,
             compute_exact_variance: false,
             _phantom: PhantomData,
-        })
+        };
+
+        // Pre-compute components based on approximation method
+        kriging.initialize_approximation()?;
+
+        Ok(kriging)
+    }
+
+    /// Initialize approximation-specific components
+    fn initialize_approximation(&mut self) -> InterpolateResult<()> {
+        match self.approx_method {
+            FastKrigingMethod::FixedRank(rank) => {
+                let (u, s, v) = covariance::compute_low_rank_approximation(
+                    &self.points,
+                    &self.anisotropic_cov,
+                    rank,
+                )?;
+                self.low_rank_components = Some((u, s, v));
+            }
+            FastKrigingMethod::Tapering(range) => {
+                let sparse_components = covariance::compute_tapered_covariance(
+                    &self.points,
+                    &self.anisotropic_cov,
+                    F::from_f64(range).unwrap(),
+                )?;
+                self.sparse_components = Some(sparse_components);
+            }
+            _ => {
+                // No pre-computation needed for Local and HODLR
+            }
+        }
+
+        // Compute basis functions and trend coefficients if needed
+        if self.trend_fn != crate::advanced::enhanced_kriging::TrendFunction::Constant {
+            let basis = universal::create_basis_functions(&self.points.view(), self.trend_fn)?;
+            let coeffs = universal::compute_trend_coefficients(
+                &self.points,
+                &self.values,
+                &basis,
+                self.trend_fn,
+            )?;
+            self.basis_functions = Some(basis);
+            self.trend_coeffs = Some(coeffs);
+        }
+
+        Ok(())
+    }
+
+    /// Predict values at query points
+    pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<FastPredictionResult<F>> {
+        if query_points.ncols() != self.points.ncols() {
+            return Err(InterpolateError::DimensionMismatch(
+                "Query points must have same dimensionality as training points".to_string(),
+            ));
+        }
+
+        match self.approx_method {
+            FastKrigingMethod::Local => self.predict_local(query_points),
+            FastKrigingMethod::FixedRank(_) => self.predict_fixed_rank(query_points),
+            FastKrigingMethod::Tapering(_) => self.predict_tapered(query_points),
+            FastKrigingMethod::HODLR(_) => self.predict_hodlr(query_points),
+        }
+    }
+
+    /// Get the number of training points
+    pub fn n_points(&self) -> usize {
+        self.points.nrows()
+    }
+
+    /// Get the dimensionality
+    pub fn n_dims(&self) -> usize {
+        self.points.ncols()
+    }
+
+    /// Get the approximation method
+    pub fn approximation_method(&self) -> FastKrigingMethod {
+        self.approx_method
     }
 }
 
@@ -352,5 +517,70 @@ where
             radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(),
             _phantom: PhantomData,
         }
+    }
+
+    /// Set the training points
+    pub fn points(mut self, points: Array2<F>) -> Self {
+        self.points = Some(points);
+        self
+    }
+
+    /// Set the training values
+    pub fn values(mut self, values: Array1<F>) -> Self {
+        self.values = Some(values);
+        self
+    }
+
+    /// Set the covariance function
+    pub fn covariance_function(mut self, cov_fn: CovarianceFunction) -> Self {
+        self.cov_fn = cov_fn;
+        self
+    }
+
+    /// Set the length scales
+    pub fn length_scales(mut self, length_scales: Array1<F>) -> Self {
+        self.length_scales = Some(length_scales);
+        self
+    }
+
+    /// Set the signal variance parameter
+    pub fn sigma_sq(mut self, sigma_sq: F) -> Self {
+        self.sigma_sq = sigma_sq;
+        self
+    }
+
+    /// Set the nugget parameter
+    pub fn nugget(mut self, nugget: F) -> Self {
+        self.nugget = nugget;
+        self
+    }
+
+    /// Set the trend function
+    pub fn trend_function(mut self, trend_fn: TrendFunction) -> Self {
+        self.trend_fn = trend_fn;
+        self
+    }
+
+    /// Set the approximation method
+    pub fn approximation_method(mut self, method: FastKrigingMethod) -> Self {
+        self.approx_method = method;
+        self
+    }
+
+    /// Set the maximum number of neighbors for local kriging
+    pub fn max_neighbors(mut self, max_neighbors: usize) -> Self {
+        self.max_neighbors = max_neighbors;
+        self
+    }
+
+    /// Set the radius multiplier for local kriging
+    pub fn radius_multiplier(mut self, radius_multiplier: F) -> Self {
+        self.radius_multiplier = radius_multiplier;
+        self
+    }
+
+    /// Build the FastKriging model
+    pub fn build(self) -> InterpolateResult<FastKriging<F>> {
+        FastKriging::from_builder(self)
     }
 }

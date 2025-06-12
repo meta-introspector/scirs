@@ -232,9 +232,7 @@ pub fn midpoint(point1: (f64, f64), point2: (f64, f64)) -> (f64, f64) {
     let bx = lat2.cos() * dlon.cos();
     let by = lat2.cos() * dlon.sin();
 
-    let lat_mid = (lat1.sin() + lat2.sin()).atan2(
-        ((lat1.cos() + bx).powi(2) + by.powi(2)).sqrt()
-    );
+    let lat_mid = (lat1.sin() + lat2.sin()).atan2(((lat1.cos() + bx).powi(2) + by.powi(2)).sqrt());
 
     let lon_mid = lon1 + by.atan2(lat1.cos() + bx);
 
@@ -261,7 +259,8 @@ pub fn cross_track_distance(
     let bearing_to_point = initial_bearing(path_start, point);
     let bearing_to_end = initial_bearing(path_start, path_end);
 
-    let cross_track_angular = (distance_to_start.sin() * (bearing_to_point - bearing_to_end).sin()).asin();
+    let cross_track_angular =
+        (distance_to_start.sin() * (bearing_to_point - bearing_to_end).sin()).asin();
 
     EARTH_RADIUS_M * cross_track_angular
 }
@@ -285,7 +284,9 @@ pub fn along_track_distance(
     let distance_to_start = haversine_distance(path_start, point) / EARTH_RADIUS_M;
     let cross_track_angular = cross_track_distance(point, path_start, path_end) / EARTH_RADIUS_M;
 
-    let along_track_angular = (distance_to_start.powi(2) - cross_track_angular.powi(2)).sqrt().acos();
+    let along_track_angular = (distance_to_start.powi(2) - cross_track_angular.powi(2))
+        .sqrt()
+        .acos();
 
     EARTH_RADIUS_M * along_track_angular
 }
@@ -341,27 +342,98 @@ pub fn point_in_spherical_polygon(point: (f64, f64), polygon: &[(f64, f64)]) -> 
         return false;
     }
 
+    // For small polygons (< 10 degrees), use planar approximation for better numerical stability
+    let max_extent = polygon
+        .iter()
+        .flat_map(|(lat, lon)| [lat.abs(), lon.abs()])
+        .fold(0.0, f64::max);
+
+    if max_extent < 10.0 {
+        // Use planar point-in-polygon algorithm (ray casting)
+        let (x, y) = point;
+        let mut inside = false;
+        let n = polygon.len();
+
+        for i in 0..n {
+            let j = (i + 1) % n;
+            let (xi, yi) = polygon[i];
+            let (xj, yj) = polygon[j];
+
+            if ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
+
+    // For larger polygons, use proper spherical calculation
     let (test_lat, test_lon) = (deg_to_rad(point.0), deg_to_rad(point.1));
-    let mut winding_number = 0.0;
+    let mut angle_sum = 0.0;
 
     for i in 0..polygon.len() {
         let j = (i + 1) % polygon.len();
         let (lat1, lon1) = (deg_to_rad(polygon[i].0), deg_to_rad(polygon[i].1));
         let (lat2, lon2) = (deg_to_rad(polygon[j].0), deg_to_rad(polygon[j].1));
 
-        // Calculate the cross product for spherical coordinates
-        let cross = (lon1 - test_lon).sin() * (lat2 - test_lat).sin()
-            - (lon2 - test_lon).sin() * (lat1 - test_lat).sin();
+        // Convert to 3D Cartesian coordinates on unit sphere
+        let x1 = lat1.cos() * lon1.cos();
+        let y1 = lat1.cos() * lon1.sin();
+        let z1 = lat1.sin();
 
-        // Calculate the dot product
-        let dot = (lon1 - test_lon).cos() * (lat2 - test_lat).cos()
-            + (lon2 - test_lon).cos() * (lat1 - test_lat).cos()
-            + (lat1 - test_lat).sin() * (lat2 - test_lat).sin();
+        let x2 = lat2.cos() * lon2.cos();
+        let y2 = lat2.cos() * lon2.sin();
+        let z2 = lat2.sin();
 
-        winding_number += cross.atan2(dot);
+        let xt = test_lat.cos() * test_lon.cos();
+        let yt = test_lat.cos() * test_lon.sin();
+        let zt = test_lat.sin();
+
+        // Vectors from test point to polygon vertices
+        let v1x = x1 - xt;
+        let v1y = y1 - yt;
+        let v1z = z1 - zt;
+
+        let v2x = x2 - xt;
+        let v2y = y2 - yt;
+        let v2z = z2 - zt;
+
+        // Normalize vectors
+        let v1_len = (v1x * v1x + v1y * v1y + v1z * v1z).sqrt();
+        let v2_len = (v2x * v2x + v2y * v2y + v2z * v2z).sqrt();
+
+        if v1_len < 1e-10 || v2_len < 1e-10 {
+            continue; // Point is on a vertex
+        }
+
+        let v1x_norm = v1x / v1_len;
+        let v1y_norm = v1y / v1_len;
+        let v1z_norm = v1z / v1_len;
+
+        let v2x_norm = v2x / v2_len;
+        let v2y_norm = v2y / v2_len;
+        let v2z_norm = v2z / v2_len;
+
+        // Calculate angle between vectors
+        let dot = v1x_norm * v2x_norm + v1y_norm * v2y_norm + v1z_norm * v2z_norm;
+        let dot = dot.clamp(-1.0, 1.0); // Handle numerical errors
+
+        // Cross product for sign
+        let cross_x = v1y_norm * v2z_norm - v1z_norm * v2y_norm;
+        let cross_y = v1z_norm * v2x_norm - v1x_norm * v2z_norm;
+        let cross_z = v1x_norm * v2y_norm - v1y_norm * v2x_norm;
+
+        // Project cross product onto normal at test point to get sign
+        let normal_dot = cross_x * xt + cross_y * yt + cross_z * zt;
+        let angle = dot.acos();
+
+        if normal_dot < 0.0 {
+            angle_sum -= angle;
+        } else {
+            angle_sum += angle;
+        }
     }
 
-    (winding_number.abs() / (2.0 * PI)) > 0.5
+    (angle_sum.abs() / (2.0 * PI)) > 0.5
 }
 
 /// Convert geographic coordinates to UTM coordinates
@@ -380,7 +452,7 @@ pub fn point_in_spherical_polygon(point: (f64, f64), polygon: &[(f64, f64)]) -> 
 /// This is a simplified UTM conversion. For high-precision applications,
 /// use specialized geospatial libraries like PROJ.
 pub fn geographic_to_utm(lat: f64, lon: f64) -> SpatialResult<(f64, f64, i32, char)> {
-    if lat < -80.0 || lat > 84.0 {
+    if !(-80.0..=84.0).contains(&lat) {
         return Err(SpatialError::ValueError(
             "Latitude must be between -80° and 84° for UTM".to_string(),
         ));
@@ -402,27 +474,36 @@ pub fn geographic_to_utm(lat: f64, lon: f64) -> SpatialResult<(f64, f64, i32, ch
     let c = EARTH_ECCENTRICITY_SQ * lat_rad.cos().powi(2) / (1.0 - EARTH_ECCENTRICITY_SQ);
     let a_coeff = lat_rad.cos() * (lon_rad - central_meridian);
 
-    let m = a * (
-        (1.0 - e_sq / 4.0 - 3.0 * e_sq.powi(2) / 64.0 - 5.0 * e_sq.powi(3) / 256.0) * lat_rad
-        - (3.0 * e_sq / 8.0 + 3.0 * e_sq.powi(2) / 32.0 + 45.0 * e_sq.powi(3) / 1024.0) * (2.0 * lat_rad).sin()
-        + (15.0 * e_sq.powi(2) / 256.0 + 45.0 * e_sq.powi(3) / 1024.0) * (4.0 * lat_rad).sin()
-        - (35.0 * e_sq.powi(3) / 3072.0) * (6.0 * lat_rad).sin()
-    );
+    let m = a
+        * ((1.0 - e_sq / 4.0 - 3.0 * e_sq.powi(2) / 64.0 - 5.0 * e_sq.powi(3) / 256.0) * lat_rad
+            - (3.0 * e_sq / 8.0 + 3.0 * e_sq.powi(2) / 32.0 + 45.0 * e_sq.powi(3) / 1024.0)
+                * (2.0 * lat_rad).sin()
+            + (15.0 * e_sq.powi(2) / 256.0 + 45.0 * e_sq.powi(3) / 1024.0) * (4.0 * lat_rad).sin()
+            - (35.0 * e_sq.powi(3) / 3072.0) * (6.0 * lat_rad).sin());
 
-    let easting = k0 * n * (
-        a_coeff + (1.0 - t + c) * a_coeff.powi(3) / 6.0
-        + (5.0 - 18.0 * t + t.powi(2) + 72.0 * c - 58.0 * EARTH_ECCENTRICITY_SQ) * a_coeff.powi(5) / 120.0
-    ) + 500000.0;
+    let easting = k0
+        * n
+        * (a_coeff
+            + (1.0 - t + c) * a_coeff.powi(3) / 6.0
+            + (5.0 - 18.0 * t + t.powi(2) + 72.0 * c - 58.0 * EARTH_ECCENTRICITY_SQ)
+                * a_coeff.powi(5)
+                / 120.0)
+        + 500000.0;
 
-    let northing = k0 * (
-        m + n * lat_rad.tan() * (
-            a_coeff.powi(2) / 2.0
-            + (5.0 - t + 9.0 * c + 4.0 * c.powi(2)) * a_coeff.powi(4) / 24.0
-            + (61.0 - 58.0 * t + t.powi(2) + 600.0 * c - 330.0 * EARTH_ECCENTRICITY_SQ) * a_coeff.powi(6) / 720.0
-        )
-    );
+    let northing = k0
+        * (m + n
+            * lat_rad.tan()
+            * (a_coeff.powi(2) / 2.0
+                + (5.0 - t + 9.0 * c + 4.0 * c.powi(2)) * a_coeff.powi(4) / 24.0
+                + (61.0 - 58.0 * t + t.powi(2) + 600.0 * c - 330.0 * EARTH_ECCENTRICITY_SQ)
+                    * a_coeff.powi(6)
+                    / 720.0));
 
-    let final_northing = if lat < 0.0 { northing + 10000000.0 } else { northing };
+    let final_northing = if lat < 0.0 {
+        northing + 10000000.0
+    } else {
+        northing
+    };
 
     Ok((easting, final_northing, zone_number, zone_letter))
 }
@@ -430,11 +511,11 @@ pub fn geographic_to_utm(lat: f64, lon: f64) -> SpatialResult<(f64, f64, i32, ch
 /// Get UTM zone letter from latitude
 fn utm_zone_letter(lat: f64) -> SpatialResult<char> {
     let letters = [
-        'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M',
-        'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+        'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+        'W', 'X',
     ];
 
-    if lat < -80.0 || lat > 84.0 {
+    if !(-80.0..=84.0).contains(&lat) {
         return Err(SpatialError::ValueError(
             "Latitude out of UTM range".to_string(),
         ));
@@ -459,7 +540,7 @@ fn utm_zone_letter(lat: f64) -> SpatialResult<char> {
 ///
 /// * (x, y) in Web Mercator coordinates (meters)
 pub fn geographic_to_web_mercator(lat: f64, lon: f64) -> SpatialResult<(f64, f64)> {
-    if lat.abs() >= 85.051128779806592 {
+    if lat.abs() >= 85.051_128_779_806_59 {
         return Err(SpatialError::ValueError(
             "Latitude must be between -85.051° and 85.051° for Web Mercator".to_string(),
         ));
@@ -556,8 +637,13 @@ pub fn vincenty_distance(point1: (f64, f64), point2: (f64, f64)) -> SpatialResul
         let c = f / 16.0 * cos_sq_alpha * (4.0 + f * (4.0 - 3.0 * cos_sq_alpha));
 
         lambda_prev = lambda;
-        lambda = l + (1.0 - c) * f * sin_alpha
-            * (sigma + c * sin_sigma * (cos_2sigma_m + c * cos_sigma * (-1.0 + 2.0 * cos_2sigma_m.powi(2))));
+        lambda = l
+            + (1.0 - c)
+                * f
+                * sin_alpha
+                * (sigma
+                    + c * sin_sigma
+                        * (cos_2sigma_m + c * cos_sigma * (-1.0 + 2.0 * cos_2sigma_m.powi(2))));
 
         if (lambda - lambda_prev).abs() < 1e-12 {
             break (cos_sq_alpha, sin_sigma, cos_sigma, sigma, cos_2sigma_m);
@@ -568,9 +654,15 @@ pub fn vincenty_distance(point1: (f64, f64), point2: (f64, f64)) -> SpatialResul
     let a_coeff = 1.0 + u_sq / 16384.0 * (4096.0 + u_sq * (-768.0 + u_sq * (320.0 - 175.0 * u_sq)));
     let b_coeff = u_sq / 1024.0 * (256.0 + u_sq * (-128.0 + u_sq * (74.0 - 47.0 * u_sq)));
 
-    let delta_sigma = b_coeff * sin_sigma
-        * (cos_2sigma_m + b_coeff / 4.0 * (cos_sigma * (-1.0 + 2.0 * cos_2sigma_m.powi(2))
-        - b_coeff / 6.0 * cos_2sigma_m * (-3.0 + 4.0 * sin_sigma.powi(2)) * (-3.0 + 4.0 * cos_2sigma_m.powi(2))));
+    let delta_sigma = b_coeff
+        * sin_sigma
+        * (cos_2sigma_m
+            + b_coeff / 4.0
+                * (cos_sigma * (-1.0 + 2.0 * cos_2sigma_m.powi(2))
+                    - b_coeff / 6.0
+                        * cos_2sigma_m
+                        * (-3.0 + 4.0 * sin_sigma.powi(2))
+                        * (-3.0 + 4.0 * cos_2sigma_m.powi(2))));
 
     let distance = b * a_coeff * (sigma - delta_sigma);
 
@@ -621,7 +713,7 @@ mod tests {
         let paris = (48.8566, 2.3522);
         let bearing = initial_bearing(london, paris);
         let bearing_deg = rad_to_deg(bearing);
-        
+
         // Should be roughly in southeast direction (around 120-150 degrees)
         assert!(bearing_deg > 100.0 && bearing_deg < 180.0);
 
@@ -644,7 +736,7 @@ mod tests {
         let bearing = 0.0; // Due north
 
         let destination = destination_point(start, distance, bearing);
-        
+
         // Should be roughly north of London
         assert!(destination.0 > start.0); // Latitude should increase
         assert!((destination.1 - start.1).abs() < 0.1); // Longitude should change little
@@ -692,14 +784,14 @@ mod tests {
     fn test_spherical_polygon_area() {
         // Simple triangle
         let triangle = vec![
-            (0.0, 0.0),   // Equator, Greenwich
-            (0.0, 1.0),   // Equator, 1° East
-            (1.0, 0.0),   // 1° North, Greenwich
+            (0.0, 0.0), // Equator, Greenwich
+            (0.0, 1.0), // Equator, 1° East
+            (1.0, 0.0), // 1° North, Greenwich
         ];
 
         let area = spherical_polygon_area(&triangle).unwrap();
         assert!(area > 0.0);
-        
+
         // Area should be reasonable for a 1°×1° triangle
         // Expected area is roughly (π/180)² * R² / 2
         let expected = (PI / 180.0).powi(2) * EARTH_RADIUS_M.powi(2) / 2.0;
@@ -734,7 +826,7 @@ mod tests {
         // London should be in UTM zone 30 or 31
         assert!(zone == 30 || zone == 31);
         assert!(letter == 'U' || letter == 'V');
-        
+
         // Coordinates should be reasonable
         assert!(easting > 400_000.0 && easting < 700_000.0);
         assert!(northing > 5_700_000.0 && northing < 5_800_000.0);
@@ -751,7 +843,7 @@ mod tests {
         let point = (51.5, 0.0); // Point on the same meridian as start
 
         let cross_track = cross_track_distance(point, start, end);
-        
+
         // Should be relatively small since point is close to the great circle
         assert!(cross_track.abs() < 50_000.0); // Within 50km
     }
@@ -761,10 +853,10 @@ mod tests {
         // Test against Haversine for short distance
         let london = (51.5074, -0.1278);
         let paris = (48.8566, 2.3522);
-        
+
         let haversine_dist = haversine_distance(london, paris);
         let vincenty_dist = vincenty_distance(london, paris).unwrap();
-        
+
         // Should be very close for moderate distances
         let diff_percent = ((vincenty_dist - haversine_dist) / haversine_dist * 100.0).abs();
         assert!(diff_percent < 1.0); // Within 1%
@@ -777,19 +869,14 @@ mod tests {
     #[test]
     fn test_point_in_spherical_polygon() {
         // Simple square around equator
-        let square = vec![
-            (-1.0, -1.0),
-            (1.0, -1.0),
-            (1.0, 1.0),
-            (-1.0, 1.0),
-        ];
+        let square = vec![(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)];
 
         // Point inside
         assert!(point_in_spherical_polygon((0.0, 0.0), &square));
-        
+
         // Point outside
         assert!(!point_in_spherical_polygon((2.0, 2.0), &square));
-        
+
         // Point on edge (may be unstable, so just ensure it doesn't crash)
         let _ = point_in_spherical_polygon((1.0, 0.0), &square);
     }

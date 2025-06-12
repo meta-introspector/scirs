@@ -50,6 +50,9 @@ cranelift-module = { workspace = true, optional = true }  # JIT compilation modu
 cranelift-jit = { workspace = true, optional = true }  # JIT compiler (previously simplejit)
 cranelift-frontend = { workspace = true, optional = true }  # JIT compiler frontend
 
+# Async runtime for async error handling
+tokio = { workspace = true, optional = true }  # Async runtime for async error handling
+
 [dev-dependencies]
 approx = { workspace = true }
 criterion = { workspace = true }
@@ -62,6 +65,7 @@ parallel = ["rayon", "ndarray/rayon", "crossbeam-utils", "crossbeam-deque", "num
 cache = ["cached"]  # Caching and memoization functionality
 validation = []  # Validation utilities
 logging = []  # Structured logging and diagnostics
+async = ["tokio"]  # Async error handling and recovery mechanisms
 gpu = []  # GPU acceleration abstractions
 cuda = ["gpu"]  # CUDA-specific GPU acceleration
 opencl = ["gpu"]  # OpenCL-specific GPU acceleration
@@ -337,3 +341,9 @@ required-features = ["types"]
 name = "enhanced_memory_metrics_example"
 path = "examples/enhanced_memory_metrics_example.rs"
 required-features = ["memory_management"]
+
+[[example]]
+name = "advanced_error_handling"
+path = "examples/advanced_error_handling.rs"
+required-features = []
+

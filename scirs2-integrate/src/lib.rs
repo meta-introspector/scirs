@@ -142,6 +142,8 @@ pub mod dae;
 pub mod gaussian;
 pub mod lebedev;
 pub mod monte_carlo;
+#[cfg(feature = "parallel")]
+pub mod monte_carlo_parallel;
 pub mod newton_cotes;
 
 // Use the new modular ODE implementation
@@ -173,6 +175,13 @@ pub use dae::{
     DAEStructure, DAEType, DummyDerivativeReducer, PantelidesReducer, ProjectionMethod,
 };
 pub use lebedev::{lebedev_integrate, lebedev_rule, LebedevOrder, LebedevRule};
+pub use monte_carlo::{
+    importance_sampling, monte_carlo, ErrorEstimationMethod, MonteCarloOptions, MonteCarloResult,
+};
+#[cfg(feature = "parallel")]
+pub use monte_carlo_parallel::{
+    adaptive_parallel_monte_carlo, parallel_monte_carlo, ParallelMonteCarloOptions,
+};
 pub use newton_cotes::{newton_cotes, newton_cotes_integrate, NewtonCotesResult, NewtonCotesType};
 // Export ODE types from the new modular implementation
 pub use ode::{

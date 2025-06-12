@@ -90,6 +90,7 @@ pub mod lombscargle;
 pub mod lti;
 pub mod lti_response;
 pub mod median;
+pub mod multirate;
 pub mod multitaper;
 pub mod nlm;
 pub mod parallel_spectral;
@@ -125,8 +126,8 @@ pub use adaptive::{
 };
 pub use advanced_filter::{
     arbitrary_magnitude_design, constrained_least_squares_design, least_squares_design,
-    minimax_design, parks_mcclellan, ArbitraryResponse, FilterDesignResult, FilterSpec,
-    FilterType, ParksMcClellanConfig,
+    minimax_design, parks_mcclellan, ArbitraryResponse, FilterDesignResult, FilterSpec, FilterType,
+    ParksMcClellanConfig,
 };
 pub use bss::{
     calculate_correlation_matrix, calculate_mutual_information, estimate_source_count, ica,
@@ -191,6 +192,10 @@ pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
 };
+pub use multirate::{
+    FilterBankProperties, MultirateConverter, PerfectReconstructionConfig,
+    PerfectReconstructionFilterBank, PrFilterDesign,
+};
 pub use nlm::{
     nlm_block_matching_2d, nlm_color_image, nlm_denoise_1d, nlm_denoise_2d, nlm_multiscale_2d,
     NlmConfig,
@@ -248,11 +253,26 @@ pub use dwt2d::{dwt2d_decompose, dwt2d_reconstruct, wavedec2, waverec2, Dwt2dRes
 pub use swt::{iswt, swt, swt_decompose, swt_reconstruct};
 pub use swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct, Swt2dResult};
 pub use wavelets::{
-    complex_gaussian, complex_morlet, cwt, cwt_magnitude, cwt_phase, fbsp, morlet, paul, ricker,
-    scale_to_frequency, scalogram, shannon,
+    complex_gaussian,
+    complex_morlet,
+    cwt,
+    cwt_magnitude,
+    cwt_phase,
+    fbsp,
+    morlet,
+    paul,
+    ricker,
+    scale_to_frequency,
+    scalogram,
+    shannon,
     // Dual-Tree Complex Wavelet Transform
-    BoundaryMode, DtcwtConfig, DtcwtFilters, DtcwtProcessor, 
-    Dtcwt1dResult, Dtcwt2dResult, FilterSet,
+    BoundaryMode,
+    Dtcwt1dResult,
+    Dtcwt2dResult,
+    DtcwtConfig,
+    DtcwtFilters,
+    DtcwtProcessor,
+    FilterSet,
 };
 pub use wpt::{
     get_level_coefficients, reconstruct_from_nodes, wp_decompose, WaveletPacket, WaveletPacketTree,

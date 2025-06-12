@@ -42,7 +42,7 @@
 
 use crate::convex_hull::ConvexHull;
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{arr1, Array1, Array2, ArrayView1};
 
 /// Representation of a halfspace: a·x ≤ b
 #[derive(Debug, Clone, PartialEq)]
@@ -184,6 +184,7 @@ pub struct HalfspaceIntersection {
     /// Whether the polytope is bounded
     is_bounded: bool,
     /// Interior point (if provided)
+    #[allow(dead_code)]
     interior_point: Option<Array1<f64>>,
 }
 
@@ -298,12 +299,103 @@ impl HalfspaceIntersection {
             .all(|(&pos, &neg)| pos > 0 && neg > 0)
     }
 
+    /// Compute 2D polygon intersection using direct vertex enumeration
+    fn compute_2d_intersection(
+        halfspaces: &[Halfspace],
+    ) -> SpatialResult<(Array2<f64>, Vec<Vec<usize>>, bool)> {
+        let mut vertices = Vec::new();
+        let n = halfspaces.len();
+
+        // Find all intersection points between pairs of halfspace boundaries
+        for i in 0..n {
+            for j in (i + 1)..n {
+                let hs1 = &halfspaces[i];
+                let hs2 = &halfspaces[j];
+
+                // Solve the 2x2 system: hs1.normal · x = hs1.offset, hs2.normal · x = hs2.offset
+                let det = hs1.normal[0] * hs2.normal[1] - hs1.normal[1] * hs2.normal[0];
+
+                if det.abs() < 1e-15 {
+                    continue; // Parallel halfspaces
+                }
+
+                let x = (hs2.normal[1] * hs1.offset - hs1.normal[1] * hs2.offset) / det;
+                let y = (hs1.normal[0] * hs2.offset - hs2.normal[0] * hs1.offset) / det;
+
+                let candidate = arr1(&[x, y]);
+
+                // Check if this intersection point satisfies all other halfspaces
+                let mut is_vertex = true;
+                for (k, hs_k) in halfspaces.iter().enumerate() {
+                    if k == i || k == j {
+                        continue;
+                    }
+                    if !hs_k.contains(&candidate.view()) {
+                        is_vertex = false;
+                        break;
+                    }
+                }
+
+                if is_vertex {
+                    vertices.push((x, y));
+                }
+            }
+        }
+
+        if vertices.is_empty() {
+            return Err(SpatialError::ComputationError(
+                "No vertices found in intersection".to_string(),
+            ));
+        }
+
+        // Remove duplicate vertices
+        vertices.sort_by(|a, b| {
+            a.0.partial_cmp(&b.0)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+        });
+        vertices.dedup_by(|a, b| (a.0 - b.0).abs() < 1e-10 && (a.1 - b.1).abs() < 1e-10);
+
+        // Order vertices counter-clockwise
+        let center_x = vertices.iter().map(|v| v.0).sum::<f64>() / vertices.len() as f64;
+        let center_y = vertices.iter().map(|v| v.1).sum::<f64>() / vertices.len() as f64;
+
+        vertices.sort_by(|a, b| {
+            let angle_a = (a.1 - center_y).atan2(a.0 - center_x);
+            let angle_b = (b.1 - center_y).atan2(b.0 - center_x);
+            angle_a
+                .partial_cmp(&angle_b)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        // Convert to Array2
+        let vertex_array = Array2::from_shape_vec(
+            (vertices.len(), 2),
+            vertices.iter().flat_map(|&(x, y)| vec![x, y]).collect(),
+        )
+        .map_err(|_| SpatialError::ComputationError("Failed to create vertex array".to_string()))?;
+
+        // Create simple face list for 2D polygon (single face with all vertices)
+        let faces = if vertices.len() >= 3 {
+            vec![(0..vertices.len()).collect()]
+        } else {
+            vec![]
+        };
+
+        Ok((vertex_array, faces, true))
+    }
+
     /// Compute intersection for bounded polytopes using dual transformation
     fn compute_bounded_intersection(
         halfspaces: &[Halfspace],
         interior_point: Option<&Array1<f64>>,
     ) -> SpatialResult<(Array2<f64>, Vec<Vec<usize>>, bool)> {
         let dim = halfspaces[0].dim();
+
+        // For 2D case, use direct vertex enumeration which is more reliable
+        if dim == 2 {
+            return Self::compute_2d_intersection(halfspaces);
+        }
 
         // Find or use provided interior point
         let interior = if let Some(point) = interior_point {
@@ -418,7 +510,7 @@ impl HalfspaceIntersection {
         let is_bounded = Self::check_boundedness(&vertices, halfspaces)?;
 
         // For simplicity, create basic face structure
-        let faces = if vertices.nrows() >= dim + 1 {
+        let faces = if vertices.nrows() > dim {
             // Compute convex hull to get proper face structure
             let hull = ConvexHull::new(&vertices.view())?;
             Self::extract_faces_from_hull(&hull)?
@@ -434,43 +526,87 @@ impl HalfspaceIntersection {
     fn find_interior_point(halfspaces: &[Halfspace]) -> SpatialResult<Array1<f64>> {
         let dim = halfspaces[0].dim();
 
-        // Use a simple approach: try the centroid of constraint normals
-        // This is a heuristic and may not always work
-        let mut sum = Array1::zeros(dim);
-        let mut count = 0;
+        // Try simple candidate points first, ensuring they are truly interior
+        let candidates = vec![
+            Array1::from_elem(dim, 0.1),    // Small positive values
+            Array1::from_elem(dim, 0.01),   // Very small positive values
+            Array1::from_elem(dim, 0.5),    // Medium values
+            Array1::from_elem(dim, 0.3333), // 1/3 values
+            Array1::from_elem(dim, 0.25),   // 1/4 values
+            Array1::zeros(dim),             // Origin (try last)
+        ];
 
-        for hs in halfspaces {
-            // Add contribution based on constraint
-            for i in 0..dim {
-                if hs.normal[i].abs() > 1e-10 {
-                    sum[i] += hs.offset / hs.normal[i];
-                    count += 1;
+        for candidate in candidates {
+            // Check that point is strictly interior (not on boundary)
+            let mut is_strictly_interior = true;
+            for hs in halfspaces {
+                let dot_product = hs.normal.dot(&candidate);
+                if dot_product >= hs.offset - 1e-10 {
+                    // Point is on or outside this halfspace
+                    is_strictly_interior = false;
+                    break;
+                }
+            }
+
+            if is_strictly_interior {
+                return Ok(candidate);
+            }
+        }
+
+        // Try to find a point by solving a linear programming problem
+        // Use Chebyshev center approach: find point that maximizes distance to closest constraint
+
+        // For simple cases, try analytical solutions
+        if dim == 2 && halfspaces.len() >= 3 {
+            // Try intersection of first two constraints, shifted inward
+            let hs1 = &halfspaces[0];
+            let hs2 = &halfspaces[1];
+
+            // Solve n1·x = b1 and n2·x = b2 system
+            let det = hs1.normal[0] * hs2.normal[1] - hs1.normal[1] * hs2.normal[0];
+
+            if det.abs() > 1e-10 {
+                let x = (hs2.normal[1] * hs1.offset - hs1.normal[1] * hs2.offset) / det;
+                let y = (hs1.normal[0] * hs2.offset - hs2.normal[0] * hs1.offset) / det;
+
+                let candidate = arr1(&[x, y]);
+
+                // Check if this intersection point is feasible for all constraints
+                if halfspaces.iter().all(|hs| hs.contains(&candidate.view())) {
+                    return Ok(candidate);
+                }
+
+                // If boundary point is feasible, move it slightly inward
+                // Find the direction that moves away from the closest constraint
+                let mut min_slack = f64::INFINITY;
+                let mut worst_constraint_idx = 0;
+
+                for (i, hs) in halfspaces.iter().enumerate() {
+                    let slack = hs.offset - hs.normal.dot(&candidate);
+                    if slack < min_slack {
+                        min_slack = slack;
+                        worst_constraint_idx = i;
+                    }
+                }
+
+                if min_slack >= -1e-10 {
+                    // Point is feasible or very close, shift inward slightly
+                    let shift_direction = &halfspaces[worst_constraint_idx].normal * (-0.1);
+                    let shifted_candidate = &candidate + &shift_direction;
+
+                    if halfspaces
+                        .iter()
+                        .all(|hs| hs.contains(&shifted_candidate.view()))
+                    {
+                        return Ok(shifted_candidate);
+                    }
                 }
             }
         }
 
-        if count == 0 {
-            return Err(SpatialError::ComputationError(
-                "Cannot find interior point".to_string(),
-            ));
-        }
-
-        let candidate = &sum / (count as f64 / dim as f64);
-
-        // Check if this point satisfies all constraints
-        if halfspaces.iter().all(|hs| hs.contains(&candidate.view())) {
-            Ok(candidate)
-        } else {
-            // Fallback: use origin or a simple point
-            let origin = Array1::zeros(dim);
-            if halfspaces.iter().all(|hs| hs.contains(&origin.view())) {
-                Ok(origin)
-            } else {
-                Err(SpatialError::ComputationError(
-                    "Cannot find feasible interior point".to_string(),
-                ))
-            }
-        }
+        Err(SpatialError::ComputationError(
+            "Cannot find feasible interior point".to_string(),
+        ))
     }
 
     /// Find intersection vertices by solving systems of linear equations

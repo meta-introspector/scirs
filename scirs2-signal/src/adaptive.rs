@@ -1,9 +1,9 @@
 //! Advanced adaptive filtering algorithms
 //!
 //! This module provides comprehensive adaptive filter implementations including classical
-//! algorithms (LMS, RLS, NLMS) and advanced variants (Variable Step-Size LMS, Affine 
-//! Projection Algorithm, Frequency Domain LMS, robust adaptive filters). These filters 
-//! are used for applications such as noise cancellation, system identification, echo 
+//! algorithms (LMS, RLS, NLMS) and advanced variants (Variable Step-Size LMS, Affine
+//! Projection Algorithm, Frequency Domain LMS, robust adaptive filters). These filters
+//! are used for applications such as noise cancellation, system identification, echo
 //! cancellation, equalization, beamforming, and channel estimation.
 
 use crate::error::{SignalError, SignalResult};
@@ -579,9 +579,9 @@ impl VsLmsFilter {
 
         // Estimate gradient correlation
         let gradient_correlation = error * self.prev_error;
-        
+
         // Update gradient power estimate
-        self.gradient_power = 
+        self.gradient_power =
             (1.0 - self.alpha) * self.gradient_power + self.alpha * gradient_correlation.abs();
 
         // Adapt step size
@@ -594,10 +594,9 @@ impl VsLmsFilter {
         }
 
         // Bound step size
-        self.step_size = self.step_size.clamp(
-            self.initial_step_size * 0.01, 
-            self.initial_step_size * 10.0
-        );
+        self.step_size = self
+            .step_size
+            .clamp(self.initial_step_size * 0.01, self.initial_step_size * 10.0);
 
         // Update weights using current step size
         for i in 0..self.weights.len() {
@@ -666,10 +665,10 @@ impl ApaFilter {
     ///
     /// * A new APA filter instance
     pub fn new(
-        num_taps: usize, 
-        projection_order: usize, 
-        step_size: f64, 
-        delta: f64
+        num_taps: usize,
+        projection_order: usize,
+        step_size: f64,
+        delta: f64,
     ) -> SignalResult<Self> {
         if num_taps == 0 {
             return Err(SignalError::ValueError(
@@ -718,22 +717,24 @@ impl ApaFilter {
         // Compute all errors for the projection order
         let mut errors = vec![0.0; self.projection_order];
         let mut outputs = vec![0.0; self.projection_order];
-        
+
         for k in 0..self.projection_order {
             outputs[k] = dot_product(&self.weights, &self.input_matrix[k]);
-            errors[k] = if k == (self.current_row + self.projection_order - 1) % self.projection_order {
-                error
-            } else {
-                // For simplicity, use zero for other desired values
-                -outputs[k]
-            };
+            errors[k] =
+                if k == (self.current_row + self.projection_order - 1) % self.projection_order {
+                    error
+                } else {
+                    // For simplicity, use zero for other desired values
+                    -outputs[k]
+                };
         }
 
         // Compute input correlation matrix X^T * X
         let mut correlation_matrix = vec![vec![0.0; self.projection_order]; self.projection_order];
         for i in 0..self.projection_order {
             for j in 0..self.projection_order {
-                correlation_matrix[i][j] = dot_product(&self.input_matrix[i], &self.input_matrix[j]);
+                correlation_matrix[i][j] =
+                    dot_product(&self.input_matrix[i], &self.input_matrix[j]);
                 if i == j {
                     correlation_matrix[i][j] += self.delta; // Regularization
                 }
@@ -818,7 +819,7 @@ impl FdlmsFilter {
         }
 
         let block_size = 2 * filter_length;
-        
+
         Ok(FdlmsFilter {
             filter_length,
             block_size,
@@ -832,7 +833,11 @@ impl FdlmsFilter {
     }
 
     /// Process a block of samples
-    pub fn adapt_block(&mut self, inputs: &[f64], desired: &[f64]) -> SignalResult<(Vec<f64>, Vec<f64>)> {
+    pub fn adapt_block(
+        &mut self,
+        inputs: &[f64],
+        desired: &[f64],
+    ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
         if inputs.len() != desired.len() {
             return Err(SignalError::ValueError(
                 "Input and desired signals must have same length".to_string(),
@@ -843,9 +848,10 @@ impl FdlmsFilter {
         let mut errors = Vec::with_capacity(inputs.len());
 
         // Process in blocks
-        for (input_chunk, desired_chunk) in inputs.chunks(self.filter_length)
-            .zip(desired.chunks(self.filter_length)) {
-            
+        for (input_chunk, desired_chunk) in inputs
+            .chunks(self.filter_length)
+            .zip(desired.chunks(self.filter_length))
+        {
             // Fill input buffer
             for &sample in input_chunk {
                 if self.input_buffer.len() >= self.block_size {
@@ -855,7 +861,8 @@ impl FdlmsFilter {
             }
 
             if self.input_buffer.len() == self.block_size {
-                let (block_outputs, block_errors) = self.process_block(input_chunk, desired_chunk)?;
+                let (block_outputs, block_errors) =
+                    self.process_block(input_chunk, desired_chunk)?;
                 outputs.extend(block_outputs);
                 errors.extend(block_errors);
             }
@@ -864,9 +871,14 @@ impl FdlmsFilter {
         Ok((outputs, errors))
     }
 
-    fn process_block(&mut self, inputs: &[f64], desired: &[f64]) -> SignalResult<(Vec<f64>, Vec<f64>)> {
+    fn process_block(
+        &mut self,
+        inputs: &[f64],
+        desired: &[f64],
+    ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
         // Convert input buffer to vector for FFT
-        let mut input_vec: Vec<Complex<f64>> = self.input_buffer
+        let mut input_vec: Vec<Complex<f64>> = self
+            .input_buffer
             .iter()
             .map(|&x| Complex::new(x, 0.0))
             .collect();
@@ -922,8 +934,8 @@ impl FdlmsFilter {
         // Update frequency domain weights
         for i in 0..self.block_size {
             let gradient = freq_input[i].conj() * error_padded[i];
-            self.freq_weights[i] = self.leakage * self.freq_weights[i] 
-                + Complex::new(self.step_size, 0.0) * gradient;
+            self.freq_weights[i] =
+                self.leakage * self.freq_weights[i] + Complex::new(self.step_size, 0.0) * gradient;
         }
 
         Ok(())
@@ -1115,17 +1127,18 @@ impl SmLmsFilter {
         if error.abs() > self.error_bound {
             // Compute input power for normalization
             let input_power: f64 = self.buffer.iter().map(|&x| x * x).sum();
-            let normalization = if input_power > 1e-12 { 
-                input_power + 1e-12 
-            } else { 
-                1e-12 
+            let normalization = if input_power > 1e-12 {
+                input_power + 1e-12
+            } else {
+                1e-12
             };
 
             // Normalized update
             let normalized_step = self.step_size / normalization;
 
             for i in 0..self.weights.len() {
-                let buffer_idx = (self.buffer_index + self.buffer.len() - 1 - i) % self.buffer.len();
+                let buffer_idx =
+                    (self.buffer_index + self.buffer.len() - 1 - i) % self.buffer.len();
                 self.weights[i] += normalized_step * error * self.buffer[buffer_idx];
             }
 
@@ -1187,12 +1200,13 @@ fn solve_linear_system_small(matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<V
     let n = matrix.len();
     if n != rhs.len() {
         return Err(SignalError::ValueError(
-            "Matrix and RHS dimensions must match".to_string()
+            "Matrix and RHS dimensions must match".to_string(),
         ));
     }
 
     // Create augmented matrix
-    let mut aug_matrix = matrix.iter()
+    let mut aug_matrix = matrix
+        .iter()
         .zip(rhs.iter())
         .map(|(row, &b)| {
             let mut aug_row = row.clone();
@@ -1217,7 +1231,7 @@ fn solve_linear_system_small(matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<V
         // Check for singular matrix
         if aug_matrix[i][i].abs() < 1e-12 {
             return Err(SignalError::Compute(
-                "Matrix is singular or near-singular".to_string()
+                "Matrix is singular or near-singular".to_string(),
             ));
         }
 
@@ -1469,11 +1483,11 @@ mod tests {
 
         // Step size should adapt over time
         let initial_step = vs_lms.current_step_size();
-        
+
         for _ in 0..10 {
             vs_lms.adapt(1.0, 0.5).unwrap();
         }
-        
+
         // Step size should have changed (either increased or decreased)
         assert_ne!(vs_lms.current_step_size(), initial_step);
     }
@@ -1633,12 +1647,11 @@ mod tests {
         for i in 0..num_samples {
             let input = (i as f64 * 0.1).sin();
             let desired = if i >= 2 {
-                target_system[0] * input +
-                target_system[1] * ((i - 1) as f64 * 0.1).sin() +
-                target_system[2] * ((i - 2) as f64 * 0.1).sin()
+                target_system[0] * input
+                    + target_system[1] * ((i - 1) as f64 * 0.1).sin()
+                    + target_system[2] * ((i - 2) as f64 * 0.1).sin()
             } else if i >= 1 {
-                target_system[0] * input +
-                target_system[1] * ((i - 1) as f64 * 0.1).sin()
+                target_system[0] * input + target_system[1] * ((i - 1) as f64 * 0.1).sin()
             } else {
                 target_system[0] * input
             };
@@ -1656,28 +1669,48 @@ mod tests {
 
         // All algorithms should achieve reasonable convergence
         let final_window = 20;
-        let lms_final_error = lms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;
-        let vs_lms_final_error = vs_lms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;
-        let nlms_final_error = nlms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;
-        let lmf_final_error = lmf_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;
+        let lms_final_error =
+            lms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;
+        let vs_lms_final_error =
+            vs_lms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;
+        let nlms_final_error =
+            nlms_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;
+        let lmf_final_error =
+            lmf_errors.iter().rev().take(final_window).sum::<f64>() / final_window as f64;
 
-        assert!(lms_final_error < 1.0, "LMS final error too large: {}", lms_final_error);
-        assert!(vs_lms_final_error < 1.0, "VS-LMS final error too large: {}", vs_lms_final_error);
-        assert!(nlms_final_error < 1.0, "NLMS final error too large: {}", nlms_final_error);
-        assert!(lmf_final_error < 1.5, "LMF final error too large: {}", lmf_final_error);
+        assert!(
+            lms_final_error < 1.0,
+            "LMS final error too large: {}",
+            lms_final_error
+        );
+        assert!(
+            vs_lms_final_error < 1.0,
+            "VS-LMS final error too large: {}",
+            vs_lms_final_error
+        );
+        assert!(
+            nlms_final_error < 1.0,
+            "NLMS final error too large: {}",
+            nlms_final_error
+        );
+        assert!(
+            lmf_final_error < 1.5,
+            "LMF final error too large: {}",
+            lmf_final_error
+        );
 
         // VS-LMS should generally perform better than standard LMS
         // (This is not always guaranteed but is expected on average)
-        println!("LMS final error: {:.4}, VS-LMS final error: {:.4}", lms_final_error, vs_lms_final_error);
+        println!(
+            "LMS final error: {:.4}, VS-LMS final error: {:.4}",
+            lms_final_error, vs_lms_final_error
+        );
     }
 
     #[test]
     fn test_solve_linear_system_small() {
         // Test 2x2 system
-        let matrix = vec![
-            vec![2.0, 1.0],
-            vec![1.0, 3.0],
-        ];
+        let matrix = vec![vec![2.0, 1.0], vec![1.0, 3.0]];
         let rhs = vec![5.0, 6.0];
 
         let solution = solve_linear_system_small(&matrix, &rhs).unwrap();
@@ -1687,10 +1720,7 @@ mod tests {
         assert_relative_eq!(solution[1], 1.4, epsilon = 1e-10);
 
         // Test singular matrix
-        let singular_matrix = vec![
-            vec![1.0, 2.0],
-            vec![2.0, 4.0],
-        ];
+        let singular_matrix = vec![vec![1.0, 2.0], vec![2.0, 4.0]];
         assert!(solve_linear_system_small(&singular_matrix, &rhs).is_err());
 
         // Test dimension mismatch
@@ -1710,7 +1740,8 @@ mod tests {
         for i in 0..10 {
             let input = i as f64;
             vs_lms.adapt(input, 0.5).unwrap();
-            apa.adapt(&vec![input, input * 0.5, input * 0.2], 0.5).unwrap();
+            apa.adapt(&vec![input, input * 0.5, input * 0.2], 0.5)
+                .unwrap();
             lmf.adapt(input, 0.5).unwrap();
             sm_lms.adapt(input, 0.5).unwrap();
         }

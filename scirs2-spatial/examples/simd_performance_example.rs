@@ -73,7 +73,10 @@ fn single_distance_performance_example() -> Result<(), Box<dyn std::error::Error
     let dimensions = [3, 10, 50, 100, 500, 1000];
     let iterations = 100_000;
 
-    println!("{:>8} {:>12} {:>12} {:>12}", "Dim", "Scalar (ms)", "SIMD (ms)", "Speedup");
+    println!(
+        "{:>8} {:>12} {:>12} {:>12}",
+        "Dim", "Scalar (ms)", "SIMD (ms)", "Speedup"
+    );
     println!("{}", "-".repeat(48));
 
     for &dim in &dimensions {
@@ -114,7 +117,10 @@ fn batch_distance_performance_example() -> Result<(), Box<dyn std::error::Error>
     let n_points = 10_000;
     let dimensions = [2, 3, 5, 10, 20];
 
-    println!("{:>8} {:>12} {:>12} {:>12}", "Dim", "Scalar (ms)", "SIMD (ms)", "Speedup");
+    println!(
+        "{:>8} {:>12} {:>12} {:>12}",
+        "Dim", "Scalar (ms)", "SIMD (ms)", "Speedup"
+    );
     println!("{}", "-".repeat(48));
 
     for &dim in &dimensions {
@@ -149,7 +155,10 @@ fn distance_matrix_performance_example() -> Result<(), Box<dyn std::error::Error
     let point_counts = [100, 200, 500, 1000];
     let dim = 3;
 
-    println!("{:>8} {:>12} {:>12} {:>12}", "Points", "Scalar (ms)", "Parallel (ms)", "Speedup");
+    println!(
+        "{:>8} {:>12} {:>12} {:>12}",
+        "Points", "Scalar (ms)", "Parallel (ms)", "Speedup"
+    );
     println!("{}", "-".repeat(48));
 
     for &n_points in &point_counts {
@@ -157,7 +166,8 @@ fn distance_matrix_performance_example() -> Result<(), Box<dyn std::error::Error
 
         // Scalar pdist
         let start = Instant::now();
-        let _scalar_dists = scirs2_spatial::distance::pdist(&points.view(), scirs2_spatial::distance::euclidean);
+        let _scalar_dists =
+            scirs2_spatial::distance::pdist(&points.view(), scirs2_spatial::distance::euclidean);
         let scalar_time = start.elapsed().as_millis();
 
         // Parallel SIMD pdist
@@ -187,17 +197,16 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     let data_points = generate_random_points(n_data, dim);
     let query_points = generate_random_points(n_queries, dim);
 
-    println!("{:>6} {:>15} {:>12}", "k", "Time (ms)", "Throughput (queries/s)");
+    println!(
+        "{:>6} {:>15} {:>12}",
+        "k", "Time (ms)", "Throughput (queries/s)"
+    );
     println!("{}", "-".repeat(35));
 
     for &k in &k_values {
         let start = Instant::now();
-        let (_indices, _distances) = simd_knn_search(
-            &query_points.view(),
-            &data_points.view(),
-            k,
-            "euclidean",
-        )?;
+        let (_indices, _distances) =
+            simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean")?;
         let elapsed = start.elapsed().as_millis();
 
         let throughput = (n_queries * 1000) / elapsed as usize;
@@ -208,19 +217,15 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     // Compare different metrics
     println!("\nPerformance by distance metric (k=5):");
     let metrics = ["euclidean", "manhattan", "sqeuclidean", "chebyshev"];
-    
+
     println!("{:>12} {:>12} {:>12}", "Metric", "Time (ms)", "Rel. Speed");
     println!("{}", "-".repeat(38));
 
     let mut base_time = 0;
     for (i, &metric) in metrics.iter().enumerate() {
         let start = Instant::now();
-        let (_indices, _distances) = simd_knn_search(
-            &query_points.view(),
-            &data_points.view(),
-            5,
-            metric,
-        )?;
+        let (_indices, _distances) =
+            simd_knn_search(&query_points.view(), &data_points.view(), 5, metric)?;
         let elapsed = start.elapsed().as_millis();
 
         if i == 0 {
@@ -241,7 +246,10 @@ fn scalability_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     let base_points = [1000, 2000, 5000, 10000];
     let dim = 4;
 
-    println!("{:>8} {:>12} {:>12} {:>15}", "Points", "Time (ms)", "Time/Point (μs)", "Memory (MB)");
+    println!(
+        "{:>8} {:>12} {:>12} {:>15}",
+        "Points", "Time (ms)", "Time/Point (μs)", "Memory (MB)"
+    );
     println!("{}", "-".repeat(50));
 
     for &n_points in &base_points {
@@ -273,7 +281,10 @@ fn test_parallel_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     let points = generate_random_points(n_points, dim);
 
     // Simulate different thread counts by controlling Rayon's thread pool
-    println!("{:>8} {:>12} {:>12} {:>12}", "Threads", "Time (ms)", "Speedup", "Efficiency");
+    println!(
+        "{:>8} {:>12} {:>12} {:>12}",
+        "Threads", "Time (ms)", "Speedup", "Efficiency"
+    );
     println!("{}", "-".repeat(48));
 
     // Note: This is a simplified demonstration
@@ -314,7 +325,10 @@ fn memory_efficiency_example() -> Result<(), Box<dyn std::error::Error>> {
     let n_points = 1000;
     let dimensions = [2, 5, 10, 20, 50];
 
-    println!("{:>8} {:>15} {:>15} {:>15}", "Dim", "Cache-friendly", "Random Access", "Improvement");
+    println!(
+        "{:>8} {:>15} {:>15} {:>15}",
+        "Dim", "Cache-friendly", "Random Access", "Improvement"
+    );
     println!("{}", "-".repeat(60));
 
     for &dim in &dimensions {
@@ -366,7 +380,10 @@ fn memory_allocation_analysis() -> Result<(), Box<dyn std::error::Error>> {
     // Distance matrix (condensed)
     let n_distances = n_points * (n_points - 1) / 2;
     let distance_memory = (n_distances * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
-    println!("{:<30} {:>10.2} {:>10}", "Distance matrix", distance_memory, 1);
+    println!(
+        "{:<30} {:>10.2} {:>10}",
+        "Distance matrix", distance_memory, 1
+    );
 
     // KNN results
     let k = 10;
@@ -449,7 +466,10 @@ fn benchmark_io_intensive() -> Result<(), Box<dyn std::error::Error>> {
     let sizes = [100, 500, 1000, 2000];
     let dim = 6;
 
-    println!("{:>8} {:>12} {:>15} {:>15}", "Size", "Read (ms)", "Compute (ms)", "Write (ms)");
+    println!(
+        "{:>8} {:>12} {:>15} {:>15}",
+        "Size", "Read (ms)", "Compute (ms)", "Write (ms)"
+    );
     println!("{}", "-".repeat(55));
 
     for &size in &sizes {
@@ -493,7 +513,10 @@ fn memory_bandwidth_analysis() -> Result<(), Box<dyn std::error::Error>> {
     let data_size = n_points * dim * std::mem::size_of::<f64>();
     let bandwidth_gb_s = (data_size as f64) / (elapsed * 1e9);
 
-    println!("Data processed: {:.2} MB", data_size as f64 / (1024.0 * 1024.0));
+    println!(
+        "Data processed: {:.2} MB",
+        data_size as f64 / (1024.0 * 1024.0)
+    );
     println!("Time elapsed: {:.3} seconds", elapsed);
     println!("Effective bandwidth: {:.2} GB/s", bandwidth_gb_s);
 

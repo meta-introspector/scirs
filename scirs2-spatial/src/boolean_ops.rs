@@ -62,6 +62,7 @@ impl Point2D {
         Self { x, y }
     }
 
+    #[allow(dead_code)]
     fn distance_to(&self, other: &Point2D) -> f64 {
         ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
     }
@@ -70,6 +71,7 @@ impl Point2D {
         self.x * other.y - self.y * other.x
     }
 
+    #[allow(dead_code)]
     fn dot_product(&self, other: &Point2D) -> f64 {
         self.x * other.x + self.y * other.y
     }
@@ -86,6 +88,7 @@ struct Edge {
 
 /// Intersection point with metadata
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct IntersectionPoint {
     point: Point2D,
     t: f64, // Parameter along the edge (0.0 at start, 1.0 at end)
@@ -97,6 +100,7 @@ struct IntersectionPoint {
 struct LabeledPolygon {
     vertices: Vec<Point2D>,
     edges: Vec<Edge>,
+    #[allow(dead_code)]
     is_hole: bool,
 }
 
@@ -180,6 +184,7 @@ impl LabeledPolygon {
         area.abs() / 2.0
     }
 
+    #[allow(dead_code)]
     fn is_clockwise(&self) -> bool {
         let mut sum = 0.0;
         let n = self.vertices.len();
@@ -194,6 +199,7 @@ impl LabeledPolygon {
         sum > 0.0
     }
 
+    #[allow(dead_code)]
     fn reverse(&mut self) {
         self.vertices.reverse();
         // Rebuild edges after reversing
@@ -406,23 +412,30 @@ fn line_segment_intersection(
     p3: &Point2D,
     p4: &Point2D,
 ) -> Option<(Point2D, f64, f64)> {
-    let d1 = Point2D::new(p2.x - p1.x, p2.y - p1.y);
-    let d2 = Point2D::new(p4.x - p3.x, p4.y - p3.y);
+    let x1 = p1.x;
+    let y1 = p1.y;
+    let x2 = p2.x;
+    let y2 = p2.y;
+    let x3 = p3.x;
+    let y3 = p3.y;
+    let x4 = p4.x;
+    let y4 = p4.y;
 
-    let denominator = d1.cross_product(&d2);
+    let denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
 
-    if denominator.abs() < 1e-10 {
+    if denom.abs() < 1e-10 {
         // Lines are parallel
         return None;
     }
 
-    let p13 = Point2D::new(p1.x - p3.x, p1.y - p3.y);
-    let t = p13.cross_product(&d2) / denominator;
-    let u = p13.cross_product(&d1) / denominator;
+    let t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+    let u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
 
     // Check if intersection is within both line segments
-    if t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0 {
-        let intersection = Point2D::new(p1.x + t * d1.x, p1.y + t * d1.y);
+    if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
+        let ix = x1 + t * (x2 - x1);
+        let iy = y1 + t * (y2 - y1);
+        let intersection = Point2D::new(ix, iy);
         Some((intersection, t, u))
     } else {
         None

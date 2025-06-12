@@ -5,8 +5,8 @@ use plotly::{
 use scirs2_fft::{
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::GPUBackend,
-    sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices, is_cuda_available},
-    sparse_fft_gpu_memory::{init_global_memory_manager, AllocationStrategy},
+    sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
+    sparse_fft_gpu_memory::{init_global_memory_manager, is_cuda_available, AllocationStrategy},
 };
 use std::f64::consts::PI;
 use std::time::Instant;

@@ -131,8 +131,8 @@ where
     let atol = opts.atol;
 
     // Newton iteration parameters
-    let newton_tol = F::from_f64(1e-8).unwrap();
-    let max_newton_iters = 10;
+    let base_newton_tol = F::from_f64(1e-6).unwrap(); // Base tolerance
+    let max_newton_iters = 20; // More iterations allowed
 
     // Create a Jacobian approximation for Newton iteration
     let mut jac_option = None;
@@ -159,14 +159,18 @@ where
         let f_current = f(t, y.view());
         func_evals += 1;
 
-        // Initial guess for stage values using explicit Euler
-        // (using mass matrix inverse if needed)
-        let dy = mass_matrix::solve_mass_system(&mass_matrix, t, y.view(), f_current.view())?;
-        func_evals += 1;
+        // Better initial guess for stage values
+        // For mass matrix systems, we need a more careful initial guess
+        let dy = if mass_matrix.matrix_type == MassMatrixType::Identity {
+            f_current.clone()
+        } else {
+            mass_matrix::solve_mass_system(&mass_matrix, t, y.view(), f_current.view())?
+        };
 
-        let mut k1 = y.clone() + dy.clone() * (h * c1);
-        let mut k2 = y.clone() + dy.clone() * (h * c2);
-        let mut k3 = y.clone() + dy.clone() * h;
+        // Use a more conservative initial guess
+        let mut k1 = y.clone() + dy.clone() * (h * c1 * F::from_f64(0.5).unwrap());
+        let mut k2 = y.clone() + dy.clone() * (h * c2 * F::from_f64(0.5).unwrap());
+        let mut k3 = y.clone() + dy.clone() * (h * F::from_f64(0.5).unwrap());
 
         // Weights for error estimation
         let error_weights = calculate_error_weights(&y, atol, rtol);
@@ -177,9 +181,16 @@ where
         let mut newton_converged = false;
         let mut newton_iterations = 0;
 
-        // For mass matrices, we have a slightly different system
-        // We're solving: M·(k_i - y)/h - sum(a_ij·f(t_j, k_j)) = 0
-        // We need the Jacobian of this system for Newton's method
+        // For mass matrices, we solve the coupled implicit system:
+        // k_i = y + h * sum(a_ij * k'_j) where M(t_j, k_j) * k'_j = f(t_j, k_j)
+
+        // Adaptive Newton tolerance based on step size
+        let newton_tol = base_newton_tol * h.max(F::from_f64(1e-3).unwrap());
+
+        // Ensure we have a Jacobian for the first iteration
+        if jac_option.is_none() {
+            compute_new_jacobian = true;
+        }
 
         // Newton iteration loop
         while !newton_converged && newton_iterations < max_newton_iters {
@@ -279,40 +290,50 @@ where
                 k2 -= &dk2;
                 k3 -= &dk3;
             } else {
-                // For non-identity mass matrices, we need to evaluate M·(k_i - y)/h
-                let r1; // = Array1::<F>::zeros(n_dim);
-                let r2; // = Array1::<F>::zeros(n_dim);
-                let r3; // = Array1::<F>::zeros(n_dim);
+                // For mass matrix systems, the correct residual formulation is:
+                // R_i = k_i - y - h * sum(a_ij * k'_j) where M(t_j, k_j) * k'_j = f(t_j, k_j)
 
-                if let Some(ref m1_matrix) = m1 {
-                    let diff1 = (&k1 - &y) / h;
-                    r1 = m1_matrix.dot(&diff1)
-                        - (f1.clone() * a11 + f2.clone() * a12 + f3.clone() * a13);
+                // Compute k'_j = M^(-1) * f for each stage
+                let k1_prime = if let Some(ref m1_matrix) = m1 {
+                    crate::ode::utils::linear_solvers::solve_linear_system(
+                        &m1_matrix.view(),
+                        &f1.view(),
+                    )?
                 } else {
-                    // Identity mass matrix
-                    r1 = (k1.clone() - y.clone()) / h
-                        - (f1.clone() * a11 + f2.clone() * a12 + f3.clone() * a13);
-                }
+                    f1.clone()
+                };
 
-                if let Some(ref m2_matrix) = m2 {
-                    let diff2 = (&k2 - &y) / h;
-                    r2 = m2_matrix.dot(&diff2)
-                        - (f1.clone() * a21 + f2.clone() * a22 + f3.clone() * a23);
+                let k2_prime = if let Some(ref m2_matrix) = m2 {
+                    crate::ode::utils::linear_solvers::solve_linear_system(
+                        &m2_matrix.view(),
+                        &f2.view(),
+                    )?
                 } else {
-                    // Identity mass matrix
-                    r2 = (k2.clone() - y.clone()) / h
-                        - (f1.clone() * a21 + f2.clone() * a22 + f3.clone() * a23);
-                }
+                    f2.clone()
+                };
 
-                if let Some(ref m3_matrix) = m3 {
-                    let diff3 = (&k3 - &y) / h;
-                    r3 = m3_matrix.dot(&diff3)
-                        - (f1.clone() * a31 + f2.clone() * a32 + f3.clone() * a33);
+                let k3_prime = if let Some(ref m3_matrix) = m3 {
+                    crate::ode::utils::linear_solvers::solve_linear_system(
+                        &m3_matrix.view(),
+                        &f3.view(),
+                    )?
                 } else {
-                    // Identity mass matrix
-                    r3 = (k3.clone() - y.clone()) / h
-                        - (f1.clone() * a31 + f2.clone() * a32 + f3.clone() * a33);
-                }
+                    f3.clone()
+                };
+
+                // Compute residuals: R_i = k_i - y - h * sum(a_ij * k'_j)
+                let r1 = &k1
+                    - &y
+                    - &((k1_prime.clone() * a11 + k2_prime.clone() * a12 + k3_prime.clone() * a13)
+                        * h);
+                let r2 = &k2
+                    - &y
+                    - &((k1_prime.clone() * a21 + k2_prime.clone() * a22 + k3_prime.clone() * a23)
+                        * h);
+                let r3 = &k3
+                    - &y
+                    - &((k1_prime.clone() * a31 + k2_prime.clone() * a32 + k3_prime.clone() * a33)
+                        * h);
 
                 // Check convergence
                 let error_norm = (r1
@@ -336,8 +357,9 @@ where
                     break;
                 }
 
-                // For non-identity mass matrices, we need a more complex Newton system
-                // The Jacobian is J_i = M/h - a_ii·df/dy - (k_i - y)/h·dM/dy
+                // For non-identity mass matrices, we need a coupled Newton system
+                // The system is: M(t_i, k_i) * (k_i - y) / h - sum(a_ij * f(t_j, k_j)) = 0
+                // We solve this as a coupled 3n x 3n system rather than three n x n systems
 
                 // Compute Jacobian of f if needed
                 if compute_new_jacobian {
@@ -356,81 +378,143 @@ where
                 // Get Jacobian
                 let jac = jac_option.as_ref().unwrap();
 
-                // This is a simplified approach that works for constant and time-dependent mass matrices
-                // For state-dependent mass matrices, a more complex approach is needed
-                // that includes dM/dy
+                // Build the coupled Newton system: J * [dk1; dk2; dk3] = -[r1; r2; r3]
+                // For the residual R_i = k_i - y - h * sum(a_ij * k'_j) where M_j * k'_j = f_j
+                // The Jacobian is: dR_i/dk_j = δ_ij - h * a_ij * d(k'_j)/dk_j
+                // where d(k'_j)/dk_j = M_j^(-1) * df_j/dk_j
 
-                // Construct Newton iteration matrices
-                let mut j1 = Array2::<F>::zeros((n_dim, n_dim));
-                let mut j2 = Array2::<F>::zeros((n_dim, n_dim));
-                let mut j3 = Array2::<F>::zeros((n_dim, n_dim));
+                let mut big_jacobian = Array2::<F>::zeros((3 * n_dim, 3 * n_dim));
+                let mut big_residual = Array1::<F>::zeros(3 * n_dim);
 
-                if let Some(ref m1_matrix) = m1 {
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            j1[[i, j]] = m1_matrix[[i, j]] / h - a11 * jac[[i, j]];
+                // Fill residual vector
+                for i in 0..n_dim {
+                    big_residual[i] = -r1[i];
+                    big_residual[n_dim + i] = -r2[i];
+                    big_residual[2 * n_dim + i] = -r3[i];
+                }
+
+                // Precompute M^(-1) * J for each stage (solve column by column)
+                let mut m1_inv_jac = Array2::<F>::zeros((n_dim, n_dim));
+                let mut m2_inv_jac = Array2::<F>::zeros((n_dim, n_dim));
+                let mut m3_inv_jac = Array2::<F>::zeros((n_dim, n_dim));
+
+                for col in 0..n_dim {
+                    let jac_col = jac.column(col);
+
+                    if let Some(ref m1_matrix) = m1 {
+                        let col_result = crate::ode::utils::linear_solvers::solve_linear_system(
+                            &m1_matrix.view(),
+                            &jac_col,
+                        )?;
+                        for row in 0..n_dim {
+                            m1_inv_jac[[row, col]] = col_result[row];
+                        }
+                    } else {
+                        for row in 0..n_dim {
+                            m1_inv_jac[[row, col]] = jac[[row, col]];
                         }
                     }
-                } else {
-                    // Identity mass matrix
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            j1[[i, j]] = if i == j { F::one() / h } else { F::zero() };
-                            j1[[i, j]] -= a11 * jac[[i, j]];
+
+                    if let Some(ref m2_matrix) = m2 {
+                        let col_result = crate::ode::utils::linear_solvers::solve_linear_system(
+                            &m2_matrix.view(),
+                            &jac_col,
+                        )?;
+                        for row in 0..n_dim {
+                            m2_inv_jac[[row, col]] = col_result[row];
+                        }
+                    } else {
+                        for row in 0..n_dim {
+                            m2_inv_jac[[row, col]] = jac[[row, col]];
+                        }
+                    }
+
+                    if let Some(ref m3_matrix) = m3 {
+                        let col_result = crate::ode::utils::linear_solvers::solve_linear_system(
+                            &m3_matrix.view(),
+                            &jac_col,
+                        )?;
+                        for row in 0..n_dim {
+                            m3_inv_jac[[row, col]] = col_result[row];
+                        }
+                    } else {
+                        for row in 0..n_dim {
+                            m3_inv_jac[[row, col]] = jac[[row, col]];
                         }
                     }
                 }
 
-                if let Some(ref m2_matrix) = m2 {
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            j2[[i, j]] = m2_matrix[[i, j]] / h - a22 * jac[[i, j]];
-                        }
-                    }
-                } else {
-                    // Identity mass matrix
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            j2[[i, j]] = if i == j { F::one() / h } else { F::zero() };
-                            j2[[i, j]] -= a22 * jac[[i, j]];
-                        }
+                // Fill Jacobian matrix: dR_i/dk_j = δ_ij - h * a_ij * M_j^(-1) * df_j/dk_j
+                for i in 0..n_dim {
+                    for j in 0..n_dim {
+                        // dR1/dk1 = I - h * a11 * M1^(-1) * df/dk
+                        big_jacobian[[i, j]] = if i == j { F::one() } else { F::zero() };
+                        big_jacobian[[i, j]] -= h * a11 * m1_inv_jac[[i, j]];
+
+                        // dR1/dk2 = -h * a12 * M2^(-1) * df/dk
+                        big_jacobian[[i, n_dim + j]] = -h * a12 * m2_inv_jac[[i, j]];
+
+                        // dR1/dk3 = -h * a13 * M3^(-1) * df/dk
+                        big_jacobian[[i, 2 * n_dim + j]] = -h * a13 * m3_inv_jac[[i, j]];
+
+                        // dR2/dk1 = -h * a21 * M1^(-1) * df/dk
+                        big_jacobian[[n_dim + i, j]] = -h * a21 * m1_inv_jac[[i, j]];
+
+                        // dR2/dk2 = I - h * a22 * M2^(-1) * df/dk
+                        big_jacobian[[n_dim + i, n_dim + j]] =
+                            if i == j { F::one() } else { F::zero() };
+                        big_jacobian[[n_dim + i, n_dim + j]] -= h * a22 * m2_inv_jac[[i, j]];
+
+                        // dR2/dk3 = -h * a23 * M3^(-1) * df/dk
+                        big_jacobian[[n_dim + i, 2 * n_dim + j]] = -h * a23 * m3_inv_jac[[i, j]];
+
+                        // dR3/dk1 = -h * a31 * M1^(-1) * df/dk
+                        big_jacobian[[2 * n_dim + i, j]] = -h * a31 * m1_inv_jac[[i, j]];
+
+                        // dR3/dk2 = -h * a32 * M2^(-1) * df/dk
+                        big_jacobian[[2 * n_dim + i, n_dim + j]] = -h * a32 * m2_inv_jac[[i, j]];
+
+                        // dR3/dk3 = I - h * a33 * M3^(-1) * df/dk
+                        big_jacobian[[2 * n_dim + i, 2 * n_dim + j]] =
+                            if i == j { F::one() } else { F::zero() };
+                        big_jacobian[[2 * n_dim + i, 2 * n_dim + j]] -=
+                            h * a33 * m3_inv_jac[[i, j]];
                     }
                 }
 
-                if let Some(ref m3_matrix) = m3 {
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            j3[[i, j]] = m3_matrix[[i, j]] / h - a33 * jac[[i, j]];
-                        }
-                    }
-                } else {
-                    // Identity mass matrix
-                    for i in 0..n_dim {
-                        for j in 0..n_dim {
-                            j3[[i, j]] = if i == j { F::one() / h } else { F::zero() };
-                            j3[[i, j]] -= a33 * jac[[i, j]];
-                        }
-                    }
-                }
+                // Solve the big linear system
+                let big_update = solve_linear_system(&big_jacobian.view(), &big_residual.view())?;
+                n_lu += 1; // Only one large LU decomposition instead of three small ones
 
-                // Solve the linear systems to get Newton updates
-                let dk1 = solve_linear_system(&j1.view(), &r1.view())?;
-                let dk2 = solve_linear_system(&j2.view(), &r2.view())?;
-                let dk3 = solve_linear_system(&j3.view(), &r3.view())?;
-                n_lu += 3;
+                // Extract updates for each stage
+                let dk1 = big_update.slice(ndarray::s![0..n_dim]).to_owned();
+                let dk2 = big_update.slice(ndarray::s![n_dim..2 * n_dim]).to_owned();
+                let dk3 = big_update
+                    .slice(ndarray::s![2 * n_dim..3 * n_dim])
+                    .to_owned();
 
                 // Update the stage values
-                k1 -= &dk1;
-                k2 -= &dk2;
-                k3 -= &dk3;
+                k1 += &dk1;
+                k2 += &dk2;
+                k3 += &dk3;
             }
         }
 
         // Check if Newton iteration converged
         if !newton_converged {
-            // Reduce step size and try again
-            h *= F::from_f64(0.5).unwrap();
+            // Reduce step size more gradually and recompute Jacobian
+            h *= F::from_f64(0.7).unwrap(); // Less aggressive step reduction
             rejected_steps += 1;
+
+            // Force recomputation of Jacobian on next iteration
+            // Note: compute_new_jacobian will be set to true at the start of next iteration
+
+            // Prevent infinite reduction
+            if h < min_step {
+                return Err(crate::error::IntegrateError::ComputationError(
+                    "Newton iteration failed to converge even with minimum step size. Last residual norm was too large.".to_string()
+                ));
+            }
             continue;
         }
 

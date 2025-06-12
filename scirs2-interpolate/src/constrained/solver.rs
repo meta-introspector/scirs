@@ -5,6 +5,7 @@
 
 use crate::bspline::{BSpline, ExtrapolateMode};
 use crate::error::{InterpolateError, InterpolateResult};
+use crate::numerical_stability::{assess_matrix_condition, solve_with_stability_monitoring, StabilityLevel};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
@@ -84,15 +85,34 @@ where
     if constraint_matrix.shape()[0] == 0 {
         #[cfg(feature = "linalg")]
         {
-            use ndarray_linalg::Solve;
-            // Convert to f64
-            let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
-            let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
-            match ata_f64.solve(&aty_f64) {
-                Ok(solution) => return Ok(solution.mapv(|x| T::from_f64(x).unwrap())),
+            // Assess matrix condition before solving
+            let condition_report = assess_matrix_condition(&ata.view());
+            if let Ok(report) = condition_report {
+                match report.stability_level {
+                    StabilityLevel::Poor => {
+                        eprintln!(
+                            "Warning: Normal equations matrix is poorly conditioned \
+                             (condition number: {:.2e}). Results may be unreliable.",
+                            report.condition_number
+                        );
+                    }
+                    StabilityLevel::Marginal => {
+                        eprintln!(
+                            "Info: Normal equations matrix has marginal conditioning \
+                             (condition number: {:.2e}). Monitoring solution quality.",
+                            report.condition_number
+                        );
+                    }
+                    _ => {}
+                }
+            }
+            
+            // Use stability-monitored solver
+            match solve_with_stability_monitoring(&ata, &aty) {
+                Ok((solution, _solve_report)) => return Ok(solution),
                 Err(_) => {
                     return Err(InterpolateError::ComputationError(
-                        "Failed to solve the unconstrained least squares problem".to_string(),
+                        "Failed to solve the unconstrained least squares problem with stability monitoring".to_string(),
                     ))
                 }
             }
@@ -110,13 +130,24 @@ where
     // Start with an initial feasible solution (unconstrained)
     #[cfg(feature = "linalg")]
     let mut c = {
-        use ndarray_linalg::Solve;
-        let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
-        let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
-        match ata_f64.solve(&aty_f64) {
-            Ok(solution) => solution.mapv(|x| T::from_f64(x).unwrap()),
+        // Use stability-monitored solver for initial solution
+        match solve_with_stability_monitoring(&ata, &aty) {
+            Ok((solution, solve_report)) => {
+                if !solve_report.is_well_conditioned {
+                    eprintln!(
+                        "Warning: Initial solution for constrained problem computed with \
+                         poorly conditioned matrix (condition number: {:.2e})",
+                        solve_report.condition_number
+                    );
+                }
+                solution
+            }
             Err(_) => {
-                // If direct solve fails, try a simpler approach
+                eprintln!(
+                    "Warning: Stability-monitored solve failed for initial solution. \
+                     Using zero initialization."
+                );
+                // If solve fails, try a simpler approach
                 let n = design_matrix.shape()[1];
                 Array1::zeros(n)
             }
