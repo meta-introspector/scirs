@@ -101,6 +101,7 @@ pub struct JitCompiler {
     options: JitOptions,
     cache: Arc<Mutex<HashMap<u64, Arc<CompiledFunction>>>>,
     pattern_detector: PatternDetector,
+    #[allow(dead_code)]
     profiler: Option<FunctionProfiler>,
 }
 
@@ -545,6 +546,7 @@ pub struct FunctionProfiler {
 struct ProfileData {
     call_count: usize,
     total_time_ns: u64,
+    #[allow(dead_code)]
     hot_paths: Vec<String>,
 }
 
@@ -669,6 +671,7 @@ mod tests {
 }
 
 /// Estimate memory usage for optimization algorithm
+#[allow(dead_code)]
 fn estimate_memory_usage(n_vars: usize, max_history: usize) -> usize {
     // Estimate memory for L-BFGS-style algorithms
     let vector_size = n_vars * std::mem::size_of::<f64>();

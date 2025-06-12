@@ -5,7 +5,7 @@
 
 use crate::error::LinalgResult;
 use crate::{decomposition, solve};
-use ndarray::{Array2, ArrayView2, ArrayView1, Array1};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
@@ -34,7 +34,10 @@ where
 }
 
 /// Backward compatibility wrapper for SVD
-pub fn svd_compat<F>(a: &ArrayView2<F>, full_matrices: bool) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
+pub fn svd_compat<F>(
+    a: &ArrayView2<F>,
+    full_matrices: bool,
+) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + 'static + ndarray::ScalarOperand,
 {

@@ -73,7 +73,7 @@ impl Default for SGDOptions {
 fn basic_sgd_step<F>(
     grad_func: &mut F,
     x: &mut Array1<f64>,
-    data_provider: &Box<dyn DataProvider>,
+    data_provider: &dyn DataProvider,
     options: &SGDOptions,
 ) where
     F: StochasticGradientFunction,
@@ -118,7 +118,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Run a few SGD steps manually
     for iteration in 0..options.max_iter {
         let prev_x = x.clone();
-        basic_sgd_step(&mut grad_func, &mut x, &data_provider, &options);
+        basic_sgd_step(&mut grad_func, &mut x, &**data_provider, &options);
 
         if iteration % 10 == 0 {
             let f_val = grad_func.compute_value(&x.view(), &vec![1.0]);

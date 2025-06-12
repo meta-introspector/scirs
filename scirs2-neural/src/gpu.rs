@@ -42,7 +42,6 @@ impl NeuralOps {
         }
 
         // Use ndarray's optimized BLAS implementation
-        use ndarray::linalg::Dot;
         Ok(a.dot(b))
     }
 
@@ -59,7 +58,7 @@ impl NeuralOps {
 
         let batch_size = a_shape[0];
         let m = a_shape[1];
-        let k = a_shape[2];
+        let _k = a_shape[2];
         let n = b_shape[2];
 
         if a_shape[0] != b_shape[0] || a_shape[2] != b_shape[1] {
@@ -85,7 +84,6 @@ impl NeuralOps {
                 .into_dimensionality::<ndarray::Ix2>()
                 .map_err(|e| Error::ComputationError(format!("Failed to convert to 2D: {}", e)))?;
 
-            use ndarray::linalg::Dot;
             result_slice.assign(&a_2d.dot(&b_2d));
         }
 
@@ -194,7 +192,7 @@ impl NeuralOps {
         }
 
         let mut output = input.clone();
-        let last_axis = input_shape.len() - 1;
+        let _last_axis = input_shape.len() - 1;
 
         // Apply softmax along the last axis (features)
         for mut row in output.axis_iter_mut(ndarray::Axis(0)) {

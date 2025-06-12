@@ -11,13 +11,14 @@ use ndarray::{Array, ArrayView1, Dimension};
 #[cfg(feature = "futures")]
 use futures::future::BoxFuture;
 
-#[cfg(feature = "lazy")]
-use std::collections::HashMap;
+// #[cfg(feature = "lazy")]
+// use std::collections::HashMap;
 
 /// Execution backend for array operations
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Backend {
     /// CPU-based computation with ndarray
+    #[default]
     Cpu,
     /// GPU-based computation (requires gpu feature)
     #[cfg(feature = "gpu")]
@@ -25,15 +26,9 @@ pub enum Backend {
     /// Lazy evaluation (requires lazy feature)
     #[cfg(feature = "lazy")]
     Lazy,
-    /// ArrayFire backend (requires array-api feature)
-    #[cfg(feature = "array-api")]
-    ArrayFire,
-}
-
-impl Default for Backend {
-    fn default() -> Self {
-        Backend::Cpu
-    }
+    // ArrayFire backend (placeholder for future implementation)
+    // #[cfg(feature = "array-api")]
+    // ArrayFire,
 }
 
 /// Configuration for array operations
@@ -90,7 +85,7 @@ pub mod memory_efficient {
 #[cfg(feature = "lazy")]
 pub mod lazy {
     use super::*;
-    use std::any::Any;
+    // use std::any::Any;
     use std::fmt::Debug;
 
     /// Trait for lazy operations that can be computed on demand
@@ -109,7 +104,7 @@ pub mod lazy {
 
     /// Container for lazy array operations
     #[derive(Debug)]
-    pub struct LazyArray<T, D> 
+    pub struct LazyArray<T, D>
     where
         D: Dimension,
     {
@@ -150,7 +145,7 @@ pub mod lazy {
         /// Force evaluation of the lazy array
         pub fn compute(&self) -> SpecialResult<Array<T, D>> {
             let mut computed = self.computed.lock().unwrap();
-            
+
             if let Some(ref cached) = *computed {
                 return Ok(cached.clone());
             }
@@ -178,7 +173,7 @@ pub mod lazy {
 
     /// Lazy operation for gamma function
     #[derive(Debug)]
-    pub struct LazyGamma<D> 
+    pub struct LazyGamma<D>
     where
         D: Dimension,
     {
@@ -297,18 +292,23 @@ pub mod gpu {
         /// Create a new GPU pipeline
         #[cfg(feature = "gpu")]
         pub async fn new() -> SpecialResult<Self> {
+            use wgpu::util::DeviceExt;
             use wgpu::*;
 
             let instance = Instance::new(InstanceDescriptor::default());
             let adapter = instance
                 .request_adapter(&RequestAdapterOptions::default())
                 .await
-                .ok_or_else(|| SpecialError::ComputationError("Failed to get GPU adapter".to_string()))?;
+                .ok_or_else(|| {
+                    SpecialError::ComputationError("Failed to get GPU adapter".to_string())
+                })?;
 
             let (device, queue) = adapter
                 .request_device(&DeviceDescriptor::default(), None)
                 .await
-                .map_err(|e| SpecialError::ComputationError(format!("Failed to get GPU device: {}", e)))?;
+                .map_err(|e| {
+                    SpecialError::ComputationError(format!("Failed to get GPU device: {}", e))
+                })?;
 
             // Create a simple compute shader for gamma function
             let shader_source = include_str!("../shaders/gamma_compute.wgsl");
@@ -322,6 +322,7 @@ pub mod gpu {
                 layout: None,
                 module: &shader_module,
                 entry_point: "main",
+                compilation_options: Default::default(),
             });
 
             Ok(Self {
@@ -338,6 +339,7 @@ pub mod gpu {
             D: Dimension,
         {
             use bytemuck;
+            use wgpu::util::{BufferInitDescriptor, DeviceExt};
             use wgpu::*;
 
             let data: Vec<f32> = input.iter().map(|&x| x as f32).collect();
@@ -384,9 +386,11 @@ pub mod gpu {
             });
 
             // Dispatch compute shader
-            let mut encoder = self.device.create_command_encoder(&CommandEncoderDescriptor {
-                label: Some("Compute Encoder"),
-            });
+            let mut encoder = self
+                .device
+                .create_command_encoder(&CommandEncoderDescriptor {
+                    label: Some("Compute Encoder"),
+                });
 
             {
                 let mut compute_pass = encoder.begin_compute_pass(&ComputePassDescriptor {
@@ -409,17 +413,21 @@ pub mod gpu {
             });
 
             self.device.poll(Maintain::Wait);
-            receiver.await.unwrap().map_err(|e| SpecialError::ComputationError(format!("GPU buffer error: {:?}", e)))?;
+            receiver.await.unwrap().map_err(|e| {
+                SpecialError::ComputationError(format!("GPU buffer error: {:?}", e))
+            })?;
 
             let buffer_view = buffer_slice.get_mapped_range();
             let result_data: &[f32] = bytemuck::cast_slice(&buffer_view);
             let result_f64: Vec<f64> = result_data.iter().map(|&x| x as f64).collect();
-            
+
             drop(buffer_view);
             staging_buffer.unmap();
 
             // Reconstruct array with original shape
-            let result_array = Array::from_vec(result_f64).into_shape(input.dim())?;
+            let result_array = Array::from_vec(result_f64)
+                .into_shape(input.dim())
+                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?;
             Ok(result_array)
         }
 
@@ -498,10 +506,10 @@ pub mod broadcasting {
 /// Vectorized special function operations with automatic backend selection
 pub mod vectorized {
     use super::*;
-    
+
     #[cfg(feature = "lazy")]
     use super::lazy::*;
-    
+
     #[cfg(feature = "gpu")]
     use super::gpu::*;
 
@@ -514,7 +522,7 @@ pub mod vectorized {
         D: Dimension + Send + Sync + 'static,
     {
         let total_elements = input.len();
-        
+
         // Choose backend based on configuration and array size
         match &config.backend {
             #[cfg(feature = "lazy")]
@@ -526,47 +534,52 @@ pub mod vectorized {
             }
             #[cfg(feature = "gpu")]
             Backend::Gpu => {
-                if total_elements >= 1000 { // GPU efficient for larger arrays
-                    return Ok(GammaResult::Future(Box::pin(gamma_gpu(input))));
+                if total_elements >= 1000 {
+                    // GPU efficient for larger arrays
+                    let input_cloned = input.clone();
+                    return Ok(GammaResult::Future(Box::pin(gamma_gpu(&input_cloned))));
                 }
             }
             Backend::Cpu => {
                 // Use CPU implementation
-            }
-            #[cfg(feature = "array-api")]
-            Backend::ArrayFire => {
-                return arrayfire_gamma(input, config);
-            }
+            } // #[cfg(feature = "array-api")]
+              // Backend::ArrayFire => {
+              //     return arrayfire_gamma(input, config);
+              // }
         }
-        
+
         // Default CPU implementation with optional parallelization
         if config.parallel && total_elements > config.chunk_size {
             #[cfg(feature = "parallel")]
             {
-                use ndarray::Zip;
-                let result = input.mapv_inplace(crate::gamma::gamma);
-                return Ok(GammaResult::Immediate(result));
+                use rayon::prelude::*;
+                let data: Vec<f64> = input.iter().copied().collect();
+                let result: Vec<f64> = data.par_iter().map(|&x| crate::gamma::gamma(x)).collect();
+                let result_array = Array::from_vec(result)
+                    .into_shape(input.dim())
+                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?;
+                return Ok(GammaResult::Immediate(result_array));
             }
         }
-        
+
         Ok(GammaResult::Immediate(input.mapv(crate::gamma::gamma)))
     }
 
     /// Enhanced Bessel J0 function computation with backend selection  
     pub fn j0_array<D>(
-        input: &Array<f64, D>, 
-        config: &ArrayConfig
+        input: &Array<f64, D>,
+        config: &ArrayConfig,
     ) -> SpecialResult<BesselResult<D>>
     where
         D: Dimension + Send + Sync + 'static,
     {
-        let total_elements = input.len();
-        
+        let _total_elements = input.len();
+
         // Choose backend based on configuration and array size
         match &config.backend {
             #[cfg(feature = "lazy")]
             Backend::Lazy => {
-                if total_elements >= config.lazy_threshold {
+                if _total_elements >= config.lazy_threshold {
                     let lazy_array = lazy_bessel_j0(input.clone(), config.clone());
                     return Ok(BesselResult::Lazy(lazy_array));
                 }
@@ -574,20 +587,18 @@ pub mod vectorized {
             Backend::Cpu => {
                 // Use CPU implementation
             }
-            _ => {
-                // Fallback to CPU for unsupported backends
+            #[cfg(feature = "gpu")]
+            Backend::Gpu => {
+                // Use CPU fallback for Bessel functions
             }
         }
-        
+
         // Default CPU implementation
         Ok(BesselResult::Immediate(input.mapv(crate::bessel::j0)))
     }
 
     /// Enhanced error function computation
-    pub fn erf_array<D>(
-        input: &Array<f64, D>,
-        config: &ArrayConfig,
-    ) -> SpecialResult<Array<f64, D>>
+    pub fn erf_array<D>(input: &Array<f64, D>, config: &ArrayConfig) -> SpecialResult<Array<f64, D>>
     where
         D: Dimension,
     {
@@ -595,12 +606,14 @@ pub mod vectorized {
             #[cfg(feature = "parallel")]
             {
                 use rayon::prelude::*;
-                let data: Vec<f64> = input.iter().collect();
+                let data: Vec<f64> = input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::erf::erf(x)).collect();
-                return Ok(Array::from_vec(result).into_shape(input.dim())?);
+                return Ok(Array::from_vec(result)
+                    .into_shape(input.dim())
+                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?);
             }
         }
-        
+
         Ok(input.mapv(crate::erf::erf))
     }
 
@@ -616,28 +629,34 @@ pub mod vectorized {
             #[cfg(feature = "parallel")]
             {
                 use rayon::prelude::*;
-                let data: Vec<u32> = input.iter().collect();
-                let result: Vec<f64> = data.par_iter()
+                let data: Vec<u32> = input.iter().copied().collect();
+                let result: Vec<f64> = data
+                    .par_iter()
                     .map(|&x| crate::combinatorial::factorial(x).unwrap_or(f64::NAN))
                     .collect();
-                return Ok(Array::from_vec(result).into_shape(input.dim())?);
+                return Ok(Array::from_vec(result)
+                    .into_shape(input.dim())
+                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?);
             }
         }
-        
+
         Ok(input.mapv(|x| crate::combinatorial::factorial(x).unwrap_or(f64::NAN)))
     }
 
     /// Enhanced softmax computation
     pub fn softmax_1d(
         input: ArrayView1<f64>,
-        config: &ArrayConfig,
+        _config: &ArrayConfig,
     ) -> SpecialResult<Array<f64, ndarray::Ix1>> {
         // Use existing optimized implementation from statistical module
         crate::statistical::softmax(input)
     }
 
     /// Result type for gamma computations that can be immediate, lazy, or async
-    pub enum GammaResult<D> where D: Dimension {
+    pub enum GammaResult<D>
+    where
+        D: Dimension,
+    {
         /// Immediate result computed synchronously
         Immediate(Array<f64, D>),
         /// Lazy result computed on demand
@@ -648,7 +667,10 @@ pub mod vectorized {
         Future(BoxFuture<'static, SpecialResult<Array<f64, D>>>),
     }
 
-    impl<D> GammaResult<D> where D: Dimension {
+    impl<D> GammaResult<D>
+    where
+        D: Dimension,
+    {
         /// Force evaluation of the result
         pub async fn compute(self) -> SpecialResult<Array<f64, D>> {
             match self {
@@ -659,7 +681,7 @@ pub mod vectorized {
                 GammaResult::Future(future) => future.await,
             }
         }
-        
+
         /// Check if result is immediately available
         pub fn is_ready(&self) -> bool {
             match self {
@@ -673,7 +695,10 @@ pub mod vectorized {
     }
 
     /// Result type for Bessel function computations
-    pub enum BesselResult<D> where D: Dimension {
+    pub enum BesselResult<D>
+    where
+        D: Dimension,
+    {
         /// Immediate result computed synchronously
         Immediate(Array<f64, D>),
         /// Lazy result computed on demand
@@ -681,7 +706,10 @@ pub mod vectorized {
         Lazy(LazyArray<f64, D>),
     }
 
-    impl<D> BesselResult<D> where D: Dimension {
+    impl<D> BesselResult<D>
+    where
+        D: Dimension,
+    {
         /// Force evaluation of the result
         pub fn compute(self) -> SpecialResult<Array<f64, D>> {
             match self {
@@ -692,54 +720,49 @@ pub mod vectorized {
         }
     }
 
-    /// ArrayFire backend implementation
-    #[cfg(feature = "array-api")]
-    fn arrayfire_gamma<D>(
-        input: &Array<f64, D>,
-        _config: &ArrayConfig,
-    ) -> SpecialResult<GammaResult<D>>
-    where
-        D: Dimension,
-    {
-        // TODO: Implement ArrayFire backend
-        // For now, fallback to CPU
-        Ok(GammaResult::Immediate(input.mapv(crate::gamma::gamma)))
-    }
+    // ArrayFire backend implementation (placeholder)
+    // #[cfg(feature = "array-api")]
+    // fn arrayfire_gamma<D>(
+    //     input: &Array<f64, D>,
+    //     _config: &ArrayConfig,
+    // ) -> SpecialResult<GammaResult<D>>
+    // where
+    //     D: Dimension,
+    // {
+    //     // TODO: Implement ArrayFire backend
+    //     // For now, fallback to CPU
+    //     Ok(GammaResult::Immediate(input.mapv(crate::gamma::gamma)))
+    // }
 
     /// Chunked processing for large arrays
     pub fn process_chunks<T, D, F>(
         input: &Array<T, D>,
         config: &ArrayConfig,
-        mut operation: F,
+        operation: F,
     ) -> SpecialResult<Array<T, D>>
     where
         T: Clone + Send + Sync,
         D: Dimension,
-        F: FnMut(T) -> T + Send + Sync,
+        F: Fn(T) -> T + Send + Sync,
     {
         if input.len() <= config.chunk_size {
             return Ok(input.mapv(operation));
         }
 
         // Process in chunks to manage memory usage
-        let mut result = Array::zeros(input.dim());
-        
         #[cfg(feature = "parallel")]
         if config.parallel {
             use rayon::prelude::*;
             let data: Vec<T> = input.iter().cloned().collect();
             let processed: Vec<T> = data.into_par_iter().map(operation).collect();
-            result = Array::from_vec(processed).into_shape(input.dim())?;
-        } else {
-            result = input.mapv(operation);
-        }
-        
-        #[cfg(not(feature = "parallel"))]
-        {
-            result = input.mapv(operation);
+            let result = Array::from_vec(processed)
+                .into_shape(input.dim())
+                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?;
+            return Ok(result);
         }
 
-        Ok(result)
+        // Default sequential processing
+        Ok(input.mapv(operation))
     }
 }
 
@@ -779,8 +802,8 @@ pub mod convenience {
 
     /// Apply gamma function to 1D array with custom config
     pub async fn gamma_1d_with_config(
-        input: &Array1<f64>, 
-        config: &ArrayConfig
+        input: &Array1<f64>,
+        config: &ArrayConfig,
     ) -> SpecialResult<Array1<f64>> {
         let result = vectorized::gamma_array(input, config)?;
         result.compute().await
@@ -796,8 +819,8 @@ pub mod convenience {
     /// Create lazy gamma computation for large arrays
     #[cfg(feature = "lazy")]
     pub fn gamma_lazy<D>(
-        input: &Array<f64, D>, 
-        config: Option<ArrayConfig>
+        input: &Array<f64, D>,
+        config: Option<ArrayConfig>,
     ) -> SpecialResult<super::lazy::LazyArray<f64, D>>
     where
         D: Dimension + Send + Sync + 'static,
@@ -807,8 +830,9 @@ pub mod convenience {
             cfg.backend = Backend::Lazy;
             cfg
         });
-        
-        if let vectorized::GammaResult::Lazy(lazy_array) = vectorized::gamma_array(input, &config)? {
+
+        if let vectorized::GammaResult::Lazy(lazy_array) = vectorized::gamma_array(input, &config)?
+        {
             Ok(lazy_array)
         } else {
             // Force lazy evaluation
@@ -834,8 +858,8 @@ pub mod convenience {
 
     /// Apply Bessel J0 function with custom config
     pub fn j0_with_config<D>(
-        input: &Array<f64, D>, 
-        config: &ArrayConfig
+        input: &Array<f64, D>,
+        config: &ArrayConfig,
     ) -> SpecialResult<Array<f64, D>>
     where
         D: Dimension + Send + Sync + 'static,
@@ -855,8 +879,10 @@ pub mod convenience {
     where
         D: Dimension,
     {
-        let mut config = ArrayConfig::default();
-        config.parallel = true;
+        let config = ArrayConfig {
+            parallel: true,
+            ..Default::default()
+        };
         vectorized::erf_array(input, &config)
     }
 
@@ -874,19 +900,19 @@ pub mod convenience {
 
     /// Batch processing for multiple arrays
     pub async fn batch_gamma<D>(
-        inputs: &[Array<f64, D>], 
-        config: &ArrayConfig
+        inputs: &[Array<f64, D>],
+        config: &ArrayConfig,
     ) -> SpecialResult<Vec<Array<f64, D>>>
     where
         D: Dimension + Send + Sync + 'static,
     {
         let mut results = Vec::with_capacity(inputs.len());
-        
+
         for input in inputs {
             let result = vectorized::gamma_array(input, config)?;
             results.push(result.compute().await?);
         }
-        
+
         Ok(results)
     }
 
@@ -1145,11 +1171,13 @@ mod tests {
     #[test]
     fn test_chunked_processing() {
         let input = Array::ones(2000);
-        let mut config = ArrayConfig::default();
-        config.chunk_size = 100;
+        let config = ArrayConfig {
+            chunk_size: 100,
+            ..Default::default()
+        };
 
-        let result = vectorized::process_chunks(&input, &config, |x| x * 2.0).unwrap();
-        
+        let result = vectorized::process_chunks(&input, &config, |x: f64| x * 2.0).unwrap();
+
         assert_eq!(result.len(), input.len());
         for &val in result.iter() {
             assert_relative_eq!(val, 2.0, epsilon = 1e-10);
@@ -1158,8 +1186,10 @@ mod tests {
 
     #[test]
     fn test_backend_selection() {
-        let mut config = ArrayConfig::default();
-        config.backend = Backend::Cpu;
+        let config = ArrayConfig {
+            backend: Backend::Cpu,
+            ..Default::default()
+        };
 
         let input = arr1(&[1.0, 2.0, 3.0]);
         let result = vectorized::gamma_array(&input, &config).unwrap();
@@ -1188,11 +1218,21 @@ mod tests {
         let result = vectorized::gamma_array(&input, &config).unwrap();
 
         // Test immediate result
-        if let vectorized::GammaResult::Immediate(array) = result {
-            assert_eq!(array.len(), 3);
-            assert_relative_eq!(array[0], 1.0, epsilon = 1e-10);
-            assert_relative_eq!(array[1], 1.0, epsilon = 1e-10);
-            assert_relative_eq!(array[2], 2.0, epsilon = 1e-10);
+        match result {
+            vectorized::GammaResult::Immediate(array) => {
+                assert_eq!(array.len(), 3);
+                assert_relative_eq!(array[0], 1.0, epsilon = 1e-10);
+                assert_relative_eq!(array[1], 1.0, epsilon = 1e-10);
+                assert_relative_eq!(array[2], 2.0, epsilon = 1e-10);
+            }
+            #[cfg(feature = "lazy")]
+            vectorized::GammaResult::Lazy(_) => {
+                panic!("Expected immediate result but got lazy result");
+            }
+            #[cfg(feature = "futures")]
+            vectorized::GammaResult::Future(_) => {
+                panic!("Expected immediate result but got future result");
+            }
         }
     }
 
@@ -1218,7 +1258,7 @@ mod tests {
     async fn test_gpu_fallback() {
         // Test that GPU functions work (fallback to CPU if no GPU)
         let input = arr1(&[1.0, 2.0, 3.0]);
-        
+
         match convenience::gamma_gpu(&input).await {
             Ok(result) => {
                 assert_eq!(result.len(), 3);
@@ -1235,7 +1275,7 @@ mod tests {
     #[test]
     fn test_complex_array_operations() {
         use num_complex::Complex64;
-        
+
         let input = Array::from_vec(vec![
             Complex64::new(1.0, 0.0),
             Complex64::new(2.0, 0.5),

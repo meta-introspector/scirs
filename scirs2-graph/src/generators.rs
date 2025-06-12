@@ -358,6 +358,152 @@ pub fn watts_strogatz_graph<R: Rng>(
     Ok(graph)
 }
 
+/// Generates a graph using the Stochastic Block Model (SBM)
+///
+/// The SBM generates a graph where nodes are divided into communities (blocks)
+/// and edge probabilities depend on which communities the nodes belong to.
+///
+/// # Arguments
+/// * `block_sizes` - Vector specifying the size of each block/community
+/// * `block_matrix` - Probability matrix where entry (i,j) is the probability
+///   of an edge between nodes in block i and block j
+/// * `rng` - Random number generator
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - The generated graph with node IDs 0..n-1
+///   where nodes 0..block_sizes[0]-1 are in block 0, etc.
+pub fn stochastic_block_model<R: Rng>(
+    block_sizes: &[usize],
+    block_matrix: &[Vec<f64>],
+    rng: &mut R,
+) -> Result<Graph<usize, f64>> {
+    if block_sizes.is_empty() {
+        return Err(GraphError::InvalidGraph(
+            "At least one block must be specified".to_string(),
+        ));
+    }
+
+    if block_matrix.len() != block_sizes.len() {
+        return Err(GraphError::InvalidGraph(
+            "Block matrix dimensions must match number of blocks".to_string(),
+        ));
+    }
+
+    for row in block_matrix {
+        if row.len() != block_sizes.len() {
+            return Err(GraphError::InvalidGraph(
+                "Block matrix must be square".to_string(),
+            ));
+        }
+        for &prob in row {
+            if !(0.0..=1.0).contains(&prob) {
+                return Err(GraphError::InvalidGraph(
+                    "All probabilities must be between 0 and 1".to_string(),
+                ));
+            }
+        }
+    }
+
+    let total_nodes: usize = block_sizes.iter().sum();
+    let mut graph = Graph::new();
+
+    // Add all nodes
+    for i in 0..total_nodes {
+        graph.add_node(i);
+    }
+
+    // Create mapping from node to block
+    let mut node_to_block = vec![0; total_nodes];
+    let mut current_node = 0;
+    for (block_id, &block_size) in block_sizes.iter().enumerate() {
+        for _ in 0..block_size {
+            node_to_block[current_node] = block_id;
+            current_node += 1;
+        }
+    }
+
+    // Generate edges based on block probabilities
+    for i in 0..total_nodes {
+        for j in (i + 1)..total_nodes {
+            let block_i = node_to_block[i];
+            let block_j = node_to_block[j];
+            let prob = block_matrix[block_i][block_j];
+
+            if rng.random::<f64>() < prob {
+                graph.add_edge(i, j, 1.0)?;
+            }
+        }
+    }
+
+    Ok(graph)
+}
+
+/// Generates a simple stochastic block model with two communities
+///
+/// This is a convenience function for creating a two-community SBM with
+/// high intra-community probability and low inter-community probability.
+///
+/// # Arguments
+/// * `n1` - Size of first community
+/// * `n2` - Size of second community
+/// * `p_in` - Probability of edges within communities
+/// * `p_out` - Probability of edges between communities
+/// * `rng` - Random number generator
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - The generated graph
+pub fn two_community_sbm<R: Rng>(
+    n1: usize,
+    n2: usize,
+    p_in: f64,
+    p_out: f64,
+    rng: &mut R,
+) -> Result<Graph<usize, f64>> {
+    let block_sizes = vec![n1, n2];
+    let block_matrix = vec![vec![p_in, p_out], vec![p_out, p_in]];
+
+    stochastic_block_model(&block_sizes, &block_matrix, rng)
+}
+
+/// Generates a planted partition model (special case of SBM)
+///
+/// In this model, there are k communities of equal size, with high
+/// intra-community probability and low inter-community probability.
+///
+/// # Arguments
+/// * `n` - Total number of nodes (must be divisible by k)
+/// * `k` - Number of communities
+/// * `p_in` - Probability of edges within communities
+/// * `p_out` - Probability of edges between communities
+/// * `rng` - Random number generator
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - The generated graph
+pub fn planted_partition_model<R: Rng>(
+    n: usize,
+    k: usize,
+    p_in: f64,
+    p_out: f64,
+    rng: &mut R,
+) -> Result<Graph<usize, f64>> {
+    if n % k != 0 {
+        return Err(GraphError::InvalidGraph(
+            "Number of nodes must be divisible by number of communities".to_string(),
+        ));
+    }
+
+    let community_size = n / k;
+    let block_sizes = vec![community_size; k];
+
+    // Create block matrix
+    let mut block_matrix = vec![vec![p_out; k]; k];
+    for i in 0..k {
+        block_matrix[i][i] = p_in;
+    }
+
+    stochastic_block_model(&block_sizes, &block_matrix, rng)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -424,5 +570,70 @@ mod tests {
         assert_eq!(graph.node_count(), 10);
         // Should have 3 + 2*7 = 17 edges (3 initial edges + 2 for each of the 7 new nodes)
         assert_eq!(graph.edge_count(), 17);
+    }
+
+    #[test]
+    fn test_stochastic_block_model() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Two blocks of size 3 and 4
+        let block_sizes = vec![3, 4];
+        // High intra-block probability, low inter-block probability
+        let block_matrix = vec![vec![0.8, 0.1], vec![0.1, 0.8]];
+
+        let graph = stochastic_block_model(&block_sizes, &block_matrix, &mut rng).unwrap();
+
+        assert_eq!(graph.node_count(), 7); // 3 + 4 = 7 nodes
+
+        // Check that all nodes are present
+        for i in 0..7 {
+            assert!(graph.has_node(&i));
+        }
+    }
+
+    #[test]
+    fn test_two_community_sbm() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        let graph = two_community_sbm(5, 5, 0.8, 0.1, &mut rng).unwrap();
+
+        assert_eq!(graph.node_count(), 10);
+
+        // Should have some edges within communities and fewer between
+        // This is probabilistic so we can't test exact numbers
+        assert!(graph.edge_count() > 0);
+    }
+
+    #[test]
+    fn test_planted_partition_model() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        let graph = planted_partition_model(12, 3, 0.7, 0.1, &mut rng).unwrap();
+
+        assert_eq!(graph.node_count(), 12); // 12 nodes total
+
+        // 3 communities of size 4 each
+        // Should have some edges
+        assert!(graph.edge_count() > 0);
+    }
+
+    #[test]
+    fn test_stochastic_block_model_errors() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Empty blocks
+        assert!(stochastic_block_model(&[], &[], &mut rng).is_err());
+
+        // Mismatched dimensions
+        let block_sizes = vec![3, 4];
+        let wrong_matrix = vec![vec![0.5]];
+        assert!(stochastic_block_model(&block_sizes, &wrong_matrix, &mut rng).is_err());
+
+        // Invalid probabilities
+        let bad_matrix = vec![vec![1.5, 0.5], vec![0.5, 0.5]];
+        assert!(stochastic_block_model(&block_sizes, &bad_matrix, &mut rng).is_err());
+
+        // Non-divisible nodes for planted partition
+        assert!(planted_partition_model(10, 3, 0.5, 0.1, &mut rng).is_err());
     }
 }

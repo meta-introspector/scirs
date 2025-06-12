@@ -4,9 +4,9 @@
 //! methods and provides a simple timing framework for basic comparisons.
 
 use ndarray::Array1;
+use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use scirs2_integrate::quad::{quad, QuadOptions};
-use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 use std::time::Instant;
 
 /// Simple timing utility
@@ -29,18 +29,18 @@ where
 {
     let mut total_time = 0.0;
     let mut result = None;
-    
+
     for i in 0..runs {
         let start = Instant::now();
         let res = f();
         let duration = start.elapsed();
         total_time += duration.as_secs_f64();
-        
+
         if i == 0 {
             result = Some(res);
         }
     }
-    
+
     let avg_time = total_time / runs as f64;
     println!("{} (avg of {} runs): {:.6} seconds", name, runs, avg_time);
     (avg_time, result.unwrap())
@@ -102,7 +102,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         let (time, result) = time_function(
-            || solve_ivp(exponential_decay, t_span_simple, y0_simple.clone(), Some(opts)),
+            || {
+                solve_ivp(
+                    exponential_decay,
+                    t_span_simple,
+                    y0_simple.clone(),
+                    Some(opts),
+                )
+            },
             &format!("Exponential decay ({})", name),
         );
 
@@ -130,7 +137,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         let (time, result) = time_function(
-            || solve_ivp(harmonic_oscillator, t_span_harm, y0_harm.clone(), Some(opts)),
+            || {
+                solve_ivp(
+                    harmonic_oscillator,
+                    t_span_harm,
+                    y0_harm.clone(),
+                    Some(opts),
+                )
+            },
             &format!("Harmonic oscillator ({})", name),
         );
 
@@ -163,8 +177,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         if let Ok(sol) = result {
-            println!("  Final steps: {}, Function evaluations: {}", 
-                    sol.n_steps, sol.n_eval);
+            println!(
+                "  Final steps: {}, Function evaluations: {}",
+                sol.n_steps, sol.n_eval
+            );
         }
     }
 
@@ -191,8 +207,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(quad_result) = result {
         let exact = 0.25;
         let actual_error = (quad_result.value - exact).abs();
-        println!("  Result: {:.12}, Estimated error: {:.2e}, Actual error: {:.2e}", 
-                quad_result.value, quad_result.abs_error, actual_error);
+        println!(
+            "  Result: {:.12}, Estimated error: {:.2e}, Actual error: {:.2e}",
+            quad_result.value, quad_result.abs_error, actual_error
+        );
     }
 
     // Oscillatory function
@@ -210,7 +228,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     if let Ok(quad_result) = result {
-        println!("  Result: {:.10}, Estimated error: {:.2e}", quad_result.value, quad_result.abs_error);
+        println!(
+            "  Result: {:.10}, Estimated error: {:.2e}",
+            quad_result.value, quad_result.abs_error
+        );
     }
 
     println!();
@@ -220,7 +241,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------------------");
 
     let sample_counts = vec![1_000, 10_000, 100_000];
-    
+
     for &n_samples in &sample_counts {
         let (time, result) = time_function(
             || {
@@ -238,8 +259,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let exact = std::f64::consts::PI; // ∫∫ exp(-x²-y²) dx dy over [-∞,∞]² = π
             let domain_exact = exact * (1.0 - (-4.0_f64).exp()).powi(2); // Scaled for [-2,2]²
             let error = (mc_result.value - domain_exact).abs();
-            println!("  Result: {:.6}, Error: {:.2e}, Std: {:.2e}", 
-                    mc_result.value, error, mc_result.std_error);
+            println!(
+                "  Result: {:.6}, Error: {:.2e}, Std: {:.2e}",
+                mc_result.value, error, mc_result.std_error
+            );
         }
     }
 
@@ -251,7 +274,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Parallel Monte Carlo Performance:");
         println!("---------------------------------");
 
-        use scirs2_integrate::monte_carlo_parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
+        use scirs2_integrate::monte_carlo_parallel::{
+            parallel_monte_carlo, ParallelMonteCarloOptions,
+        };
 
         let n_samples = 1_000_000;
         let ranges = vec![(-2.0, 2.0), (-2.0, 2.0)];
@@ -294,28 +319,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------");
 
     let system_sizes = vec![50, 100, 200];
-    
+
     for &n in &system_sizes {
         // Create a large linear ODE system: dy/dt = A*y
         let (time, result) = time_function(
             || {
                 use ndarray::Array2;
-                
+
                 let a_matrix = Array2::from_shape_fn((n, n), |(i, j)| {
                     if i == j {
                         -1.0 // diagonal
                     } else if i.abs_diff(j) == 1 {
-                        0.1  // off-diagonal
+                        0.1 // off-diagonal
                     } else {
                         0.0
                     }
                 });
-                
+
                 let linear_system = move |_t: f64, y: ndarray::ArrayView1<f64>| {
                     let y_owned = y.to_owned();
                     a_matrix.dot(&y_owned)
                 };
-                
+
                 let y0 = Array1::ones(n);
                 let opts = ODEOptions {
                     method: ODEMethod::Bdf, // Good for large systems
@@ -323,7 +348,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     atol: 1e-6,
                     ..Default::default()
                 };
-                
+
                 solve_ivp(linear_system, [0.0, 1.0], y0, Some(opts))
             },
             &format!("Large linear system ({}×{})", n, n),

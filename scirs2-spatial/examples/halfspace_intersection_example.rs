@@ -5,7 +5,7 @@
 //! dual problem to convex hull computation and is useful in optimization,
 //! computational geometry, and constraint satisfaction.
 
-use ndarray::{arr1, array};
+use ndarray::arr1;
 use scirs2_spatial::halfspace::{Halfspace, HalfspaceIntersection};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

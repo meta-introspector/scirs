@@ -35,10 +35,13 @@ pub mod traversal;
 
 // Re-export all public items for convenience
 pub use coloring::*;
-pub use community::*;
+pub use community::{
+    greedy_modularity_optimization, label_propagation, louvain_communities, modularity,
+    modularity_optimization, CommunityStructure,
+};
 pub use connectivity::*;
 pub use decomposition::*;
-pub use flow::*;
+pub use flow::{dinic_max_flow, minimum_cut, push_relabel_max_flow};
 pub use isomorphism::*;
 pub use matching::*;
 pub use motifs::*;

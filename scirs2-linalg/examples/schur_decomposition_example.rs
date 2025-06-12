@@ -6,7 +6,7 @@
 //! (or quasi-triangular for real matrices).
 
 use ndarray::array;
-use scirs2_linalg::{compat, schur};
+use scirs2_linalg::compat;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Schur Decomposition Example");
@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let a = array![[1.0, 2.0], [3.0, 4.0]];
     println!("Matrix A = \n{:8.6}", a);
 
-    let (z, t) = schur(&a.view())?;
+    let (z, t) = compat::schur(&a.view(), "real", None, false, None, true)?;
     println!("Orthogonal matrix Z = \n{:8.6}", z);
     println!("Upper triangular T = \n{:8.6}", t);
 
@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let symmetric = array![[2.0, 1.0], [1.0, 3.0]];
     println!("Symmetric matrix A = \n{:8.6}", symmetric);
 
-    let (z_sym, t_sym) = schur(&symmetric.view())?;
+    let (z_sym, t_sym) = compat::schur(&symmetric.view(), "real", None, false, None, true)?;
     println!("Z = \n{:8.6}", z_sym);
     println!("T = \n{:8.6}", t_sym);
 
@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let large = array![[1.0, 2.0, 3.0], [0.0, 4.0, 5.0], [0.0, 0.0, 6.0]];
     println!("Upper triangular matrix A = \n{:8.6}", large);
 
-    let (z_large, t_large) = schur(&large.view())?;
+    let (z_large, t_large) = compat::schur(&large.view(), "real", None, false, None, true)?;
     println!("Z = \n{:8.6}", z_large);
     println!("T = \n{:8.6}", t_large);
 
@@ -103,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let eig_matrix = array![[5.0, 1.0], [0.0, 3.0]];
     println!("Matrix A = \n{:8.6}", eig_matrix);
 
-    let (_, t_eig) = schur(&eig_matrix.view())?;
+    let (_, t_eig) = compat::schur(&eig_matrix.view(), "real", None, false, None, true)?;
     println!("Schur form T = \n{:8.6}", t_eig);
 
     // For upper triangular matrices, eigenvalues are the diagonal elements

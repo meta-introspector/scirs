@@ -372,9 +372,9 @@ pub fn bernoulli_number(n: u32) -> SpecialResult<f64> {
         }
 
         let mut sum = 0.0;
-        for k in 0..m {
+        for (k, &bernoulli_k) in bernoulli.iter().enumerate().take(m) {
             let binom_coeff = binomial((m + 1) as u32, k as u32)?;
-            sum += binom_coeff * bernoulli[k];
+            sum += binom_coeff * bernoulli_k;
         }
         bernoulli[m] = -sum / (m + 1) as f64;
     }

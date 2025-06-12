@@ -98,7 +98,7 @@ mod rnn_thread_safe;
 
 // Re-export layer types
 pub use attention::{AttentionConfig, AttentionMask, MultiHeadAttention, SelfAttention};
-pub use conv::{Conv2D, GlobalAvgPool2D, MaxPool2D, PaddingMode};
+pub use conv::{AdaptiveAvgPool2D, AdaptiveMaxPool2D, Conv2D, GlobalAvgPool2D, MaxPool2D, PaddingMode};
 pub use dense::Dense;
 pub use dropout::Dropout;
 pub use embedding::{Embedding, EmbeddingConfig, PatchEmbedding, PositionalEmbedding};

@@ -119,6 +119,7 @@ struct NoiseRobustState {
     function_window: VecDeque<f64>,
     gradient_window: VecDeque<f64>,
     step_window: VecDeque<f64>,
+    #[allow(dead_code)]
     stable_convergence_count: usize,
 }
 
@@ -209,7 +210,7 @@ impl RobustConvergenceState {
     }
 
     /// Update early stopping state
-    fn update_early_stopping(&mut self, function_value: f64, iteration: usize) {
+    fn update_early_stopping(&mut self, function_value: f64, _iteration: usize) {
         let improvement = self.early_stop_state.best_value - function_value;
 
         if improvement > self.options.early_stopping_min_delta {
@@ -312,10 +313,10 @@ impl RobustConvergenceState {
     /// Check all convergence criteria
     fn check_all_convergence_criteria(
         &self,
-        function_value: f64,
+        _function_value: f64,
         gradient_norm: f64,
         step_norm: f64,
-        iteration: usize,
+        _iteration: usize,
     ) -> Result<RobustConvergenceResult, OptimizeError> {
         let mut convergence_reasons = Vec::new();
         let mut warning_flags = Vec::new();
@@ -650,7 +651,6 @@ pub fn create_robust_options_for_problem(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Duration;
 
     #[test]
     fn test_robust_convergence_initialization() {

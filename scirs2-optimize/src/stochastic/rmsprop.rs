@@ -471,9 +471,9 @@ mod tests {
 
     #[test]
     fn test_rmsprop_different_decay_rates() {
-        let grad_func = QuadraticFunction;
+        let _grad_func = QuadraticFunction;
         let x0 = Array1::from_vec(vec![1.0, 1.0]);
-        let data_provider = Box::new(InMemoryDataProvider::new(vec![1.0; 50]));
+        let _data_provider = Box::new(InMemoryDataProvider::new(vec![1.0; 50]));
 
         // Test different decay rates
         let decay_rates = [0.9, 0.95, 0.99, 0.999];

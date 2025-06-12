@@ -457,7 +457,7 @@ mod tests {
         }
 
         // Compute determinant with standard precision
-        let std_det = crate::basic::det(&hilbert.view()).unwrap();
+        let std_det = crate::basic::det(&hilbert.view(), None).unwrap();
 
         // Compute determinant with extended precision
         let ext_det = extended_det::<_, f64>(&hilbert.view()).unwrap();

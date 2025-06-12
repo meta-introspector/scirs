@@ -8,7 +8,7 @@ use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, One, Zero};
 use std::fmt::Debug;
 
-use crate::basic::det;
+// use crate::basic::det; // Currently unused
 use crate::error::{LinalgError, LinalgResult};
 
 /// Configuration for matrix optimization algorithms

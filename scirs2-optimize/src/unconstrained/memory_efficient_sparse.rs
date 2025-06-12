@@ -60,8 +60,10 @@ struct UltraScaleState {
     /// Variable blocks for progressive processing
     blocks: Vec<VariableBlock>,
     /// Active variable indices for current iteration
+    #[allow(dead_code)]
     active_variables: Vec<usize>,
     /// Temporary directory for out-of-core storage
+    #[allow(dead_code)]
     temp_dir: Option<PathBuf>,
 }
 
@@ -73,7 +75,9 @@ enum VariableStorage {
     Disk {
         file_path: PathBuf,
         size: usize,
+        #[allow(dead_code)]
         buffer: Vec<f64>, // In-memory cache for active variables
+        #[allow(dead_code)]
         active_indices: Vec<usize>,
     },
 }

@@ -52,8 +52,8 @@ fn numerical_analysis_demo() -> Result<(), Box<dyn std::error::Error>> {
     let two_over_sqrt_pi: f64 = 2.0 / PI.sqrt();
 
     for n in 0..20 {
-        let term = ((-1.0_f64).powi(n as i32) * x.powi(2 * n as i32 + 1))
-            / (factorial(n as u32)? * (2 * n + 1) as f64);
+        let term =
+            ((-1.0_f64).powi(n) * x.powi(2 * n + 1)) / (factorial(n as u32)? * (2 * n + 1) as f64);
         erf_series += term;
     }
     erf_series *= two_over_sqrt_pi;
@@ -72,7 +72,7 @@ fn statistical_computing_demo() -> Result<(), Box<dyn std::error::Error>> {
 
     // Beta distribution density function
     fn beta_pdf(x: f64, alpha: f64, beta_param: f64) -> Result<f64, Box<dyn std::error::Error>> {
-        if x < 0.0 || x > 1.0 || alpha <= 0.0 || beta_param <= 0.0 {
+        if !(0.0..=1.0).contains(&x) || alpha <= 0.0 || beta_param <= 0.0 {
             return Ok(0.0);
         }
 

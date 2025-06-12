@@ -148,7 +148,7 @@ where
 /// A rows×cols matrix with standard normal distribution
 pub fn random_normal_matrix<F>(shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + num_traits::FromPrimitive,
+    F: Float + Zero + One + Copy + num_traits::FromPrimitive + NumAssign + 'static,
 {
     Ok(normal(shape.0, shape.1, F::zero(), F::one(), seed))
 }
@@ -1339,7 +1339,7 @@ mod tests {
         assert_eq!(a.shape(), &[n, n]);
 
         // Compute SVD to get singular values
-        let (_, s, _) = svd(&a.view(), false).unwrap();
+        let (_, s, _) = svd(&a.view(), false, None).unwrap();
 
         // Verify we have the expected number of singular values
         assert_eq!(s.len(), n);
@@ -1488,7 +1488,7 @@ mod tests {
         assert_eq!(a.shape(), &[rows, cols]);
 
         // Check rank by computing SVD
-        let (_, s, _) = svd(&a.view(), false).unwrap();
+        let (_, s, _) = svd(&a.view(), false, None).unwrap();
 
         // First 'rank' singular values should be significantly larger than the rest
         for i in 0..rank {

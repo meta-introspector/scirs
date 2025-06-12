@@ -29,9 +29,9 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 
 ## Graph Data Structures
 
-- [ ] Enhanced graph representations
-  - [ ] MultiGraph (parallel edges)
-  - [ ] MultiDiGraph (directed with parallel edges)
+- [x] Enhanced graph representations
+  - [x] MultiGraph (parallel edges)
+  - [x] MultiDiGraph (directed with parallel edges)
   - [ ] Hypergraph implementation
   - [ ] Temporal graph structures
   - [ ] Bipartite graph specialization
@@ -64,8 +64,8 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 - [x] Flow algorithms
   - [x] Maximum flow (Ford-Fulkerson)
   - [x] Minimum-cost flow
-  - [ ] Dinic's algorithm
-  - [ ] Push-relabel algorithm
+  - [x] Dinic's algorithm
+  - [x] Push-relabel algorithm
 - [x] Matching algorithms
   - [x] Maximum bipartite matching
   - [ ] Minimum weight bipartite matching
@@ -81,13 +81,13 @@ This module provides graph data structures and algorithms similar to SciPy's gra
   - [x] Graph similarity measures
   - [x] Core decomposition
 - [x] Advanced centrality measures
-  - [ ] Katz centrality
+  - [x] Katz centrality
   - [x] Eigenvector centrality
   - [x] PageRank implementation
-  - [ ] HITS algorithm
+  - [x] HITS algorithm
   - [ ] Weighted centrality variants
 - [x] Community detection
-  - [ ] Modularity optimization
+  - [x] Modularity optimization
   - [x] Label propagation
   - [ ] Infomap algorithm
   - [x] Louvain method
@@ -100,7 +100,7 @@ This module provides graph data structures and algorithms similar to SciPy's gra
   - [x] Erdős–Rényi model
   - [x] Watts-Strogatz small-world model
   - [x] Barabási–Albert preferential attachment
-  - [ ] Stochastic block model
+  - [x] Stochastic block model
   - [ ] Configuration model
 - [x] Deterministic graph families
   - [x] Complete graphs

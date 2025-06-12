@@ -5,7 +5,9 @@
 
 use crate::bspline::{BSpline, ExtrapolateMode};
 use crate::error::{InterpolateError, InterpolateResult};
-use crate::numerical_stability::{assess_matrix_condition, solve_with_stability_monitoring, StabilityLevel};
+use crate::numerical_stability::{
+    assess_matrix_condition, solve_with_stability_monitoring, StabilityLevel,
+};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
@@ -106,7 +108,7 @@ where
                     _ => {}
                 }
             }
-            
+
             // Use stability-monitored solver
             match solve_with_stability_monitoring(&ata, &aty) {
                 Ok((solution, _solve_report)) => return Ok(solution),

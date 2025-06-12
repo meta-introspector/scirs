@@ -143,7 +143,7 @@ This module provides linear algebra functionality comparable to NumPy/SciPy's li
 
 - [x] Comprehensive tests and benchmarks
   - [x] Test suite that verifies numerical accuracy against SciPy results
-  - [ ] Performance benchmarks for all key operations
+  - [x] Performance benchmarks for all key operations
   - [x] Correctness validation for edge cases
 - [x] Performance optimizations for large matrices
   - [x] Cache-friendly algorithms (implemented in perf_opt module)
@@ -154,8 +154,8 @@ This module provides linear algebra functionality comparable to NumPy/SciPy's li
   - [x] Memory-efficient operations with matrix-free approach
 - [x] Improve error messages and handling
   - [x] More detailed error diagnostics for singular matrices
-  - [ ] Suggestions for regularization approaches when decompositions fail
-  - [ ] Improved numerical stability checks
+  - [x] Suggestions for regularization approaches when decompositions fail
+  - [x] Improved numerical stability checks
 - [x] Add more examples and documentation
   - [x] Practical tutorials for common scientific and engineering applications
   - [x] Conversion guides for SciPy/NumPy users (via examples and compat module)

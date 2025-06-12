@@ -231,8 +231,8 @@ pub use sparse_fft_multi_gpu::{
 // Specialized hardware support module
 pub mod sparse_fft_specialized_hardware;
 pub use sparse_fft_specialized_hardware::{
-    specialized_hardware_sparse_fft, AcceleratorInfo, AcceleratorType, AcceleratorCapabilities,
-    SpecializedHardwareManager, HardwareAbstractionLayer,
+    specialized_hardware_sparse_fft, AcceleratorCapabilities, AcceleratorInfo, AcceleratorType,
+    HardwareAbstractionLayer, SpecializedHardwareManager,
 };
 // Batch processing module
 pub mod sparse_fft_batch;

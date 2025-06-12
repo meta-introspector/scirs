@@ -30,21 +30,23 @@ pub use algorithms::{
     articulation_points, astar_search, astar_search_digraph, betweenness_centrality,
     breadth_first_search, breadth_first_search_digraph, bridges, center_nodes, chromatic_number,
     closeness_centrality, connected_components, cosine_similarity, depth_first_search,
-    depth_first_search_digraph, diameter, eigenvector_centrality, eulerian_type, find_motifs,
-    find_subgraph_matches, floyd_warshall, floyd_warshall_digraph, graph_edit_distance,
-    greedy_coloring, has_hamiltonian_circuit, has_hamiltonian_path, is_bipartite,
-    jaccard_similarity, k_core_decomposition, k_shortest_paths, label_propagation,
-    louvain_communities, maximum_bipartite_matching, minimum_cut, minimum_spanning_tree,
-    minimum_weight_bipartite_matching, pagerank, personalized_pagerank, radius, random_walk,
-    shortest_path, shortest_path_digraph, strongly_connected_components, topological_sort,
-    transition_matrix, AStarResult, BipartiteMatching, BipartiteResult, CommunityStructure,
-    EulerianType, GraphColoring, MotifType,
+    depth_first_search_digraph, diameter, dinic_max_flow, eigenvector_centrality, eulerian_type,
+    find_motifs, find_subgraph_matches, floyd_warshall, floyd_warshall_digraph,
+    graph_edit_distance, greedy_coloring, greedy_modularity_optimization, has_hamiltonian_circuit,
+    has_hamiltonian_path, is_bipartite, jaccard_similarity, k_core_decomposition, k_shortest_paths,
+    label_propagation, louvain_communities, maximum_bipartite_matching, minimum_cut,
+    minimum_spanning_tree, minimum_weight_bipartite_matching, modularity, modularity_optimization,
+    pagerank, personalized_pagerank, push_relabel_max_flow, radius, random_walk, shortest_path,
+    shortest_path_digraph, strongly_connected_components, topological_sort, transition_matrix,
+    AStarResult, BipartiteMatching, BipartiteResult, CommunityStructure, EulerianType,
+    GraphColoring, MotifType,
 };
-pub use base::{DiGraph, Edge, EdgeWeight, Graph, IndexType, Node};
+pub use base::{DiGraph, Edge, EdgeWeight, Graph, IndexType, MultiDiGraph, MultiGraph, Node};
 pub use error::{GraphError, Result};
 pub use generators::{
     barabasi_albert_graph, complete_graph, cycle_graph, erdos_renyi_graph, grid_2d_graph,
-    path_graph, star_graph, watts_strogatz_graph,
+    path_graph, planted_partition_model, star_graph, stochastic_block_model, two_community_sbm,
+    watts_strogatz_graph,
 };
 pub use layout::{circular_layout, hierarchical_layout, spectral_layout, spring_layout, Position};
 pub use measures::{

@@ -1736,7 +1736,7 @@ mod tests {
         let optimizer = NSGAII::new(1, 2, Some(config));
 
         // Create a simple Pareto front
-        let mut population = vec![
+        let population = vec![
             MultiObjectiveSolution {
                 variables: array![0.0],
                 objectives: array![1.0, 3.0],

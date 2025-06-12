@@ -40,7 +40,7 @@ use crate::norm::matrix_norm;
 /// ```
 pub fn det_derivative<F>(x: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand,
+    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -59,11 +59,11 @@ where
     }
 
     // Compute inverse transpose
-    let x_inv = inv(x)?;
+    let x_inv = inv(x, None)?;
     let x_inv_t = x_inv.t().to_owned();
 
     // d(det(X))/dX = det(X) * (X^{-T})
-    Ok(det_x * x_inv_t)
+    Ok(x_inv_t * det_x)
 }
 
 /// Compute the derivative of matrix trace with respect to matrix elements.
@@ -151,7 +151,7 @@ pub fn inv_directional_derivative<F>(
     direction: &ArrayView2<F>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand,
+    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -169,7 +169,7 @@ where
     }
 
     // Compute X^{-1}
-    let x_inv = inv(x)?;
+    let x_inv = inv(x, None)?;
 
     // Compute -X^{-1} * V * X^{-1}
     let temp = x_inv.dot(direction);
@@ -210,7 +210,7 @@ pub fn exp_directional_derivative<F>(
     num_terms: usize,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand,
+    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -260,7 +260,7 @@ where
         }
 
         // Add (1/k!) * inner_sum to result
-        result = result + (F::one() / factorial) * inner_sum;
+        result = result + inner_sum * (F::one() / factorial);
     }
 
     Ok(result)
@@ -297,7 +297,7 @@ pub fn eigenvalue_derivatives<F>(
     direction: &ArrayView2<F>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand,
+    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -334,7 +334,7 @@ where
     let eig_x = simple_symmetric_eigenvalues(x)?;
 
     // Compute eigenvalues at X + eps*V
-    let x_pert = x + &(eps * direction);
+    let x_pert = x + &(direction * eps);
     let eig_x_pert = simple_symmetric_eigenvalues(&x_pert.view())?;
 
     // Finite difference approximation
@@ -373,7 +373,7 @@ where
 /// ```
 pub fn norm_derivative<F>(x: &ArrayView2<F>, norm_type: &str) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand,
+    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
 {
     match norm_type {
         "fro" | "frobenius" => {
@@ -456,7 +456,7 @@ pub fn matmul_derivative<F>(
     direction_b: Option<&ArrayView2<F>>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand,
+    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
 {
     if a.ncols() != b.nrows() {
         return Err(LinalgError::ShapeError(format!(
@@ -499,7 +499,7 @@ where
 /// This is a simplified version for demonstration purposes
 fn simple_symmetric_eigenvalues<F>(x: &ArrayView2<F>) -> LinalgResult<Array1<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand,
+    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
 {
     // For now, return the diagonal elements as a rough approximation
     // In practice, you'd use a proper eigenvalue solver

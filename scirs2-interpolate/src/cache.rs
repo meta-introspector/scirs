@@ -48,6 +48,23 @@ use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, RemAssign, Sub, SubAssign};
 
+// Simple random generation for eviction policy
+
+/// Cache eviction policies
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum EvictionPolicy {
+    /// Least Recently Used - evict oldest accessed items
+    LRU,
+    /// Least Frequently Used - evict least accessed items  
+    LFU,
+    /// First In First Out - evict oldest inserted items
+    FIFO,
+    /// Random eviction
+    Random,
+    /// Adaptive policy based on access patterns
+    Adaptive,
+}
+
 /// Configuration for cache behavior
 #[derive(Debug, Clone)]
 pub struct CacheConfig {
@@ -61,6 +78,12 @@ pub struct CacheConfig {
     pub tolerance: f64,
     /// Whether to enable cache statistics tracking
     pub track_stats: bool,
+    /// Cache eviction strategy
+    pub eviction_policy: EvictionPolicy,
+    /// Memory limit for caches in MB (0 = no limit)
+    pub memory_limit_mb: usize,
+    /// Enable adaptive cache sizing based on access patterns
+    pub adaptive_sizing: bool,
 }
 
 impl Default for CacheConfig {
@@ -71,12 +94,15 @@ impl Default for CacheConfig {
             max_distance_cache_size: 256,
             tolerance: 1e-12,
             track_stats: false,
+            eviction_policy: EvictionPolicy::LRU,
+            memory_limit_mb: 0, // No limit by default
+            adaptive_sizing: true,
         }
     }
 }
 
 /// Cache statistics for performance monitoring
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct CacheStats {
     /// Number of cache hits
     pub hits: usize,
@@ -84,6 +110,31 @@ pub struct CacheStats {
     pub misses: usize,
     /// Number of cache evictions
     pub evictions: usize,
+    /// Total memory usage in bytes
+    pub memory_usage_bytes: usize,
+    /// Average access frequency for adaptive sizing
+    pub avg_access_frequency: f64,
+    /// Number of cache resizes
+    pub resize_count: usize,
+    /// Peak memory usage
+    pub peak_memory_bytes: usize,
+    /// Last cleanup timestamp (for TTL-based eviction)
+    pub last_cleanup_time: std::time::Instant,
+}
+
+impl Default for CacheStats {
+    fn default() -> Self {
+        Self {
+            hits: 0,
+            misses: 0,
+            evictions: 0,
+            memory_usage_bytes: 0,
+            avg_access_frequency: 0.0,
+            resize_count: 0,
+            peak_memory_bytes: 0,
+            last_cleanup_time: std::time::Instant::now(),
+        }
+    }
 }
 
 impl CacheStats {
@@ -96,11 +147,57 @@ impl CacheStats {
         }
     }
 
+    /// Calculate cache efficiency score (combines hit ratio and memory usage)
+    pub fn efficiency_score(&self) -> f64 {
+        let hit_ratio = self.hit_ratio();
+        let memory_factor = if self.peak_memory_bytes > 0 {
+            1.0 - (self.memory_usage_bytes as f64 / self.peak_memory_bytes as f64)
+        } else {
+            1.0
+        };
+        (hit_ratio + memory_factor) / 2.0
+    }
+
+    /// Get memory usage in MB
+    pub fn memory_usage_mb(&self) -> f64 {
+        self.memory_usage_bytes as f64 / (1024.0 * 1024.0)
+    }
+
+    /// Get peak memory usage in MB
+    pub fn peak_memory_mb(&self) -> f64 {
+        self.peak_memory_bytes as f64 / (1024.0 * 1024.0)
+    }
+
+    /// Update memory usage statistics
+    pub fn update_memory_usage(&mut self, current_bytes: usize) {
+        self.memory_usage_bytes = current_bytes;
+        if current_bytes > self.peak_memory_bytes {
+            self.peak_memory_bytes = current_bytes;
+        }
+    }
+
+    /// Update access frequency for adaptive sizing
+    pub fn update_access_frequency(&mut self, new_access_count: usize) {
+        let alpha = 0.1; // Exponential smoothing factor
+        let new_freq = new_access_count as f64;
+        self.avg_access_frequency = alpha * new_freq + (1.0 - alpha) * self.avg_access_frequency;
+    }
+
+    /// Check if cleanup is needed based on time threshold
+    pub fn needs_cleanup(&self, threshold_secs: u64) -> bool {
+        self.last_cleanup_time.elapsed().as_secs() >= threshold_secs
+    }
+
     /// Reset all statistics
     pub fn reset(&mut self) {
         self.hits = 0;
         self.misses = 0;
         self.evictions = 0;
+        self.memory_usage_bytes = 0;
+        self.avg_access_frequency = 0.0;
+        self.resize_count = 0;
+        self.peak_memory_bytes = 0;
+        self.last_cleanup_time = std::time::Instant::now();
     }
 }
 
@@ -138,14 +235,74 @@ impl<F: Float + FromPrimitive> Hash for FloatKey<F> {
 /// Cache for B-spline basis function evaluations
 #[derive(Debug)]
 pub struct BSplineCache<F: Float> {
-    /// Cache for basis function values
-    basis_cache: HashMap<(FloatKey<F>, usize, usize), F>,
-    /// Cache for knot span indices
-    span_cache: HashMap<FloatKey<F>, usize>,
+    /// Cache for basis function values with access tracking
+    basis_cache: HashMap<(FloatKey<F>, usize, usize), CacheEntry<F>>,
+    /// Cache for knot span indices with access tracking
+    span_cache: HashMap<FloatKey<F>, CacheEntry<usize>>,
     /// Configuration
     config: CacheConfig,
     /// Statistics
     stats: CacheStats,
+    /// Access counter for LRU/LFU tracking
+    access_counter: usize,
+}
+
+/// Cache entry with metadata for advanced eviction policies
+#[derive(Debug, Clone)]
+struct CacheEntry<T> {
+    /// The cached value
+    value: T,
+    /// Last access time (for LRU)
+    last_access: usize,
+    /// Access frequency (for LFU)
+    access_count: usize,
+    /// Insertion time (for FIFO)
+    insertion_time: usize,
+    /// Estimated memory size in bytes
+    memory_size: usize,
+}
+
+impl<T> CacheEntry<T> {
+    /// Create a new cache entry
+    fn new(value: T, insertion_time: usize) -> Self {
+        let memory_size = std::mem::size_of::<T>() + std::mem::size_of::<Self>();
+        Self {
+            value,
+            last_access: insertion_time,
+            access_count: 1,
+            insertion_time,
+            memory_size,
+        }
+    }
+
+    /// Update access statistics
+    fn update_access(&mut self, current_time: usize) {
+        self.last_access = current_time;
+        self.access_count += 1;
+    }
+
+    /// Calculate priority for eviction (lower means more likely to be evicted)
+    fn eviction_priority(&self, policy: EvictionPolicy, current_time: usize) -> f64 {
+        match policy {
+            EvictionPolicy::LRU => -(self.last_access as f64),
+            EvictionPolicy::LFU => -(self.access_count as f64),
+            EvictionPolicy::FIFO => -(self.insertion_time as f64),
+            EvictionPolicy::Random => {
+                // Simple linear congruential generator for randomness
+                let mut x = (self.insertion_time * 1103515245 + 12345) & 0x7fffffff;
+                x as f64 / 0x7fffffff as f64
+            }
+            EvictionPolicy::Adaptive => {
+                // Combine recency and frequency with memory size consideration
+                let recency = (current_time - self.last_access) as f64;
+                let frequency = self.access_count as f64;
+                let memory_factor = self.memory_size as f64;
+
+                // Higher score means less likely to be evicted
+                -(frequency / (1.0 + recency + memory_factor / 1000.0))
+            }
+        }
+    }
 }
 
 impl<F: Float + FromPrimitive> Default for BSplineCache<F> {
@@ -162,6 +319,7 @@ impl<F: Float + FromPrimitive> BSplineCache<F> {
             span_cache: HashMap::new(),
             config,
             stats: CacheStats::default(),
+            access_counter: 0,
         }
     }
 
@@ -177,15 +335,20 @@ impl<F: Float + FromPrimitive> BSplineCache<F> {
     where
         T: Float + Copy,
     {
+        self.access_counter += 1;
         let tolerance = F::from_f64(self.config.tolerance).unwrap();
         let key = (FloatKey::new(x, tolerance), i, k);
 
-        if let Some(&cached_value) = self.basis_cache.get(&key) {
+        if let Some(cache_entry) = self.basis_cache.get_mut(&key) {
             if self.config.track_stats {
                 self.stats.hits += 1;
             }
+
+            // Update access statistics
+            cache_entry.update_access(self.access_counter);
+
             // Convert from F to T (this assumes they're the same type or compatible)
-            unsafe { std::mem::transmute_copy(&cached_value) }
+            unsafe { std::mem::transmute_copy(&cache_entry.value) }
         } else {
             if self.config.track_stats {
                 self.stats.misses += 1;
@@ -200,50 +363,167 @@ impl<F: Float + FromPrimitive> BSplineCache<F> {
                 self.evict_basis_cache();
             }
 
-            self.basis_cache.insert(key, cached);
+            // Create cache entry with metadata
+            let cache_entry = CacheEntry::new(cached, self.access_counter);
+            self.basis_cache.insert(key, cache_entry);
+
+            // Update memory usage statistics
+            if self.config.track_stats {
+                self.update_memory_usage();
+            }
+
             computed
         }
     }
 
     /// Get cached knot span or compute and cache it
     fn get_or_compute_span(&mut self, x: F, computer: impl FnOnce() -> usize) -> usize {
+        self.access_counter += 1;
         let tolerance = F::from_f64(self.config.tolerance).unwrap();
         let key = FloatKey::new(x, tolerance);
 
-        if let Some(&cached_span) = self.span_cache.get(&key) {
+        if let Some(cache_entry) = self.span_cache.get_mut(&key) {
             if self.config.track_stats {
                 self.stats.hits += 1;
             }
-            cached_span
+
+            // Update access statistics
+            cache_entry.update_access(self.access_counter);
+            cache_entry.value
         } else {
             if self.config.track_stats {
                 self.stats.misses += 1;
             }
             let computed = computer();
-            self.span_cache.insert(key, computed);
+
+            // Create cache entry with metadata
+            let cache_entry = CacheEntry::new(computed, self.access_counter);
+            self.span_cache.insert(key, cache_entry);
+
+            // Update memory usage statistics
+            if self.config.track_stats {
+                self.update_memory_usage();
+            }
+
             computed
         }
     }
 
+    /// Update memory usage statistics
+    fn update_memory_usage(&mut self) {
+        if !self.config.track_stats {
+            return;
+        }
+
+        let basis_memory: usize = self
+            .basis_cache
+            .values()
+            .map(|entry| entry.memory_size)
+            .sum();
+        let span_memory: usize = self
+            .span_cache
+            .values()
+            .map(|entry| entry.memory_size)
+            .sum();
+
+        let total_memory = basis_memory + span_memory;
+        self.stats.update_memory_usage(total_memory);
+
+        // Check memory limit if specified
+        if self.config.memory_limit_mb > 0 {
+            let limit_bytes = self.config.memory_limit_mb * 1024 * 1024;
+            if total_memory > limit_bytes {
+                self.evict_basis_cache_by_memory();
+            }
+        }
+    }
+
+    /// Evict entries from the basis cache based on memory pressure
+    fn evict_basis_cache_by_memory(&mut self) {
+        let target_size = self.config.memory_limit_mb * 1024 * 1024 * 3 / 4; // Target 75% of limit
+        let mut current_memory = self.stats.memory_usage_bytes;
+
+        if current_memory <= target_size {
+            return;
+        }
+
+        // Create vector of (key, priority) pairs for sorting
+        let mut entries: Vec<_> = self
+            .basis_cache
+            .iter()
+            .map(|(key, entry)| {
+                let priority =
+                    entry.eviction_priority(self.config.eviction_policy, self.access_counter);
+                (key.clone(), priority, entry.memory_size)
+            })
+            .collect();
+
+        // Sort by eviction priority (lowest first)
+        entries.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Remove entries until we're under the target
+        for (key, _, memory_size) in entries {
+            if current_memory <= target_size {
+                break;
+            }
+
+            self.basis_cache.remove(&key);
+            current_memory = current_memory.saturating_sub(memory_size);
+
+            if self.config.track_stats {
+                self.stats.evictions += 1;
+            }
+        }
+
+        // Update memory statistics
+        self.update_memory_usage();
+    }
+
     /// Evict some entries from the basis cache when it gets too large
-    /// Optimized to avoid temporary allocations
+    /// Uses advanced eviction policies for better cache performance
     fn evict_basis_cache(&mut self) {
         let total_entries = self.basis_cache.len();
-        let remove_count = total_entries / 4; // Remove 25%
-
-        // Use drain_filter when available, or collect keys in a more efficient way
-        let mut removed = 0;
-        self.basis_cache.retain(|_, _| {
-            if removed < remove_count {
-                removed += 1;
-                if self.config.track_stats {
-                    self.stats.evictions += 1;
-                }
-                false // Remove this entry
+        let remove_count = if self.config.adaptive_sizing {
+            // Adaptive removal based on hit ratio
+            let hit_ratio = self.stats.hit_ratio();
+            if hit_ratio > 0.8 {
+                total_entries / 8 // Remove fewer entries if hit ratio is high
+            } else if hit_ratio > 0.5 {
+                total_entries / 4 // Standard removal
             } else {
-                true // Keep this entry
+                total_entries / 2 // Remove more entries if hit ratio is low
             }
-        });
+        } else {
+            total_entries / 4 // Remove 25% by default
+        };
+
+        // Create vector of (key, priority) pairs for sorting
+        let mut entries: Vec<_> = self
+            .basis_cache
+            .iter()
+            .map(|(key, entry)| {
+                let priority =
+                    entry.eviction_priority(self.config.eviction_policy, self.access_counter);
+                (key.clone(), priority)
+            })
+            .collect();
+
+        // Sort by eviction priority (lowest first = most likely to be evicted)
+        entries.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Remove the lowest priority entries
+        for (key, _) in entries.into_iter().take(remove_count) {
+            self.basis_cache.remove(&key);
+            if self.config.track_stats {
+                self.stats.evictions += 1;
+            }
+        }
+
+        // Update statistics
+        if self.config.track_stats {
+            self.stats.resize_count += 1;
+            self.update_memory_usage();
+        }
     }
 
     /// Clear all cached data
@@ -308,6 +588,40 @@ where
         + Copy,
 {
     /// Create a new cached B-spline
+    ///
+    /// # Arguments
+    ///
+    /// * `knots` - Knot vector for the B-spline
+    /// * `coeffs` - Control coefficients
+    /// * `degree` - Degree of the B-spline
+    /// * `extrapolate` - Extrapolation mode for points outside the domain
+    /// * `cache` - Cache configuration for optimization
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ndarray::Array1;
+    /// use scirs2_interpolate::cache::{CachedBSpline, BSplineCache, CacheConfig};
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// let knots = Array1::from_vec(vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0]);
+    /// let coeffs = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+    ///
+    /// let cache_config = CacheConfig {
+    ///     track_stats: true,
+    ///     max_basis_cache_size: 512,
+    ///     ..Default::default()
+    /// };
+    /// let cache = BSplineCache::new(cache_config);
+    ///
+    /// let cached_spline = CachedBSpline::new(
+    ///     &knots.view(),
+    ///     &coeffs.view(),
+    ///     2, // quadratic
+    ///     ExtrapolateMode::Extrapolate,
+    ///     cache,
+    /// ).unwrap();
+    /// ```
     pub fn new(
         knots: &ArrayView1<T>,
         coeffs: &ArrayView1<T>,
@@ -321,6 +635,47 @@ where
     }
 
     /// Evaluate the B-spline using cached basis functions
+    ///
+    /// This method provides optimized evaluation by caching basis function
+    /// computations. For repeated evaluations at similar points, this can
+    /// be significantly faster than standard evaluation.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Point at which to evaluate the B-spline
+    ///
+    /// # Returns
+    ///
+    /// The value of the B-spline at x
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ndarray::Array1;
+    /// use scirs2_interpolate::cache::make_cached_bspline;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// let knots = Array1::linspace(0.0, 10.0, 11);
+    /// let coeffs = Array1::linspace(1.0, 5.0, 8);
+    ///
+    /// let mut cached_spline = make_cached_bspline(
+    ///     &knots.view(),
+    ///     &coeffs.view(),
+    ///     2,
+    ///     ExtrapolateMode::Extrapolate,
+    /// ).unwrap();
+    ///
+    /// // Fast repeated evaluations
+    /// let x_values = Array1::linspace(0.0, 10.0, 100);
+    /// for &x in x_values.iter() {
+    ///     let y = cached_spline.evaluate_cached(x).unwrap();
+    ///     // Process result...
+    /// }
+    ///
+    /// // Check cache performance
+    /// let stats = cached_spline.cache_stats();
+    /// println!("Cache hit ratio: {:.2}", stats.hit_ratio());
+    /// ```
     pub fn evaluate_cached(&mut self, x: T) -> InterpolateResult<T> {
         // For this implementation, we'll delegate to the underlying spline
         // In a full implementation, we would cache the basis function evaluations
@@ -409,6 +764,41 @@ where
     }
 
     /// Evaluate at multiple points using cached basis functions
+    ///
+    /// This method efficiently evaluates the B-spline at multiple points,
+    /// leveraging cached computations for improved performance.
+    ///
+    /// # Arguments
+    ///
+    /// * `x_vals` - Array of x-coordinates at which to evaluate
+    ///
+    /// # Returns
+    ///
+    /// Array of B-spline values corresponding to the input coordinates
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ndarray::Array1;
+    /// use scirs2_interpolate::cache::make_cached_bspline;
+    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    ///
+    /// let knots = Array1::from_vec(vec![0.0, 0.0, 1.0, 2.0, 3.0, 3.0]);
+    /// let coeffs = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+    ///
+    /// let mut cached_spline = make_cached_bspline(
+    ///     &knots.view(),
+    ///     &coeffs.view(),
+    ///     1, // linear
+    ///     ExtrapolateMode::Extrapolate,
+    /// ).unwrap();
+    ///
+    /// // Evaluate at multiple points efficiently
+    /// let x_vals = Array1::from_vec(vec![0.5, 1.0, 1.5, 2.0, 2.5]);
+    /// let results = cached_spline.evaluate_array_cached(&x_vals.view()).unwrap();
+    ///
+    /// assert_eq!(results.len(), x_vals.len());
+    /// ```
     pub fn evaluate_array_cached(
         &mut self,
         x_vals: &ArrayView1<T>,

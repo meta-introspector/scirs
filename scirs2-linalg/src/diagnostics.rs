@@ -4,7 +4,7 @@
 //! helping users understand and fix issues more effectively.
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array1, ArrayView2};
+use ndarray::ArrayView2;
 use num_traits::{Float, NumAssign, ToPrimitive};
 use std::fmt;
 
@@ -201,7 +201,7 @@ where
         // Alternative check for small matrices with nearly zero determinant
         if a.nrows() == 2 && a.ncols() == 2 {
             use crate::basic::det;
-            if let Ok(det_val) = det(a) {
+            if let Ok(det_val) = det(a, None) {
                 // This specific check is for the test case
                 if det_val.abs() < F::from(1e-8).unwrap() {
                     diagnostics
@@ -260,7 +260,7 @@ where
     // Check for singular/near-singular matrices using determinant for small matrices
     if a.nrows() <= 3 && a.nrows() == a.ncols() {
         use crate::basic::det;
-        if let Ok(det_val) = det(a) {
+        if let Ok(det_val) = det(a, None) {
             if det_val.abs() < F::epsilon() {
                 diagnostics
                     .suggestions
@@ -312,7 +312,7 @@ where
 
     // Try to compute determinant for small matrices
     if a.nrows() <= 3 {
-        if let Ok(det_a) = det(a) {
+        if let Ok(det_a) = det(a, None) {
             if det_a.abs() < F::epsilon() {
                 return Ok(F::infinity());
             }
@@ -420,7 +420,9 @@ fn compute_gershgorin_radius<F: Float + NumAssign>(a: &ArrayView2<F>) -> Option<
 
 /// Estimate the number of near-zero eigenvalues using Sylvester's criterion
 /// This is an approximation for symmetric matrices
-fn estimate_near_zero_eigenvalues<F: Float + NumAssign>(a: &ArrayView2<F>) -> Option<usize> {
+fn estimate_near_zero_eigenvalues<F: Float + NumAssign + std::iter::Sum>(
+    a: &ArrayView2<F>,
+) -> Option<usize> {
     if a.nrows() != a.ncols() || a.nrows() == 0 {
         return None;
     }
@@ -439,7 +441,7 @@ fn estimate_near_zero_eigenvalues<F: Float + NumAssign>(a: &ArrayView2<F>) -> Op
     // For 2x2 matrices, check determinant
     if n == 2 {
         use crate::basic::det;
-        if let Ok(det_val) = det(a) {
+        if let Ok(det_val) = det(a, None) {
             if det_val.abs() < threshold {
                 zero_count = zero_count.max(1);
             }
@@ -450,6 +452,7 @@ fn estimate_near_zero_eigenvalues<F: Float + NumAssign>(a: &ArrayView2<F>) -> Op
 }
 
 /// Perform advanced stability analysis
+#[allow(dead_code)]
 pub fn advanced_stability_check<F>(a: &ArrayView2<F>) -> StabilityReport<F>
 where
     F: Float + NumAssign + std::iter::Sum + fmt::Display + ToPrimitive,
@@ -530,7 +533,10 @@ where
 }
 
 /// Estimate the numerical rank of a matrix
-fn estimate_numerical_rank<F: Float + NumAssign>(a: &ArrayView2<F>) -> Option<usize> {
+#[allow(dead_code)]
+fn estimate_numerical_rank<F: Float + NumAssign + std::iter::Sum>(
+    a: &ArrayView2<F>,
+) -> Option<usize> {
     if a.nrows() != a.ncols() {
         return None;
     }
@@ -549,7 +555,7 @@ fn estimate_numerical_rank<F: Float + NumAssign>(a: &ArrayView2<F>) -> Option<us
     // For small matrices, check determinant
     if n <= 3 {
         use crate::basic::det;
-        if let Ok(det_val) = det(a) {
+        if let Ok(det_val) = det(a, None) {
             if det_val.abs() < F::epsilon() * F::from(1000.0).unwrap() {
                 apparent_rank = apparent_rank.saturating_sub(1);
             }

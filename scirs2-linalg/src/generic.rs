@@ -194,12 +194,12 @@ where
 
 /// Generic determinant calculation (only for real floats)
 pub fn gdet<T: LinalgScalar + Float>(a: &ArrayView2<T>) -> LinalgResult<T> {
-    crate::basic::det(a)
+    crate::basic::det(a, None)
 }
 
 /// Generic matrix inversion (only for real floats)
 pub fn ginv<T: LinalgScalar + Float>(a: &ArrayView2<T>) -> LinalgResult<Array2<T>> {
-    crate::basic::inv(a)
+    crate::basic::inv(a, None)
 }
 
 /// Generic matrix norm (only for real floats)

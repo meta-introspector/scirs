@@ -4,7 +4,7 @@
 //! only need a few eigenvalues/eigenvectors, not the full spectrum.
 
 use ndarray::{Array1, Array2, ArrayView2};
-use num_traits::{Float, NumAssign, ToPrimitive};
+use num_traits::{Float, NumAssign};
 use rand::Rng;
 use std::iter::Sum;
 

@@ -60,7 +60,7 @@ fn bench_basic_operations(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("inv_basic", size), &matrix, |b, m| {
-            b.iter(|| inv(&m.view()).unwrap())
+            b.iter(|| inv(&m.view(), None).unwrap())
         });
     }
 

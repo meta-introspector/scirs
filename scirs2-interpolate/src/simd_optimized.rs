@@ -176,8 +176,8 @@ where
     }
 
     let n_queries = queries.nrows();
-    let _n_centers = centers.nrows(); // Currently unused but kept for future optimizations
-    let _dims = queries.ncols(); // Currently unused but kept for future optimizations
+    let n_centers = centers.nrows();
+    let dims = queries.ncols();
 
     let mut results = Array1::zeros(n_queries);
 
@@ -254,8 +254,8 @@ fn simd_rbf_evaluate_f64_vectorized(
     epsilon: f64,
 ) -> InterpolateResult<Array1<f64>> {
     let n_queries = queries.nrows();
-    let _n_centers = centers.nrows(); // Currently unused but kept for future optimizations
-    let _dims = queries.ncols(); // Currently unused but kept for future optimizations
+    let n_centers = centers.nrows();
+    let dims = queries.ncols();
     let mut results = Array1::zeros(n_queries);
 
     if is_x86_feature_detected!("avx2") {
@@ -306,8 +306,8 @@ unsafe fn simd_rbf_evaluate_avx2(
     results: &mut Array1<f64>,
 ) -> InterpolateResult<()> {
     let n_queries = queries.nrows();
-    let _n_centers = centers.nrows(); // Currently unused but kept for future optimizations
-    let _dims = queries.ncols(); // Currently unused but kept for future optimizations
+    let n_centers = centers.nrows();
+    let dims = queries.ncols();
 
     // Process 4 f64 values at a time with AVX2
     let simd_width = 4;
@@ -404,8 +404,8 @@ unsafe fn simd_rbf_evaluate_sse2(
     results: &mut Array1<f64>,
 ) -> InterpolateResult<()> {
     let n_queries = queries.nrows();
-    let _n_centers = centers.nrows(); // Currently unused but kept for future optimizations
-    let _dims = queries.ncols(); // Currently unused but kept for future optimizations
+    let n_centers = centers.nrows();
+    let dims = queries.ncols();
 
     // Process 2 f64 values at a time with SSE2
     let simd_width = 2;
@@ -519,8 +519,8 @@ where
     F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
 {
     let n_queries = queries.nrows();
-    let _n_centers = centers.nrows(); // Currently unused but kept for future optimizations
-    let _dims = queries.ncols(); // Currently unused but kept for future optimizations
+    let n_centers = centers.nrows();
+    let dims = queries.ncols();
 
     for q in 0..n_queries {
         let mut sum = F::zero();

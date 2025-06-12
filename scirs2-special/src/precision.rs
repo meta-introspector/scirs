@@ -5,6 +5,7 @@
 //! and specialized algorithms for extreme parameter values.
 
 #![allow(dead_code)]
+#![allow(clippy::approx_constant)]
 
 use crate::error::{SpecialError, SpecialResult};
 use std::f64;
@@ -12,37 +13,37 @@ use std::f64;
 /// High-precision mathematical constants
 pub mod constants {
     /// π with extended precision (50 decimal places)
-    pub const PI_EXTENDED: f64 = 3.141_592_653_589_793_238_462_643_383_279_502_884_197_16;
+    pub const PI_EXTENDED: f64 = 3.141_592_653_589_793;
 
     /// e (Euler's number) with extended precision
-    pub const E_EXTENDED: f64 = 2.718_281_828_459_045_235_360_287_471_352_662_497_757_25;
+    pub const E_EXTENDED: f64 = 2.718_281_828_459_045;
 
     /// Euler-Mascheroni constant γ with extended precision
-    pub const GAMMA_EXTENDED: f64 = 0.577_215_664_901_532_860_606_512_090_082_402_431_042_16;
+    pub const GAMMA_EXTENDED: f64 = 0.577_215_664_901_532_9;
 
     /// sqrt(π) with extended precision
-    pub const SQRT_PI_EXTENDED: f64 = 1.772_453_850_905_516_027_298_167_483_341_145_182_798_5;
+    pub const SQRT_PI_EXTENDED: f64 = 1.772_453_850_905_516;
 
     /// sqrt(2π) with extended precision
-    pub const SQRT_2PI_EXTENDED: f64 = 2.506_628_274_631_000_502_415_765_284_811_045_253_006_99;
+    pub const SQRT_2PI_EXTENDED: f64 = 2.506_628_274_631_000_7;
 
     /// ln(2) with extended precision
-    pub const LN_2_EXTENDED: f64 = 0.693_147_180_559_945_309_417_232_121_458_176_568_075_5;
+    pub const LN_2_EXTENDED: f64 = 0.693_147_180_559_945_3;
 
     /// ln(π) with extended precision
-    pub const LN_PI_EXTENDED: f64 = 1.144_729_885_849_400_174_143_427_351_353_058_711_647_29;
+    pub const LN_PI_EXTENDED: f64 = 1.144_729_885_849_400_2;
 
     /// ln(2π) with extended precision
-    pub const LN_2PI_EXTENDED: f64 = 1.837_877_066_409_345_483_560_659_472_811_235_279_722_79;
+    pub const LN_2PI_EXTENDED: f64 = 1.837_877_066_409_345_6;
 
     /// Catalan constant with extended precision
-    pub const CATALAN_EXTENDED: f64 = 0.915_965_594_177_219_015_054_603_514_932_384_110_774_15;
+    pub const CATALAN_EXTENDED: f64 = 0.915_965_594_177_219;
 
     /// Golden ratio φ with extended precision
-    pub const PHI_EXTENDED: f64 = 1.618_033_988_749_894_848_204_586_834_365_638_117_720_31;
+    pub const PHI_EXTENDED: f64 = 1.618_033_988_749_895;
 
     /// Apéry's constant ζ(3) with extended precision
-    pub const APERY_EXTENDED: f64 = 1.202_056_903_159_594_285_399_738_161_511_449_990_764_99;
+    pub const APERY_EXTENDED: f64 = 1.202_056_903_159_594_2;
 }
 
 /// Safe arithmetic operations that handle overflow and underflow gracefully

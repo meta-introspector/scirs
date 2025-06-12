@@ -72,11 +72,9 @@ pub mod factorizations {
     //! Matrix factorizations with gradients (coming soon)
 }
 
-/// Placeholder for future matrix calculus module
-/// Will include: gradient, hessian, jacobian computations
-pub mod matrix_calculus {
-    //! Matrix calculus operations (coming soon)
-}
+/// Matrix calculus operations with automatic differentiation support
+/// Includes: gradient, hessian, jacobian computations, VJP, JVP
+pub mod matrix_calculus;
 
 /// Helper functions for common patterns in linear algebra autodiff
 pub mod helpers {

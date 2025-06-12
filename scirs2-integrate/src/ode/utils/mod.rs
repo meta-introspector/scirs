@@ -30,6 +30,6 @@ pub use common::{
 
 // SIMD operations (feature-gated)
 #[cfg(feature = "simd")]
-pub use simd_ops::{SimdOdeOps};
+pub use simd_ops::SimdOdeOps;
 
 // Don't re-export events or mass_matrix as they have potential naming conflicts

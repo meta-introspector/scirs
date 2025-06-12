@@ -34,7 +34,7 @@ const BENCHMARK_SEED: u64 = 12345;
 /// Generate reproducible random points for benchmarking
 fn generate_points(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::from_shape_fn((n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
+    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
 /// Generate two sets of random points for cross-distance benchmarks
@@ -45,8 +45,8 @@ fn generate_point_pairs(
     seed: u64,
 ) -> (Array2<f64>, Array2<f64>) {
     let mut rng = StdRng::seed_from_u64(seed);
-    let points1 = Array2::from_shape_fn((n1, dimensions), |_| rng.gen_range(-10.0..10.0));
-    let points2 = Array2::from_shape_fn((n2, dimensions), |_| rng.gen_range(-10.0..10.0));
+    let points1 = Array2::from_shape_fn((n1, dimensions), |_| rng.random_range(-10.0..10.0));
+    let points2 = Array2::from_shape_fn((n2, dimensions), |_| rng.random_range(-10.0..10.0));
     (points1, points2)
 }
 
@@ -130,7 +130,7 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
 
         // Sequential pdist
         group.bench_with_input(BenchmarkId::new("sequential_pdist", size), &size, |b, _| {
-            b.iter(|| black_box(pdist(&points.view(), euclidean)))
+            b.iter(|| black_box(pdist(&points, euclidean)))
         });
 
         // Parallel pdist
@@ -220,7 +220,7 @@ fn bench_distance_metrics_comparison(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("parallel_pdist", metric),
             metric,
-            |b, &metric| b.iter(|| black_box(parallel_pdist(&points.view(), metric).unwrap())),
+            |b, metric| b.iter(|| black_box(parallel_pdist(&points.view(), metric).unwrap())),
         );
     }
 
@@ -232,7 +232,7 @@ fn bench_distance_metrics_comparison(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("simd_single_distance", metric),
             metric,
-            |b, &metric| match metric {
+            |b, metric| match metric {
                 "euclidean" => b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap())),
                 "manhattan" => b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap())),
                 _ => unreachable!(),
@@ -384,7 +384,7 @@ fn bench_knn_performance_scaling(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("knn_by_metric", metric),
             metric,
-            |b, &metric| {
+            |b, metric| {
                 b.iter(|| {
                     black_box(
                         simd_knn_search(&query_points.view(), &data_points.view(), k, metric)

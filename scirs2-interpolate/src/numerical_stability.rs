@@ -30,7 +30,7 @@
 //!
 //! match report.stability_level {
 //!     StabilityLevel::Excellent => println!("Matrix is well-conditioned"),
-//!     StabilityLevel::Poor => println!("Consider regularization: {:?}", 
+//!     StabilityLevel::Poor => println!("Consider regularization: {:?}",
 //!                                     report.recommended_regularization),
 //!     _ => println!("Condition number: {:.2e}", report.condition_number),
 //! }
@@ -38,27 +38,28 @@
 
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView2};
-use num_traits::{Float, FromPrimitive, Zero};
+use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
+use std::ops::{AddAssign, SubAssign};
 
 /// Condition number and stability assessment report
 #[derive(Debug, Clone)]
 pub struct ConditionReport<F>
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     /// Estimated condition number of the matrix
     pub condition_number: F,
-    
+
     /// Whether the matrix is considered well-conditioned
     pub is_well_conditioned: bool,
-    
+
     /// Suggested regularization parameter if needed
     pub recommended_regularization: Option<F>,
-    
+
     /// Overall stability classification
     pub stability_level: StabilityLevel,
-    
+
     /// Additional diagnostic information
     pub diagnostics: StabilityDiagnostics<F>,
 }
@@ -80,30 +81,30 @@ pub enum StabilityLevel {
 #[derive(Debug, Clone)]
 pub struct StabilityDiagnostics<F>
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     /// Smallest singular value (if computed)
     pub min_singular_value: Option<F>,
-    
+
     /// Largest singular value (if computed)
     pub max_singular_value: Option<F>,
-    
+
     /// Matrix rank estimate
     pub estimated_rank: Option<usize>,
-    
+
     /// Whether the matrix appears to be symmetric
     pub is_symmetric: bool,
-    
+
     /// Whether the matrix appears to be positive definite
     pub is_positive_definite: Option<bool>,
-    
+
     /// Machine epsilon for the floating point type
     pub machine_epsilon: F,
 }
 
 impl<F> Default for StabilityDiagnostics<F>
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     fn default() -> Self {
         Self {
@@ -121,15 +122,15 @@ where
 pub fn machine_epsilon<F: Float + FromPrimitive>() -> F {
     match std::mem::size_of::<F>() {
         4 => F::from_f64(f32::EPSILON as f64).unwrap(), // f32
-        8 => F::from_f64(f64::EPSILON).unwrap(),         // f64
-        _ => F::from_f64(2.22e-16).unwrap(),             // Default to f64 epsilon
+        8 => F::from_f64(f64::EPSILON).unwrap(),        // f64
+        _ => F::from_f64(2.22e-16).unwrap(),            // Default to f64 epsilon
     }
 }
 
 /// Assess the numerical condition of a matrix
 pub fn assess_matrix_condition<F>(matrix: &ArrayView2<F>) -> InterpolateResult<ConditionReport<F>>
 where
-    F: Float + FromPrimitive + Debug + Display + 'static,
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
     if matrix.nrows() != matrix.ncols() {
         return Err(InterpolateError::ShapeMismatch {
@@ -147,19 +148,22 @@ where
     }
 
     let mut diagnostics = StabilityDiagnostics::default();
-    
+
     // Check if matrix is symmetric
     diagnostics.is_symmetric = check_symmetry(matrix);
-    
+
     // Estimate condition number
     let condition_number = estimate_condition_number(matrix, &mut diagnostics)?;
-    
+
     // Classify stability level
     let stability_level = classify_stability(condition_number);
-    
+
     // Determine if well-conditioned
-    let is_well_conditioned = matches!(stability_level, StabilityLevel::Excellent | StabilityLevel::Good);
-    
+    let is_well_conditioned = matches!(
+        stability_level,
+        StabilityLevel::Excellent | StabilityLevel::Good
+    );
+
     // Suggest regularization if needed
     let recommended_regularization = if !is_well_conditioned {
         Some(suggest_regularization(condition_number, &diagnostics))
@@ -179,11 +183,11 @@ where
 /// Check if a matrix is symmetric within numerical tolerance
 fn check_symmetry<F>(matrix: &ArrayView2<F>) -> bool
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let n = matrix.nrows();
     let tol = F::from_f64(1e-12).unwrap();
-    
+
     for i in 0..n {
         for j in 0..i {
             let diff = (matrix[[i, j]] - matrix[[j, i]]).abs();
@@ -198,10 +202,10 @@ where
 /// Estimate condition number using different methods based on availability
 fn estimate_condition_number<F>(
     matrix: &ArrayView2<F>,
-    diagnostics: &mut StabilityDiagnostics<F>,
+    _diagnostics: &mut StabilityDiagnostics<F>,
 ) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display + 'static,
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
     // Try SVD-based condition number first (most accurate)
     #[cfg(feature = "linalg")]
@@ -213,7 +217,7 @@ where
             }
         }
     }
-    
+
     // Fall back to norm-based estimation
     estimate_condition_norm_based(matrix)
 }
@@ -225,13 +229,13 @@ fn estimate_condition_svd<F>(
     diagnostics: &mut StabilityDiagnostics<F>,
 ) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display + 'static,
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
     use ndarray_linalg::SVD;
 
     // Convert to f64 for SVD computation
     let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());
-    
+
     match matrix_f64.svd(false, false) {
         Ok((_, singular_values, _)) => {
             if singular_values.is_empty() {
@@ -239,19 +243,19 @@ where
                     "SVD returned empty singular values".to_string(),
                 ));
             }
-            
+
             let max_sv = singular_values[0];
             let min_sv = singular_values[singular_values.len() - 1];
-            
+
             // Update diagnostics
             diagnostics.max_singular_value = Some(F::from_f64(max_sv).unwrap());
             diagnostics.min_singular_value = Some(F::from_f64(min_sv).unwrap());
-            
+
             // Estimate rank
             let eps = f64::EPSILON * max_sv * (matrix.nrows() as f64).sqrt();
             let rank = singular_values.iter().filter(|&&sv| sv > eps).count();
             diagnostics.estimated_rank = Some(rank);
-            
+
             // Compute condition number
             if min_sv > f64::EPSILON {
                 Ok(F::from_f64(max_sv / min_sv).unwrap())
@@ -268,35 +272,35 @@ where
 /// Fallback condition number estimation using matrix norms
 fn estimate_condition_norm_based<F>(matrix: &ArrayView2<F>) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     // Estimate condition number using Frobenius norm and diagonal dominance
     let n = matrix.nrows();
-    
+
     // Compute Frobenius norm
     let frobenius_norm_sq = matrix.iter().map(|&x| x * x).fold(F::zero(), |a, b| a + b);
     let frobenius_norm = frobenius_norm_sq.sqrt();
-    
+
     // Estimate smallest eigenvalue using Gershgorin circles
     let mut min_gershgorin = F::infinity();
-    
+
     for i in 0..n {
         let diagonal = matrix[[i, i]];
         let off_diagonal_sum = (0..n)
             .filter(|&j| j != i)
             .map(|j| matrix[[i, j]].abs())
             .fold(F::zero(), |a, b| a + b);
-        
+
         let center = diagonal.abs();
         let radius = off_diagonal_sum;
-        
+
         // Lower bound of Gershgorin disk
         let lower_bound = center - radius;
         if lower_bound > F::zero() && lower_bound < min_gershgorin {
             min_gershgorin = lower_bound;
         }
     }
-    
+
     // Estimate condition number
     if min_gershgorin.is_finite() && min_gershgorin > F::zero() {
         Ok(frobenius_norm / min_gershgorin)
@@ -323,18 +327,15 @@ where
 }
 
 /// Suggest regularization parameter based on condition number and diagnostics
-fn suggest_regularization<F>(
-    condition_number: F,
-    diagnostics: &StabilityDiagnostics<F>,
-) -> F
+fn suggest_regularization<F>(condition_number: F, diagnostics: &StabilityDiagnostics<F>) -> F
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let machine_eps = diagnostics.machine_epsilon;
-    
+
     // Base regularization on condition number and machine epsilon
     let base_reg = machine_eps * condition_number.sqrt();
-    
+
     // Adjust based on minimum singular value if available
     if let Some(min_sv) = diagnostics.min_singular_value {
         if min_sv < machine_eps {
@@ -353,11 +354,11 @@ where
 /// Check if a division operation is numerically safe
 pub fn check_safe_division<F>(numerator: F, denominator: F) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let eps = machine_epsilon::<F>();
     let safe_threshold = eps * F::from_f64(1e6).unwrap();
-    
+
     if denominator.abs() < safe_threshold {
         Err(InterpolateError::NumericalError(format!(
             "Division by near-zero value: {} / {} (threshold: {:.2e})",
@@ -371,7 +372,7 @@ where
 /// Check if reciprocal operation is numerically safe
 pub fn safe_reciprocal<F>(value: F) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     check_safe_division(F::one(), value)
 }
@@ -382,10 +383,10 @@ pub fn apply_tikhonov_regularization<F>(
     regularization: F,
 ) -> InterpolateResult<()>
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let n = matrix.nrows();
-    
+
     if matrix.ncols() != n {
         return Err(InterpolateError::ShapeMismatch {
             expected: "square matrix".to_string(),
@@ -393,12 +394,12 @@ where
             object: "Tikhonov regularization".to_string(),
         });
     }
-    
+
     // Add regularization to diagonal
     for i in 0..n {
         matrix[[i, i]] += regularization;
     }
-    
+
     Ok(())
 }
 
@@ -408,52 +409,50 @@ pub fn solve_with_stability_monitoring<F>(
     rhs: &Array1<F>,
 ) -> InterpolateResult<(Array1<F>, ConditionReport<F>)>
 where
-    F: Float + FromPrimitive + Debug + Display + 'static,
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
     // Assess matrix condition first
     let condition_report = assess_matrix_condition(&matrix.view())?;
-    
+
     // Warn about poor conditioning
     if matches!(condition_report.stability_level, StabilityLevel::Poor) {
         eprintln!(
             "Warning: Matrix is poorly conditioned (condition number: {:.2e}). \
              Consider regularization parameter: {:?}",
-            condition_report.condition_number,
-            condition_report.recommended_regularization
+            condition_report.condition_number, condition_report.recommended_regularization
         );
     }
-    
+
     // Attempt solve with regularization if recommended
     let solution = if let Some(reg) = condition_report.recommended_regularization {
         let mut regularized_matrix = matrix.clone();
         apply_tikhonov_regularization(&mut regularized_matrix, reg)?;
-        
+
         // Try solve with regularized matrix
-        solve_system(&regularized_matrix, rhs)
-            .or_else(|_| {
-                eprintln!("Warning: Regularized solve failed, falling back to original matrix");
-                solve_system(matrix, rhs)
-            })?
+        solve_system(&regularized_matrix, rhs).or_else(|_| {
+            eprintln!("Warning: Regularized solve failed, falling back to original matrix");
+            solve_system(matrix, rhs)
+        })?
     } else {
         solve_system(matrix, rhs)?
     };
-    
+
     Ok((solution, condition_report))
 }
 
 /// Internal function to solve linear system
 fn solve_system<F>(matrix: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug + Display + 'static,
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
     #[cfg(feature = "linalg")]
     {
         use ndarray_linalg::Solve;
-        
+
         // Convert to f64 for solve
         let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());
         let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
-        
+
         match matrix_f64.solve(&rhs_f64) {
             Ok(solution_f64) => {
                 let solution = solution_f64.mapv(|x| F::from_f64(x).unwrap());
@@ -464,7 +463,7 @@ where
             )),
         }
     }
-    
+
     #[cfg(not(feature = "linalg"))]
     {
         // Fallback: simple Gaussian elimination for small systems
@@ -480,14 +479,17 @@ where
 
 /// Simple Gaussian elimination for small systems (fallback)
 #[cfg(not(feature = "linalg"))]
-fn gaussian_elimination_small<F>(matrix: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>>
+fn gaussian_elimination_small<F>(
+    matrix: &Array2<F>,
+    rhs: &Array1<F>,
+) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug + Display,
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let n = matrix.nrows();
     let mut a = matrix.clone();
     let mut b = rhs.clone();
-    
+
     // Forward elimination
     for i in 0..n {
         // Find pivot
@@ -497,7 +499,7 @@ where
                 max_row = k;
             }
         }
-        
+
         // Swap rows
         if max_row != i {
             for j in 0..n {
@@ -509,24 +511,26 @@ where
             b[i] = b[max_row];
             b[max_row] = temp;
         }
-        
+
         // Check for near-zero pivot
         if a[[i, i]].abs() < machine_epsilon::<F>() * F::from_f64(1e6).unwrap() {
             return Err(InterpolateError::ComputationError(
                 "Matrix is singular or nearly singular".to_string(),
             ));
         }
-        
+
         // Eliminate column
         for k in (i + 1)..n {
             let factor = a[[k, i]] / a[[i, i]];
             for j in i..n {
-                a[[k, j]] -= factor * a[[i, j]];
+                let a_ij = a[[i, j]];
+                a[[k, j]] -= factor * a_ij;
             }
-            b[k] -= factor * b[i];
+            let b_i = b[i];
+            b[k] -= factor * b_i;
         }
     }
-    
+
     // Back substitution
     let mut x = Array1::zeros(n);
     for i in (0..n).rev() {
@@ -536,7 +540,7 @@ where
         }
         x[i] = (b[i] - sum) / a[[i, i]];
     }
-    
+
     Ok(x)
 }
 
@@ -550,7 +554,7 @@ mod tests {
     fn test_machine_epsilon() {
         let eps_f32: f32 = machine_epsilon();
         let eps_f64: f64 = machine_epsilon();
-        
+
         assert!(eps_f32 > 0.0);
         assert!(eps_f64 > 0.0);
         assert!(eps_f32 > eps_f64); // f32 has larger epsilon
@@ -560,7 +564,7 @@ mod tests {
     fn test_condition_assessment_identity() {
         let matrix = Array2::eye(3);
         let report = assess_matrix_condition(&matrix.view()).unwrap();
-        
+
         assert_relative_eq!(report.condition_number, 1.0, epsilon = 1e-10);
         assert!(report.is_well_conditioned);
         assert_eq!(report.stability_level, StabilityLevel::Excellent);
@@ -571,9 +575,9 @@ mod tests {
     fn test_condition_assessment_ill_conditioned() {
         let mut matrix = Array2::eye(3);
         matrix[[2, 2]] = 1e-16; // Make it ill-conditioned
-        
+
         let report = assess_matrix_condition(&matrix.view()).unwrap();
-        
+
         assert!(report.condition_number > 1e12);
         assert!(!report.is_well_conditioned);
         assert!(matches!(report.stability_level, StabilityLevel::Poor));
@@ -584,7 +588,7 @@ mod tests {
     fn test_symmetry_check() {
         let symmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0]).unwrap();
         let asymmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        
+
         assert!(check_symmetry(&symmetric.view()));
         assert!(!check_symmetry(&asymmetric.view()));
     }
@@ -593,7 +597,7 @@ mod tests {
     fn test_safe_division() {
         assert!(check_safe_division(1.0, 2.0).is_ok());
         assert!(check_safe_division(1.0, 1e-20).is_err());
-        
+
         assert_eq!(check_safe_division(6.0, 2.0).unwrap(), 3.0);
     }
 
@@ -601,7 +605,7 @@ mod tests {
     fn test_safe_reciprocal() {
         assert!(safe_reciprocal(2.0).is_ok());
         assert!(safe_reciprocal(1e-20).is_err());
-        
+
         assert_relative_eq!(safe_reciprocal(4.0).unwrap(), 0.25, epsilon = 1e-10);
     }
 
@@ -611,9 +615,9 @@ mod tests {
         matrix[[0, 0]] = 1.0;
         matrix[[1, 1]] = 2.0;
         matrix[[2, 2]] = 3.0;
-        
+
         apply_tikhonov_regularization(&mut matrix, 0.1).unwrap();
-        
+
         assert_relative_eq!(matrix[[0, 0]], 1.1, epsilon = 1e-10);
         assert_relative_eq!(matrix[[1, 1]], 2.1, epsilon = 1e-10);
         assert_relative_eq!(matrix[[2, 2]], 3.1, epsilon = 1e-10);
@@ -624,9 +628,9 @@ mod tests {
     fn test_solve_with_monitoring() {
         let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 1.0]).unwrap();
         let rhs = Array1::from_vec(vec![3.0, 2.0]);
-        
+
         let (solution, report) = solve_with_stability_monitoring(&matrix, &rhs).unwrap();
-        
+
         assert_relative_eq!(solution[0], 1.0, epsilon = 1e-10);
         assert_relative_eq!(solution[1], 1.0, epsilon = 1e-10);
         assert!(report.is_well_conditioned);

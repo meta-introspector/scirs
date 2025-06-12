@@ -244,7 +244,7 @@ fn simd_gemm_micro_kernel_f32(
             let nr_actual = nr.min(nc - jr);
 
             // Initialize accumulator registers
-            let mut c_regs = vec![f32x8::splat(0.0); (mr_actual * nr_actual + 7) / 8];
+            let mut c_regs = vec![f32x8::splat(0.0); (mr_actual * nr_actual).div_ceil(8)];
 
             // Inner product loop over K dimension
             for p in 0..kc {
@@ -281,6 +281,7 @@ fn simd_gemm_micro_kernel_f32(
                     }
 
                     // Handle remaining elements
+                    #[allow(clippy::needless_range_loop)]
                     for i in a_idx..mr_actual {
                         let reg_idx = (j * mr_actual + i) / 8;
                         let lane = (j * mr_actual + i) % 8;
@@ -343,7 +344,7 @@ fn simd_gemm_micro_kernel_f64(
             let nr_actual = nr.min(nc - jr);
 
             // Initialize accumulator registers (4-wide for f64)
-            let mut c_regs = vec![f64x4::splat(0.0); (mr_actual * nr_actual + 3) / 4];
+            let mut c_regs = vec![f64x4::splat(0.0); (mr_actual * nr_actual).div_ceil(4)];
 
             // Inner product loop over K dimension
             for p in 0..kc {
@@ -376,6 +377,7 @@ fn simd_gemm_micro_kernel_f64(
                     }
 
                     // Handle remaining elements
+                    #[allow(clippy::needless_range_loop)]
                     for i in a_idx..mr_actual {
                         let reg_idx = (j * mr_actual + i) / 4;
                         let lane = (j * mr_actual + i) % 4;

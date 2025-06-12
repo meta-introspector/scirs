@@ -3,12 +3,12 @@
 #[cfg(test)]
 mod tests {
     // use super::*; // Unused import, commenting out
+    use crate::pde::finite_element::{
+        ElementType, FEMOptions, FEMPoissonSolver, HigherOrderMeshGenerator, Point, ShapeFunctions,
+        TriangularMesh, TriangularQuadrature,
+    };
     use crate::pde::{
         BoundaryCondition as GenericBoundaryCondition, BoundaryConditionType, BoundaryLocation,
-    };
-    use crate::pde::finite_element::{
-        TriangularMesh, HigherOrderMeshGenerator, ShapeFunctions, TriangularQuadrature,
-        ElementType, FEMOptions, FEMPoissonSolver, Point,
     };
     use approx::assert_relative_eq;
 

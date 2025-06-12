@@ -21,7 +21,7 @@ lazy_static = { workspace = true }
 
 [features]
 default = []
-parallel = ["scirs2-core/parallel", "ndarray/rayon"]
+parallel = ["scirs2-core/parallel", "ndarray/rayon", "rayon"]
 simd = ["scirs2-core/simd"]
 lazy = ["futures"]
 gpu = ["wgpu", "bytemuck"]
@@ -39,6 +39,11 @@ optional = true
 
 [dependencies.bytemuck]
 version = "1.14"
+features = ["derive"]
+optional = true
+
+[dependencies.rayon]
+version = "1.10"
 optional = true
 
 # Note: These are placeholder features - actual implementations would use appropriate crates

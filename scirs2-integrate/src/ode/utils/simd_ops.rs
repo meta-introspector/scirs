@@ -38,7 +38,7 @@ impl SimdOdeOps {
                 _ => {}
             }
         }
-        
+
         // Fallback implementation
         Zip::from(y).and(dy).for_each(|y_val, &dy_val| {
             *y_val += a * dy_val;
@@ -47,10 +47,10 @@ impl SimdOdeOps {
 
     /// Compute linear combination: result = a*x + b*y using SIMD
     pub fn simd_linear_combination<F: IntegrateFloat>(
-        x: &ArrayView1<F>, 
-        a: F, 
-        y: &ArrayView1<F>, 
-        b: F
+        x: &ArrayView1<F>,
+        a: F,
+        y: &ArrayView1<F>,
+        b: F,
     ) -> Array1<F> {
         let mut result = Array1::zeros(x.len());
         #[cfg(feature = "simd")]
@@ -77,11 +77,14 @@ impl SimdOdeOps {
                 _ => {}
             }
         }
-        
+
         // Fallback implementation
-        Zip::from(&mut result).and(x).and(y).for_each(|r, &x_val, &y_val| {
-            *r = a * x_val + b * y_val;
-        });
+        Zip::from(&mut result)
+            .and(x)
+            .and(y)
+            .for_each(|r, &x_val, &y_val| {
+                *r = a * x_val + b * y_val;
+            });
         result
     }
 
@@ -108,11 +111,14 @@ impl SimdOdeOps {
                 _ => {}
             }
         }
-        
+
         // Fallback implementation
-        Zip::from(&mut result).and(a).and(b).for_each(|r, &a_val, &b_val| {
-            *r = a_val.max(b_val);
-        });
+        Zip::from(&mut result)
+            .and(a)
+            .and(b)
+            .for_each(|r, &a_val, &b_val| {
+                *r = a_val.max(b_val);
+            });
         result
     }
 
@@ -139,11 +145,14 @@ impl SimdOdeOps {
                 _ => {}
             }
         }
-        
+
         // Fallback implementation
-        Zip::from(&mut result).and(a).and(b).for_each(|r, &a_val, &b_val| {
-            *r = a_val.min(b_val);
-        });
+        Zip::from(&mut result)
+            .and(a)
+            .and(b)
+            .for_each(|r, &a_val, &b_val| {
+                *r = a_val.min(b_val);
+            });
         result
     }
 
@@ -165,9 +174,12 @@ impl SimdOdeOps {
                 _ => {}
             }
         }
-        
+
         // Fallback implementation
-        x.iter().map(|&val| val * val).fold(F::zero(), |acc, x| acc + x).sqrt()
+        x.iter()
+            .map(|&val| val * val)
+            .fold(F::zero(), |acc, x| acc + x)
+            .sqrt()
     }
 
     /// Compute infinity norm using SIMD
@@ -188,9 +200,11 @@ impl SimdOdeOps {
                 _ => {}
             }
         }
-        
+
         // Fallback implementation
-        x.iter().map(|&val| val.abs()).fold(F::zero(), |acc, x| acc.max(x))
+        x.iter()
+            .map(|&val| val.abs())
+            .fold(F::zero(), |acc, x| acc.max(x))
     }
 
     /// Apply scalar function element-wise using SIMD when possible

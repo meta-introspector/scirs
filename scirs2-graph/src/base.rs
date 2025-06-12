@@ -431,6 +431,375 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> {
     }
 }
 
+/// A multi-graph structure that supports parallel edges
+///
+/// Unlike Graph, MultiGraph allows multiple edges between the same pair of nodes.
+/// This is useful for modeling scenarios where multiple connections of different types
+/// or weights can exist between nodes.
+pub struct MultiGraph<N: Node, E: EdgeWeight, Ix: IndexType = u32> {
+    /// Adjacency list representation: node -> list of (neighbor, edge_weight, edge_id)
+    adjacency: HashMap<N, Vec<(N, E, usize)>>,
+    /// All nodes in the graph
+    nodes: std::collections::HashSet<N>,
+    /// Edge counter for unique edge IDs
+    edge_id_counter: usize,
+    /// All edges in the graph with their IDs
+    edges: HashMap<usize, Edge<N, E>>,
+    /// Phantom data for index type
+    _phantom: std::marker::PhantomData<Ix>,
+}
+
+/// A directed multi-graph structure that supports parallel edges
+pub struct MultiDiGraph<N: Node, E: EdgeWeight, Ix: IndexType = u32> {
+    /// Outgoing adjacency list: node -> list of (target, edge_weight, edge_id)
+    out_adjacency: HashMap<N, Vec<(N, E, usize)>>,
+    /// Incoming adjacency list: node -> list of (source, edge_weight, edge_id)
+    in_adjacency: HashMap<N, Vec<(N, E, usize)>>,
+    /// All nodes in the graph
+    nodes: std::collections::HashSet<N>,
+    /// Edge counter for unique edge IDs
+    edge_id_counter: usize,
+    /// All edges in the graph with their IDs
+    edges: HashMap<usize, Edge<N, E>>,
+    /// Phantom data for index type
+    _phantom: std::marker::PhantomData<Ix>,
+}
+
+impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for MultiGraph<N, E, Ix> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<N: Node, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, Ix> {
+    /// Create a new empty multi-graph
+    pub fn new() -> Self {
+        MultiGraph {
+            adjacency: HashMap::new(),
+            nodes: std::collections::HashSet::new(),
+            edge_id_counter: 0,
+            edges: HashMap::new(),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Add a node to the graph
+    pub fn add_node(&mut self, node: N) {
+        if !self.nodes.contains(&node) {
+            self.nodes.insert(node.clone());
+            self.adjacency.insert(node, Vec::new());
+        }
+    }
+
+    /// Add an edge between two nodes with a given weight
+    /// Returns the edge ID for reference
+    pub fn add_edge(&mut self, source: N, target: N, weight: E) -> usize
+    where
+        N: Clone,
+        E: Clone,
+    {
+        // Ensure both nodes exist
+        self.add_node(source.clone());
+        self.add_node(target.clone());
+
+        let edge_id = self.edge_id_counter;
+        self.edge_id_counter += 1;
+
+        // Add to adjacency lists (undirected, so add both directions)
+        self.adjacency
+            .get_mut(&source)
+            .unwrap()
+            .push((target.clone(), weight.clone(), edge_id));
+
+        if source != target {
+            self.adjacency.get_mut(&target).unwrap().push((
+                source.clone(),
+                weight.clone(),
+                edge_id,
+            ));
+        }
+
+        // Store edge information
+        self.edges.insert(
+            edge_id,
+            Edge {
+                source,
+                target,
+                weight,
+            },
+        );
+
+        edge_id
+    }
+
+    /// Get all parallel edges between two nodes
+    pub fn get_edges_between(&self, source: &N, target: &N) -> Vec<(usize, &E)>
+    where
+        E: Clone,
+    {
+        let mut result = Vec::new();
+
+        if let Some(neighbors) = self.adjacency.get(source) {
+            for (neighbor, weight, edge_id) in neighbors {
+                if neighbor == target {
+                    result.push((*edge_id, weight));
+                }
+            }
+        }
+
+        result
+    }
+
+    /// Remove an edge by its ID
+    pub fn remove_edge(&mut self, edge_id: usize) -> Result<Edge<N, E>>
+    where
+        N: Clone,
+        E: Clone,
+    {
+        if let Some(edge) = self.edges.remove(&edge_id) {
+            // Remove from adjacency lists
+            if let Some(neighbors) = self.adjacency.get_mut(&edge.source) {
+                neighbors.retain(|(_, _, id)| *id != edge_id);
+            }
+
+            if edge.source != edge.target {
+                if let Some(neighbors) = self.adjacency.get_mut(&edge.target) {
+                    neighbors.retain(|(_, _, id)| *id != edge_id);
+                }
+            }
+
+            Ok(edge)
+        } else {
+            Err(GraphError::EdgeNotFound)
+        }
+    }
+
+    /// Get all nodes in the graph
+    pub fn nodes(&self) -> std::collections::hash_set::Iter<'_, N> {
+        self.nodes.iter()
+    }
+
+    /// Get all edges in the graph
+    pub fn edges(&self) -> std::collections::hash_map::Values<'_, usize, Edge<N, E>> {
+        self.edges.values()
+    }
+
+    /// Number of nodes in the graph
+    pub fn node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
+    /// Number of edges in the graph
+    pub fn edge_count(&self) -> usize {
+        self.edges.len()
+    }
+
+    /// Get neighbors of a node with edge weights and IDs
+    pub fn neighbors_with_edges(&self, node: &N) -> Option<&Vec<(N, E, usize)>> {
+        self.adjacency.get(node)
+    }
+
+    /// Get simple neighbors (without edge information)
+    pub fn neighbors(&self, node: &N) -> Vec<&N> {
+        if let Some(neighbors) = self.adjacency.get(node) {
+            neighbors.iter().map(|(neighbor, _, _)| neighbor).collect()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Check if the graph contains a node
+    pub fn has_node(&self, node: &N) -> bool {
+        self.nodes.contains(node)
+    }
+
+    /// Get the degree of a node (total number of incident edges)
+    pub fn degree(&self, node: &N) -> usize {
+        self.adjacency
+            .get(node)
+            .map_or(0, |neighbors| neighbors.len())
+    }
+}
+
+impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for MultiDiGraph<N, E, Ix> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<N: Node, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E, Ix> {
+    /// Create a new empty directed multi-graph
+    pub fn new() -> Self {
+        MultiDiGraph {
+            out_adjacency: HashMap::new(),
+            in_adjacency: HashMap::new(),
+            nodes: std::collections::HashSet::new(),
+            edge_id_counter: 0,
+            edges: HashMap::new(),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Add a node to the graph
+    pub fn add_node(&mut self, node: N) {
+        if !self.nodes.contains(&node) {
+            self.nodes.insert(node.clone());
+            self.out_adjacency.insert(node.clone(), Vec::new());
+            self.in_adjacency.insert(node, Vec::new());
+        }
+    }
+
+    /// Add an edge from source to target with given weight
+    /// Returns the edge ID for reference
+    pub fn add_edge(&mut self, source: N, target: N, weight: E) -> usize
+    where
+        N: Clone,
+        E: Clone,
+    {
+        // Ensure both nodes exist
+        self.add_node(source.clone());
+        self.add_node(target.clone());
+
+        let edge_id = self.edge_id_counter;
+        self.edge_id_counter += 1;
+
+        // Add to outgoing adjacency list
+        self.out_adjacency.get_mut(&source).unwrap().push((
+            target.clone(),
+            weight.clone(),
+            edge_id,
+        ));
+
+        // Add to incoming adjacency list
+        self.in_adjacency
+            .get_mut(&target)
+            .unwrap()
+            .push((source.clone(), weight.clone(), edge_id));
+
+        // Store edge information
+        self.edges.insert(
+            edge_id,
+            Edge {
+                source,
+                target,
+                weight,
+            },
+        );
+
+        edge_id
+    }
+
+    /// Get all parallel edges between two nodes
+    pub fn get_edges_between(&self, source: &N, target: &N) -> Vec<(usize, &E)> {
+        let mut result = Vec::new();
+
+        if let Some(neighbors) = self.out_adjacency.get(source) {
+            for (neighbor, weight, edge_id) in neighbors {
+                if neighbor == target {
+                    result.push((*edge_id, weight));
+                }
+            }
+        }
+
+        result
+    }
+
+    /// Remove an edge by its ID
+    pub fn remove_edge(&mut self, edge_id: usize) -> Result<Edge<N, E>>
+    where
+        N: Clone,
+        E: Clone,
+    {
+        if let Some(edge) = self.edges.remove(&edge_id) {
+            // Remove from outgoing adjacency list
+            if let Some(neighbors) = self.out_adjacency.get_mut(&edge.source) {
+                neighbors.retain(|(_, _, id)| *id != edge_id);
+            }
+
+            // Remove from incoming adjacency list
+            if let Some(neighbors) = self.in_adjacency.get_mut(&edge.target) {
+                neighbors.retain(|(_, _, id)| *id != edge_id);
+            }
+
+            Ok(edge)
+        } else {
+            Err(GraphError::EdgeNotFound)
+        }
+    }
+
+    /// Get all nodes in the graph
+    pub fn nodes(&self) -> std::collections::hash_set::Iter<'_, N> {
+        self.nodes.iter()
+    }
+
+    /// Get all edges in the graph
+    pub fn edges(&self) -> std::collections::hash_map::Values<'_, usize, Edge<N, E>> {
+        self.edges.values()
+    }
+
+    /// Number of nodes in the graph
+    pub fn node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
+    /// Number of edges in the graph
+    pub fn edge_count(&self) -> usize {
+        self.edges.len()
+    }
+
+    /// Get outgoing neighbors of a node with edge weights and IDs
+    pub fn successors_with_edges(&self, node: &N) -> Option<&Vec<(N, E, usize)>> {
+        self.out_adjacency.get(node)
+    }
+
+    /// Get incoming neighbors of a node with edge weights and IDs
+    pub fn predecessors_with_edges(&self, node: &N) -> Option<&Vec<(N, E, usize)>> {
+        self.in_adjacency.get(node)
+    }
+
+    /// Get simple successors (without edge information)
+    pub fn successors(&self, node: &N) -> Vec<&N> {
+        if let Some(neighbors) = self.out_adjacency.get(node) {
+            neighbors.iter().map(|(neighbor, _, _)| neighbor).collect()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Get simple predecessors (without edge information)
+    pub fn predecessors(&self, node: &N) -> Vec<&N> {
+        if let Some(neighbors) = self.in_adjacency.get(node) {
+            neighbors.iter().map(|(neighbor, _, _)| neighbor).collect()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Check if the graph contains a node
+    pub fn has_node(&self, node: &N) -> bool {
+        self.nodes.contains(node)
+    }
+
+    /// Get the out-degree of a node
+    pub fn out_degree(&self, node: &N) -> usize {
+        self.out_adjacency
+            .get(node)
+            .map_or(0, |neighbors| neighbors.len())
+    }
+
+    /// Get the in-degree of a node
+    pub fn in_degree(&self, node: &N) -> usize {
+        self.in_adjacency
+            .get(node)
+            .map_or(0, |neighbors| neighbors.len())
+    }
+
+    /// Get the total degree of a node (in-degree + out-degree)
+    pub fn degree(&self, node: &N) -> usize {
+        self.in_degree(node) + self.out_degree(node)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -521,5 +890,96 @@ mod tests {
         // D connects to C, A = 2
 
         assert_eq!(degrees, Array1::from_vec(vec![3, 2, 3, 2]));
+    }
+
+    #[test]
+    fn test_multigraph_parallel_edges() {
+        let mut graph: MultiGraph<&str, f64> = MultiGraph::new();
+
+        // Add parallel edges between A and B
+        let edge1 = graph.add_edge("A", "B", 1.0);
+        let edge2 = graph.add_edge("A", "B", 2.0);
+        let edge3 = graph.add_edge("A", "B", 3.0);
+
+        assert_eq!(graph.node_count(), 2);
+        assert_eq!(graph.edge_count(), 3);
+
+        // Check that we can get all parallel edges
+        let edges_ab = graph.get_edges_between(&"A", &"B");
+        assert_eq!(edges_ab.len(), 3);
+
+        // Check edge weights
+        let weights: Vec<f64> = edges_ab.iter().map(|(_, &weight)| weight).collect();
+        assert!(weights.contains(&1.0));
+        assert!(weights.contains(&2.0));
+        assert!(weights.contains(&3.0));
+
+        // Remove one edge
+        let removed_edge = graph.remove_edge(edge2).unwrap();
+        assert_eq!(removed_edge.weight, 2.0);
+        assert_eq!(graph.edge_count(), 2);
+
+        // Check remaining edges
+        let edges_ab = graph.get_edges_between(&"A", &"B");
+        assert_eq!(edges_ab.len(), 2);
+    }
+
+    #[test]
+    fn test_multidigraph_parallel_edges() {
+        let mut graph: MultiDiGraph<&str, f64> = MultiDiGraph::new();
+
+        // Add parallel directed edges from A to B
+        let edge1 = graph.add_edge("A", "B", 1.0);
+        let edge2 = graph.add_edge("A", "B", 2.0);
+
+        // Add edge in opposite direction
+        let edge3 = graph.add_edge("B", "A", 3.0);
+
+        assert_eq!(graph.node_count(), 2);
+        assert_eq!(graph.edge_count(), 3);
+
+        // Check outgoing edges from A
+        let edges_ab = graph.get_edges_between(&"A", &"B");
+        assert_eq!(edges_ab.len(), 2);
+
+        // Check outgoing edges from B
+        let edges_ba = graph.get_edges_between(&"B", &"A");
+        assert_eq!(edges_ba.len(), 1);
+
+        // Check degrees
+        assert_eq!(graph.out_degree(&"A"), 2);
+        assert_eq!(graph.in_degree(&"A"), 1);
+        assert_eq!(graph.out_degree(&"B"), 1);
+        assert_eq!(graph.in_degree(&"B"), 2);
+
+        // Remove edge and check
+        graph.remove_edge(edge1).unwrap();
+        assert_eq!(graph.edge_count(), 2);
+        assert_eq!(graph.out_degree(&"A"), 1);
+        assert_eq!(graph.in_degree(&"B"), 1);
+    }
+
+    #[test]
+    fn test_multigraph_self_loops() {
+        let mut graph: MultiGraph<i32, f64> = MultiGraph::new();
+
+        // Add self loops
+        let edge1 = graph.add_edge(1, 1, 10.0);
+        let edge2 = graph.add_edge(1, 1, 20.0);
+
+        assert_eq!(graph.node_count(), 1);
+        assert_eq!(graph.edge_count(), 2);
+
+        // Self loops should appear in neighbors
+        let neighbors = graph.neighbors(&1);
+        assert_eq!(neighbors.len(), 2);
+        assert!(neighbors.iter().all(|&&n| n == 1));
+
+        // Degree should count self loops
+        assert_eq!(graph.degree(&1), 2);
+
+        // Check self-loop edges
+        let self_edges = graph.get_edges_between(&1, &1);
+        assert_eq!(self_edges.len(), 2);
     }
 }

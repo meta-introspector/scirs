@@ -44,6 +44,29 @@ where
         Self { spline, workspace }
     }
 
+    /// Get reference to the underlying B-spline
+    pub fn spline(&self) -> &BSpline<T> {
+        &self.spline
+    }
+
+    /// Check if SIMD optimization is available for this data type
+    pub fn simd_available(&self) -> bool {
+        #[cfg(feature = "simd")]
+        {
+            use std::any::TypeId;
+            TypeId::of::<T>() == TypeId::of::<f64>()
+        }
+        #[cfg(not(feature = "simd"))]
+        {
+            false
+        }
+    }
+
+    /// Evaluate a single point (optimized for workspace reuse)
+    pub fn evaluate(&self, point: T) -> InterpolateResult<T> {
+        self.spline.evaluate_with_workspace(point, &self.workspace)
+    }
+
     /// Evaluate the B-spline at multiple points using SIMD optimization when available
     ///
     /// This method automatically chooses between SIMD and scalar evaluation
@@ -115,15 +138,269 @@ where
         &self,
         points: &ArrayView1<T>,
     ) -> Option<InterpolateResult<Array1<T>>> {
-        // This is a simplified SIMD implementation
-        // In practice, you'd need to implement SIMD versions of:
-        // 1. Knot span finding (binary search)
-        // 2. de Boor's algorithm
-        // 3. Extrapolation handling
+        use std::any::TypeId;
 
-        // For now, return None to use scalar fallback
-        // TODO: Implement full SIMD B-spline evaluation
-        None
+        // Only proceed if T is f64
+        if TypeId::of::<T>() != TypeId::of::<f64>() {
+            return None;
+        }
+
+        // Check if we have enough points to make SIMD worthwhile
+        if points.len() < 4 {
+            return None;
+        }
+
+        // Convert to f64 for SIMD processing
+        let points_f64 =
+            unsafe { std::slice::from_raw_parts(points.as_ptr() as *const f64, points.len()) };
+
+        match self.evaluate_batch_simd_f64_impl(points_f64) {
+            Ok(results_f64) => {
+                // Convert results back to T
+                let mut results = Array1::zeros(points.len());
+                for (i, &val) in results_f64.iter().enumerate() {
+                    results[i] = unsafe { *(&val as *const f64 as *const T) };
+                }
+                Some(Ok(results))
+            }
+            Err(e) => Some(Err(e)),
+        }
+    }
+
+    /// Core SIMD implementation for f64 B-spline evaluation
+    #[cfg(feature = "simd")]
+    fn evaluate_batch_simd_f64_impl(&self, points: &[f64]) -> InterpolateResult<Vec<f64>> {
+        let knots = unsafe {
+            std::slice::from_raw_parts(
+                self.spline.knot_vector().as_ptr() as *const f64,
+                self.spline.knot_vector().len(),
+            )
+        };
+
+        let coeffs = unsafe {
+            std::slice::from_raw_parts(
+                self.spline.coefficients().as_ptr() as *const f64,
+                self.spline.coefficients().len(),
+            )
+        };
+
+        let degree = self.spline.degree();
+        let n_points = points.len();
+        let mut results = vec![0.0; n_points];
+
+        // Process points in SIMD-friendly chunks
+        let chunk_size = 4; // f64x4 SIMD width
+        let n_chunks = n_points / chunk_size;
+        let remainder = n_points % chunk_size;
+
+        // Process full chunks with vectorized de Boor
+        for chunk_idx in 0..n_chunks {
+            let start_idx = chunk_idx * chunk_size;
+            let chunk_points = &points[start_idx..start_idx + chunk_size];
+            let chunk_results = &mut results[start_idx..start_idx + chunk_size];
+
+            self.vectorized_de_boor_f64x4(chunk_points, knots, coeffs, degree, chunk_results)?;
+        }
+
+        // Handle remaining points with scalar evaluation
+        if remainder > 0 {
+            let start_idx = n_chunks * chunk_size;
+            for (i, &point) in points[start_idx..].iter().enumerate() {
+                results[start_idx + i] = self.scalar_de_boor_f64(point, knots, coeffs, degree)?;
+            }
+        }
+
+        Ok(results)
+    }
+
+    /// Vectorized de Boor algorithm for 4 points simultaneously
+    #[cfg(feature = "simd")]
+    fn vectorized_de_boor_f64x4(
+        &self,
+        points: &[f64], // Length 4
+        knots: &[f64],
+        coeffs: &[f64],
+        degree: usize,
+        results: &mut [f64], // Length 4
+    ) -> InterpolateResult<()> {
+        assert_eq!(points.len(), 4);
+        assert_eq!(results.len(), 4);
+
+        // Find knot spans for all 4 points
+        let mut spans = [0usize; 4];
+        for (i, &point) in points.iter().enumerate() {
+            spans[i] = self.find_knot_span_f64(point, knots, degree)?;
+        }
+
+        // Check if all spans are the same (common case for nearby points)
+        let same_span = spans.iter().all(|&span| span == spans[0]);
+
+        if same_span {
+            // Optimized path for same knot span
+            self.vectorized_de_boor_same_span_f64x4(
+                points, knots, coeffs, degree, spans[0], results,
+            )?;
+        } else {
+            // General path with different spans
+            self.vectorized_de_boor_different_spans_f64x4(
+                points, knots, coeffs, degree, &spans, results,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    /// Optimized vectorized de Boor for points in the same knot span
+    #[cfg(feature = "simd")]
+    fn vectorized_de_boor_same_span_f64x4(
+        &self,
+        points: &[f64],
+        knots: &[f64],
+        coeffs: &[f64],
+        degree: usize,
+        span: usize,
+        results: &mut [f64],
+    ) -> InterpolateResult<()> {
+        // Load points into SIMD register
+        let points_vec = f64x4::new([points[0], points[1], points[2], points[3]]);
+
+        // Initialize working array with coefficient vectors
+        let mut d = vec![f64x4::ZERO; degree + 1];
+
+        // Load initial coefficients
+        for j in 0..=degree {
+            let coeff_idx = span - degree + j;
+            if coeff_idx < coeffs.len() {
+                d[j] = f64x4::splat(coeffs[coeff_idx]);
+            }
+        }
+
+        // Vectorized de Boor recursion
+        for r in 1..=degree {
+            for j in (r..=degree).rev() {
+                let knot_left = knots[span - degree + j];
+                let knot_right = knots[span + j - r + 1];
+                let knot_diff = knot_right - knot_left;
+
+                if knot_diff.abs() < f64::EPSILON {
+                    // Handle repeated knots
+                    continue;
+                }
+
+                // Compute alpha for all points simultaneously
+                let knot_left_vec = f64x4::splat(knot_left);
+                let knot_diff_vec = f64x4::splat(knot_diff);
+                let alpha = (points_vec - knot_left_vec) / knot_diff_vec;
+
+                // de Boor recursion: d[j] = (1-alpha) * d[j-1] + alpha * d[j]
+                let one_minus_alpha = f64x4::splat(1.0) - alpha;
+                d[j] = one_minus_alpha * d[j - 1] + alpha * d[j];
+            }
+        }
+
+        // Extract results
+        let final_result = d[degree];
+        results[0] = final_result.as_array()[0];
+        results[1] = final_result.as_array()[1];
+        results[2] = final_result.as_array()[2];
+        results[3] = final_result.as_array()[3];
+
+        Ok(())
+    }
+
+    /// Vectorized de Boor for points with different knot spans
+    #[cfg(feature = "simd")]
+    fn vectorized_de_boor_different_spans_f64x4(
+        &self,
+        points: &[f64],
+        knots: &[f64],
+        coeffs: &[f64],
+        degree: usize,
+        spans: &[usize],
+        results: &mut [f64],
+    ) -> InterpolateResult<()> {
+        // For different spans, we need separate processing
+        // but can still vectorize some operations
+
+        for (i, (&point, &span)) in points.iter().zip(spans.iter()).enumerate() {
+            results[i] = self.scalar_de_boor_f64(point, knots, coeffs, degree)?;
+        }
+
+        Ok(())
+    }
+
+    /// Scalar de Boor algorithm for fallback
+    #[cfg(feature = "simd")]
+    fn scalar_de_boor_f64(
+        &self,
+        point: f64,
+        knots: &[f64],
+        coeffs: &[f64],
+        degree: usize,
+    ) -> InterpolateResult<f64> {
+        let span = self.find_knot_span_f64(point, knots, degree)?;
+
+        // Initialize working array
+        let mut d = vec![0.0; degree + 1];
+        for j in 0..=degree {
+            let coeff_idx = span - degree + j;
+            if coeff_idx < coeffs.len() {
+                d[j] = coeffs[coeff_idx];
+            }
+        }
+
+        // de Boor recursion
+        for r in 1..=degree {
+            for j in (r..=degree).rev() {
+                let knot_left = knots[span - degree + j];
+                let knot_right = knots[span + j - r + 1];
+                let knot_diff = knot_right - knot_left;
+
+                if knot_diff.abs() < f64::EPSILON {
+                    continue;
+                }
+
+                let alpha = (point - knot_left) / knot_diff;
+                d[j] = (1.0 - alpha) * d[j - 1] + alpha * d[j];
+            }
+        }
+
+        Ok(d[degree])
+    }
+
+    /// Find knot span using binary search
+    #[cfg(feature = "simd")]
+    fn find_knot_span_f64(
+        &self,
+        point: f64,
+        knots: &[f64],
+        degree: usize,
+    ) -> InterpolateResult<usize> {
+        let n = knots.len() - degree - 1;
+
+        // Handle boundary cases
+        if point <= knots[degree] {
+            return Ok(degree);
+        }
+        if point >= knots[n] {
+            return Ok(n - 1);
+        }
+
+        // Binary search
+        let mut low = degree;
+        let mut high = n;
+        let mut mid = (low + high) / 2;
+
+        while point < knots[mid] || point >= knots[mid + 1] {
+            if point < knots[mid] {
+                high = mid;
+            } else {
+                low = mid;
+            }
+            mid = (low + high) / 2;
+        }
+
+        Ok(mid)
     }
 
     /// SIMD-optimized distance calculation for RBF methods
@@ -252,10 +529,78 @@ mod tests {
         let points = Array1::linspace(0.1, 0.9, 10);
         let batch_result = evaluator.evaluate_batch(&points.view())?;
 
-        // Compare with individual evaluation
+        // Compare with individual evaluations
         for (i, &point) in points.iter().enumerate() {
             let individual_result = spline.evaluate(point)?;
             assert_abs_diff_eq!(batch_result[i], individual_result, epsilon = 1e-12);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "simd")]
+    fn test_simd_detection() -> InterpolateResult<()> {
+        let knots = Array1::linspace(0.0, 1.0, 10);
+        let coeffs = Array1::linspace(-1.0, 1.0, 7);
+        let spline = BSpline::new(
+            &knots.view(),
+            &coeffs.view(),
+            3,
+            ExtrapolateMode::Extrapolate,
+        )?;
+
+        let evaluator_f64 = SimdBSplineEvaluator::new(spline);
+
+        // f64 should have SIMD available if compiled with simd feature
+        assert!(evaluator_f64.simd_available());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_large_batch_performance() -> InterpolateResult<()> {
+        let knots = Array1::linspace(0.0, 1.0, 20);
+        let coeffs = Array1::linspace(-2.0, 2.0, 17);
+        let spline = BSpline::new(
+            &knots.view(),
+            &coeffs.view(),
+            3,
+            ExtrapolateMode::Extrapolate,
+        )?;
+
+        let evaluator = SimdBSplineEvaluator::new(spline);
+
+        // Test large batch that will trigger SIMD code paths
+        let points = Array1::linspace(0.05, 0.95, 1000);
+        let result = evaluator.evaluate_batch(&points.view())?;
+
+        assert_eq!(result.len(), 1000);
+
+        // Basic sanity check - results should be finite and reasonable
+        for &val in result.iter() {
+            assert!(val.is_finite());
+            assert!(val.abs() < 10.0); // Should be reasonable for our test function
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_edge_cases() -> InterpolateResult<()> {
+        let knots = Array1::linspace(0.0, 1.0, 8);
+        let coeffs = Array1::linspace(0.0, 1.0, 5);
+        let spline = BSpline::new(&knots.view(), &coeffs.view(), 3, ExtrapolateMode::Constant)?;
+
+        let evaluator = SimdBSplineEvaluator::new(spline);
+
+        // Test edge cases
+        let edge_points = Array1::from_vec(vec![0.0, 1.0, 0.5]);
+        let result = evaluator.evaluate_batch(&edge_points.view())?;
+
+        assert_eq!(result.len(), 3);
+        for &val in result.iter() {
+            assert!(val.is_finite());
         }
 
         Ok(())

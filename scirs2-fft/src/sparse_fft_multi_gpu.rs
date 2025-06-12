@@ -99,7 +99,7 @@ impl Default for MultiGPUConfig {
             base_config: SparseFFTConfig::default(),
             distribution: WorkloadDistribution::ComputeBased,
             manual_ratios: Vec::new(),
-            max_devices: 0, // Use all available
+            max_devices: 0,        // Use all available
             min_signal_size: 4096, // Only use multi-GPU for larger signals
             chunk_overlap: 0,
             enable_load_balancing: true,
@@ -219,7 +219,7 @@ impl MultiGPUSparseFFT {
                 device_name: "AMD GPU (simulated)".to_string(),
                 memory_total: 16 * 1024 * 1024 * 1024, // 16GB
                 memory_free: 12 * 1024 * 1024 * 1024,  // 12GB free
-                compute_capability: 10.3, // GFX103x equivalent
+                compute_capability: 10.3,              // GFX103x equivalent
                 compute_units: 40,
                 max_threads_per_block: 256,
                 is_available: true,
@@ -241,7 +241,7 @@ impl MultiGPUSparseFFT {
                 device_name: "Intel GPU (simulated)".to_string(),
                 memory_total: 4 * 1024 * 1024 * 1024, // 4GB
                 memory_free: 3 * 1024 * 1024 * 1024,  // 3GB free
-                compute_capability: 1.2, // Intel GPU equivalent
+                compute_capability: 1.2,              // Intel GPU equivalent
                 compute_units: 96,
                 max_threads_per_block: 512,
                 is_available: true,
@@ -318,7 +318,7 @@ impl MultiGPUSparseFFT {
                     .iter()
                     .map(|(idx, device)| (*idx, (*device).clone()))
                     .collect();
-                
+
                 // Use performance history to select best devices
                 self.select_adaptive_devices_with_clone(available_devices_clone, max_devices)?;
             }
@@ -489,7 +489,11 @@ impl MultiGPUSparseFFT {
     }
 
     /// Calculate chunk sizes for workload distribution
-    fn calculate_chunk_sizes(&self, signal_len: usize, num_devices: usize) -> FFTResult<Vec<usize>> {
+    fn calculate_chunk_sizes(
+        &self,
+        signal_len: usize,
+        num_devices: usize,
+    ) -> FFTResult<Vec<usize>> {
         let mut chunk_sizes = Vec::with_capacity(num_devices);
 
         match self.config.distribution {
@@ -498,7 +502,11 @@ impl MultiGPUSparseFFT {
                 let remainder = signal_len % num_devices;
 
                 for i in 0..num_devices {
-                    let size = if i < remainder { base_size + 1 } else { base_size };
+                    let size = if i < remainder {
+                        base_size + 1
+                    } else {
+                        base_size
+                    };
                     chunk_sizes.push(size);
                 }
             }
@@ -507,7 +515,10 @@ impl MultiGPUSparseFFT {
                 let total_compute: f32 = self
                     .selected_devices
                     .iter()
-                    .map(|&idx| self.devices[idx].compute_capability * self.devices[idx].compute_units as f32)
+                    .map(|&idx| {
+                        self.devices[idx].compute_capability
+                            * self.devices[idx].compute_units as f32
+                    })
                     .sum();
 
                 let mut remaining = signal_len;
@@ -608,7 +619,10 @@ impl MultiGPUSparseFFT {
     }
 
     /// Combine results from multiple chunks
-    fn combine_chunk_results(&self, chunk_results: Vec<SparseFFTResult>) -> FFTResult<SparseFFTResult> {
+    fn combine_chunk_results(
+        &self,
+        chunk_results: Vec<SparseFFTResult>,
+    ) -> FFTResult<SparseFFTResult> {
         if chunk_results.is_empty() {
             return Err(FFTError::ComputationError(
                 "No chunk results to combine".to_string(),
@@ -634,7 +648,7 @@ impl MultiGPUSparseFFT {
         for result in chunk_results {
             // Store the indices length before moving
             let indices_len = result.indices.len();
-            
+
             // Add values from this chunk
             combined_values.extend(result.values);
 

@@ -124,7 +124,7 @@ impl MemoryBenchmark {
 
     fn generate_points(&self, n_points: usize, dimensions: usize) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
-        Array2::from_shape_fn((n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
+        Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
     }
 
     /// Analyze memory usage for different data sizes
@@ -199,7 +199,7 @@ impl MemoryBenchmark {
 
     fn test_sequential_pdist(&self, points: &Array2<f64>) -> MemoryStats {
         MEMORY_TRACKER.reset();
-        let _distances = pdist(&points.view(), euclidean);
+        let _distances = pdist(&points, euclidean);
         MEMORY_TRACKER.get_stats()
     }
 
@@ -250,7 +250,7 @@ impl MemoryBenchmark {
             // Random access pattern (simulate worst-case cache behavior)
             let mut rng = StdRng::seed_from_u64(self.seed);
             let indices: Vec<(usize, usize)> = (0..size * 10)
-                .map(|_| (rng.gen_range(0..size), rng.gen_range(0..10)))
+                .map(|_| (rng.random_range(0..size), rng.random_range(0..10)))
                 .collect();
 
             let start = Instant::now();
@@ -477,8 +477,8 @@ criterion_group!(
 
 criterion_main!(memory_benches);
 
-/// Main function for running memory analysis
-fn main() {
+/// Standalone function for running memory analysis
+fn run_memory_analysis() {
     let benchmark = MemoryBenchmark::new(12345);
 
     // Run comprehensive memory analysis

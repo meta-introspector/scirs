@@ -225,7 +225,7 @@ fn demo_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
 
     // Error analysis
     use scirs2_special::precision::error_analysis;
-    let computed = 3.14159;
+    let computed = std::f64::consts::PI;
     let exact = PI;
     let digits = error_analysis::accurate_digits(computed, exact);
     println!("π approximation accuracy: {} digits", digits);

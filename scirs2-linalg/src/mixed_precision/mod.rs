@@ -816,7 +816,7 @@ where
     let a_high = convert_2d::<A, H>(a);
 
     // Compute SVD in high precision
-    let (_, s, _) = svd(&a_high.view(), false)?;
+    let (_, s, _) = svd(&a_high.view(), false, None)?;
 
     // Find the largest and smallest singular values
     let s_max = s.iter().cloned().fold(H::zero(), |a, b| a.max(b));
@@ -942,7 +942,7 @@ where
 
     // Compute initial solution in working precision
     use crate::solve::solve;
-    let x_w: Array1<W> = solve(&a_w.view(), &b_w.view())?;
+    let x_w: Array1<W> = solve(&a_w.view(), &b_w.view(), None)?;
 
     // Convert initial solution to higher precision
     let mut x_h: Array1<H> = convert(&x_w.view());
@@ -975,7 +975,7 @@ where
         let r_w: Array1<W> = convert(&r_h.view());
 
         // Solve for correction in working precision: A * dx = r
-        let dx_w = solve(&a_w.view(), &r_w.view())?;
+        let dx_w = solve(&a_w.view(), &r_w.view(), None)?;
 
         // Convert correction to higher precision and apply
         let dx_h: Array1<H> = convert(&dx_w.view());
@@ -1523,7 +1523,7 @@ where
         use crate::decomposition::svd;
 
         // Call SVD with higher precision
-        svd(&a_h.view(), full_matrices)?
+        svd(&a_h.view(), full_matrices, None)?
     };
 
     // Convert back to desired output precision
@@ -1760,7 +1760,7 @@ where
         }
         _ => {
             // For larger matrices, use LU decomposition in higher precision
-            match crate::decomposition::lu(&a_h.view()) {
+            match crate::decomposition::lu(&a_h.view(), None) {
                 Ok((p, _l, u)) => {
                     // Calculate the determinant as the product of diagonal elements of U
                     let mut det_u = H::one();
@@ -1858,7 +1858,7 @@ where
     // Use mixed_precision_solve_multiple if available, otherwise use LU decomposition directly
     let result_h = {
         // First, perform LU decomposition with partial pivoting
-        match crate::decomposition::lu(&a_h.view()) {
+        match crate::decomposition::lu(&a_h.view(), None) {
             Ok((p, l, u)) => {
                 // Create the result matrix that will hold the inverse
                 let mut result = Array2::<H>::zeros((n, n));
@@ -1960,7 +1960,7 @@ where
         // Use QR decomposition in higher precision
         let (q_h, r_h) = {
             // Use QR decomposition in higher precision
-            let (q, r) = crate::decomposition::qr(&a_h.view())?;
+            let (q, r) = crate::decomposition::qr(&a_h.view(), None)?;
             (q, r)
         };
 
@@ -2018,7 +2018,7 @@ where
         // Underdetermined system, use SVD in higher precision
         let (u_h, s_h, vt_h) = {
             // Use SVD in higher precision
-            crate::decomposition::svd(&a_h.view(), false)?
+            crate::decomposition::svd(&a_h.view(), false, None)?
         };
 
         // Determine effective rank by thresholding singular values
@@ -2518,7 +2518,7 @@ mod tests {
 
         // First solve with standard solver in f32
         use crate::solve::solve;
-        let x_std = solve(&ill_conditioned.view(), &b_ill.view()).unwrap();
+        let x_std = solve(&ill_conditioned.view(), &b_ill.view(), None).unwrap();
 
         // Then solve with iterative refinement using f64 precision internally
         let x_ref = iterative_refinement_solve::<_, _, f32, f64, f32>(
@@ -2668,7 +2668,7 @@ mod tests {
 
         // Compare standard precision vs mixed precision
         use crate::decomposition::lu as decomp_lu;
-        let lu_std = decomp_lu(&a_ill.view()).unwrap(); // Using standard library LU
+        let lu_std = decomp_lu(&a_ill.view(), None).unwrap(); // Using standard library LU
         let (lu_mixed, _) = mixed_precision_lu::<_, f32, f64>(&a_ill.view()).unwrap();
 
         // Check the residual errors in the decomposition
@@ -3007,7 +3007,7 @@ mod tests {
         }
 
         // Try to invert with standard precision (using ordinary inv function)
-        let hilbert_inv_std = crate::basic::inv(&hilbert.view()).unwrap();
+        let hilbert_inv_std = crate::basic::inv(&hilbert.view(), None).unwrap();
 
         // Invert with mixed precision
         let hilbert_inv_mixed = mixed_precision_inv::<_, f32, f64>(&hilbert.view()).unwrap();
@@ -3153,7 +3153,7 @@ mod tests {
         ];
 
         // Calculate expected determinant from basic::det to ensure consistency
-        let det_a_expected = crate::basic::det(&a.view()).unwrap();
+        let det_a_expected = crate::basic::det(&a.view(), None).unwrap();
         let det_a = mixed_precision_det::<_, f32, f64>(&a.view()).unwrap();
         assert_relative_eq!(det_a, det_a_expected, epsilon = 1e-5);
 
@@ -3167,7 +3167,7 @@ mod tests {
         ];
 
         // Calculate expected determinant from basic::det to ensure consistency
-        let det_b_expected = crate::basic::det(&b.view()).unwrap();
+        let det_b_expected = crate::basic::det(&b.view(), None).unwrap();
         let det_b = mixed_precision_det::<_, f32, f64>(&b.view()).unwrap();
         assert_relative_eq!(det_b, det_b_expected, epsilon = 1e-5);
     }
@@ -3186,13 +3186,13 @@ mod tests {
         let hilbert_f64 = convert_2d::<f32, f64>(&hilbert.view());
 
         // Calculate determinant using standard f32 precision
-        let det_std = crate::basic::det(&hilbert.view()).unwrap();
+        let det_std = crate::basic::det(&hilbert.view(), None).unwrap();
 
         // Calculate determinant using mixed precision
         let det_mixed = mixed_precision_det::<_, f32, f64>(&hilbert.view()).unwrap();
 
         // Calculate determinant using direct f64 precision (as reference)
-        let det_f64_ref = crate::basic::det(&hilbert_f64.view()).unwrap() as f32;
+        let det_f64_ref = crate::basic::det(&hilbert_f64.view(), None).unwrap() as f32;
 
         // For a 5x5 Hilbert matrix, the determinant is extremely small
         // The main goal is to confirm that the mixed precision version is

@@ -167,7 +167,7 @@ fn distance_matrix_performance_example() -> Result<(), Box<dyn std::error::Error
         // Scalar pdist
         let start = Instant::now();
         let _scalar_dists =
-            scirs2_spatial::distance::pdist(&points.view(), scirs2_spatial::distance::euclidean);
+            scirs2_spatial::distance::pdist(&points, scirs2_spatial::distance::euclidean);
         let scalar_time = start.elapsed().as_millis();
 
         // Parallel SIMD pdist

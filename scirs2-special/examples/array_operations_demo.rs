@@ -10,14 +10,15 @@ use scirs2_special::array_ops::*;
 use scirs2_special::*;
 use std::time::Instant;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SCIRS2-SPECIAL Array Operations Demo ===\n");
 
     // 1. Basic Vectorized Operations
-    demo_vectorized_operations()?;
+    demo_vectorized_operations().await?;
 
     // 2. Multidimensional Arrays
-    demo_multidimensional_arrays()?;
+    demo_multidimensional_arrays().await?;
 
     // 3. Broadcasting Operations
     demo_broadcasting()?;
@@ -29,19 +30,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     demo_memory_efficiency()?;
 
     // 6. Performance Comparison
-    demo_performance_comparison()?;
+    demo_performance_comparison().await?;
 
     println!("=== Array operations demo completed successfully! ===");
     Ok(())
 }
 
-fn demo_vectorized_operations() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_vectorized_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Vectorized Special Function Operations");
     println!("========================================");
 
     // Gamma function on arrays
     let gamma_input = arr1(&[1.0, 2.0, 3.0, 4.0, 5.0]);
-    let gamma_result = convenience::gamma_1d(&gamma_input)?;
+    let gamma_result = convenience::gamma_1d(&gamma_input).await?;
     println!("Gamma function:");
     println!("  Input:  {:?}", gamma_input);
     println!("  Output: {:?}", gamma_result);
@@ -80,13 +81,13 @@ fn demo_vectorized_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn demo_multidimensional_arrays() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_multidimensional_arrays() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Multidimensional Array Operations");
     println!("====================================");
 
     // 2D gamma function
     let gamma_2d = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
-    let gamma_2d_result = convenience::gamma_2d(&gamma_2d)?;
+    let gamma_2d_result = convenience::gamma_2d(&gamma_2d).await?;
     println!("2D Gamma function:");
     println!("Input:\n{:?}", gamma_2d);
     println!("Output:\n{:?}", gamma_2d_result);
@@ -96,7 +97,7 @@ fn demo_multidimensional_arrays() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nProcessing large array (1000 elements):");
 
     let start = Instant::now();
-    let large_gamma_result = convenience::gamma_1d(&large_input)?;
+    let large_gamma_result = convenience::gamma_1d(&large_input).await?;
     let duration = start.elapsed();
 
     println!(
@@ -227,16 +228,16 @@ fn demo_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nArray processing configurations:");
 
     let configs = [
-        ArrayConfig {
-            chunk_size: 512,
-            parallel: false,
-            memory_limit: 512 * 1024 * 1024,
-        },
-        ArrayConfig {
-            chunk_size: 2048,
-            parallel: false,
-            memory_limit: 2 * 1024 * 1024 * 1024,
-        },
+        convenience::ConfigBuilder::new()
+            .chunk_size(512)
+            .parallel(false)
+            .memory_limit(512 * 1024 * 1024)
+            .build(),
+        convenience::ConfigBuilder::new()
+            .chunk_size(2048)
+            .parallel(false)
+            .memory_limit(2 * 1024 * 1024 * 1024)
+            .build(),
         ArrayConfig::default(),
     ];
 
@@ -254,7 +255,7 @@ fn demo_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn demo_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("6. Performance Comparison");
     println!("=========================");
 
@@ -268,12 +269,12 @@ fn demo_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
         // Element-wise operation
         let start = Instant::now();
-        let _element_wise: Array1<f64> = input.mapv(|x| gamma(x));
+        let _element_wise: Array1<f64> = input.mapv(gamma);
         let element_wise_time = start.elapsed();
 
         // Vectorized operation
         let start = Instant::now();
-        let _vectorized = convenience::gamma_1d(&input)?;
+        let _vectorized = convenience::gamma_1d(&input).await?;
         let vectorized_time = start.elapsed();
 
         println!("  Element-wise: {:?}", element_wise_time);
@@ -293,7 +294,7 @@ fn demo_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let large_input: Array1<f64> = Array1::linspace(0.1, 5.0, large_size);
 
     let start = Instant::now();
-    let _large_result = convenience::gamma_1d(&large_input)?;
+    let _large_result = convenience::gamma_1d(&large_input).await?;
     let duration = start.elapsed();
 
     let throughput = large_size as f64 / duration.as_secs_f64();

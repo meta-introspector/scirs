@@ -485,13 +485,9 @@ mod tests {
 
         // Direct test of the Gragg-Bulirsch-Stoer method instead
         let f = |_t: f64, y: ArrayView1<f64>| -y.to_owned();
-        let result = gragg_bulirsch_stoer_method(
-            f,
-            [0.0, h],
-            y0.clone(),
-            ODEOptions::default(),
-            None,
-        ).unwrap();
+        let result =
+            gragg_bulirsch_stoer_method(f, [0.0, h], y0.clone(), ODEOptions::default(), None)
+                .unwrap();
 
         let exact = (-h).exp();
         let final_value = result.y.last().unwrap()[0];

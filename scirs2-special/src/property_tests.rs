@@ -128,7 +128,7 @@ pub mod properties {
             }
 
             // Test bounds: -1 ≤ erf(x) ≤ 1
-            if erf_x < -1.0 || erf_x > 1.0 {
+            if !(-1.0..=1.0).contains(&erf_x) {
                 errors.push(format!(
                     "erf(x) out of bounds for x={}: erf({})={}",
                     x, x, erf_x

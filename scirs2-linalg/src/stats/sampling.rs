@@ -4,7 +4,7 @@
 //! matrix-valued probability distributions, including multivariate normal,
 //! Wishart, and other specialized distributions.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, One, Zero};
 
 use crate::decomposition::cholesky;
@@ -37,7 +37,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let p = mean.len();
 
@@ -51,7 +53,7 @@ where
     }
 
     // Generate standard normal samples
-    let z = random_normal_matrix((n_samples, p), rng_seed)?;
+    let z = random_normal_matrix::<F>((n_samples, p), rng_seed)?;
 
     // Compute Cholesky factorization of covariance matrix
     let l = cholesky(cov, None)?;
@@ -92,7 +94,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let mut samples = Vec::with_capacity(n_samples);
 
@@ -128,7 +132,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let mut samples = Vec::with_capacity(n_samples);
 
@@ -165,10 +171,13 @@ where
         + One
         + Copy
         + std::fmt::Debug
+        + std::fmt::Display
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
-    let p = scale.nrows();
+    let _p = scale.nrows();
 
     if scale.nrows() != scale.ncols() {
         return Err(LinalgError::ShapeError(
@@ -177,7 +186,7 @@ where
     }
 
     // For inverse Wishart, we sample from Wishart and then invert
-    let scale_inv = crate::basic::inv(scale)?;
+    let scale_inv = crate::basic::inv(scale, None)?;
     let wishart_params = WishartParams::new(scale_inv, dof)?;
 
     let mut samples = Vec::with_capacity(n_samples);
@@ -185,7 +194,7 @@ where
     for i in 0..n_samples {
         let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
         let wishart_sample = crate::stats::distributions::sample_wishart(&wishart_params, seed)?;
-        let inverse_wishart_sample = crate::basic::inv(&wishart_sample.view())?;
+        let inverse_wishart_sample = crate::basic::inv(&wishart_sample.view(), None)?;
         samples.push(inverse_wishart_sample);
     }
 
@@ -220,8 +229,11 @@ where
         + One
         + Copy
         + std::fmt::Debug
+        + std::fmt::Display
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let (m, n) = mean.dim();
 
@@ -244,11 +256,11 @@ where
             crate::stats::distributions::sample_matrix_normal(&matrix_normal_params, seed)?;
 
         // Sample chi-square for scaling (simplified - using normal approximation)
-        let chi_approx = random_normal_matrix((1, 1), seed)?;
+        let chi_approx = random_normal_matrix::<F>((1, 1), seed)?;
         let scale_factor = (dof / (dof + chi_approx[[0, 0]] * chi_approx[[0, 0]])).sqrt();
 
         // Scale the normal sample
-        let t_sample = mean + &(scale_factor * (&normal_sample - mean));
+        let t_sample = mean + &((&normal_sample - mean) * scale_factor);
         samples.push(t_sample);
     }
 
@@ -383,7 +395,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let (m, n) = initial_value.dim();
     let total_samples = n_samples + burn_in;
@@ -400,9 +414,9 @@ where
         let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
 
         // Generate proposal
-        let noise = random_normal_matrix((m, n), seed)?;
-        let proposal_noise = l.t().dot(&noise.view().into_dimensionality().unwrap());
-        let proposal = &current + &proposal_noise.into_dimensionality().unwrap();
+        let noise = random_normal_matrix::<F>((m, n), seed)?;
+        let proposal_noise = l.t().dot(&noise);
+        let proposal = &current + &proposal_noise;
 
         // Compute acceptance probability
         let proposal_log_density = match log_density(&proposal.view()) {
@@ -413,7 +427,7 @@ where
         let log_alpha = proposal_log_density - current_log_density;
 
         // Accept or reject
-        let uniform_sample = random_normal_matrix((1, 1), seed)?;
+        let uniform_sample = random_normal_matrix::<F>((1, 1), seed)?;
         let uniform = (uniform_sample[[0, 0]].abs() % F::one()).abs(); // Rough uniform approximation
 
         if log_alpha > uniform.ln() {

@@ -3,10 +3,10 @@
 //! This example demonstrates the enhanced array operations in scirs2-special,
 //! including lazy evaluation, GPU acceleration, and multidimensional support.
 
-use ndarray::{Array, Array1, Array2};
+use ndarray::{Array, Array1};
 use scirs2_special::array_ops::{
     convenience::{self, ConfigBuilder},
-    Backend, ArrayConfig,
+    ArrayConfig, Backend,
 };
 
 #[tokio::main]
@@ -47,14 +47,14 @@ async fn demo_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
     // 1D gamma function
     let input_1d = Array1::linspace(1.0, 5.0, 5);
     println!("Input 1D array: {:?}", input_1d);
-    
+
     let result_1d = convenience::gamma_1d(&input_1d).await?;
     println!("Gamma(input): {:?}", result_1d);
 
     // 2D gamma function
     let input_2d = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])?;
     println!("\nInput 2D array:\n{:?}", input_2d);
-    
+
     let result_2d = convenience::gamma_2d(&input_2d).await?;
     println!("Gamma(input) 2D:\n{:?}", result_2d);
 
@@ -84,10 +84,12 @@ async fn demo_configuration_options() -> Result<(), Box<dyn std::error::Error>> 
         .lazy_threshold(1000)
         .build();
 
-    println!("Custom config: chunk_size={}, parallel={}, memory_limit={}MB", 
-             custom_config.chunk_size, 
-             custom_config.parallel, 
-             custom_config.memory_limit / (1024 * 1024));
+    println!(
+        "Custom config: chunk_size={}, parallel={}, memory_limit={}MB",
+        custom_config.chunk_size,
+        custom_config.parallel,
+        custom_config.memory_limit / (1024 * 1024)
+    );
 
     // Test with custom config
     let input = Array1::linspace(1.0, 4.0, 4);
@@ -96,23 +98,27 @@ async fn demo_configuration_options() -> Result<(), Box<dyn std::error::Error>> 
 
     // Predefined configurations
     let large_config = convenience::large_array_config();
-    println!("\nLarge array config: chunk_size={}, lazy_threshold={}", 
-             large_config.chunk_size, large_config.lazy_threshold);
+    println!(
+        "\nLarge array config: chunk_size={}, lazy_threshold={}",
+        large_config.chunk_size, large_config.lazy_threshold
+    );
 
     let small_config = convenience::small_array_config();
-    println!("Small array config: chunk_size={}, lazy_threshold={}", 
-             small_config.chunk_size, small_config.lazy_threshold);
+    println!(
+        "Small array config: chunk_size={}, lazy_threshold={}",
+        small_config.chunk_size, small_config.lazy_threshold
+    );
 
     // Test different backends
     let backends = vec![Backend::Cpu];
-    
+
     #[cfg(feature = "lazy")]
     let backends = {
         let mut b = backends;
         b.push(Backend::Lazy);
         b
     };
-    
+
     #[cfg(feature = "gpu")]
     let backends = {
         let mut b = backends;
@@ -121,10 +127,12 @@ async fn demo_configuration_options() -> Result<(), Box<dyn std::error::Error>> 
     };
 
     for backend in backends {
-        let mut config = ArrayConfig::default();
-        config.backend = backend.clone();
+        let config = ArrayConfig {
+            backend: backend.clone(),
+            ..Default::default()
+        };
         println!("Testing backend: {:?}", backend);
-        
+
         let test_input = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let result = convenience::gamma_1d_with_config(&test_input, &config).await?;
         println!("  Result: {:?}", result);
@@ -154,7 +162,7 @@ async fn demo_lazy_evaluation() -> Result<(), Box<dyn std::error::Error>> {
     let start_time = std::time::Instant::now();
     let result = lazy_gamma.compute()?;
     let duration = start_time.elapsed();
-    
+
     println!("Computation completed in {:?}", duration);
     println!("Result shape: {:?}", result.shape());
     println!("First 5 values: {:?}", &result.as_slice().unwrap()[0..5]);
@@ -184,11 +192,15 @@ async fn demo_gpu_acceleration() -> Result<(), Box<dyn std::error::Error>> {
         Ok(gpu_result) => {
             println!("GPU computation successful!");
             println!("Result shape: {:?}", gpu_result.shape());
-            println!("First 5 values: {:?}", &gpu_result.as_slice().unwrap()[0..5]);
-            
+            println!(
+                "First 5 values: {:?}",
+                &gpu_result.as_slice().unwrap()[0..5]
+            );
+
             // Compare with CPU result
             let cpu_result = convenience::gamma_1d(&gpu_input).await?;
-            let max_diff = gpu_result.iter()
+            let max_diff = gpu_result
+                .iter()
                 .zip(cpu_result.iter())
                 .map(|(a, b)| (a - b).abs())
                 .fold(0.0, f64::max);
@@ -216,23 +228,30 @@ async fn demo_large_array_processing() -> Result<(), Box<dyn std::error::Error>>
 
     // Use configuration optimized for large arrays
     let config = convenience::large_array_config();
-    
+
     let start_time = std::time::Instant::now();
     let result = convenience::gamma_1d_with_config(&large_array, &config).await?;
     let duration = start_time.elapsed();
-    
+
     println!("Large array processing completed in {:?}", duration);
     println!("Result statistics:");
-    println!("  Min: {:.6}", result.iter().fold(f64::INFINITY, |a, &b| a.min(b)));
-    println!("  Max: {:.6}", result.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)));
+    println!(
+        "  Min: {:.6}",
+        result.iter().fold(f64::INFINITY, |a, &b| a.min(b))
+    );
+    println!(
+        "  Max: {:.6}",
+        result.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
+    );
     println!("  Mean: {:.6}", result.mean().unwrap());
 
     // Memory usage estimation
     use scirs2_special::array_ops::memory_efficient;
-    let memory_usage = memory_efficient::estimate_memory_usage::<f64>(
-        result.shape(), 2
+    let memory_usage = memory_efficient::estimate_memory_usage::<f64>(result.shape(), 2);
+    println!(
+        "Estimated memory usage: {:.2} MB",
+        memory_usage as f64 / (1024.0 * 1024.0)
     );
-    println!("Estimated memory usage: {:.2} MB", memory_usage as f64 / (1024.0 * 1024.0));
 
     println!();
     Ok(())
@@ -280,48 +299,52 @@ async fn demo_memory_efficient_operations() -> Result<(), Box<dyn std::error::Er
     // Check memory limits
     use scirs2_special::array_ops::memory_efficient;
     let memory_needed = memory_efficient::estimate_memory_usage::<f64>(
-        array_2d.shape(), 3 // input, output, temporary
+        array_2d.shape(),
+        3, // input, output, temporary
     );
-    println!("Estimated memory needed: {:.2} MB", memory_needed as f64 / (1024.0 * 1024.0));
+    println!(
+        "Estimated memory needed: {:.2} MB",
+        memory_needed as f64 / (1024.0 * 1024.0)
+    );
 
     let config = ArrayConfig::default();
-    let within_limit = memory_efficient::check_memory_limit::<f64>(
-        array_2d.shape(), 3, &config
-    );
+    let within_limit = memory_efficient::check_memory_limit::<f64>(array_2d.shape(), 3, &config);
     println!("Within memory limit: {}", within_limit);
 
     // Process with chunking for memory efficiency
     use scirs2_special::array_ops::vectorized;
-    let chunked_result = vectorized::process_chunks(
-        &array_2d,
-        &config,
-        |x| x * 2.0 + 1.0
-    )?;
-    
+    let chunked_result = vectorized::process_chunks(&array_2d, &config, |x: f64| x * 2.0 + 1.0)?;
+
     println!("Chunked processing completed");
     println!("Result shape: {:?}", chunked_result.shape());
-    println!("Sample values: {:?}", &chunked_result.as_slice().unwrap()[0..5]);
+    println!(
+        "Sample values: {:?}",
+        &chunked_result.as_slice().unwrap()[0..5]
+    );
 
     // Parallel processing comparison
     #[cfg(feature = "parallel")]
     {
         let parallel_input = Array1::linspace(-1.0, 1.0, 10000);
-        
+
         println!("\nParallel vs Sequential processing comparison:");
-        
+
         // Sequential
         let start_time = std::time::Instant::now();
         let _seq_result = convenience::erf_1d(&parallel_input)?;
         let seq_duration = start_time.elapsed();
-        
+
         // Parallel
         let start_time = std::time::Instant::now();
         let _par_result = convenience::erf_parallel(&parallel_input)?;
         let par_duration = start_time.elapsed();
-        
+
         println!("  Sequential: {:?}", seq_duration);
         println!("  Parallel: {:?}", par_duration);
-        println!("  Speedup: {:.2}x", seq_duration.as_secs_f64() / par_duration.as_secs_f64());
+        println!(
+            "  Speedup: {:.2}x",
+            seq_duration.as_secs_f64() / par_duration.as_secs_f64()
+        );
     }
 
     println!();

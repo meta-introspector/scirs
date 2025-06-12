@@ -489,7 +489,9 @@ where
     let mut z = Array2::eye(n);
 
     // Iteration
-    for _ in 0..max_iter {
+    let mut final_error = None;
+
+    for _iter in 0..max_iter {
         // Compute Y_next = 0.5 * (Y + Z^-1)
         // and Z_next = 0.5 * (Z + Y^-1)
 
@@ -497,8 +499,10 @@ where
         let z_inv = match solve_multiple(&z.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
             Err(_) => {
-                return Err(LinalgError::InvalidInputError(
-                    "Matrix is singular during square root iteration".to_string(),
+                return Err(LinalgError::singular_matrix_with_suggestions(
+                    "Matrix square root (Denman-Beavers iteration)",
+                    (n, n),
+                    None,
                 ))
             }
         };
@@ -506,8 +510,10 @@ where
         let y_inv = match solve_multiple(&y.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
             Err(_) => {
-                return Err(LinalgError::InvalidInputError(
-                    "Matrix is singular during square root iteration".to_string(),
+                return Err(LinalgError::singular_matrix_with_suggestions(
+                    "Matrix square root (Denman-Beavers iteration)",
+                    (n, n),
+                    None,
                 ))
             }
         };
@@ -536,6 +542,8 @@ where
             }
         }
 
+        final_error = Some(error.to_f64().unwrap_or(1.0));
+
         // Update Y and Z
         y = y_next;
         z = z_next;
@@ -546,8 +554,13 @@ where
         }
     }
 
-    // Return the current approximation if max iterations reached
-    Ok(y)
+    // Failed to converge - return error with suggestions
+    return Err(LinalgError::convergence_with_suggestions(
+        "Matrix square root (Denman-Beavers iteration)",
+        max_iter,
+        tol.to_f64().unwrap_or(1e-12),
+        final_error,
+    ));
 }
 
 /// Compute the matrix cosine using eigendecomposition.

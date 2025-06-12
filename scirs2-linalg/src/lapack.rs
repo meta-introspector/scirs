@@ -105,8 +105,17 @@ where
 
         // Check for singularity
         if max_val < F::epsilon() {
-            return Err(LinalgError::SingularMatrixError(
-                "Matrix is singular or nearly singular".to_string(),
+            // Calculate condition number estimate based on pivot ratio
+            let condition_estimate = if max_val > F::zero() {
+                Some((F::one() / max_val).to_f64().unwrap_or(1e16))
+            } else {
+                None
+            };
+
+            return Err(LinalgError::singular_matrix_with_suggestions(
+                "LU decomposition",
+                (n, m),
+                condition_estimate,
             ));
         }
 

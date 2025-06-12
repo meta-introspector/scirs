@@ -133,7 +133,7 @@ fn demo_half_integer_bessel() -> Result<(), Box<dyn std::error::Error>> {
     let test_values = [
         Complex64::new(1.0, 0.0),
         Complex64::new(2.0, 0.0),
-        Complex64::new(π(), 0.0),
+        Complex64::new(pi(), 0.0),
         Complex64::new(1.0, 0.5),
     ];
 
@@ -200,7 +200,7 @@ fn demo_mathematical_properties() -> Result<(), Box<dyn std::error::Error>> {
         let k0_z = k0_complex(z);
 
         // The Wronskian for I₀ and K₀ is -1/z
-        let expected_wronskian = -Complex64::new(1.0, 0.0) / z;
+        let _expected_wronskian = -Complex64::new(1.0, 0.0) / z;
 
         // For verification, we'd need derivatives, so we'll just show the values
         println!(
@@ -279,6 +279,6 @@ fn demo_complex_arguments() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function for π
-fn π() -> f64 {
+fn pi() -> f64 {
     std::f64::consts::PI
 }

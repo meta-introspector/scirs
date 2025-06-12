@@ -98,6 +98,7 @@ struct SparseQuasiNewton {
     /// Maximum history size
     max_history: usize,
     /// Sparsity pattern for Hessian approximation
+    #[allow(dead_code)]
     pattern: Option<CsrArray<f64>>,
 }
 
@@ -211,7 +212,7 @@ where
 
     let mut iter = 0;
     let mut nfev = 1;
-    let mut njev = 1;
+    let mut _njev = 1;
 
     // Main optimization loop
     while iter < base_opts.max_iter {
@@ -266,7 +267,7 @@ where
 
         // Compute new gradient
         let g_new_dense = grad(&x_new.view());
-        njev += 1;
+        _njev += 1;
 
         let g_new_sparse = if should_use_sparse(&g_new_dense, options.sparse_percentage_threshold) {
             dense_to_sparse_vector(&g_new_dense, options.sparsity_threshold)?
@@ -403,7 +404,7 @@ fn compute_sparse_newton_direction<F>(
     _x: &ArrayView1<f64>,
     g_sparse: &CsrArray<f64>,
     sparsity_info: &SparsityInfo,
-    options: &EfficientSparseOptions,
+    _options: &EfficientSparseOptions,
 ) -> Result<Array1<f64>, OptimizeError>
 where
     F: FnMut(&ArrayView1<f64>) -> f64 + Sync,
@@ -615,6 +616,7 @@ fn sparse_matrix_vector_product(
     Ok(matrix_dense.dot(&vector_dense))
 }
 
+#[allow(dead_code)]
 fn solve_sparse_linear_system(
     matrix: &CsrArray<f64>,
     rhs: &Array1<f64>,
@@ -676,9 +678,9 @@ mod tests {
     #[test]
     fn test_efficient_sparse_optimization() {
         // Test on a simple sparse quadratic problem
-        let mut fun = |x: &ArrayView1<f64>| -> f64 { x[0].powi(2) + x[2].powi(2) + x[4].powi(2) };
+        let fun = |x: &ArrayView1<f64>| -> f64 { x[0].powi(2) + x[2].powi(2) + x[4].powi(2) };
 
-        let mut grad = |x: &ArrayView1<f64>| -> Array1<f64> {
+        let grad = |x: &ArrayView1<f64>| -> Array1<f64> {
             let mut g = Array1::zeros(5);
             g[0] = 2.0 * x[0];
             g[2] = 2.0 * x[2];

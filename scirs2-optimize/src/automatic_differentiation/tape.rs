@@ -462,7 +462,7 @@ mod tests {
         let x = builder.input(2.0);
         let y = builder.input(3.0);
         let sum = builder.binary_op(x, y, 1.0, 1.0); // x + y, partials: ∂/∂x=1, ∂/∂y=1
-        let result = builder.binary_op(sum, x, 2.0, 5.0); // sum * x, partials: ∂/∂sum=x=2, ∂/∂x=sum=5
+        let _result = builder.binary_op(sum, x, 2.0, 5.0); // sum * x, partials: ∂/∂sum=x=2, ∂/∂x=sum=5
 
         let tape = builder.build();
 

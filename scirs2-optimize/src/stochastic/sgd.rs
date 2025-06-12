@@ -52,7 +52,7 @@ where
     F: StochasticGradientFunction,
 {
     let mut func_evals = 0;
-    let mut grad_evals = 0;
+    let mut _grad_evals = 0;
 
     let num_samples = data_provider.num_samples();
     let batch_size = options.batch_size.unwrap_or(num_samples);
@@ -93,7 +93,7 @@ where
 
         // Compute gradient on batch
         let mut gradient = grad_func.compute_gradient(&x.view(), &batch_data);
-        grad_evals += 1;
+        _grad_evals += 1;
 
         // Apply gradient clipping if specified
         if let Some(clip_threshold) = options.gradient_clip {
@@ -197,7 +197,7 @@ where
     F: StochasticGradientFunction,
 {
     let mut func_evals = 0;
-    let mut grad_evals = 0;
+    let mut _grad_evals = 0;
 
     let num_samples = data_provider.num_samples();
     let batch_size = options.batch_size.unwrap_or(1);
@@ -206,7 +206,7 @@ where
     // Compute full gradient initially
     let full_data = data_provider.get_full_data();
     let mut full_gradient = grad_func.compute_gradient(&x.view(), &full_data);
-    grad_evals += 1;
+    _grad_evals += 1;
 
     let mut x_snapshot = x.clone();
     let mut best_x = x.clone();
@@ -227,18 +227,18 @@ where
         );
 
         // Inner loop: one pass through data
-        for inner_iter in 0..update_frequency {
+        for _inner_iter in 0..update_frequency {
             // Generate batch indices
             let batch_indices = generate_batch_indices(num_samples, batch_size, true);
             let batch_data = data_provider.get_batch(&batch_indices);
 
             // Compute stochastic gradient
             let stoch_grad = grad_func.compute_gradient(&x.view(), &batch_data);
-            grad_evals += 1;
+            _grad_evals += 1;
 
             // Compute control variate gradient at snapshot
             let control_grad = grad_func.compute_gradient(&x_snapshot.view(), &batch_data);
-            grad_evals += 1;
+            _grad_evals += 1;
 
             // SVRG gradient estimate: g_i - g_i(snapshot) + full_gradient
             let mut svrg_gradient = &stoch_grad - &control_grad + &full_gradient;
@@ -255,7 +255,7 @@ where
         // Update snapshot and full gradient
         x_snapshot = x.clone();
         full_gradient = grad_func.compute_gradient(&x_snapshot.view(), &full_data);
-        grad_evals += 1;
+        _grad_evals += 1;
 
         // Evaluate progress
         let current_loss = grad_func.compute_value(&x.view(), &full_data);
@@ -320,7 +320,7 @@ where
     F: StochasticGradientFunction,
 {
     let mut func_evals = 0;
-    let mut grad_evals = 0;
+    let mut _grad_evals = 0;
 
     let num_samples = data_provider.num_samples();
     let batch_size = options.batch_size.unwrap_or(32.min(num_samples / 10));
@@ -353,7 +353,7 @@ where
         use rand::seq::SliceRandom;
         all_indices.shuffle(&mut rng());
 
-        let mut epoch_loss = 0.0;
+        let mut _epoch_loss = 0.0;
         let mut epoch_grad_norm = 0.0;
 
         // Process all batches in epoch
@@ -366,7 +366,7 @@ where
 
             // Compute gradient on batch
             let mut gradient = grad_func.compute_gradient(&x.view(), &batch_data);
-            grad_evals += 1;
+            _grad_evals += 1;
 
             // Apply gradient clipping
             if let Some(clip_threshold) = options.gradient_clip {
@@ -382,7 +382,7 @@ where
 
             let batch_loss = grad_func.compute_value(&x.view(), &batch_data);
             func_evals += 1;
-            epoch_loss += batch_loss;
+            _epoch_loss += batch_loss;
         }
 
         // Update Polyak averaging

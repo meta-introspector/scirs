@@ -9,9 +9,11 @@ use crate::lapack::{cholesky as lapack_cholesky, lu_factor, qr_factor, svd as la
 
 // Type aliases for complex return types
 /// Result type for QZ decomposition: (Q, A_decomp, B_decomp, Z)
+#[allow(dead_code)]
 type QZResult<F> = LinalgResult<(Array2<F>, Array2<F>, Array2<F>, Array2<F>)>;
 
 /// Result type for Complete Orthogonal Decomposition: (Q, R, P)
+#[allow(dead_code)]
 type CODResult<F> = LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>;
 
 /// Compute the Cholesky decomposition of a matrix.
@@ -320,6 +322,7 @@ where
 /// let (q, a_decomp, b_decomp, z) = qz(&a.view(), &b.view()).unwrap();
 /// // Result should be a valid QZ decomposition where Q*A*Z = A_decomp and Q*B*Z = B_decomp
 /// ```
+#[allow(dead_code)]
 pub fn qz<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> QZResult<F>
 where
     F: Float + NumAssign + Sum + 'static,
@@ -420,6 +423,7 @@ where
 /// let (q, r, p) = complete_orthogonal_decomposition(&a.view()).unwrap();
 /// // The rank of a will be revealed in the R matrix
 /// ```
+#[allow(dead_code)]
 pub fn complete_orthogonal_decomposition<F>(a: &ArrayView2<F>) -> CODResult<F>
 where
     F: Float + NumAssign + Sum + 'static,

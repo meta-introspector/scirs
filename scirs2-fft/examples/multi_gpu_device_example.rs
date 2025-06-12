@@ -4,9 +4,7 @@
 //! distribution across multiple GPU devices for high-performance sparse FFT.
 
 use scirs2_fft::{
-    sparse_fft_multi_gpu::{
-        MultiGPUConfig, MultiGPUSparseFFT, WorkloadDistribution,
-    },
+    sparse_fft_multi_gpu::{MultiGPUConfig, MultiGPUSparseFFT, WorkloadDistribution},
     FFTResult,
 };
 use std::f64::consts::PI;
@@ -45,17 +43,25 @@ fn test_device_enumeration() -> FFTResult<()> {
         println!("  Device {}: {}", i, device.device_name);
         println!("    Backend: {:?}", device.backend);
         println!("    Device ID: {}", device.device_id);
-        println!("    Memory: {:.1} GB total, {:.1} GB free", 
+        println!(
+            "    Memory: {:.1} GB total, {:.1} GB free",
             device.memory_total as f64 / (1024.0 * 1024.0 * 1024.0),
-            device.memory_free as f64 / (1024.0 * 1024.0 * 1024.0));
+            device.memory_free as f64 / (1024.0 * 1024.0 * 1024.0)
+        );
         println!("    Compute capability: {:.1}", device.compute_capability);
         println!("    Compute units: {}", device.compute_units);
-        println!("    Max threads per block: {}", device.max_threads_per_block);
+        println!(
+            "    Max threads per block: {}",
+            device.max_threads_per_block
+        );
         println!("    Available: {}", device.is_available);
     }
 
     let selected_devices = processor.get_selected_devices();
-    println!("\nSelected {} devices for processing:", selected_devices.len());
+    println!(
+        "\nSelected {} devices for processing:",
+        selected_devices.len()
+    );
     for device in selected_devices {
         println!("  - {} ({})", device.device_name, device.backend as u8);
     }
@@ -73,24 +79,30 @@ fn test_workload_distribution_strategies() -> FFTResult<()> {
 
     let strategies = vec![
         ("Equal Distribution", WorkloadDistribution::Equal),
-        ("Memory-Based Distribution", WorkloadDistribution::MemoryBased),
-        ("Compute-Based Distribution", WorkloadDistribution::ComputeBased),
+        (
+            "Memory-Based Distribution",
+            WorkloadDistribution::MemoryBased,
+        ),
+        (
+            "Compute-Based Distribution",
+            WorkloadDistribution::ComputeBased,
+        ),
         ("Adaptive Distribution", WorkloadDistribution::Adaptive),
     ];
 
     for (name, strategy) in strategies {
         println!("\nTesting {}:", name);
-        
+
         let config = MultiGPUConfig {
             distribution: strategy,
-            max_devices: 4, // Use up to 4 devices
+            max_devices: 4,        // Use up to 4 devices
             min_signal_size: 1024, // Lower threshold for testing
             enable_load_balancing: true,
             ..MultiGPUConfig::default()
         };
 
         let start = Instant::now();
-        
+
         match test_strategy(config, &signal, sparsity) {
             Ok((result, processor_info)) => {
                 let elapsed = start.elapsed();
@@ -98,7 +110,7 @@ fn test_workload_distribution_strategies() -> FFTResult<()> {
                 println!("  Execution time: {:?}", elapsed);
                 println!("  Found {} frequency components", result.indices.len());
                 println!("  Device configuration: {}", processor_info);
-                
+
                 // Show performance metrics
                 if !processor_info.is_empty() {
                     println!("  Performance per device:");
@@ -126,16 +138,19 @@ fn test_strategy(
 ) -> FFTResult<(scirs2_fft::sparse_fft::SparseFFTResult, String)> {
     let mut processor = MultiGPUSparseFFT::new(config);
     processor.initialize()?;
-    
+
     let result = processor.sparse_fft(signal)?;
-    
+
     // Generate device info summary
     let devices = processor.get_selected_devices();
     let mut info = format!("Using {} devices", devices.len());
     for device in devices {
-        info.push_str(&format!("\n    {} ({})", device.device_name, device.backend as u8));
+        info.push_str(&format!(
+            "\n    {} ({})",
+            device.device_name, device.backend as u8
+        ));
     }
-    
+
     Ok((result, info))
 }
 
@@ -160,14 +175,19 @@ fn test_performance_scaling() -> FFTResult<()> {
             };
 
             let start = Instant::now();
-            
+
             match test_strategy(config, &signal, 10) {
                 Ok((result, _)) => {
                     let elapsed = start.elapsed();
                     let throughput = signal_size as f64 / elapsed.as_secs_f64();
-                    
-                    println!("  {} device(s): {:?} ({:.0} samples/sec, {} components)", 
-                        *max_devices, elapsed, throughput, result.indices.len());
+
+                    println!(
+                        "  {} device(s): {:?} ({:.0} samples/sec, {} components)",
+                        *max_devices,
+                        elapsed,
+                        throughput,
+                        result.indices.len()
+                    );
                 }
                 Err(e) => {
                     println!("  {} device(s): Failed ({})", *max_devices, e);
@@ -198,16 +218,23 @@ fn test_adaptive_load_balancing() -> FFTResult<()> {
     let iterations = 5;
     let signal = create_test_signal(4096);
 
-    println!("Running {} iterations to build performance history...", iterations);
+    println!(
+        "Running {} iterations to build performance history...",
+        iterations
+    );
 
     for i in 1..=iterations {
         let start = Instant::now();
-        
+
         match processor.sparse_fft(&signal) {
             Ok(result) => {
                 let elapsed = start.elapsed();
-                println!("  Iteration {}: {:?} ({} components)", 
-                    i, elapsed, result.indices.len());
+                println!(
+                    "  Iteration {}: {:?} ({} components)",
+                    i,
+                    elapsed,
+                    result.indices.len()
+                );
             }
             Err(e) => {
                 println!("  Iteration {} failed: {}", i, e);
@@ -223,9 +250,15 @@ fn test_adaptive_load_balancing() -> FFTResult<()> {
             let avg_time = times.iter().sum::<f64>() / times.len() as f64;
             let min_time = times.iter().fold(f64::INFINITY, |a, &b| a.min(b));
             let max_time = times.iter().fold(0.0f64, |a, &b| a.max(b));
-            
-            println!("  Device {}: avg={:.3}s, min={:.3}s, max={:.3}s ({} runs)",
-                device_id, avg_time, min_time, max_time, times.len());
+
+            println!(
+                "  Device {}: avg={:.3}s, min={:.3}s, max={:.3}s ({} runs)",
+                device_id,
+                avg_time,
+                min_time,
+                max_time,
+                times.len()
+            );
         }
     }
 
@@ -238,11 +271,11 @@ fn create_test_signal(n: usize) -> Vec<f64> {
 
     // Add sparse frequency components
     let frequencies = vec![
-        (50, 1.0),    // 50 Hz, amplitude 1.0
-        (120, 0.7),   // 120 Hz, amplitude 0.7
-        (200, 0.5),   // 200 Hz, amplitude 0.5
-        (350, 0.3),   // 350 Hz, amplitude 0.3
-        (500, 0.2),   // 500 Hz, amplitude 0.2
+        (50, 1.0),  // 50 Hz, amplitude 1.0
+        (120, 0.7), // 120 Hz, amplitude 0.7
+        (200, 0.5), // 200 Hz, amplitude 0.5
+        (350, 0.3), // 350 Hz, amplitude 0.3
+        (500, 0.2), // 500 Hz, amplitude 0.2
     ];
 
     for i in 0..n {
@@ -256,7 +289,7 @@ fn create_test_signal(n: usize) -> Vec<f64> {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(42);
-    
+
     for sample in &mut signal {
         *sample += 0.1 * (rng.random::<f64>() - 0.5);
     }
@@ -268,19 +301,25 @@ fn create_test_signal(n: usize) -> Vec<f64> {
 #[allow(dead_code)]
 fn display_system_info() {
     println!("\n--- Multi-GPU System Information ---");
-    
+
     let mut processor = MultiGPUSparseFFT::new(MultiGPUConfig::default());
     if let Ok(()) = processor.initialize() {
         let devices = processor.get_devices();
-        
-        let gpu_count = devices.iter().filter(|d| d.backend != scirs2_fft::sparse_fft_gpu::GPUBackend::CPUFallback).count();
+
+        let gpu_count = devices
+            .iter()
+            .filter(|d| d.backend != scirs2_fft::sparse_fft_gpu::GPUBackend::CPUFallback)
+            .count();
         let total_memory: usize = devices.iter().map(|d| d.memory_total).sum();
         let total_compute_units: usize = devices.iter().map(|d| d.compute_units).sum();
-        
+
         println!("GPU Devices: {}", gpu_count);
-        println!("Total GPU Memory: {:.1} GB", total_memory as f64 / (1024.0 * 1024.0 * 1024.0));
+        println!(
+            "Total GPU Memory: {:.1} GB",
+            total_memory as f64 / (1024.0 * 1024.0 * 1024.0)
+        );
         println!("Total Compute Units: {}", total_compute_units);
-        
+
         println!("\nOptimal Configuration Recommendations:");
         if gpu_count >= 4 {
             println!("  ✓ Excellent multi-GPU setup for large-scale processing");

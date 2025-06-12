@@ -189,7 +189,7 @@ impl ReedsSheppPath {
                     0.0
                 };
 
-                return Ok(self.sample_segment(&current_pose, segment, segment_t)?);
+                return self.sample_segment(&current_pose, segment, segment_t);
             }
 
             // Move to the end of this segment

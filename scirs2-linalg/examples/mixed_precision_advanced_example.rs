@@ -60,7 +60,7 @@ fn main() {
     println!("\nRight-hand side b: {}", b);
 
     // Solve using standard precision
-    let x_std = solve(&hilbert.view(), &b.view()).unwrap();
+    let x_std = solve(&hilbert.view(), &b.view(), None).unwrap();
     println!("\nSolution with standard f32 precision:");
     println!("{}", x_std);
 
@@ -159,7 +159,7 @@ fn main() {
     println!("{}", nearly_singular);
 
     // Compute SVD using standard f32 precision
-    let svd_result = svd(&nearly_singular.view(), false);
+    let svd_result = svd(&nearly_singular.view(), false, None);
     let (u_f32, s_f32, vt_f32) = match svd_result {
         Ok(result) => result,
         Err(e) => {
@@ -244,7 +244,7 @@ fn main() {
     println!("Condition number: Very high (approximately 1e8 for 6x6 Hilbert)");
 
     // Solve using standard precision
-    let result_std = lstsq(&hilbert_large.view(), &b_large.view()).unwrap();
+    let result_std = lstsq(&hilbert_large.view(), &b_large.view(), None).unwrap();
 
     // Solve using mixed precision
     let result_mixed =
@@ -296,7 +296,7 @@ fn main() {
     println!("Expected solution: [1.0, 2.0]");
 
     // Solve using standard precision
-    let result_std_over = lstsq(&a_over.view(), &b_over.view()).unwrap();
+    let result_std_over = lstsq(&a_over.view(), &b_over.view(), None).unwrap();
 
     // Solve using mixed precision
     let result_mixed_over =
@@ -341,7 +341,7 @@ fn main() {
 
     // Compute inversion using standard precision
     println!("\nComputing inverse with standard f32 precision...");
-    let hilbert_inv_std = match inv(&hilbert5.view()) {
+    let hilbert_inv_std = match inv(&hilbert5.view(), None) {
         Ok(inv) => inv,
         Err(e) => {
             println!("Standard precision inversion failed: {}", e);

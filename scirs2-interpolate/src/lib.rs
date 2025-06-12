@@ -212,7 +212,7 @@ pub use local::polynomial::{
 };
 pub use multiscale::{make_adaptive_bspline, MultiscaleBSpline, RefinementCriterion};
 pub use numerical_stability::{
-    assess_matrix_condition, apply_tikhonov_regularization, check_safe_division, machine_epsilon,
+    apply_tikhonov_regularization, assess_matrix_condition, check_safe_division, machine_epsilon,
     safe_reciprocal, solve_with_stability_monitoring, ConditionReport, StabilityDiagnostics,
     StabilityLevel,
 };

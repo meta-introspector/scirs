@@ -5,7 +5,7 @@
 //! the Best Linear Unbiased Estimator (BLUE) and includes uncertainty quantification.
 
 use ndarray::{array, Array1, Array2};
-use scirs2_spatial::kriging::{KrigingPrediction, OrdinaryKriging, SimpleKriging, VariogramModel};
+use scirs2_spatial::kriging::{OrdinaryKriging, SimpleKriging, VariogramModel};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Kriging Interpolation Example ===\n");
@@ -410,7 +410,7 @@ fn create_synthetic_data(n_points: usize, noise_level: f64) -> (Array2<f64>, Arr
         points[[i, 1]] = y;
 
         // Synthetic function with spatial correlation
-        let true_value = 10.0 + 2.0 * x + 0.5 * y + 3.0 * (0.5 * x).sin() * (0.3 * y).cos();
+        let true_value = 10.0 + 2.0 * x + 0.5 * y + 3.0 * (0.5 * x as f64).sin() * (0.3 * y as f64).cos();
         let noise = rng.random_range(-noise_level..noise_level);
         values[i] = true_value + noise;
     }

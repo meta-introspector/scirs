@@ -136,6 +136,7 @@ impl SimdBfgsState {
     }
 
     /// Vector-matrix multiply (v^T * M) using SIMD
+    #[allow(dead_code)]
     fn vector_matrix_multiply_simd(
         &self,
         vector: &ArrayView1<f64>,

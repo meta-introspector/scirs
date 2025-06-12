@@ -56,6 +56,9 @@ use crate::{basic, decomposition, eigen, matrix_functions, norm as norm_mod, sol
 /// Type alias for SVD decomposition result
 pub type SvdResult<F> = (Option<Array2<F>>, Array1<F>, Option<Array2<F>>);
 
+/// Type alias for least squares solver result
+pub type LstsqResult<F> = (Array2<F>, Option<Array1<F>>, usize, Array1<F>);
+
 /// Compute the determinant of a matrix (SciPy-compatible interface)
 ///
 /// # Arguments
@@ -79,7 +82,7 @@ where
         }
     }
     // Note: _overwrite_a is ignored in our implementation
-    basic::det(a)
+    basic::det(a, None)
 }
 
 /// Compute the inverse of a matrix (SciPy-compatible interface)
@@ -105,7 +108,7 @@ where
         }
     }
     // Note: _overwrite_a is ignored in our implementation
-    basic::inv(a)
+    basic::inv(a, None)
 }
 
 /// Compute eigenvalues and eigenvectors (SciPy-compatible interface)
@@ -705,19 +708,19 @@ where
         None | Some("2") => norm_mod::cond(a, p),
         Some("1") => {
             let norm_a = norm_mod::matrix_norm(a, "1")?;
-            let inv_a = basic::inv(a)?;
+            let inv_a = basic::inv(a, None)?;
             let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "1")?;
             Ok(norm_a * norm_inv_a)
         }
         Some("inf") => {
             let norm_a = norm_mod::matrix_norm(a, "inf")?;
-            let inv_a = basic::inv(a)?;
+            let inv_a = basic::inv(a, None)?;
             let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "inf")?;
             Ok(norm_a * norm_inv_a)
         }
         Some("fro") => {
             let norm_a = norm_mod::matrix_norm(a, "frobenius")?;
-            let inv_a = basic::inv(a)?;
+            let inv_a = basic::inv(a, None)?;
             let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "frobenius")?;
             Ok(norm_a * norm_inv_a)
         }
@@ -782,7 +785,7 @@ pub fn lstsq<F>(
     _overwrite_b: bool,
     check_finite: bool,
     _lapack_driver: Option<&str>,
-) -> LinalgResult<(Array2<F>, Option<Array1<F>>, usize, Array1<F>)>
+) -> LinalgResult<LstsqResult<F>>
 where
     F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {

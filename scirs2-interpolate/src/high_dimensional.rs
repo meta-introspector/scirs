@@ -200,17 +200,44 @@ where
     F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
 {
     /// Create a new builder with default settings
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
+    /// use ndarray::Array2;
+    ///
+    /// let builder = HighDimensionalInterpolator::<f64>::new();
+    /// ```
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Set the dimension reduction method
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scirs2_interpolate::high_dimensional::{HighDimensionalInterpolator, DimensionReductionMethod};
+    ///
+    /// let builder = HighDimensionalInterpolator::<f64>::new()
+    ///     .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 5 });
+    /// ```
     pub fn with_dimension_reduction(mut self, method: DimensionReductionMethod) -> Self {
         self.dimension_reduction = method;
         self
     }
 
     /// Set the local interpolation method
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scirs2_interpolate::high_dimensional::{HighDimensionalInterpolator, LocalMethod};
+    ///
+    /// let builder = HighDimensionalInterpolator::<f64>::new()
+    ///     .with_local_method(LocalMethod::KNearestNeighbors { k: 8, weight_power: 1.5 });
+    /// ```
     pub fn with_local_method(mut self, method: LocalMethod) -> Self {
         self.local_method = method;
         self
@@ -413,19 +440,62 @@ where
         points: &Array2<F>,
         index_type: SpatialIndexType,
     ) -> InterpolateResult<SpatialIndex<F>> {
+        let n_dims = points.ncols();
+        let n_points = points.nrows();
+
         match index_type {
             SpatialIndexType::KdTree => {
-                // For now, fall back to brute force since KdTree implementation may need updates
-                Ok(SpatialIndex::BruteForce(points.clone()))
+                if n_dims <= 10 && n_points >= 20 {
+                    // Try to build KdTree for moderate dimensions and sufficient points
+                    match KdTree::new(points) {
+                        Ok(kdtree) => Ok(SpatialIndex::KdTree(kdtree)),
+                        Err(_) => {
+                            // Fall back to brute force if KdTree construction fails
+                            Ok(SpatialIndex::BruteForce(points.clone()))
+                        }
+                    }
+                } else {
+                    // Use brute force for very small datasets or high dimensions
+                    Ok(SpatialIndex::BruteForce(points.clone()))
+                }
             }
             SpatialIndexType::BallTree => {
-                // For now, fall back to brute force since BallTree implementation may need updates
-                Ok(SpatialIndex::BruteForce(points.clone()))
+                if n_points >= 50 {
+                    // Try to build BallTree for larger datasets
+                    match BallTree::new(points) {
+                        Ok(balltree) => Ok(SpatialIndex::BallTree(balltree)),
+                        Err(_) => {
+                            // Fall back to brute force if BallTree construction fails
+                            Ok(SpatialIndex::BruteForce(points.clone()))
+                        }
+                    }
+                } else {
+                    // Use brute force for small datasets
+                    Ok(SpatialIndex::BruteForce(points.clone()))
+                }
             }
             SpatialIndexType::BruteForce => Ok(SpatialIndex::BruteForce(points.clone())),
             SpatialIndexType::Auto => {
-                // Default to brute force for simplicity
-                Ok(SpatialIndex::BruteForce(points.clone()))
+                // Intelligent selection based on data characteristics
+                if n_points < 20 {
+                    // Small datasets: always use brute force
+                    Ok(SpatialIndex::BruteForce(points.clone()))
+                } else if n_dims <= 5 && n_points >= 100 {
+                    // Low-dimensional, large datasets: prefer KdTree
+                    match KdTree::new(points) {
+                        Ok(kdtree) => Ok(SpatialIndex::KdTree(kdtree)),
+                        Err(_) => Ok(SpatialIndex::BruteForce(points.clone())),
+                    }
+                } else if n_dims <= 15 && n_points >= 50 {
+                    // Medium-dimensional datasets: prefer BallTree
+                    match BallTree::new(points) {
+                        Ok(balltree) => Ok(SpatialIndex::BallTree(balltree)),
+                        Err(_) => Ok(SpatialIndex::BruteForce(points.clone())),
+                    }
+                } else {
+                    // High-dimensional or edge cases: use brute force
+                    Ok(SpatialIndex::BruteForce(points.clone()))
+                }
             }
         }
     }
@@ -436,11 +506,60 @@ where
     F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static,
 {
     /// Create a new builder for high-dimensional interpolation
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
+    /// use ndarray::{Array1, Array2};
+    ///
+    /// // Create sample high-dimensional data
+    /// let n_points = 50;
+    /// let n_dims = 20;
+    /// let points = Array2::zeros((n_points, n_dims));
+    /// let values = Array1::zeros(n_points);
+    ///
+    /// let interpolator = HighDimensionalInterpolator::<f64>::new()
+    ///     .build(&points.view(), &values.view())
+    ///     .unwrap();
+    /// ```
     pub fn new() -> HighDimensionalInterpolatorBuilder<F> {
         HighDimensionalInterpolatorBuilder::new()
     }
 
     /// Interpolate at a query point
+    ///
+    /// # Arguments
+    ///
+    /// * `query` - Query point coordinates with shape (n_dims,)
+    ///
+    /// # Returns
+    ///
+    /// Interpolated value at the query point
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scirs2_interpolate::high_dimensional::{HighDimensionalInterpolator, DimensionReductionMethod};
+    /// use ndarray::{Array1, Array2};
+    ///
+    /// // Create sample 5D data
+    /// let points = Array2::from_shape_vec((4, 5), vec![
+    ///     0.0, 0.0, 0.0, 0.0, 0.0,
+    ///     1.0, 0.0, 0.0, 0.0, 0.0,
+    ///     0.0, 1.0, 0.0, 0.0, 0.0,
+    ///     0.0, 0.0, 1.0, 0.0, 0.0,
+    /// ]).unwrap();
+    /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
+    ///
+    /// let interpolator = HighDimensionalInterpolator::new()
+    ///     .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 3 })
+    ///     .build(&points.view(), &values.view())
+    ///     .unwrap();
+    ///
+    /// let query = Array1::from_vec(vec![0.5, 0.5, 0.0, 0.0, 0.0]);
+    /// let result = interpolator.interpolate(&query.view()).unwrap();
+    /// ```
     pub fn interpolate(&self, query: &ArrayView1<F>) -> InterpolateResult<F> {
         // Transform query point if dimension reduction is applied
         let transformed_query = if let Some(dr) = &self.dimension_reduction {
@@ -461,13 +580,45 @@ where
     fn find_neighbors(&self, query: &Array1<F>) -> InterpolateResult<Vec<(usize, F)>> {
         match &self.spatial_index {
             SpatialIndex::BruteForce(points) => self.brute_force_neighbors(query, points),
-            SpatialIndex::KdTree(_) => {
-                // TODO: Implement KdTree neighbor search
-                self.brute_force_neighbors(query, &self.points)
+            SpatialIndex::KdTree(kdtree) => {
+                // Use KdTree for efficient neighbor search
+                let query_slice = query.as_slice().unwrap();
+                match &self.local_method {
+                    LocalMethod::KNearestNeighbors { k, .. } => {
+                        let neighbors = kdtree.k_nearest_neighbors(query_slice, *k)?;
+                        Ok(neighbors)
+                    }
+                    LocalMethod::LocallyWeighted { bandwidth, .. } => {
+                        let radius = F::from_f64(*bandwidth).unwrap();
+                        let neighbors = kdtree.radius_neighbors(query_slice, radius)?;
+                        Ok(neighbors)
+                    }
+                    LocalMethod::LocalRBF { radius, .. } => {
+                        let search_radius = F::from_f64(*radius).unwrap();
+                        let neighbors = kdtree.radius_neighbors(query_slice, search_radius)?;
+                        Ok(neighbors)
+                    }
+                }
             }
-            SpatialIndex::BallTree(_) => {
-                // TODO: Implement BallTree neighbor search
-                self.brute_force_neighbors(query, &self.points)
+            SpatialIndex::BallTree(balltree) => {
+                // Use BallTree for efficient neighbor search
+                let query_slice = query.as_slice().unwrap();
+                match &self.local_method {
+                    LocalMethod::KNearestNeighbors { k, .. } => {
+                        let neighbors = balltree.k_nearest_neighbors(query_slice, *k)?;
+                        Ok(neighbors)
+                    }
+                    LocalMethod::LocallyWeighted { bandwidth, .. } => {
+                        let radius = F::from_f64(*bandwidth).unwrap();
+                        let neighbors = balltree.radius_neighbors(query_slice, radius)?;
+                        Ok(neighbors)
+                    }
+                    LocalMethod::LocalRBF { radius, .. } => {
+                        let search_radius = F::from_f64(*radius).unwrap();
+                        let neighbors = balltree.radius_neighbors(query_slice, search_radius)?;
+                        Ok(neighbors)
+                    }
+                }
             }
         }
     }
@@ -603,6 +754,32 @@ where
     }
 
     /// Interpolate at multiple query points
+    ///
+    /// # Arguments
+    ///
+    /// * `queries` - Query points with shape (n_queries, n_dims)
+    ///
+    /// # Returns
+    ///
+    /// Array of interpolated values with shape (n_queries,)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
+    /// use ndarray::{Array1, Array2};
+    ///
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0]);
+    ///
+    /// let interpolator = HighDimensionalInterpolator::new()
+    ///     .build(&points.view(), &values.view())
+    ///     .unwrap();
+    ///
+    /// let queries = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.0, 0.5]).unwrap();
+    /// let results = interpolator.interpolate_multi(&queries.view()).unwrap();
+    /// assert_eq!(results.len(), 2);
+    /// ```
     pub fn interpolate_multi(&self, queries: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         let mut results = Array1::zeros(queries.nrows());
 
@@ -611,6 +788,91 @@ where
         }
 
         Ok(results)
+    }
+
+    /// Interpolate at multiple query points in parallel
+    ///
+    /// This method provides parallel evaluation for large query sets, providing
+    /// significant speedup for expensive high-dimensional interpolation operations.
+    ///
+    /// # Arguments
+    ///
+    /// * `queries` - Query points with shape (n_queries, n_dims)
+    /// * `workers` - Number of worker threads to use (None = automatic)
+    ///
+    /// # Returns
+    ///
+    /// Array of interpolated values with shape (n_queries,)
+    ///
+    /// # Performance
+    ///
+    /// The parallel version provides speedup for:
+    /// - Large query sets (n_queries > 100)
+    /// - High-dimensional data (n_dims > 10)
+    /// - Complex local methods (LocalRBF, LocallyWeighted)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
+    /// use ndarray::{Array1, Array2};
+    ///
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0]);
+    ///
+    /// let interpolator = HighDimensionalInterpolator::new()
+    ///     .build(&points.view(), &values.view())
+    ///     .unwrap();
+    ///
+    /// // Create many query points for parallel processing
+    /// let queries = Array2::from_shape_vec((1000, 2), (0..2000).map(|i| i as f64 / 1000.0).collect()).unwrap();
+    ///
+    /// // Use 4 worker threads
+    /// let results = interpolator.interpolate_multi_parallel(&queries.view(), Some(4)).unwrap();
+    /// assert_eq!(results.len(), 1000);
+    /// ```
+    pub fn interpolate_multi_parallel(
+        &self,
+        queries: &ArrayView2<F>,
+        workers: Option<usize>,
+    ) -> InterpolateResult<Array1<F>> {
+        use crate::parallel::{estimate_chunk_size, ParallelConfig};
+        use rayon::prelude::*;
+
+        let n_queries = queries.nrows();
+
+        // For small query sets, use sequential processing
+        if n_queries < 50 {
+            return self.interpolate_multi(queries);
+        }
+
+        // Set up parallel configuration
+        let parallel_config = if let Some(n_workers) = workers {
+            ParallelConfig::new().with_workers(n_workers)
+        } else {
+            ParallelConfig::new()
+        };
+
+        // Estimate computational cost based on local method
+        let cost_factor = match &self.local_method {
+            LocalMethod::KNearestNeighbors { .. } => 2.0,
+            LocalMethod::LocallyWeighted { .. } => 5.0,
+            LocalMethod::LocalRBF { .. } => 8.0,
+        };
+
+        let chunk_size = estimate_chunk_size(n_queries, cost_factor, &parallel_config);
+
+        // Process queries in parallel
+        let results: Result<Vec<F>, InterpolateError> = (0..n_queries)
+            .into_par_iter()
+            .with_min_len(chunk_size)
+            .map(|i| {
+                let query = queries.slice(ndarray::s![i, ..]);
+                self.interpolate(&query.view())
+            })
+            .collect();
+
+        Ok(Array1::from_vec(results?))
     }
 
     /// Get interpolator statistics
@@ -632,6 +894,41 @@ where
 }
 
 /// Create a high-dimensional interpolator with k-nearest neighbors
+///
+/// This is a convenience function for creating an interpolator that uses
+/// k-nearest neighbor interpolation with inverse distance weighting.
+///
+/// # Arguments
+///
+/// * `points` - Training data points with shape (n_points, n_dims)
+/// * `values` - Training data values with shape (n_points,)
+/// * `k` - Number of nearest neighbors to use
+///
+/// # Returns
+///
+/// A configured high-dimensional interpolator
+///
+/// # Examples
+///
+/// ```rust
+/// use scirs2_interpolate::high_dimensional::make_knn_interpolator;
+/// use ndarray::{Array1, Array2};
+///
+/// // Create 3D scattered data
+/// let points = Array2::from_shape_vec((5, 3), vec![
+///     0.0, 0.0, 0.0,
+///     1.0, 0.0, 0.0,
+///     0.0, 1.0, 0.0,
+///     0.0, 0.0, 1.0,
+///     1.0, 1.0, 1.0,
+/// ]).unwrap();
+/// let values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 6.0]);
+///
+/// let interpolator = make_knn_interpolator(&points.view(), &values.view(), 3).unwrap();
+///
+/// let query = Array1::from_vec(vec![0.5, 0.5, 0.5]);
+/// let result = interpolator.interpolate(&query.view()).unwrap();
+/// ```
 pub fn make_knn_interpolator<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -649,6 +946,43 @@ where
 }
 
 /// Create a high-dimensional interpolator with PCA dimension reduction
+///
+/// This function creates an interpolator that first reduces the dimensionality
+/// of the data using Principal Component Analysis (PCA), then performs
+/// k-nearest neighbor interpolation in the reduced space.
+///
+/// # Arguments
+///
+/// * `points` - Training data points with shape (n_points, n_dims)
+/// * `values` - Training data values with shape (n_points,)
+/// * `target_dims` - Target number of dimensions after PCA reduction
+/// * `k` - Number of nearest neighbors to use in reduced space
+///
+/// # Returns
+///
+/// A configured high-dimensional interpolator with PCA preprocessing
+///
+/// # Examples
+///
+/// ```rust
+/// use scirs2_interpolate::high_dimensional::make_pca_interpolator;
+/// use ndarray::{Array1, Array2};
+///
+/// // Create high-dimensional data that lies on a lower-dimensional manifold
+/// let points = Array2::from_shape_vec((4, 6), vec![
+///     1.0, 1.0, 1.0, 0.0, 0.0, 0.0,  // Redundant dimensions
+///     2.0, 2.0, 2.0, 0.0, 0.0, 0.0,
+///     1.0, 2.0, 3.0, 0.0, 0.0, 0.0,
+///     3.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+/// ]).unwrap();
+/// let values = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.5]);
+///
+/// // Reduce from 6D to 3D, then use 3 nearest neighbors
+/// let interpolator = make_pca_interpolator(&points.view(), &values.view(), 3, 3).unwrap();
+///
+/// let query = Array1::from_vec(vec![1.5, 1.5, 1.5, 0.0, 0.0, 0.0]);
+/// let result = interpolator.interpolate(&query.view()).unwrap();
+/// ```
 pub fn make_pca_interpolator<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -668,6 +1002,42 @@ where
 }
 
 /// Create a high-dimensional interpolator with local RBF
+///
+/// This function creates an interpolator that uses locally supported Radial
+/// Basis Functions (RBF) for interpolation. Only points within the specified
+/// radius contribute to the interpolation at each query point.
+///
+/// # Arguments
+///
+/// * `points` - Training data points with shape (n_points, n_dims)
+/// * `values` - Training data values with shape (n_points,)
+/// * `radius` - Radius of local support for RBF functions
+///
+/// # Returns
+///
+/// A configured high-dimensional interpolator with local RBF
+///
+/// # Examples
+///
+/// ```rust
+/// use scirs2_interpolate::high_dimensional::make_local_rbf_interpolator;
+/// use ndarray::{Array1, Array2};
+///
+/// // Create scattered 2D data
+/// let points = Array2::from_shape_vec((4, 2), vec![
+///     0.0, 0.0,
+///     1.0, 0.0,
+///     0.0, 1.0,
+///     1.0, 1.0,
+/// ]).unwrap();
+/// let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
+///
+/// // Use radius of 1.5 to include nearby points
+/// let interpolator = make_local_rbf_interpolator(&points.view(), &values.view(), 1.5).unwrap();
+///
+/// let query = Array1::from_vec(vec![0.5, 0.5]);
+/// let result = interpolator.interpolate(&query.view()).unwrap();
+/// ```
 pub fn make_local_rbf_interpolator<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,

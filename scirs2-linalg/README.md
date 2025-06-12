@@ -48,6 +48,8 @@ SciRS2 is designed for high performance with multiple optimization strategies:
 - **Parallel Processing**: Multi-core acceleration for large matrices
 - **SciPy API Compatibility**: Zero-overhead wrappers maintaining familiar interfaces
 
+📊 **Performance Guides**: See [docs/PERFORMANCE_GUIDE.md](docs/PERFORMANCE_GUIDE.md) for detailed benchmarks and [docs/OPTIMIZATION_GUIDELINES.md](docs/OPTIMIZATION_GUIDELINES.md) for practical optimization strategies.
+
 ### Performance Highlights
 
 | Operation | Small Matrices | Medium Matrices | Large Matrices |

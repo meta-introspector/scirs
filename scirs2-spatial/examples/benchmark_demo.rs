@@ -79,7 +79,7 @@ fn report_simd_capabilities() {
 
 fn generate_test_data(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::from_shape_fn((n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
+    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
 fn benchmark_distance_calculations() -> Result<(), Box<dyn std::error::Error>> {
@@ -132,7 +132,7 @@ fn benchmark_distance_matrices() -> Result<(), Box<dyn std::error::Error>> {
 
         // Sequential distance matrix
         let start = Instant::now();
-        let _distances_seq = pdist(&points.view(), euclidean);
+        let _distances_seq = pdist(&points, euclidean);
         let sequential_time = start.elapsed().as_millis();
 
         // Parallel distance matrix

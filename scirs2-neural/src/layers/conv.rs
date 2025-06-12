@@ -1287,6 +1287,513 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for MaxP
     }
 }
 
+/// Adaptive Average Pooling 2D layer
+///
+/// Applies average pooling with adaptive output size.
+/// The output size is specified, and the pooling kernel size and stride are computed automatically.
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_neural::layers::{AdaptiveAvgPool2D, Layer};
+/// use ndarray::{Array, Array4};
+///
+/// // Create an adaptive average pooling layer with output size 7x7
+/// let pool = AdaptiveAvgPool2D::new((7, 7), Some("adaptive_pool")).unwrap();
+///
+/// // Forward pass with a batch of 2 samples, each with 3 channels and size 32x32
+/// let batch_size = 2;
+/// let channels = 3;
+/// let height = 32;
+/// let width = 32;
+/// let input = Array4::<f64>::from_elem((batch_size, channels, height, width), 0.1).into_dyn();
+/// let output = pool.forward(&input).unwrap();
+///
+/// // Output should have dimensions [batch_size, channels, 7, 7]
+/// assert_eq!(output.shape(), &[batch_size, channels, 7, 7]);
+/// ```
+pub struct AdaptiveAvgPool2D<F: Float + Debug + Send + Sync> {
+    /// Output size (height, width)
+    output_size: (usize, usize),
+    /// Name of the layer
+    name: Option<String>,
+    /// Input cache for backward pass
+    input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
+    /// Phantom data for generic type
+    _phantom: PhantomData<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> AdaptiveAvgPool2D<F> {
+    /// Create a new adaptive average pooling layer
+    ///
+    /// # Arguments
+    ///
+    /// * `output_size` - Desired output spatial size (height, width)
+    /// * `name` - Optional name for the layer
+    ///
+    /// # Returns
+    ///
+    /// * A new adaptive average pooling layer
+    pub fn new(output_size: (usize, usize), name: Option<&str>) -> Result<Self> {
+        if output_size.0 == 0 || output_size.1 == 0 {
+            return Err(NeuralError::InvalidArchitecture(
+                "Output size must be positive".to_string(),
+            ));
+        }
+
+        Ok(Self {
+            output_size,
+            name: name.map(String::from),
+            input_cache: Arc::new(RwLock::new(None)),
+            _phantom: PhantomData,
+        })
+    }
+
+    /// Get the name of the layer
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// Calculate adaptive pooling parameters
+    fn calculate_pooling_params(&self, input_size: usize, output_size: usize) -> (usize, usize, usize) {
+        // Calculate stride as floor division
+        let stride = input_size / output_size;
+        // Calculate kernel size to ensure complete coverage
+        let kernel_size = input_size - (output_size - 1) * stride;
+        // Calculate padding to center the pooling
+        let padding = 0; // No padding for adaptive pooling
+        
+        (kernel_size, stride, padding)
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for AdaptiveAvgPool2D<F> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        // Cache input for backward pass
+        if let Ok(mut cache) = self.input_cache.write() {
+            *cache = Some(input.clone());
+        } else {
+            return Err(NeuralError::InferenceError(
+                "Failed to acquire write lock on input cache".to_string(),
+            ));
+        }
+
+        // Check input shape
+        let input_shape = input.shape();
+        if input_shape.len() != 4 {
+            return Err(NeuralError::InferenceError(format!(
+                "Expected 4D input [batch_size, channels, height, width], got {:?}",
+                input_shape
+            )));
+        }
+
+        let (batch_size, channels, in_height, in_width) = (
+            input_shape[0],
+            input_shape[1],
+            input_shape[2],
+            input_shape[3],
+        );
+
+        let (out_height, out_width) = self.output_size;
+
+        // Calculate pooling parameters for each dimension
+        let (kernel_h, stride_h, _pad_h) = self.calculate_pooling_params(in_height, out_height);
+        let (kernel_w, stride_w, _pad_w) = self.calculate_pooling_params(in_width, out_width);
+
+        // Create output array
+        let mut output = Array::<F, _>::zeros((batch_size, channels, out_height, out_width));
+
+        // Perform adaptive average pooling
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for oh in 0..out_height {
+                    for ow in 0..out_width {
+                        let h_start = oh * stride_h;
+                        let w_start = ow * stride_w;
+                        let h_end = (h_start + kernel_h).min(in_height);
+                        let w_end = (w_start + kernel_w).min(in_width);
+
+                        let mut sum = F::zero();
+                        let mut count = 0;
+
+                        for h in h_start..h_end {
+                            for w in w_start..w_end {
+                                sum = sum + input[[b, c, h, w]];
+                                count += 1;
+                            }
+                        }
+
+                        // Calculate average
+                        if count > 0 {
+                            output[[b, c, oh, ow]] = sum / F::from(count).unwrap();
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(output.into_dyn())
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        // Retrieve cached input
+        let input_ref = match self.input_cache.read() {
+            Ok(guard) => guard,
+            Err(_) => {
+                return Err(NeuralError::InferenceError(
+                    "Failed to acquire read lock on input cache".to_string(),
+                ))
+            }
+        };
+        if input_ref.is_none() {
+            return Err(NeuralError::InferenceError(
+                "No cached input for backward pass. Call forward() first.".to_string(),
+            ));
+        }
+        let cached_input = input_ref.as_ref().unwrap();
+
+        // Input shape
+        let input_shape = cached_input.shape();
+        let (batch_size, channels, in_height, in_width) = (
+            input_shape[0],
+            input_shape[1],
+            input_shape[2],
+            input_shape[3],
+        );
+
+        let (out_height, out_width) = self.output_size;
+
+        // Calculate pooling parameters for each dimension
+        let (kernel_h, stride_h, _pad_h) = self.calculate_pooling_params(in_height, out_height);
+        let (kernel_w, stride_w, _pad_w) = self.calculate_pooling_params(in_width, out_width);
+
+        // Create gradient input with same shape as input
+        let mut grad_input = Array::<F, _>::zeros(input_shape);
+
+        // Distribute gradients back to input positions
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for oh in 0..out_height {
+                    for ow in 0..out_width {
+                        let h_start = oh * stride_h;
+                        let w_start = ow * stride_w;
+                        let h_end = (h_start + kernel_h).min(in_height);
+                        let w_end = (w_start + kernel_w).min(in_width);
+
+                        let pool_size = (h_end - h_start) * (w_end - w_start);
+                        let grad_per_elem = grad_output[[b, c, oh, ow]] / F::from(pool_size).unwrap();
+
+                        for h in h_start..h_end {
+                            for w in w_start..w_end {
+                                grad_input[[b, c, h, w]] = grad_input[[b, c, h, w]] + grad_per_elem;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(grad_input)
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // AdaptiveAvgPool2D has no learnable parameters
+        Ok(())
+    }
+
+    fn layer_type(&self) -> &str {
+        "AdaptiveAvgPool2D"
+    }
+
+    fn parameter_count(&self) -> usize {
+        // AdaptiveAvgPool2D has no parameters
+        0
+    }
+
+    fn layer_description(&self) -> String {
+        format!(
+            "type:AdaptiveAvgPool2D, output_size:({}, {}), name:{}",
+            self.output_size.0,
+            self.output_size.1,
+            self.name.as_ref().map_or("None", |s| s)
+        )
+    }
+}
+
+/// Adaptive Max Pooling 2D layer
+///
+/// Applies max pooling with adaptive output size.
+/// The output size is specified, and the pooling kernel size and stride are computed automatically.
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_neural::layers::{AdaptiveMaxPool2D, Layer};
+/// use ndarray::{Array, Array4};
+///
+/// // Create an adaptive max pooling layer with output size 7x7
+/// let pool = AdaptiveMaxPool2D::new((7, 7), Some("adaptive_max_pool")).unwrap();
+///
+/// // Forward pass with a batch of 2 samples, each with 3 channels and size 32x32
+/// let batch_size = 2;
+/// let channels = 3;
+/// let height = 32;
+/// let width = 32;
+/// let input = Array4::<f64>::from_elem((batch_size, channels, height, width), 0.1).into_dyn();
+/// let output = pool.forward(&input).unwrap();
+///
+/// // Output should have dimensions [batch_size, channels, 7, 7]
+/// assert_eq!(output.shape(), &[batch_size, channels, 7, 7]);
+/// ```
+pub struct AdaptiveMaxPool2D<F: Float + Debug + Send + Sync> {
+    /// Output size (height, width)
+    output_size: (usize, usize),
+    /// Name of the layer
+    name: Option<String>,
+    /// Input cache for backward pass
+    input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
+    /// Indices of max values for backward pass
+    max_indices: Arc<RwLock<Option<Array<(usize, usize), IxDyn>>>>,
+    /// Phantom data for generic type
+    _phantom: PhantomData<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> AdaptiveMaxPool2D<F> {
+    /// Create a new adaptive max pooling layer
+    ///
+    /// # Arguments
+    ///
+    /// * `output_size` - Desired output spatial size (height, width)
+    /// * `name` - Optional name for the layer
+    ///
+    /// # Returns
+    ///
+    /// * A new adaptive max pooling layer
+    pub fn new(output_size: (usize, usize), name: Option<&str>) -> Result<Self> {
+        if output_size.0 == 0 || output_size.1 == 0 {
+            return Err(NeuralError::InvalidArchitecture(
+                "Output size must be positive".to_string(),
+            ));
+        }
+
+        Ok(Self {
+            output_size,
+            name: name.map(String::from),
+            input_cache: Arc::new(RwLock::new(None)),
+            max_indices: Arc::new(RwLock::new(None)),
+            _phantom: PhantomData,
+        })
+    }
+
+    /// Get the name of the layer
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// Calculate adaptive pooling parameters
+    fn calculate_pooling_params(&self, input_size: usize, output_size: usize) -> (usize, usize, usize) {
+        // Calculate stride as floor division
+        let stride = input_size / output_size;
+        // Calculate kernel size to ensure complete coverage
+        let kernel_size = input_size - (output_size - 1) * stride;
+        // Calculate padding to center the pooling
+        let padding = 0; // No padding for adaptive pooling
+        
+        (kernel_size, stride, padding)
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for AdaptiveMaxPool2D<F> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        // Cache input for backward pass
+        if let Ok(mut cache) = self.input_cache.write() {
+            *cache = Some(input.clone());
+        } else {
+            return Err(NeuralError::InferenceError(
+                "Failed to acquire write lock on input cache".to_string(),
+            ));
+        }
+
+        // Check input shape
+        let input_shape = input.shape();
+        if input_shape.len() != 4 {
+            return Err(NeuralError::InferenceError(format!(
+                "Expected 4D input [batch_size, channels, height, width], got {:?}",
+                input_shape
+            )));
+        }
+
+        let (batch_size, channels, in_height, in_width) = (
+            input_shape[0],
+            input_shape[1],
+            input_shape[2],
+            input_shape[3],
+        );
+
+        let (out_height, out_width) = self.output_size;
+
+        // Calculate pooling parameters for each dimension
+        let (kernel_h, stride_h, _pad_h) = self.calculate_pooling_params(in_height, out_height);
+        let (kernel_w, stride_w, _pad_w) = self.calculate_pooling_params(in_width, out_width);
+
+        // Create output array and max indices
+        let mut output = Array::<F, _>::zeros((batch_size, channels, out_height, out_width));
+        let mut indices = Array::<(usize, usize), _>::zeros((batch_size, channels, out_height, out_width));
+
+        // Perform adaptive max pooling
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for oh in 0..out_height {
+                    for ow in 0..out_width {
+                        let h_start = oh * stride_h;
+                        let w_start = ow * stride_w;
+                        let h_end = (h_start + kernel_h).min(in_height);
+                        let w_end = (w_start + kernel_w).min(in_width);
+
+                        let mut max_val = F::neg_infinity();
+                        let mut max_h = h_start;
+                        let mut max_w = w_start;
+
+                        for h in h_start..h_end {
+                            for w in w_start..w_end {
+                                let val = input[[b, c, h, w]];
+                                if val > max_val {
+                                    max_val = val;
+                                    max_h = h;
+                                    max_w = w;
+                                }
+                            }
+                        }
+
+                        output[[b, c, oh, ow]] = max_val;
+                        indices[[b, c, oh, ow]] = (max_h, max_w);
+                    }
+                }
+            }
+        }
+
+        // Cache max indices for backward pass
+        if let Ok(mut cache) = self.max_indices.write() {
+            *cache = Some(indices.into_dyn());
+        } else {
+            return Err(NeuralError::InferenceError(
+                "Failed to acquire write lock on max indices cache".to_string(),
+            ));
+        }
+
+        Ok(output.into_dyn())
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        // Retrieve cached input and indices
+        let input_ref = match self.input_cache.read() {
+            Ok(guard) => guard,
+            Err(_) => {
+                return Err(NeuralError::InferenceError(
+                    "Failed to acquire read lock on input cache".to_string(),
+                ))
+            }
+        };
+        if input_ref.is_none() {
+            return Err(NeuralError::InferenceError(
+                "No cached input for backward pass. Call forward() first.".to_string(),
+            ));
+        }
+        let cached_input = input_ref.as_ref().unwrap();
+
+        let indices_ref = match self.max_indices.read() {
+            Ok(guard) => guard,
+            Err(_) => {
+                return Err(NeuralError::InferenceError(
+                    "Failed to acquire read lock on max indices cache".to_string(),
+                ))
+            }
+        };
+        if indices_ref.is_none() {
+            return Err(NeuralError::InferenceError(
+                "No cached max indices for backward pass. Call forward() first.".to_string(),
+            ));
+        }
+        let max_indices = indices_ref.as_ref().unwrap();
+
+        // Input shape
+        let input_shape = cached_input.shape();
+        let (batch_size, channels, _in_height, _in_width) = (
+            input_shape[0],
+            input_shape[1],
+            input_shape[2],
+            input_shape[3],
+        );
+
+        let (out_height, out_width) = self.output_size;
+
+        // Create gradient input with same shape as input
+        let mut grad_input = Array::<F, _>::zeros(input_shape);
+
+        // Distribute gradients back to max positions only
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for oh in 0..out_height {
+                    for ow in 0..out_width {
+                        let (max_h, max_w) = max_indices[[b, c, oh, ow]];
+                        let grad = grad_output[[b, c, oh, ow]];
+                        grad_input[[b, c, max_h, max_w]] = grad_input[[b, c, max_h, max_w]] + grad;
+                    }
+                }
+            }
+        }
+
+        Ok(grad_input)
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // AdaptiveMaxPool2D has no learnable parameters
+        Ok(())
+    }
+
+    fn layer_type(&self) -> &str {
+        "AdaptiveMaxPool2D"
+    }
+
+    fn parameter_count(&self) -> usize {
+        // AdaptiveMaxPool2D has no parameters
+        0
+    }
+
+    fn layer_description(&self) -> String {
+        format!(
+            "type:AdaptiveMaxPool2D, output_size:({}, {}), name:{}",
+            self.output_size.0,
+            self.output_size.1,
+            self.name.as_ref().map_or("None", |s| s)
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1413,5 +1920,114 @@ mod tests {
         assert!((output[[0, 0, 0, 1]] - 0.8).abs() < 1e-10); // max of top-right 2x2
         assert!((output[[0, 0, 1, 0]] - 1.4).abs() < 1e-10); // max of bottom-left 2x2
         assert!((output[[0, 0, 1, 1]] - 1.6).abs() < 1e-10); // max of bottom-right 2x2
+    }
+
+    #[test]
+    fn test_adaptive_avg_pool2d_shape() {
+        // Create an adaptive average pooling layer with output size 2x2
+        let pool = AdaptiveAvgPool2D::<f64>::new((2, 2), Some("test_pool")).unwrap();
+
+        // Create a 4x4 input
+        let input = Array4::<f64>::from_elem((1, 1, 8, 8), 1.0);
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape - should be 2x2
+        assert_eq!(output.shape(), &[1, 1, 2, 2]);
+    }
+
+    #[test]
+    fn test_adaptive_avg_pool2d_values() {
+        // Create an adaptive average pooling layer with output size 2x2
+        let pool = AdaptiveAvgPool2D::<f64>::new((2, 2), Some("test_pool")).unwrap();
+
+        // Create a 4x4 input with known values
+        let mut input = Array4::<f64>::zeros((1, 1, 4, 4));
+        let mut val = 1.0;
+        for i in 0..4 {
+            for j in 0..4 {
+                input[[0, 0, i, j]] = val;
+                val += 1.0;
+            }
+        }
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape
+        assert_eq!(output.shape(), &[1, 1, 2, 2]);
+
+        // Values should be averaged within each 2x2 window
+        // Top-left: average of 1,2,5,6 = 3.5
+        assert!((output[[0, 0, 0, 0]] - 3.5).abs() < 1e-10);
+        // Top-right: average of 3,4,7,8 = 5.5
+        assert!((output[[0, 0, 0, 1]] - 5.5).abs() < 1e-10);
+        // Bottom-left: average of 9,10,13,14 = 11.5
+        assert!((output[[0, 0, 1, 0]] - 11.5).abs() < 1e-10);
+        // Bottom-right: average of 11,12,15,16 = 13.5
+        assert!((output[[0, 0, 1, 1]] - 13.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_adaptive_max_pool2d_shape() {
+        // Create an adaptive max pooling layer with output size 2x2
+        let pool = AdaptiveMaxPool2D::<f64>::new((2, 2), Some("test_pool")).unwrap();
+
+        // Create a 4x4 input
+        let input = Array4::<f64>::from_elem((1, 1, 8, 8), 1.0);
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape - should be 2x2
+        assert_eq!(output.shape(), &[1, 1, 2, 2]);
+    }
+
+    #[test]
+    fn test_adaptive_max_pool2d_values() {
+        // Create an adaptive max pooling layer with output size 2x2
+        let pool = AdaptiveMaxPool2D::<f64>::new((2, 2), Some("test_pool")).unwrap();
+
+        // Create a 4x4 input with known values
+        let mut input = Array4::<f64>::zeros((1, 1, 4, 4));
+        let mut val = 1.0;
+        for i in 0..4 {
+            for j in 0..4 {
+                input[[0, 0, i, j]] = val;
+                val += 1.0;
+            }
+        }
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape
+        assert_eq!(output.shape(), &[1, 1, 2, 2]);
+
+        // Values should be maximum within each 2x2 window
+        // Top-left: max of 1,2,5,6 = 6
+        assert!((output[[0, 0, 0, 0]] - 6.0).abs() < 1e-10);
+        // Top-right: max of 3,4,7,8 = 8
+        assert!((output[[0, 0, 0, 1]] - 8.0).abs() < 1e-10);
+        // Bottom-left: max of 9,10,13,14 = 14
+        assert!((output[[0, 0, 1, 0]] - 14.0).abs() < 1e-10);
+        // Bottom-right: max of 11,12,15,16 = 16
+        assert!((output[[0, 0, 1, 1]] - 16.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_adaptive_pool_different_output_sizes() {
+        // Test with non-square adaptive pooling (3x2 output size)
+        let pool = AdaptiveAvgPool2D::<f64>::new((3, 2), Some("test_pool")).unwrap();
+
+        // Create a 6x4 input
+        let input = Array4::<f64>::from_elem((1, 1, 6, 4), 1.0);
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape - should be 3x2
+        assert_eq!(output.shape(), &[1, 1, 3, 2]);
     }
 }

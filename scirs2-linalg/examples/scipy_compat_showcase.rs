@@ -4,7 +4,7 @@
 //! coverage provided by scirs2-linalg. It shows how to use common SciPy
 //! functions with the same interface and parameter names.
 
-use ndarray::{array, Array1, Array2};
+use ndarray::array;
 use scirs2_linalg::compat;
 use scirs2_linalg::error::LinalgResult;
 
@@ -163,7 +163,7 @@ fn main() -> LinalgResult<()> {
     println!("Matrix exponential:\n{:.4}", exp_result);
 
     // Matrix square root (SciPy: scipy.linalg.sqrtm)
-    let sqrt_result = compat::sqrtm(&a.view())?;
+    let sqrt_result = compat::sqrtm(&a.view(), None)?;
     println!("Matrix square root:\n{:.4}", sqrt_result);
 
     // Matrix logarithm (SciPy: scipy.linalg.logm)
@@ -303,11 +303,11 @@ mod tests {
 
         // Test vector 1-norm
         let norm_1 = compat::vector_norm(&v.view(), Some(1.0), true).unwrap();
-        assert!((norm_1 - 7.0).abs() < 1e-10);
+        assert!((norm_1 - 7.0_f64).abs() < 1e-10);
 
         // Test vector infinity norm
         let norm_inf = compat::vector_norm(&v.view(), Some(f64::INFINITY), true).unwrap();
-        assert!((norm_inf - 4.0).abs() < 1e-10);
+        assert!((norm_inf - 4.0_f64).abs() < 1e-10);
     }
 
     #[test]

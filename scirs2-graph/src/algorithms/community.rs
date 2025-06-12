@@ -286,6 +286,318 @@ where
         .collect()
 }
 
+/// Computes the modularity of a given community partition
+///
+/// Modularity measures the quality of a partition by comparing the number
+/// of edges within communities to what would be expected in a random graph.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze
+/// * `communities` - Map from nodes to community IDs
+///
+/// # Returns
+/// * The modularity score (typically between -1 and 1, higher is better)
+pub fn modularity<N, E, Ix>(graph: &Graph<N, E, Ix>, communities: &HashMap<N, usize>) -> f64
+where
+    N: Node,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    let n = graph.node_count();
+    if n == 0 || communities.is_empty() {
+        return 0.0;
+    }
+
+    // Calculate total edge weight
+    let mut m = 0.0;
+    for edge in graph.inner().edge_references() {
+        m += (*edge.weight()).into();
+    }
+
+    if m == 0.0 {
+        return 0.0;
+    }
+
+    // Calculate node degrees
+    let mut node_degrees: HashMap<N, f64> = HashMap::new();
+    for node in graph.nodes() {
+        let mut degree = 0.0;
+        if let Ok(neighbors) = graph.neighbors(node) {
+            for neighbor in neighbors {
+                if let Ok(weight) = graph.edge_weight(node, &neighbor) {
+                    degree += weight.into();
+                }
+            }
+        }
+        node_degrees.insert(node.clone(), degree);
+    }
+
+    // Calculate modularity
+    let mut q = 0.0;
+    for node_i in graph.nodes() {
+        for node_j in graph.nodes() {
+            if communities.get(node_i) == communities.get(node_j) {
+                // Check if edge exists
+                let a_ij = if let Ok(weight) = graph.edge_weight(node_i, node_j) {
+                    weight.into()
+                } else {
+                    0.0
+                };
+
+                let k_i = node_degrees.get(node_i).unwrap_or(&0.0);
+                let k_j = node_degrees.get(node_j).unwrap_or(&0.0);
+
+                q += a_ij - (k_i * k_j) / (2.0 * m);
+            }
+        }
+    }
+
+    q / (2.0 * m)
+}
+
+/// Optimizes modularity using simulated annealing
+///
+/// This algorithm tries to maximize modularity by iteratively moving nodes
+/// between communities using simulated annealing to escape local optima.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze
+/// * `initial_temp` - Initial temperature for simulated annealing
+/// * `cooling_rate` - Rate at which temperature decreases (0 < rate < 1)
+/// * `max_iterations` - Maximum number of iterations
+///
+/// # Returns
+/// * A community structure with optimized modularity
+pub fn modularity_optimization<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    initial_temp: f64,
+    cooling_rate: f64,
+    max_iterations: usize,
+) -> CommunityStructure<N>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let n = nodes.len();
+
+    if n == 0 {
+        return CommunityStructure {
+            node_communities: HashMap::new(),
+            modularity: 0.0,
+        };
+    }
+
+    // Initialize with each node in its own community
+    let mut current_communities: HashMap<N, usize> = nodes
+        .iter()
+        .enumerate()
+        .map(|(i, node)| (node.clone(), i))
+        .collect();
+
+    let mut current_modularity = modularity(graph, &current_communities);
+    let mut best_communities = current_communities.clone();
+    let mut best_modularity = current_modularity;
+
+    let mut temp = initial_temp;
+    let mut rng = rand::rng();
+
+    for iteration in 0..max_iterations {
+        // Choose a random node to move
+        use rand::Rng;
+        let node_idx = rng.random_range(0..n);
+        let node = &nodes[node_idx];
+        let current_community = current_communities[node];
+
+        // Find possible communities to move to (neighboring communities + new community)
+        let mut candidate_communities = std::collections::HashSet::new();
+        candidate_communities.insert(n); // New community
+
+        if let Ok(neighbors) = graph.neighbors(node) {
+            for neighbor in neighbors {
+                if let Some(&comm) = current_communities.get(&neighbor) {
+                    candidate_communities.insert(comm);
+                }
+            }
+        }
+
+        // Try moving to a random candidate community
+        let candidates: Vec<usize> = candidate_communities.into_iter().collect();
+        if candidates.is_empty() {
+            continue;
+        }
+
+        let new_community = candidates[rng.random_range(0..candidates.len())];
+
+        if new_community == current_community {
+            continue;
+        }
+
+        // Make the move temporarily
+        current_communities.insert(node.clone(), new_community);
+        let new_modularity = modularity(graph, &current_communities);
+        let delta = new_modularity - current_modularity;
+
+        // Accept or reject the move
+        let accept = if delta > 0.0 {
+            true
+        } else {
+            // Accept with probability exp(delta / temp)
+            let prob = (delta / temp).exp();
+            rng.gen::<f64>() < prob
+        };
+
+        if accept {
+            current_modularity = new_modularity;
+            if current_modularity > best_modularity {
+                best_modularity = current_modularity;
+                best_communities = current_communities.clone();
+            }
+        } else {
+            // Revert the move
+            current_communities.insert(node.clone(), current_community);
+        }
+
+        // Cool down
+        temp *= cooling_rate;
+
+        // Early stopping if temperature is too low
+        if temp < 1e-8 {
+            break;
+        }
+    }
+
+    // Renumber communities to be consecutive
+    let mut community_map: HashMap<usize, usize> = HashMap::new();
+    let mut next_id = 0;
+    for &comm in best_communities.values() {
+        if let std::collections::hash_map::Entry::Vacant(e) = community_map.entry(comm) {
+            e.insert(next_id);
+            next_id += 1;
+        }
+    }
+
+    // Apply renumbering
+    for (_, comm) in best_communities.iter_mut() {
+        *comm = community_map[comm];
+    }
+
+    CommunityStructure {
+        node_communities: best_communities,
+        modularity: best_modularity,
+    }
+}
+
+/// Greedy modularity optimization algorithm
+///
+/// This is a simplified version of modularity optimization that uses a greedy
+/// approach without simulated annealing. It's faster but may get stuck in local optima.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze
+/// * `max_iterations` - Maximum number of iterations
+///
+/// # Returns
+/// * A community structure with optimized modularity
+pub fn greedy_modularity_optimization<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iterations: usize,
+) -> CommunityStructure<N>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let n = nodes.len();
+
+    if n == 0 {
+        return CommunityStructure {
+            node_communities: HashMap::new(),
+            modularity: 0.0,
+        };
+    }
+
+    // Initialize with each node in its own community
+    let mut communities: HashMap<N, usize> = nodes
+        .iter()
+        .enumerate()
+        .map(|(i, node)| (node.clone(), i))
+        .collect();
+
+    let mut improved = true;
+    let mut iterations = 0;
+
+    while improved && iterations < max_iterations {
+        improved = false;
+        iterations += 1;
+
+        let current_modularity = modularity(graph, &communities);
+
+        // Try moving each node to each neighboring community
+        for node in &nodes {
+            let original_community = communities[node];
+            let mut best_modularity = current_modularity;
+            let mut best_community = original_community;
+
+            // Get neighboring communities
+            let mut neighboring_communities = std::collections::HashSet::new();
+            if let Ok(neighbors) = graph.neighbors(node) {
+                for neighbor in neighbors {
+                    if let Some(&comm) = communities.get(&neighbor) {
+                        neighboring_communities.insert(comm);
+                    }
+                }
+            }
+
+            // Try each neighboring community
+            for &candidate_community in &neighboring_communities {
+                if candidate_community != original_community {
+                    communities.insert(node.clone(), candidate_community);
+                    let new_modularity = modularity(graph, &communities);
+
+                    if new_modularity > best_modularity {
+                        best_modularity = new_modularity;
+                        best_community = candidate_community;
+                    }
+                }
+            }
+
+            // Move to best community if it's better
+            if best_community != original_community {
+                communities.insert(node.clone(), best_community);
+                improved = true;
+            } else {
+                // Restore original community
+                communities.insert(node.clone(), original_community);
+            }
+        }
+    }
+
+    // Renumber communities to be consecutive
+    let mut community_map: HashMap<usize, usize> = HashMap::new();
+    let mut next_id = 0;
+    for &comm in communities.values() {
+        if let std::collections::hash_map::Entry::Vacant(e) = community_map.entry(comm) {
+            e.insert(next_id);
+            next_id += 1;
+        }
+    }
+
+    // Apply renumbering
+    for (_, comm) in communities.iter_mut() {
+        *comm = community_map[comm];
+    }
+
+    let final_modularity = modularity(graph, &communities);
+
+    CommunityStructure {
+        node_communities: communities,
+        modularity: final_modularity,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -381,5 +693,118 @@ mod tests {
         assert!(communities.contains_key(&"F"));
 
         Ok(())
+    }
+
+    #[test]
+    fn test_modularity_calculation() -> GraphResult<()> {
+        // Create a simple graph with clear community structure
+        let mut graph = create_graph::<i32, f64>();
+
+        // Community 1: triangle
+        graph.add_edge(0, 1, 1.0)?;
+        graph.add_edge(1, 2, 1.0)?;
+        graph.add_edge(2, 0, 1.0)?;
+
+        // Community 2: triangle
+        graph.add_edge(3, 4, 1.0)?;
+        graph.add_edge(4, 5, 1.0)?;
+        graph.add_edge(5, 3, 1.0)?;
+
+        // Weak connection between communities
+        graph.add_edge(2, 3, 0.1)?;
+
+        // Define communities manually
+        let mut communities = HashMap::new();
+        communities.insert(0, 0);
+        communities.insert(1, 0);
+        communities.insert(2, 0);
+        communities.insert(3, 1);
+        communities.insert(4, 1);
+        communities.insert(5, 1);
+
+        let mod_score = modularity(&graph, &communities);
+
+        // Should be positive for good community structure
+        assert!(mod_score > 0.0);
+
+        // Compare with random partition - should be lower
+        let mut random_communities = HashMap::new();
+        random_communities.insert(0, 0);
+        random_communities.insert(1, 1);
+        random_communities.insert(2, 0);
+        random_communities.insert(3, 1);
+        random_communities.insert(4, 0);
+        random_communities.insert(5, 1);
+
+        let random_mod = modularity(&graph, &random_communities);
+        assert!(mod_score > random_mod);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_modularity_optimization() -> GraphResult<()> {
+        // Create a graph with community structure
+        let mut graph = create_graph::<&str, f64>();
+
+        // Dense connections within communities
+        graph.add_edge("A", "B", 1.0)?;
+        graph.add_edge("B", "C", 1.0)?;
+        graph.add_edge("C", "A", 1.0)?;
+
+        graph.add_edge("D", "E", 1.0)?;
+        graph.add_edge("E", "F", 1.0)?;
+        graph.add_edge("F", "D", 1.0)?;
+
+        // Sparse connection between communities
+        graph.add_edge("C", "D", 0.1)?;
+
+        let result = modularity_optimization(&graph, 1.0, 0.9, 1000);
+
+        // Check that all nodes are assigned to communities
+        assert_eq!(result.node_communities.len(), 6);
+
+        // Modularity should be reasonable
+        assert!(result.modularity >= -0.1);
+
+        // Verify modularity calculation matches
+        let calculated_mod = modularity(&graph, &result.node_communities);
+        assert!((result.modularity - calculated_mod).abs() < 1e-10);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_greedy_modularity_optimization() -> GraphResult<()> {
+        // Create a simple graph
+        let mut graph = create_graph::<i32, f64>();
+
+        graph.add_edge(0, 1, 1.0)?;
+        graph.add_edge(1, 2, 1.0)?;
+        graph.add_edge(3, 4, 1.0)?;
+        graph.add_edge(0, 3, 0.1)?; // Weak link
+
+        let result = greedy_modularity_optimization(&graph, 100);
+
+        // Should find some community structure
+        assert_eq!(result.node_communities.len(), 5);
+
+        // Modularity should be calculated correctly
+        let calculated_mod = modularity(&graph, &result.node_communities);
+        assert!((result.modularity - calculated_mod).abs() < 1e-10);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_empty_graph_modularity() {
+        let graph = create_graph::<i32, f64>();
+        let communities = HashMap::new();
+
+        assert_eq!(modularity(&graph, &communities), 0.0);
+
+        let result = modularity_optimization(&graph, 1.0, 0.9, 100);
+        assert_eq!(result.modularity, 0.0);
+        assert!(result.node_communities.is_empty());
     }
 }

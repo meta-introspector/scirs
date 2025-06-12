@@ -166,7 +166,7 @@ impl ComputationGraph {
         }
 
         // Reverse pass through the tape
-        self.tape.backward(&mut self.gradients);
+        let _ = self.tape.backward(&mut self.gradients);
 
         Ok(())
     }

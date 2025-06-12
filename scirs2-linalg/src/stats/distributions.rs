@@ -4,7 +4,7 @@
 //! on matrices, including the Wishart distribution, matrix normal distribution,
 //! and inverse Wishart distribution.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, One, Zero};
 use std::f64::consts::PI;
 
@@ -27,7 +27,7 @@ pub struct MatrixNormalParams<F: Float> {
     pub col_cov: Array2<F>,
 }
 
-impl<F: Float + Zero + One + Copy> MatrixNormalParams<F> {
+impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> MatrixNormalParams<F> {
     /// Create new matrix normal parameters
     ///
     /// # Arguments
@@ -79,7 +79,7 @@ pub struct WishartParams<F: Float> {
     pub dof: F,
 }
 
-impl<F: Float + Zero + One + Copy> WishartParams<F> {
+impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> WishartParams<F> {
     /// Create new Wishart parameters
     ///
     /// # Arguments
@@ -129,7 +129,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let (m, n) = x.dim();
 
@@ -146,12 +148,12 @@ where
     let centered = x - &params.mean;
 
     // Compute log determinants
-    let log_det_u = det(&params.row_cov.view())?.ln();
-    let log_det_v = det(&params.col_cov.view())?.ln();
+    let log_det_u = det(&params.row_cov.view(), None)?.ln();
+    let log_det_v = det(&params.col_cov.view(), None)?.ln();
 
     // Compute inverse matrices
-    let u_inv = inv(&params.row_cov.view())?;
-    let v_inv = inv(&params.col_cov.view())?;
+    let u_inv = inv(&params.row_cov.view(), None)?;
+    let v_inv = inv(&params.col_cov.view(), None)?;
 
     // Compute the quadratic form: tr(V^{-1} * X^T * U^{-1} * X)
     let temp1 = centered.t().dot(&u_inv);
@@ -185,7 +187,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let p = x.nrows();
 
@@ -205,11 +209,11 @@ where
     }
 
     // Compute log determinants
-    let log_det_x = det(x)?.ln();
-    let log_det_v = det(&params.scale.view())?.ln();
+    let log_det_x = det(x, None)?.ln();
+    let log_det_v = det(&params.scale.view(), None)?.ln();
 
     // Compute the trace term: tr(V^{-1} * X)
-    let v_inv = inv(&params.scale.view())?;
+    let v_inv = inv(&params.scale.view(), None)?;
     let trace_term = v_inv.dot(x).diag().sum();
 
     // Compute the log normalizing constant
@@ -249,7 +253,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let (m, n) = params.mean.dim();
 
@@ -288,7 +294,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let p = params.scale.nrows();
 
@@ -302,7 +310,7 @@ where
 
     // Fill lower triangular part with random values
     // This is a simplified version - in practice you'd use proper random distributions
-    let z = random_normal_matrix((p, p), rng_seed)?;
+    let z = random_normal_matrix::<F>((p, p), rng_seed)?;
 
     for i in 0..p {
         for j in 0..=i {

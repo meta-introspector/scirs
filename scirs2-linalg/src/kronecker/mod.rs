@@ -518,8 +518,8 @@ where
 ///
 /// // Note: a_cov has shape (input_dim+1, input_dim+1) due to bias term
 /// // s_cov has shape (output_dim, output_dim)
-/// let a_inv = inv(&a_cov.view()).unwrap();
-/// let s_inv = inv(&s_cov.view()).unwrap();
+/// let a_inv = inv(&a_cov.view(), None).unwrap();
+/// let s_inv = inv(&s_cov.view(), None).unwrap();
 ///
 /// // Perform natural gradient update
 /// let new_weights = kfac_update(

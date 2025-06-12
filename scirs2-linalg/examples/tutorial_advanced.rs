@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GMRES solution: {:?}", x_gmres);
 
     // Direct solution for comparison
-    match solve(&spd.view(), &b.view()) {
+    match solve(&spd.view(), &b.view(), None) {
         Ok(x_direct) => {
             println!("Direct solution: {:?}\n", x_direct);
         }
@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Demonstrate with a 2x2 system instead
             let spd_2x2 = array![[4.0, 1.0], [1.0, 3.0]];
             let b_2x2 = array![1.0, 2.0];
-            let x_direct_2x2 = solve(&spd_2x2.view(), &b_2x2.view())?;
+            let x_direct_2x2 = solve(&spd_2x2.view(), &b_2x2.view(), None)?;
             println!("Direct solution (2x2): {:?}\n", x_direct_2x2);
         }
     }

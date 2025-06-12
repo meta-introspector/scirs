@@ -36,7 +36,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::{Add, Mul, Sub};
 
-use num_traits::{cast, Float, NumCast, Zero};
+use num_traits::{cast, Float, NumAssign, NumCast, Zero};
 
 use crate::error::{LinalgError, LinalgResult};
 
@@ -642,7 +642,10 @@ pub mod advanced {
             + Add<Output = T>
             + Sub<Output = T>
             + Mul<Output = T>
-            + PartialOrd,
+            + PartialOrd
+            + std::iter::Sum
+            + ndarray::ScalarOperand
+            + NumAssign,
     {
         // Analyze sparsity pattern to choose optimal algorithm
         let sparsity_ratio = sparse.nnz() as f64 / (sparse.nrows() * sparse.ncols()) as f64;
@@ -657,7 +660,7 @@ pub mod advanced {
         } else {
             // Dense-like: convert to dense and use direct methods
             let dense = sparse.to_dense();
-            crate::solve::solve(&dense.view(), rhs, None).map_err(|e| e)
+            crate::solve::solve(&dense.view(), rhs, None)
         }
     }
 
@@ -677,7 +680,8 @@ pub mod advanced {
             + Add<Output = T>
             + Sub<Output = T>
             + Mul<Output = T>
-            + PartialOrd,
+            + PartialOrd
+            + ndarray::ScalarOperand,
     {
         let n = a.nrows();
         if a.ncols() != n {
@@ -715,8 +719,8 @@ pub mod advanced {
             let alpha = rsold / pap;
 
             // Update solution and residual
-            x = x + alpha * &p;
-            r = r - alpha * &ap;
+            x = x + &p * alpha;
+            r = r - &ap * alpha;
 
             let rsnew = r.dot(&r);
 
@@ -727,7 +731,7 @@ pub mod advanced {
 
             // Update search direction
             let beta = rsnew / rsold;
-            p = &r + beta * &p;
+            p = &r + &p * beta;
             rsold = rsnew;
         }
 
@@ -751,7 +755,8 @@ pub mod advanced {
             + Add<Output = T>
             + Sub<Output = T>
             + Mul<Output = T>
-            + PartialOrd,
+            + PartialOrd
+            + ndarray::ScalarOperand,
     {
         // Extract diagonal for preconditioning
         let mut diag = Array1::zeros(a.nrows());
@@ -792,8 +797,8 @@ pub mod advanced {
 
             let alpha = rzold / pap;
 
-            x = x + alpha * &p;
-            r = r - alpha * &ap;
+            x = x + &p * alpha;
+            r = r - &ap * alpha;
 
             // Check convergence
             let r_norm = r.dot(&r).sqrt();
@@ -806,7 +811,7 @@ pub mod advanced {
             let rznew = r.dot(&z);
             let beta = rznew / rzold;
 
-            p = &z + beta * &p;
+            p = &z + &p * beta;
             rzold = rznew;
         }
 
@@ -970,7 +975,10 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
-        + PartialOrd,
+        + PartialOrd
+        + std::iter::Sum
+        + ndarray::ScalarOperand
+        + NumAssign,
 {
     fn shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
@@ -1022,7 +1030,10 @@ pub mod utils {
             + Sub<Output = T>
             + Mul<Output = T>
             + PartialOrd
-            + NumCast,
+            + NumCast
+            + NumAssign
+            + std::iter::Sum
+            + ndarray::ScalarOperand,
     {
         // Analyze matrix sparsity
         let total_elements = matrix.len();

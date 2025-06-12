@@ -196,7 +196,7 @@ fn coordinate_transformations_example() -> Result<(), Box<dyn std::error::Error>
 
     for (name, (lat, lon)) in &locations {
         // UTM conversion (skip poles)
-        if lat.abs() < 84.0f64 {
+        if (*lat as f64).abs() < 84.0 {
             let utm_result = geographic_to_utm(*lat, *lon);
             match utm_result {
                 Ok((easting, northing, zone, letter)) => {
@@ -434,7 +434,7 @@ fn gps_tracking_example() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Trail GPS coordinates:");
     let mut total_distance = 0.0;
-    let mut elevations = vec![
+    let elevations = vec![
         1200.0, 1250.0, 1320.0, 1400.0, 1520.0, 1650.0, 1520.0, 1400.0, 1320.0, 1200.0,
     ];
 

@@ -7,7 +7,6 @@ use plotters::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Write};
-use std::path::Path;
 
 /// Performance data point for analysis
 #[derive(Debug, Clone)]

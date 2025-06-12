@@ -8,7 +8,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, One, Zero};
 use std::f64::consts::PI;
 
-use crate::basic::{det, inv, trace};
+use crate::basic::{det, inv};
 use crate::eigen::eigen_symmetric;
 use crate::error::{LinalgError, LinalgResult};
 use crate::stats::covariance::covariance_matrix;
@@ -68,7 +68,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     if groups.len() < 2 {
         return Err(LinalgError::InvalidInputError(
@@ -105,7 +107,7 @@ where
 
         sample_sizes.push(n_i);
         let cov_i = covariance_matrix(group, Some(1))?;
-        let log_det_i = det(&cov_i.view())?.ln();
+        let log_det_i = det(&cov_i.view(), None)?.ln();
 
         group_covs.push(cov_i);
         log_dets.push(log_det_i);
@@ -117,10 +119,10 @@ where
 
     for (i, cov_i) in group_covs.iter().enumerate() {
         let weight = F::from(sample_sizes[i] - 1).unwrap() / F::from(total_dof).unwrap();
-        pooled_cov = pooled_cov + weight * cov_i;
+        pooled_cov = pooled_cov + &(cov_i * weight);
     }
 
-    let log_det_pooled = det(&pooled_cov.view())?.ln();
+    let log_det_pooled = det::<F>(&pooled_cov.view(), None)?.ln();
 
     // Compute Box's M statistic
     let mut m_statistic = F::from(total_dof).unwrap() * log_det_pooled;
@@ -171,7 +173,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let n = data.nrows();
     let p = data.ncols();
@@ -200,7 +204,7 @@ where
 
     // Convert to chi-square using Mauchly's transformation
     let n_f = F::from(n - 1).unwrap();
-    let f = F::from(p * (p + 1) / 2 - 1).unwrap();
+    let _f = F::from(p * (p + 1) / 2 - 1).unwrap();
     let chi_square_stat =
         -(n_f - F::from(2 * p * p + p + 2).unwrap() / F::from(6 * p).unwrap()) * w_statistic.ln();
 
@@ -240,7 +244,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let n = data.nrows();
     let p = data.ncols();
@@ -255,7 +261,7 @@ where
     // Compute sample mean and covariance
     let mean = data.mean_axis(Axis(0)).unwrap();
     let cov = covariance_matrix(data, Some(1))?;
-    let cov_inv = inv(&cov.view())?;
+    let cov_inv = inv(&cov.view(), None)?;
 
     // Compute Mahalanobis distances
     let mut distances = Array1::zeros(n);
@@ -276,7 +282,7 @@ where
             let centered_j = &row_j - &mean;
 
             let temp_i = centered_i.dot(&cov_inv);
-            let temp_j = centered_j.dot(&cov_inv);
+            let _temp_j = centered_j.dot(&cov_inv);
 
             let cross_term = temp_i.dot(&centered_j);
             skewness_sum = skewness_sum + cross_term.powi(3);
@@ -341,7 +347,9 @@ where
         + Copy
         + std::fmt::Debug
         + ndarray::ScalarOperand
-        + num_traits::FromPrimitive,
+        + num_traits::FromPrimitive
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     let n = data.nrows();
     let p = data.ncols();
@@ -376,7 +384,7 @@ where
 
     // Compute sample covariance matrix
     let cov = covariance_matrix(data, Some(1))?;
-    let cov_inv = inv(&cov.view())?;
+    let cov_inv = inv(&cov.view(), None)?;
 
     // Compute Hotelling's T² statistic
     let t2_stat = F::from(n).unwrap() * diff.dot(&cov_inv).dot(&diff);
@@ -444,7 +452,7 @@ where
     Ok(approx.min(F::one()))
 }
 
-fn f_survival_function<F>(x: F, df1: usize, df2: usize) -> LinalgResult<F>
+fn f_survival_function<F>(x: F, _df1: usize, _df2: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive,
 {

@@ -42,7 +42,7 @@ fn main() -> LinalgResult<()> {
     println!("Right-hand side b: {:?}\n", b);
 
     // Solve using standard precision
-    let x_std = match scirs2_linalg::solve(&hilbert.view(), &b.view()) {
+    let x_std = match scirs2_linalg::solve(&hilbert.view(), &b.view(), None) {
         Ok(result) => result,
         Err(e) => {
             println!("Error in standard precision solve: {}", e);

@@ -264,7 +264,7 @@ where
         // Create cubic splines for each x value across y
         let mut values_at_x = Array1::zeros(self.y.len());
 
-        for (i, &y_val) in self.y.iter().enumerate() {
+        for (i, &_y_val) in self.y.iter().enumerate() {
             let row = self.z.slice(ndarray::s![i, ..]);
             let spline = CubicSpline::new(&self.x.view(), &row)?;
             values_at_x[i] = spline.evaluate(x_new)?;

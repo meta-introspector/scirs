@@ -4,7 +4,7 @@
 
 use crate::error::{InterpolateError, InterpolateResult};
 use crate::numerical_stability::{
-    assess_matrix_condition, solve_with_stability_monitoring, StabilityLevel, ConditionReport,
+    assess_matrix_condition, solve_with_stability_monitoring, ConditionReport, StabilityLevel,
 };
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
@@ -38,7 +38,9 @@ pub enum RBFKernel {
 /// The interpolator now includes numerical stability monitoring to detect
 /// and warn about ill-conditioned matrices during construction.
 #[derive(Debug, Clone)]
-pub struct RBFInterpolator<F: Float + Display + FromPrimitive> {
+pub struct RBFInterpolator<
+    F: Float + Display + FromPrimitive + Debug + AddAssign + std::ops::SubAssign,
+> {
     /// Coordinates of sample points
     points: Array2<F>,
     /// Coefficients for the RBF interpolation
@@ -51,7 +53,9 @@ pub struct RBFInterpolator<F: Float + Display + FromPrimitive> {
     condition_report: Option<ConditionReport<F>>,
 }
 
-impl<F: Float + FromPrimitive + Debug + Display + AddAssign + 'static> RBFInterpolator<F> {
+impl<F: Float + FromPrimitive + Debug + Display + AddAssign + std::ops::SubAssign + 'static>
+    RBFInterpolator<F>
+{
     /// Create a new RBF interpolator
     ///
     /// # Arguments
@@ -135,7 +139,7 @@ impl<F: Float + FromPrimitive + Debug + Display + AddAssign + 'static> RBFInterp
 
         // Assess matrix condition before solving
         let condition_report = assess_matrix_condition(&a_matrix.view()).ok();
-        
+
         // Warn about potential numerical issues
         if let Some(ref report) = condition_report {
             match report.stability_level {
@@ -161,14 +165,14 @@ impl<F: Float + FromPrimitive + Debug + Display + AddAssign + 'static> RBFInterp
         let (coefficients, _solve_report) = solve_with_stability_monitoring(&a_matrix, values)
             .or_else(|_| {
                 eprintln!("Warning: Stability-monitored solve failed. Falling back to basic solver with regularization.");
-                
+
                 // Fall back to regularized version
                 let mut regularized_matrix = a_matrix.clone();
                 let regularization = F::from_f64(1e-6).unwrap();
                 for i in 0..n_points {
                     regularized_matrix[[i, i]] += regularization;
                 }
-                
+
                 self_solve_linear_system(&regularized_matrix, values)
                     .map(|coeffs| (coeffs, condition_report.clone().unwrap_or_else(|| {
                         // Create a default report for fallback case
@@ -332,7 +336,7 @@ impl<F: Float + FromPrimitive + Debug + Display + AddAssign + 'static> RBFInterp
     /// // Create interpolator (example data)
     /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
     /// let values = ndarray::array![0.0, 1.0, 1.0];
-    /// let interp = RBFInterpolator::new(&points.view(), &values.view(), 
+    /// let interp = RBFInterpolator::new(&points.view(), &values.view(),
     ///                                   RBFKernel::Gaussian, 1.0).unwrap();
     ///
     /// // Check numerical stability
@@ -360,7 +364,9 @@ impl<F: Float + FromPrimitive + Debug + Display + AddAssign + 'static> RBFInterp
     /// * `Some(false)` - Matrix is poorly conditioned (results may be unreliable)  
     /// * `None` - Condition assessment was not performed or failed
     pub fn is_well_conditioned(&self) -> Option<bool> {
-        self.condition_report.as_ref().map(|report| report.is_well_conditioned)
+        self.condition_report
+            .as_ref()
+            .map(|report| report.is_well_conditioned)
     }
 }
 
@@ -392,7 +398,7 @@ fn self_solve_linear_system<F: Float + FromPrimitive + Debug + Display>(
                 max_row = i;
             }
         }
-        
+
         // Swap rows if a better pivot was found
         if max_row != k {
             for j in k..n {
@@ -404,18 +410,19 @@ fn self_solve_linear_system<F: Float + FromPrimitive + Debug + Display>(
             b_copy[k] = b_copy[max_row];
             b_copy[max_row] = temp;
         }
-        
+
         for i in k + 1..n {
             // Use safe division to detect numerical issues
             let factor = match crate::numerical_stability::check_safe_division(
-                a_copy[[i, k]], 
-                a_copy[[k, k]]
+                a_copy[[i, k]],
+                a_copy[[k, k]],
             ) {
                 Ok(f) => f,
                 Err(_) => {
                     return Err(InterpolateError::NumericalError(format!(
                         "Pivot element at row {} is too small for stable division: {:.2e}",
-                        k, a_copy[[k, k]]
+                        k,
+                        a_copy[[k, k]]
                     )));
                 }
             };
@@ -443,13 +450,14 @@ fn self_solve_linear_system<F: Float + FromPrimitive + Debug + Display>(
         // Use safe division for back substitution
         x[i] = match crate::numerical_stability::check_safe_division(
             b_copy[i] - sum,
-            a_copy[[i, i]]
+            a_copy[[i, i]],
         ) {
             Ok(result) => result,
             Err(_) => {
                 return Err(InterpolateError::NumericalError(format!(
                     "Diagonal element at row {} is too small for stable division: {:.2e}",
-                    i, a_copy[[i, i]]
+                    i,
+                    a_copy[[i, i]]
                 )));
             }
         };

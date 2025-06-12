@@ -74,7 +74,11 @@ impl Default for AcceleratorCapabilities {
         Self {
             max_signal_size: 65536,
             max_sparsity: 1024,
-            supported_data_types: vec!["f32".to_string(), "f64".to_string(), "complex64".to_string()],
+            supported_data_types: vec![
+                "f32".to_string(),
+                "f64".to_string(),
+                "complex64".to_string(),
+            ],
             memory_bandwidth_gb_s: 100.0,
             peak_throughput_gflops: 1000.0,
             power_consumption_watts: 25.0,
@@ -187,7 +191,7 @@ impl FPGAAccelerator {
             capabilities: AcceleratorCapabilities {
                 max_signal_size: 1048576, // 1M samples
                 max_sparsity: 8192,
-                memory_bandwidth_gb_s: 600.0, // High bandwidth memory
+                memory_bandwidth_gb_s: 600.0,   // High bandwidth memory
                 peak_throughput_gflops: 2000.0, // Configurable logic
                 power_consumption_watts: 75.0,
                 latency_us: 1.0, // Very low latency
@@ -233,9 +237,12 @@ impl HardwareAbstractionLayer for FPGAAccelerator {
         // 3. Initialize memory controllers
         // 4. Set up DMA channels
 
-        self.performance_metrics.insert("initialization_time_ms".to_string(), 500.0);
-        self.performance_metrics.insert("bitstream_load_time_ms".to_string(), 200.0);
-        self.performance_metrics.insert("clock_frequency_mhz".to_string(), 250.0);
+        self.performance_metrics
+            .insert("initialization_time_ms".to_string(), 500.0);
+        self.performance_metrics
+            .insert("bitstream_load_time_ms".to_string(), 200.0);
+        self.performance_metrics
+            .insert("clock_frequency_mhz".to_string(), 250.0);
 
         self.initialized = true;
         Ok(())
@@ -279,7 +286,8 @@ impl HardwareAbstractionLayer for FPGAAccelerator {
         }
 
         // Simulate high-speed data transfer
-        let transfer_time_us = data.len() as f64 / (self.info.capabilities.memory_bandwidth_gb_s * 1000.0);
+        let transfer_time_us =
+            data.len() as f64 / (self.info.capabilities.memory_bandwidth_gb_s * 1000.0);
         std::thread::sleep(Duration::from_micros(transfer_time_us as u64));
 
         self.performance_metrics.insert(
@@ -298,7 +306,8 @@ impl HardwareAbstractionLayer for FPGAAccelerator {
         }
 
         // Simulate high-speed data transfer
-        let transfer_time_us = data.len() as f64 / (self.info.capabilities.memory_bandwidth_gb_s * 1000.0);
+        let transfer_time_us =
+            data.len() as f64 / (self.info.capabilities.memory_bandwidth_gb_s * 1000.0);
         std::thread::sleep(Duration::from_micros(transfer_time_us as u64));
 
         // Simulate data (in real implementation, would copy from FPGA memory)
@@ -341,10 +350,17 @@ impl HardwareAbstractionLayer for FPGAAccelerator {
         let elapsed = start.elapsed();
 
         // Update performance metrics
-        self.performance_metrics.insert("last_execution_time_us".to_string(), elapsed.as_micros() as f64);
-        self.performance_metrics.insert("computed_gflops".to_string(), 
-            (signal_size as f64 * (signal_size as f64).log2() * 5.0) / (elapsed.as_secs_f64() * 1e9));
-        self.performance_metrics.insert("utilization_percent".to_string(), 85.0);
+        self.performance_metrics.insert(
+            "last_execution_time_us".to_string(),
+            elapsed.as_micros() as f64,
+        );
+        self.performance_metrics.insert(
+            "computed_gflops".to_string(),
+            (signal_size as f64 * (signal_size as f64).log2() * 5.0)
+                / (elapsed.as_secs_f64() * 1e9),
+        );
+        self.performance_metrics
+            .insert("utilization_percent".to_string(), 85.0);
 
         Ok(elapsed)
     }
@@ -383,7 +399,7 @@ impl ASICAccelerator {
                 memory_bandwidth_gb_s: 1000.0, // Dedicated memory interface
                 peak_throughput_gflops: 5000.0, // Purpose-built for sparse FFT
                 power_consumption_watts: 50.0, // Optimized design
-                latency_us: 0.5, // Ultra-low latency
+                latency_us: 0.5,               // Ultra-low latency
                 supports_parallel: true,
                 supports_pipeline: true,
                 ..AcceleratorCapabilities::default()
@@ -418,9 +434,12 @@ impl HardwareAbstractionLayer for ASICAccelerator {
         }
 
         // Simulate ASIC initialization
-        self.performance_metrics.insert("initialization_time_ms".to_string(), 50.0);
-        self.performance_metrics.insert("pll_lock_time_ms".to_string(), 10.0);
-        self.performance_metrics.insert("calibration_time_ms".to_string(), 30.0);
+        self.performance_metrics
+            .insert("initialization_time_ms".to_string(), 50.0);
+        self.performance_metrics
+            .insert("pll_lock_time_ms".to_string(), 10.0);
+        self.performance_metrics
+            .insert("calibration_time_ms".to_string(), 30.0);
 
         self.initialized = true;
         Ok(())
@@ -479,16 +498,20 @@ impl HardwareAbstractionLayer for ASICAccelerator {
         // - Highly optimized datapath
         // - Minimal overhead
 
-        let computation_time_ns = self.info.capabilities.latency_us * 1000.0 +
-            (signal_size as f64 / 1000.0) * sparsity as f64; // Highly optimized
+        let computation_time_ns = self.info.capabilities.latency_us * 1000.0
+            + (signal_size as f64 / 1000.0) * sparsity as f64; // Highly optimized
 
         std::thread::sleep(Duration::from_nanos(computation_time_ns as u64));
 
         let elapsed = start.elapsed();
 
         // Update performance metrics
-        self.performance_metrics.insert("last_execution_time_ns".to_string(), elapsed.as_nanos() as f64);
-        self.performance_metrics.insert("peak_performance_achieved".to_string(), 95.0);
+        self.performance_metrics.insert(
+            "last_execution_time_ns".to_string(),
+            elapsed.as_nanos() as f64,
+        );
+        self.performance_metrics
+            .insert("peak_performance_achieved".to_string(), 95.0);
 
         Ok(elapsed)
     }
@@ -523,21 +546,23 @@ impl SpecializedHardwareManager {
         let mut discovered = Vec::new();
 
         // Simulate discovery of different accelerator types
-        // In real implementation, this would scan system buses, 
+        // In real implementation, this would scan system buses,
         // check driver availability, etc.
 
         // Register FPGA if available
         if self.is_fpga_available() {
             let fpga = FPGAAccelerator::new("fpga_0");
             discovered.push("fpga_0".to_string());
-            self.accelerators.insert("fpga_0".to_string(), Box::new(fpga));
+            self.accelerators
+                .insert("fpga_0".to_string(), Box::new(fpga));
         }
 
         // Register ASIC if available
         if self.is_asic_available() {
             let asic = ASICAccelerator::new("asic_0");
             discovered.push("asic_0".to_string());
-            self.accelerators.insert("asic_0".to_string(), Box::new(asic));
+            self.accelerators
+                .insert("asic_0".to_string(), Box::new(asic));
         }
 
         Ok(discovered)
@@ -593,8 +618,9 @@ impl SpecializedHardwareManager {
         let signal_complex: Vec<Complex64> = signal
             .iter()
             .map(|&val| {
-                let val_f64 = NumCast::from(val)
-                    .ok_or_else(|| FFTError::ValueError(format!("Could not convert {:?} to f64", val)))?;
+                let val_f64 = NumCast::from(val).ok_or_else(|| {
+                    FFTError::ValueError(format!("Could not convert {:?} to f64", val))
+                })?;
                 Ok(Complex64::new(val_f64, 0.0))
             })
             .collect::<FFTResult<Vec<_>>>()?;
@@ -608,14 +634,14 @@ impl SpecializedHardwareManager {
 
         // Execute on selected accelerator
         let accelerator = self.accelerators.get_mut(&best_accelerator).unwrap();
-        
+
         let input_handle = accelerator.allocate_memory(signal_bytes.len())?;
-        let output_handle = accelerator.allocate_memory(
-            self.config.sparsity * std::mem::size_of::<Complex64>()
-        )?;
+        let output_handle =
+            accelerator.allocate_memory(self.config.sparsity * std::mem::size_of::<Complex64>())?;
 
         accelerator.transfer_to_device(input_handle, signal_bytes)?;
-        let execution_time = accelerator.execute_sparse_fft(input_handle, output_handle, &self.config)?;
+        let execution_time =
+            accelerator.execute_sparse_fft(input_handle, output_handle, &self.config)?;
 
         // Get results
         let mut result_bytes = vec![0u8; self.config.sparsity * std::mem::size_of::<Complex64>()];
@@ -652,7 +678,7 @@ impl SpecializedHardwareManager {
             }
 
             let info = accelerator.get_info();
-            
+
             // Score based on suitability for the task
             let mut score = 0.0;
 
@@ -685,9 +711,8 @@ impl SpecializedHardwareManager {
             }
         }
 
-        best_accelerator.ok_or_else(|| {
-            FFTError::ComputationError("No suitable accelerator found".to_string())
-        })
+        best_accelerator
+            .ok_or_else(|| FFTError::ComputationError("No suitable accelerator found".to_string()))
     }
 
     /// Get performance summary for all accelerators
@@ -730,10 +755,10 @@ mod tests {
     #[ignore = "Ignored for alpha-4 release - specialized hardware dependent test"]
     fn test_fpga_accelerator() {
         let mut fpga = FPGAAccelerator::new("test_fpga");
-        
+
         assert!(fpga.initialize().is_ok());
         assert!(fpga.is_available());
-        
+
         let info = fpga.get_info();
         assert_eq!(info.accelerator_type, AcceleratorType::FPGA);
         assert!(info.capabilities.max_signal_size > 0);
@@ -743,10 +768,10 @@ mod tests {
     #[ignore = "Ignored for alpha-4 release - specialized hardware dependent test"]
     fn test_asic_accelerator() {
         let mut asic = ASICAccelerator::new("test_asic");
-        
+
         assert!(asic.initialize().is_ok());
         assert!(asic.is_available());
-        
+
         let info = asic.get_info();
         assert_eq!(info.accelerator_type, AcceleratorType::ASIC);
         assert!(info.capabilities.peak_throughput_gflops > 1000.0);
@@ -764,10 +789,10 @@ mod tests {
 
         let mut manager = SpecializedHardwareManager::new(config);
         let discovered = manager.discover_accelerators().unwrap();
-        
+
         assert!(!discovered.is_empty());
         assert!(manager.initialize_all().is_ok());
-        
+
         let available = manager.get_available_accelerators();
         assert!(!available.is_empty());
     }
@@ -784,7 +809,7 @@ mod tests {
 
         let result = specialized_hardware_sparse_fft(&signal, config);
         assert!(result.is_ok());
-        
+
         let result = result.unwrap();
         assert_eq!(result.values.len(), 4);
         assert_eq!(result.indices.len(), 4);

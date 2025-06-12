@@ -71,7 +71,7 @@ where
 
     // For small matrices, we can solve directly using the inverse
     if a.nrows() <= 4 {
-        let a_inv = inv(a)?;
+        let a_inv = inv(a, None)?;
         // Compute x = a_inv * b
         let mut x = Array1::zeros(a.nrows());
         for i in 0..a.nrows() {

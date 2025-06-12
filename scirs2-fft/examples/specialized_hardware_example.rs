@@ -63,17 +63,35 @@ fn test_hardware_discovery() -> FFTResult<()> {
             println!("  Vendor: {}", info.vendor);
             println!("  Driver: {}", info.driver_version);
             println!("  Available: {}", info.is_available);
-            
+
             println!("  Capabilities:");
-            println!("    Max signal size: {} samples", info.capabilities.max_signal_size);
+            println!(
+                "    Max signal size: {} samples",
+                info.capabilities.max_signal_size
+            );
             println!("    Max sparsity: {}", info.capabilities.max_sparsity);
-            println!("    Memory bandwidth: {:.1} GB/s", info.capabilities.memory_bandwidth_gb_s);
-            println!("    Peak throughput: {:.1} GFLOPS", info.capabilities.peak_throughput_gflops);
-            println!("    Power consumption: {:.1} W", info.capabilities.power_consumption_watts);
+            println!(
+                "    Memory bandwidth: {:.1} GB/s",
+                info.capabilities.memory_bandwidth_gb_s
+            );
+            println!(
+                "    Peak throughput: {:.1} GFLOPS",
+                info.capabilities.peak_throughput_gflops
+            );
+            println!(
+                "    Power consumption: {:.1} W",
+                info.capabilities.power_consumption_watts
+            );
             println!("    Latency: {:.2} μs", info.capabilities.latency_us);
-            println!("    Parallel support: {}", info.capabilities.supports_parallel);
-            println!("    Pipeline support: {}", info.capabilities.supports_pipeline);
-            
+            println!(
+                "    Parallel support: {}",
+                info.capabilities.supports_parallel
+            );
+            println!(
+                "    Pipeline support: {}",
+                info.capabilities.supports_pipeline
+            );
+
             if !info.capabilities.custom_features.is_empty() {
                 println!("  Custom features:");
                 for (feature, value) in &info.capabilities.custom_features {
@@ -96,7 +114,7 @@ fn test_performance_comparison() -> FFTResult<()> {
     for signal_size in signal_sizes {
         for &sparsity in &sparsity_levels {
             println!("\nSignal size: {}, Sparsity: {}", signal_size, sparsity);
-            
+
             let signal = create_test_signal(signal_size);
             let config = SparseFFTConfig {
                 sparsity,
@@ -111,7 +129,7 @@ fn test_performance_comparison() -> FFTResult<()> {
                 Ok(result) => {
                     let elapsed = start.elapsed();
                     let throughput = signal_size as f64 / elapsed.as_secs_f64();
-                    
+
                     println!("  Specialized Hardware: {:?}", elapsed);
                     println!("    Throughput: {:.0} samples/sec", throughput);
                     println!("    Found components: {}", result.values.len());
@@ -149,13 +167,15 @@ fn test_signal_size_scaling() -> FFTResult<()> {
 
         let start = Instant::now();
         match specialized_hardware_sparse_fft(&signal, config) {
-            Ok(result) => {
+            Ok(_result) => {
                 let elapsed = start.elapsed();
                 let throughput = signal_size as f64 / elapsed.as_secs_f64();
                 let efficiency = throughput / (signal_size as f64); // Relative efficiency
-                
-                println!("{}\t\t{:?}\t\t{:.0}\t\t\t{:.3}",
-                    signal_size, elapsed, throughput, efficiency);
+
+                println!(
+                    "{}\t\t{:?}\t\t{:.0}\t\t\t{:.3}",
+                    signal_size, elapsed, throughput, efficiency
+                );
             }
             Err(e) => {
                 println!("{}\t\tFailed: {}", signal_size, e);
@@ -182,7 +202,7 @@ fn test_power_efficiency() -> FFTResult<()> {
     manager.initialize_all()?;
 
     let available = manager.get_available_accelerators();
-    
+
     println!("Accelerator\t\tType\t\tPower (W)\tThroughput (GFLOPS)\tEfficiency (GFLOPS/W)");
     println!("===========\t\t====\t\t=========\t==================\t====================");
 
@@ -191,17 +211,19 @@ fn test_power_efficiency() -> FFTResult<()> {
             let power = info.capabilities.power_consumption_watts;
             let throughput = info.capabilities.peak_throughput_gflops;
             let efficiency = throughput / power;
-            
-            println!("{}\t\t{}\t\t{:.1}\t\t{:.1}\t\t\t{:.2}",
-                id, info.accelerator_type, power, throughput, efficiency);
+
+            println!(
+                "{}\t\t{}\t\t{:.1}\t\t{:.1}\t\t\t{:.2}",
+                id, info.accelerator_type, power, throughput, efficiency
+            );
         }
     }
 
     // Analyze power vs performance trade-offs
     println!("\nPower vs Performance Analysis:");
-    
+
     let signal = create_test_signal(4096);
-    
+
     for id in manager.get_available_accelerators() {
         // Get info first to avoid borrow conflicts
         let (power, id_clone) = if let Some(info) = manager.get_accelerator_info(&id) {
@@ -209,16 +231,20 @@ fn test_power_efficiency() -> FFTResult<()> {
         } else {
             continue;
         };
-        
+
         let start = Instant::now();
-        
+
         // Simulate execution on specific accelerator
         if let Ok(result) = manager.execute_sparse_fft(&signal) {
             let elapsed = start.elapsed();
             let energy_per_operation = power * elapsed.as_secs_f64(); // Joules
-            
-            println!("  {}: {:.3} J/operation, {} components found",
-                id_clone, energy_per_operation, result.values.len());
+
+            println!(
+                "  {}: {:.3} J/operation, {} components found",
+                id_clone,
+                energy_per_operation,
+                result.values.len()
+            );
         }
     }
 
@@ -231,11 +257,11 @@ fn create_test_signal(n: usize) -> Vec<f64> {
 
     // Add sparse frequency components
     let frequencies = vec![
-        (50, 1.0),    // 50 Hz, amplitude 1.0
-        (150, 0.8),   // 150 Hz, amplitude 0.8
-        (300, 0.6),   // 300 Hz, amplitude 0.6
-        (450, 0.4),   // 450 Hz, amplitude 0.4
-        (600, 0.3),   // 600 Hz, amplitude 0.3
+        (50, 1.0),  // 50 Hz, amplitude 1.0
+        (150, 0.8), // 150 Hz, amplitude 0.8
+        (300, 0.6), // 300 Hz, amplitude 0.6
+        (450, 0.4), // 450 Hz, amplitude 0.4
+        (600, 0.3), // 600 Hz, amplitude 0.3
     ];
 
     for i in 0..n {
@@ -249,7 +275,7 @@ fn create_test_signal(n: usize) -> Vec<f64> {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(12345);
-    
+
     for sample in &mut signal {
         *sample += 0.05 * (rng.random::<f64>() - 0.5);
     }
@@ -261,34 +287,34 @@ fn create_test_signal(n: usize) -> Vec<f64> {
 #[allow(dead_code)]
 fn display_accelerator_recommendations() {
     println!("\n--- Accelerator Recommendations ---");
-    
+
     println!("For different use cases:");
     println!();
-    
+
     println!("Ultra-Low Latency Applications (< 1 μs):");
     println!("  ✓ ASIC accelerators - Purpose-built for sparse FFT");
     println!("  ✓ FPGA with custom bitstreams - Configurable for specific needs");
     println!("  • Consider: Power consumption vs latency trade-offs");
     println!();
-    
+
     println!("High-Throughput Batch Processing:");
     println!("  ✓ Multi-accelerator setups with pipeline processing");
     println!("  ✓ FPGA with parallel processing units");
     println!("  • Consider: Memory bandwidth limitations");
     println!();
-    
+
     println!("Power-Constrained Environments:");
     println!("  ✓ Low-power ASICs with optimized algorithms");
     println!("  ✓ DSP processors with sparse FFT optimizations");
     println!("  • Consider: Performance vs power efficiency");
     println!();
-    
+
     println!("Flexible/Research Applications:");
     println!("  ✓ FPGA with reconfigurable logic");
     println!("  ✓ GPU + FPGA hybrid systems");
     println!("  • Consider: Development time vs performance");
     println!();
-    
+
     println!("Real-Time Signal Processing:");
     println!("  ✓ ASIC with guaranteed latency bounds");
     println!("  ✓ DSP with real-time OS support");
