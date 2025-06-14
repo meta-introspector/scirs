@@ -125,7 +125,7 @@ impl PCA {
         }
 
         // Perform SVD
-        let (_u, s, vt) = match svd::<f64>(&x_processed.view(), true) {
+        let (_u, s, vt) = match svd::<f64>(&x_processed.view(), true, None) {
             Ok(result) => result,
             Err(e) => return Err(TransformError::LinalgError(e)),
         };
@@ -320,7 +320,7 @@ impl TruncatedSVD {
         }
 
         // Perform SVD
-        let (_u, s, vt) = match svd::<f64>(&x_f64.view(), true) {
+        let (_u, s, vt) = match svd::<f64>(&x_f64.view(), true, None) {
             Ok(result) => result,
             Err(e) => return Err(TransformError::LinalgError(e)),
         };

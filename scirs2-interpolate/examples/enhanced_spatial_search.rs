@@ -8,9 +8,9 @@
 //! - Adaptive search strategies
 //! - Batch and parallel query processing
 
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 use scirs2_interpolate::spatial::{
-    AdaptiveSearchStrategy, BallTree, BatchQueryProcessor, CacheFriendlyIndex, KdTree,
+    AdaptiveSearchStrategy, BatchQueryProcessor, CacheFriendlyIndex, KdTree,
     SIMDDistanceCalculator,
 };
 use std::time::Instant;
@@ -69,11 +69,11 @@ fn generate_test_data(
     let cluster_std = 0.3;
 
     for _ in 0..n_points {
-        let cluster_id = rng.gen_range(0..n_clusters);
+        let cluster_id = rng.random_range(0..n_clusters);
         let cluster_center = cluster_id as f64 * 2.0;
 
         for _ in 0..n_dims {
-            let coord = cluster_center + rng.gen::<f64>() * cluster_std;
+            let coord = cluster_center + rng.random::<f64>() * cluster_std;
             points_data.push(coord);
         }
     }
@@ -81,7 +81,7 @@ fn generate_test_data(
     // Generate query points around the data
     for _ in 0..n_queries {
         for _ in 0..n_dims {
-            let coord = rng.gen::<f64>() * (n_clusters as f64 * 2.0);
+            let coord = rng.random::<f64>() * (n_clusters as f64 * 2.0);
             queries_data.push(coord);
         }
     }
@@ -104,7 +104,7 @@ fn compare_knn_methods(
     let query_slice = query.as_slice().unwrap();
 
     // Standard KdTree
-    let kdtree = KdTree::new(points)?;
+    let kdtree = KdTree::new(points.to_owned())?;
     let start = Instant::now();
     let standard_result = kdtree.k_nearest_neighbors(query_slice, k)?;
     let standard_time = start.elapsed();
@@ -222,7 +222,7 @@ fn demonstrate_cache_friendly_index(
     let cache_time = start.elapsed();
 
     // Compare with standard approach
-    let kdtree = KdTree::new(points)?;
+    let kdtree = KdTree::new(points.to_owned())?;
     let start = Instant::now();
     let standard_result = kdtree.k_nearest_neighbors(query_slice, k)?;
     let standard_time = start.elapsed();
@@ -303,7 +303,7 @@ fn demonstrate_batch_processing(
     // Sequential processing
     let start = Instant::now();
     let mut sequential_results = Vec::new();
-    let kdtree = KdTree::new(points)?;
+    let kdtree = KdTree::new(points.to_owned())?;
     for i in 0..queries.nrows() {
         let query = queries.row(i);
         let query_slice = query.as_slice().unwrap();

@@ -188,11 +188,6 @@ path = "examples/memory_metrics_snapshots.rs"
 required-features = ["memory_management", "memory_metrics"]
 
 [[example]]
-name = "memory_efficient_example"
-path = "examples/memory_efficient_example.rs"
-required-features = ["memory_efficient"]
-
-[[example]]
 name = "memory_mapped_array"
 path = "examples/memory_mapped_array.rs"
 required-features = ["memory_efficient"]

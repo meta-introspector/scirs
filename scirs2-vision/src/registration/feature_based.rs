@@ -48,6 +48,7 @@ pub struct FeatureDetectorParams {
     pub orb_params: (),
     /// Harris corner parameters
     pub harris_block_size: usize,
+    /// Harris corner detection parameter k
     pub harris_k: f32,
 }
 
@@ -215,19 +216,28 @@ fn detect_and_describe(
 /// Simple keypoint structure
 #[derive(Debug, Clone)]
 pub struct Keypoint {
+    /// X coordinate of the keypoint
     pub x: f32,
+    /// Y coordinate of the keypoint
     pub y: f32,
+    /// Scale of the keypoint
     pub scale: f32,
+    /// Orientation angle in radians
     pub angle: f32,
+    /// Detection response strength
     pub response: f32,
 }
 
 /// Simple match structure
 #[derive(Debug, Clone)]
 pub struct FeatureMatch {
+    /// Index of the query keypoint
     pub query_idx: usize,
+    /// Index of the train keypoint
     pub train_idx: usize,
+    /// Distance between feature descriptors
     pub distance: f32,
+    /// Confidence score of the match
     pub confidence: f32,
 }
 

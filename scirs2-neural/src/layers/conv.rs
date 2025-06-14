@@ -15,6 +15,7 @@ use std::sync::{Arc, RwLock};
 
 // Type aliases for complex types
 type MaxIndicesCache = Arc<RwLock<Option<Array<(usize, usize), IxDyn>>>>;
+type MaxIndicesCache3D = Arc<RwLock<Option<Array<(usize, usize, usize), IxDyn>>>>;
 
 /// Padding mode for convolutional layers
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -2044,5 +2045,749 @@ mod tests {
 
         // Check output shape - should be 3x2
         assert_eq!(output.shape(), &[1, 1, 3, 2]);
+    }
+}
+
+/// 1D Adaptive Average Pooling layer
+///
+/// Applies average pooling with adaptive output size for 1D data.
+/// The output size is specified, and the pooling kernel size and stride are computed automatically.
+pub struct AdaptiveAvgPool1D<F: Float + Debug + Send + Sync> {
+    /// Output size (width)
+    output_size: usize,
+    /// Name of the layer
+    name: Option<String>,
+    /// Input cache for backward pass
+    input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
+    /// Phantom data for generic type
+    _phantom: PhantomData<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> AdaptiveAvgPool1D<F> {
+    /// Create a new adaptive average pooling layer for 1D data
+    pub fn new(output_size: usize, name: Option<&str>) -> Result<Self> {
+        if output_size == 0 {
+            return Err(NeuralError::InvalidArchitecture(
+                "Output size must be positive".to_string(),
+            ));
+        }
+
+        Ok(Self {
+            output_size,
+            name: name.map(|s| s.to_string()),
+            input_cache: Arc::new(RwLock::new(None)),
+            _phantom: PhantomData,
+        })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for AdaptiveAvgPool1D<F> {
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        if input.ndim() != 3 {
+            return Err(NeuralError::InvalidArgument(
+                "Input must be 3D [batch_size, channels, width]".to_string(),
+            ));
+        }
+
+        let shape = input.shape();
+        let batch_size = shape[0];
+        let channels = shape[1];
+        let input_width = shape[2];
+
+        // Cache input for backward pass
+        *self.input_cache.write().unwrap() = Some(input.clone());
+
+        let output_width = self.output_size;
+
+        // Create output array
+        let mut output = Array::<F, IxDyn>::zeros(IxDyn(&[batch_size, channels, output_width]));
+
+        // Perform adaptive pooling
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for w_out in 0..output_width {
+                    let start_w = (w_out * input_width) / output_width;
+                    let end_w = ((w_out + 1) * input_width) / output_width;
+
+                    let mut sum = F::zero();
+                    let mut count = F::zero();
+
+                    for w in start_w..end_w {
+                        sum = sum + input[[b, c, w]];
+                        count = count + F::one();
+                    }
+
+                    output[[b, c, w_out]] = if count > F::zero() {
+                        sum / count
+                    } else {
+                        F::zero()
+                    };
+                }
+            }
+        }
+
+        Ok(output)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        let input_cache = self.input_cache.read().unwrap();
+        let input = input_cache.as_ref().ok_or_else(|| {
+            NeuralError::ComputationError("No cached input for backward pass".to_string())
+        })?;
+
+        let input_shape = input.shape();
+        let batch_size = input_shape[0];
+        let channels = input_shape[1];
+        let input_width = input_shape[2];
+        let output_width = self.output_size;
+
+        let mut grad_input = Array::<F, IxDyn>::zeros(input.raw_dim());
+
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for w_out in 0..output_width {
+                    let start_w = (w_out * input_width) / output_width;
+                    let end_w = ((w_out + 1) * input_width) / output_width;
+
+                    let pool_size = F::from(end_w - start_w).unwrap();
+                    let grad_per_element = grad_output[[b, c, w_out]] / pool_size;
+
+                    for w in start_w..end_w {
+                        grad_input[[b, c, w]] = grad_input[[b, c, w]] + grad_per_element;
+                    }
+                }
+            }
+        }
+
+        Ok(grad_input)
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // AdaptiveAvgPool1D has no learnable parameters
+        Ok(())
+    }
+
+    fn layer_type(&self) -> &str {
+        "AdaptiveAvgPool1D"
+    }
+
+    fn parameter_count(&self) -> usize {
+        // AdaptiveAvgPool1D has no parameters
+        0
+    }
+
+    fn layer_description(&self) -> String {
+        format!(
+            "type:AdaptiveAvgPool1D, output_size:{}, name:{}",
+            self.output_size,
+            self.name.as_deref().unwrap_or("None")
+        )
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+/// 1D Adaptive Max Pooling layer
+///
+/// Applies max pooling with adaptive output size for 1D data.
+/// The output size is specified, and the pooling kernel size and stride are computed automatically.
+pub struct AdaptiveMaxPool1D<F: Float + Debug + Send + Sync> {
+    /// Output size (width)
+    output_size: usize,
+    /// Name of the layer
+    name: Option<String>,
+    /// Input cache for backward pass
+    input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
+    /// Max indices cache for backward pass
+    max_indices_cache: Arc<RwLock<Option<Array<usize, IxDyn>>>>,
+    /// Phantom data for generic type
+    _phantom: PhantomData<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> AdaptiveMaxPool1D<F> {
+    /// Create a new adaptive max pooling layer for 1D data
+    pub fn new(output_size: usize, name: Option<&str>) -> Result<Self> {
+        if output_size == 0 {
+            return Err(NeuralError::InvalidArchitecture(
+                "Output size must be positive".to_string(),
+            ));
+        }
+
+        Ok(Self {
+            output_size,
+            name: name.map(|s| s.to_string()),
+            input_cache: Arc::new(RwLock::new(None)),
+            max_indices_cache: Arc::new(RwLock::new(None)),
+            _phantom: PhantomData,
+        })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for AdaptiveMaxPool1D<F> {
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        if input.ndim() != 3 {
+            return Err(NeuralError::InvalidArgument(
+                "Input must be 3D [batch_size, channels, width]".to_string(),
+            ));
+        }
+
+        let shape = input.shape();
+        let batch_size = shape[0];
+        let channels = shape[1];
+        let input_width = shape[2];
+
+        // Cache input for backward pass
+        *self.input_cache.write().unwrap() = Some(input.clone());
+
+        let output_width = self.output_size;
+
+        // Create output array and indices array
+        let mut output = Array::<F, IxDyn>::zeros(IxDyn(&[batch_size, channels, output_width]));
+        let mut max_indices =
+            Array::<usize, IxDyn>::zeros(IxDyn(&[batch_size, channels, output_width]));
+
+        // Perform adaptive pooling
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for w_out in 0..output_width {
+                    let start_w = (w_out * input_width) / output_width;
+                    let end_w = ((w_out + 1) * input_width) / output_width;
+
+                    let mut max_val = F::neg_infinity();
+                    let mut max_idx = start_w;
+
+                    for w in start_w..end_w {
+                        let val = input[[b, c, w]];
+                        if val > max_val {
+                            max_val = val;
+                            max_idx = w;
+                        }
+                    }
+
+                    output[[b, c, w_out]] = max_val;
+                    max_indices[[b, c, w_out]] = max_idx;
+                }
+            }
+        }
+
+        // Cache max indices for backward pass
+        *self.max_indices_cache.write().unwrap() = Some(max_indices);
+
+        Ok(output)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        let input_cache = self.input_cache.read().unwrap();
+        let input = input_cache.as_ref().ok_or_else(|| {
+            NeuralError::ComputationError("No cached input for backward pass".to_string())
+        })?;
+
+        let max_indices_cache = self.max_indices_cache.read().unwrap();
+        let max_indices = max_indices_cache.as_ref().ok_or_else(|| {
+            NeuralError::ComputationError("No cached max indices for backward pass".to_string())
+        })?;
+
+        let input_shape = input.shape();
+        let batch_size = input_shape[0];
+        let channels = input_shape[1];
+        let output_width = self.output_size;
+
+        let mut grad_input = Array::<F, IxDyn>::zeros(input.raw_dim());
+
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for w_out in 0..output_width {
+                    let max_idx = max_indices[[b, c, w_out]];
+                    grad_input[[b, c, max_idx]] =
+                        grad_input[[b, c, max_idx]] + grad_output[[b, c, w_out]];
+                }
+            }
+        }
+
+        Ok(grad_input)
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // AdaptiveMaxPool1D has no learnable parameters
+        Ok(())
+    }
+
+    fn layer_type(&self) -> &str {
+        "AdaptiveMaxPool1D"
+    }
+
+    fn parameter_count(&self) -> usize {
+        // AdaptiveMaxPool1D has no parameters
+        0
+    }
+
+    fn layer_description(&self) -> String {
+        format!(
+            "type:AdaptiveMaxPool1D, output_size:{}, name:{}",
+            self.output_size,
+            self.name.as_deref().unwrap_or("None")
+        )
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+/// 3D Adaptive Average Pooling layer
+///
+/// Applies average pooling with adaptive output size for 3D data.
+/// The output size is specified, and the pooling kernel size and stride are computed automatically.
+pub struct AdaptiveAvgPool3D<F: Float + Debug + Send + Sync> {
+    /// Output size (depth, height, width)
+    output_size: (usize, usize, usize),
+    /// Name of the layer
+    name: Option<String>,
+    /// Input cache for backward pass
+    input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
+    /// Phantom data for generic type
+    _phantom: PhantomData<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> AdaptiveAvgPool3D<F> {
+    /// Create a new adaptive average pooling layer for 3D data
+    pub fn new(output_size: (usize, usize, usize), name: Option<&str>) -> Result<Self> {
+        if output_size.0 == 0 || output_size.1 == 0 || output_size.2 == 0 {
+            return Err(NeuralError::InvalidArchitecture(
+                "Output size must be positive".to_string(),
+            ));
+        }
+
+        Ok(Self {
+            output_size,
+            name: name.map(|s| s.to_string()),
+            input_cache: Arc::new(RwLock::new(None)),
+            _phantom: PhantomData,
+        })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for AdaptiveAvgPool3D<F> {
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        if input.ndim() != 5 {
+            return Err(NeuralError::InvalidArgument(
+                "Input must be 5D [batch_size, channels, depth, height, width]".to_string(),
+            ));
+        }
+
+        let shape = input.shape();
+        let batch_size = shape[0];
+        let channels = shape[1];
+        let input_depth = shape[2];
+        let input_height = shape[3];
+        let input_width = shape[4];
+
+        // Cache input for backward pass
+        *self.input_cache.write().unwrap() = Some(input.clone());
+
+        let (output_depth, output_height, output_width) = self.output_size;
+
+        // Create output array
+        let mut output = Array::<F, IxDyn>::zeros(IxDyn(&[
+            batch_size,
+            channels,
+            output_depth,
+            output_height,
+            output_width,
+        ]));
+
+        // Perform adaptive pooling
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for d_out in 0..output_depth {
+                    for h_out in 0..output_height {
+                        for w_out in 0..output_width {
+                            let start_d = (d_out * input_depth) / output_depth;
+                            let end_d = ((d_out + 1) * input_depth) / output_depth;
+                            let start_h = (h_out * input_height) / output_height;
+                            let end_h = ((h_out + 1) * input_height) / output_height;
+                            let start_w = (w_out * input_width) / output_width;
+                            let end_w = ((w_out + 1) * input_width) / output_width;
+
+                            let mut sum = F::zero();
+                            let mut count = F::zero();
+
+                            for d in start_d..end_d {
+                                for h in start_h..end_h {
+                                    for w in start_w..end_w {
+                                        sum = sum + input[[b, c, d, h, w]];
+                                        count = count + F::one();
+                                    }
+                                }
+                            }
+
+                            output[[b, c, d_out, h_out, w_out]] = if count > F::zero() {
+                                sum / count
+                            } else {
+                                F::zero()
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(output)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        let input_cache = self.input_cache.read().unwrap();
+        let input = input_cache.as_ref().ok_or_else(|| {
+            NeuralError::ComputationError("No cached input for backward pass".to_string())
+        })?;
+
+        let input_shape = input.shape();
+        let batch_size = input_shape[0];
+        let channels = input_shape[1];
+        let input_depth = input_shape[2];
+        let input_height = input_shape[3];
+        let input_width = input_shape[4];
+        let (output_depth, output_height, output_width) = self.output_size;
+
+        let mut grad_input = Array::<F, IxDyn>::zeros(input.raw_dim());
+
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for d_out in 0..output_depth {
+                    for h_out in 0..output_height {
+                        for w_out in 0..output_width {
+                            let start_d = (d_out * input_depth) / output_depth;
+                            let end_d = ((d_out + 1) * input_depth) / output_depth;
+                            let start_h = (h_out * input_height) / output_height;
+                            let end_h = ((h_out + 1) * input_height) / output_height;
+                            let start_w = (w_out * input_width) / output_width;
+                            let end_w = ((w_out + 1) * input_width) / output_width;
+
+                            let pool_size =
+                                F::from((end_d - start_d) * (end_h - start_h) * (end_w - start_w))
+                                    .unwrap();
+                            let grad_per_element =
+                                grad_output[[b, c, d_out, h_out, w_out]] / pool_size;
+
+                            for d in start_d..end_d {
+                                for h in start_h..end_h {
+                                    for w in start_w..end_w {
+                                        grad_input[[b, c, d, h, w]] =
+                                            grad_input[[b, c, d, h, w]] + grad_per_element;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(grad_input)
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // AdaptiveAvgPool3D has no learnable parameters
+        Ok(())
+    }
+
+    fn layer_type(&self) -> &str {
+        "AdaptiveAvgPool3D"
+    }
+
+    fn parameter_count(&self) -> usize {
+        // AdaptiveAvgPool3D has no parameters
+        0
+    }
+
+    fn layer_description(&self) -> String {
+        format!(
+            "type:AdaptiveAvgPool3D, output_size:({}, {}, {}), name:{}",
+            self.output_size.0,
+            self.output_size.1,
+            self.output_size.2,
+            self.name.as_deref().unwrap_or("None")
+        )
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+/// 3D Adaptive Max Pooling layer
+///
+/// Applies max pooling with adaptive output size for 3D data.
+/// The output size is specified, and the pooling kernel size and stride are computed automatically.
+pub struct AdaptiveMaxPool3D<F: Float + Debug + Send + Sync> {
+    /// Output size (depth, height, width)
+    output_size: (usize, usize, usize),
+    /// Name of the layer
+    name: Option<String>,
+    /// Input cache for backward pass
+    input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
+    /// Max indices cache for backward pass
+    max_indices_cache: MaxIndicesCache3D,
+    /// Phantom data for generic type
+    _phantom: PhantomData<F>,
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> AdaptiveMaxPool3D<F> {
+    /// Create a new adaptive max pooling layer for 3D data
+    pub fn new(output_size: (usize, usize, usize), name: Option<&str>) -> Result<Self> {
+        if output_size.0 == 0 || output_size.1 == 0 || output_size.2 == 0 {
+            return Err(NeuralError::InvalidArchitecture(
+                "Output size must be positive".to_string(),
+            ));
+        }
+
+        Ok(Self {
+            output_size,
+            name: name.map(|s| s.to_string()),
+            input_cache: Arc::new(RwLock::new(None)),
+            max_indices_cache: Arc::new(RwLock::new(None)),
+            _phantom: PhantomData,
+        })
+    }
+}
+
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for AdaptiveMaxPool3D<F> {
+    fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+        if input.ndim() != 5 {
+            return Err(NeuralError::InvalidArgument(
+                "Input must be 5D [batch_size, channels, depth, height, width]".to_string(),
+            ));
+        }
+
+        let shape = input.shape();
+        let batch_size = shape[0];
+        let channels = shape[1];
+        let input_depth = shape[2];
+        let input_height = shape[3];
+        let input_width = shape[4];
+
+        // Cache input for backward pass
+        *self.input_cache.write().unwrap() = Some(input.clone());
+
+        let (output_depth, output_height, output_width) = self.output_size;
+
+        // Create output array and indices array
+        let mut output = Array::<F, IxDyn>::zeros(IxDyn(&[
+            batch_size,
+            channels,
+            output_depth,
+            output_height,
+            output_width,
+        ]));
+        let mut max_indices = Array::<(usize, usize, usize), IxDyn>::from_elem(
+            IxDyn(&[
+                batch_size,
+                channels,
+                output_depth,
+                output_height,
+                output_width,
+            ]),
+            (0, 0, 0),
+        );
+
+        // Perform adaptive pooling
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for d_out in 0..output_depth {
+                    for h_out in 0..output_height {
+                        for w_out in 0..output_width {
+                            let start_d = (d_out * input_depth) / output_depth;
+                            let end_d = ((d_out + 1) * input_depth) / output_depth;
+                            let start_h = (h_out * input_height) / output_height;
+                            let end_h = ((h_out + 1) * input_height) / output_height;
+                            let start_w = (w_out * input_width) / output_width;
+                            let end_w = ((w_out + 1) * input_width) / output_width;
+
+                            let mut max_val = F::neg_infinity();
+                            let mut max_idx = (start_d, start_h, start_w);
+
+                            for d in start_d..end_d {
+                                for h in start_h..end_h {
+                                    for w in start_w..end_w {
+                                        let val = input[[b, c, d, h, w]];
+                                        if val > max_val {
+                                            max_val = val;
+                                            max_idx = (d, h, w);
+                                        }
+                                    }
+                                }
+                            }
+
+                            output[[b, c, d_out, h_out, w_out]] = max_val;
+                            max_indices[[b, c, d_out, h_out, w_out]] = max_idx;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Cache max indices for backward pass
+        *self.max_indices_cache.write().unwrap() = Some(max_indices);
+
+        Ok(output)
+    }
+
+    fn backward(
+        &self,
+        _input: &Array<F, IxDyn>,
+        grad_output: &Array<F, IxDyn>,
+    ) -> Result<Array<F, IxDyn>> {
+        let input_cache = self.input_cache.read().unwrap();
+        let input = input_cache.as_ref().ok_or_else(|| {
+            NeuralError::ComputationError("No cached input for backward pass".to_string())
+        })?;
+
+        let max_indices_cache = self.max_indices_cache.read().unwrap();
+        let max_indices = max_indices_cache.as_ref().ok_or_else(|| {
+            NeuralError::ComputationError("No cached max indices for backward pass".to_string())
+        })?;
+
+        let input_shape = input.shape();
+        let batch_size = input_shape[0];
+        let channels = input_shape[1];
+        let (output_depth, output_height, output_width) = self.output_size;
+
+        let mut grad_input = Array::<F, IxDyn>::zeros(input.raw_dim());
+
+        for b in 0..batch_size {
+            for c in 0..channels {
+                for d_out in 0..output_depth {
+                    for h_out in 0..output_height {
+                        for w_out in 0..output_width {
+                            let (max_d, max_h, max_w) = max_indices[[b, c, d_out, h_out, w_out]];
+                            grad_input[[b, c, max_d, max_h, max_w]] = grad_input
+                                [[b, c, max_d, max_h, max_w]]
+                                + grad_output[[b, c, d_out, h_out, w_out]];
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(grad_input)
+    }
+
+    fn update(&mut self, _learning_rate: F) -> Result<()> {
+        // AdaptiveMaxPool3D has no learnable parameters
+        Ok(())
+    }
+
+    fn layer_type(&self) -> &str {
+        "AdaptiveMaxPool3D"
+    }
+
+    fn parameter_count(&self) -> usize {
+        // AdaptiveMaxPool3D has no parameters
+        0
+    }
+
+    fn layer_description(&self) -> String {
+        format!(
+            "type:AdaptiveMaxPool3D, output_size:({}, {}, {}), name:{}",
+            self.output_size.0,
+            self.output_size.1,
+            self.output_size.2,
+            self.name.as_deref().unwrap_or("None")
+        )
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+#[cfg(test)]
+mod adaptive_pooling_tests {
+    use super::*;
+
+    #[test]
+    fn test_adaptive_avg_pool_1d() {
+        let pool = AdaptiveAvgPool1D::<f64>::new(4, Some("test_pool")).unwrap();
+
+        // Create a 3D input: [batch_size, channels, width]
+        let input = Array::from_shape_vec((1, 2, 8), (0..16).map(|i| i as f64).collect()).unwrap();
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape - should be [1, 2, 4]
+        assert_eq!(output.shape(), &[1, 2, 4]);
+    }
+
+    #[test]
+    fn test_adaptive_max_pool_1d() {
+        let pool = AdaptiveMaxPool1D::<f64>::new(3, Some("test_pool")).unwrap();
+
+        // Create a 3D input: [batch_size, channels, width]
+        let input = Array::from_shape_vec((1, 1, 6), vec![1.0, 3.0, 2.0, 5.0, 4.0, 6.0]).unwrap();
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape - should be [1, 1, 3]
+        assert_eq!(output.shape(), &[1, 1, 3]);
+    }
+
+    #[test]
+    fn test_adaptive_avg_pool_3d() {
+        let pool = AdaptiveAvgPool3D::<f64>::new((2, 2, 2), Some("test_pool")).unwrap();
+
+        // Create a 5D input: [batch_size, channels, depth, height, width]
+        let input = Array::from_elem((1, 1, 4, 4, 4), 1.0);
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape - should be [1, 1, 2, 2, 2]
+        assert_eq!(output.shape(), &[1, 1, 2, 2, 2]);
+    }
+
+    #[test]
+    fn test_adaptive_max_pool_3d() {
+        let pool = AdaptiveMaxPool3D::<f64>::new((1, 2, 2), Some("test_pool")).unwrap();
+
+        // Create a 5D input: [batch_size, channels, depth, height, width]
+        let input = Array::from_elem((1, 1, 2, 4, 4), 2.0);
+
+        // Forward pass
+        let output = pool.forward(&input.into_dyn()).unwrap();
+
+        // Check output shape - should be [1, 1, 1, 2, 2]
+        assert_eq!(output.shape(), &[1, 1, 1, 2, 2]);
     }
 }

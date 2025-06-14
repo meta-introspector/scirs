@@ -26,6 +26,7 @@
 //! ```rust
 //! use ndarray::Array1;
 //! use scirs2_signal::streaming_stft::{StreamingStft, StreamingStftConfig};
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!
 //! // Configure streaming STFT
 //! let config = StreamingStftConfig {
@@ -42,6 +43,8 @@
 //! if let Some(spectrum) = streaming_stft.process_frame(&input_frame)? {
 //!     println!("Got spectrum with {} frequency bins", spectrum.len());
 //! }
+//! # Ok(())
+//! # }
 //! ```
 
 use crate::error::{SignalError, SignalResult};

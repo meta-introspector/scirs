@@ -35,6 +35,7 @@
 //! use ndarray::Array1;
 //! use scirs2_signal::sysid::{estimate_transfer_function, TfEstimationMethod, ModelValidation};
 //! use scirs2_signal::waveforms::chirp;
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!
 //! // Generate test system and data
 //! let n = 1000;
@@ -42,7 +43,8 @@
 //! let t = Array1::linspace(0.0, (n-1) as f64 / fs, n);
 //!
 //! // Create chirp input signal
-//! let input = chirp(&t, 1.0, t[t.len()-1], 20.0, "linear", None).unwrap();
+//! let input_vec = chirp(t.as_slice().unwrap(), 1.0, t[t.len()-1], 20.0, "linear", 0.0)?;
+//! let input = Array1::from(input_vec);
 //!
 //! // Simulate system output (simple first-order system)
 //! let mut output = Array1::zeros(n);
@@ -54,11 +56,13 @@
 //! // Estimate transfer function
 //! let result = estimate_transfer_function(
 //!     &input, &output, fs, 2, 2, TfEstimationMethod::LeastSquares
-//! ).unwrap();
+//! )?;
 //!
 //! println!("Estimated numerator: {:?}", result.numerator);
 //! println!("Estimated denominator: {:?}", result.denominator);
 //! println!("Fit percentage: {:.2}%", result.fit_percentage);
+//! # Ok(())
+//! # }
 //! ```
 
 use crate::error::{SignalError, SignalResult};
@@ -217,16 +221,22 @@ pub struct ModelValidation {
 /// ```
 /// use ndarray::Array1;
 /// use scirs2_signal::sysid::{estimate_transfer_function, TfEstimationMethod};
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///
-/// let input = Array1::from_vec(vec![1.0, 0.0, 0.0, 0.0, 0.0]); // Impulse
-/// let output = Array1::from_vec(vec![0.0, 0.5, 0.25, 0.125, 0.0625]); // First-order response
+/// // Create longer test signals to avoid singular matrix
+/// let input = Array1::from_vec(vec![1.0, 0.8, 0.6, 0.4, 0.2, 0.1, 0.05, 0.0, 0.0, 0.0]);
+/// let output = Array1::from_vec(vec![0.0, 0.5, 0.65, 0.725, 0.7625, 0.68125, 0.540625, 0.2703125, 0.13515625, 0.067578125]);
 /// let fs = 1.0;
 ///
 /// let result = estimate_transfer_function(
 ///     &input, &output, fs, 1, 1, TfEstimationMethod::LeastSquares
-/// ).unwrap();
+/// )?;
 ///
 /// // Should estimate something like H(z) = 0.5 / (z - 0.5)
+/// println!("Estimated transfer function with {} numerator and {} denominator coefficients",
+///          result.numerator.len(), result.denominator.len());
+/// # Ok(())
+/// # }
 /// ```
 pub fn estimate_transfer_function(
     input: &Array1<f64>,

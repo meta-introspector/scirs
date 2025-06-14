@@ -57,6 +57,8 @@ full = ["core", "gpu", "memory_efficient", "openblas"]  # Enhanced feature set
 core = ["dep:scirs2-core"]
 gpu = ["core"]  # GPU acceleration requires core
 memory_efficient = ["core"]  # Memory efficiency requires core
+memory_management = ["core"]  # Memory management features
+cache = ["core"]  # Caching features
 simd = ["core"]  # SIMD acceleration requires core
 rayon = ["dep:rayon"]  # Parallel processing support
 # Features temporarily disabled for publishing

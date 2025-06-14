@@ -100,7 +100,7 @@ where
 /// ```
 pub fn expm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
 {
     // Redirect to the implementation in matrix_functions module
     matrix_functions::expm(a)

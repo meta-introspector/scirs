@@ -193,9 +193,13 @@ pub fn decompose_affine(transform: &TransformMatrix) -> Result<AffineComponents>
 /// Components of an affine transformation
 #[derive(Debug, Clone)]
 pub struct AffineComponents {
+    /// Translation vector (dx, dy)
     pub translation: Point2D,
+    /// Rotation angle in radians
     pub rotation: f64,
+    /// Scale factors (sx, sy)
     pub scale: Point2D,
+    /// Shear angle in radians
     pub shear: f64,
 }
 
@@ -214,9 +218,8 @@ pub fn ransac_estimate_transform(
 
     if matches.len() < min_samples {
         return Err(VisionError::InvalidParameter(format!(
-            "Need at least {} matches for {} transformation",
-            min_samples,
-            format!("{:?}", transform_type)
+            "Need at least {} matches for {:?} transformation",
+            min_samples, transform_type
         )));
     }
 

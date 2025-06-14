@@ -31,6 +31,7 @@ pub mod properties;
 pub mod random_walk;
 pub mod shortest_path;
 pub mod similarity;
+pub mod transformations;
 pub mod traversal;
 
 // Re-export all public items for convenience
@@ -50,6 +51,7 @@ pub use properties::*;
 pub use random_walk::*;
 pub use shortest_path::*;
 pub use similarity::*;
+pub use transformations::*;
 pub use traversal::*;
 
 // Additional algorithms that haven't been moved to submodules yet

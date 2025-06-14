@@ -90,10 +90,13 @@ pub struct KdTreeIndex<F: Float> {
     root: usize,
     /// Number of dimensions
     dimensions: usize,
+    /// Original points data
+    points: Array2<F>,
 }
 
 /// KD-tree node
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct KdTreeNode<F: Float> {
     /// Point index in original data
     point_idx: Option<usize>,
@@ -119,10 +122,13 @@ pub struct BallTreeIndex<F: Float> {
     root: usize,
     /// Number of dimensions
     dimensions: usize,
+    /// Original points data
+    points: Array2<F>,
 }
 
 /// Ball tree node
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct BallTreeNode<F: Float> {
     /// Point indices in this ball
     point_indices: Vec<usize>,
@@ -142,14 +148,19 @@ struct BallTreeNode<F: Float> {
 #[derive(Debug)]
 pub struct LSHIndex<F: Float> {
     /// Hash tables
+    #[allow(dead_code)]
     hash_tables: Vec<HashMap<u64, Vec<usize>>>,
     /// Random projection matrices
+    #[allow(dead_code)]
     projections: Vec<Array2<F>>,
     /// Number of hash functions per table
+    #[allow(dead_code)]
     hash_functions_per_table: usize,
     /// Number of hash tables
+    #[allow(dead_code)]
     num_tables: usize,
     /// Hash bucket width
+    #[allow(dead_code)]
     bucket_width: F,
 }
 
@@ -643,10 +654,16 @@ where
 }
 
 /// Wrapper for floating point values to make them orderable
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct OrderedFloat<F: Float>(F);
 
 impl<F: Float> Eq for OrderedFloat<F> {}
+
+impl<F: Float> PartialOrd for OrderedFloat<F> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 impl<F: Float> Ord for OrderedFloat<F> {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -654,66 +671,554 @@ impl<F: Float> Ord for OrderedFloat<F> {
     }
 }
 
-/// Implementation stubs for the various index types
+/// Implementation of KD-tree for efficient nearest neighbor search
 impl<F: Float + FromPrimitive> KdTreeIndex<F> {
-    pub fn new(_points: &Array2<F>) -> InterpolateResult<Self> {
-        // Simplified stub - real implementation would build the tree
-        Err(InterpolateError::NotImplementedError(
-            "KdTreeIndex not fully implemented".to_string(),
-        ))
+    /// Build a new KD-tree from points
+    pub fn new(points: &Array2<F>) -> InterpolateResult<Self> {
+        if points.is_empty() {
+            return Err(InterpolateError::invalid_input("Points array is empty"));
+        }
+
+        let dimensions = points.ncols();
+        let num_points = points.nrows();
+
+        // Create point indices
+        let mut indices: Vec<usize> = (0..num_points).collect();
+
+        // Build the tree recursively
+        let mut nodes = Vec::new();
+        let root = Self::build_tree_recursive(points, &mut indices, 0, dimensions, &mut nodes)?;
+
+        Ok(Self {
+            nodes,
+            root,
+            dimensions,
+            points: points.to_owned(),
+        })
     }
 
+    /// Recursively build the KD-tree
+    fn build_tree_recursive(
+        points: &Array2<F>,
+        indices: &mut [usize],
+        depth: usize,
+        dimensions: usize,
+        nodes: &mut Vec<KdTreeNode<F>>,
+    ) -> InterpolateResult<usize> {
+        if indices.is_empty() {
+            return Err(InterpolateError::invalid_input(
+                "Empty indices in tree building",
+            ));
+        }
+
+        let split_dim = depth % dimensions;
+
+        // Sort indices by the splitting dimension
+        indices.sort_by(|&a, &b| {
+            let val_a = points[[a, split_dim]];
+            let val_b = points[[b, split_dim]];
+            val_a.partial_cmp(&val_b).unwrap_or(Ordering::Equal)
+        });
+
+        let median_idx = indices.len() / 2;
+        let point_idx = indices[median_idx];
+        let split_value = points[[point_idx, split_dim]];
+
+        // Compute bounding box
+        let mut bbox_min = vec![F::infinity(); dimensions];
+        let mut bbox_max = vec![F::neg_infinity(); dimensions];
+
+        for &idx in indices.iter() {
+            for d in 0..dimensions {
+                let val = points[[idx, d]];
+                bbox_min[d] = bbox_min[d].min(val);
+                bbox_max[d] = bbox_max[d].max(val);
+            }
+        }
+
+        // Reserve space for this node first
+        let node_idx = nodes.len();
+        nodes.push(KdTreeNode {
+            point_idx: Some(point_idx),
+            split_dim,
+            split_value,
+            left: None,
+            right: None,
+            bbox_min,
+            bbox_max,
+        });
+
+        // Recursively build left and right subtrees
+        if median_idx > 0 {
+            let left_idx = Self::build_tree_recursive(
+                points,
+                &mut indices[..median_idx],
+                depth + 1,
+                dimensions,
+                nodes,
+            )?;
+            nodes[node_idx].left = Some(left_idx);
+        }
+
+        if median_idx + 1 < indices.len() {
+            let right_idx = Self::build_tree_recursive(
+                points,
+                &mut indices[median_idx + 1..],
+                depth + 1,
+                dimensions,
+                nodes,
+            )?;
+            nodes[node_idx].right = Some(right_idx);
+        }
+
+        Ok(node_idx)
+    }
+
+    /// Find k nearest neighbors
     pub fn k_nearest_neighbors(
         &self,
-        _query: &ArrayView1<F>,
-        _k: usize,
-        _stats: &mut SearchStats,
+        query: &ArrayView1<F>,
+        k: usize,
+        stats: &mut SearchStats,
     ) -> InterpolateResult<Vec<(usize, F)>> {
-        Err(InterpolateError::NotImplementedError(
-            "KdTreeIndex k_nearest_neighbors not implemented".to_string(),
-        ))
+        if k == 0 {
+            return Ok(Vec::new());
+        }
+
+        let mut best = BinaryHeap::new();
+        self.search_knn_recursive(self.root, query, k, &mut best, stats)?;
+
+        let mut result = Vec::new();
+        while let Some(neighbor) = best.pop() {
+            result.push((neighbor.index, neighbor.distance.0));
+        }
+        result.reverse(); // Convert from max-heap order to min order
+
+        Ok(result)
     }
 
+    /// Recursive k-nearest neighbors search
+    fn search_knn_recursive(
+        &self,
+        node_idx: usize,
+        query: &ArrayView1<F>,
+        k: usize,
+        best: &mut BinaryHeap<Neighbor<F>>,
+        stats: &mut SearchStats,
+    ) -> InterpolateResult<()> {
+        stats.nodes_visited += 1;
+
+        let node = &self.nodes[node_idx];
+
+        // Calculate distance to this node's point
+        if let Some(point_idx) = node.point_idx {
+            // Calculate Euclidean distance
+            let mut distance_sq = F::zero();
+            for d in 0..self.dimensions {
+                let diff = query[d] - self.points[[point_idx, d]];
+                distance_sq = distance_sq + diff * diff;
+            }
+            let distance = distance_sq.sqrt();
+
+            let neighbor = Neighbor {
+                index: point_idx,
+                distance: OrderedFloat(distance),
+            };
+
+            if best.len() < k {
+                best.push(neighbor);
+            } else if neighbor.distance < best.peek().unwrap().distance {
+                best.pop();
+                best.push(neighbor);
+            }
+        }
+
+        // Determine which child to visit first
+        let split_dim = node.split_dim;
+        let query_val = query[split_dim];
+        let (first, second) = if query_val < node.split_value {
+            (node.left, node.right)
+        } else {
+            (node.right, node.left)
+        };
+
+        // Visit the first child
+        if let Some(child_idx) = first {
+            self.search_knn_recursive(child_idx, query, k, best, stats)?;
+        }
+
+        // Check if we need to visit the second child
+        if let Some(child_idx) = second {
+            let worst_dist = best.peek().map(|n| n.distance.0).unwrap_or(F::infinity());
+            let axis_dist = (query_val - node.split_value).abs();
+
+            if best.len() < k || axis_dist < worst_dist {
+                self.search_knn_recursive(child_idx, query, k, best, stats)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Find all neighbors within a given radius
     pub fn radius_neighbors(
         &self,
-        _query: &ArrayView1<F>,
-        _radius: F,
-        _stats: &mut SearchStats,
+        query: &ArrayView1<F>,
+        radius: F,
+        stats: &mut SearchStats,
     ) -> InterpolateResult<Vec<(usize, F)>> {
-        Err(InterpolateError::NotImplementedError(
-            "KdTreeIndex radius_neighbors not implemented".to_string(),
-        ))
+        let mut result = Vec::new();
+        self.search_radius_recursive(self.root, query, radius, &mut result, stats)?;
+        // Sort results by distance
+        result.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
+        Ok(result)
+    }
+
+    /// Recursive radius search
+    fn search_radius_recursive(
+        &self,
+        node_idx: usize,
+        query: &ArrayView1<F>,
+        radius: F,
+        result: &mut Vec<(usize, F)>,
+        stats: &mut SearchStats,
+    ) -> InterpolateResult<()> {
+        stats.nodes_visited += 1;
+
+        let node = &self.nodes[node_idx];
+
+        // Check if this node's point is within radius
+        if let Some(point_idx) = node.point_idx {
+            // Calculate Euclidean distance
+            let mut distance_sq = F::zero();
+            for d in 0..self.dimensions {
+                let diff = query[d] - self.points[[point_idx, d]];
+                distance_sq = distance_sq + diff * diff;
+            }
+            let distance = distance_sq.sqrt();
+
+            if distance <= radius {
+                result.push((point_idx, distance));
+            }
+        }
+
+        // Check if we need to recurse into children
+        let split_dim = node.split_dim;
+        let query_val = query[split_dim];
+
+        if let Some(left_idx) = node.left {
+            if query_val - radius <= node.split_value {
+                self.search_radius_recursive(left_idx, query, radius, result, stats)?;
+            }
+        }
+
+        if let Some(right_idx) = node.right {
+            if query_val + radius >= node.split_value {
+                self.search_radius_recursive(right_idx, query, radius, result, stats)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+/// Helper struct for priority queue in k-nearest neighbors search
+#[derive(Debug, Clone)]
+struct Neighbor<F: Float> {
+    index: usize,
+    distance: OrderedFloat<F>,
+}
+
+impl<F: Float> PartialEq for Neighbor<F> {
+    fn eq(&self, other: &Self) -> bool {
+        self.distance == other.distance
+    }
+}
+
+impl<F: Float> Eq for Neighbor<F> {}
+
+impl<F: Float> PartialOrd for Neighbor<F> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<F: Float> Ord for Neighbor<F> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.distance.cmp(&other.distance)
     }
 }
 
 impl<F: Float + FromPrimitive> BallTreeIndex<F> {
-    pub fn new(_points: &Array2<F>) -> InterpolateResult<Self> {
-        // Simplified stub - real implementation would build the tree
-        Err(InterpolateError::NotImplementedError(
-            "BallTreeIndex not fully implemented".to_string(),
-        ))
+    /// Build a new Ball tree from points
+    pub fn new(points: &Array2<F>) -> InterpolateResult<Self> {
+        if points.is_empty() {
+            return Err(InterpolateError::invalid_input("Points array is empty"));
+        }
+
+        let dimensions = points.ncols();
+        let num_points = points.nrows();
+
+        // Create point indices
+        let mut indices: Vec<usize> = (0..num_points).collect();
+
+        // Build the tree recursively
+        let mut nodes = Vec::new();
+        let root = Self::build_tree_recursive(points, &mut indices, dimensions, &mut nodes)?;
+
+        Ok(Self {
+            nodes,
+            root,
+            dimensions,
+            points: points.to_owned(),
+        })
     }
 
+    /// Recursively build the Ball tree
+    fn build_tree_recursive(
+        points: &Array2<F>,
+        indices: &mut [usize],
+        dimensions: usize,
+        nodes: &mut Vec<BallTreeNode<F>>,
+    ) -> InterpolateResult<usize> {
+        if indices.is_empty() {
+            return Err(InterpolateError::invalid_input(
+                "Empty indices in tree building",
+            ));
+        }
+
+        // Calculate centroid
+        let mut centroid = vec![F::zero(); dimensions];
+        for &idx in indices.iter() {
+            for d in 0..dimensions {
+                centroid[d] = centroid[d] + points[[idx, d]];
+            }
+        }
+        let n = F::from_usize(indices.len()).unwrap_or(F::one());
+        for item in centroid.iter_mut().take(dimensions) {
+            *item = *item / n;
+        }
+
+        // Calculate radius (maximum distance to centroid)
+        let mut radius = F::zero();
+        for &idx in indices.iter() {
+            let mut dist_sq = F::zero();
+            for d in 0..dimensions {
+                let diff = points[[idx, d]] - centroid[d];
+                dist_sq = dist_sq + diff * diff;
+            }
+            radius = radius.max(dist_sq.sqrt());
+        }
+
+        // Create the current node
+        let node_idx = nodes.len();
+        let is_leaf = indices.len() <= 1;
+
+        // Reserve space for this node first
+        nodes.push(BallTreeNode {
+            point_indices: indices.to_vec(),
+            center: centroid,
+            radius,
+            left: None,
+            right: None,
+            is_leaf,
+        });
+
+        if !is_leaf {
+            // Find the dimension with maximum spread
+            let mut best_dim = 0;
+            let mut max_spread = F::zero();
+            for d in 0..dimensions {
+                let mut min_val = F::infinity();
+                let mut max_val = F::neg_infinity();
+                for &idx in indices.iter() {
+                    let val = points[[idx, d]];
+                    min_val = min_val.min(val);
+                    max_val = max_val.max(val);
+                }
+                let spread = max_val - min_val;
+                if spread > max_spread {
+                    max_spread = spread;
+                    best_dim = d;
+                }
+            }
+
+            // Sort by the dimension with maximum spread
+            indices.sort_by(|&a, &b| {
+                let val_a = points[[a, best_dim]];
+                let val_b = points[[b, best_dim]];
+                val_a.partial_cmp(&val_b).unwrap_or(Ordering::Equal)
+            });
+
+            let split_idx = indices.len() / 2;
+
+            // Build left subtree
+            let left_idx =
+                Self::build_tree_recursive(points, &mut indices[..split_idx], dimensions, nodes)?;
+            nodes[node_idx].left = Some(left_idx);
+
+            // Build right subtree
+            let right_idx =
+                Self::build_tree_recursive(points, &mut indices[split_idx..], dimensions, nodes)?;
+            nodes[node_idx].right = Some(right_idx);
+        }
+
+        Ok(node_idx)
+    }
+
+    /// Find k nearest neighbors
     pub fn k_nearest_neighbors(
         &self,
-        _query: &ArrayView1<F>,
-        _k: usize,
-        _stats: &mut SearchStats,
+        query: &ArrayView1<F>,
+        k: usize,
+        stats: &mut SearchStats,
     ) -> InterpolateResult<Vec<(usize, F)>> {
-        Err(InterpolateError::NotImplementedError(
-            "BallTreeIndex k_nearest_neighbors not implemented".to_string(),
-        ))
+        if k == 0 {
+            return Ok(Vec::new());
+        }
+
+        let mut best = BinaryHeap::new();
+        self.search_knn_recursive(self.root, query, k, &mut best, stats)?;
+
+        let mut result = Vec::new();
+        while let Some(neighbor) = best.pop() {
+            result.push((neighbor.index, neighbor.distance.0));
+        }
+        result.reverse(); // Convert from max-heap order to min order
+
+        Ok(result)
     }
 
+    /// Recursive k-nearest neighbors search
+    fn search_knn_recursive(
+        &self,
+        node_idx: usize,
+        query: &ArrayView1<F>,
+        k: usize,
+        best: &mut BinaryHeap<Neighbor<F>>,
+        stats: &mut SearchStats,
+    ) -> InterpolateResult<()> {
+        stats.nodes_visited += 1;
+
+        let node = &self.nodes[node_idx];
+
+        // Calculate distance to ball center
+        let mut center_dist_sq = F::zero();
+        for d in 0..self.dimensions {
+            let diff = query[d] - node.center[d];
+            center_dist_sq = center_dist_sq + diff * diff;
+        }
+        let center_dist = center_dist_sq.sqrt();
+
+        // Check if we can prune this ball
+        let worst_dist = best.peek().map(|n| n.distance.0).unwrap_or(F::infinity());
+        let min_possible_dist = (center_dist - node.radius).max(F::zero());
+
+        if best.len() >= k && min_possible_dist >= worst_dist {
+            return Ok(()); // Prune this ball
+        }
+
+        if node.is_leaf {
+            // Process all points in this leaf
+            for &point_idx in &node.point_indices {
+                let mut distance_sq = F::zero();
+                for d in 0..self.dimensions {
+                    let diff = query[d] - self.points[[point_idx, d]];
+                    distance_sq = distance_sq + diff * diff;
+                }
+                let distance = distance_sq.sqrt();
+
+                let neighbor = Neighbor {
+                    index: point_idx,
+                    distance: OrderedFloat(distance),
+                };
+
+                if best.len() < k {
+                    best.push(neighbor);
+                } else if neighbor.distance < best.peek().unwrap().distance {
+                    best.pop();
+                    best.push(neighbor);
+                }
+            }
+        } else {
+            // Recurse into children
+            if let Some(left_idx) = node.left {
+                self.search_knn_recursive(left_idx, query, k, best, stats)?;
+            }
+            if let Some(right_idx) = node.right {
+                self.search_knn_recursive(right_idx, query, k, best, stats)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Find all neighbors within a given radius
     pub fn radius_neighbors(
         &self,
-        _query: &ArrayView1<F>,
-        _radius: F,
-        _stats: &mut SearchStats,
+        query: &ArrayView1<F>,
+        radius: F,
+        stats: &mut SearchStats,
     ) -> InterpolateResult<Vec<(usize, F)>> {
-        Err(InterpolateError::NotImplementedError(
-            "BallTreeIndex radius_neighbors not implemented".to_string(),
-        ))
+        let mut result = Vec::new();
+        self.search_radius_recursive(self.root, query, radius, &mut result, stats)?;
+        // Sort results by distance
+        result.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
+        Ok(result)
+    }
+
+    /// Recursive radius search
+    fn search_radius_recursive(
+        &self,
+        node_idx: usize,
+        query: &ArrayView1<F>,
+        radius: F,
+        result: &mut Vec<(usize, F)>,
+        stats: &mut SearchStats,
+    ) -> InterpolateResult<()> {
+        stats.nodes_visited += 1;
+
+        let node = &self.nodes[node_idx];
+
+        // Calculate distance to ball center
+        let mut center_dist_sq = F::zero();
+        for d in 0..self.dimensions {
+            let diff = query[d] - node.center[d];
+            center_dist_sq = center_dist_sq + diff * diff;
+        }
+        let center_dist = center_dist_sq.sqrt();
+
+        // Check if we can prune this ball
+        let min_possible_dist = (center_dist - node.radius).max(F::zero());
+        if min_possible_dist > radius {
+            return Ok(()); // Prune this ball
+        }
+
+        if node.is_leaf {
+            // Process all points in this leaf
+            for &point_idx in &node.point_indices {
+                let mut distance_sq = F::zero();
+                for d in 0..self.dimensions {
+                    let diff = query[d] - self.points[[point_idx, d]];
+                    distance_sq = distance_sq + diff * diff;
+                }
+                let distance = distance_sq.sqrt();
+
+                if distance <= radius {
+                    result.push((point_idx, distance));
+                }
+            }
+        } else {
+            // Recurse into children
+            if let Some(left_idx) = node.left {
+                self.search_radius_recursive(left_idx, query, radius, result, stats)?;
+            }
+            if let Some(right_idx) = node.right {
+                self.search_radius_recursive(right_idx, query, radius, result, stats)?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -919,5 +1424,330 @@ mod tests {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let searcher = make_enhanced_searcher(points, None);
         assert!(searcher.is_ok());
+    }
+
+    // Test functions for KD-tree implementation
+
+    #[test]
+    fn test_kdtree_basic_functionality() {
+        // Create a simple set of 2D points
+        let points = array![
+            [0.0, 0.0], // 0
+            [1.0, 0.0], // 1
+            [0.0, 1.0], // 2
+            [1.0, 1.0], // 3
+            [0.5, 0.5]  // 4 - should be closest to query (0.6, 0.6)
+        ];
+
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::KdTree, config)
+                .unwrap();
+
+        // Test k-nearest neighbors search
+        let query = array![0.6, 0.6];
+        let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();
+
+        // Verify distances are sorted
+        for i in 1..neighbors.len() {
+            assert!(neighbors[i].1 >= neighbors[i - 1].1);
+        }
+
+        // Should find exactly 3 neighbors
+        assert_eq!(neighbors.len(), 3);
+
+        // The closest point should be (0.5, 0.5)
+        assert_eq!(neighbors[0].0, 4); // Index of [0.5, 0.5]
+
+        // Check that distances are reasonable
+        assert!(neighbors[0].1 < 0.2); // Very close
+        assert!(neighbors[1].1 < 1.0); // Reasonable distance
+        assert!(neighbors[2].1 < 1.0); // Reasonable distance
+    }
+
+    #[test]
+    fn test_kdtree_radius_search() {
+        let points = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [3.0, 3.0], // Far point
+            [0.1, 0.1]  // Close point
+        ];
+
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::KdTree, config)
+                .unwrap();
+
+        // Search within radius of 1.5 from origin
+        let query = array![0.0, 0.0];
+        let neighbors = searcher.radius_neighbors(&query.view(), 1.5).unwrap();
+
+        // Should find: [0,0], [1,0], [0,1], [1,1], [0.1,0.1] but not [3,3]
+        assert_eq!(neighbors.len(), 5);
+
+        // Verify all found points are within radius
+        for (_, dist) in &neighbors {
+            assert!(*dist <= 1.5);
+        }
+
+        // Verify results are sorted by distance
+        for i in 1..neighbors.len() {
+            assert!(neighbors[i].1 >= neighbors[i - 1].1);
+        }
+    }
+
+    #[test]
+    fn test_kdtree_single_point() {
+        let points = array![[1.0, 2.0]];
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points, IndexType::KdTree, config).unwrap();
+
+        let query = array![0.0, 0.0];
+        let neighbors = searcher.k_nearest_neighbors(&query.view(), 1).unwrap();
+
+        assert_eq!(neighbors.len(), 1);
+        assert_eq!(neighbors[0].0, 0);
+        assert!((neighbors[0].1 - 5.0_f64.sqrt()).abs() < 1e-10); // sqrt(1^2 + 2^2)
+    }
+
+    #[test]
+    fn test_kdtree_high_dimensional() {
+        // Test with 5D points
+        let points = array![
+            [0.0, 0.0, 0.0, 0.0, 0.0], // 0 - distance from query = sqrt(5*0.1^2) = sqrt(0.05) ≈ 0.224
+            [1.0, 0.0, 0.0, 0.0, 0.0], // 1 - distance = sqrt(0.81 + 4*0.01) = sqrt(0.85) ≈ 0.922
+            [0.0, 1.0, 0.0, 0.0, 0.0], // 2 - distance = sqrt(0.81 + 4*0.01) = sqrt(0.85) ≈ 0.922
+            [0.0, 0.0, 1.0, 0.0, 0.0], // 3 - distance = sqrt(0.81 + 4*0.01) = sqrt(0.85) ≈ 0.922
+            [0.0, 0.0, 0.0, 1.0, 0.0], // 4 - distance = sqrt(0.81 + 4*0.01) = sqrt(0.85) ≈ 0.922
+            [0.0, 0.0, 0.0, 0.0, 1.0], // 5 - distance = sqrt(0.81 + 4*0.01) = sqrt(0.85) ≈ 0.922
+            [0.2, 0.2, 0.2, 0.2, 0.2]  // 6 - distance = sqrt(5*0.1^2) = sqrt(0.05) ≈ 0.224
+        ];
+
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::KdTree, config)
+                .unwrap();
+
+        let query = array![0.1, 0.1, 0.1, 0.1, 0.1];
+        let neighbors = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();
+
+        assert_eq!(neighbors.len(), 2);
+
+        // Both point 0 and point 6 have the same distance, so either could be closest
+        // The algorithm might find either one first depending on tree structure
+        assert!(neighbors[0].0 == 0 || neighbors[0].0 == 6);
+
+        // Verify that distances are reasonable (should be around 0.224)
+        assert!(neighbors[0].1 < 0.3);
+        assert!(neighbors[1].1 < 1.0);
+    }
+
+    // Test functions for Ball tree implementation
+
+    #[test]
+    fn test_balltree_basic_functionality() {
+        let points = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [0.5, 0.5],
+            [2.0, 1.0],
+            [1.0, 2.0]
+        ];
+
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::BallTree, config)
+                .unwrap();
+
+        // Test k-nearest neighbors search
+        let query = array![0.6, 0.6];
+        let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();
+
+        assert_eq!(neighbors.len(), 3);
+
+        // The closest point should be (0.5, 0.5)
+        assert_eq!(neighbors[0].0, 4); // Index of [0.5, 0.5]
+
+        // Verify distances are sorted
+        for i in 1..neighbors.len() {
+            assert!(neighbors[i].1 >= neighbors[i - 1].1);
+        }
+    }
+
+    #[test]
+    fn test_balltree_radius_search() {
+        let points = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [5.0, 5.0], // Far point
+            [0.2, 0.2]  // Close point
+        ];
+
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::BallTree, config)
+                .unwrap();
+
+        // Search within radius of 2.0 from origin
+        let query = array![0.0, 0.0];
+        let neighbors = searcher.radius_neighbors(&query.view(), 2.0).unwrap();
+
+        // Should find: [0,0], [1,0], [0,1], [1,1], [0.2,0.2] but not [5,5]
+        assert_eq!(neighbors.len(), 5);
+
+        // Verify all found points are within radius
+        for (_, dist) in &neighbors {
+            assert!(*dist <= 2.0);
+        }
+
+        // Verify results are sorted by distance
+        for i in 1..neighbors.len() {
+            assert!(neighbors[i].1 >= neighbors[i - 1].1);
+        }
+    }
+
+    #[test]
+    fn test_balltree_empty_results() {
+        let points = array![[10.0, 10.0], [11.0, 10.0], [10.0, 11.0], [11.0, 11.0]];
+
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap();
+
+        // Search for neighbors very far away with small radius
+        let query = array![0.0, 0.0];
+        let neighbors = searcher.radius_neighbors(&query.view(), 1.0).unwrap();
+
+        // Should find no points within radius
+        assert_eq!(neighbors.len(), 0);
+    }
+
+    #[test]
+    fn test_balltree_high_dimensional() {
+        // Test with 8D points for Ball tree (better for high dimensions)
+        let points = array![
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+        ];
+
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap();
+
+        let query = array![0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05];
+        let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();
+
+        assert_eq!(neighbors.len(), 3);
+        // The closest point should be [0.1, 0.1, ..., 0.1]
+        assert_eq!(neighbors[0].0, 8);
+    }
+
+    #[test]
+    fn test_balltree_single_point() {
+        let points = array![[3.0, 4.0]];
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap();
+
+        let query = array![0.0, 0.0];
+        let neighbors = searcher.k_nearest_neighbors(&query.view(), 1).unwrap();
+
+        assert_eq!(neighbors.len(), 1);
+        assert_eq!(neighbors[0].0, 0);
+        assert!((neighbors[0].1 - 5.0).abs() < 1e-10); // sqrt(3^2 + 4^2) = 5
+    }
+
+    // Comparative tests between KD-tree and Ball tree
+
+    #[test]
+    fn test_kdtree_vs_balltree_consistency() {
+        // Test that both algorithms give the same results for the same data
+        let points = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [0.5, 0.5],
+            [2.0, 2.0],
+            [0.2, 0.8],
+            [0.8, 0.2]
+        ];
+
+        let config = SearchConfig::default();
+
+        let mut kdtree_searcher =
+            EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::KdTree, config.clone())
+                .unwrap();
+
+        let mut balltree_searcher =
+            EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::BallTree, config)
+                .unwrap();
+
+        let query = array![0.3, 0.7];
+        let k = 4;
+
+        let kdtree_neighbors = kdtree_searcher
+            .k_nearest_neighbors(&query.view(), k)
+            .unwrap();
+        let balltree_neighbors = balltree_searcher
+            .k_nearest_neighbors(&query.view(), k)
+            .unwrap();
+
+        assert_eq!(kdtree_neighbors.len(), balltree_neighbors.len());
+
+        // Sort both results by index to compare (since ties might be ordered differently)
+        let mut kdtree_sorted = kdtree_neighbors.clone();
+        let mut balltree_sorted = balltree_neighbors.clone();
+        kdtree_sorted.sort_by_key(|&(idx, _)| idx);
+        balltree_sorted.sort_by_key(|&(idx, _)| idx);
+
+        // Check that the same points are found (distances should be very close)
+        for i in 0..k {
+            assert_eq!(kdtree_sorted[i].0, balltree_sorted[i].0);
+            assert!((kdtree_sorted[i].1 - balltree_sorted[i].1).abs() < 1e-10);
+        }
+    }
+
+    #[test]
+    fn test_performance_statistics() {
+        let points = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [2.0, 0.0],
+            [0.0, 2.0],
+            [2.0, 2.0],
+            [1.0, 0.5],
+            [0.5, 1.0],
+            [1.5, 1.5]
+        ];
+
+        let config = SearchConfig::default();
+        let mut searcher =
+            EnhancedNearestNeighborSearcher::new(points, IndexType::KdTree, config).unwrap();
+
+        let query = array![0.5, 0.5];
+        let _neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();
+
+        let stats = searcher.stats();
+        assert!(stats.total_queries > 0);
+        assert!(stats.total_query_time_us > 0);
+        assert!(stats.nodes_visited > 0);
     }
 }

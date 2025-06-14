@@ -403,7 +403,7 @@ fn noisy_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
             // True gradient: 2*x, plus noise
             x.mapv(|xi| {
                 let true_grad = 2.0 * xi;
-                let noise = rng.gen_range(-self.noise_level..self.noise_level);
+                let noise = rng.random_range(-self.noise_level..self.noise_level);
                 true_grad + noise
             })
         }
@@ -414,7 +414,7 @@ fn noisy_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
 
             // True function: sum(x_i^2), plus noise
             let true_value = x.mapv(|xi| xi * xi).sum();
-            let noise = rng.gen_range(-self.noise_level..self.noise_level);
+            let noise = rng.random_range(-self.noise_level..self.noise_level);
             true_value + noise
         }
     }

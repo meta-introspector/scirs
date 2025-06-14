@@ -104,8 +104,10 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
 
     /// Create accelerator with default options
     pub fn with_memory_depth(dimension: usize, memory_depth: usize) -> Self {
-        let mut options = AcceleratorOptions::default();
-        options.memory_depth = memory_depth;
+        let options = AcceleratorOptions {
+            memory_depth,
+            ..Default::default()
+        };
         Self::new(dimension, options)
     }
 
@@ -245,7 +247,7 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
             for j in 0..m {
                 let mut sum = F::zero();
                 for k in 0..n {
-                    sum = sum + a[[k, i]] * a[[k, j]];
+                    sum += a[[k, i]] * a[[k, j]];
                 }
                 ata[[i, j]] = sum;
             }
@@ -253,7 +255,7 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
 
         // Add regularization: A^T A + λI
         for i in 0..m {
-            ata[[i, i]] = ata[[i, i]] + self.options.regularization;
+            ata[[i, i]] += self.options.regularization;
         }
 
         // Compute A^T b
@@ -261,7 +263,7 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
         for i in 0..m {
             let mut sum = F::zero();
             for k in 0..n {
-                sum = sum + a[[k, i]] * b[k];
+                sum += a[[k, i]] * b[k];
             }
             atb[i] = sum;
         }
@@ -326,7 +328,7 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
         for i in (0..n).rev() {
             let mut sum = F::zero();
             for j in (i + 1)..n {
-                sum = sum + a[[i, j]] * x[j];
+                sum += a[[i, j]] * x[j];
             }
             x[i] = (b[i] - sum) / a[[i, i]];
         }

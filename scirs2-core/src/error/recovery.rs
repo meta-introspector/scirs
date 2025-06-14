@@ -856,7 +856,7 @@ mod tests {
         assert!(result.is_err());
 
         // Second failure - should trigger circuit open
-        let result =
+        let result: std::result::Result<(), _> =
             cb.execute(|| Err(CoreError::ComputationError(ErrorContext::new("Test error"))));
         assert!(result.is_err());
 

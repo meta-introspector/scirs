@@ -67,7 +67,7 @@ impl<
         let interpolator = NaturalNeighborInterpolator::new(points, values, method)?;
 
         // Use the provided config or the default
-        let parallel_config = config.unwrap_or_else(ParallelConfig::new);
+        let parallel_config = config.unwrap_or_default();
 
         Ok(ParallelNaturalNeighborInterpolator {
             interpolator,

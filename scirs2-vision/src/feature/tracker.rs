@@ -169,7 +169,7 @@ impl LKTracker {
 
         let mut tracked_features = Vec::new();
 
-        for (_i, feature) in self.features.iter().enumerate() {
+        for feature in self.features.iter() {
             let x = feature.position.0 as usize;
             let y = feature.position.1 as usize;
 

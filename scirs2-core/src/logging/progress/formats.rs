@@ -141,7 +141,7 @@ fn extract_format_spec(text: &str, field: &str) -> Option<FormatSpec> {
 }
 
 /// Progress display theme
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ProgressTheme {
     /// Symbols for progress visualization
     pub symbols: ProgressSymbols,
@@ -152,7 +152,7 @@ pub struct ProgressTheme {
 }
 
 /// Color scheme for progress display
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ColorScheme {
     /// Color for progress bar fill
     pub fill_color: Option<String>,
@@ -177,18 +177,7 @@ pub struct AnimationSettings {
     pub animate_bar: bool,
 }
 
-impl Default for ProgressTheme {
-    fn default() -> Self {
-        Self {
-            symbols: ProgressSymbols::default(),
-            colors: ColorScheme::default(),
-            animation: AnimationSettings::default(),
-        }
-    }
-}
-
 impl ProgressTheme {
-
     /// Modern theme with Unicode blocks
     pub fn modern() -> Self {
         Self {
@@ -239,20 +228,7 @@ impl ProgressTheme {
     }
 }
 
-impl Default for ColorScheme {
-    fn default() -> Self {
-        Self {
-            fill_color: None,
-            empty_color: None,
-            text_color: None,
-            percentage_color: None,
-            eta_color: None,
-        }
-    }
-}
-
 impl ColorScheme {
-
     /// Colorful scheme with ANSI colors
     pub fn colorful() -> Self {
         Self {
@@ -319,7 +295,6 @@ impl Default for AnimationSettings {
 }
 
 impl AnimationSettings {
-
     /// Smooth animation settings
     pub fn smooth() -> Self {
         Self {

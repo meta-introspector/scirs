@@ -147,10 +147,10 @@ where
         });
     }
 
-    let mut diagnostics = StabilityDiagnostics::default();
-
-    // Check if matrix is symmetric
-    diagnostics.is_symmetric = check_symmetry(matrix);
+    let mut diagnostics = StabilityDiagnostics {
+        is_symmetric: check_symmetry(matrix),
+        ..Default::default()
+    };
 
     // Estimate condition number
     let condition_number = estimate_condition_number(matrix, &mut diagnostics)?;
@@ -275,15 +275,12 @@ fn estimate_condition_norm_based<F>(matrix: &ArrayView2<F>) -> InterpolateResult
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
-    // Estimate condition number using Frobenius norm and diagonal dominance
+    // Estimate condition number using maximum and minimum eigenvalue estimates
     let n = matrix.nrows();
 
-    // Compute Frobenius norm
-    let frobenius_norm_sq = matrix.iter().map(|&x| x * x).fold(F::zero(), |a, b| a + b);
-    let frobenius_norm = frobenius_norm_sq.sqrt();
-
-    // Estimate smallest eigenvalue using Gershgorin circles
+    // Estimate largest and smallest eigenvalues using Gershgorin circles
     let mut min_gershgorin = F::infinity();
+    let mut max_gershgorin = F::neg_infinity();
 
     for i in 0..n {
         let diagonal = matrix[[i, i]];
@@ -295,16 +292,22 @@ where
         let center = diagonal.abs();
         let radius = off_diagonal_sum;
 
-        // Lower bound of Gershgorin disk
+        // Lower and upper bounds of Gershgorin disk
         let lower_bound = center - radius;
+        let upper_bound = center + radius;
+
         if lower_bound > F::zero() && lower_bound < min_gershgorin {
             min_gershgorin = lower_bound;
         }
+
+        if upper_bound > max_gershgorin {
+            max_gershgorin = upper_bound;
+        }
     }
 
-    // Estimate condition number
-    if min_gershgorin.is_finite() && min_gershgorin > F::zero() {
-        Ok(frobenius_norm / min_gershgorin)
+    // Estimate condition number as ratio of max to min eigenvalue estimates
+    if min_gershgorin.is_finite() && min_gershgorin > F::zero() && max_gershgorin.is_finite() {
+        Ok(max_gershgorin / min_gershgorin)
     } else {
         // Conservative estimate for potentially ill-conditioned matrices
         Ok(F::from_f64(1e16).unwrap())
@@ -379,7 +382,13 @@ where
 /// Check if reciprocal operation is numerically safe
 pub fn safe_reciprocal<F>(value: F) -> InterpolateResult<F>
 where
-    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign + std::fmt::LowerExp,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::fmt::LowerExp,
 {
     check_safe_division(F::one(), value)
 }

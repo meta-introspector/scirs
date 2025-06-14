@@ -5,7 +5,7 @@
 //! cache performance for spatial operations.
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array2, ArrayView2};
+use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
     distance::{euclidean, pdist},
@@ -14,7 +14,7 @@ use scirs2_spatial::{
 };
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Memory tracking allocator wrapper
 struct MemoryTracker {
@@ -73,6 +73,7 @@ impl MemoryTracker {
 static MEMORY_TRACKER: MemoryTracker = MemoryTracker::new();
 
 /// Custom allocator that tracks memory usage
+#[allow(dead_code)]
 struct TrackingAllocator;
 
 unsafe impl GlobalAlloc for TrackingAllocator {
@@ -103,10 +104,12 @@ struct MemoryStats {
 }
 
 impl MemoryStats {
+    #[allow(dead_code)]
     fn peak_mb(&self) -> f64 {
         self.peak_allocated as f64 / (1024.0 * 1024.0)
     }
 
+    #[allow(dead_code)]
     fn current_mb(&self) -> f64 {
         self.current_allocated as f64 / (1024.0 * 1024.0)
     }
@@ -147,7 +150,7 @@ impl MemoryBenchmark {
             MEMORY_TRACKER.reset();
 
             // Measure memory usage during computation
-            let start_stats = MEMORY_TRACKER.get_stats();
+            let _start_stats = MEMORY_TRACKER.get_stats();
             let _distances = parallel_pdist(&points.view(), "euclidean").unwrap();
             let end_stats = MEMORY_TRACKER.get_stats();
 
@@ -199,7 +202,7 @@ impl MemoryBenchmark {
 
     fn test_sequential_pdist(&self, points: &Array2<f64>) -> MemoryStats {
         MEMORY_TRACKER.reset();
-        let _distances = pdist(&points, euclidean);
+        let _distances = pdist(points, euclidean);
         MEMORY_TRACKER.get_stats()
     }
 
@@ -478,6 +481,7 @@ criterion_group!(
 criterion_main!(memory_benches);
 
 /// Standalone function for running memory analysis
+#[allow(dead_code)]
 fn run_memory_analysis() {
     let benchmark = MemoryBenchmark::new(12345);
 

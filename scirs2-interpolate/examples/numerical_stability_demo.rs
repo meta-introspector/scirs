@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Matrix Condition Assessment:");
 
     // Well-conditioned matrix (identity)
-    let well_conditioned = Array2::eye(3);
+    let well_conditioned = Array2::<f64>::eye(3);
     let report = assess_matrix_condition(&well_conditioned.view())?;
     println!("   Identity matrix:");
     println!("     Condition number: {:.2e}", report.condition_number);

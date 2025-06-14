@@ -55,7 +55,10 @@ This module provides signal processing functionality similar to SciPy's signal m
 - [x] Implement advanced filter types and design methods
   - [x] Parks-McClellan optimal FIR filters (Remez exchange algorithm)
   - [x] Minimum phase filter conversion
-  - [ ] Filter design in the Z-domain
+  - [x] Filter design in the Z-domain
+    - [x] Direct Z-domain Butterworth bandpass/bandstop filters
+    - [x] Direct Z-domain Chebyshev Type I filters (lowpass/highpass)
+    - [x] Direct Z-domain IIR optimization design
   - [x] Matched filter implementation
   - [x] Adaptive filters (LMS, RLS, Kalman)
   - [x] Elliptic (Cauer) filter design with optimal transition characteristics
@@ -168,7 +171,12 @@ This module provides signal processing functionality similar to SciPy's signal m
     - [x] Block-based processing for real-time applications
     - [x] Magnitude-only processing for efficiency
     - [x] Log scaling and power spectrum options
-  - [ ] Memory-efficient implementation for large signals
+  - [x] Memory-efficient implementation for large signals
+    - [x] Chunked processing for large signals
+    - [x] Automatic memory management
+    - [x] Memory usage analysis and optimization
+    - [x] Parallel chunked processing support
+    - [x] Magnitude-only processing for reduced memory usage
 
 - [x] Signal enhancement and restoration
   - [x] Implement denoising algorithms
@@ -220,7 +228,12 @@ This module provides signal processing functionality similar to SciPy's signal m
     - [x] Sparse signal denoising
     - [x] Random sensing matrix generation
     - [x] Matrix coherence and RIP estimation
-  - [ ] Robust filtering for outliers
+  - [x] Robust filtering for outliers
+    - [x] Alpha-trimmed mean filtering
+    - [x] Hampel filter for outlier detection and replacement
+    - [x] Winsorized filtering
+    - [x] Huber loss-based robust filtering
+    - [x] 2D robust filtering for image processing
   - [ ] Multi-band signal separation
   - [ ] Harmonic/percussive separation for audio
 

@@ -705,8 +705,8 @@ mod tests {
 
         assert_eq!(alpha_shape.ndim(), 2);
         assert_eq!(alpha_shape.npoints(), 4);
-        assert!(alpha_shape.complex().len() > 0);
-        assert!(alpha_shape.boundary().len() > 0);
+        assert!(!alpha_shape.complex().is_empty());
+        assert!(!alpha_shape.boundary().is_empty());
     }
 
     #[test]
@@ -753,7 +753,7 @@ mod tests {
             println!("3D alpha shape test: complex is empty with large alpha, which indicates circumradius issues");
             assert_eq!(alpha_shape.boundary().len(), 0);
         } else {
-            assert!(alpha_shape.complex().len() > 0);
+            assert!(!alpha_shape.complex().is_empty());
 
             // 3D boundary should consist of triangular faces
             for face in alpha_shape.boundary() {
@@ -837,8 +837,8 @@ mod tests {
 
         assert!(optimal_alpha > 0.0);
         assert!(optimal_alpha.is_finite());
-        assert!(shape.complex().len() > 0);
-        assert!(shape.boundary().len() > 0);
+        assert!(!shape.complex().is_empty());
+        assert!(!shape.boundary().is_empty());
     }
 
     #[test]

@@ -103,9 +103,20 @@ pub enum SparseStrategy {
 #[derive(Debug)]
 pub struct HighDimensionalInterpolator<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + AddAssign
+        + ScalarOperand
+        + 'static
+        + Send
+        + Sync,
 {
     /// Training data points
+    #[allow(dead_code)]
     points: Array2<F>,
     /// Training data values
     values: Array1<F>,
@@ -114,6 +125,7 @@ where
     /// Local interpolation method
     local_method: LocalMethod,
     /// Sparse interpolation strategy
+    #[allow(dead_code)]
     sparse_strategy: Option<SparseStrategy>,
     /// Spatial data structure for fast neighbor search
     spatial_index: SpatialIndex<F>,
@@ -124,9 +136,11 @@ where
 /// Dimension reduction transformation
 #[derive(Debug)]
 struct DimensionReduction<F: Float> {
+    #[allow(dead_code)]
     method: DimensionReductionMethod,
     transformation_matrix: Array2<F>,
     mean: Array1<F>,
+    #[allow(dead_code)]
     explained_variance_ratio: Option<Array1<F>>,
 }
 
@@ -147,7 +161,9 @@ pub struct InterpolatorStats {
     n_training_points: usize,
     original_dimensions: usize,
     reduced_dimensions: Option<usize>,
+    #[allow(dead_code)]
     average_neighbors_used: f64,
+    #[allow(dead_code)]
     cache_hit_rate: f64,
 }
 
@@ -155,7 +171,17 @@ pub struct InterpolatorStats {
 #[derive(Debug)]
 pub struct HighDimensionalInterpolatorBuilder<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + AddAssign
+        + ScalarOperand
+        + 'static
+        + Send
+        + Sync,
 {
     dimension_reduction: DimensionReductionMethod,
     local_method: LocalMethod,
@@ -179,7 +205,17 @@ pub enum SpatialIndexType {
 
 impl<F> Default for HighDimensionalInterpolatorBuilder<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + AddAssign
+        + ScalarOperand
+        + 'static
+        + Send
+        + Sync,
 {
     fn default() -> Self {
         Self {
@@ -197,7 +233,17 @@ where
 
 impl<F> HighDimensionalInterpolatorBuilder<F>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + AddAssign
+        + ScalarOperand
+        + 'static
+        + Send
+        + Sync,
 {
     /// Create a new builder with default settings
     ///
@@ -529,11 +575,11 @@ where
     /// let points = Array2::zeros((n_points, n_dims));
     /// let values = Array1::zeros(n_points);
     ///
-    /// let interpolator = HighDimensionalInterpolator::<f64>::new()
+    /// let interpolator = HighDimensionalInterpolator::<f64>::builder()
     ///     .build(&points.view(), &values.view())
     ///     .unwrap();
     /// ```
-    pub fn new() -> HighDimensionalInterpolatorBuilder<F> {
+    pub fn builder() -> HighDimensionalInterpolatorBuilder<F> {
         HighDimensionalInterpolatorBuilder::new()
     }
 
@@ -945,9 +991,19 @@ pub fn make_knn_interpolator<F>(
     k: usize,
 ) -> InterpolateResult<HighDimensionalInterpolator<F>>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + AddAssign
+        + ScalarOperand
+        + 'static
+        + Send
+        + Sync,
 {
-    HighDimensionalInterpolator::new()
+    HighDimensionalInterpolator::builder()
         .with_local_method(LocalMethod::KNearestNeighbors {
             k,
             weight_power: 2.0,
@@ -1000,9 +1056,19 @@ pub fn make_pca_interpolator<F>(
     k: usize,
 ) -> InterpolateResult<HighDimensionalInterpolator<F>>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + AddAssign
+        + ScalarOperand
+        + 'static
+        + Send
+        + Sync,
 {
-    HighDimensionalInterpolator::new()
+    HighDimensionalInterpolator::builder()
         .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims })
         .with_local_method(LocalMethod::KNearestNeighbors {
             k,
@@ -1054,9 +1120,19 @@ pub fn make_local_rbf_interpolator<F>(
     radius: f64,
 ) -> InterpolateResult<HighDimensionalInterpolator<F>>
 where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + AddAssign + ScalarOperand + 'static + Send + Sync,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Zero
+        + Copy
+        + AddAssign
+        + ScalarOperand
+        + 'static
+        + Send
+        + Sync,
 {
-    HighDimensionalInterpolator::new()
+    HighDimensionalInterpolator::builder()
         .with_local_method(LocalMethod::LocalRBF {
             radius,
             rbf_type: LocalRBFType::CompactGaussian,
@@ -1079,7 +1155,7 @@ mod tests {
         ];
         let values = array![0.0, 1.0, 1.0, 1.0];
 
-        let interpolator = HighDimensionalInterpolator::<f64>::new()
+        let interpolator = HighDimensionalInterpolator::<f64>::builder()
             .build(&points.view(), &values.view())
             .unwrap();
 
@@ -1163,7 +1239,7 @@ mod tests {
         let values = array![1.0, 2.0, 3.0];
 
         // Test PCA
-        let pca_interp = HighDimensionalInterpolator::<f64>::new()
+        let pca_interp = HighDimensionalInterpolator::<f64>::builder()
             .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 2 })
             .build(&points.view(), &values.view())
             .unwrap();
@@ -1171,7 +1247,7 @@ mod tests {
         assert_eq!(pca_interp.effective_dimensions(), 2);
 
         // Test Random Projection
-        let rp_interp = HighDimensionalInterpolator::new()
+        let rp_interp = HighDimensionalInterpolator::builder()
             .with_dimension_reduction(DimensionReductionMethod::RandomProjection { target_dims: 2 })
             .build(&points.view(), &values.view())
             .unwrap();
@@ -1184,7 +1260,7 @@ mod tests {
         let points = array![[0.0, 0.0], [1.0, 1.0]];
         let values = array![0.0, 1.0];
 
-        let interpolator = HighDimensionalInterpolator::new()
+        let interpolator = HighDimensionalInterpolator::builder()
             .with_local_method(LocalMethod::LocallyWeighted {
                 bandwidth: 1.0,
                 degree: 1,

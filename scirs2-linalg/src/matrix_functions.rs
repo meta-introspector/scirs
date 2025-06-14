@@ -39,7 +39,7 @@ use crate::solve::solve_multiple;
 /// ```
 pub fn expm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(

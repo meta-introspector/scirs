@@ -460,9 +460,9 @@ where
         let mut c_high = Array2::<H>::zeros((m, n));
 
         // Block sizes
-        let block_m = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
-        let block_n = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-        let block_k = (k + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        let block_m = m.div_ceil(BLOCK_SIZE);
+        let block_n = n.div_ceil(BLOCK_SIZE);
+        let block_k = k.div_ceil(BLOCK_SIZE);
 
         // Blocked matrix multiplication algorithm - compute blocks sequentially to avoid borrowing issues
         for bi in 0..block_m {

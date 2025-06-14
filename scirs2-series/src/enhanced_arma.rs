@@ -276,7 +276,7 @@ where
         for i in 0..self.p {
             r_vector[i] = acf[i + 1];
             for j in 0..self.p {
-                r_matrix[[i, j]] = acf[(i as i32 - j as i32).abs() as usize];
+                r_matrix[[i, j]] = acf[(i as i32 - j as i32).unsigned_abs() as usize];
             }
         }
 
@@ -737,7 +737,7 @@ where
         let n = data.len();
         let n_eff = n - self.p;
         let n_params = self.p + 1;
-        let mut hessian;
+        let hessian;
 
         // For AR models, the Hessian can be approximated using the design matrix
         let mut x = Array2::zeros((n_eff, n_params));

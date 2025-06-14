@@ -86,10 +86,7 @@ impl<F: IntegrateFloat> MemoryPool<F> {
     pub fn deallocate(&mut self, buffer: Vec<F>) {
         let size = buffer.len();
         if size <= self.max_buffer_size && self.buffers.len() < 100 {
-            self.buffers
-                .entry(size)
-                .or_insert_with(VecDeque::new)
-                .push_back(buffer);
+            self.buffers.entry(size).or_default().push_back(buffer);
         } else {
             self.total_allocated = self
                 .total_allocated
@@ -236,7 +233,7 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
                 let in_block_row = row % block_size;
                 let in_block_col = col % block_size;
 
-                let blocks_per_row = (self.cols + block_size - 1) / block_size;
+                let blocks_per_row = self.cols.div_ceil(block_size);
                 let block_index = block_row * blocks_per_row + block_col;
                 let in_block_index = in_block_row * block_size + in_block_col;
 
@@ -259,7 +256,7 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
                 for i in 0..self.rows {
                     let mut sum = F::zero();
                     for j in 0..self.cols {
-                        sum = sum + self.get(i, j) * x[j];
+                        sum += self.get(i, j) * x[j];
                     }
                     y[i] = sum;
                 }
@@ -268,7 +265,7 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
                 for j in 0..self.cols {
                     let x_j = x[j];
                     for i in 0..self.rows {
-                        y[i] = y[i] + self.get(i, j) * x_j;
+                        y[i] += self.get(i, j) * x_j;
                     }
                 }
             }
@@ -282,8 +279,8 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
 
     /// Blocked matrix-vector multiplication for better cache performance
     fn blocked_matvec(&self, x: ArrayView1<F>, mut y: ArrayViewMut1<F>, block_size: usize) {
-        let rows_blocks = (self.rows + block_size - 1) / block_size;
-        let cols_blocks = (self.cols + block_size - 1) / block_size;
+        let rows_blocks = self.rows.div_ceil(block_size);
+        let cols_blocks = self.cols.div_ceil(block_size);
 
         for i_block in 0..rows_blocks {
             for j_block in 0..cols_blocks {
@@ -295,9 +292,9 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
                 for i in i_start..i_end {
                     let mut sum = F::zero();
                     for j in j_start..j_end {
-                        sum = sum + self.get(i, j) * x[j];
+                        sum += self.get(i, j) * x[j];
                     }
-                    y[i] = y[i] + sum;
+                    y[i] += sum;
                 }
             }
         }
@@ -400,7 +397,7 @@ impl CacheAwareAlgorithms {
             let mut sum = F::zero();
 
             for i in start..end {
-                sum = sum + data[i];
+                sum += data[i];
             }
 
             partial_sums.push(sum);

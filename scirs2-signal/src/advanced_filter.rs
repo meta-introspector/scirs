@@ -825,7 +825,7 @@ mod tests {
 
         assert_eq!(frequencies.len(), desired.len());
         assert_eq!(frequencies.len(), weights.len());
-        assert!(frequencies.len() > 0);
+        assert!(!frequencies.is_empty());
 
         // Check frequency ordering
         for i in 1..frequencies.len() {

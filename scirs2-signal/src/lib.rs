@@ -100,6 +100,7 @@ pub mod phase_vocoder;
 pub mod realtime;
 pub mod reassigned;
 pub mod resample;
+pub mod robust;
 pub mod savgol;
 pub mod sparse;
 pub mod spectral;
@@ -146,11 +147,13 @@ pub use deconvolution::{
     DeconvolutionConfig, DeconvolutionMethod,
 };
 pub use filter::{
-    allpass_filter, allpass_filter_zpk, analyze_filter, bessel, butter, cheby1, cheby2,
-    check_filter_stability, comb_filter, comb_filter_zpk, ellip, filtfilt, firwin, lfilter,
+    allpass_filter, allpass_filter_zpk, analyze_filter, bessel, bilinear_transform, butter,
+    butter_bandpass_bandstop, cheby1, cheby2, check_filter_stability, comb_filter, comb_filter_zpk,
+    ellip, filtfilt, firwin, frequency_sampling_design, impulse_invariant_transform, lfilter,
     matched_filter, matched_filter_bank, matched_filter_bank_detect, matched_filter_detect,
-    minimum_phase, notch_filter, notch_filter_zpk, peak_filter, peak_filter_zpk, remez,
-    z_domain_transform, zpk_design, FilterAnalysis, FilterStability,
+    minimum_phase, notch_filter, notch_filter_zpk, peak_filter, peak_filter_zpk, prewarp_frequency,
+    remez, z_domain_chebyshev1, z_domain_iir_design, z_domain_transform, zpk_design,
+    FilterAnalysis, FilterStability,
 };
 pub use filter_banks::{
     CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
@@ -211,6 +214,10 @@ pub use realtime::{
     RealtimeProcessor, RealtimeStats, StreamBlock, StreamProcessor, ZeroLatencyLimiter,
 };
 pub use reassigned::{reassigned_spectrogram, smoothed_reassigned_spectrogram, ReassignedConfig};
+pub use robust::{
+    alpha_trimmed_filter, hampel_filter, huber_filter, robust_filter_2d, winsorize_filter,
+    RobustConfig,
+};
 pub use sparse::{
     basis_pursuit, compressed_sensing_recover, cosamp, estimate_rip_constant, fista, iht,
     image_inpainting, ista, lasso, matrix_coherence, measure_sparsity, mp, omp,
@@ -220,7 +227,7 @@ pub use sparse::{
 pub use spectral::{periodogram, spectrogram, stft as spectral_stft, welch};
 pub use stft::{
     closest_stft_dual_window, create_cola_window, MemoryEfficientStft, MemoryEfficientStftConfig,
-    ShortTimeFft,
+    MemoryInfo, ShortTimeFft,
 };
 pub use streaming_stft::{
     RealTimeStft, RealTimeStftStatistics, StreamingStft, StreamingStftConfig,
@@ -283,9 +290,9 @@ pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D, WaveletPacketTree2
 pub use lti::system::{c2d, ss, tf, zpk};
 pub use lti::{
     analyze_control_observability, analyze_controllability, analyze_observability, bode,
-    matrix_condition_number, systems_equivalent, ControlObservabilityAnalysis,
-    ControllabilityAnalysis, KalmanStructure, LtiSystem, ObservabilityAnalysis, StateSpace,
-    TransferFunction, ZerosPoleGain,
+    complete_kalman_decomposition, compute_lyapunov_gramians, matrix_condition_number,
+    systems_equivalent, ControlObservabilityAnalysis, ControllabilityAnalysis, KalmanDecomposition,
+    KalmanStructure, LtiSystem, ObservabilityAnalysis, StateSpace, TransferFunction, ZerosPoleGain,
 };
 
 // Laplace transform functions for continuous-time analysis
@@ -362,9 +369,13 @@ pub use utilities::spectral::{
 
 // Window functions
 pub use window::{
-    analysis::{analyze_window, compare_windows, design_window_with_constraints, WindowAnalysis},
-    barthann, bartlett, blackman, blackmanharris, bohman, boxcar, cosine, exponential, flattop,
-    get_window, hamming, hann,
+    analysis::{
+        analyze_window, analyze_window_transition, compare_windows, design_custom_window,
+        design_optimal_kaiser, design_window_with_constraints, select_optimal_window,
+        WindowAnalysis, WindowOptimizationCriteria, WindowTransitionAnalysis,
+    },
+    barthann, bartlett, blackman, blackmanharris, bohman, boxcar, cosine, dpss_windows,
+    exponential, flattop, get_window, hamming, hann,
     kaiser::{kaiser, kaiser_bessel_derived},
     lanczos, nuttall, parzen, triang, tukey,
 };

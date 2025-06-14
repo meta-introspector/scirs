@@ -108,6 +108,7 @@ pub trait DataProvider {
 }
 
 /// Simple in-memory data provider
+#[derive(Clone)]
 pub struct InMemoryDataProvider {
     data: Vec<f64>,
 }

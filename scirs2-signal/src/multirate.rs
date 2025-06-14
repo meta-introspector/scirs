@@ -1140,7 +1140,6 @@ mod tests {
         // Output length should be related to input length times conversion ratio
         // But exact length depends on filtering and boundary conditions
         assert!(!output.is_empty());
-        assert!(output.len() > 0);
 
         assert_eq!(converter.conversion_ratio(), 1.5);
     }

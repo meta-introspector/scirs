@@ -19,6 +19,7 @@ use crate::ExtrapolateMode;
 #[derive(Debug, Clone)]
 pub struct HermiteSpline<T: Float> {
     x: Array1<T>,
+    #[allow(dead_code)]
     y: Array1<T>,
     derivatives: Array1<T>,
     coeffs: Array2<T>,

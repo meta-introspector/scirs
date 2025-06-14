@@ -1622,8 +1622,8 @@ mod tests {
         let mut sm_lms = SmLmsFilter::new(3, 0.1, 0.1).unwrap();
 
         // Apply mix of small and large errors
-        let inputs = vec![1.0, 0.5, -0.3, 0.8, 0.2];
-        let errors = vec![0.05, 0.15, 0.08, 0.2, 0.03]; // Mix of small and large
+        let inputs = [1.0, 0.5, -0.3, 0.8, 0.2];
+        let errors = [0.05, 0.15, 0.08, 0.2, 0.03]; // Mix of small and large
 
         for (&input, &target_error) in inputs.iter().zip(errors.iter()) {
             // Desired is computed to produce target error (since initial output is 0)
@@ -1748,8 +1748,7 @@ mod tests {
         for i in 0..10 {
             let input = i as f64;
             vs_lms.adapt(input, 0.5).unwrap();
-            apa.adapt(&vec![input, input * 0.5, input * 0.2], 0.5)
-                .unwrap();
+            apa.adapt(&[input, input * 0.5, input * 0.2], 0.5).unwrap();
             lmf.adapt(input, 0.5).unwrap();
             sm_lms.adapt(input, 0.5).unwrap();
         }

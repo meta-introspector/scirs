@@ -41,6 +41,9 @@ use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
 
+/// Type alias for PCA computation results: (components, explained_variance, mean)
+type PCAResultData<F> = (Array2<F>, Array1<F>, Option<Array1<F>>);
+
 /// Configuration for Principal Component Analysis
 #[derive(Debug, Clone)]
 pub struct PCAConfig {
@@ -629,10 +632,7 @@ pub fn apply_symbolic_approximation(
 
 // Helper functions for PCA computation
 
-fn compute_pca_svd<F>(
-    data: &Array2<F>,
-    config: &PCAConfig,
-) -> Result<(Array2<F>, Array1<F>, Option<Array1<F>>)>
+fn compute_pca_svd<F>(data: &Array2<F>, config: &PCAConfig) -> Result<PCAResultData<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
 {
@@ -649,7 +649,7 @@ where
 fn compute_pca_eigendecomposition<F>(
     data: &Array2<F>,
     config: &PCAConfig,
-) -> Result<(Array2<F>, Array1<F>, Option<Array1<F>>)>
+) -> Result<PCAResultData<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
 {
@@ -1331,6 +1331,7 @@ fn paa_to_symbols(paa_values: &Array1<f64>, breakpoints: &Array1<f64>) -> Result
     Ok(symbols)
 }
 
+#[allow(dead_code)]
 fn reconstruct_from_sax(
     _symbolic_sequence: &[char],
     _breakpoints: &Array1<f64>,
@@ -1343,6 +1344,7 @@ fn reconstruct_from_sax(
     ))
 }
 
+#[allow(dead_code)]
 fn compute_reconstruction_error(_original: &Array1<f64>, _reconstructed: &Array1<f64>) -> f64 {
     // Placeholder for reconstruction error computation
     0.0

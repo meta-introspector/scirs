@@ -24,17 +24,17 @@ fn simd_vs_scalar_benchmark(c: &mut Criterion) {
         let p2: Vec<f64> = (0..size).map(|i| (i + 1) as f64).collect();
 
         // Scalar version
-        group.bench_function(&format!("scalar_euclidean_{}", size), |b| {
+        group.bench_function(format!("scalar_euclidean_{}", size), |b| {
             b.iter(|| black_box(euclidean(&p1, &p2)))
         });
 
         // SIMD version
-        group.bench_function(&format!("simd_euclidean_{}", size), |b| {
+        group.bench_function(format!("simd_euclidean_{}", size), |b| {
             b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap()))
         });
 
         // SIMD Manhattan
-        group.bench_function(&format!("simd_manhattan_{}", size), |b| {
+        group.bench_function(format!("simd_manhattan_{}", size), |b| {
             b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap()))
         });
     }
@@ -52,7 +52,7 @@ fn parallel_vs_sequential_benchmark(c: &mut Criterion) {
         let points = generate_test_data(size, 10);
 
         // Sequential (using our manual pdist implementation)
-        group.bench_function(&format!("sequential_pdist_{}", size), |b| {
+        group.bench_function(format!("sequential_pdist_{}", size), |b| {
             b.iter(|| {
                 let mut distances = Vec::new();
                 for i in 0..points.nrows() {
@@ -67,7 +67,7 @@ fn parallel_vs_sequential_benchmark(c: &mut Criterion) {
         });
 
         // Parallel version
-        group.bench_function(&format!("parallel_pdist_{}", size), |b| {
+        group.bench_function(format!("parallel_pdist_{}", size), |b| {
             b.iter(|| {
                 let distances = parallel_pdist(&points.view(), "euclidean").unwrap();
                 black_box(distances.sum())

@@ -34,11 +34,11 @@ This module provides graph data structures and algorithms similar to SciPy's gra
   - [x] MultiDiGraph (directed with parallel edges)
   - [ ] Hypergraph implementation
   - [ ] Temporal graph structures
-  - [ ] Bipartite graph specialization
-- [ ] Attribute handling
-  - [ ] Node/edge attribute system
-  - [ ] Graph-level attributes
-  - [ ] Attribute views and projections
+  - [x] Bipartite graph specialization
+- [x] Attribute handling
+  - [x] Node/edge attribute system
+  - [x] Graph-level attributes
+  - [x] Attribute views and projections
 - [ ] Specialized graph types
   - [ ] Weighted graphs with dedicated APIs
   - [ ] Spatial graphs with geometric properties
@@ -50,14 +50,14 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 - [x] Traversal algorithms
   - [x] Breadth-first search (BFS)
   - [x] Depth-first search (DFS)
-  - [ ] Priority-first search
-  - [ ] Bidirectional search
+  - [x] Priority-first search
+  - [x] Bidirectional search
 - [x] Path and connectivity
-  - [ ] All-pairs shortest paths (Floyd-Warshall)
+  - [x] All-pairs shortest paths (Floyd-Warshall)
   - [x] A* search implementation
   - [x] K-shortest paths
-  - [ ] Strongly connected components (Tarjan's algorithm)
-  - [ ] Weakly connected components
+  - [x] Strongly connected components (Tarjan's algorithm)
+  - [x] Weakly connected components
   - [x] Articulation points and bridges
   - [x] Eulerian paths and circuits
   - [x] Hamiltonian paths and circuits
@@ -68,15 +68,15 @@ This module provides graph data structures and algorithms similar to SciPy's gra
   - [x] Push-relabel algorithm
 - [x] Matching algorithms
   - [x] Maximum bipartite matching
-  - [ ] Minimum weight bipartite matching
-  - [ ] Maximum cardinality matching
-  - [ ] Stable matching algorithms
+  - [x] Minimum weight bipartite matching
+  - [x] Maximum cardinality matching
+  - [x] Stable matching algorithms
 
 ## Graph Analytics
 
 - [x] Structural analysis
-  - [ ] Isomorphism checking
-  - [ ] Subgraph matching
+  - [x] Isomorphism checking (with VF2 algorithm for enhanced performance)
+  - [x] Subgraph matching
   - [x] Motif finding
   - [x] Graph similarity measures
   - [x] Core decomposition
@@ -85,7 +85,7 @@ This module provides graph data structures and algorithms similar to SciPy's gra
   - [x] Eigenvector centrality
   - [x] PageRank implementation
   - [x] HITS algorithm
-  - [ ] Weighted centrality variants
+  - [x] Weighted centrality variants
 - [x] Community detection
   - [x] Modularity optimization
   - [x] Label propagation
@@ -101,18 +101,18 @@ This module provides graph data structures and algorithms similar to SciPy's gra
   - [x] Watts-Strogatz small-world model
   - [x] Barabási–Albert preferential attachment
   - [x] Stochastic block model
-  - [ ] Configuration model
+  - [x] Configuration model
 - [x] Deterministic graph families
   - [x] Complete graphs
   - [x] Regular graphs
-  - [ ] Grid/lattice graphs
+  - [x] Grid/lattice graphs
   - [x] Star, wheel, and other special types
-  - [ ] Trees and forests
-- [ ] Graph transformations
-  - [ ] Line graph conversion
-  - [ ] Subgraph extraction
-  - [ ] Graph composition operations
-  - [ ] Graph product operators
+  - [x] Trees and forests
+- [x] Graph transformations
+  - [x] Line graph conversion
+  - [x] Subgraph extraction
+  - [x] Graph composition operations
+  - [x] Graph product operators
 
 ## Advanced Techniques
 
@@ -137,7 +137,7 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 - [x] Layout algorithms
   - [x] Force-directed layouts
   - [x] Circular layouts
-  - [ ] Hierarchical layouts
+  - [x] Hierarchical layouts
   - [x] Spectral layouts
 - [ ] Rendering systems
   - [ ] SVG export

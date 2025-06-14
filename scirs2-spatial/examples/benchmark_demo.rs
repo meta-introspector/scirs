@@ -6,11 +6,8 @@
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
-    distance::{euclidean, manhattan, pdist},
-    simd_distance::{
-        parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch,
-        simd_manhattan_distance,
-    },
+    distance::{euclidean, pdist},
+    simd_distance::{parallel_pdist, simd_euclidean_distance_batch},
     KDTree,
 };
 use std::time::Instant;
@@ -198,7 +195,7 @@ fn analyze_memory_scaling() -> Result<(), Box<dyn std::error::Error>> {
 
         // Measure actual performance with memory allocation
         let start = Instant::now();
-        let distances = parallel_pdist(&points.view(), "euclidean")?;
+        let _distances = parallel_pdist(&points.view(), "euclidean")?;
         let elapsed = start.elapsed().as_millis();
 
         let efficiency = (size * (size - 1) / 2) as f64 / elapsed as f64;

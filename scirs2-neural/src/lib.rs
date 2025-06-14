@@ -20,17 +20,24 @@ pub mod callbacks;
 // pub mod config;
 /// Data augmentation module
 pub mod augmentation;
+/// Model compression module
+pub mod compression;
 pub mod data;
+/// Knowledge distillation module
+pub mod distillation;
 pub mod error;
 pub mod evaluation;
 /// GPU acceleration module (currently CPU fallback)
 pub mod gpu;
+/// Interpretation module
+pub mod interpretation;
 pub mod layers;
 pub mod linalg;
 pub mod losses;
 /// Memory-efficient operations module
-#[cfg(feature = "memory_efficient")]
 pub mod memory_efficient;
+/// Enhanced model evaluation module
+pub mod model_evaluation;
 pub mod models;
 pub mod optimizers;
 /// Performance optimization module
@@ -38,6 +45,8 @@ pub mod performance;
 pub mod prelude;
 pub mod serialization;
 pub mod training;
+/// Transfer learning module
+pub mod transfer_learning;
 pub mod transformer;
 pub mod utils;
 

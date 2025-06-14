@@ -22,7 +22,7 @@ This module provides neural network building blocks and functionality for deep l
     - [x] MaxPool1D/2D/3D
     - [x] AvgPool1D/2D/3D
     - [x] GlobalPooling variants
-    - [ ] Adaptive pooling
+    - [x] Adaptive pooling
   - [x] Recurrent layers
     - [x] LSTM implementation
     - [x] GRU implementation
@@ -49,7 +49,7 @@ This module provides neural network building blocks and functionality for deep l
   - [x] Regularization layers
     - [x] Dropout variants
     - [x] Spatial dropout
-    - [ ] Activity regularization
+    - [x] Activity regularization
 
 - [x] Activation functions
   - [x] ReLU and variants
@@ -142,7 +142,7 @@ This module provides neural network building blocks and functionality for deep l
   - [x] Parameter group support
 
 - [ ] Performance optimizations
-  - [ ] Memory-efficient implementations
+  - [x] Memory-efficient implementations
   - [ ] SIMD acceleration
   - [ ] Thread pool for batch operations
   - [ ] Just-in-time compilation

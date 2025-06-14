@@ -4,25 +4,30 @@
 //! that can evaluate B-splines at multiple points simultaneously using SIMD
 //! instructions for significant performance improvements.
 
+#[cfg(feature = "simd")]
 use ndarray::Array1;
+#[cfg(feature = "simd")]
 use scirs2_interpolate::{
     bspline::{BSpline, ExtrapolateMode},
     simd_bspline::{make_simd_bspline_evaluator, SimdBSplineEvaluator},
     simd_optimized::{get_simd_config, is_simd_available},
 };
+#[cfg(feature = "simd")]
 use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SIMD B-spline Evaluation Demo ===\n");
 
-    // 1. Display SIMD capabilities
-    println!("1. SIMD Capabilities:");
-    let simd_config = get_simd_config();
-    println!("   SIMD Available: {}", simd_config.simd_available);
-    println!("   Instruction Set: {}", simd_config.instruction_set);
-    println!("   f64 Vector Width: {}", simd_config.f64_width);
-    println!("   f32 Vector Width: {}", simd_config.f32_width);
-    println!();
+    #[cfg(feature = "simd")]
+    {
+        // 1. Display SIMD capabilities
+        println!("1. SIMD Capabilities:");
+        let simd_config = get_simd_config();
+        println!("   SIMD Available: {}", simd_config.simd_available);
+        println!("   Instruction Set: {}", simd_config.instruction_set);
+        println!("   f64 Vector Width: {}", simd_config.f64_width);
+        println!("   f32 Vector Width: {}", simd_config.f32_width);
+        println!();
 
     // 2. Create test B-splines
     println!("2. Creating Test B-splines:");
@@ -267,5 +272,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("• Memory-efficient SIMD register utilization");
     println!("• Numerical accuracy identical to scalar implementation");
 
-    Ok(())
+        Ok(())
+    }
+
+    #[cfg(not(feature = "simd"))]
+    {
+        println!("⚠️  SIMD features are not enabled for this build.");
+        println!("To see SIMD B-spline evaluation in action:");
+        println!("  cargo run --example simd_bspline_demo --features simd");
+        println!("\nThis example requires the 'simd' feature flag to demonstrate:");
+        println!("• Vectorized de Boor algorithm");
+        println!("• SIMD-accelerated B-spline evaluation");
+        println!("• Performance comparisons with scalar implementation");
+        Ok(())
+    }
 }

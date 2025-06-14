@@ -1216,7 +1216,12 @@ pub fn lanczos(length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
         } else if x.abs() < 1.0 {
             // Lanczos window: sinc(x) * sinc(x/a)
             let sinc_x = (PI * x).sin() / (PI * x);
-            let sinc_x_a = (PI * x).sin() / (PI * x);
+            let x_a = x / a as f64;
+            let sinc_x_a = if x_a.abs() < 1e-15 {
+                1.0
+            } else {
+                (PI * x_a).sin() / (PI * x_a)
+            };
             sinc_x * sinc_x_a
         } else {
             // Outside the support interval
@@ -1610,5 +1615,356 @@ pub mod analysis {
             assert!(window2.iter().fold(0.0_f64, |acc, &x| acc.max(x)) <= 1.0);
             assert!(window3.iter().fold(0.0_f64, |acc, &x| acc.max(x)) <= 1.0);
         }
+
+        #[test]
+        fn test_optimized_window_design() {
+            // Test optimized Kaiser window design
+            let window = design_optimal_kaiser(64, -60.0, 0.1).unwrap();
+            assert_eq!(window.len(), 64);
+
+            // Test transition analysis
+            let hann_win = super::hann(32, true).unwrap();
+            let analysis = analyze_window_transition(&hann_win, 0.3).unwrap();
+            assert!(analysis.transition_width >= 0.0);
+            assert!(analysis.cutoff_3db >= 0.0);
+            assert!(analysis.cutoff_6db >= 0.0);
+        }
+
+        #[test]
+        fn test_window_optimization() {
+            let hann_win = super::hann(32, true).unwrap();
+            let hamming_win = super::hamming(32, true).unwrap();
+
+            let best = select_optimal_window(
+                &[("hann", &hann_win), ("hamming", &hamming_win)],
+                WindowOptimizationCriteria::MinSidelobes,
+            )
+            .unwrap();
+
+            assert!(!best.is_empty());
+        }
+    }
+
+    /// Advanced window design tools and optimization utilities
+    /// Design an optimal Kaiser window for given specifications
+    ///
+    /// This function calculates the optimal Kaiser window parameters (beta and length)
+    /// to meet specified sidelobe attenuation and transition width requirements.
+    ///
+    /// # Arguments
+    ///
+    /// * `length` - Desired window length
+    /// * `sidelobe_db` - Required sidelobe attenuation in dB (negative value)
+    /// * `transition_width` - Normalized transition width (0.0 to 1.0)
+    ///
+    /// # Returns
+    ///
+    /// * Optimally designed Kaiser window
+    pub fn design_optimal_kaiser(
+        length: usize,
+        sidelobe_db: f64,
+        transition_width: f64,
+    ) -> SignalResult<Vec<f64>> {
+        if length == 0 {
+            return Err(SignalError::ValueError(
+                "Length must be positive".to_string(),
+            ));
+        }
+
+        if sidelobe_db >= 0.0 {
+            return Err(SignalError::ValueError(
+                "Sidelobe attenuation must be negative".to_string(),
+            ));
+        }
+
+        if !(0.0..=1.0).contains(&transition_width) {
+            return Err(SignalError::ValueError(
+                "Transition width must be between 0.0 and 1.0".to_string(),
+            ));
+        }
+
+        // Calculate optimal Kaiser beta parameter based on sidelobe requirement
+        let atten = sidelobe_db.abs();
+        let beta = if atten >= 50.0 {
+            0.1102 * (atten - 8.7)
+        } else if atten >= 21.0 {
+            0.5842 * (atten - 21.0).powf(0.4) + 0.07886 * (atten - 21.0)
+        } else {
+            0.0
+        };
+
+        // Use the kaiser module function
+        super::kaiser::kaiser(length, beta, true)
+    }
+
+    /// Window transition analysis
+    #[derive(Debug, Clone)]
+    pub struct WindowTransitionAnalysis {
+        /// Transition width in normalized frequency units
+        pub transition_width: f64,
+        /// Transition steepness (rolloff rate in dB per normalized frequency unit)
+        pub transition_steepness: f64,
+        /// Transition center frequency
+        pub transition_center: f64,
+        /// -3dB cutoff frequency
+        pub cutoff_3db: f64,
+        /// -6dB cutoff frequency
+        pub cutoff_6db: f64,
+    }
+
+    /// Analyze window transition characteristics
+    ///
+    /// This function analyzes the transition characteristics of a window function,
+    /// useful for understanding filter performance.
+    ///
+    /// # Arguments
+    ///
+    /// * `window` - Window function to analyze
+    /// * `transition_threshold` - Threshold for transition analysis (0.0 to 1.0)
+    ///
+    /// # Returns
+    ///
+    /// * Window transition analysis results
+    pub fn analyze_window_transition(
+        window: &[f64],
+        transition_threshold: f64,
+    ) -> SignalResult<WindowTransitionAnalysis> {
+        if window.is_empty() {
+            return Err(SignalError::ValueError(
+                "Window cannot be empty".to_string(),
+            ));
+        }
+
+        if !(0.0..=1.0).contains(&transition_threshold) {
+            return Err(SignalError::ValueError(
+                "Transition threshold must be between 0.0 and 1.0".to_string(),
+            ));
+        }
+
+        // Compute frequency response
+        let fft_size = window.len() * 8;
+        let mut padded_window = vec![0.0; fft_size];
+        padded_window[..window.len()].copy_from_slice(window);
+
+        let freq_response = compute_window_fft_magnitude(&padded_window)?;
+        let peak_value = freq_response[0];
+
+        // Find transition points
+        let upper_threshold = peak_value * (1.0 - transition_threshold);
+        let lower_threshold = peak_value * transition_threshold;
+
+        let mut upper_point = 0;
+        let mut lower_point = 0;
+
+        // Find upper transition point (near peak)
+        for (i, &val) in freq_response
+            .iter()
+            .enumerate()
+            .take(freq_response.len() / 2)
+        {
+            if val < upper_threshold {
+                upper_point = i;
+                break;
+            }
+        }
+
+        // Find lower transition point
+        for (i, &val) in freq_response
+            .iter()
+            .enumerate()
+            .take(freq_response.len() / 2)
+        {
+            if val < lower_threshold {
+                lower_point = i;
+                break;
+            }
+        }
+
+        // Calculate metrics
+        let freq_bin_width = 1.0 / fft_size as f64;
+        let transition_width = (lower_point - upper_point) as f64 * freq_bin_width;
+        let transition_center = (upper_point + lower_point) as f64 * freq_bin_width / 2.0;
+
+        // Calculate steepness in dB per normalized frequency unit
+        let upper_db = 20.0 * (freq_response[upper_point] / peak_value).log10();
+        let lower_db = 20.0 * (freq_response[lower_point] / peak_value).log10();
+        let transition_steepness = if transition_width > 0.0 {
+            (upper_db - lower_db) / transition_width
+        } else {
+            0.0
+        };
+
+        // Find -3dB and -6dB points
+        let threshold_3db = peak_value / 2.0_f64.sqrt(); // -3dB
+        let threshold_6db = peak_value / 2.0; // -6dB
+
+        let cutoff_3db = find_cutoff_frequency(&freq_response, threshold_3db, freq_bin_width);
+        let cutoff_6db = find_cutoff_frequency(&freq_response, threshold_6db, freq_bin_width);
+
+        Ok(WindowTransitionAnalysis {
+            transition_width,
+            transition_steepness,
+            transition_center,
+            cutoff_3db,
+            cutoff_6db,
+        })
+    }
+
+    /// Window optimization criteria
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum WindowOptimizationCriteria {
+        /// Minimize sidelobe levels
+        MinSidelobes,
+        /// Minimize scalloping loss
+        MinScallopingLoss,
+        /// Minimize noise bandwidth
+        MinNoiseBandwidth,
+        /// Maximize processing gain
+        MaxProcessingGain,
+        /// Balance between sidelobes and bandwidth
+        Balanced,
+    }
+
+    /// Select optimal window from a set of candidates based on criteria
+    ///
+    /// # Arguments
+    ///
+    /// * `windows` - Array of (name, window) pairs to compare
+    /// * `criteria` - Optimization criteria to use
+    ///
+    /// # Returns
+    ///
+    /// * Name of the optimal window
+    pub fn select_optimal_window(
+        windows: &[(&str, &[f64])],
+        criteria: WindowOptimizationCriteria,
+    ) -> SignalResult<String> {
+        if windows.is_empty() {
+            return Err(SignalError::ValueError(
+                "No windows provided for comparison".to_string(),
+            ));
+        }
+
+        let mut best_name = windows[0].0.to_string();
+        let mut best_score = f64::NEG_INFINITY;
+
+        for &(name, window) in windows {
+            let analysis = analyze_window(window, None)?;
+
+            let score = match criteria {
+                WindowOptimizationCriteria::MinSidelobes => -analysis.max_sidelobe_db,
+                WindowOptimizationCriteria::MinScallopingLoss => -analysis.scalloping_loss_db.abs(),
+                WindowOptimizationCriteria::MinNoiseBandwidth => -analysis.nenbw,
+                WindowOptimizationCriteria::MaxProcessingGain => analysis.processing_gain_db,
+                WindowOptimizationCriteria::Balanced => {
+                    // Balanced score: consider both sidelobes and bandwidth
+                    let sidelobe_score = (-analysis.max_sidelobe_db).min(60.0) / 60.0; // Normalize to 0-1
+                    let bandwidth_score = (4.0 - analysis.nenbw).max(0.0) / 4.0; // Normalize to 0-1
+                    (sidelobe_score + bandwidth_score) / 2.0
+                }
+            };
+
+            if score > best_score {
+                best_score = score;
+                best_name = name.to_string();
+            }
+        }
+
+        Ok(best_name)
+    }
+
+    /// Generate a custom window using polynomial interpolation
+    ///
+    /// This function creates a custom window by interpolating between specified control points.
+    ///
+    /// # Arguments
+    ///
+    /// * `length` - Desired window length
+    /// * `control_points` - Array of (position, value) pairs for interpolation
+    /// * `symmetric` - Whether to enforce symmetry
+    ///
+    /// # Returns
+    ///
+    /// * Custom interpolated window
+    pub fn design_custom_window(
+        length: usize,
+        control_points: &[(f64, f64)],
+        symmetric: bool,
+    ) -> SignalResult<Vec<f64>> {
+        if length == 0 {
+            return Err(SignalError::ValueError(
+                "Length must be positive".to_string(),
+            ));
+        }
+
+        if control_points.len() < 2 {
+            return Err(SignalError::ValueError(
+                "At least 2 control points required".to_string(),
+            ));
+        }
+
+        // Validate control points
+        for &(pos, _val) in control_points {
+            if !(0.0..=1.0).contains(&pos) {
+                return Err(SignalError::ValueError(
+                    "Control point positions must be between 0.0 and 1.0".to_string(),
+                ));
+            }
+        }
+
+        let mut window = vec![0.0; length];
+        let half_len = length / 2;
+
+        for (i, window_value) in window.iter_mut().enumerate() {
+            let x = if symmetric && i > half_len {
+                // Mirror for symmetric window
+                (length - 1 - i) as f64 / (length - 1) as f64
+            } else {
+                i as f64 / (length - 1) as f64
+            };
+
+            // Linear interpolation between control points
+            let value = interpolate_control_points(control_points, x);
+            *window_value = value;
+        }
+
+        Ok(window)
+    }
+
+    // Helper functions
+
+    fn find_cutoff_frequency(freq_response: &[f64], threshold: f64, freq_bin_width: f64) -> f64 {
+        for (i, &val) in freq_response
+            .iter()
+            .enumerate()
+            .take(freq_response.len() / 2)
+        {
+            if val < threshold {
+                return i as f64 * freq_bin_width;
+            }
+        }
+        0.5 // Nyquist frequency as fallback
+    }
+
+    fn interpolate_control_points(control_points: &[(f64, f64)], x: f64) -> f64 {
+        // Simple linear interpolation between control points
+        if x <= control_points[0].0 {
+            return control_points[0].1;
+        }
+
+        for i in 1..control_points.len() {
+            if x <= control_points[i].0 {
+                let x1 = control_points[i - 1].0;
+                let y1 = control_points[i - 1].1;
+                let x2 = control_points[i].0;
+                let y2 = control_points[i].1;
+
+                // Linear interpolation
+                let t = (x - x1) / (x2 - x1);
+                return y1 + t * (y2 - y1);
+            }
+        }
+
+        control_points.last().unwrap().1
     }
 }

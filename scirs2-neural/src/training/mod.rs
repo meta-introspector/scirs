@@ -203,7 +203,43 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
             accumulator.initialize(&*self.model)?;
         }
 
-        // TODO: Initialize mixed precision if enabled
+        // Initialize mixed precision if enabled
+        if let Some(ref mp_config) = self.config.mixed_precision {
+            if let Some(ref mut mixed_precision) = self.mixed_precision {
+                // Initialize the mixed precision manager with the model
+                // Since we need a clonable version of the model, we'll try to get it
+                if let Some(high_precision_model) = self
+                    .model
+                    .as_any()
+                    .downcast_ref::<crate::layers::Sequential<F>>()
+                {
+                    // For Sequential models, we can attempt initialization
+                    if let Err(e) = mixed_precision.initialize(high_precision_model) {
+                        eprintln!("Warning: Failed to initialize mixed precision: {}", e);
+                    }
+                } else {
+                    // For other model types that don't implement Clone, we'll skip mixed precision
+                    eprintln!("Warning: Mixed precision requires clonable models. Skipping mixed precision initialization.");
+                }
+            } else {
+                // Create mixed precision manager if it doesn't exist
+                let manager = MixedPrecisionManager::<F, F>::new(mp_config.clone());
+                self.mixed_precision = Some(manager);
+
+                // Try to initialize it
+                if let Some(ref mut mixed_precision) = self.mixed_precision {
+                    if let Some(high_precision_model) = self
+                        .model
+                        .as_any()
+                        .downcast_ref::<crate::layers::Sequential<F>>()
+                    {
+                        if let Err(e) = mixed_precision.initialize(high_precision_model) {
+                            eprintln!("Warning: Failed to initialize mixed precision: {}", e);
+                        }
+                    }
+                }
+            }
+        }
 
         // Call on_train_begin for callbacks
         self.callback_manager.on_train_begin()?;

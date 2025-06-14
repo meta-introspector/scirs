@@ -17,51 +17,80 @@ use std::fmt::Debug;
 #[derive(Debug, Clone, PartialEq)]
 pub enum ImageAugmentation {
     /// Random horizontal flip
-    RandomHorizontalFlip { probability: f64 },
+    RandomHorizontalFlip {
+        /// Probability of applying the flip (0.0 to 1.0)
+        probability: f64,
+    },
     /// Random vertical flip
-    RandomVerticalFlip { probability: f64 },
+    RandomVerticalFlip {
+        /// Probability of applying the flip (0.0 to 1.0)
+        probability: f64,
+    },
     /// Random rotation within angle range
     RandomRotation {
+        /// Minimum rotation angle in degrees
         min_angle: f64,
+        /// Maximum rotation angle in degrees
         max_angle: f64,
+        /// How to fill empty areas after rotation
         fill_mode: FillMode,
     },
     /// Random scaling
     RandomScale {
+        /// Minimum scaling factor
         min_scale: f64,
+        /// Maximum scaling factor
         max_scale: f64,
+        /// Whether to preserve aspect ratio
         preserve_aspect_ratio: bool,
     },
     /// Random crop and resize
     RandomCrop {
+        /// Height of the crop
         crop_height: usize,
+        /// Width of the crop
         crop_width: usize,
+        /// Optional padding to add before cropping
         padding: Option<usize>,
     },
     /// Color jittering
     ColorJitter {
+        /// Brightness variation (None to disable)
         brightness: Option<f64>,
+        /// Contrast variation (None to disable)
         contrast: Option<f64>,
+        /// Saturation variation (None to disable)
         saturation: Option<f64>,
+        /// Hue variation (None to disable)
         hue: Option<f64>,
     },
     /// Gaussian noise injection
     GaussianNoise {
+        /// Mean of the Gaussian noise
         mean: f64,
+        /// Standard deviation of the Gaussian noise
         std: f64,
+        /// Probability of applying noise (0.0 to 1.0)
         probability: f64,
     },
     /// Random erasing (cutout)
     RandomErasing {
+        /// Probability of applying erasing (0.0 to 1.0)
         probability: f64,
+        /// Range of area ratios to erase (min, max)
         area_ratio_range: (f64, f64),
+        /// Range of aspect ratios for erased area (min, max)
         aspect_ratio_range: (f64, f64),
+        /// Value to fill erased area with
         fill_value: f64,
     },
     /// Elastic deformation
     ElasticDeformation {
+        /// Scaling factor for deformation strength
         alpha: f64,
+        /// Standard deviation for Gaussian filter
         sigma: f64,
+        /// Probability of applying deformation (0.0 to 1.0)
         probability: f64,
     },
 }
@@ -84,22 +113,40 @@ pub enum FillMode {
 pub enum TextAugmentation {
     /// Random synonym replacement
     SynonymReplacement {
+        /// Probability of replacing each word (0.0 to 1.0)
         probability: f64,
+        /// Number of words to replace
         num_replacements: usize,
     },
     /// Random word insertion
     RandomInsertion {
+        /// Probability of inserting words (0.0 to 1.0)
         probability: f64,
+        /// Number of words to insert
         num_insertions: usize,
     },
     /// Random word deletion
-    RandomDeletion { probability: f64 },
+    RandomDeletion {
+        /// Probability of deleting each word (0.0 to 1.0)
+        probability: f64,
+    },
     /// Random word swap
-    RandomSwap { probability: f64, num_swaps: usize },
+    RandomSwap {
+        /// Probability of swapping words (0.0 to 1.0)
+        probability: f64,
+        /// Number of swaps to perform
+        num_swaps: usize,
+    },
     /// Back translation
-    BackTranslation { intermediate_language: String },
+    BackTranslation {
+        /// Intermediate language for back translation
+        intermediate_language: String,
+    },
     /// Paraphrasing
-    Paraphrasing { model_type: String },
+    Paraphrasing {
+        /// Type of paraphrasing model to use
+        model_type: String,
+    },
 }
 
 /// Audio augmentation techniques
@@ -107,31 +154,48 @@ pub enum TextAugmentation {
 pub enum AudioAugmentation {
     /// Time stretching
     TimeStretch {
+        /// Range of time stretch factors (min, max)
         stretch_factor_range: (f64, f64),
+        /// Probability of applying time stretch (0.0 to 1.0)
         probability: f64,
     },
     /// Pitch shifting
     PitchShift {
+        /// Range of pitch shift in semitones (min, max)
         semitone_range: (f64, f64),
+        /// Probability of applying pitch shift (0.0 to 1.0)
         probability: f64,
     },
     /// Add background noise
-    AddNoise { noise_factor: f64, probability: f64 },
+    AddNoise {
+        /// Factor for noise intensity
+        noise_factor: f64,
+        /// Probability of adding noise (0.0 to 1.0)
+        probability: f64,
+    },
     /// Volume adjustment
     VolumeAdjust {
+        /// Range of volume gain factors (min, max)
         gain_range: (f64, f64),
+        /// Probability of applying volume adjustment (0.0 to 1.0)
         probability: f64,
     },
     /// Frequency masking
     FrequencyMask {
+        /// Number of frequency masks to apply
         num_masks: usize,
+        /// Range of mask widths (min, max)
         mask_width_range: (usize, usize),
+        /// Probability of applying frequency masking (0.0 to 1.0)
         probability: f64,
     },
     /// Time masking
     TimeMask {
+        /// Number of time masks to apply
         num_masks: usize,
+        /// Range of mask lengths (min, max)
         mask_length_range: (usize, usize),
+        /// Probability of applying time masking (0.0 to 1.0)
         probability: f64,
     },
 }
@@ -140,28 +204,41 @@ pub enum AudioAugmentation {
 #[derive(Debug, Clone, PartialEq)]
 pub enum MixAugmentation {
     /// MixUp augmentation
-    MixUp { alpha: f64 },
+    MixUp {
+        /// Beta distribution parameter for mixing ratio
+        alpha: f64,
+    },
     /// CutMix augmentation
     CutMix {
+        /// Beta distribution parameter for mixing ratio
         alpha: f64,
+        /// Range of cut ratios (min, max)
         cut_ratio_range: (f64, f64),
     },
     /// AugMix augmentation
     AugMix {
+        /// Severity of augmentation operations
         severity: usize,
+        /// Width of augmentation chain
         width: usize,
+        /// Depth of augmentation chain
         depth: usize,
+        /// Beta distribution parameter for mixing
         alpha: f64,
     },
     /// Manifold mixup
     ManifoldMix {
+        /// Beta distribution parameter for mixing ratio
         alpha: f64,
+        /// Probability of mixing at each layer
         layer_mix_probability: f64,
     },
 }
 
 /// Comprehensive data augmentation manager
-pub struct AugmentationManager<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> {
+pub struct AugmentationManager<
+    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive,
+> {
     /// Image augmentation pipeline
     image_transforms: Vec<ImageAugmentation>,
     /// Text augmentation pipeline
@@ -178,7 +255,9 @@ pub struct AugmentationManager<F: Float + Debug + 'static + ndarray::ScalarOpera
 
 /// Statistics for tracking augmentation usage
 #[derive(Debug, Clone)]
-pub struct AugmentationStatistics<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> {
+pub struct AugmentationStatistics<
+    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive,
+> {
     /// Number of samples processed
     pub samples_processed: usize,
     /// Average augmentation intensity
@@ -189,7 +268,9 @@ pub struct AugmentationStatistics<F: Float + Debug + 'static + ndarray::ScalarOp
     pub processing_time_ms: f64,
 }
 
-impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> AugmentationManager<F> {
+impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive>
+    AugmentationManager<F>
+{
     /// Create a new augmentation manager
     pub fn new(rng_seed: Option<u64>) -> Self {
         Self {
@@ -588,17 +669,19 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
             let j = indices[i];
 
             // Mix images: x_mixed = lambda * x_i + (1 - lambda) * x_j
-            let x_i = images.slice(ndarray::s![i, ..]);
-            let x_j = images.slice(ndarray::s![j, ..]);
+            let x_i = images.index_axis(ndarray::Axis(0), i);
+            let x_j = images.index_axis(ndarray::Axis(0), j);
             let mixed = &x_i * lambda_f + &x_j * (F::one() - lambda_f);
-            mixed_images.slice_mut(ndarray::s![i, ..]).assign(&mixed);
+            mixed_images
+                .index_axis_mut(ndarray::Axis(0), i)
+                .assign(&mixed);
 
             // Mix labels: y_mixed = lambda * y_i + (1 - lambda) * y_j
-            let y_i = labels.slice(ndarray::s![i, ..]);
-            let y_j = labels.slice(ndarray::s![j, ..]);
+            let y_i = labels.index_axis(ndarray::Axis(0), i);
+            let y_j = labels.index_axis(ndarray::Axis(0), j);
             let mixed_label = &y_i * lambda_f + &y_j * (F::one() - lambda_f);
             mixed_labels
-                .slice_mut(ndarray::s![i, ..])
+                .index_axis_mut(ndarray::Axis(0), i)
                 .assign(&mixed_label);
         }
 
@@ -785,18 +868,24 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
     }
 }
 
-impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> Default for AugmentationManager<F> {
+impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> Default
+    for AugmentationManager<F>
+{
     fn default() -> Self {
         Self::new(None)
     }
 }
 
 /// Augmentation pipeline builder for easy configuration
-pub struct AugmentationPipelineBuilder<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> {
+pub struct AugmentationPipelineBuilder<
+    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive,
+> {
     manager: AugmentationManager<F>,
 }
 
-impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> AugmentationPipelineBuilder<F> {
+impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive>
+    AugmentationPipelineBuilder<F>
+{
     /// Create a new pipeline builder
     pub fn new() -> Self {
         Self {
@@ -848,7 +937,9 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
     }
 }
 
-impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> Default for AugmentationPipelineBuilder<F> {
+impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive> Default
+    for AugmentationPipelineBuilder<F>
+{
     fn default() -> Self {
         Self::new()
     }

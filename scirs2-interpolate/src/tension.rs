@@ -20,6 +20,7 @@ use crate::ExtrapolateMode;
 #[derive(Debug, Clone)]
 pub struct TensionSpline<T: Float> {
     x: Array1<T>,
+    #[allow(dead_code)]
     y: Array1<T>,
     coeffs: Array2<T>,
     tension: T,

@@ -242,10 +242,10 @@ where
     let multi_acf_periods = detect_multiple_acf_peaks(ts, config.min_period, max_period)?;
     for period in multi_acf_periods {
         let strength = calculate_seasonal_strength(ts, period, &config.model)?;
-        if strength > config.seasonal_strength_threshold {
-            if !period_scores.iter().any(|(p, _)| *p == period) {
-                period_scores.push((period, strength));
-            }
+        if strength > config.seasonal_strength_threshold
+            && !period_scores.iter().any(|(p, _)| *p == period)
+        {
+            period_scores.push((period, strength));
         }
     }
 

@@ -4,18 +4,14 @@
 //! comparing against reference implementations, and producing detailed
 //! performance reports with charts and statistics.
 
-use criterion::{black_box, Criterion, Throughput};
-use ndarray::{Array1, Array2, ArrayView2};
+use criterion::black_box;
+use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
-    distance::{euclidean, manhattan, pdist},
-    simd_distance::{
-        parallel_cdist, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch,
-        simd_knn_search, simd_manhattan_distance,
-    },
+    distance::{euclidean, pdist},
+    simd_distance::{parallel_pdist, simd_euclidean_distance_batch, simd_knn_search},
     BallTree, KDTree,
 };
-use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 /// Dataset generator for realistic spatial data patterns
@@ -108,7 +104,7 @@ impl DatasetGenerator {
 
         for i in 0..n_points {
             for j in 0..dimensions {
-                if rng.gen::<f64>() > sparsity {
+                if rng.random::<f64>() > sparsity {
                     points[[i, j]] = rng.random_range(-1.0..1.0);
                 }
                 // else remains 0.0 (sparse)
@@ -319,7 +315,7 @@ impl PerformanceAnalyzer {
 
             // BallTree construction
             let start = Instant::now();
-            let balltree = BallTree::with_euclidean_distance(&points.view(), 10).unwrap();
+            let _balltree = BallTree::with_euclidean_distance(&points.view(), 10).unwrap();
             let balltree_build_time = start.elapsed();
 
             // KDTree queries

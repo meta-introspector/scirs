@@ -1507,7 +1507,7 @@ where
                     ErrorContext::new(format!("Failed to create thread pool: {}", e))
                         .with_location(ErrorLocation::new(file!(), line!()))
                 ))?;
-            
+
             pool.install(|| {
                 let results: Result<Vec<_>, _> = arrays
                     .par_iter()

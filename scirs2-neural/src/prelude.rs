@@ -9,9 +9,9 @@ pub use crate::callbacks::{
 };
 pub use crate::error::{Error, Result};
 pub use crate::evaluation::{
-    CrossValidationConfig, CrossValidator, EarlyStoppingConfig,
-    EarlyStoppingMode, EvaluationConfig, Evaluator, Metric, MetricType, TestConfig, TestEvaluator,
-    ValidationConfig, ValidationHandler,
+    CrossValidationConfig, CrossValidator, EarlyStoppingConfig, EarlyStoppingMode,
+    EvaluationConfig, Evaluator, Metric, MetricType, TestConfig, TestEvaluator, ValidationConfig,
+    ValidationHandler,
 };
 pub use crate::layers::{
     ActivityRegularization, AdaptiveAvgPool2D, AdaptiveMaxPool2D, Dense, Dropout,
@@ -34,13 +34,31 @@ pub use crate::performance::{
 
 // Data augmentation
 pub use crate::augmentation::{
-    AugmentationManager, AugmentationPipelineBuilder, ImageAugmentation, MixAugmentation,
-    TextAugmentation, AudioAugmentation, FillMode,
+    AudioAugmentation, AugmentationManager, AugmentationPipelineBuilder, FillMode,
+    ImageAugmentation, MixAugmentation, TextAugmentation,
 };
 
-// Enhanced evaluation tools - alias to avoid conflict
-pub use crate::evaluation::{
-    Evaluator as ModelEvaluator,
+// Enhanced evaluation tools
+pub use crate::model_evaluation::{
+    AveragingMethod, ClassificationMetric, CrossValidationStrategy, EvaluationBuilder,
+    EvaluationMetric, ModelEvaluator, RegressionMetric,
+};
+
+// Model compression
+pub use crate::compression::{
+    CalibrationMethod, CompressionAnalyzer, ModelPruner, PostTrainingQuantizer, PruningMethod,
+    QuantizationBits, QuantizationScheme,
+};
+
+// Knowledge distillation
+pub use crate::distillation::{DistillationMethod, DistillationTrainer, FeatureAdaptation};
+
+// Transfer learning
+pub use crate::transfer_learning::{LayerState, TransferLearningManager, TransferStrategy};
+
+// Model interpretation
+pub use crate::interpretation::{
+    AttributionMethod, BaselineMethod, ModelInterpreter, VisualizationMethod,
 };
 
 // Architecture specific imports

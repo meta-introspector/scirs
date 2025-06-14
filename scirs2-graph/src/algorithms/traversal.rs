@@ -3,7 +3,7 @@
 //! This module provides breadth-first search (BFS) and depth-first search (DFS)
 //! algorithms for both directed and undirected graphs.
 
-use std::collections::{HashSet, VecDeque};
+use std::collections::{BinaryHeap, HashSet, VecDeque};
 
 use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
@@ -216,6 +216,190 @@ where
                 if !visited.contains(&neighbor_idx) {
                     stack.push(neighbor_idx);
                 }
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Priority-first search state for priority queue
+#[derive(Clone)]
+struct PriorityState<N: Node, P: PartialOrd> {
+    node: N,
+    priority: P,
+}
+
+impl<N: Node, P: PartialOrd> PartialEq for PriorityState<N, P> {
+    fn eq(&self, other: &Self) -> bool {
+        self.node == other.node
+    }
+}
+
+impl<N: Node, P: PartialOrd> Eq for PriorityState<N, P> {}
+
+impl<N: Node, P: PartialOrd> PartialOrd for PriorityState<N, P> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<N: Node, P: PartialOrd> Ord for PriorityState<N, P> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // Reverse order for min-heap behavior
+        other
+            .priority
+            .partial_cmp(&self.priority)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    }
+}
+
+/// Performs priority-first search from a given starting node
+///
+/// This is a generalized graph traversal algorithm where nodes are visited
+/// in order of a priority function. When the priority function represents
+/// distance, this becomes Dijkstra's algorithm. When all priorities are equal,
+/// this becomes breadth-first search.
+///
+/// # Arguments
+/// * `graph` - The graph to traverse
+/// * `start` - The starting node
+/// * `priority_fn` - Function that assigns priority to each node (lower values visited first)
+///
+/// # Returns
+/// * `Result<Vec<N>>` - The nodes visited in priority order
+pub fn priority_first_search<N, E, Ix, P, F>(
+    graph: &Graph<N, E, Ix>,
+    start: &N,
+    priority_fn: F,
+) -> Result<Vec<N>>
+where
+    N: Node + std::fmt::Debug + Clone,
+    E: EdgeWeight,
+    Ix: petgraph::graph::IndexType,
+    P: PartialOrd + Clone + Copy,
+    F: Fn(&N) -> P,
+{
+    if !graph.has_node(start) {
+        return Err(GraphError::InvalidGraph(format!(
+            "Start node {:?} not found",
+            start
+        )));
+    }
+
+    let mut visited = HashSet::new();
+    let mut priority_queue = BinaryHeap::new();
+    let mut result = Vec::new();
+
+    // Find the starting node index (not used but kept for consistency)
+    let _start_idx = graph
+        .inner()
+        .node_indices()
+        .find(|&idx| graph.inner()[idx] == *start)
+        .unwrap();
+
+    priority_queue.push(PriorityState {
+        node: start.clone(),
+        priority: priority_fn(start),
+    });
+
+    while let Some(current_state) = priority_queue.pop() {
+        let current_node = &current_state.node;
+
+        if visited.contains(current_node) {
+            continue;
+        }
+
+        visited.insert(current_node.clone());
+        result.push(current_node.clone());
+
+        // Find current node index
+        let current_idx = graph
+            .inner()
+            .node_indices()
+            .find(|&idx| graph.inner()[idx] == *current_node)
+            .unwrap();
+
+        // Add all unvisited neighbors to the priority queue
+        for neighbor_idx in graph.inner().neighbors(current_idx) {
+            let neighbor_node = &graph.inner()[neighbor_idx];
+            if !visited.contains(neighbor_node) {
+                priority_queue.push(PriorityState {
+                    node: neighbor_node.clone(),
+                    priority: priority_fn(neighbor_node),
+                });
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Performs priority-first search from a given starting node in a directed graph
+///
+/// # Arguments
+/// * `graph` - The directed graph to traverse
+/// * `start` - The starting node
+/// * `priority_fn` - Function that assigns priority to each node (lower values visited first)
+///
+/// # Returns
+/// * `Result<Vec<N>>` - The nodes visited in priority order
+pub fn priority_first_search_digraph<N, E, Ix, P, F>(
+    graph: &DiGraph<N, E, Ix>,
+    start: &N,
+    priority_fn: F,
+) -> Result<Vec<N>>
+where
+    N: Node + std::fmt::Debug + Clone,
+    E: EdgeWeight,
+    Ix: petgraph::graph::IndexType,
+    P: PartialOrd + Clone + Copy,
+    F: Fn(&N) -> P,
+{
+    if !graph.has_node(start) {
+        return Err(GraphError::InvalidGraph(format!(
+            "Start node {:?} not found",
+            start
+        )));
+    }
+
+    let mut visited = HashSet::new();
+    let mut priority_queue = BinaryHeap::new();
+    let mut result = Vec::new();
+
+    priority_queue.push(PriorityState {
+        node: start.clone(),
+        priority: priority_fn(start),
+    });
+
+    while let Some(current_state) = priority_queue.pop() {
+        let current_node = &current_state.node;
+
+        if visited.contains(current_node) {
+            continue;
+        }
+
+        visited.insert(current_node.clone());
+        result.push(current_node.clone());
+
+        // Find current node index
+        let current_idx = graph
+            .inner()
+            .node_indices()
+            .find(|&idx| graph.inner()[idx] == *current_node)
+            .unwrap();
+
+        // Add all unvisited successors to the priority queue (directed graph)
+        for neighbor_idx in graph
+            .inner()
+            .neighbors_directed(current_idx, petgraph::Direction::Outgoing)
+        {
+            let neighbor_node = &graph.inner()[neighbor_idx];
+            if !visited.contains(neighbor_node) {
+                priority_queue.push(PriorityState {
+                    node: neighbor_node.clone(),
+                    priority: priority_fn(neighbor_node),
+                });
             }
         }
     }
@@ -683,5 +867,66 @@ mod tests {
         // Test no path in wrong direction
         let no_path = bidirectional_search_digraph(&graph, &5, &1).unwrap();
         assert_eq!(no_path, None);
+    }
+
+    #[test]
+    fn test_priority_first_search() {
+        let mut graph: Graph<i32, f64> = Graph::new();
+
+        // Create a simple graph: 1 -- 2 -- 3
+        //                             |
+        //                             4
+        graph.add_edge(1, 2, 1.0).unwrap();
+        graph.add_edge(2, 3, 1.0).unwrap();
+        graph.add_edge(2, 4, 1.0).unwrap();
+
+        // Test with node value as priority (lower values first)
+        let result = priority_first_search(&graph, &1, |node| *node).unwrap();
+
+        // Should visit in order: 1, 2, 3, 4 (based on node values)
+        assert_eq!(result[0], 1);
+        assert_eq!(result[1], 2);
+        assert!(result.contains(&3));
+        assert!(result.contains(&4));
+        assert_eq!(result.len(), 4);
+
+        // Test with reverse priority (higher values first)
+        let result_reverse = priority_first_search(&graph, &1, |node| -node).unwrap();
+        assert_eq!(result_reverse[0], 1);
+        // Since 2 is connected to 1, it should be visited next
+        assert_eq!(result_reverse[1], 2);
+        // 4 should come before 3 when using reverse priority
+        assert!(
+            result_reverse.iter().position(|&x| x == 4)
+                < result_reverse.iter().position(|&x| x == 3)
+        );
+    }
+
+    #[test]
+    fn test_priority_first_search_digraph() {
+        let mut graph: DiGraph<i32, f64> = DiGraph::new();
+
+        // Create a directed graph: 1 -> 2 -> 3
+        //                               |
+        //                               v
+        //                               4
+        graph.add_edge(1, 2, 1.0).unwrap();
+        graph.add_edge(2, 3, 1.0).unwrap();
+        graph.add_edge(2, 4, 1.0).unwrap();
+
+        // Test with node value as priority
+        let result = priority_first_search_digraph(&graph, &1, |node| *node).unwrap();
+
+        assert_eq!(result[0], 1);
+        assert_eq!(result[1], 2);
+        assert!(result.contains(&3));
+        assert!(result.contains(&4));
+        assert_eq!(result.len(), 4);
+
+        // Test with constant priority (should behave like BFS)
+        let result_constant = priority_first_search_digraph(&graph, &1, |_| 1).unwrap();
+        assert_eq!(result_constant[0], 1);
+        assert_eq!(result_constant[1], 2);
+        assert_eq!(result_constant.len(), 4);
     }
 }

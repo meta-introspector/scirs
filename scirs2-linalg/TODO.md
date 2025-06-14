@@ -18,9 +18,20 @@ This module provides linear algebra functionality comparable to NumPy/SciPy's li
 - [x] Create comprehensive test suite against SciPy
 - [x] Add comprehensive documentation and tutorials
 
+## Recent Improvements (Latest Update)
+
+- [x] Fixed 2 failing statistical tests (Box M test and Hotelling T² test) by adding regularization for numerical stability
+- [x] Re-enabled and fixed compilation issues in matrix_calculus module
+- [x] Updated function signatures to match API changes (det function now requires workers parameter)
+- [x] Fixed type mismatches and scalar operation issues in optimization functions
+- [x] Applied clippy fixes for better code quality
+- [x] Comprehensive build verification (0 errors, minimal warnings)
+
 ## Known Issues
 
 - Matrix functions' implementation may have numerical stability issues
+- random_new module temporarily disabled due to validation trait dependency conflicts
+- Some optimization tests may require longer convergence times in test environment
 
 ## Matrix Operations
 

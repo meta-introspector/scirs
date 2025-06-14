@@ -5,13 +5,13 @@
 //! insights for optimization decisions and performance scaling analysis.
 
 use criterion::{
-    black_box, criterion_group, criterion_main, measurement::WallTime, BenchmarkGroup, BenchmarkId,
-    Criterion, PlotConfiguration, Throughput,
+    black_box, criterion_group, criterion_main, BenchmarkId, Criterion, PlotConfiguration,
+    Throughput,
 };
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
-    distance::{cdist, euclidean, manhattan, pdist},
+    distance::{euclidean, pdist},
     simd_distance::{
         parallel_cdist, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch,
         simd_knn_search, simd_manhattan_distance,
@@ -24,6 +24,7 @@ use std::time::Duration;
 const SMALL_SIZES: &[usize] = &[100, 500, 1_000];
 const MEDIUM_SIZES: &[usize] = &[1_000, 5_000, 10_000];
 const LARGE_SIZES: &[usize] = &[10_000, 50_000, 100_000];
+#[allow(dead_code)]
 const DIMENSIONS: &[usize] = &[2, 3, 5, 10, 20, 50, 100];
 const DISTANCE_METRICS: &[&str] = &["euclidean", "manhattan", "chebyshev"];
 const KNN_K_VALUES: &[usize] = &[1, 5, 10, 20, 50];

@@ -419,7 +419,7 @@ fn main() {
 
     // Compute determinant using standard precision
     println!("\nComputing determinant with standard f32 precision...");
-    let det_std = match det(&hilbert6.view()) {
+    let det_std = match det(&hilbert6.view(), None) {
         Ok(det) => det,
         Err(e) => {
             println!("Standard precision determinant calculation failed: {}", e);
@@ -434,7 +434,7 @@ fn main() {
     // Compute determinant using higher precision directly
     // Convert matrix to f64 for a direct comparison
     let hilbert6_f64 = convert_2d::<f32, f64>(&hilbert6.view());
-    let det_f64 = det(&hilbert6_f64.view()).unwrap() as f32;
+    let det_f64 = det(&hilbert6_f64.view(), None).unwrap() as f32;
 
     println!("\nDeterminant (standard f32 precision): {:.6e}", det_std);
     println!(

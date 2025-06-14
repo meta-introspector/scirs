@@ -702,6 +702,232 @@ where
     Ok((centroids, labels))
 }
 
+/// Enhanced K-means clustering with custom distance metrics
+///
+/// This function extends the standard K-means algorithm to support various distance
+/// metrics including Euclidean, Manhattan, Chebyshev, Mahalanobis, and more.
+///
+/// # Arguments
+///
+/// * `data` - Input data (n_samples × n_features)
+/// * `k` - Number of clusters
+/// * `metric` - Distance metric to use for clustering
+/// * `options` - Optional parameters
+///
+/// # Returns
+///
+/// * Tuple of (centroids, labels) where:
+///   - centroids: Array of shape (k × n_features)
+///   - labels: Array of shape (n_samples,) with cluster assignments
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::Array2;
+/// use scirs2_cluster::vq::{kmeans_with_metric, EuclideanDistance, KMeansOptions};
+///
+/// let data = Array2::from_shape_vec((6, 2), vec![
+///     1.0, 2.0,
+///     1.2, 1.8,
+///     0.8, 1.9,
+///     3.7, 4.2,
+///     3.9, 3.9,
+///     4.2, 4.1,
+/// ]).unwrap();
+///
+/// let metric = Box::new(EuclideanDistance);
+/// let (centroids, labels) = kmeans_with_metric(data.view(), 2, metric, None).unwrap();
+/// ```
+pub fn kmeans_with_metric<F>(
+    data: ArrayView2<F>,
+    k: usize,
+    metric: Box<dyn crate::vq::VQDistanceMetric<F>>,
+    options: Option<KMeansOptions<F>>,
+) -> Result<(Array2<F>, Array1<usize>)>
+where
+    F: Float + FromPrimitive + Debug + std::iter::Sum + Send + Sync + 'static,
+{
+    if k == 0 {
+        return Err(ClusteringError::InvalidInput(
+            "Number of clusters must be greater than 0".to_string(),
+        ));
+    }
+
+    let n_samples = data.shape()[0];
+    if n_samples == 0 {
+        return Err(ClusteringError::InvalidInput(
+            "Input data is empty".to_string(),
+        ));
+    }
+
+    if k > n_samples {
+        return Err(ClusteringError::InvalidInput(format!(
+            "Number of clusters ({}) cannot be greater than number of data points ({})",
+            k, n_samples
+        )));
+    }
+
+    let opts = options.unwrap_or_default();
+
+    let mut best_centroids = None;
+    let mut best_labels = None;
+    let mut best_inertia = F::infinity();
+
+    // If we're using K-means|| initialization, we only need to run once
+    let n_init = if opts.init_method == KMeansInit::KMeansParallel {
+        1
+    } else {
+        opts.n_init
+    };
+
+    for _ in 0..n_init {
+        // Initialize centroids using the specified method
+        let centroids = kmeans_init(data, k, Some(opts.init_method), opts.random_seed)?;
+
+        // Run k-means with custom distance metric
+        let (centroids, labels, inertia) = _kmeans_single_with_metric(data, centroids.view(), &metric, &opts)?;
+
+        if inertia < best_inertia {
+            best_centroids = Some(centroids);
+            best_labels = Some(labels);
+            best_inertia = inertia;
+        }
+    }
+
+    Ok((best_centroids.unwrap(), best_labels.unwrap()))
+}
+
+/// Run a single k-means clustering iteration with custom distance metric
+fn _kmeans_single_with_metric<F>(
+    data: ArrayView2<F>,
+    init_centroids: ArrayView2<F>,
+    metric: &Box<dyn crate::vq::VQDistanceMetric<F>>,
+    opts: &KMeansOptions<F>,
+) -> Result<(Array2<F>, Array1<usize>, F)>
+where
+    F: Float + FromPrimitive + Debug + std::iter::Sum + Send + Sync,
+{
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
+    let k = init_centroids.shape()[0];
+
+    let mut centroids = init_centroids.to_owned();
+    let mut labels = Array1::zeros(n_samples);
+    let mut prev_centroid_diff = F::infinity();
+
+    for _iter in 0..opts.max_iter {
+        // Assign samples to nearest centroid using custom metric
+        let (new_labels, distances) = _vq_with_metric(data, centroids.view(), metric)?;
+        labels = new_labels;
+
+        // Compute new centroids
+        let mut new_centroids = Array2::zeros((k, n_features));
+        let mut counts = Array1::zeros(k);
+
+        for i in 0..n_samples {
+            let cluster = labels[i];
+            let point = data.slice(s![i, ..]);
+
+            for j in 0..n_features {
+                new_centroids[[cluster, j]] = new_centroids[[cluster, j]] + point[j];
+            }
+
+            counts[cluster] += 1;
+        }
+
+        // If a cluster is empty, reinitialize it
+        for i in 0..k {
+            if counts[i] == 0 {
+                // Find the point furthest from its centroid
+                let mut max_dist = F::zero();
+                let mut far_idx = 0;
+
+                for j in 0..n_samples {
+                    let dist = distances[j];
+                    if dist > max_dist {
+                        max_dist = dist;
+                        far_idx = j;
+                    }
+                }
+
+                // Move this point to the empty cluster
+                for j in 0..n_features {
+                    new_centroids[[i, j]] = data[[far_idx, j]];
+                }
+
+                counts[i] = 1;
+            } else {
+                // Normalize by the number of points in the cluster
+                for j in 0..n_features {
+                    new_centroids[[i, j]] = new_centroids[[i, j]] / F::from(counts[i]).unwrap();
+                }
+            }
+        }
+
+        // Check for convergence using custom metric
+        let mut centroid_diff = F::zero();
+        for i in 0..k {
+            let dist = metric.distance(centroids.slice(s![i, ..]), new_centroids.slice(s![i, ..]));
+            centroid_diff = centroid_diff + dist;
+        }
+
+        centroids = new_centroids;
+
+        if centroid_diff <= opts.tol || centroid_diff >= prev_centroid_diff {
+            break;
+        }
+
+        prev_centroid_diff = centroid_diff;
+    }
+
+    // Calculate inertia (sum of squared distances to nearest centroid)
+    let mut inertia = F::zero();
+    for i in 0..n_samples {
+        let cluster = labels[i];
+        let dist = metric.distance(data.slice(s![i, ..]), centroids.slice(s![cluster, ..]));
+        inertia = inertia + dist * dist;
+    }
+
+    Ok((centroids, labels, inertia))
+}
+
+/// Vector quantization with custom distance metric
+fn _vq_with_metric<F>(
+    data: ArrayView2<F>,
+    centroids: ArrayView2<F>,
+    metric: &Box<dyn crate::vq::VQDistanceMetric<F>>,
+) -> Result<(Array1<usize>, Array1<F>)>
+where
+    F: Float + FromPrimitive + Debug + Send + Sync,
+{
+    let n_samples = data.shape()[0];
+    let n_centroids = centroids.shape()[0];
+
+    let mut labels = Array1::zeros(n_samples);
+    let mut distances = Array1::zeros(n_samples);
+
+    for i in 0..n_samples {
+        let point = data.slice(s![i, ..]);
+        let mut min_dist = F::infinity();
+        let mut closest_centroid = 0;
+
+        for j in 0..n_centroids {
+            let centroid = centroids.slice(s![j, ..]);
+            let dist = metric.distance(point, centroid);
+
+            if dist < min_dist {
+                min_dist = dist;
+                closest_centroid = j;
+            }
+        }
+
+        labels[i] = closest_centroid;
+        distances[i] = min_dist;
+    }
+
+    Ok((labels, distances))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1777,6 +1777,162 @@ impl MemoryEfficientStft {
 
         memory_per_chunk as f64 / 1_000_000.0
     }
+
+    /// Process STFT with automatic memory management
+    /// This method automatically selects the best processing approach based on signal size
+    pub fn stft_auto<T>(&self, signal: &[T]) -> SignalResult<Array2<Complex64>>
+    where
+        T: Float + NumCast + Debug + Send + Sync,
+    {
+        let signal_memory_mb = std::mem::size_of_val(signal) / 1_000_000;
+        
+        if signal_memory_mb > self.config.max_memory_mb / 4 {
+            // Use chunked processing for large signals
+            self.stft_chunked(signal)
+        } else {
+            // Use regular processing for smaller signals
+            self.stft.stft(signal)
+        }
+    }
+
+    /// Process spectrogram with automatic memory management
+    pub fn spectrogram_auto<T>(&self, signal: &[T]) -> SignalResult<Array2<f64>>
+    where
+        T: Float + NumCast + Debug + Send + Sync,
+    {
+        let signal_memory_mb = std::mem::size_of_val(signal) / 1_000_000;
+        
+        if signal_memory_mb > self.config.max_memory_mb / 4 {
+            // Use chunked processing for large signals
+            self.spectrogram_chunked(signal)
+        } else {
+            // Use regular processing for smaller signals
+            self.stft.spectrogram(signal)
+        }
+    }
+
+    /// Process STFT with parallel chunked processing for very large signals
+    #[cfg(feature = "parallel")]
+    pub fn stft_parallel_chunked<T>(&self, signal: &[T]) -> SignalResult<Array2<Complex64>>
+    where
+        T: Float + NumCast + Debug + Send + Sync,
+    {
+        use rayon::prelude::*;
+        
+        let chunk_size = self.calculate_chunk_size(signal.len());
+        let window_length = self.stft.win.len();
+        let hop_size = self.stft.hop;
+        let overlap = window_length.saturating_sub(hop_size);
+
+        // Calculate chunks
+        let mut chunks = Vec::new();
+        let mut sample_offset = 0;
+        
+        while sample_offset < signal.len() {
+            let chunk_start = sample_offset.saturating_sub(overlap);
+            let chunk_end = (sample_offset + chunk_size).min(signal.len());
+            
+            if chunk_end > chunk_start {
+                chunks.push((chunk_start, chunk_end, sample_offset));
+            }
+            sample_offset += chunk_size;
+        }
+
+        // Process chunks in parallel
+        let chunk_results: Result<Vec<_>, _> = chunks
+            .par_iter()
+            .map(|(start, end, _)| {
+                let chunk = &signal[*start..*end];
+                self.stft.stft(chunk)
+            })
+            .collect();
+
+        let chunk_results = chunk_results?;
+
+        // Combine results
+        let total_frames = self.stft.p_max(signal.len()) - self.stft.p_min();
+        let mut result = Array2::zeros((self.stft.f_pts(), total_frames as usize));
+        
+        let mut frame_offset = 0;
+        for (i, chunk_stft) in chunk_results.iter().enumerate() {
+            let skip_frames = if i == 0 { 0 } else { overlap / hop_size };
+            let frames_in_chunk = chunk_stft.shape()[1];
+            let copy_frames = frames_in_chunk.saturating_sub(skip_frames);
+            
+            if frame_offset < result.shape()[1] && copy_frames > 0 {
+                let copy_end = (skip_frames + copy_frames).min(chunk_stft.shape()[1]);
+                let result_end = (frame_offset + copy_frames).min(result.shape()[1]);
+                
+                for f in 0..self.stft.f_pts() {
+                    for t in skip_frames..copy_end {
+                        let result_t = frame_offset + t - skip_frames;
+                        if result_t < result_end {
+                            result[[f, result_t]] = chunk_stft[[f, t]];
+                        }
+                    }
+                }
+                
+                frame_offset = result_end;
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Get detailed memory usage information
+    pub fn memory_info(&self, signal_length: usize) -> MemoryInfo {
+        let chunk_size = self.calculate_chunk_size(signal_length);
+        let _window_length = self.stft.win.len();
+        let hop_size = self.stft.hop;
+        
+        let total_frames = self.stft.p_max(signal_length) - self.stft.p_min();
+        let frames_per_chunk = chunk_size / hop_size + 1;
+        let num_chunks = signal_length.div_ceil(chunk_size);
+        
+        let total_memory_mb = if self.config.magnitude_only {
+            total_frames as f64 * self.stft.f_pts() as f64 * 8.0 / 1_000_000.0
+        } else {
+            total_frames as f64 * self.stft.f_pts() as f64 * 16.0 / 1_000_000.0
+        };
+        
+        let chunk_memory_mb = if self.config.magnitude_only {
+            frames_per_chunk as f64 * self.stft.f_pts() as f64 * 8.0 / 1_000_000.0
+        } else {
+            frames_per_chunk as f64 * self.stft.f_pts() as f64 * 16.0 / 1_000_000.0
+        };
+
+        MemoryInfo {
+            signal_length,
+            chunk_size,
+            num_chunks,
+            total_frames: total_frames as usize,
+            frames_per_chunk,
+            total_memory_mb,
+            chunk_memory_mb,
+            memory_reduction_factor: total_memory_mb / chunk_memory_mb,
+        }
+    }
+}
+
+/// Memory usage information for STFT processing
+#[derive(Debug, Clone)]
+pub struct MemoryInfo {
+    /// Length of input signal
+    pub signal_length: usize,
+    /// Size of each processing chunk
+    pub chunk_size: usize,
+    /// Number of chunks needed
+    pub num_chunks: usize,
+    /// Total number of time frames in output
+    pub total_frames: usize,
+    /// Number of frames per chunk
+    pub frames_per_chunk: usize,
+    /// Total memory required without chunking (MB)
+    pub total_memory_mb: f64,
+    /// Memory required per chunk (MB)
+    pub chunk_memory_mb: f64,
+    /// Memory reduction factor compared to non-chunked processing
+    pub memory_reduction_factor: f64,
 }
 
 #[cfg(test)]
@@ -1846,16 +2002,184 @@ mod memory_efficient_tests {
             MemoryEfficientStft::new(&window, hop_size, fs, Some(stft_config), memory_config)
                 .unwrap();
 
-        // Test magnitude-only spectrogram
         let spec_result = mem_stft.spectrogram_chunked(&signal).unwrap();
 
-        // Check dimensions
+        // Should have real values only (no complex)
         assert!(spec_result.shape()[0] > 0);
         assert!(spec_result.shape()[1] > 0);
 
         // All values should be non-negative (magnitudes)
-        for &val in spec_result.iter() {
-            assert!(val >= 0.0);
+        for val in spec_result.iter() {
+            assert!(*val >= 0.0);
+        }
+    }
+
+    #[test]
+    fn test_auto_memory_management() {
+        let fs = 1000.0;
+        
+        // Small signal - should use regular processing
+        let small_signal: Vec<f64> = (0..1000).map(|i| (i as f64 * 0.1).sin()).collect();
+        
+        // Large signal - should use chunked processing
+        let large_signal: Vec<f64> = (0..100000).map(|i| (i as f64 * 0.001).sin()).collect();
+
+        let window_length = 256;
+        let hop_size = 128;
+        let window = window::hann(window_length, true).unwrap();
+
+        let memory_config = MemoryEfficientStftConfig {
+            max_memory_mb: 10,
+            chunk_size: None, // Auto-calculated
+            parallel: false,
+            magnitude_only: false,
+        };
+
+        let stft_config = StftConfig::default();
+        let mem_stft =
+            MemoryEfficientStft::new(&window, hop_size, fs, Some(stft_config), memory_config)
+                .unwrap();
+
+        // Test both small and large signals
+        let small_result = mem_stft.stft_auto(&small_signal).unwrap();
+        let large_result = mem_stft.stft_auto(&large_signal).unwrap();
+
+        assert!(small_result.shape()[0] > 0);
+        assert!(small_result.shape()[1] > 0);
+        assert!(large_result.shape()[0] > 0);
+        assert!(large_result.shape()[1] > 0);
+
+        // Large signal should produce more frames
+        assert!(large_result.shape()[1] > small_result.shape()[1]);
+    }
+
+    #[test]
+    fn test_memory_info() {
+        let fs = 1000.0;
+        let signal_length = 50000;
+
+        let window_length = 512;
+        let hop_size = 256;
+        let window = window::hann(window_length, true).unwrap();
+
+        let memory_config = MemoryEfficientStftConfig {
+            max_memory_mb: 20,
+            chunk_size: None,
+            parallel: false,
+            magnitude_only: false,
+        };
+
+        let stft_config = StftConfig::default();
+        let mem_stft =
+            MemoryEfficientStft::new(&window, hop_size, fs, Some(stft_config), memory_config)
+                .unwrap();
+
+        let info = mem_stft.memory_info(signal_length);
+
+        assert_eq!(info.signal_length, signal_length);
+        assert!(info.chunk_size > 0);
+        assert!(info.num_chunks > 0);
+        assert!(info.total_frames > 0);
+        assert!(info.frames_per_chunk > 0);
+        assert!(info.total_memory_mb > 0.0);
+        assert!(info.chunk_memory_mb > 0.0);
+        assert!(info.memory_reduction_factor >= 1.0);
+
+        // Memory reduction should be significant for large signals
+        if signal_length > 10000 {
+            assert!(info.memory_reduction_factor > 2.0);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "parallel")]
+    fn test_parallel_chunked_processing() {
+        let fs = 1000.0;
+        let duration = 3.0;
+        let n = (fs * duration) as usize;
+        let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
+        let signal: Vec<f64> = t.iter().map(|&t| (2.0 * PI * 50.0 * t).sin()).collect();
+
+        let window_length = 256;
+        let hop_size = 128;
+        let window = window::hann(window_length, true).unwrap();
+
+        let memory_config = MemoryEfficientStftConfig {
+            max_memory_mb: 15,
+            chunk_size: Some(1000),
+            parallel: true,
+            magnitude_only: false,
+        };
+
+        let stft_config = StftConfig::default();
+        let mem_stft =
+            MemoryEfficientStft::new(&window, hop_size, fs, Some(stft_config), memory_config)
+                .unwrap();
+
+        // Test parallel chunked processing
+        let parallel_result = mem_stft.stft_parallel_chunked(&signal).unwrap();
+        let sequential_result = mem_stft.stft_chunked(&signal).unwrap();
+
+        // Results should have same dimensions
+        assert_eq!(parallel_result.shape(), sequential_result.shape());
+
+        // Results should be approximately equal (within numerical precision)
+        let max_diff = parallel_result.iter()
+            .zip(sequential_result.iter())
+            .map(|(a, b)| (a - b).norm())
+            .fold(0.0, f64::max);
+
+        assert!(max_diff < 1e-10); // Very small difference expected
+    }
+
+    #[test]
+    fn test_large_signal_processing() {
+        // Test with a very large signal that would consume too much memory if processed all at once
+        let fs = 8000.0;
+        let duration = 10.0; // 10 seconds
+        let n = (fs * duration) as usize;
+        
+        // Create a chirp signal for more interesting spectral content
+        let signal: Vec<f64> = (0..n).map(|i| {
+            let t = i as f64 / fs;
+            let freq = 100.0 + 500.0 * t / duration; // Frequency sweep from 100 to 600 Hz
+            (2.0 * PI * freq * t).sin()
+        }).collect();
+
+        let window_length = 1024;
+        let hop_size = 512;
+        let window = window::hann(window_length, true).unwrap();
+
+        let memory_config = MemoryEfficientStftConfig {
+            max_memory_mb: 50, // Reasonable memory limit
+            chunk_size: None, // Auto-calculate
+            parallel: false,
+            magnitude_only: true, // Use magnitude only to save memory
+        };
+
+        let stft_config = StftConfig::default();
+        let mem_stft =
+            MemoryEfficientStft::new(&window, hop_size, fs, Some(stft_config), memory_config)
+                .unwrap();
+
+        let info = mem_stft.memory_info(signal.len());
+        println!("Processing {} samples in {} chunks", info.signal_length, info.num_chunks);
+        println!("Memory reduction factor: {:.2}x", info.memory_reduction_factor);
+
+        // Process the large signal
+        let spec_result = mem_stft.spectrogram_auto(&signal).unwrap();
+
+        // Verify we got a reasonable result
+        assert!(spec_result.shape()[0] > 0);
+        assert!(spec_result.shape()[1] > 0);
+        
+        // Check that the result has the expected frequency resolution
+        let expected_freq_bins = window_length / 2 + 1;
+        assert_eq!(spec_result.shape()[0], expected_freq_bins);
+
+        // Verify all magnitudes are non-negative
+        for val in spec_result.iter() {
+            assert!(*val >= 0.0);
         }
     }
 }

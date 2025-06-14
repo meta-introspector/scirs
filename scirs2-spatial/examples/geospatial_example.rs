@@ -196,7 +196,8 @@ fn coordinate_transformations_example() -> Result<(), Box<dyn std::error::Error>
 
     for (name, (lat, lon)) in &locations {
         // UTM conversion (skip poles)
-        if (*lat as f64).abs() < 84.0 {
+        let lat_val: f64 = *lat;
+        if lat_val.abs() < 84.0 {
             let utm_result = geographic_to_utm(*lat, *lon);
             match utm_result {
                 Ok((easting, northing, zone, letter)) => {
@@ -227,7 +228,8 @@ fn coordinate_transformations_example() -> Result<(), Box<dyn std::error::Error>
     );
 
     for (name, (lat, lon)) in &locations {
-        if lat.abs() < 85.05 {
+        let lat_val: f64 = *lat;
+        if lat_val.abs() < 85.05 {
             // Web Mercator limit
             let web_merc_result = geographic_to_web_mercator(*lat, *lon);
             match web_merc_result {
@@ -264,7 +266,7 @@ fn flight_path_example() -> Result<(), Box<dyn std::error::Error>> {
     let destination = (51.5074, -0.1278); // London
 
     // Define a planned route with waypoints
-    let planned_route = vec![
+    let planned_route = [
         departure,
         (40.0, -100.0), // Over central US
         (50.0, -60.0),  // Over Atlantic
@@ -419,7 +421,7 @@ fn gps_tracking_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("GPS tracking simulation: Hiking trail");
 
     // Simulate GPS coordinates along a hiking trail
-    let trail_points = vec![
+    let trail_points = [
         (37.8651, -119.5383), // Yosemite Valley start
         (37.8701, -119.5234), // Moving northeast
         (37.8781, -119.5145), // Continuing
@@ -434,7 +436,7 @@ fn gps_tracking_example() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Trail GPS coordinates:");
     let mut total_distance = 0.0;
-    let elevations = vec![
+    let elevations = [
         1200.0, 1250.0, 1320.0, 1400.0, 1520.0, 1650.0, 1520.0, 1400.0, 1320.0, 1200.0,
     ];
 
@@ -601,12 +603,10 @@ fn format_dms(decimal_degrees: f64, is_latitude: bool) -> String {
         } else {
             "S"
         }
+    } else if decimal_degrees >= 0.0 {
+        "E"
     } else {
-        if decimal_degrees >= 0.0 {
-            "E"
-        } else {
-            "W"
-        }
+        "W"
     };
 
     format!("{}°{}'{:.1}\"{}", degrees, minutes, seconds, direction)

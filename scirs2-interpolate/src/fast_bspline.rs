@@ -65,6 +65,7 @@ where
     /// The B-spline to evaluate (shared reference for memory efficiency)
     spline: Arc<BSpline<T>>,
     /// Precomputed knot differences for efficiency
+    #[allow(dead_code)]
     knot_diffs: Array2<T>,
     /// Cache for basis functions
     cache: Option<BSplineCache<T>>,
@@ -284,11 +285,7 @@ where
         }
 
         // Initial coefficient index (matching the standard implementation)
-        let mut idx = if interval >= degree {
-            interval - degree
-        } else {
-            0
-        };
+        let mut idx = interval.saturating_sub(degree);
 
         if idx > coeffs.len() - degree - 1 {
             idx = coeffs.len() - degree - 1;
@@ -332,6 +329,7 @@ where
 
     /// Fast computation of blending coefficients using precomputed knot differences
     #[inline]
+    #[allow(dead_code)]
     fn compute_alpha_fast(&self, x: T, span: usize, j: usize, r: usize) -> T {
         let knots = self.spline.knot_vector();
         let degree = self.spline.degree();

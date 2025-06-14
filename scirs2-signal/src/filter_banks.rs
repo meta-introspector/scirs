@@ -25,6 +25,7 @@
 //! ```rust
 //! use ndarray::Array1;
 //! use scirs2_signal::filter_banks::{QmfBank, WaveletFilterBank, FilterBankType};
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!
 //! // Design a QMF filter bank
 //! let qmf = QmfBank::new(8, FilterBankType::Orthogonal)?;
@@ -40,6 +41,8 @@
 //! let wavelet_bank = WaveletFilterBank::new("db4", 3)?;
 //! let coeffs = wavelet_bank.decompose(&input)?;
 //! let recovered = wavelet_bank.reconstruct(&coeffs)?;
+//! # Ok(())
+//! # }
 //! ```
 
 use crate::dwt::Wavelet;

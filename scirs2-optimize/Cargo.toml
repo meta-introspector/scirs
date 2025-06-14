@@ -64,10 +64,6 @@ name = "comprehensive_benchmark"
 path = "examples/comprehensive_benchmark.rs"
 
 [[example]]
-name = "scipy_comparison"
-path = "examples/scipy_comparison.rs"
-
-[[example]]
 name = "async_parallel_optimization"
 path = "examples/async_parallel_optimization.rs"
 required-features = ["async"]
@@ -83,10 +79,6 @@ path = "examples/jit_optimization.rs"
 [[example]]
 name = "interior_point_example"
 path = "examples/interior_point_example.rs"
-
-[[example]]
-name = "memory_efficient_example"
-path = "examples/memory_efficient_example.rs"
 
 [[example]]
 name = "efficient_sparse_example"

@@ -269,6 +269,7 @@ struct CacheEntry<T> {
     memory_size: usize,
 }
 
+#[allow(dead_code)]
 impl<T> CacheEntry<T> {
     /// Create a new cache entry
     fn new(value: T, insertion_time: usize) -> Self {
@@ -318,6 +319,7 @@ impl<F: Float + FromPrimitive> Default for BSplineCache<F> {
     }
 }
 
+#[allow(dead_code)]
 impl<F: Float + FromPrimitive> BSplineCache<F> {
     /// Create a new B-spline cache with the given configuration
     pub fn new(config: CacheConfig) -> Self {
@@ -576,6 +578,7 @@ where
     cache: BSplineCache<T>,
 }
 
+#[allow(dead_code)]
 impl<T> CachedBSpline<T>
 where
     T: Float
@@ -736,6 +739,7 @@ where
     }
 
     /// Compute a single basis function value
+    #[allow(clippy::only_used_in_recursion)]
     fn compute_basis_function(&self, x: T, i: usize, degree: usize, knots: &Array1<T>) -> T {
         // De Boor's algorithm for a single basis function
         if degree == 0 {

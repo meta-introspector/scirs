@@ -19,9 +19,9 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
-//! use ndarray::array;
-//!
+//! # use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
+//! # use ndarray::array;
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Define halfspaces for a unit square: x ≥ 0, y ≥ 0, x ≤ 1, y ≤ 1
 //! let halfspaces = vec![
 //!     Halfspace::new(array![-1.0, 0.0], 0.0),   // -x ≤ 0  =>  x ≥ 0
@@ -38,6 +38,8 @@
 //!
 //! // Check if the polytope is bounded
 //! println!("Is bounded: {}", intersection.is_bounded());
+//! # Ok(())
+//! # }
 //! ```
 
 use crate::convex_hull::ConvexHull;
@@ -203,9 +205,9 @@ impl HalfspaceIntersection {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
-    /// use ndarray::array;
-    ///
+    /// # use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
+    /// # use ndarray::array;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let halfspaces = vec![
     ///     Halfspace::new(array![-1.0, 0.0], 0.0),   // x ≥ 0
     ///     Halfspace::new(array![0.0, -1.0], 0.0),   // y ≥ 0
@@ -213,6 +215,8 @@ impl HalfspaceIntersection {
     /// ];
     ///
     /// let intersection = HalfspaceIntersection::new(&halfspaces, None)?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn new(
         halfspaces: &[Halfspace],

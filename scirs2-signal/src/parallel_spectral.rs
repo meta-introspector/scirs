@@ -9,6 +9,7 @@ use crate::window;
 use ndarray::Array2;
 
 type SpectrogramResult = (Vec<f64>, Vec<f64>, Array2<f64>);
+type TimeFrequencyCoherenceResult = (Vec<f64>, Vec<f64>, Array2<f64>);
 use num_complex::Complex64;
 use rustfft::{num_complex::Complex, FftPlanner};
 use std::sync::Arc;
@@ -856,6 +857,516 @@ fn single_welch(
     Ok((frequencies, avg_psd))
 }
 
+/// Advanced parallel spectral analysis algorithms
+impl ParallelSpectralProcessor {
+    /// Parallel batch cross-power spectral density
+    ///
+    /// Computes cross-PSD between pairs of signals in parallel
+    ///
+    /// # Arguments
+    ///
+    /// * `signal_pairs` - Vector of signal pairs for cross-PSD computation
+    /// * `fs` - Sampling frequency
+    /// * `window_size` - Window size for Welch method
+    /// * `overlap` - Overlap ratio (0.0 to 1.0)
+    ///
+    /// # Returns
+    ///
+    /// * Vector of (frequencies, cross_psd) pairs
+    pub fn batch_cross_psd(
+        &self,
+        signal_pairs: &[(&[f64], &[f64])],
+        fs: f64,
+        window_size: usize,
+        overlap: f64,
+    ) -> SignalResult<Vec<(Vec<f64>, Vec<Complex64>)>> {
+        if signal_pairs.is_empty() {
+            return Err(SignalError::ValueError("No signal pairs provided".to_string()));
+        }
+
+        // Process signal pairs in parallel
+        #[cfg(feature = "parallel")]
+        let results: Result<Vec<_>, SignalError> = signal_pairs
+            .par_iter()
+            .map(|(sig1, sig2)| self.single_cross_psd(sig1, sig2, fs, window_size, overlap))
+            .collect();
+
+        #[cfg(not(feature = "parallel"))]
+        let results: Result<Vec<_>, SignalError> = signal_pairs
+            .iter()
+            .map(|(sig1, sig2)| self.single_cross_psd(sig1, sig2, fs, window_size, overlap))
+            .collect();
+
+        results
+    }
+
+    /// Parallel batch phase-amplitude coupling analysis
+    ///
+    /// Computes phase-amplitude coupling between signals using parallel processing
+    ///
+    /// # Arguments
+    ///
+    /// * `signals` - Vector of signals to analyze
+    /// * `phase_band` - Frequency band for phase (low, high)
+    /// * `amplitude_band` - Frequency band for amplitude (low, high)
+    /// * `fs` - Sampling frequency
+    ///
+    /// # Returns
+    ///
+    /// * Vector of coupling strength values
+    pub fn batch_phase_amplitude_coupling(
+        &self,
+        signals: &[&[f64]],
+        phase_band: (f64, f64),
+        amplitude_band: (f64, f64),
+        fs: f64,
+    ) -> SignalResult<Vec<f64>> {
+        if signals.is_empty() {
+            return Err(SignalError::ValueError("No signals provided".to_string()));
+        }
+
+        // Process signals in parallel
+        #[cfg(feature = "parallel")]
+        let results: Result<Vec<_>, SignalError> = signals
+            .par_iter()
+            .map(|&signal| self.single_pac_analysis(signal, phase_band, amplitude_band, fs))
+            .collect();
+
+        #[cfg(not(feature = "parallel"))]
+        let results: Result<Vec<_>, SignalError> = signals
+            .iter()
+            .map(|&signal| self.single_pac_analysis(signal, phase_band, amplitude_band, fs))
+            .collect();
+
+        results
+    }
+
+    /// Parallel time-frequency coherence analysis
+    ///
+    /// Computes time-frequency coherence between signal pairs using parallel processing
+    ///
+    /// # Arguments
+    ///
+    /// * `signal_pairs` - Vector of signal pairs
+    /// * `fs` - Sampling frequency
+    /// * `window_size` - Window size for STFT
+    /// * `hop_size` - Hop size for STFT
+    ///
+    /// # Returns
+    ///
+    /// * Vector of (frequencies, times, coherence_matrix) tuples
+    pub fn batch_time_frequency_coherence(
+        &self,
+        signal_pairs: &[(&[f64], &[f64])],
+        fs: f64,
+        window_size: usize,
+        hop_size: usize,
+    ) -> SignalResult<Vec<TimeFrequencyCoherenceResult>> {
+        if signal_pairs.is_empty() {
+            return Err(SignalError::ValueError("No signal pairs provided".to_string()));
+        }
+
+        // Process signal pairs in parallel
+        #[cfg(feature = "parallel")]
+        let results: Result<Vec<_>, SignalError> = signal_pairs
+            .par_iter()
+            .map(|(sig1, sig2)| self.single_tf_coherence(sig1, sig2, fs, window_size, hop_size))
+            .collect();
+
+        #[cfg(not(feature = "parallel"))]
+        let results: Result<Vec<_>, SignalError> = signal_pairs
+            .iter()
+            .map(|(sig1, sig2)| self.single_tf_coherence(sig1, sig2, fs, window_size, hop_size))
+            .collect();
+
+        results
+    }
+
+    /// Parallel spectral entropy computation
+    ///
+    /// Computes spectral entropy for multiple signals in parallel
+    ///
+    /// # Arguments
+    ///
+    /// * `signals` - Vector of signals
+    /// * `fs` - Sampling frequency
+    /// * `method` - Entropy method ("shannon", "renyi", "tsallis")
+    /// * `q` - Parameter for Renyi/Tsallis entropy (ignored for Shannon)
+    ///
+    /// # Returns
+    ///
+    /// * Vector of spectral entropy values
+    pub fn batch_spectral_entropy(
+        &self,
+        signals: &[&[f64]],
+        fs: f64,
+        method: &str,
+        q: f64,
+    ) -> SignalResult<Vec<f64>> {
+        if signals.is_empty() {
+            return Err(SignalError::ValueError("No signals provided".to_string()));
+        }
+
+        // Process signals in parallel
+        #[cfg(feature = "parallel")]
+        let results: Result<Vec<_>, SignalError> = signals
+            .par_iter()
+            .map(|&signal| self.single_spectral_entropy(signal, fs, method, q))
+            .collect();
+
+        #[cfg(not(feature = "parallel"))]
+        let results: Result<Vec<_>, SignalError> = signals
+            .iter()
+            .map(|&signal| self.single_spectral_entropy(signal, fs, method, q))
+            .collect();
+
+        results
+    }
+
+    /// Parallel band power computation
+    ///
+    /// Computes power in specific frequency bands for multiple signals in parallel
+    ///
+    /// # Arguments
+    ///
+    /// * `signals` - Vector of signals
+    /// * `bands` - Vector of frequency bands (low, high)
+    /// * `fs` - Sampling frequency
+    ///
+    /// # Returns
+    ///
+    /// * Vector of band power matrices (signals x bands)
+    pub fn batch_band_power(
+        &self,
+        signals: &[&[f64]],
+        bands: &[(f64, f64)],
+        fs: f64,
+    ) -> SignalResult<Array2<f64>> {
+        if signals.is_empty() || bands.is_empty() {
+            return Err(SignalError::ValueError("No signals or bands provided".to_string()));
+        }
+
+        let mut power_matrix = Array2::zeros((signals.len(), bands.len()));
+
+        // Process signals in parallel
+        #[cfg(feature = "parallel")]
+        {
+            let results: Result<Vec<_>, SignalError> = signals
+                .par_iter()
+                .map(|&signal| self.single_band_power(signal, bands, fs))
+                .collect();
+
+            let band_powers = results?;
+            for (i, powers) in band_powers.into_iter().enumerate() {
+                for (j, power) in powers.into_iter().enumerate() {
+                    power_matrix[[i, j]] = power;
+                }
+            }
+        }
+
+        #[cfg(not(feature = "parallel"))]
+        {
+            for (i, &signal) in signals.iter().enumerate() {
+                let powers = self.single_band_power(signal, bands, fs)?;
+                for (j, power) in powers.into_iter().enumerate() {
+                    power_matrix[[i, j]] = power;
+                }
+            }
+        }
+
+        Ok(power_matrix)
+    }
+
+    // Private helper methods for advanced algorithms
+
+    fn single_cross_psd(
+        &self,
+        signal1: &[f64],
+        signal2: &[f64],
+        fs: f64,
+        window_size: usize,
+        overlap: f64,
+    ) -> SignalResult<(Vec<f64>, Vec<Complex64>)> {
+        if signal1.len() != signal2.len() {
+            return Err(SignalError::ValueError(
+                "Signals must have the same length".to_string(),
+            ));
+        }
+
+        let n = signal1.len();
+        if n < window_size {
+            return Err(SignalError::ValueError(
+                "Signal length must be at least window size".to_string(),
+            ));
+        }
+
+        let hop_size = ((1.0 - overlap) * window_size as f64) as usize;
+        let window = window::hann(window_size, true).map_err(|_| {
+            SignalError::ValueError("Failed to create window".to_string())
+        })?;
+
+        let mut fft_planner = self.fft_planner.lock().map_err(|_| {
+            SignalError::ComputationError("Failed to acquire FFT planner".to_string())
+        })?;
+        let fft = fft_planner.plan_fft_forward(window_size);
+
+        let mut cross_psd_sum = vec![Complex64::new(0.0, 0.0); window_size / 2 + 1];
+        let mut n_segments = 0;
+
+        let mut idx = 0;
+        while idx + window_size <= n {
+            // Apply window to both signals
+            let windowed1: Vec<Complex64> = signal1[idx..idx + window_size]
+                .iter()
+                .zip(window.iter())
+                .map(|(&s, &w)| Complex64::new(s * w, 0.0))
+                .collect();
+
+            let windowed2: Vec<Complex64> = signal2[idx..idx + window_size]
+                .iter()
+                .zip(window.iter())
+                .map(|(&s, &w)| Complex64::new(s * w, 0.0))
+                .collect();
+
+            // Compute FFTs
+            let mut fft1 = windowed1;
+            let mut fft2 = windowed2;
+            fft.process(&mut fft1);
+            fft.process(&mut fft2);
+
+            // Compute cross-power spectrum
+            for i in 0..cross_psd_sum.len() {
+                cross_psd_sum[i] += fft1[i] * fft2[i].conj();
+            }
+
+            n_segments += 1;
+            idx += hop_size;
+        }
+
+        // Average and normalize
+        for cps in &mut cross_psd_sum {
+            *cps /= n_segments as f64;
+        }
+
+        // Create frequency vector
+        let frequencies: Vec<f64> = (0..cross_psd_sum.len())
+            .map(|i| i as f64 * fs / window_size as f64)
+            .collect();
+
+        Ok((frequencies, cross_psd_sum))
+    }
+
+    fn single_pac_analysis(
+        &self,
+        signal: &[f64],
+        phase_band: (f64, f64),
+        amplitude_band: (f64, f64),
+        fs: f64,
+    ) -> SignalResult<f64> {
+        use crate::filter::butter;
+        use crate::hilbert::hilbert;
+
+        // Design filters for phase and amplitude bands
+        let (b_phase, a_phase) = butter(4, phase_band.1 / (fs / 2.0), crate::filter::FilterType::Lowpass)?;
+        let (b_amp, a_amp) = butter(4, amplitude_band.1 / (fs / 2.0), crate::filter::FilterType::Lowpass)?;
+
+        // Filter signals (simplified - in practice would use proper bandpass filters)
+        let phase_filtered = self.apply_filter(signal, &b_phase, &a_phase)?;
+        let amplitude_filtered = self.apply_filter(signal, &b_amp, &a_amp)?;
+
+        // Extract phase from low-frequency component
+        let analytic_phase = hilbert(&phase_filtered)?;
+        let phases: Vec<f64> = analytic_phase.iter().map(|c| c.arg()).collect();
+
+        // Extract amplitude envelope from high-frequency component
+        let analytic_amp = hilbert(&amplitude_filtered)?;
+        let amplitudes: Vec<f64> = analytic_amp.iter().map(|c| c.norm()).collect();
+
+        // Compute phase-amplitude coupling using mean vector length
+        let n = phases.len().min(amplitudes.len());
+        let mut sum_real = 0.0;
+        let mut sum_imag = 0.0;
+
+        for i in 0..n {
+            let phase = phases[i];
+            let amplitude = amplitudes[i];
+            sum_real += amplitude * phase.cos();
+            sum_imag += amplitude * phase.sin();
+        }
+
+        let mean_vector_length = (sum_real * sum_real + sum_imag * sum_imag).sqrt() / 
+                                (amplitudes.iter().sum::<f64>() / n as f64);
+
+        Ok(mean_vector_length)
+    }
+
+    fn single_tf_coherence(
+        &self,
+        signal1: &[f64],
+        signal2: &[f64],
+        fs: f64,
+        window_size: usize,
+        hop_size: usize,
+    ) -> SignalResult<(Vec<f64>, Vec<f64>, Array2<f64>)> {
+        if signal1.len() != signal2.len() {
+            return Err(SignalError::ValueError(
+                "Signals must have the same length".to_string(),
+            ));
+        }
+
+        let n = signal1.len();
+        let n_frames = (n - window_size) / hop_size + 1;
+        let n_freqs = window_size / 2 + 1;
+
+        let mut coherence = Array2::zeros((n_freqs, n_frames));
+        let window = window::hann(window_size, true).map_err(|_| {
+            SignalError::ValueError("Failed to create window".to_string())
+        })?;
+
+        let mut fft_planner = self.fft_planner.lock().map_err(|_| {
+            SignalError::ComputationError("Failed to acquire FFT planner".to_string())
+        })?;
+        let fft = fft_planner.plan_fft_forward(window_size);
+
+        for frame in 0..n_frames {
+            let start = frame * hop_size;
+            let end = start + window_size;
+
+            if end <= n {
+                // Windowed signals
+                let windowed1: Vec<Complex64> = signal1[start..end]
+                    .iter()
+                    .zip(window.iter())
+                    .map(|(&s, &w)| Complex64::new(s * w, 0.0))
+                    .collect();
+
+                let windowed2: Vec<Complex64> = signal2[start..end]
+                    .iter()
+                    .zip(window.iter())
+                    .map(|(&s, &w)| Complex64::new(s * w, 0.0))
+                    .collect();
+
+                // Compute FFTs
+                let mut fft1 = windowed1;
+                let mut fft2 = windowed2;
+                fft.process(&mut fft1);
+                fft.process(&mut fft2);
+
+                // Compute coherence for each frequency
+                for freq in 0..n_freqs {
+                    let cross_spectrum = fft1[freq] * fft2[freq].conj();
+                    let auto1 = fft1[freq].norm_sqr();
+                    let auto2 = fft2[freq].norm_sqr();
+
+                    let coherence_val = if auto1 > 0.0 && auto2 > 0.0 {
+                        cross_spectrum.norm_sqr() / (auto1 * auto2)
+                    } else {
+                        0.0
+                    };
+
+                    coherence[[freq, frame]] = coherence_val;
+                }
+            }
+        }
+
+        // Create frequency and time vectors
+        let frequencies: Vec<f64> = (0..n_freqs)
+            .map(|i| i as f64 * fs / window_size as f64)
+            .collect();
+
+        let times: Vec<f64> = (0..n_frames)
+            .map(|i| i as f64 * hop_size as f64 / fs)
+            .collect();
+
+        Ok((frequencies, times, coherence))
+    }
+
+    fn single_spectral_entropy(
+        &self,
+        signal: &[f64],
+        fs: f64,
+        method: &str,
+        q: f64,
+    ) -> SignalResult<f64> {
+        // Compute power spectral density
+        let (_, psd) = self.single_periodogram(signal, fs, Some("hann"), None)?;
+
+        // Normalize PSD to create probability distribution
+        let total_power: f64 = psd.iter().sum();
+        if total_power <= 0.0 {
+            return Ok(0.0);
+        }
+
+        let probabilities: Vec<f64> = psd.iter().map(|&p| p / total_power).collect();
+
+        // Compute entropy based on method
+        let entropy = match method.to_lowercase().as_str() {
+            "shannon" => {
+                -probabilities.iter()
+                    .filter(|&&p| p > 0.0)
+                    .map(|&p| p * p.ln())
+                    .sum::<f64>()
+            }
+            "renyi" => {
+                if (q - 1.0).abs() < 1e-10 {
+                    // Limit case q -> 1 gives Shannon entropy
+                    -probabilities.iter()
+                        .filter(|&&p| p > 0.0)
+                        .map(|&p| p * p.ln())
+                        .sum::<f64>()
+                } else {
+                    let sum_q: f64 = probabilities.iter()
+                        .filter(|&&p| p > 0.0)
+                        .map(|&p| p.powf(q))
+                        .sum();
+                    (1.0 / (1.0 - q)) * sum_q.ln()
+                }
+            }
+            "tsallis" => {
+                let sum_q: f64 = probabilities.iter()
+                    .filter(|&&p| p > 0.0)
+                    .map(|&p| p.powf(q))
+                    .sum();
+                (1.0 - sum_q) / (q - 1.0)
+            }
+            _ => return Err(SignalError::ValueError(
+                "Unknown entropy method. Use 'shannon', 'renyi', or 'tsallis'".to_string()
+            )),
+        };
+
+        Ok(entropy)
+    }
+
+    fn single_band_power(
+        &self,
+        signal: &[f64],
+        bands: &[(f64, f64)],
+        fs: f64,
+    ) -> SignalResult<Vec<f64>> {
+        // Compute power spectral density
+        let (frequencies, psd) = self.single_periodogram(signal, fs, Some("hann"), None)?;
+
+        let mut band_powers = Vec::with_capacity(bands.len());
+
+        for &(low_freq, high_freq) in bands {
+            let power = frequencies.iter()
+                .zip(psd.iter())
+                .filter(|(&freq, _)| freq >= low_freq && freq <= high_freq)
+                .map(|(_, &power)| power)
+                .sum::<f64>();
+
+            band_powers.push(power);
+        }
+
+        Ok(band_powers)
+    }
+
+    fn apply_filter(&self, signal: &[f64], b: &[f64], a: &[f64]) -> SignalResult<Vec<f64>> {
+        // Simplified filter implementation - in practice would use proper IIR filtering
+        crate::filter::lfilter(b, a, signal)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -884,8 +1395,8 @@ mod tests {
             .unwrap();
 
         assert_eq!(results.len(), 2);
-        assert!(results[0].0.len() > 0);
-        assert!(results[0].1.len() > 0);
+        assert!(!results[0].0.is_empty());
+        assert!(!results[0].1.is_empty());
     }
 
     #[test]
@@ -912,8 +1423,8 @@ mod tests {
 
         assert_eq!(results.len(), 1);
         let (frequencies, times, spectrogram) = &results[0];
-        assert!(frequencies.len() > 0);
-        assert!(times.len() > 0);
+        assert!(!frequencies.is_empty());
+        assert!(!times.is_empty());
         assert_eq!(spectrogram.shape()[0], frequencies.len());
         assert_eq!(spectrogram.shape()[1], times.len());
     }
@@ -975,7 +1486,7 @@ mod tests {
 
         for (frequencies, psd) in &results {
             assert_eq!(frequencies.len(), psd.len());
-            assert!(frequencies.len() > 0);
+            assert!(!frequencies.is_empty());
         }
     }
 

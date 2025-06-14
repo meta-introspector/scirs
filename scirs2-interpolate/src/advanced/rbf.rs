@@ -61,6 +61,8 @@ impl<
             + AddAssign
             + std::ops::SubAssign
             + std::fmt::LowerExp
+            + Send
+            + Sync
             + 'static,
     > RBFInterpolator<F>
 {
@@ -109,6 +111,80 @@ impl<
         kernel: RBFKernel,
         epsilon: F,
     ) -> InterpolateResult<Self> {
+        Self::new_impl(points, values, kernel, epsilon, false, 0)
+    }
+
+    /// Create a new RBF interpolator with parallel matrix construction
+    ///
+    /// This method uses parallel computation to build the RBF matrix, which can provide
+    /// significant speedup for large datasets. The matrix construction is the most
+    /// computationally expensive part of RBF interpolation setup.
+    ///
+    /// # Arguments
+    ///
+    /// * `points` - Coordinates of sample points
+    /// * `values` - Values at the sample points
+    /// * `kernel` - RBF kernel function to use
+    /// * `epsilon` - Shape parameter for the kernel
+    /// * `workers` - Number of parallel workers to use (0 for automatic detection)
+    ///
+    /// # Returns
+    ///
+    /// A new `RBFInterpolator` object
+    ///
+    /// # Performance
+    ///
+    /// Parallel construction is most beneficial for datasets with more than ~100 points.
+    /// For smaller datasets, the overhead of parallel processing may outweigh the benefits.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array2};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    ///
+    /// // Create 2D points
+    /// let points = Array2::from_shape_vec((5, 2), vec![
+    ///     0.0f64, 0.0,
+    ///     1.0, 0.0,
+    ///     0.0, 1.0,
+    ///     1.0, 1.0,
+    ///     0.5, 0.5
+    /// ]).unwrap();
+    ///
+    /// // Create values at those points (z = x² + y²)
+    /// let values = array![0.0f64, 1.0, 1.0, 2.0, 0.5];
+    ///
+    /// // Create an RBF interpolator with parallel matrix construction
+    /// // Use 0 workers for automatic detection
+    /// let interp = RBFInterpolator::new_parallel(&points.view(), &values.view(),
+    ///                                          RBFKernel::Gaussian, 1.0, 0).unwrap();
+    ///
+    /// // Interpolate at a new point
+    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+    /// let result = interp.interpolate(&test_point.view()).unwrap();
+    /// println!("Interpolated value at (0.25, 0.25): {}", result[0]);
+    /// ```
+    pub fn new_parallel(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        kernel: RBFKernel,
+        epsilon: F,
+        workers: usize,
+    ) -> InterpolateResult<Self> {
+        Self::new_impl(points, values, kernel, epsilon, true, workers)
+    }
+
+    /// Internal implementation for both serial and parallel constructors
+    #[allow(clippy::too_many_arguments)]
+    fn new_impl(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        kernel: RBFKernel,
+        epsilon: F,
+        use_parallel: bool,
+        workers: usize,
+    ) -> InterpolateResult<Self> {
         // Check inputs
         if points.shape()[0] != values.len() {
             return Err(InterpolateError::shape_mismatch(
@@ -132,6 +208,38 @@ impl<
 
         let n_points = points.shape()[0];
 
+        // Set up parallel workers if specified
+        if use_parallel && workers > 0 {
+            let thread_pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(workers)
+                .build()
+                .map_err(|e| {
+                    InterpolateError::ComputationError(format!(
+                        "Failed to create thread pool: {}",
+                        e
+                    ))
+                })?;
+
+            thread_pool.install(|| {
+                Self::build_rbf_matrix_parallel(points, values, n_points, kernel, epsilon)
+            })
+        } else if use_parallel {
+            // Use default Rayon configuration
+            Self::build_rbf_matrix_parallel(points, values, n_points, kernel, epsilon)
+        } else {
+            // Sequential matrix construction
+            Self::build_rbf_matrix_sequential(points, values, n_points, kernel, epsilon)
+        }
+    }
+
+    /// Build RBF matrix using sequential computation
+    fn build_rbf_matrix_sequential(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        n_points: usize,
+        kernel: RBFKernel,
+        epsilon: F,
+    ) -> InterpolateResult<Self> {
         // Build the interpolation matrix A where A[i,j] = kernel(||x_i - x_j||)
         let mut a_matrix = Array2::<F>::zeros((n_points, n_points));
 
@@ -144,6 +252,51 @@ impl<
                 a_matrix[[i, j]] = Self::rbf_kernel(r, epsilon, kernel);
             }
         }
+
+        Self::finalize_construction(points, values, &a_matrix, kernel, epsilon)
+    }
+
+    /// Build RBF matrix using parallel computation
+    fn build_rbf_matrix_parallel(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        n_points: usize,
+        kernel: RBFKernel,
+        epsilon: F,
+    ) -> InterpolateResult<Self> {
+        // Build the interpolation matrix A where A[i,j] = kernel(||x_i - x_j||)
+        // Use parallel processing for matrix construction
+        use rayon::prelude::*;
+        let matrix_data: Vec<F> = (0..n_points * n_points)
+            .into_par_iter()
+            .map(|idx| {
+                let i = idx / n_points;
+                let j = idx % n_points;
+
+                let point_i = points.slice(ndarray::s![i, ..]);
+                let point_j = points.slice(ndarray::s![j, ..]);
+
+                let r = Self::distance(&point_i, &point_j);
+                Self::rbf_kernel(r, epsilon, kernel)
+            })
+            .collect();
+
+        let a_matrix = Array2::from_shape_vec((n_points, n_points), matrix_data).map_err(|e| {
+            InterpolateError::ComputationError(format!("Failed to construct RBF matrix: {}", e))
+        })?;
+
+        Self::finalize_construction(points, values, &a_matrix, kernel, epsilon)
+    }
+
+    /// Complete the RBF interpolator construction after matrix is built
+    fn finalize_construction(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        a_matrix: &Array2<F>,
+        kernel: RBFKernel,
+        epsilon: F,
+    ) -> InterpolateResult<Self> {
+        let n_points = points.shape()[0];
 
         // Assess matrix condition before solving
         let condition_report = assess_matrix_condition(&a_matrix.view()).ok();
@@ -170,7 +323,7 @@ impl<
         }
 
         // Solve the linear system with stability monitoring
-        let (coefficients, _solve_report) = solve_with_stability_monitoring(&a_matrix, &values.to_owned())
+        let (coefficients, _solve_report) = solve_with_stability_monitoring(a_matrix, &values.to_owned())
             .or_else(|_| {
                 eprintln!("Warning: Stability-monitored solve failed. Falling back to basic solver with regularization.");
 
@@ -388,7 +541,9 @@ fn self_solve_linear_system<
         + Display
         + std::ops::SubAssign
         + std::fmt::LowerExp
-        + std::ops::AddAssign,
+        + std::ops::AddAssign
+        + Send
+        + Sync,
 >(
     a: &Array2<F>,
     b: &ArrayView1<F>,
@@ -460,7 +615,7 @@ fn self_solve_linear_system<
     for i in (0..n).rev() {
         let mut sum = F::zero();
         for j in i + 1..n {
-            sum = sum + a_copy[[i, j]] * x[j];
+            sum += a_copy[[i, j]] * x[j];
         }
 
         // Use safe division for back substitution
@@ -623,5 +778,100 @@ mod tests {
         // The result should be close to x + y + z = 0.5 + 0.5 + 0.5 = 1.5
         // Using a larger epsilon for our simplified algorithm
         assert!((result[0] - 1.5).abs() < 2.0);
+    }
+
+    #[test]
+    fn test_rbf_interpolator_parallel() {
+        // Create 2D points
+        let points = Array2::from_shape_vec(
+            (8, 2),
+            vec![
+                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.25, 0.25, 0.75, 0.75, 0.25,
+                0.75,
+            ],
+        )
+        .unwrap();
+
+        // Create values at those points (z = x² + y²)
+        let values = array![0.0, 1.0, 1.0, 2.0, 0.5, 0.125, 1.125, 0.625];
+
+        // Create RBF interpolators with serial and parallel construction
+        let interp_serial =
+            RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).unwrap();
+
+        let interp_parallel = RBFInterpolator::new_parallel(
+            &points.view(),
+            &values.view(),
+            RBFKernel::Gaussian,
+            1.0,
+            2,
+        )
+        .unwrap();
+
+        // Test interpolation at the same point with both methods
+        let test_point = Array2::from_shape_vec((1, 2), vec![0.3, 0.7]).unwrap();
+        let result_serial = interp_serial.interpolate(&test_point.view()).unwrap();
+        let result_parallel = interp_parallel.interpolate(&test_point.view()).unwrap();
+
+        // Results should be very close (allowing for small numerical differences)
+        assert!((result_serial[0] - result_parallel[0]).abs() < 1e-10);
+
+        // Test with automatic worker detection
+        let interp_auto = RBFInterpolator::new_parallel(
+            &points.view(),
+            &values.view(),
+            RBFKernel::Gaussian,
+            1.0,
+            0,
+        )
+        .unwrap();
+        let result_auto = interp_auto.interpolate(&test_point.view()).unwrap();
+
+        // Results should be very close
+        assert!((result_serial[0] - result_auto[0]).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_rbf_interpolator_parallel_different_kernels() {
+        // Create 2D points
+        let points = Array2::from_shape_vec(
+            (6, 2),
+            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.25, 0.75],
+        )
+        .unwrap();
+
+        // Create values at those points
+        let values = array![0.0, 1.0, 1.0, 2.0, 0.5, 0.625];
+
+        // Test different kernels with parallel construction
+        let kernels = [
+            RBFKernel::Gaussian,
+            RBFKernel::Multiquadric,
+            RBFKernel::InverseMultiquadric,
+            RBFKernel::Linear,
+        ];
+
+        for kernel in kernels.iter() {
+            let interp_serial =
+                RBFInterpolator::new(&points.view(), &values.view(), *kernel, 1.0).unwrap();
+
+            let interp_parallel =
+                RBFInterpolator::new_parallel(&points.view(), &values.view(), *kernel, 1.0, 4)
+                    .unwrap();
+
+            // Test interpolation at a new point
+            let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.4]).unwrap();
+            let result_serial = interp_serial.interpolate(&test_point.view()).unwrap();
+            let result_parallel = interp_parallel.interpolate(&test_point.view()).unwrap();
+
+            // Results should be very close (allowing for small numerical differences)
+            assert!(
+                (result_serial[0] - result_parallel[0]).abs() < 1e-10,
+                "Kernel {:?} failed: serial={}, parallel={}",
+                kernel,
+                result_serial[0],
+                result_parallel[0]
+            );
+        }
     }
 }

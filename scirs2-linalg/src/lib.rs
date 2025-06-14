@@ -118,7 +118,7 @@ pub mod gradient;
 mod iterative_solvers;
 pub mod kronecker;
 pub mod lowrank;
-// pub mod matrix_calculus; // Temporarily disabled due to compilation issues
+pub mod matrix_calculus;
 pub mod matrix_factorization;
 pub mod matrix_functions;
 pub mod matrixfree;
@@ -136,7 +136,7 @@ pub use self::quantization::calibration::{
 };
 pub mod random;
 pub mod random_matrices;
-// 一時的にrandom_newモジュールを無効化（コンパイル問題解決まで）
+// Temporarily disabled due to validation trait dependency issues
 // pub mod random_new;
 mod diagnostics;
 pub mod simd_ops;

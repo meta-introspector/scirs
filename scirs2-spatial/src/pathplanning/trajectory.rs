@@ -649,7 +649,7 @@ mod tests {
         assert_relative_eq!(last_point.y, goal.y, epsilon = 1e-2);
 
         // Check trajectory properties
-        assert!(trajectory.len() > 0);
+        assert!(!trajectory.is_empty());
         assert_eq!(trajectory.duration(), duration);
         assert_eq!(trajectory.method(), OptimizationMethod::Quintic);
     }
@@ -687,10 +687,12 @@ mod tests {
 
         // Use an obstacle that's off the direct path to make avoidance easier
         let obstacles = vec![CircularObstacle::new(2.0, 1.5, 0.5)];
-        let mut constraints = TrajectoryConstraints::default();
         // Relax constraints significantly for obstacle avoidance
-        constraints.max_acceleration = 50.0;
-        constraints.max_velocity = 50.0;
+        let constraints = TrajectoryConstraints {
+            max_acceleration: 50.0,
+            max_velocity: 50.0,
+            ..Default::default()
+        };
         let optimizer = TrajectoryOptimizer::new(constraints);
 
         let trajectory_result =
@@ -701,7 +703,7 @@ mod tests {
         match trajectory_result {
             Ok(trajectory) => {
                 // Basic checks
-                assert!(trajectory.len() > 0);
+                assert!(!trajectory.is_empty());
                 assert!(!trajectory.is_empty());
                 println!(
                     "Successfully generated obstacle-avoiding trajectory with {} points",

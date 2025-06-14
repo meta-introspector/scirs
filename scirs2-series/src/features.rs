@@ -11,6 +11,27 @@ use std::fmt::Debug;
 use crate::error::{Result, TimeSeriesError};
 use crate::utils::{autocorrelation, is_stationary, partial_autocorrelation};
 
+/// Type alias for spectral peak detection results
+type SpectralPeakResult<F> = (Vec<F>, Vec<F>, Vec<F>, Vec<F>, usize, F, F, Vec<F>);
+
+/// Type alias for phase spectrum analysis results
+type PhaseSpectrumResult<F> = (
+    Vec<F>,
+    Vec<F>,
+    F,
+    PhaseSpectrumFeatures<F>,
+    BispectrumFeatures<F>,
+);
+
+/// Type alias for complex frequency feature extraction results
+type FrequencyFeatureResult<F> = (F, F, F, F, F, F, F, F);
+
+/// Type alias for multiscale spectral analysis results  
+type MultiscaleSpectralResult<F> = (Vec<F>, Vec<ScaleSpectralFeatures<F>>, Vec<F>, F);
+
+/// Type alias for cross frequency coupling analysis results
+type CrossFrequencyCouplingResult<F> = (F, F, F, F, F, F, F, Vec<F>, Vec<F>, F);
+
 /// Statistical features of a time series
 #[derive(Debug, Clone)]
 pub struct TimeSeriesFeatures<F> {
@@ -4280,7 +4301,7 @@ where
     let freq_points = n / 2;
     let mut ar_spectrum = vec![F::zero(); freq_points];
 
-    for k in 0..freq_points {
+    for (k, spectrum_val) in ar_spectrum.iter_mut().enumerate().take(freq_points) {
         let freq = F::from(k as f64 * std::f64::consts::PI / freq_points as f64).unwrap();
         let mut denominator_real = F::one();
         let mut denominator_imag = F::zero();
@@ -4293,7 +4314,7 @@ where
 
         let power =
             F::one() / (denominator_real * denominator_real + denominator_imag * denominator_imag);
-        ar_spectrum[k] = power;
+        *spectrum_val = power;
     }
 
     Ok(ar_spectrum)
@@ -4385,8 +4406,10 @@ fn calculate_window_analysis<F>(
 where
     F: Float + FromPrimitive,
 {
-    let mut window_info = WindowTypeInfo::default();
-    window_info.window_name = config.primary_window_type.clone();
+    let mut window_info = WindowTypeInfo {
+        window_name: config.primary_window_type.clone(),
+        ..Default::default()
+    };
 
     // Set window characteristics based on type
     match config.primary_window_type.as_str() {
@@ -4457,8 +4480,10 @@ fn calculate_periodogram_confidence_intervals<F>(
 where
     F: Float + FromPrimitive,
 {
-    let mut confidence_intervals = ConfidenceIntervals::default();
-    confidence_intervals.confidence_level = F::from(config.confidence_level).unwrap();
+    let mut confidence_intervals = ConfidenceIntervals {
+        confidence_level: F::from(config.confidence_level).unwrap(),
+        ..Default::default()
+    };
 
     if periodogram.is_empty() {
         return Ok(confidence_intervals);
@@ -4579,23 +4604,19 @@ where
 
     let mut smoothed = vec![F::zero(); periodogram.len()];
 
-    for i in 0..periodogram.len() {
-        let start = if i >= half_bandwidth {
-            i - half_bandwidth
-        } else {
-            0
-        };
+    for (i, smoothed_val) in smoothed.iter_mut().enumerate().take(periodogram.len()) {
+        let start = i.saturating_sub(half_bandwidth);
         let end = std::cmp::min(i + half_bandwidth + 1, periodogram.len());
 
         let mut sum = F::zero();
         let mut count = 0;
 
-        for j in start..end {
-            sum = sum + periodogram[j];
+        for period_val in periodogram.iter().take(end).skip(start) {
+            sum = sum + *period_val;
             count += 1;
         }
 
-        smoothed[i] = sum / F::from_usize(count).unwrap();
+        *smoothed_val = sum / F::from_usize(count).unwrap();
     }
 
     Ok(smoothed)
@@ -4640,18 +4661,18 @@ where
     let new_length = (periodogram.len() as f64 * factor).round() as usize;
     let mut interpolated = vec![F::zero(); new_length];
 
-    for i in 0..new_length {
+    for (i, interp_val) in interpolated.iter_mut().enumerate().take(new_length) {
         let original_index = i as f64 / factor;
         let lower_idx = original_index.floor() as usize;
         let upper_idx = std::cmp::min(lower_idx + 1, periodogram.len() - 1);
 
         if lower_idx == upper_idx {
-            interpolated[i] = periodogram[lower_idx];
+            *interp_val = periodogram[lower_idx];
         } else {
             let weight = F::from(original_index - lower_idx as f64).unwrap();
             let lower_val = periodogram[lower_idx];
             let upper_val = periodogram[upper_idx];
-            interpolated[i] = lower_val * (F::one() - weight) + upper_val * weight;
+            *interp_val = lower_val * (F::one() - weight) + upper_val * weight;
         }
     }
 
@@ -11072,7 +11093,7 @@ where
     let freq_points = n / 2 + 1;
     let mut ar_psd = vec![F::zero(); freq_points];
 
-    for k in 0..freq_points {
+    for (k, psd_val) in ar_psd.iter_mut().enumerate().take(freq_points) {
         let freq = F::from(k).unwrap() / F::from(n).unwrap();
         let omega = F::from(2.0 * std::f64::consts::PI).unwrap() * freq;
 
@@ -11087,7 +11108,7 @@ where
         }
 
         let magnitude_sq = real_part * real_part + imag_part * imag_part;
-        ar_psd[k] = if magnitude_sq > F::zero() {
+        *psd_val = if magnitude_sq > F::zero() {
             F::one() / magnitude_sq
         } else {
             F::zero()
@@ -11101,7 +11122,7 @@ where
 fn detect_and_characterize_spectral_peaks<F>(
     psd: &Array1<F>,
     config: &SpectralAnalysisConfig,
-) -> Result<(Vec<F>, Vec<F>, Vec<F>, Vec<F>, usize, F, F, Vec<F>)>
+) -> Result<SpectralPeakResult<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
@@ -11242,7 +11263,7 @@ where
 fn analyze_frequency_bands<F>(
     psd: &Array1<F>,
     config: &SpectralAnalysisConfig,
-) -> Result<(F, F, F, F, F, F, F, Vec<F>, Vec<F>, F)>
+) -> Result<CrossFrequencyCouplingResult<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -11476,7 +11497,7 @@ where
 fn calculate_spectral_shape_measures<F>(
     psd: &Array1<F>,
     _config: &SpectralAnalysisConfig,
-) -> Result<(F, F, F, F, F, F, F, F)>
+) -> Result<FrequencyFeatureResult<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -11630,13 +11651,7 @@ fn calculate_advanced_spectral_characteristics<F>(
     _ts: &Array1<F>,
     psd: &Array1<F>,
     config: &SpectralAnalysisConfig,
-) -> Result<(
-    Vec<F>,
-    Vec<F>,
-    F,
-    PhaseSpectrumFeatures<F>,
-    BispectrumFeatures<F>,
-)>
+) -> Result<PhaseSpectrumResult<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -11878,7 +11893,7 @@ where
 fn calculate_multiscale_spectral_features<F>(
     ts: &Array1<F>,
     config: &SpectralAnalysisConfig,
-) -> Result<(Vec<F>, Vec<ScaleSpectralFeatures<F>>, Vec<F>, F)>
+) -> Result<MultiscaleSpectralResult<F>>
 where
     F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + std::iter::Sum,
     for<'a> F: std::iter::Sum<&'a F>,
@@ -15875,23 +15890,12 @@ struct StabilityFeatures<F> {
 }
 
 /// Helper struct for advanced pattern features
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct AdvancedPatternFeatures {
     double_peak_count: usize,
     double_bottom_count: usize,
     head_shoulders_count: usize,
     triangular_pattern_count: usize,
-}
-
-impl Default for AdvancedPatternFeatures {
-    fn default() -> Self {
-        Self {
-            double_peak_count: 0,
-            double_bottom_count: 0,
-            head_shoulders_count: 0,
-            triangular_pattern_count: 0,
-        }
-    }
 }
 
 /// Helper struct for position features

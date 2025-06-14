@@ -4,11 +4,10 @@
 //! distance calculations and parallel spatial operations. It compares
 //! scalar vs SIMD implementations across different data sizes and metrics.
 
-use ndarray::{Array2, Axis};
+use ndarray::Array2;
 use rand::Rng;
 use scirs2_spatial::simd_distance::{
-    bench, parallel_cdist, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch,
-    simd_knn_search, simd_manhattan_distance, SimdMetric,
+    bench, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch, simd_knn_search,
 };
 use std::time::Instant;
 
@@ -373,7 +372,7 @@ fn memory_allocation_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "-".repeat(50));
 
     // Point storage
-    let points = generate_random_points(n_points, dim);
+    let _points = generate_random_points(n_points, dim);
     let points_memory = (n_points * dim * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
     println!("{:<30} {:>10.2} {:>10}", "Point storage", points_memory, 1);
 
@@ -404,6 +403,7 @@ fn generate_random_points(n_points: usize, dim: usize) -> Array2<f64> {
 }
 
 /// Demonstrate different optimization strategies
+#[allow(dead_code)]
 fn optimization_strategies_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nOptimization strategies comparison:");
 
@@ -460,6 +460,7 @@ fn optimization_strategies_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Benchmark I/O intensive operations
+#[allow(dead_code)]
 fn benchmark_io_intensive() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nI/O intensive operations benchmark:");
 
@@ -498,6 +499,7 @@ fn benchmark_io_intensive() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Memory bandwidth utilization analysis
+#[allow(dead_code)]
 fn memory_bandwidth_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nMemory bandwidth utilization:");
 

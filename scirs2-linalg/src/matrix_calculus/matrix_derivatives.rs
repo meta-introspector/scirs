@@ -40,7 +40,14 @@ use crate::norm::matrix_norm;
 /// ```
 pub fn det_derivative<F>(x: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Debug
+        + ndarray::ScalarOperand
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -50,7 +57,7 @@ where
     }
 
     // Compute determinant
-    let det_x = det(x)?;
+    let det_x = det(x, None)?;
 
     if det_x.abs() < F::epsilon() {
         return Err(LinalgError::SingularMatrixError(
@@ -151,7 +158,14 @@ pub fn inv_directional_derivative<F>(
     direction: &ArrayView2<F>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Debug
+        + ndarray::ScalarOperand
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -210,7 +224,14 @@ pub fn exp_directional_derivative<F>(
     num_terms: usize,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Debug
+        + ndarray::ScalarOperand
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -235,7 +256,7 @@ where
     // Use the series: d(exp(X))/dX[V] = sum_{k=0}^∞ (1/k!) * sum_{j=0}^{k-1} X^j * V * X^{k-1-j}
     for k in 0..num_terms {
         if k > 0 {
-            factorial = factorial * F::from(k).unwrap();
+            factorial *= F::from(k).unwrap();
             x_power = x_power.dot(x);
         }
 
@@ -297,7 +318,14 @@ pub fn eigenvalue_derivatives<F>(
     direction: &ArrayView2<F>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Debug
+        + ndarray::ScalarOperand
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -373,7 +401,14 @@ where
 /// ```
 pub fn norm_derivative<F>(x: &ArrayView2<F>, norm_type: &str) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Debug
+        + ndarray::ScalarOperand
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     match norm_type {
         "fro" | "frobenius" => {
@@ -393,7 +428,7 @@ where
             // d(||X||_2)/dX = u_1 * v_1^T where u_1, v_1 are the first singular vectors
             let (u, s, vt) = svd(x, false, None)?;
 
-            if s.len() == 0 || s[0] < F::epsilon() {
+            if s.is_empty() || s[0] < F::epsilon() {
                 return Err(LinalgError::InvalidInputError(
                     "Cannot compute spectral norm derivative for zero matrix".to_string(),
                 ));
@@ -456,7 +491,14 @@ pub fn matmul_derivative<F>(
     direction_b: Option<&ArrayView2<F>>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Debug
+        + ndarray::ScalarOperand
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     if a.ncols() != b.nrows() {
         return Err(LinalgError::ShapeError(format!(
@@ -499,7 +541,14 @@ where
 /// This is a simplified version for demonstration purposes
 fn simple_symmetric_eigenvalues<F>(x: &ArrayView2<F>) -> LinalgResult<Array1<F>>
 where
-    F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign + std::iter::Sum,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Debug
+        + ndarray::ScalarOperand
+        + num_traits::NumAssign
+        + std::iter::Sum,
 {
     // For now, return the diagonal elements as a rough approximation
     // In practice, you'd use a proper eigenvalue solver
@@ -547,7 +596,7 @@ mod tests {
     #[test]
     fn test_trace_derivative() {
         // Test d(tr(X))/dX = I
-        let d_trace = trace_derivative(None, (3, 3)).unwrap();
+        let d_trace = trace_derivative::<f64>(None, (3, 3)).unwrap();
 
         for i in 0..3 {
             for j in 0..3 {

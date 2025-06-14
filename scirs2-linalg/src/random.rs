@@ -266,7 +266,7 @@ where
 /// assert!(a.iter().zip(a_t.iter()).all(|(x, y)| (x - y).abs() < 1e-10));
 ///
 /// // Verify that it's positive definite (can be Cholesky decomposed)
-/// let result = cholesky(&a.view());
+/// let result = cholesky(&a.view(), None);
 /// assert!(result.is_ok());
 /// ```
 pub fn spd<F>(n: usize, min_eigenval: F, max_eigenval: F, seed: Option<u64>) -> Array2<F>
@@ -904,7 +904,7 @@ where
 /// assert_eq!(a.shape(), &[5, 5]);
 ///
 /// // Verify rank by checking singular values
-/// let (_, s, _) = svd(&a.view(), false).unwrap();
+/// let (_, s, _) = svd(&a.view(), false, None).unwrap();
 /// // The first two singular values should be significantly larger than zero
 /// assert!(s[0] > 1e-10);
 /// assert!(s[1] > 1e-10);

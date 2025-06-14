@@ -394,7 +394,7 @@ where
 
     // Note: overwrite_a and lapack_driver are ignored in our implementation
     if compute_uv {
-        let (u, s, vt) = decomposition::svd(a, !full_matrices, None)?;
+        let (u, s, vt) = decomposition::svd(a, full_matrices, None)?;
         Ok((Some(u), s, Some(vt)))
     } else {
         Err(LinalgError::NotImplementedError(
@@ -559,7 +559,7 @@ pub fn norm<F>(
     check_finite: bool,
 ) -> LinalgResult<F>
 where
-    F: Float + Sum + NumAssign,
+    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {
     if check_finite {
         for &elem in a.iter() {

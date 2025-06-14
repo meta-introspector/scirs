@@ -294,6 +294,8 @@ where
             ));
         }
 
+        // For optimized strategy, num_knots represents the number of interior knots we want
+        // Including the boundary knots. We need at least 2 (start and end).
         // Start with equally spaced knots
         let mut knots = Vec::with_capacity(num_knots);
         for i in 0..num_knots {
@@ -358,10 +360,10 @@ where
                                     best_knots = knots.clone();
                                     improved = true;
                                 } else {
-                                    knots[i] = knots[i] - delta; // Revert
+                                    knots[i] -= delta; // Revert
                                 }
                             } else {
-                                knots[i] = knots[i] - delta; // Revert
+                                knots[i] -= delta; // Revert
                             }
                         }
                     }
@@ -435,8 +437,8 @@ where
         let mut knots = vec![x[0], x[x.len() - 1]];
 
         let max_new_knots = (max_knots - 2).min(knot_candidates.len());
-        for i in 0..max_new_knots {
-            let new_knot = knot_candidates[i].0;
+        for item in knot_candidates.iter().take(max_new_knots) {
+            let new_knot = item.0;
 
             // Insert in sorted order
             let mut inserted = false;
@@ -484,20 +486,31 @@ where
 
         // Create a clamped knot vector
         // For degree k, we need k+1 repetitions at each end
-        // Total knots = (k+1) + interior_knots.len() + (k+1) = interior_knots.len() + 2*(k+1)
-        let mut extended = Vec::with_capacity(interior_knots.len() + 2 * (degree + 1));
+        // The interior knots should only be the unique internal knots, not the boundary values
+        let start_knot = interior_knots[0];
+        let end_knot = interior_knots[interior_knots.len() - 1];
+
+        // Extract only the interior knots (excluding the first and last)
+        let internal_knots = if interior_knots.len() > 2 {
+            &interior_knots[1..interior_knots.len() - 1]
+        } else {
+            &[]
+        };
+
+        // Total knots = (k+1) + internal_knots.len() + (k+1) = internal_knots.len() + 2*(k+1)
+        let mut extended = Vec::with_capacity(internal_knots.len() + 2 * (degree + 1));
 
         // Add degree+1 copies of the start knot
         for _ in 0..=degree {
-            extended.push(interior_knots[0]);
+            extended.push(start_knot);
         }
 
-        // Add all interior knots
-        extended.extend_from_slice(interior_knots);
+        // Add only the internal knots (not the boundary knots)
+        extended.extend_from_slice(internal_knots);
 
         // Add degree+1 copies of the end knot
         for _ in 0..=degree {
-            extended.push(interior_knots[interior_knots.len() - 1]);
+            extended.push(end_knot);
         }
 
         Ok(extended)
@@ -515,7 +528,7 @@ where
         for i in 0..x.len() {
             let y_pred = spline.evaluate(x[i])?;
             let error = y[i] - y_pred;
-            sum_squared_error = sum_squared_error + error * error;
+            sum_squared_error += error * error;
         }
 
         Ok((sum_squared_error / n).sqrt())

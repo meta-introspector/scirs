@@ -120,6 +120,7 @@ where
     /// Grid points and their hierarchical coefficients
     grid_points: HashMap<MultiIndex, GridPoint<F>>,
     /// Whether to use adaptive refinement
+    #[allow(dead_code)]
     adaptive: bool,
     /// Tolerance for adaptive refinement
     tolerance: F,
@@ -368,6 +369,7 @@ where
         for point_coords in points {
             let grid_point_idx = self.coords_to_multi_index(&point_coords, multi_idx);
 
+            #[allow(clippy::map_entry)]
             if !self.grid_points.contains_key(&grid_point_idx) {
                 let value = func(&point_coords);
                 self.stats.num_evaluations += 1;
@@ -569,6 +571,7 @@ where
                     {
                         let new_idx = self.coords_to_multi_index(&new_coords, center_idx);
 
+                        #[allow(clippy::map_entry)]
                         if !self.grid_points.contains_key(&new_idx) {
                             let value = func(&new_coords);
                             self.stats.num_evaluations += 1;

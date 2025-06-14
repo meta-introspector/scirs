@@ -7,30 +7,38 @@
 //! - Domain adaptation tools
 
 use crate::error::{NeuralError, Result};
-use crate::layers::{Layer, Sequential};
-use ndarray::{Array, ArrayD, IxDyn};
-use num_traits::Float;
+use crate::layers::Layer;
+use ndarray::ArrayD;
+use num_traits::{Float, FromPrimitive, Zero};
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::ops::{Add, Div};
 use std::sync::{Arc, RwLock};
 
 /// Transfer learning strategy
 #[derive(Debug, Clone, PartialEq)]
 pub enum TransferStrategy {
     /// Freeze all layers except the last few
-    FeatureExtraction { unfrozen_layers: usize },
+    FeatureExtraction {
+        /// Number of layers from the end to leave unfrozen
+        unfrozen_layers: usize,
+    },
     /// Fine-tune all layers with different learning rates
-    FineTuning { 
+    FineTuning {
+        /// Learning rate ratio for backbone layers
         backbone_lr_ratio: f64,
-        head_lr_ratio: f64 
+        /// Learning rate ratio for head layers
+        head_lr_ratio: f64,
     },
     /// Progressive unfreezing during training
-    ProgressiveUnfreezing { 
-        unfreeze_schedule: Vec<(usize, usize)> // (epoch, layers_to_unfreeze)
+    ProgressiveUnfreezing {
+        /// Schedule of (epoch, layers_to_unfreeze) pairs
+        unfreeze_schedule: Vec<(usize, usize)>,
     },
     /// Custom layer-specific learning rates
-    LayerWiseLearningRates { 
-        layer_lr_map: HashMap<String, f64> 
+    LayerWiseLearningRates {
+        /// Map of layer names to learning rate ratios
+        layer_lr_map: HashMap<String, f64>,
     },
 }
 
@@ -49,6 +57,8 @@ pub enum LayerState {
 pub struct TransferLearningManager<F: Float + Debug> {
     /// Layer states for each layer
     layer_states: HashMap<String, LayerState>,
+    /// Layer names in order (for consistent unfreezing)
+    layer_order: Vec<String>,
     /// Transfer strategy
     strategy: TransferStrategy,
     /// Base learning rate
@@ -79,6 +89,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
     pub fn new(strategy: TransferStrategy, base_learning_rate: f64) -> Result<Self> {
         Ok(Self {
             layer_states: HashMap::new(),
+            layer_order: Vec::new(),
             strategy,
             base_learning_rate: F::from(base_learning_rate).ok_or_else(|| {
                 NeuralError::InvalidArchitecture("Invalid learning rate".to_string())
@@ -90,11 +101,13 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
 
     /// Initialize layer states based on the transfer strategy
     pub fn initialize_layer_states(&mut self, layer_names: &[String]) -> Result<()> {
+        // Store the layer order
+        self.layer_order = layer_names.to_vec();
         match &self.strategy {
             TransferStrategy::FeatureExtraction { unfrozen_layers } => {
                 let total_layers = layer_names.len();
                 let frozen_layers = total_layers.saturating_sub(*unfrozen_layers);
-                
+
                 for (i, layer_name) in layer_names.iter().enumerate() {
                     let state = if i < frozen_layers {
                         LayerState::Frozen
@@ -104,11 +117,14 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
                     self.layer_states.insert(layer_name.clone(), state);
                 }
             }
-            
-            TransferStrategy::FineTuning { backbone_lr_ratio, head_lr_ratio } => {
+
+            TransferStrategy::FineTuning {
+                backbone_lr_ratio,
+                head_lr_ratio,
+            } => {
                 let total_layers = layer_names.len();
                 let backbone_layers = total_layers.saturating_sub(2); // Last 2 layers are "head"
-                
+
                 for (i, layer_name) in layer_names.iter().enumerate() {
                     let state = if i < backbone_layers {
                         LayerState::ReducedLearningRate(*backbone_lr_ratio)
@@ -118,14 +134,15 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
                     self.layer_states.insert(layer_name.clone(), state);
                 }
             }
-            
+
             TransferStrategy::ProgressiveUnfreezing { .. } => {
                 // Start with all layers frozen
                 for layer_name in layer_names {
-                    self.layer_states.insert(layer_name.clone(), LayerState::Frozen);
+                    self.layer_states
+                        .insert(layer_name.clone(), LayerState::Frozen);
                 }
             }
-            
+
             TransferStrategy::LayerWiseLearningRates { layer_lr_map } => {
                 for layer_name in layer_names {
                     let lr_ratio = layer_lr_map.get(layer_name).unwrap_or(&1.0);
@@ -138,46 +155,48 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
                 }
             }
         }
-        
+
         Ok(())
     }
 
     /// Update layer states at the beginning of each epoch
     pub fn update_epoch(&mut self, epoch: usize) -> Result<()> {
         self.current_epoch = epoch;
-        
-        if let TransferStrategy::ProgressiveUnfreezing { unfreeze_schedule } = &self.strategy {
+
+        if let TransferStrategy::ProgressiveUnfreezing { unfreeze_schedule } =
+            &self.strategy.clone()
+        {
             for (unfreeze_epoch, layers_to_unfreeze) in unfreeze_schedule {
                 if epoch == *unfreeze_epoch {
                     self.unfreeze_layers(*layers_to_unfreeze)?;
                 }
             }
         }
-        
+
         Ok(())
     }
 
     /// Unfreeze the specified number of layers from the end
     pub fn unfreeze_layers(&mut self, count: usize) -> Result<()> {
-        let layer_names: Vec<String> = self.layer_states.keys().cloned().collect();
-        let total_layers = layer_names.len();
+        let total_layers = self.layer_order.len();
         let start_idx = total_layers.saturating_sub(count);
-        
-        for layer_name in layer_names.iter().skip(start_idx) {
+
+        for layer_name in self.layer_order.iter().skip(start_idx) {
             if let Some(state) = self.layer_states.get_mut(layer_name) {
                 if *state == LayerState::Frozen {
                     *state = LayerState::Trainable;
                 }
             }
         }
-        
+
         Ok(())
     }
 
     /// Freeze specific layers
     pub fn freeze_layers(&mut self, layer_names: &[String]) -> Result<()> {
         for layer_name in layer_names {
-            self.layer_states.insert(layer_name.clone(), LayerState::Frozen);
+            self.layer_states
+                .insert(layer_name.clone(), LayerState::Frozen);
         }
         Ok(())
     }
@@ -209,7 +228,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
         activation_variance: F,
     ) -> Result<()> {
         let is_frozen = self.is_layer_frozen(&layer_name);
-        
+
         let stats = LayerStatistics {
             avg_gradient_magnitude: gradient_magnitude,
             param_update_magnitude,
@@ -217,11 +236,11 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
             activation_variance,
             is_frozen,
         };
-        
+
         if let Ok(mut layer_stats) = self.layer_stats.write() {
             layer_stats.insert(layer_name, stats);
         }
-        
+
         Ok(())
     }
 
@@ -240,7 +259,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
         let mut frozen_layers = 0;
         let mut trainable_layers = 0;
         let mut reduced_lr_layers = 0;
-        
+
         for state in self.layer_states.values() {
             match state {
                 LayerState::Frozen => frozen_layers += 1,
@@ -248,7 +267,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
                 LayerState::ReducedLearningRate(_) => reduced_lr_layers += 1,
             }
         }
-        
+
         TransferLearningState {
             current_epoch: self.current_epoch,
             total_layers: self.layer_states.len(),
@@ -328,18 +347,22 @@ impl PretrainedWeightLoader {
     /// Apply weights to a model layer
     pub fn apply_weights_to_layer<L: Layer<f32>>(
         &self,
-        layer: &mut L,
+        _layer: &mut L,
         layer_name: &str,
     ) -> Result<bool> {
         // Try direct layer name first, then check mapping
-        let weight_key = self.layer_mapping.get(layer_name)
-            .unwrap_or(&layer_name.to_string());
-        
+        let default_key = layer_name.to_string();
+        let weight_key = self.layer_mapping.get(layer_name).unwrap_or(&default_key);
+
         if let Some(weights) = self.weights.get(weight_key) {
             // Here we would need to implement the actual weight setting
             // This is a simplified version - real implementation would need
             // access to layer internals
-            println!("Loading weights for layer {}: shape {:?}", layer_name, weights.shape());
+            println!(
+                "Loading weights for layer {}: shape {:?}",
+                layer_name,
+                weights.shape()
+            );
             Ok(true)
         } else {
             Ok(false)
@@ -379,28 +402,37 @@ impl<F: Float + Debug + 'static> FineTuningUtilities<F> {
     }
 
     /// Set learning rate for a layer group
-    pub fn set_layer_learning_rate(&mut self, layer_pattern: String, learning_rate: f64) -> Result<()> {
-        let lr = F::from(learning_rate).ok_or_else(|| {
-            NeuralError::InvalidArchitecture("Invalid learning rate".to_string())
-        })?;
+    pub fn set_layer_learning_rate(
+        &mut self,
+        layer_pattern: String,
+        learning_rate: f64,
+    ) -> Result<()> {
+        let lr = F::from(learning_rate)
+            .ok_or_else(|| NeuralError::InvalidArchitecture("Invalid learning rate".to_string()))?;
         self.lr_scheduler.insert(layer_pattern, lr);
         Ok(())
     }
 
     /// Set gradient clipping for a layer group
-    pub fn set_layer_gradient_clip(&mut self, layer_pattern: String, clip_value: f64) -> Result<()> {
-        let clip = F::from(clip_value).ok_or_else(|| {
-            NeuralError::InvalidArchitecture("Invalid clip value".to_string())
-        })?;
+    pub fn set_layer_gradient_clip(
+        &mut self,
+        layer_pattern: String,
+        clip_value: f64,
+    ) -> Result<()> {
+        let clip = F::from(clip_value)
+            .ok_or_else(|| NeuralError::InvalidArchitecture("Invalid clip value".to_string()))?;
         self.gradient_clips.insert(layer_pattern, clip);
         Ok(())
     }
 
     /// Set weight decay for a layer group
-    pub fn set_layer_weight_decay(&mut self, layer_pattern: String, weight_decay: f64) -> Result<()> {
-        let decay = F::from(weight_decay).ok_or_else(|| {
-            NeuralError::InvalidArchitecture("Invalid weight decay".to_string())
-        })?;
+    pub fn set_layer_weight_decay(
+        &mut self,
+        layer_pattern: String,
+        weight_decay: f64,
+    ) -> Result<()> {
+        let decay = F::from(weight_decay)
+            .ok_or_else(|| NeuralError::InvalidArchitecture("Invalid weight decay".to_string()))?;
         self.weight_decays.insert(layer_pattern, decay);
         Ok(())
     }
@@ -472,12 +504,18 @@ pub enum AdaptationMethod {
     /// Feature alignment via moment matching
     MomentMatching,
     /// Adversarial domain adaptation
-    AdversarialTraining { lambda: f64 },
+    AdversarialTraining {
+        /// Regularization parameter for adversarial loss
+        lambda: f64,
+    },
     /// Coral (correlation alignment)
     CoralAlignment,
 }
 
-impl<F: Float + Debug + 'static> DomainAdaptation<F> {
+impl<
+        F: Float + Debug + 'static + FromPrimitive + Clone + Zero + Add<Output = F> + Div<Output = F>,
+    > DomainAdaptation<F>
+{
     /// Create new domain adaptation utility
     pub fn new(method: AdaptationMethod) -> Self {
         Self {
@@ -502,15 +540,17 @@ impl<F: Float + Debug + 'static> DomainAdaptation<F> {
         }
 
         // Compute mean across batch dimension
-        let mean = features.mean_axis(ndarray::Axis(0))
+        let mean = features
+            .mean_axis(ndarray::Axis(0))
             .ok_or_else(|| NeuralError::ComputationError("Failed to compute mean".to_string()))?;
 
         // Compute variance
         let variance = {
             let diff = features - &mean;
             let squared_diff = diff.mapv(|x| x * x);
-            squared_diff.mean_axis(ndarray::Axis(0))
-                .ok_or_else(|| NeuralError::ComputationError("Failed to compute variance".to_string()))?
+            squared_diff.mean_axis(ndarray::Axis(0)).ok_or_else(|| {
+                NeuralError::ComputationError("Failed to compute variance".to_string())
+            })?
         };
 
         let stats = DomainStatistics {
@@ -529,14 +569,14 @@ impl<F: Float + Debug + 'static> DomainAdaptation<F> {
     }
 
     /// Apply domain adaptation
-    pub fn adapt_features(
-        &self,
-        layer_name: &str,
-        features: &ArrayD<F>,
-    ) -> Result<ArrayD<F>> {
-        let source_stats = self.source_stats.get(layer_name)
+    pub fn adapt_features(&self, layer_name: &str, features: &ArrayD<F>) -> Result<ArrayD<F>> {
+        let source_stats = self
+            .source_stats
+            .get(layer_name)
             .ok_or_else(|| NeuralError::ComputationError("Source stats not found".to_string()))?;
-        let target_stats = self.target_stats.get(layer_name)
+        let target_stats = self
+            .target_stats
+            .get(layer_name)
             .ok_or_else(|| NeuralError::ComputationError("Target stats not found".to_string()))?;
 
         match self.adaptation_method {
@@ -561,15 +601,15 @@ impl<F: Float + Debug + 'static> DomainAdaptation<F> {
     ) -> Result<ArrayD<F>> {
         // Normalize using source statistics, then denormalize using target statistics
         let eps = F::from(1e-5).unwrap();
-        
+
         // Normalize with source stats
-        let normalized = (features - &source_stats.mean) / 
-            (source_stats.variance.mapv(|x| (x + eps).sqrt()));
-        
+        let normalized =
+            (features - &source_stats.mean) / (source_stats.variance.mapv(|x| (x + eps).sqrt()));
+
         // Denormalize with target stats
-        let adapted = normalized * target_stats.variance.mapv(|x| (x + eps).sqrt()) + 
-            &target_stats.mean;
-        
+        let adapted =
+            normalized * target_stats.variance.mapv(|x| (x + eps).sqrt()) + &target_stats.mean;
+
         Ok(adapted)
     }
 
@@ -580,25 +620,26 @@ impl<F: Float + Debug + 'static> DomainAdaptation<F> {
         target_stats: &DomainStatistics<F>,
     ) -> Result<ArrayD<F>> {
         // Simple moment matching: adjust to target mean and variance
-        let current_mean = features.mean_axis(ndarray::Axis(0))
+        let current_mean = features
+            .mean_axis(ndarray::Axis(0))
             .ok_or_else(|| NeuralError::ComputationError("Failed to compute mean".to_string()))?;
         let current_var = {
             let diff = features - &current_mean;
             let squared_diff = diff.mapv(|x| x * x);
-            squared_diff.mean_axis(ndarray::Axis(0))
-                .ok_or_else(|| NeuralError::ComputationError("Failed to compute variance".to_string()))?
+            squared_diff.mean_axis(ndarray::Axis(0)).ok_or_else(|| {
+                NeuralError::ComputationError("Failed to compute variance".to_string())
+            })?
         };
 
         let eps = F::from(1e-5).unwrap();
-        
+
         // Normalize current features
-        let normalized = (features - &current_mean) / 
-            current_var.mapv(|x| (x + eps).sqrt());
-        
+        let normalized = (features - &current_mean) / current_var.mapv(|x| (x + eps).sqrt());
+
         // Apply target statistics
-        let adapted = normalized * target_stats.variance.mapv(|x| (x + eps).sqrt()) + 
-            &target_stats.mean;
-        
+        let adapted =
+            normalized * target_stats.variance.mapv(|x| (x + eps).sqrt()) + &target_stats.mean;
+
         Ok(adapted)
     }
 }
@@ -618,17 +659,17 @@ mod tests {
     fn test_feature_extraction_strategy() {
         let strategy = TransferStrategy::FeatureExtraction { unfrozen_layers: 2 };
         let mut manager = TransferLearningManager::<f64>::new(strategy, 0.001).unwrap();
-        
+
         let layer_names = vec![
             "conv1".to_string(),
-            "conv2".to_string(), 
+            "conv2".to_string(),
             "conv3".to_string(),
             "fc1".to_string(),
             "fc2".to_string(),
         ];
-        
+
         manager.initialize_layer_states(&layer_names).unwrap();
-        
+
         // First 3 layers should be frozen, last 2 trainable
         assert!(manager.is_layer_frozen("conv1"));
         assert!(manager.is_layer_frozen("conv2"));
@@ -639,49 +680,49 @@ mod tests {
 
     #[test]
     fn test_fine_tuning_strategy() {
-        let strategy = TransferStrategy::FineTuning { 
-            backbone_lr_ratio: 0.1, 
-            head_lr_ratio: 1.0 
+        let strategy = TransferStrategy::FineTuning {
+            backbone_lr_ratio: 0.1,
+            head_lr_ratio: 1.0,
         };
         let mut manager = TransferLearningManager::<f64>::new(strategy, 0.001).unwrap();
-        
+
         let layer_names = vec![
             "backbone1".to_string(),
             "backbone2".to_string(),
             "head1".to_string(),
             "head2".to_string(),
         ];
-        
+
         manager.initialize_layer_states(&layer_names).unwrap();
-        
+
         // Check learning rates
         let backbone_lr = manager.get_layer_learning_rate("backbone1");
         let head_lr = manager.get_layer_learning_rate("head1");
-        
+
         assert!((backbone_lr - 0.0001).abs() < 1e-6); // 0.001 * 0.1
         assert!((head_lr - 0.001).abs() < 1e-6); // 0.001 * 1.0
     }
 
     #[test]
     fn test_progressive_unfreezing() {
-        let strategy = TransferStrategy::ProgressiveUnfreezing { 
-            unfreeze_schedule: vec![(5, 2), (10, 2)] 
+        let strategy = TransferStrategy::ProgressiveUnfreezing {
+            unfreeze_schedule: vec![(5, 2), (10, 2)],
         };
         let mut manager = TransferLearningManager::<f64>::new(strategy, 0.001).unwrap();
-        
+
         let layer_names = vec![
             "layer1".to_string(),
             "layer2".to_string(),
             "layer3".to_string(),
             "layer4".to_string(),
         ];
-        
+
         manager.initialize_layer_states(&layer_names).unwrap();
-        
+
         // Initially all frozen
         assert!(manager.is_layer_frozen("layer1"));
         assert!(manager.is_layer_frozen("layer4"));
-        
+
         // After epoch 5, last 2 layers unfrozen
         manager.update_epoch(5).unwrap();
         assert!(manager.is_layer_frozen("layer1"));
@@ -693,14 +734,17 @@ mod tests {
     #[test]
     fn test_pretrained_weight_loader() {
         let mut loader = PretrainedWeightLoader::new();
-        
+
         let mut weights = HashMap::new();
-        weights.insert("layer1".to_string(), Array::zeros((10, 5)).into_dyn());
-        weights.insert("layer2".to_string(), Array::ones((5, 3)).into_dyn());
-        
+        weights.insert(
+            "layer1".to_string(),
+            ArrayD::zeros(ndarray::IxDyn(&[10, 5])),
+        );
+        weights.insert("layer2".to_string(), ArrayD::ones(ndarray::IxDyn(&[5, 3])));
+
         loader.load_weights(weights).unwrap();
         loader.add_layer_mapping("layer1".to_string(), "new_layer1".to_string());
-        
+
         let available = loader.get_available_weights();
         assert_eq!(available.len(), 2);
         assert!(available.contains(&"layer1".to_string()));
@@ -710,19 +754,25 @@ mod tests {
     #[test]
     fn test_fine_tuning_utilities() {
         let mut utils = FineTuningUtilities::<f64>::new();
-        
-        utils.set_layer_learning_rate("backbone".to_string(), 0.0001).unwrap();
-        utils.set_layer_learning_rate("head".to_string(), 0.001).unwrap();
-        utils.set_layer_gradient_clip("backbone".to_string(), 1.0).unwrap();
-        
+
+        utils
+            .set_layer_learning_rate("backbone".to_string(), 0.0001)
+            .unwrap();
+        utils
+            .set_layer_learning_rate("head".to_string(), 0.001)
+            .unwrap();
+        utils
+            .set_layer_gradient_clip("backbone".to_string(), 1.0)
+            .unwrap();
+
         let backbone_lr = utils.get_effective_learning_rate("backbone_layer1", 0.01);
         let head_lr = utils.get_effective_learning_rate("head_layer1", 0.01);
         let unknown_lr = utils.get_effective_learning_rate("unknown_layer", 0.01);
-        
+
         assert!((backbone_lr - 0.0001).abs() < 1e-6);
         assert!((head_lr - 0.001).abs() < 1e-6);
         assert!((unknown_lr - 0.01).abs() < 1e-6);
-        
+
         let clip = utils.get_gradient_clip("backbone_layer1");
         assert!(clip.is_some());
         assert!((clip.unwrap() - 1.0).abs() < 1e-6);
@@ -731,16 +781,28 @@ mod tests {
     #[test]
     fn test_domain_adaptation() {
         let mut adapter = DomainAdaptation::<f64>::new(AdaptationMethod::BatchNormAdaptation);
-        
+
         // Create some test features
-        let source_features = Array::from_shape_vec((10, 5), 
-            (0..50).map(|x| x as f64 / 10.0).collect()).unwrap().into_dyn();
-        let target_features = Array::from_shape_vec((10, 5), 
-            (0..50).map(|x| (x as f64 + 25.0) / 10.0).collect()).unwrap().into_dyn();
-        
-        adapter.compute_domain_statistics("layer1".to_string(), &source_features, true).unwrap();
-        adapter.compute_domain_statistics("layer1".to_string(), &target_features, false).unwrap();
-        
+        let source_features = ArrayD::from_shape_vec(
+            ndarray::IxDyn(&[10, 5]),
+            (0..50).map(|x| x as f64 / 10.0).collect(),
+        )
+        .unwrap()
+        .into_dyn();
+        let target_features = ArrayD::from_shape_vec(
+            ndarray::IxDyn(&[10, 5]),
+            (0..50).map(|x| (x as f64 + 25.0) / 10.0).collect(),
+        )
+        .unwrap()
+        .into_dyn();
+
+        adapter
+            .compute_domain_statistics("layer1".to_string(), &source_features, true)
+            .unwrap();
+        adapter
+            .compute_domain_statistics("layer1".to_string(), &target_features, false)
+            .unwrap();
+
         let adapted = adapter.adapt_features("layer1", &source_features).unwrap();
         assert_eq!(adapted.shape(), source_features.shape());
     }
@@ -756,7 +818,7 @@ mod tests {
             reduced_lr_layers: 0,
             strategy,
         };
-        
+
         let display_str = format!("{}", state);
         assert!(display_str.contains("Epoch 10"));
         assert!(display_str.contains("Total layers: 5"));

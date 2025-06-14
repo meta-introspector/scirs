@@ -52,8 +52,8 @@ pub trait ExactSolution<F: IntegrateFloat> {
         let mut coords_plus = coordinates.to_vec();
         let mut coords_minus = coordinates.to_vec();
 
-        coords_plus[var2] = coords_plus[var2] + h;
-        coords_minus[var2] = coords_minus[var2] - h;
+        coords_plus[var2] += h;
+        coords_minus[var2] -= h;
 
         let deriv_plus = self.derivative(&coords_plus, var1);
         let deriv_minus = self.derivative(&coords_minus, var1);
@@ -85,8 +85,8 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         let mut t_power = F::one();
 
         for &coeff in &self.coefficients {
-            result = result + coeff * t_power;
-            t_power = t_power * t;
+            result += coeff * t_power;
+            t_power *= t;
         }
 
         result
@@ -98,8 +98,8 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         let mut t_power = F::one();
 
         for (i, &coeff) in self.coefficients.iter().enumerate().skip(1) {
-            result = result + F::from(i).unwrap() * coeff * t_power;
-            t_power = t_power * t;
+            result += F::from(i).unwrap() * coeff * t_power;
+            t_power *= t;
         }
 
         result
@@ -112,8 +112,8 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
 
         for (i, &coeff) in self.coefficients.iter().enumerate().skip(2) {
             let factor = F::from(i * (i - 1)).unwrap();
-            result = result + factor * coeff * t_power;
-            t_power = t_power * t;
+            result += factor * coeff * t_power;
+            t_power *= t;
         }
 
         result
@@ -350,10 +350,10 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
             let log_h = h.ln();
             let log_e = e.ln();
 
-            sum_log_h = sum_log_h + log_h;
-            sum_log_e = sum_log_e + log_e;
-            sum_log_h_sq = sum_log_h_sq + log_h * log_h;
-            sum_log_h_log_e = sum_log_h_log_e + log_h * log_e;
+            sum_log_h += log_h;
+            sum_log_e += log_e;
+            sum_log_h_sq += log_h * log_h;
+            sum_log_h_log_e += log_h * log_e;
         }
 
         let n_f = F::from(n).unwrap();
@@ -425,7 +425,7 @@ impl ErrorAnalysis {
         let mut sum_sq = F::zero();
         for (e, n) in exact.iter().zip(numerical.iter()) {
             let diff = *e - *n;
-            sum_sq = sum_sq + diff * diff;
+            sum_sq += diff * diff;
         }
 
         Ok((sum_sq / F::from(exact.len()).unwrap()).sqrt())
@@ -469,7 +469,7 @@ impl ErrorAnalysis {
 
         for (e, n) in exact.iter().zip(numerical.iter()) {
             let diff = *e - *n;
-            sum_sq = sum_sq + diff * diff;
+            sum_sq += diff * diff;
             count += 1;
         }
 

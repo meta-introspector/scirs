@@ -309,10 +309,16 @@ impl<F: Float + FromPrimitive + Debug + Display> RegularGridInterpolator<F> {
                             // Point is before the first grid point
                             if self.extrapolate == ExtrapolateMode::Extrapolate {
                                 idx = 0;
-                            } else if self.extrapolate == ExtrapolateMode::Extrapolate {
-                                // Create index coordinates (all zeros)
-                                let idx = vec![0; self.points.len()];
-                                return Ok(self.values[idx.as_slice()]);
+                            } else if self.extrapolate == ExtrapolateMode::Error {
+                                return Err(InterpolateError::out_of_domain(
+                                    x,
+                                    dim_points[0],
+                                    dim_points[dim_points.len() - 1],
+                                    "N-dimensional interpolation",
+                                ));
+                            } else {
+                                // For Nan mode, clamp to boundary
+                                idx = 0;
                             }
                         } else {
                             // Point is after the last grid point

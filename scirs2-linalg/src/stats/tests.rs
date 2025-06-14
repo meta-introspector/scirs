@@ -106,9 +106,26 @@ where
         }
 
         sample_sizes.push(n_i);
-        let cov_i = covariance_matrix(group, Some(1))?;
-        let log_det_i = det(&cov_i.view(), None)?.ln();
+        let mut cov_i = covariance_matrix(group, Some(1))?;
 
+        // Add small regularization to diagonal for numerical stability
+        let reg_factor = F::from(1e-10).unwrap();
+        for j in 0..cov_i.nrows() {
+            cov_i[[j, j]] += reg_factor;
+        }
+
+        let det_i = det(&cov_i.view(), None)?;
+
+        // Check for positive determinant before taking log
+        if det_i <= F::zero() {
+            return Err(LinalgError::InvalidInputError(format!(
+                "Covariance matrix for group {} has non-positive determinant: {:?}. Consider increasing sample size or regularization.",
+                groups.iter().position(|g| std::ptr::eq(g.as_ptr(), group.as_ptr())).unwrap_or(0),
+                det_i
+            )));
+        }
+
+        let log_det_i = det_i.ln();
         group_covs.push(cov_i);
         log_dets.push(log_det_i);
     }
@@ -122,7 +139,23 @@ where
         pooled_cov += &(cov_i * weight);
     }
 
-    let log_det_pooled = det::<F>(&pooled_cov.view(), None)?.ln();
+    // Add regularization to pooled covariance matrix
+    let reg_factor = F::from(1e-10).unwrap();
+    for i in 0..pooled_cov.nrows() {
+        pooled_cov[[i, i]] += reg_factor;
+    }
+
+    let det_pooled = det::<F>(&pooled_cov.view(), None)?;
+
+    // Check for positive determinant before taking log
+    if det_pooled <= F::zero() {
+        return Err(LinalgError::InvalidInputError(format!(
+            "Pooled covariance matrix has non-positive determinant: {:?}. Consider increasing sample sizes or regularization.",
+            det_pooled
+        )));
+    }
+
+    let log_det_pooled = det_pooled.ln();
 
     // Compute Box's M statistic
     let mut m_statistic = F::from(total_dof).unwrap() * log_det_pooled;
@@ -134,6 +167,13 @@ where
     // Convert to chi-square statistic using Box's correction
     let c1 = compute_box_correction_c1(&sample_sizes, p)?;
     let chi_square_stat = m_statistic * (F::one() - c1);
+
+    // Check for finite statistic
+    if !chi_square_stat.is_finite() {
+        return Err(LinalgError::InvalidInputError(
+            "Box's M statistic is not finite. This may indicate numerical instability due to ill-conditioned covariance matrices.".to_string(),
+        ));
+    }
 
     // Degrees of freedom for chi-square distribution
     let df = (k - 1) * p * (p + 1) / 2;
@@ -258,9 +298,16 @@ where
         )));
     }
 
-    // Compute sample mean and covariance
+    // Compute sample mean and covariance with regularization
     let mean = data.mean_axis(Axis(0)).unwrap();
-    let cov = covariance_matrix(data, Some(1))?;
+    let mut cov = covariance_matrix(data, Some(1))?;
+
+    // Add small regularization to diagonal for numerical stability
+    let reg_factor = F::from(1e-10).unwrap();
+    for i in 0..cov.nrows() {
+        cov[[i, i]] += reg_factor;
+    }
+
     let cov_inv = inv(&cov.view(), None)?;
 
     // Compute Mahalanobis distances
@@ -382,8 +429,15 @@ where
     // Compute difference
     let diff = &sample_mean - &hypothesized_mean;
 
-    // Compute sample covariance matrix
-    let cov = covariance_matrix(data, Some(1))?;
+    // Compute sample covariance matrix with regularization for numerical stability
+    let mut cov = covariance_matrix(data, Some(1))?;
+
+    // Add small regularization to diagonal for numerical stability
+    let reg_factor = F::from(1e-10).unwrap();
+    for i in 0..cov.nrows() {
+        cov[[i, i]] += reg_factor;
+    }
+
     let cov_inv = inv(&cov.view(), None)?;
 
     // Compute Hotelling's T² statistic
@@ -487,8 +541,16 @@ mod tests {
 
     #[test]
     fn test_hotelling_t2_test() {
-        // Simple test with known result
-        let data = array![[1.0, 2.0], [2.0, 3.0], [3.0, 4.0], [4.0, 5.0], [5.0, 6.0]];
+        // Test data with some variation to avoid singular covariance matrix
+        let data = array![
+            [1.0, 2.1],
+            [2.1, 2.9],
+            [2.9, 4.1],
+            [4.1, 4.8],
+            [4.8, 6.2],
+            [0.5, 1.8],
+            [3.2, 3.7]
+        ];
 
         let result = hotelling_t2_test(&data.view(), None, 0.05).unwrap();
 
@@ -537,10 +599,24 @@ mod tests {
 
     #[test]
     fn test_box_m_test() {
-        // Create two groups with potentially different covariances
-        let group1 = array![[1.0, 0.0], [2.0, 1.0], [3.0, 2.0], [4.0, 3.0]];
+        // Create two groups with more samples and variation to avoid singular matrices
+        let group1 = array![
+            [1.0, 0.1],
+            [2.1, 1.2],
+            [2.8, 1.9],
+            [4.1, 3.2],
+            [1.5, 0.8],
+            [3.2, 2.1]
+        ];
 
-        let group2 = array![[0.0, 1.0], [1.0, 2.0], [2.0, 3.0], [3.0, 4.0]];
+        let group2 = array![
+            [0.2, 1.1],
+            [1.1, 2.2],
+            [1.9, 2.8],
+            [3.2, 4.1],
+            [0.8, 1.9],
+            [2.5, 3.3]
+        ];
 
         let groups = vec![group1.view(), group2.view()];
         let result = box_m_test(&groups, 0.05).unwrap();

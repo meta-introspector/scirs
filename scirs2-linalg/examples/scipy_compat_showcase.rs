@@ -243,7 +243,7 @@ mod tests {
 
         // Test determinant
         let det_result = compat::det(&a.view(), false, true).unwrap();
-        assert!((det_result - 3.0).abs() < 1e-10);
+        assert!((det_result - 3.0_f64).abs() < 1e-10);
 
         // Test matrix norm
         let norm_result = compat::norm(&a.view(), Some("fro"), None, false, true).unwrap();
@@ -285,7 +285,7 @@ mod tests {
         assert_eq!(exp_result.shape(), [2, 2]);
 
         // Test matrix square root
-        let sqrt_result = compat::sqrtm(&a.view()).unwrap();
+        let sqrt_result = compat::sqrtm(&a.view(), None).unwrap();
         assert_eq!(sqrt_result.shape(), [2, 2]);
 
         // Test pseudoinverse
@@ -299,7 +299,7 @@ mod tests {
 
         // Test vector 2-norm
         let norm_2 = compat::vector_norm(&v.view(), Some(2.0), true).unwrap();
-        assert!((norm_2 - 5.0).abs() < 1e-10);
+        assert!((norm_2 - 5.0_f64).abs() < 1e-10);
 
         // Test vector 1-norm
         let norm_1 = compat::vector_norm(&v.view(), Some(1.0), true).unwrap();
@@ -329,11 +329,12 @@ mod tests {
     fn test_scipy_compat_error_handling() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
 
-        // Test that unimplemented functions return appropriate errors
-        assert!(compat::schur(&a.view(), "real", None, false, None, true).is_err());
-        assert!(compat::sinm(&a.view()).is_err());
-        assert!(compat::cosm(&a.view()).is_err());
-        assert!(compat::tanm(&a.view()).is_err());
+        // Test that Schur decomposition works with valid input
+        assert!(compat::schur(&a.view(), "real", None, false, None, true).is_ok());
+        // Test that trigonometric matrix functions work
+        assert!(compat::sinm(&a.view()).is_ok());
+        assert!(compat::cosm(&a.view()).is_ok());
+        assert!(compat::tanm(&a.view()).is_ok());
 
         let b = array![[1.0], [2.0]];
         assert!(compat::solve_banded(&a.view(), &b.view(), false, false, true).is_err());

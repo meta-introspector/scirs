@@ -127,6 +127,7 @@ pub fn griddata<F>(
     xi: &ArrayView2<F>,
     method: GriddataMethod,
     fill_value: Option<F>,
+    workers: Option<usize>,
 ) -> InterpolateResult<Array1<F>>
 where
     F: Float
@@ -137,19 +138,42 @@ where
         + AddAssign
         + std::ops::SubAssign
         + std::fmt::LowerExp
+        + Send
+        + Sync
         + 'static,
 {
     // Validate inputs
     validate_griddata_inputs(points, values, xi)?;
 
-    match method {
-        GriddataMethod::Linear => griddata_linear(points, values, xi, fill_value),
-        GriddataMethod::Nearest => griddata_nearest(points, values, xi, fill_value),
-        GriddataMethod::Cubic => griddata_cubic(points, values, xi, fill_value),
-        GriddataMethod::Rbf => griddata_rbf(points, values, xi, RBFKernel::Linear, fill_value),
-        GriddataMethod::RbfCubic => griddata_rbf(points, values, xi, RBFKernel::Cubic, fill_value),
-        GriddataMethod::RbfThinPlate => {
-            griddata_rbf(points, values, xi, RBFKernel::ThinPlateSpline, fill_value)
+    // Decide whether to use parallel or serial execution
+    let use_parallel = match workers {
+        Some(1) => false, // Explicitly requested serial execution
+        Some(_) => true,  // Explicitly requested parallel execution with n > 1 workers
+        None => {
+            // Automatic decision based on dataset size
+            // Use parallel for large datasets (threshold based on empirical testing)
+            let n_points = points.nrows();
+            let n_queries = xi.nrows();
+            n_queries >= 100 && n_points >= 50
+        }
+    };
+
+    if use_parallel {
+        // Use the existing parallel implementation
+        griddata_parallel(points, values, xi, method, fill_value, workers)
+    } else {
+        // Use serial implementation
+        match method {
+            GriddataMethod::Linear => griddata_linear(points, values, xi, fill_value),
+            GriddataMethod::Nearest => griddata_nearest(points, values, xi, fill_value),
+            GriddataMethod::Cubic => griddata_cubic(points, values, xi, fill_value),
+            GriddataMethod::Rbf => griddata_rbf(points, values, xi, RBFKernel::Linear, fill_value),
+            GriddataMethod::RbfCubic => {
+                griddata_rbf(points, values, xi, RBFKernel::Cubic, fill_value)
+            }
+            GriddataMethod::RbfThinPlate => {
+                griddata_rbf(points, values, xi, RBFKernel::ThinPlateSpline, fill_value)
+            }
         }
     }
 }
@@ -244,7 +268,7 @@ where
     // For small query sets, just use the standard griddata function
     let n_queries = xi.nrows();
     if n_queries < 100 {
-        return griddata(points, values, xi, method, fill_value);
+        return griddata(points, values, xi, method, fill_value, None);
     }
 
     // Pre-setup the interpolation method
@@ -937,6 +961,8 @@ where
         + AddAssign
         + std::ops::SubAssign
         + std::fmt::LowerExp
+        + Send
+        + Sync
         + 'static,
 {
     // For now, fall back to RBF with cubic kernel
@@ -961,6 +987,8 @@ where
         + AddAssign
         + std::ops::SubAssign
         + std::fmt::LowerExp
+        + Send
+        + Sync
         + 'static,
 {
     // Determine appropriate epsilon based on data scale
@@ -1116,6 +1144,7 @@ mod tests {
             &xi.view(),
             GriddataMethod::Nearest,
             None,
+            None,
         )?;
 
         assert_eq!(result.len(), 2);
@@ -1136,6 +1165,7 @@ mod tests {
             &values.view(),
             &xi.view(),
             GriddataMethod::Rbf,
+            None,
             None,
         )?;
 
@@ -1176,6 +1206,7 @@ mod tests {
             &values.view(),
             &xi.view(),
             GriddataMethod::Nearest,
+            None,
             None,
         );
 

@@ -207,6 +207,15 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
         }
     }
 
+    /// Get the degree of a node (total number of incident edges)
+    pub fn degree(&self, node: &N) -> usize {
+        if let Some(idx) = self.node_indices.get(node) {
+            self.graph.neighbors(*idx).count()
+        } else {
+            0
+        }
+    }
+
     /// Check if the graph contains a specific node
     pub fn contains_node(&self, node: &N) -> bool {
         self.node_indices.contains_key(node)
@@ -800,6 +809,319 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E, Ix> {
     }
 }
 
+/// A specialized bipartite graph structure
+///
+/// A bipartite graph is a graph whose vertices can be divided into two disjoint sets
+/// such that no two vertices within the same set are adjacent. This implementation
+/// enforces the bipartite property and provides optimized operations.
+pub struct BipartiteGraph<N: Node, E: EdgeWeight, Ix: IndexType = u32> {
+    /// The underlying undirected graph
+    graph: Graph<N, E, Ix>,
+    /// Set A of the bipartition
+    set_a: std::collections::HashSet<N>,
+    /// Set B of the bipartition
+    set_b: std::collections::HashSet<N>,
+}
+
+impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for BipartiteGraph<N, E, Ix> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<N: Node, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, E, Ix> {
+    /// Create a new empty bipartite graph
+    pub fn new() -> Self {
+        BipartiteGraph {
+            graph: Graph::new(),
+            set_a: std::collections::HashSet::new(),
+            set_b: std::collections::HashSet::new(),
+        }
+    }
+
+    /// Create a bipartite graph from a regular graph if it's bipartite
+    ///
+    /// # Arguments
+    /// * `graph` - The input graph to convert
+    ///
+    /// # Returns
+    /// * `Result<BipartiteGraph<N, E, Ix>>` - The bipartite graph if conversion is successful
+    pub fn from_graph(graph: Graph<N, E, Ix>) -> Result<Self>
+    where
+        N: Clone,
+        E: Clone,
+    {
+        // Check if the graph is bipartite using the existing algorithm
+        let bipartite_result = crate::algorithms::connectivity::is_bipartite(&graph);
+
+        if !bipartite_result.is_bipartite {
+            return Err(GraphError::InvalidGraph(
+                "Input graph is not bipartite".to_string(),
+            ));
+        }
+
+        let mut set_a = std::collections::HashSet::new();
+        let mut set_b = std::collections::HashSet::new();
+
+        // Partition nodes based on coloring
+        for (node, &color) in &bipartite_result.coloring {
+            if color == 0 {
+                set_a.insert(node.clone());
+            } else {
+                set_b.insert(node.clone());
+            }
+        }
+
+        Ok(BipartiteGraph {
+            graph,
+            set_a,
+            set_b,
+        })
+    }
+
+    /// Add a node to set A of the bipartition
+    pub fn add_node_to_set_a(&mut self, node: N) {
+        if !self.set_b.contains(&node) {
+            self.graph.add_node(node.clone());
+            self.set_a.insert(node);
+        }
+    }
+
+    /// Add a node to set B of the bipartition
+    pub fn add_node_to_set_b(&mut self, node: N) {
+        if !self.set_a.contains(&node) {
+            self.graph.add_node(node.clone());
+            self.set_b.insert(node);
+        }
+    }
+
+    /// Add an edge between nodes from different sets
+    ///
+    /// # Arguments
+    /// * `source` - Source node (must be in one set)
+    /// * `target` - Target node (must be in the other set)
+    /// * `weight` - Edge weight
+    ///
+    /// # Returns
+    /// * `Result<()>` - Success or error if nodes are in the same set
+    pub fn add_edge(&mut self, source: N, target: N, weight: E) -> Result<()>
+    where
+        N: Clone,
+    {
+        // Validate bipartite property
+        let source_in_a = self.set_a.contains(&source);
+        let source_in_b = self.set_b.contains(&source);
+        let target_in_a = self.set_a.contains(&target);
+        let target_in_b = self.set_b.contains(&target);
+
+        // Check if both nodes exist in the graph
+        if (!source_in_a && !source_in_b) || (!target_in_a && !target_in_b) {
+            return Err(GraphError::NodeNotFound);
+        }
+
+        // Check bipartite constraint: nodes must be in different sets
+        if (source_in_a && target_in_a) || (source_in_b && target_in_b) {
+            return Err(GraphError::InvalidGraph(
+                "Cannot add edge between nodes in the same partition".to_string(),
+            ));
+        }
+
+        self.graph.add_edge(source, target, weight)
+    }
+
+    /// Get all nodes in set A
+    pub fn set_a(&self) -> &std::collections::HashSet<N> {
+        &self.set_a
+    }
+
+    /// Get all nodes in set B
+    pub fn set_b(&self) -> &std::collections::HashSet<N> {
+        &self.set_b
+    }
+
+    /// Get the size of set A
+    pub fn set_a_size(&self) -> usize {
+        self.set_a.len()
+    }
+
+    /// Get the size of set B
+    pub fn set_b_size(&self) -> usize {
+        self.set_b.len()
+    }
+
+    /// Check which set a node belongs to
+    ///
+    /// # Arguments
+    /// * `node` - The node to check
+    ///
+    /// # Returns
+    /// * `Some(0)` if node is in set A, `Some(1)` if in set B, `None` if not found
+    pub fn node_set(&self, node: &N) -> Option<u8> {
+        if self.set_a.contains(node) {
+            Some(0)
+        } else if self.set_b.contains(node) {
+            Some(1)
+        } else {
+            None
+        }
+    }
+
+    /// Get neighbors of a node (always from the opposite set)
+    pub fn neighbors(&self, node: &N) -> Result<Vec<N>>
+    where
+        N: Clone,
+    {
+        self.graph.neighbors(node)
+    }
+
+    /// Get neighbors in set A for a node in set B
+    pub fn neighbors_in_a(&self, node: &N) -> Result<Vec<N>>
+    where
+        N: Clone,
+    {
+        if !self.set_b.contains(node) {
+            return Err(GraphError::InvalidGraph(
+                "Node must be in set B to get neighbors in set A".to_string(),
+            ));
+        }
+
+        let all_neighbors = self.graph.neighbors(node)?;
+        Ok(all_neighbors
+            .into_iter()
+            .filter(|n| self.set_a.contains(n))
+            .collect())
+    }
+
+    /// Get neighbors in set B for a node in set A
+    pub fn neighbors_in_b(&self, node: &N) -> Result<Vec<N>>
+    where
+        N: Clone,
+    {
+        if !self.set_a.contains(node) {
+            return Err(GraphError::InvalidGraph(
+                "Node must be in set A to get neighbors in set B".to_string(),
+            ));
+        }
+
+        let all_neighbors = self.graph.neighbors(node)?;
+        Ok(all_neighbors
+            .into_iter()
+            .filter(|n| self.set_b.contains(n))
+            .collect())
+    }
+
+    /// Get the degree of a node
+    pub fn degree(&self, node: &N) -> usize {
+        self.graph.degree(node)
+    }
+
+    /// Get all nodes in the graph
+    pub fn nodes(&self) -> Vec<&N> {
+        self.graph.nodes()
+    }
+
+    /// Get all edges in the graph
+    pub fn edges(&self) -> Vec<Edge<N, E>>
+    where
+        N: Clone,
+        E: Clone,
+    {
+        self.graph.edges()
+    }
+
+    /// Number of nodes in the graph
+    pub fn node_count(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    /// Number of edges in the graph
+    pub fn edge_count(&self) -> usize {
+        self.graph.edge_count()
+    }
+
+    /// Check if the graph has a node
+    pub fn has_node(&self, node: &N) -> bool {
+        self.graph.has_node(node)
+    }
+
+    /// Check if an edge exists between two nodes
+    pub fn has_edge(&self, source: &N, target: &N) -> bool {
+        self.graph.has_edge(source, target)
+    }
+
+    /// Get the weight of an edge between two nodes
+    pub fn edge_weight(&self, source: &N, target: &N) -> Result<E>
+    where
+        E: Clone,
+    {
+        self.graph.edge_weight(source, target)
+    }
+
+    /// Get the adjacency matrix representation of the bipartite graph
+    ///
+    /// Returns a matrix where rows correspond to set A and columns to set B
+    pub fn biadjacency_matrix(&self) -> Array2<E>
+    where
+        E: num_traits::Zero + Copy,
+        N: Clone,
+    {
+        let a_size = self.set_a.len();
+        let b_size = self.set_b.len();
+        let mut biadj_mat = Array2::zeros((a_size, b_size));
+
+        // Create mappings from nodes to indices
+        let a_nodes: Vec<&N> = self.set_a.iter().collect();
+        let b_nodes: Vec<&N> = self.set_b.iter().collect();
+
+        let a_to_idx: HashMap<&N, usize> =
+            a_nodes.iter().enumerate().map(|(i, &n)| (n, i)).collect();
+        let b_to_idx: HashMap<&N, usize> =
+            b_nodes.iter().enumerate().map(|(i, &n)| (n, i)).collect();
+
+        // Fill the biadjacency matrix
+        for edge in self.graph.edges() {
+            let (a_idx, b_idx) = if self.set_a.contains(&edge.source) {
+                (a_to_idx[&edge.source], b_to_idx[&edge.target])
+            } else {
+                (a_to_idx[&edge.target], b_to_idx[&edge.source])
+            };
+            biadj_mat[[a_idx, b_idx]] = edge.weight;
+        }
+
+        biadj_mat
+    }
+
+    /// Convert to a regular graph
+    pub fn to_graph(self) -> Graph<N, E, Ix> {
+        self.graph
+    }
+
+    /// Get a reference to the underlying graph
+    pub fn as_graph(&self) -> &Graph<N, E, Ix> {
+        &self.graph
+    }
+
+    /// Check if the graph is complete bipartite (all possible edges exist)
+    pub fn is_complete(&self) -> bool {
+        let expected_edges = self.set_a.len() * self.set_b.len();
+        self.edge_count() == expected_edges
+    }
+
+    /// Get the maximum possible number of edges for this bipartite graph
+    pub fn max_edges(&self) -> usize {
+        self.set_a.len() * self.set_b.len()
+    }
+
+    /// Get the density of the bipartite graph (actual edges / max possible edges)
+    pub fn density(&self) -> f64 {
+        if self.max_edges() == 0 {
+            0.0
+        } else {
+            self.edge_count() as f64 / self.max_edges() as f64
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -957,6 +1279,193 @@ mod tests {
         assert_eq!(graph.edge_count(), 2);
         assert_eq!(graph.out_degree(&"A"), 1);
         assert_eq!(graph.in_degree(&"B"), 1);
+    }
+
+    #[test]
+    fn test_bipartite_graph_creation() {
+        let mut bipartite: BipartiteGraph<&str, f64> = BipartiteGraph::new();
+
+        // Add nodes to different sets
+        bipartite.add_node_to_set_a("A1");
+        bipartite.add_node_to_set_a("A2");
+        bipartite.add_node_to_set_b("B1");
+        bipartite.add_node_to_set_b("B2");
+
+        assert_eq!(bipartite.set_a_size(), 2);
+        assert_eq!(bipartite.set_b_size(), 2);
+        assert_eq!(bipartite.node_count(), 4);
+
+        // Add valid edges (between different sets)
+        assert!(bipartite.add_edge("A1", "B1", 1.0).is_ok());
+        assert!(bipartite.add_edge("A2", "B2", 2.0).is_ok());
+
+        assert_eq!(bipartite.edge_count(), 2);
+    }
+
+    #[test]
+    fn test_bipartite_graph_invalid_edges() {
+        let mut bipartite: BipartiteGraph<i32, f64> = BipartiteGraph::new();
+
+        bipartite.add_node_to_set_a(1);
+        bipartite.add_node_to_set_a(2);
+        bipartite.add_node_to_set_b(3);
+        bipartite.add_node_to_set_b(4);
+
+        // Try to add edge within same set (should fail)
+        assert!(bipartite.add_edge(1, 2, 1.0).is_err());
+        assert!(bipartite.add_edge(3, 4, 1.0).is_err());
+
+        // Valid edge should work
+        assert!(bipartite.add_edge(1, 3, 1.0).is_ok());
+    }
+
+    #[test]
+    fn test_bipartite_graph_from_regular_graph() {
+        // Create a bipartite graph (square)
+        let mut graph: Graph<i32, f64> = Graph::new();
+        graph.add_edge(1, 2, 1.0).unwrap();
+        graph.add_edge(2, 3, 2.0).unwrap();
+        graph.add_edge(3, 4, 3.0).unwrap();
+        graph.add_edge(4, 1, 4.0).unwrap();
+
+        // Convert to bipartite graph
+        let bipartite = BipartiteGraph::from_graph(graph).unwrap();
+
+        assert_eq!(bipartite.node_count(), 4);
+        assert_eq!(bipartite.edge_count(), 4);
+        assert_eq!(bipartite.set_a_size() + bipartite.set_b_size(), 4);
+
+        // Check that nodes are properly partitioned
+        assert!(bipartite.set_a_size() == 2);
+        assert!(bipartite.set_b_size() == 2);
+    }
+
+    #[test]
+    fn test_bipartite_graph_from_non_bipartite_graph() {
+        // Create a non-bipartite graph (triangle)
+        let mut graph: Graph<i32, f64> = Graph::new();
+        graph.add_edge(1, 2, 1.0).unwrap();
+        graph.add_edge(2, 3, 2.0).unwrap();
+        graph.add_edge(3, 1, 3.0).unwrap();
+
+        // Should fail to convert
+        assert!(BipartiteGraph::from_graph(graph).is_err());
+    }
+
+    #[test]
+    fn test_bipartite_graph_node_set_identification() {
+        let mut bipartite: BipartiteGraph<char, f64> = BipartiteGraph::new();
+
+        bipartite.add_node_to_set_a('A');
+        bipartite.add_node_to_set_b('B');
+
+        assert_eq!(bipartite.node_set(&'A'), Some(0));
+        assert_eq!(bipartite.node_set(&'B'), Some(1));
+        assert_eq!(bipartite.node_set(&'C'), None);
+    }
+
+    #[test]
+    fn test_bipartite_graph_neighbors() {
+        let mut bipartite: BipartiteGraph<&str, f64> = BipartiteGraph::new();
+
+        bipartite.add_node_to_set_a("A1");
+        bipartite.add_node_to_set_a("A2");
+        bipartite.add_node_to_set_b("B1");
+        bipartite.add_node_to_set_b("B2");
+
+        bipartite.add_edge("A1", "B1", 1.0).unwrap();
+        bipartite.add_edge("A1", "B2", 2.0).unwrap();
+        bipartite.add_edge("A2", "B1", 3.0).unwrap();
+
+        // Test neighbors_in_b for nodes in set A
+        let a1_neighbors = bipartite.neighbors_in_b(&"A1").unwrap();
+        assert_eq!(a1_neighbors.len(), 2);
+        assert!(a1_neighbors.contains(&"B1"));
+        assert!(a1_neighbors.contains(&"B2"));
+
+        // Test neighbors_in_a for nodes in set B
+        let b1_neighbors = bipartite.neighbors_in_a(&"B1").unwrap();
+        assert_eq!(b1_neighbors.len(), 2);
+        assert!(b1_neighbors.contains(&"A1"));
+        assert!(b1_neighbors.contains(&"A2"));
+
+        // Test invalid neighbor queries
+        assert!(bipartite.neighbors_in_b(&"B1").is_err()); // B1 is not in set A
+        assert!(bipartite.neighbors_in_a(&"A1").is_err()); // A1 is not in set B
+    }
+
+    #[test]
+    fn test_bipartite_graph_biadjacency_matrix() {
+        let mut bipartite: BipartiteGraph<i32, f64> = BipartiteGraph::new();
+
+        bipartite.add_node_to_set_a(1);
+        bipartite.add_node_to_set_a(2);
+        bipartite.add_node_to_set_b(3);
+        bipartite.add_node_to_set_b(4);
+
+        bipartite.add_edge(1, 3, 5.0).unwrap();
+        bipartite.add_edge(2, 4, 7.0).unwrap();
+
+        let biadj = bipartite.biadjacency_matrix();
+        assert_eq!(biadj.shape(), &[2, 2]);
+
+        // Check that the matrix has the expected structure
+        // Note: exact positions may vary based on hash set iteration order
+        let total_sum: f64 = biadj.iter().sum();
+        assert_eq!(total_sum, 12.0); // 5.0 + 7.0 = 12.0
+    }
+
+    #[test]
+    fn test_bipartite_graph_completeness() {
+        let mut bipartite: BipartiteGraph<i32, f64> = BipartiteGraph::new();
+
+        bipartite.add_node_to_set_a(1);
+        bipartite.add_node_to_set_a(2);
+        bipartite.add_node_to_set_b(3);
+        bipartite.add_node_to_set_b(4);
+
+        // Not complete initially
+        assert!(!bipartite.is_complete());
+        assert_eq!(bipartite.max_edges(), 4); // 2 * 2 = 4
+        assert_eq!(bipartite.density(), 0.0);
+
+        // Add all possible edges
+        bipartite.add_edge(1, 3, 1.0).unwrap();
+        bipartite.add_edge(1, 4, 1.0).unwrap();
+        bipartite.add_edge(2, 3, 1.0).unwrap();
+        bipartite.add_edge(2, 4, 1.0).unwrap();
+
+        // Now it should be complete
+        assert!(bipartite.is_complete());
+        assert_eq!(bipartite.density(), 1.0);
+    }
+
+    #[test]
+    fn test_bipartite_graph_conversion() {
+        let mut bipartite: BipartiteGraph<&str, f64> = BipartiteGraph::new();
+
+        bipartite.add_node_to_set_a("A");
+        bipartite.add_node_to_set_b("B");
+        bipartite.add_edge("A", "B", 3.15).unwrap();
+
+        // Convert to regular graph
+        let regular_graph = bipartite.to_graph();
+        assert_eq!(regular_graph.node_count(), 2);
+        assert_eq!(regular_graph.edge_count(), 1);
+        assert!(regular_graph.has_edge(&"A", &"B"));
+    }
+
+    #[test]
+    fn test_bipartite_graph_empty() {
+        let bipartite: BipartiteGraph<i32, f64> = BipartiteGraph::new();
+
+        assert_eq!(bipartite.node_count(), 0);
+        assert_eq!(bipartite.edge_count(), 0);
+        assert_eq!(bipartite.set_a_size(), 0);
+        assert_eq!(bipartite.set_b_size(), 0);
+        assert_eq!(bipartite.max_edges(), 0);
+        assert_eq!(bipartite.density(), 0.0);
+        assert!(bipartite.is_complete()); // Vacuously true for empty graph
     }
 
     #[test]

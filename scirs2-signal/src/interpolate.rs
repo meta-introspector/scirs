@@ -2703,7 +2703,7 @@ pub mod polynomial {
 
             // Check that all nodes are in [-1, 1]
             for &node in &nodes {
-                assert!(node >= -1.0 && node <= 1.0);
+                assert!((-1.0..=1.0).contains(&node));
             }
 
             // Check specific values for 5 nodes

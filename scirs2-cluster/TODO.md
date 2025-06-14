@@ -30,16 +30,16 @@ This module provides clustering algorithms similar to SciPy's cluster module.
 
 ## Vector Quantization (VQ) Enhancements
 
-- [ ] Improved K-means implementations
-  - [ ] Enhanced kmeans2 implementation
-  - [ ] Multiple initialization strategies
-  - [ ] Update with K-means|| parallel initialization
-  - [ ] Weighted K-means variant
-  - [ ] Mini-batch K-means
-- [ ] Data preparation utilities
-  - [ ] Whitening transformations
-  - [ ] Normalization functions
-  - [ ] Feature scaling options
+- [x] Improved K-means implementations
+  - [x] Enhanced kmeans2 implementation
+  - [x] Multiple initialization strategies
+  - [x] Update with K-means|| parallel initialization
+  - [x] Weighted K-means variant
+  - [x] Mini-batch K-means
+- [x] Data preparation utilities
+  - [x] Whitening transformations
+  - [x] Normalization functions
+  - [x] Feature scaling options
 - [ ] API compatibility improvements
   - [ ] Ensure full parameter compatibility with SciPy
   - [ ] Implement all parameter options (threshold, check_finite, etc.)
@@ -72,10 +72,10 @@ This module provides clustering algorithms similar to SciPy's cluster module.
   - [ ] DisjointSet implementation for connectivity queries
   - [ ] Condensed distance matrix format
   - [ ] Sparse distance matrix support
-- [ ] Distance computation optimization
-  - [ ] Vectorized distance computation
-  - [ ] SIMD-accelerated distance functions
-  - [ ] Custom distance metrics (Mahalanobis, etc.)
+- [x] Distance computation optimization
+  - [x] Vectorized distance computation
+  - [x] SIMD-accelerated distance functions
+  - [x] Custom distance metrics (Mahalanobis, Manhattan, Chebyshev, Cosine, Correlation)
 - [ ] Input validation utilities
   - [ ] Ensure robust validation compatible with SciPy
   - [ ] Consistent error messages
@@ -94,15 +94,15 @@ This module provides clustering algorithms similar to SciPy's cluster module.
 
 ## Performance Improvements
 
-- [ ] Parallelization for computationally intensive operations
+- [x] Parallelization for computationally intensive operations
   - [x] Parallel K-means implementation
-  - [ ] Multi-threaded distance matrix computation
+  - [x] Multi-threaded distance matrix computation
   - [ ] Parallel hierarchical clustering
-- [ ] Acceleration strategies
-  - [ ] Native Rust optimizations for core algorithms
+- [x] Acceleration strategies
+  - [x] Native Rust optimizations for core algorithms
   - [ ] More efficient neighbor search algorithms
-  - [ ] Optimizations for large datasets
-  - [ ] SIMD vectorization for distance computations
+  - [x] Optimizations for large datasets
+  - [x] SIMD vectorization for distance computations
 - [ ] Memory efficiency
   - [ ] Reduced memory footprint for large datasets
   - [ ] Streaming implementations for out-of-memory datasets

@@ -573,6 +573,19 @@ fn evaluate_rbf_kernel_scalar(r: f64, epsilon: f64, kernel: RBFKernel) -> f64 {
 }
 
 /// SIMD-optimized distance matrix computation
+///
+/// Computes pairwise Euclidean distances between two sets of points using
+/// SIMD vectorized operations when available.
+///
+/// # Arguments
+///
+/// * `points_a` - First set of points with shape (n_a, dims)
+/// * `points_b` - Second set of points with shape (n_b, dims)
+///
+/// # Returns
+///
+/// Distance matrix with shape (n_a, n_b) where entry (i,j) contains the
+/// Euclidean distance between points_a[i] and points_b[j]
 pub fn simd_distance_matrix<F>(
     points_a: &ArrayView2<F>,
     points_b: &ArrayView2<F>,
@@ -586,15 +599,238 @@ where
         ));
     }
 
+    // For f64, use optimized SIMD implementation when available
+    if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
+        let points_a_f64 = points_a.mapv(|x| x.to_f64().unwrap_or(0.0));
+        let points_b_f64 = points_b.mapv(|x| x.to_f64().unwrap_or(0.0));
+
+        let result_f64 =
+            simd_distance_matrix_f64_vectorized(&points_a_f64.view(), &points_b_f64.view())?;
+        let result = result_f64.mapv(|x| F::from_f64(x).unwrap_or(F::zero()));
+
+        return Ok(result);
+    }
+
+    // Fallback to scalar implementation for other types
+    simd_distance_matrix_scalar(points_a, points_b)
+}
+
+/// SIMD-optimized distance matrix computation for f64 values
+#[cfg(feature = "simd")]
+fn simd_distance_matrix_f64_vectorized(
+    points_a: &ArrayView2<f64>,
+    points_b: &ArrayView2<f64>,
+) -> InterpolateResult<Array2<f64>> {
+    let config = get_simd_config();
+
+    // Use the best available SIMD instruction set based on detected capabilities
+    #[cfg(target_arch = "x86_64")]
+    {
+        if config.instruction_set == "AVX2" {
+            return unsafe { simd_distance_matrix_avx2(points_a, points_b) };
+        } else if config.instruction_set == "AVX" || config.instruction_set == "SSE2" {
+            return unsafe { simd_distance_matrix_sse2(points_a, points_b) };
+        }
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    {
+        if config.instruction_set == "NEON" {
+            return unsafe { simd_distance_matrix_neon(points_a, points_b) };
+        }
+    }
+
+    // Fallback to scalar implementation
+    simd_distance_matrix_scalar(points_a, points_b)
+}
+
+#[cfg(not(feature = "simd"))]
+fn simd_distance_matrix_f64_vectorized(
+    points_a: &ArrayView2<f64>,
+    points_b: &ArrayView2<f64>,
+) -> InterpolateResult<Array2<f64>> {
+    simd_distance_matrix_scalar(points_a, points_b)
+}
+
+/// AVX2-optimized distance matrix computation (processes 4 f64 values at once)
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+#[allow(dead_code)]
+unsafe fn simd_distance_matrix_avx2(
+    points_a: &ArrayView2<f64>,
+    points_b: &ArrayView2<f64>,
+) -> InterpolateResult<Array2<f64>> {
+    #[cfg(target_arch = "x86_64")]
+    {
+        use std::arch::x86_64::*;
+
+        let n_a = points_a.nrows();
+        let n_b = points_b.nrows();
+        let dims = points_a.ncols();
+        let mut distances = Array2::zeros((n_a, n_b));
+
+        for i in 0..n_a {
+            for j in 0..n_b {
+                let mut dist_sq_vec = _mm256_setzero_pd();
+
+                // Process 4 dimensions at a time
+                let mut d = 0;
+                while d + 4 <= dims {
+                    let a_vec = _mm256_loadu_pd(points_a.as_ptr().add(i * dims + d));
+                    let b_vec = _mm256_loadu_pd(points_b.as_ptr().add(j * dims + d));
+                    let diff = _mm256_sub_pd(a_vec, b_vec);
+                    dist_sq_vec = _mm256_fmadd_pd(diff, diff, dist_sq_vec);
+                    d += 4;
+                }
+
+                // Horizontal reduction: sum the 4 components
+                let sum_high = _mm256_extractf128_pd(dist_sq_vec, 1);
+                let sum_low = _mm256_extractf128_pd(dist_sq_vec, 0);
+                let sum_128 = _mm_add_pd(sum_low, sum_high);
+                let sum_final = _mm_hadd_pd(sum_128, sum_128);
+                let mut dist_sq: f64 = _mm_cvtsd_f64(sum_final);
+
+                // Handle remaining dimensions
+                for d in d..dims {
+                    let diff = points_a[[i, d]] - points_b[[j, d]];
+                    dist_sq += diff * diff;
+                }
+
+                distances[[i, j]] = dist_sq.sqrt();
+            }
+        }
+
+        Ok(distances)
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        simd_distance_matrix_scalar(points_a, points_b)
+    }
+}
+
+/// SSE2-optimized distance matrix computation (processes 2 f64 values at once)
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "sse2")]
+#[allow(dead_code)]
+unsafe fn simd_distance_matrix_sse2(
+    points_a: &ArrayView2<f64>,
+    points_b: &ArrayView2<f64>,
+) -> InterpolateResult<Array2<f64>> {
+    #[cfg(target_arch = "x86_64")]
+    {
+        use std::arch::x86_64::*;
+
+        let n_a = points_a.nrows();
+        let n_b = points_b.nrows();
+        let dims = points_a.ncols();
+        let mut distances = Array2::zeros((n_a, n_b));
+
+        for i in 0..n_a {
+            for j in 0..n_b {
+                let mut dist_sq_vec = _mm_setzero_pd();
+
+                // Process 2 dimensions at a time
+                let mut d = 0;
+                while d + 2 <= dims {
+                    let a_vec = _mm_loadu_pd(points_a.as_ptr().add(i * dims + d));
+                    let b_vec = _mm_loadu_pd(points_b.as_ptr().add(j * dims + d));
+                    let diff = _mm_sub_pd(a_vec, b_vec);
+                    dist_sq_vec = _mm_add_pd(dist_sq_vec, _mm_mul_pd(diff, diff));
+                    d += 2;
+                }
+
+                // Horizontal reduction
+                let sum_high = _mm_unpackhi_pd(dist_sq_vec, dist_sq_vec);
+                let sum_low = _mm_add_sd(dist_sq_vec, sum_high);
+                let mut dist_sq: f64 = _mm_cvtsd_f64(sum_low);
+
+                // Handle remaining dimension
+                if d < dims {
+                    let diff = points_a[[i, d]] - points_b[[j, d]];
+                    dist_sq += diff * diff;
+                }
+
+                distances[[i, j]] = dist_sq.sqrt();
+            }
+        }
+
+        Ok(distances)
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        simd_distance_matrix_scalar(points_a, points_b)
+    }
+}
+
+/// NEON-optimized distance matrix computation for ARM64
+#[cfg(target_arch = "aarch64")]
+#[target_feature(enable = "neon")]
+unsafe fn simd_distance_matrix_neon(
+    points_a: &ArrayView2<f64>,
+    points_b: &ArrayView2<f64>,
+) -> InterpolateResult<Array2<f64>> {
+    #[cfg(target_arch = "aarch64")]
+    {
+        use std::arch::aarch64::*;
+
+        let n_a = points_a.nrows();
+        let n_b = points_b.nrows();
+        let dims = points_a.ncols();
+        let mut distances = Array2::zeros((n_a, n_b));
+
+        for i in 0..n_a {
+            for j in 0..n_b {
+                let mut dist_sq_vec = vdupq_n_f64(0.0);
+
+                // Process 2 dimensions at a time
+                let mut d = 0;
+                while d + 2 <= dims {
+                    let a_vec = vld1q_f64(points_a.as_ptr().add(i * dims + d));
+                    let b_vec = vld1q_f64(points_b.as_ptr().add(j * dims + d));
+                    let diff = vsubq_f64(a_vec, b_vec);
+                    dist_sq_vec = vfmaq_f64(dist_sq_vec, diff, diff);
+                    d += 2;
+                }
+
+                // Horizontal reduction
+                let sum = vaddvq_f64(dist_sq_vec);
+                let mut dist_sq = sum;
+
+                // Handle remaining dimension
+                if d < dims {
+                    let diff = points_a[[i, d]] - points_b[[j, d]];
+                    dist_sq += diff * diff;
+                }
+
+                distances[[i, j]] = dist_sq.sqrt();
+            }
+        }
+
+        Ok(distances)
+    }
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        simd_distance_matrix_scalar(points_a, points_b)
+    }
+}
+
+/// Scalar fallback implementation for distance matrix computation
+fn simd_distance_matrix_scalar<F>(
+    points_a: &ArrayView2<F>,
+    points_b: &ArrayView2<F>,
+) -> InterpolateResult<Array2<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy,
+{
     let n_a = points_a.nrows();
     let n_b = points_b.nrows();
+    let dims = points_a.ncols();
     let mut distances = Array2::zeros((n_a, n_b));
 
-    // For now, use scalar implementation as fallback
     for i in 0..n_a {
         for j in 0..n_b {
             let mut dist_sq = F::zero();
-            for d in 0..points_a.ncols() {
+            for d in 0..dims {
                 let diff = points_a[[i, d]] - points_b[[j, d]];
                 dist_sq = dist_sq + diff * diff;
             }

@@ -105,7 +105,7 @@ impl<F: Float + fmt::Display> fmt::Display for MatrixDiagnostics<F> {
 #[allow(dead_code)]
 pub fn analyze_matrix<F>(a: &ArrayView2<F>) -> MatrixDiagnostics<F>
 where
-    F: Float + NumAssign + std::iter::Sum + fmt::Display,
+    F: Float + NumAssign + std::iter::Sum + fmt::Display + ndarray::ScalarOperand,
 {
     let shape = (a.nrows(), a.ncols());
     let mut diagnostics = MatrixDiagnostics {
@@ -297,7 +297,7 @@ fn is_symmetric<F: Float>(a: &ArrayView2<F>) -> bool {
 #[allow(dead_code)]
 fn estimate_condition_number<F>(a: &ArrayView2<F>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + std::iter::Sum + fmt::Display,
+    F: Float + NumAssign + std::iter::Sum + fmt::Display + ndarray::ScalarOperand,
 {
     // Simple estimation using determinant and norm
     use crate::basic::det;
@@ -353,7 +353,7 @@ pub fn enhanced_error<F>(
     operation: &str,
 ) -> LinalgError
 where
-    F: Float + NumAssign + std::iter::Sum + fmt::Display,
+    F: Float + NumAssign + std::iter::Sum + fmt::Display + ndarray::ScalarOperand,
 {
     if let Some(a) = matrix {
         let diagnostics = analyze_matrix(a);
@@ -371,7 +371,7 @@ where
 #[allow(dead_code)]
 pub fn regularization_suggestions<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgError
 where
-    F: Float + NumAssign + std::iter::Sum + fmt::Display,
+    F: Float + NumAssign + std::iter::Sum + fmt::Display + ndarray::ScalarOperand,
 {
     let mut diagnostics = analyze_matrix(matrix);
 
@@ -455,7 +455,7 @@ fn estimate_near_zero_eigenvalues<F: Float + NumAssign + std::iter::Sum>(
 #[allow(dead_code)]
 pub fn advanced_stability_check<F>(a: &ArrayView2<F>) -> StabilityReport<F>
 where
-    F: Float + NumAssign + std::iter::Sum + fmt::Display + ToPrimitive,
+    F: Float + NumAssign + std::iter::Sum + fmt::Display + ToPrimitive + ndarray::ScalarOperand,
 {
     let mut report = StabilityReport {
         is_stable: true,

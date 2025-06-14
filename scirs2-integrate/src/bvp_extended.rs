@@ -205,9 +205,9 @@ where
                 boundary_conditions.right[0]
             {
                 // Linear interpolation between boundary values
-                for i in 0..n_points {
+                for (i, y_val) in y_init.iter_mut().enumerate().take(n_points) {
                     let t = F::from_usize(i).unwrap() / F::from_usize(n_points - 1).unwrap();
-                    y_init[i][0] = value * (F::one() - t) + right_value * t;
+                    y_val[0] = value * (F::one() - t) + right_value * t;
                 }
             }
         }
@@ -328,6 +328,12 @@ pub struct MultipointBVP<F: IntegrateFloat> {
     pub interior_points: Vec<F>,
     /// Boundary conditions at interior points
     pub interior_conditions: Vec<Vec<BoundaryConditionType<F>>>,
+}
+
+impl<F: IntegrateFloat> Default for MultipointBVP<F> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<F: IntegrateFloat> MultipointBVP<F> {

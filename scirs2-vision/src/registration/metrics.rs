@@ -6,9 +6,13 @@ use image::GrayImage;
 /// Registration quality metrics
 #[derive(Debug, Clone)]
 pub struct RegistrationMetrics {
+    /// Mean squared error between images
     pub mean_squared_error: f64,
+    /// Peak signal-to-noise ratio in dB
     pub peak_signal_to_noise_ratio: f64,
+    /// Structural similarity index (SSIM)
     pub structural_similarity_index: f64,
+    /// Normalized cross-correlation coefficient
     pub normalized_cross_correlation: f64,
 }
 

@@ -1205,6 +1205,8 @@ where
         + std::ops::DivAssign
         + std::ops::RemAssign
         + std::fmt::LowerExp
+        + Send
+        + Sync
         + 'static,
 {
     // Extract data from the standard RBF interpolator

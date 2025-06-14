@@ -219,7 +219,7 @@ mod tests {
         );
 
         // First failure should work
-        let result =
+        let result: std::result::Result<(), _> =
             breaker.execute(|| Err(CoreError::ComputationError(error_context!("Test failure"))));
         assert!(result.is_err());
 

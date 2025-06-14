@@ -259,10 +259,7 @@ impl MemoryAnalytics {
         let current_usage = self.calculate_current_usage(&component);
 
         // Update usage history
-        let usage_history = self
-            .usage_history
-            .entry(component)
-            .or_insert_with(VecDeque::new);
+        let usage_history = self.usage_history.entry(component).or_default();
         usage_history.push_back((timestamp, current_usage));
 
         // Limit history size
@@ -823,18 +820,12 @@ impl MemoryAnalytics {
 
         // Specific recommendations based on detected issues
         for issue in issues {
-            match issue {
-                MemoryIssue::HighPeakUsage { peak_size, .. } => {
-                    recommendations.push(
-                        OptimizationRecommendation::UseMemoryEfficientStructures {
-                            current_type: "Unknown".to_string(),
-                            suggested_alternative: "Streaming or memory-mapped structures"
-                                .to_string(),
-                            memory_reduction: peak_size / 2, // Rough estimate
-                        },
-                    );
-                }
-                _ => {}
+            if let MemoryIssue::HighPeakUsage { peak_size, .. } = issue {
+                recommendations.push(OptimizationRecommendation::UseMemoryEfficientStructures {
+                    current_type: "Unknown".to_string(),
+                    suggested_alternative: "Streaming or memory-mapped structures".to_string(),
+                    memory_reduction: peak_size / 2, // Rough estimate
+                });
             }
         }
 

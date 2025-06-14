@@ -203,6 +203,216 @@ pub fn path_graph(n: usize) -> Result<Graph<usize, f64>> {
     Ok(graph)
 }
 
+/// Generates a random tree with n nodes
+///
+/// Uses a random process to connect nodes while maintaining the tree property
+/// (connected and acyclic). Each tree has exactly n-1 edges.
+///
+/// # Arguments
+/// * `n` - Number of nodes
+/// * `rng` - Random number generator
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - A random tree with nodes 0, 1, ..., n-1
+pub fn tree_graph<R: Rng>(n: usize, rng: &mut R) -> Result<Graph<usize, f64>> {
+    if n == 0 {
+        return Ok(Graph::new());
+    }
+    if n == 1 {
+        let mut graph = Graph::new();
+        graph.add_node(0);
+        return Ok(graph);
+    }
+
+    let mut graph = Graph::new();
+
+    // Add all nodes
+    for i in 0..n {
+        graph.add_node(i);
+    }
+
+    // Use Prim's algorithm variation to build a random tree
+    let mut in_tree = vec![false; n];
+    let mut tree_nodes = Vec::new();
+
+    // Start with a random node
+    let start = rng.random_range(0..n);
+    in_tree[start] = true;
+    tree_nodes.push(start);
+
+    // Add n-1 edges to complete the tree
+    for _ in 1..n {
+        // Pick a random node already in the tree
+        let tree_node = tree_nodes[rng.random_range(0..tree_nodes.len())];
+
+        // Pick a random node not yet in the tree
+        let candidates: Vec<usize> = (0..n).filter(|&i| !in_tree[i]).collect();
+        if candidates.is_empty() {
+            break;
+        }
+
+        let new_node = candidates[rng.random_range(0..candidates.len())];
+
+        // Add edge and mark node as in tree
+        graph.add_edge(tree_node, new_node, 1.0)?;
+        in_tree[new_node] = true;
+        tree_nodes.push(new_node);
+    }
+
+    Ok(graph)
+}
+
+/// Generates a random spanning tree from an existing graph
+///
+/// Uses Kruskal's algorithm with randomized edge selection to produce
+/// a random spanning tree of the input graph.
+///
+/// # Arguments
+/// * `graph` - The input graph to extract a spanning tree from
+/// * `rng` - Random number generator
+///
+/// # Returns
+/// * `Result<Graph<N, E>>` - A spanning tree of the input graph
+pub fn random_spanning_tree<N, E, Ix, R>(
+    graph: &Graph<N, E, Ix>,
+    rng: &mut R,
+) -> Result<Graph<N, E, Ix>>
+where
+    N: crate::base::Node,
+    E: crate::base::EdgeWeight + Clone,
+    Ix: petgraph::graph::IndexType,
+    R: Rng,
+{
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    if nodes.is_empty() {
+        return Ok(Graph::new());
+    }
+    if nodes.len() == 1 {
+        let mut tree = Graph::new();
+        tree.add_node(nodes[0].clone());
+        return Ok(tree);
+    }
+
+    // Get all edges and shuffle them randomly
+    let mut edges: Vec<_> = graph.edges().into_iter().collect();
+    edges.shuffle(rng);
+
+    let mut tree = Graph::new();
+
+    // Add all nodes to the tree
+    for node in &nodes {
+        tree.add_node(node.clone());
+    }
+
+    // Use Union-Find to track components
+    let mut parent: std::collections::HashMap<N, N> =
+        nodes.iter().map(|n| (n.clone(), n.clone())).collect();
+    let mut rank: std::collections::HashMap<N, usize> =
+        nodes.iter().map(|n| (n.clone(), 0)).collect();
+
+    fn find<N: crate::base::Node>(parent: &mut std::collections::HashMap<N, N>, node: &N) -> N {
+        if parent[node] != *node {
+            let root = find(parent, &parent[node].clone());
+            parent.insert(node.clone(), root.clone());
+        }
+        parent[node].clone()
+    }
+
+    fn union<N: crate::base::Node>(
+        parent: &mut std::collections::HashMap<N, N>,
+        rank: &mut std::collections::HashMap<N, usize>,
+        x: &N,
+        y: &N,
+    ) -> bool {
+        let root_x = find(parent, x);
+        let root_y = find(parent, y);
+
+        if root_x == root_y {
+            return false; // Already in same component
+        }
+
+        // Union by rank
+        match rank[&root_x].cmp(&rank[&root_y]) {
+            std::cmp::Ordering::Less => {
+                parent.insert(root_x, root_y);
+            }
+            std::cmp::Ordering::Greater => {
+                parent.insert(root_y, root_x);
+            }
+            std::cmp::Ordering::Equal => {
+                parent.insert(root_y, root_x.clone());
+                *rank.get_mut(&root_x).unwrap() += 1;
+            }
+        }
+        true
+    }
+
+    let mut edges_added = 0;
+
+    // Add edges without creating cycles until we have n-1 edges
+    for edge in edges {
+        if union(&mut parent, &mut rank, &edge.source, &edge.target) {
+            tree.add_edge(edge.source, edge.target, edge.weight)?;
+            edges_added += 1;
+            if edges_added == nodes.len() - 1 {
+                break;
+            }
+        }
+    }
+
+    // Check if we have a spanning tree (connected graph)
+    if edges_added != nodes.len() - 1 {
+        return Err(GraphError::InvalidGraph(
+            "Input graph is not connected - cannot create spanning tree".to_string(),
+        ));
+    }
+
+    Ok(tree)
+}
+
+/// Generates a random forest (collection of trees)
+///
+/// Creates a forest by generating multiple random trees and combining them
+/// into a single graph. The trees are disjoint (no edges between different trees).
+///
+/// # Arguments
+/// * `tree_sizes` - Vector specifying the size of each tree in the forest
+/// * `rng` - Random number generator
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - A forest containing the specified trees
+pub fn forest_graph<R: Rng>(tree_sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
+    let mut forest = Graph::new();
+    let mut node_offset = 0;
+
+    for &tree_size in tree_sizes {
+        if tree_size == 0 {
+            continue;
+        }
+
+        // Generate a tree with nodes starting from node_offset
+        let tree = tree_graph(tree_size, rng)?;
+
+        // Add nodes to forest with offset
+        for i in 0..tree_size {
+            forest.add_node(node_offset + i);
+        }
+
+        // Add edges with offset
+        for edge in tree.edges() {
+            forest.add_edge(
+                node_offset + edge.source,
+                node_offset + edge.target,
+                edge.weight,
+            )?;
+        }
+
+        node_offset += tree_size;
+    }
+
+    Ok(forest)
+}
+
 /// Generates a cycle graph (circular arrangement of nodes)
 ///
 /// # Arguments
@@ -680,6 +890,199 @@ pub fn planted_partition_model<R: Rng>(
     stochastic_block_model(&block_sizes, &block_matrix, rng)
 }
 
+/// Generates a random graph using the Configuration Model
+///
+/// The Configuration Model generates a random graph where each node has a specified degree.
+/// The degree sequence is the sequence of degrees for all nodes. The algorithm creates
+/// "stubs" (half-edges) for each node according to its degree, then randomly connects
+/// the stubs to form edges.
+///
+/// # Arguments
+/// * `degree_sequence` - Vector specifying the degree of each node
+/// * `rng` - Random number generator
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - The generated graph with node IDs 0..n-1
+///
+/// # Notes
+/// * The sum of all degrees must be even (since each edge contributes 2 to the total degree)
+/// * Self-loops and multiple edges between the same pair of nodes are possible
+/// * If you want a simple graph (no self-loops or multiple edges), you may need to
+///   regenerate or post-process the result
+pub fn configuration_model<R: Rng>(
+    degree_sequence: &[usize],
+    rng: &mut R,
+) -> Result<Graph<usize, f64>> {
+    if degree_sequence.is_empty() {
+        return Ok(Graph::new());
+    }
+
+    // Check that sum of degrees is even
+    let total_degree: usize = degree_sequence.iter().sum();
+    if total_degree % 2 != 0 {
+        return Err(GraphError::InvalidGraph(
+            "Sum of degrees must be even".to_string(),
+        ));
+    }
+
+    let n = degree_sequence.len();
+    let mut graph = Graph::new();
+
+    // Add all nodes
+    for i in 0..n {
+        graph.add_node(i);
+    }
+
+    // Create stubs (half-edges) for each node
+    let mut stubs = Vec::new();
+    for (node_id, &degree) in degree_sequence.iter().enumerate() {
+        for _ in 0..degree {
+            stubs.push(node_id);
+        }
+    }
+
+    // Randomly connect stubs to form edges
+    while stubs.len() >= 2 {
+        // Pick two random stubs
+        let idx1 = rng.random_range(0..stubs.len());
+        let stub1 = stubs.remove(idx1);
+
+        let idx2 = rng.random_range(0..stubs.len());
+        let stub2 = stubs.remove(idx2);
+
+        // Connect the nodes (allow self-loops and multiple edges)
+        graph.add_edge(stub1, stub2, 1.0)?;
+    }
+
+    Ok(graph)
+}
+
+/// Generates a simple random graph using the Configuration Model
+///
+/// This variant attempts to generate a simple graph (no self-loops or multiple edges)
+/// by rejecting problematic edge attempts. If too many rejections occur, it returns
+/// an error indicating that the degree sequence may not be realizable as a simple graph.
+///
+/// # Arguments
+/// * `degree_sequence` - Vector specifying the degree of each node
+/// * `rng` - Random number generator
+/// * `max_attempts` - Maximum number of attempts before giving up
+///
+/// # Returns
+/// * `Result<Graph<usize, f64>>` - The generated simple graph
+pub fn simple_configuration_model<R: Rng>(
+    degree_sequence: &[usize],
+    rng: &mut R,
+    max_attempts: usize,
+) -> Result<Graph<usize, f64>> {
+    if degree_sequence.is_empty() {
+        return Ok(Graph::new());
+    }
+
+    // Check that sum of degrees is even
+    let total_degree: usize = degree_sequence.iter().sum();
+    if total_degree % 2 != 0 {
+        return Err(GraphError::InvalidGraph(
+            "Sum of degrees must be even".to_string(),
+        ));
+    }
+
+    let n = degree_sequence.len();
+
+    // Check for degree sequence constraints for simple graphs
+    for &degree in degree_sequence {
+        if degree >= n {
+            return Err(GraphError::InvalidGraph(
+                "Node degree cannot exceed n-1 in a simple graph".to_string(),
+            ));
+        }
+    }
+
+    let mut attempts = 0;
+
+    while attempts < max_attempts {
+        let mut graph = Graph::new();
+
+        // Add all nodes
+        for i in 0..n {
+            graph.add_node(i);
+        }
+
+        // Create stubs (half-edges) for each node
+        let mut stubs = Vec::new();
+        for (node_id, &degree) in degree_sequence.iter().enumerate() {
+            for _ in 0..degree {
+                stubs.push(node_id);
+            }
+        }
+
+        let mut success = true;
+
+        // Randomly connect stubs to form edges
+        while stubs.len() >= 2 && success {
+            // Pick two random stubs
+            let idx1 = rng.random_range(0..stubs.len());
+            let stub1 = stubs[idx1];
+
+            let idx2 = rng.random_range(0..stubs.len());
+            let stub2 = stubs[idx2];
+
+            // Check for self-loop or existing edge
+            if stub1 == stub2 || graph.has_edge(&stub1, &stub2) {
+                // Try a few more times before giving up on this attempt
+                let mut retries = 0;
+                let mut found_valid = false;
+
+                while retries < 50 && !found_valid {
+                    let new_idx2 = rng.random_range(0..stubs.len());
+                    let new_stub2 = stubs[new_idx2];
+
+                    if stub1 != new_stub2 && !graph.has_edge(&stub1, &new_stub2) {
+                        // Remove stubs and add edge
+                        // Remove the larger index first to avoid index shifting issues
+                        if idx1 > new_idx2 {
+                            stubs.remove(idx1);
+                            stubs.remove(new_idx2);
+                        } else {
+                            stubs.remove(new_idx2);
+                            stubs.remove(idx1);
+                        }
+                        graph.add_edge(stub1, new_stub2, 1.0)?;
+                        found_valid = true;
+                    }
+                    retries += 1;
+                }
+
+                if !found_valid {
+                    success = false;
+                }
+            } else {
+                // Remove stubs and add edge
+                // Remove the larger index first to avoid index shifting issues
+                if idx1 > idx2 {
+                    stubs.remove(idx1);
+                    stubs.remove(idx2);
+                } else {
+                    stubs.remove(idx2);
+                    stubs.remove(idx1);
+                }
+                graph.add_edge(stub1, stub2, 1.0)?;
+            }
+        }
+
+        if success && stubs.is_empty() {
+            return Ok(graph);
+        }
+
+        attempts += 1;
+    }
+
+    Err(GraphError::InvalidGraph(
+        "Could not generate simple graph with given degree sequence after maximum attempts"
+            .to_string(),
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -839,5 +1242,145 @@ mod tests {
 
         // Non-divisible nodes for planted partition
         assert!(planted_partition_model(10, 3, 0.5, 0.1, &mut rng).is_err());
+    }
+
+    #[test]
+    fn test_configuration_model() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Test valid degree sequence (even sum)
+        let degree_sequence = vec![2, 2, 2, 2]; // Sum = 8 (even)
+        let graph = configuration_model(&degree_sequence, &mut rng).unwrap();
+
+        assert_eq!(graph.node_count(), 4);
+        // Should have 4 edges (sum of degrees / 2)
+        assert_eq!(graph.edge_count(), 4);
+
+        // Check that each node has the correct degree
+        for (i, &expected_degree) in degree_sequence.iter().enumerate() {
+            let actual_degree = graph.degree(&i);
+            assert_eq!(actual_degree, expected_degree);
+        }
+    }
+
+    #[test]
+    fn test_configuration_model_errors() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Test odd degree sum (should fail)
+        let odd_degree_sequence = vec![1, 2, 2]; // Sum = 5 (odd)
+        assert!(configuration_model(&odd_degree_sequence, &mut rng).is_err());
+
+        // Test empty sequence
+        let empty_sequence = vec![];
+        let graph = configuration_model(&empty_sequence, &mut rng).unwrap();
+        assert_eq!(graph.node_count(), 0);
+    }
+
+    #[test]
+    fn test_simple_configuration_model() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Test valid degree sequence for simple graph
+        let degree_sequence = vec![2, 2, 2, 2]; // Sum = 8 (even)
+        let graph = simple_configuration_model(&degree_sequence, &mut rng, 100).unwrap();
+
+        assert_eq!(graph.node_count(), 4);
+        assert_eq!(graph.edge_count(), 4);
+
+        // Check that graph is simple (no self-loops)
+        for i in 0..4 {
+            assert!(!graph.has_edge(&i, &i), "Graph should not have self-loops");
+        }
+
+        // Check degrees
+        for (i, &expected_degree) in degree_sequence.iter().enumerate() {
+            let actual_degree = graph.degree(&i);
+            assert_eq!(actual_degree, expected_degree);
+        }
+    }
+
+    #[test]
+    fn test_simple_configuration_model_errors() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Test degree too large for simple graph
+        let invalid_degree_sequence = vec![4, 2, 2, 2]; // Node 0 has degree 4, but n=4, so max degree is 3
+        assert!(simple_configuration_model(&invalid_degree_sequence, &mut rng, 10).is_err());
+
+        // Test odd degree sum
+        let odd_degree_sequence = vec![1, 2, 2]; // Sum = 5 (odd)
+        assert!(simple_configuration_model(&odd_degree_sequence, &mut rng, 10).is_err());
+    }
+
+    #[test]
+    fn test_tree_graph() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Test empty tree
+        let empty_tree = tree_graph(0, &mut rng).unwrap();
+        assert_eq!(empty_tree.node_count(), 0);
+        assert_eq!(empty_tree.edge_count(), 0);
+
+        // Test single node tree
+        let single_tree = tree_graph(1, &mut rng).unwrap();
+        assert_eq!(single_tree.node_count(), 1);
+        assert_eq!(single_tree.edge_count(), 0);
+
+        // Test tree with multiple nodes
+        let tree = tree_graph(5, &mut rng).unwrap();
+        assert_eq!(tree.node_count(), 5);
+        assert_eq!(tree.edge_count(), 4); // n-1 edges for a tree
+
+        // Verify all nodes are present
+        for i in 0..5 {
+            assert!(tree.has_node(&i));
+        }
+    }
+
+    #[test]
+    fn test_random_spanning_tree() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Create a complete graph
+        let complete = complete_graph(4).unwrap();
+
+        // Generate spanning tree
+        let spanning_tree = random_spanning_tree(&complete, &mut rng).unwrap();
+
+        assert_eq!(spanning_tree.node_count(), 4);
+        assert_eq!(spanning_tree.edge_count(), 3); // n-1 edges for spanning tree
+
+        // Verify all nodes are present
+        for i in 0..4 {
+            assert!(spanning_tree.has_node(&i));
+        }
+    }
+
+    #[test]
+    fn test_forest_graph() {
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // Create forest with trees of sizes [3, 2, 4]
+        let tree_sizes = vec![3, 2, 4];
+        let forest = forest_graph(&tree_sizes, &mut rng).unwrap();
+
+        assert_eq!(forest.node_count(), 9); // 3 + 2 + 4 = 9 nodes
+        assert_eq!(forest.edge_count(), 6); // (3-1) + (2-1) + (4-1) = 6 edges
+
+        // Verify all nodes are present
+        for i in 0..9 {
+            assert!(forest.has_node(&i));
+        }
+
+        // Test empty forest
+        let empty_forest = forest_graph(&[], &mut rng).unwrap();
+        assert_eq!(empty_forest.node_count(), 0);
+        assert_eq!(empty_forest.edge_count(), 0);
+
+        // Test forest with empty trees
+        let forest_with_zeros = forest_graph(&[0, 3, 0, 2], &mut rng).unwrap();
+        assert_eq!(forest_with_zeros.node_count(), 5); // 3 + 2 = 5 nodes
+        assert_eq!(forest_with_zeros.edge_count(), 3); // (3-1) + (2-1) = 3 edges
     }
 }

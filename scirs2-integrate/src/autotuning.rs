@@ -297,8 +297,7 @@ impl AutoTuner {
             return cached.clone();
         }
 
-        let profile = self.compute_tuning_profile(problem_size);
-        profile
+        self.compute_tuning_profile(problem_size)
     }
 
     /// Compute optimal tuning profile for given problem size
@@ -345,7 +344,7 @@ impl AutoTuner {
             1
         } else if problem_size < 10000 {
             // Medium problems use moderate parallelization
-            (max_threads / 2).max(1).min(4)
+            (max_threads / 2).clamp(1, 4)
         } else {
             // Large problems can use all available threads
             max_threads.min(problem_size / 1000)

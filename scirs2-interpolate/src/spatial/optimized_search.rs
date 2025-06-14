@@ -153,7 +153,7 @@ where
         let mut points_soa = vec![Vec::with_capacity(n_points); dim];
         let indices: Vec<usize> = (0..n_points).collect();
 
-        for (_i, point) in points.axis_iter(Axis(0)).enumerate() {
+        for point in points.axis_iter(Axis(0)) {
             for (d, &coord) in point.iter().enumerate() {
                 points_soa[d].push(coord);
             }
@@ -179,6 +179,7 @@ where
     }
 
     /// Get a point in AoS format
+    #[allow(dead_code)]
     fn get_point_aos(&self, index: usize) -> Vec<F> {
         let mut point = Vec::with_capacity(self.dim);
         for d in 0..self.dim {
@@ -202,8 +203,8 @@ where
         // Use SoA layout for better cache performance
         for i in 0..self.indices.len() {
             let mut sum_sq = F::zero();
-            for d in 0..self.dim {
-                let diff = self.points_soa[d][i] - query[d];
+            for (d, &query_coord) in query.iter().enumerate().take(self.dim) {
+                let diff = self.points_soa[d][i] - query_coord;
                 sum_sq = sum_sq + diff * diff;
             }
             distances.push(sum_sq.sqrt());
@@ -216,6 +217,7 @@ where
 /// Adaptive search strategy that chooses the best method based on query characteristics
 pub struct AdaptiveSearchStrategy<F: Float + FromPrimitive + Debug + std::cmp::PartialOrd> {
     cache_friendly_index: CacheFriendlyIndex<F>,
+    #[allow(dead_code)]
     simd_calculator: SIMDDistanceCalculator<F>,
     stats: SearchStats,
 }

@@ -64,13 +64,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("b = {:?}\n", b);
 
     // Conjugate Gradient (for SPD matrices)
-    let x_cg = conjugate_gradient(&spd.view(), &b.view(), 10, 1e-10)?;
+    let x_cg = conjugate_gradient(&spd.view(), &b.view(), 10, 1e-10, None)?;
     println!("Conjugate Gradient solution: {:?}", x_cg);
 
     // GMRES (for general matrices)
     let _restart = 3;
     let max_iter = 10;
-    let x_gmres = conjugate_gradient(&spd.view(), &b.view(), max_iter, 1e-10)?;
+    let x_gmres = conjugate_gradient(&spd.view(), &b.view(), max_iter, 1e-10, None)?;
     println!("GMRES solution: {:?}", x_gmres);
 
     // Direct solution for comparison

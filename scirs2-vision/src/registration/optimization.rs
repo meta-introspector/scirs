@@ -6,9 +6,13 @@ use ndarray::Array1;
 /// Optimization result
 #[derive(Debug, Clone)]
 pub struct OptimizationResult {
+    /// Optimized parameter values
     pub parameters: Array1<f64>,
+    /// Final cost function value
     pub final_cost: f64,
+    /// Number of iterations performed
     pub iterations: usize,
+    /// Whether optimization converged
     pub converged: bool,
 }
 

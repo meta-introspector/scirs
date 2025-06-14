@@ -2,12 +2,13 @@
 //!
 //! This example demonstrates the Fast Kriging implementation for large-scale datasets.
 
-use ndarray::{Array1, Array2};
-use scirs2_interpolate::advanced::fast_kriging::{
-    make_fixed_rank_kriging, make_local_kriging, make_tapered_kriging, FastKrigingBuilder,
-    FastKrigingMethod,
-};
-use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+// Currently unused imports - Fast Kriging implementation is feature-gated
+// use ndarray::{Array1, Array2};
+// use scirs2_interpolate::advanced::fast_kriging::{
+//     make_fixed_rank_kriging, make_local_kriging, make_tapered_kriging, FastKrigingBuilder,
+//     FastKrigingMethod,
+// };
+// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "linalg")]
