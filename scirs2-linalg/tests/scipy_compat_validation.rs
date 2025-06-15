@@ -168,13 +168,13 @@ mod reference_value_tests {
     fn test_matrix_function_reference_values() {
         // Matrix exponential of zero matrix should be identity
         let zero_2x2 = Array2::zeros((2, 2));
-        let exp_zero = compat::expm(&zero_2x2.view()).unwrap();
+        let exp_zero = compat::expm(&zero_2x2.view(), None).unwrap();
         let identity = Array2::eye(2);
         assert!(arrays_close_f64(&exp_zero, &identity, VALIDATION_TOL));
 
         // exp(diag(a,b)) = diag(exp(a), exp(b))
         let diag_matrix = array![[0.0, 0.0], [0.0, 1.0]];
-        let exp_diag = compat::expm(&diag_matrix.view()).unwrap();
+        let exp_diag = compat::expm(&diag_matrix.view(), None).unwrap();
         let expected_exp = array![[1.0, 0.0], [0.0, 1.0_f64.exp()]];
         assert!(arrays_close_f64(&exp_diag, &expected_exp, 1e-10));
 
@@ -337,12 +337,12 @@ mod mathematical_property_tests {
 
         // exp(log(A)) = A for positive definite matrices
         let log_a = compat::logm(&a.view()).unwrap();
-        let exp_log_a = compat::expm(&log_a.view()).unwrap();
+        let exp_log_a = compat::expm(&log_a.view(), None).unwrap();
         assert!(arrays_close_f64(&exp_log_a, &a, 1e-8));
 
         // log(exp(A)) = A for matrices where exp is invertible
         let small_a = &a * 0.1; // Small matrix to ensure convergence
-        let exp_small_a = compat::expm(&small_a.view()).unwrap();
+        let exp_small_a = compat::expm(&small_a.view(), None).unwrap();
         let log_exp_small_a = compat::logm(&exp_small_a.view()).unwrap();
         assert!(arrays_close_f64(&log_exp_small_a, &small_a, 1e-8));
 
@@ -355,9 +355,9 @@ mod mathematical_property_tests {
         let diag_a = array![[1.0, 0.0], [0.0, 2.0]];
         let diag_b = array![[0.5, 0.0], [0.0, 1.5]];
 
-        let exp_sum = compat::expm(&(&diag_a + &diag_b).view()).unwrap();
-        let exp_a = compat::expm(&diag_a.view()).unwrap();
-        let exp_b = compat::expm(&diag_b.view()).unwrap();
+        let exp_sum = compat::expm(&(&diag_a + &diag_b).view(), None).unwrap();
+        let exp_a = compat::expm(&diag_a.view(), None).unwrap();
+        let exp_b = compat::expm(&diag_b.view(), None).unwrap();
         let product = exp_a.dot(&exp_b);
 
         assert!(arrays_close_f64(&exp_sum, &product, 1e-10));

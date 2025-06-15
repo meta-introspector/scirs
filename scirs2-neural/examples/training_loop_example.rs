@@ -162,6 +162,7 @@ fn main() -> Result<()> {
         metrics: Vec::new(),
         history: &context_history,
         stop_training: false,
+        model: None,
     };
 
     for callback in &mut callbacks {

@@ -1122,6 +1122,479 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, E, Ix> {
     }
 }
 
+/// A hypergraph structure where hyperedges can connect any number of vertices
+///
+/// A hypergraph is a generalization of a graph where edges (called hyperedges)
+/// can connect any number of vertices, not just two. This is useful for modeling
+/// complex relationships where multiple entities interact simultaneously.
+pub struct Hypergraph<N: Node, E: EdgeWeight, Ix: IndexType = u32> {
+    /// All nodes in the hypergraph
+    nodes: std::collections::HashSet<N>,
+    /// Hyperedges stored as (hyperedge_id, nodes, weight)
+    hyperedges: HashMap<usize, (std::collections::HashSet<N>, E)>,
+    /// Node to hyperedges mapping: node -> set of hyperedge IDs containing this node
+    node_to_hyperedges: HashMap<N, std::collections::HashSet<usize>>,
+    /// Counter for unique hyperedge IDs
+    hyperedge_id_counter: usize,
+    /// Phantom data for index type
+    _phantom: std::marker::PhantomData<Ix>,
+}
+
+/// Represents a hyperedge in a hypergraph
+#[derive(Debug, Clone)]
+pub struct Hyperedge<N: Node, E: EdgeWeight> {
+    /// Unique identifier for this hyperedge
+    pub id: usize,
+    /// Set of nodes connected by this hyperedge
+    pub nodes: std::collections::HashSet<N>,
+    /// Weight/value associated with this hyperedge
+    pub weight: E,
+}
+
+impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for Hypergraph<N, E, Ix> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<N: Node, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, Ix> {
+    /// Create a new empty hypergraph
+    pub fn new() -> Self {
+        Hypergraph {
+            nodes: std::collections::HashSet::new(),
+            hyperedges: HashMap::new(),
+            node_to_hyperedges: HashMap::new(),
+            hyperedge_id_counter: 0,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Add a node to the hypergraph
+    pub fn add_node(&mut self, node: N) {
+        if !self.nodes.contains(&node) {
+            self.nodes.insert(node.clone());
+            self.node_to_hyperedges
+                .insert(node, std::collections::HashSet::new());
+        }
+    }
+
+    /// Add a hyperedge connecting a set of nodes with a given weight
+    ///
+    /// # Arguments
+    /// * `nodes` - Set of nodes to connect
+    /// * `weight` - Weight of the hyperedge
+    ///
+    /// # Returns
+    /// * The ID of the created hyperedge
+    pub fn add_hyperedge(
+        &mut self,
+        nodes: std::collections::HashSet<N>,
+        weight: E,
+    ) -> Result<usize> {
+        if nodes.is_empty() {
+            return Err(GraphError::InvalidGraph(
+                "Hyperedge must connect at least one node".to_string(),
+            ));
+        }
+
+        // Ensure all nodes exist in the hypergraph
+        for node in &nodes {
+            self.add_node(node.clone());
+        }
+
+        let hyperedge_id = self.hyperedge_id_counter;
+        self.hyperedge_id_counter += 1;
+
+        // Store the hyperedge
+        self.hyperedges
+            .insert(hyperedge_id, (nodes.clone(), weight));
+
+        // Update node-to-hyperedges mapping
+        for node in &nodes {
+            self.node_to_hyperedges
+                .get_mut(node)
+                .unwrap()
+                .insert(hyperedge_id);
+        }
+
+        Ok(hyperedge_id)
+    }
+
+    /// Add a hyperedge from a vector of nodes (convenience method)
+    pub fn add_hyperedge_from_vec(&mut self, nodes: Vec<N>, weight: E) -> Result<usize> {
+        let node_set: std::collections::HashSet<N> = nodes.into_iter().collect();
+        self.add_hyperedge(node_set, weight)
+    }
+
+    /// Remove a hyperedge by its ID
+    pub fn remove_hyperedge(&mut self, hyperedge_id: usize) -> Result<Hyperedge<N, E>>
+    where
+        N: Clone,
+        E: Clone,
+    {
+        if let Some((nodes, weight)) = self.hyperedges.remove(&hyperedge_id) {
+            // Remove from node-to-hyperedges mapping
+            for node in &nodes {
+                if let Some(hyperedge_set) = self.node_to_hyperedges.get_mut(node) {
+                    hyperedge_set.remove(&hyperedge_id);
+                }
+            }
+
+            Ok(Hyperedge {
+                id: hyperedge_id,
+                nodes,
+                weight,
+            })
+        } else {
+            Err(GraphError::EdgeNotFound)
+        }
+    }
+
+    /// Get all nodes in the hypergraph
+    pub fn nodes(&self) -> std::collections::hash_set::Iter<'_, N> {
+        self.nodes.iter()
+    }
+
+    /// Get all hyperedges in the hypergraph
+    pub fn hyperedges(&self) -> Vec<Hyperedge<N, E>>
+    where
+        N: Clone,
+        E: Clone,
+    {
+        self.hyperedges
+            .iter()
+            .map(|(&id, (nodes, weight))| Hyperedge {
+                id,
+                nodes: nodes.clone(),
+                weight: weight.clone(),
+            })
+            .collect()
+    }
+
+    /// Get a specific hyperedge by its ID
+    pub fn get_hyperedge(&self, hyperedge_id: usize) -> Option<Hyperedge<N, E>>
+    where
+        N: Clone,
+        E: Clone,
+    {
+        self.hyperedges
+            .get(&hyperedge_id)
+            .map(|(nodes, weight)| Hyperedge {
+                id: hyperedge_id,
+                nodes: nodes.clone(),
+                weight: weight.clone(),
+            })
+    }
+
+    /// Get all hyperedges that contain a specific node
+    pub fn hyperedges_containing_node(&self, node: &N) -> Vec<Hyperedge<N, E>>
+    where
+        N: Clone,
+        E: Clone,
+    {
+        let mut result = Vec::new();
+
+        if let Some(hyperedge_ids) = self.node_to_hyperedges.get(node) {
+            for &hyperedge_id in hyperedge_ids {
+                if let Some(hyperedge) = self.get_hyperedge(hyperedge_id) {
+                    result.push(hyperedge);
+                }
+            }
+        }
+
+        result
+    }
+
+    /// Get all nodes that are connected to a given node through some hyperedge
+    ///
+    /// Returns all nodes that share at least one hyperedge with the given node
+    pub fn neighbors(&self, node: &N) -> std::collections::HashSet<N>
+    where
+        N: Clone,
+    {
+        let mut neighbors = std::collections::HashSet::new();
+
+        if let Some(hyperedge_ids) = self.node_to_hyperedges.get(node) {
+            for &hyperedge_id in hyperedge_ids {
+                if let Some((nodes, _)) = self.hyperedges.get(&hyperedge_id) {
+                    for neighbor in nodes {
+                        if neighbor != node {
+                            neighbors.insert(neighbor.clone());
+                        }
+                    }
+                }
+            }
+        }
+
+        neighbors
+    }
+
+    /// Number of nodes in the hypergraph
+    pub fn node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
+    /// Number of hyperedges in the hypergraph
+    pub fn hyperedge_count(&self) -> usize {
+        self.hyperedges.len()
+    }
+
+    /// Check if the hypergraph contains a specific node
+    pub fn has_node(&self, node: &N) -> bool {
+        self.nodes.contains(node)
+    }
+
+    /// Check if the hypergraph contains a specific hyperedge
+    pub fn has_hyperedge(&self, hyperedge_id: usize) -> bool {
+        self.hyperedges.contains_key(&hyperedge_id)
+    }
+
+    /// Get the degree of a node (number of hyperedges it participates in)
+    pub fn degree(&self, node: &N) -> usize {
+        self.node_to_hyperedges
+            .get(node)
+            .map_or(0, |hyperedges| hyperedges.len())
+    }
+
+    /// Get the size of a hyperedge (number of nodes it connects)
+    pub fn hyperedge_size(&self, hyperedge_id: usize) -> Option<usize> {
+        self.hyperedges
+            .get(&hyperedge_id)
+            .map(|(nodes, _)| nodes.len())
+    }
+
+    /// Check if two nodes are connected (share at least one hyperedge)
+    pub fn are_connected(&self, node1: &N, node2: &N) -> bool {
+        if let Some(hyperedge_ids) = self.node_to_hyperedges.get(node1) {
+            for &hyperedge_id in hyperedge_ids {
+                if let Some((nodes, _)) = self.hyperedges.get(&hyperedge_id) {
+                    if nodes.contains(node2) {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    /// Get the hyperedges that connect two specific nodes
+    pub fn connecting_hyperedges(&self, node1: &N, node2: &N) -> Vec<usize> {
+        let mut connecting = Vec::new();
+
+        if let Some(hyperedge_ids) = self.node_to_hyperedges.get(node1) {
+            for &hyperedge_id in hyperedge_ids {
+                if let Some((nodes, _)) = self.hyperedges.get(&hyperedge_id) {
+                    if nodes.contains(node2) {
+                        connecting.push(hyperedge_id);
+                    }
+                }
+            }
+        }
+
+        connecting
+    }
+
+    /// Convert to a regular graph by creating edges between all pairs of nodes
+    /// that are connected by the same hyperedge
+    ///
+    /// This creates the 2-section (or clique expansion) of the hypergraph
+    pub fn to_graph(&self) -> Graph<N, E, Ix>
+    where
+        N: Clone,
+        E: Clone + num_traits::Zero + std::ops::Add<Output = E>,
+    {
+        let mut graph = Graph::new();
+
+        // Add all nodes
+        for node in &self.nodes {
+            graph.add_node(node.clone());
+        }
+
+        // For each hyperedge, connect all pairs of nodes
+        for (nodes, weight) in self.hyperedges.values() {
+            let node_vec: Vec<&N> = nodes.iter().collect();
+            for i in 0..node_vec.len() {
+                for j in (i + 1)..node_vec.len() {
+                    let node1 = node_vec[i];
+                    let node2 = node_vec[j];
+
+                    // If edge already exists, add to its weight
+                    if graph.has_edge(node1, node2) {
+                        if let Ok(existing_weight) = graph.edge_weight(node1, node2) {
+                            let new_weight: E = existing_weight + weight.clone();
+                            // Remove and re-add with new weight
+                            // Note: This is a simplified approach. In practice, you might want
+                            // a more efficient way to update edge weights
+                            let mut new_graph = Graph::new();
+                            for node in graph.nodes() {
+                                new_graph.add_node(node.clone());
+                            }
+                            for edge in graph.edges() {
+                                if (edge.source == *node1 && edge.target == *node2)
+                                    || (edge.source == *node2 && edge.target == *node1)
+                                {
+                                    new_graph
+                                        .add_edge(edge.source, edge.target, new_weight.clone())
+                                        .unwrap();
+                                } else {
+                                    new_graph
+                                        .add_edge(edge.source, edge.target, edge.weight)
+                                        .unwrap();
+                                }
+                            }
+                            graph = new_graph;
+                        }
+                    } else {
+                        graph
+                            .add_edge(node1.clone(), node2.clone(), weight.clone())
+                            .unwrap();
+                    }
+                }
+            }
+        }
+
+        graph
+    }
+
+    /// Get the incidence matrix of the hypergraph
+    ///
+    /// Returns a matrix where rows represent nodes and columns represent hyperedges.
+    /// Entry (i,j) is 1 if node i is in hyperedge j, 0 otherwise.
+    pub fn incidence_matrix(&self) -> Array2<u8>
+    where
+        N: Clone + Ord,
+    {
+        let mut sorted_nodes: Vec<&N> = self.nodes.iter().collect();
+        sorted_nodes.sort();
+
+        let mut sorted_hyperedges: Vec<usize> = self.hyperedges.keys().cloned().collect();
+        sorted_hyperedges.sort();
+
+        let mut matrix = Array2::zeros((sorted_nodes.len(), sorted_hyperedges.len()));
+
+        let node_to_idx: HashMap<&N, usize> = sorted_nodes
+            .iter()
+            .enumerate()
+            .map(|(i, &node)| (node, i))
+            .collect();
+
+        let hyperedge_to_idx: HashMap<usize, usize> = sorted_hyperedges
+            .iter()
+            .enumerate()
+            .map(|(j, &he_id)| (he_id, j))
+            .collect();
+
+        for (&hyperedge_id, (nodes, _)) in &self.hyperedges {
+            let j = hyperedge_to_idx[&hyperedge_id];
+            for node in nodes {
+                if let Some(&i) = node_to_idx.get(node) {
+                    matrix[[i, j]] = 1;
+                }
+            }
+        }
+
+        matrix
+    }
+
+    /// Check if the hypergraph is uniform (all hyperedges have the same size)
+    pub fn is_uniform(&self) -> bool {
+        if self.hyperedges.is_empty() {
+            return true;
+        }
+
+        let first_size = self.hyperedges.values().next().unwrap().0.len();
+        self.hyperedges
+            .values()
+            .all(|(nodes, _)| nodes.len() == first_size)
+    }
+
+    /// Get the uniformity of the hypergraph (the common size if uniform, None otherwise)
+    pub fn uniformity(&self) -> Option<usize> {
+        if self.is_uniform() && !self.hyperedges.is_empty() {
+            Some(self.hyperedges.values().next().unwrap().0.len())
+        } else {
+            None
+        }
+    }
+
+    /// Get statistics about hyperedge sizes
+    pub fn hyperedge_size_stats(&self) -> (usize, usize, f64) {
+        if self.hyperedges.is_empty() {
+            return (0, 0, 0.0);
+        }
+
+        let sizes: Vec<usize> = self
+            .hyperedges
+            .values()
+            .map(|(nodes, _)| nodes.len())
+            .collect();
+
+        let min_size = *sizes.iter().min().unwrap();
+        let max_size = *sizes.iter().max().unwrap();
+        let avg_size = sizes.iter().sum::<usize>() as f64 / sizes.len() as f64;
+
+        (min_size, max_size, avg_size)
+    }
+
+    /// Find all maximal cliques in the hypergraph
+    ///
+    /// A maximal clique is a set of nodes that are all connected to each other
+    /// and cannot be extended by adding another node while maintaining this property.
+    /// In hypergraphs, this corresponds to finding maximal sets of nodes that
+    /// all participate in some common hyperedge.
+    pub fn maximal_cliques(&self) -> Vec<std::collections::HashSet<N>>
+    where
+        N: Clone,
+    {
+        let mut cliques = Vec::new();
+
+        // For each hyperedge, the nodes form a clique
+        for (nodes, _) in self.hyperedges.values() {
+            let mut is_maximal = true;
+
+            // Check if this clique is contained in any existing clique
+            for existing_clique in &cliques {
+                if nodes.is_subset(existing_clique) {
+                    is_maximal = false;
+                    break;
+                }
+            }
+
+            if is_maximal {
+                // Remove any existing cliques that are subsets of this one
+                cliques.retain(|existing_clique| !existing_clique.is_subset(nodes));
+                cliques.push(nodes.clone());
+            }
+        }
+
+        cliques
+    }
+
+    /// Create a hypergraph from a regular graph where each edge becomes a 2-uniform hyperedge
+    pub fn from_graph(graph: &Graph<N, E, Ix>) -> Self
+    where
+        N: Clone,
+        E: Clone,
+    {
+        let mut hypergraph = Hypergraph::new();
+
+        // Add all nodes
+        for node in graph.nodes() {
+            hypergraph.add_node(node.clone());
+        }
+
+        // Convert each edge to a 2-uniform hyperedge
+        for edge in graph.edges() {
+            let mut nodes = std::collections::HashSet::new();
+            nodes.insert(edge.source);
+            nodes.insert(edge.target);
+            hypergraph.add_hyperedge(nodes, edge.weight).unwrap();
+        }
+
+        hypergraph
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1453,6 +1926,263 @@ mod tests {
         assert_eq!(regular_graph.node_count(), 2);
         assert_eq!(regular_graph.edge_count(), 1);
         assert!(regular_graph.has_edge(&"A", &"B"));
+    }
+
+    #[test]
+    fn test_hypergraph_creation() {
+        let mut hypergraph: Hypergraph<&str, f64> = Hypergraph::new();
+
+        // Add some nodes
+        hypergraph.add_node("A");
+        hypergraph.add_node("B");
+        hypergraph.add_node("C");
+
+        assert_eq!(hypergraph.node_count(), 3);
+        assert_eq!(hypergraph.hyperedge_count(), 0);
+        assert!(hypergraph.has_node(&"A"));
+        assert!(hypergraph.has_node(&"B"));
+        assert!(hypergraph.has_node(&"C"));
+    }
+
+    #[test]
+    fn test_hypergraph_add_hyperedge() {
+        let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
+
+        // Create a 3-uniform hyperedge
+        let nodes = vec![1, 2, 3];
+        let hyperedge_id = hypergraph.add_hyperedge_from_vec(nodes, 1.5).unwrap();
+
+        assert_eq!(hypergraph.node_count(), 3);
+        assert_eq!(hypergraph.hyperedge_count(), 1);
+        assert!(hypergraph.has_hyperedge(hyperedge_id));
+        assert_eq!(hypergraph.hyperedge_size(hyperedge_id), Some(3));
+
+        // Check that nodes are properly connected
+        assert!(hypergraph.are_connected(&1, &2));
+        assert!(hypergraph.are_connected(&2, &3));
+        assert!(hypergraph.are_connected(&1, &3));
+
+        // Check degrees
+        assert_eq!(hypergraph.degree(&1), 1);
+        assert_eq!(hypergraph.degree(&2), 1);
+        assert_eq!(hypergraph.degree(&3), 1);
+    }
+
+    #[test]
+    fn test_hypergraph_neighbors() {
+        let mut hypergraph: Hypergraph<&str, f64> = Hypergraph::new();
+
+        // Add two hyperedges: {A, B, C} and {B, C, D}
+        hypergraph
+            .add_hyperedge_from_vec(vec!["A", "B", "C"], 1.0)
+            .unwrap();
+        hypergraph
+            .add_hyperedge_from_vec(vec!["B", "C", "D"], 2.0)
+            .unwrap();
+
+        // Check neighbors of B
+        let b_neighbors = hypergraph.neighbors(&"B");
+        assert_eq!(b_neighbors.len(), 3);
+        assert!(b_neighbors.contains(&"A"));
+        assert!(b_neighbors.contains(&"C"));
+        assert!(b_neighbors.contains(&"D"));
+
+        // Check neighbors of A
+        let a_neighbors = hypergraph.neighbors(&"A");
+        assert_eq!(a_neighbors.len(), 2);
+        assert!(a_neighbors.contains(&"B"));
+        assert!(a_neighbors.contains(&"C"));
+    }
+
+    #[test]
+    fn test_hypergraph_remove_hyperedge() {
+        let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
+
+        let hyperedge_id = hypergraph
+            .add_hyperedge_from_vec(vec![1, 2, 3], 5.0)
+            .unwrap();
+        assert_eq!(hypergraph.hyperedge_count(), 1);
+
+        let removed = hypergraph.remove_hyperedge(hyperedge_id).unwrap();
+        assert_eq!(removed.weight, 5.0);
+        assert_eq!(removed.nodes.len(), 3);
+        assert_eq!(hypergraph.hyperedge_count(), 0);
+
+        // Nodes should still exist but have no connections
+        assert!(hypergraph.has_node(&1));
+        assert_eq!(hypergraph.degree(&1), 0);
+        assert!(!hypergraph.are_connected(&1, &2));
+    }
+
+    #[test]
+    fn test_hypergraph_from_graph() {
+        let mut graph: Graph<&str, f64> = Graph::new();
+        graph.add_edge("A", "B", 1.0).unwrap();
+        graph.add_edge("B", "C", 2.0).unwrap();
+
+        let hypergraph = Hypergraph::from_graph(&graph);
+
+        assert_eq!(hypergraph.node_count(), 3);
+        assert_eq!(hypergraph.hyperedge_count(), 2);
+        assert!(hypergraph.is_uniform());
+        assert_eq!(hypergraph.uniformity(), Some(2));
+
+        // Each edge should become a 2-uniform hyperedge
+        let hyperedges = hypergraph.hyperedges();
+        for hyperedge in hyperedges {
+            assert_eq!(hyperedge.nodes.len(), 2);
+        }
+    }
+
+    #[test]
+    fn test_hypergraph_to_graph() {
+        let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
+
+        // Add a 3-uniform hyperedge {1, 2, 3}
+        hypergraph
+            .add_hyperedge_from_vec(vec![1, 2, 3], 1.0)
+            .unwrap();
+
+        let graph = hypergraph.to_graph();
+
+        // Should create edges (1,2), (1,3), (2,3) all with weight 1.0
+        assert_eq!(graph.node_count(), 3);
+        assert_eq!(graph.edge_count(), 3);
+        assert!(graph.has_edge(&1, &2));
+        assert!(graph.has_edge(&1, &3));
+        assert!(graph.has_edge(&2, &3));
+    }
+
+    #[test]
+    fn test_hypergraph_incidence_matrix() {
+        let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
+
+        hypergraph.add_hyperedge_from_vec(vec![1, 2], 1.0).unwrap();
+        hypergraph.add_hyperedge_from_vec(vec![2, 3], 2.0).unwrap();
+
+        let matrix = hypergraph.incidence_matrix();
+        assert_eq!(matrix.shape(), &[3, 2]);
+
+        // Each row should have exactly one or two 1s (depending on node participation)
+        for row in matrix.rows() {
+            let sum: u8 = row.iter().sum();
+            assert!(sum >= 1);
+        }
+    }
+
+    #[test]
+    fn test_hypergraph_uniformity() {
+        let mut uniform_hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
+
+        // Add 3-uniform hyperedges
+        uniform_hypergraph
+            .add_hyperedge_from_vec(vec![1, 2, 3], 1.0)
+            .unwrap();
+        uniform_hypergraph
+            .add_hyperedge_from_vec(vec![4, 5, 6], 2.0)
+            .unwrap();
+
+        assert!(uniform_hypergraph.is_uniform());
+        assert_eq!(uniform_hypergraph.uniformity(), Some(3));
+
+        // Add a 2-uniform hyperedge to make it non-uniform
+        uniform_hypergraph
+            .add_hyperedge_from_vec(vec![1, 4], 3.0)
+            .unwrap();
+
+        assert!(!uniform_hypergraph.is_uniform());
+        assert_eq!(uniform_hypergraph.uniformity(), None);
+    }
+
+    #[test]
+    fn test_hypergraph_size_stats() {
+        let mut hypergraph: Hypergraph<&str, f64> = Hypergraph::new();
+
+        hypergraph
+            .add_hyperedge_from_vec(vec!["A", "B"], 1.0)
+            .unwrap();
+        hypergraph
+            .add_hyperedge_from_vec(vec!["B", "C", "D"], 2.0)
+            .unwrap();
+        hypergraph
+            .add_hyperedge_from_vec(vec!["A", "B", "C", "D", "E"], 3.0)
+            .unwrap();
+
+        let (min, max, avg) = hypergraph.hyperedge_size_stats();
+        assert_eq!(min, 2);
+        assert_eq!(max, 5);
+        assert!((avg - 10.0 / 3.0).abs() < 1e-6); // (2 + 3 + 5) / 3 = 10/3 ≈ 3.33
+    }
+
+    #[test]
+    fn test_hypergraph_maximal_cliques() {
+        let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
+
+        // Add overlapping hyperedges
+        hypergraph
+            .add_hyperedge_from_vec(vec![1, 2, 3], 1.0)
+            .unwrap();
+        hypergraph
+            .add_hyperedge_from_vec(vec![2, 3, 4], 2.0)
+            .unwrap();
+        hypergraph.add_hyperedge_from_vec(vec![1, 2], 3.0).unwrap(); // Subset of first
+
+        let cliques = hypergraph.maximal_cliques();
+
+        // Should have 2 maximal cliques: {1,2,3} and {2,3,4}
+        // The {1,2} hyperedge should be filtered out as it's a subset
+        assert_eq!(cliques.len(), 2);
+
+        let clique_sizes: Vec<usize> = cliques.iter().map(|c| c.len()).collect();
+        assert!(clique_sizes.contains(&3));
+    }
+
+    #[test]
+    fn test_hypergraph_connecting_hyperedges() {
+        let mut hypergraph: Hypergraph<&str, f64> = Hypergraph::new();
+
+        let he1 = hypergraph
+            .add_hyperedge_from_vec(vec!["A", "B", "C"], 1.0)
+            .unwrap();
+        let he2 = hypergraph
+            .add_hyperedge_from_vec(vec!["B", "C", "D"], 2.0)
+            .unwrap();
+        let _he3 = hypergraph
+            .add_hyperedge_from_vec(vec!["A", "E"], 3.0)
+            .unwrap();
+
+        let connecting_ab = hypergraph.connecting_hyperedges(&"A", &"B");
+        assert_eq!(connecting_ab.len(), 1);
+        assert!(connecting_ab.contains(&he1));
+
+        let connecting_bc = hypergraph.connecting_hyperedges(&"B", &"C");
+        assert_eq!(connecting_bc.len(), 2);
+        assert!(connecting_bc.contains(&he1));
+        assert!(connecting_bc.contains(&he2));
+
+        let connecting_ad = hypergraph.connecting_hyperedges(&"A", &"D");
+        assert_eq!(connecting_ad.len(), 0);
+    }
+
+    #[test]
+    fn test_hypergraph_empty() {
+        let hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
+
+        assert_eq!(hypergraph.node_count(), 0);
+        assert_eq!(hypergraph.hyperedge_count(), 0);
+        assert!(hypergraph.is_uniform()); // Vacuously true
+        assert_eq!(hypergraph.uniformity(), None);
+        assert_eq!(hypergraph.hyperedge_size_stats(), (0, 0, 0.0));
+        assert!(hypergraph.maximal_cliques().is_empty());
+    }
+
+    #[test]
+    fn test_hypergraph_invalid_hyperedge() {
+        let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
+
+        // Try to add empty hyperedge
+        let result = hypergraph.add_hyperedge_from_vec(vec![], 1.0);
+        assert!(result.is_err());
     }
 
     #[test]

@@ -17,7 +17,7 @@ num-traits = { workspace = true }
 num-complex = { workspace = true }
 num-integer = { workspace = true }
 thiserror = { workspace = true }
-openblas-src = { workspace = true }
+# BLAS dependencies handled through scirs2-core
 
 # Signal processing specific dependencies
 rustfft = { workspace = true }

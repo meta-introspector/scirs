@@ -28,6 +28,7 @@ dirs = { workspace = true }
 flate2 = { workspace = true }
 zip = { workspace = true }
 blake3 = { workspace = true }
+sha2 = { workspace = true }
 lazy_static = { workspace = true }
 ureq = { workspace = true }
 tempfile = { workspace = true }

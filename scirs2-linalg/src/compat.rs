@@ -251,10 +251,10 @@ where
 
     // Note: lower, overwrite_a, overwrite_b, driver, type_param are not used
     if eigvals_only {
-        let eigenvalues = eigen::eigvalsh(a)?;
+        let eigenvalues = eigen::eigvalsh(a, None)?;
         Ok((eigenvalues, None))
     } else {
-        let (eigenvalues, eigenvectors) = eigen::eigh(a)?;
+        let (eigenvalues, eigenvectors) = eigen::eigh(a, None)?;
         Ok((eigenvalues, Some(eigenvectors)))
     }
 }
@@ -1007,7 +1007,7 @@ where
     F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {
     match func {
-        "exp" => matrix_functions::expm(a),
+        "exp" => matrix_functions::expm(a, None),
         "log" => matrix_functions::logm(a),
         "sqrt" => matrix_functions::sqrtm(a, 100, F::from(1e-12).unwrap()),
         "cos" => cosm(a),

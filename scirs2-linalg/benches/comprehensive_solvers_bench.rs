@@ -446,7 +446,7 @@ fn bench_krylov_solvers(c: &mut Criterion) {
             &(&spd_matrix, &rhs),
             |b, (m, r)| {
                 b.iter(|| {
-                    conjugate_gradient(black_box(&m.view()), black_box(&r.view()), 200, 1e-10)
+                    conjugate_gradient(black_box(&m.view()), black_box(&r.view()), 200, 1e-10, None)
                         .unwrap()
                 })
             },
@@ -479,7 +479,9 @@ fn bench_krylov_solvers(c: &mut Criterion) {
             BenchmarkId::new("bicgstab", size),
             &(&general_matrix, &rhs),
             |b, (m, r)| {
-                b.iter(|| bicgstab(black_box(&m.view()), black_box(&r.view()), 200, 1e-10).unwrap())
+                b.iter(|| {
+                    bicgstab(black_box(&m.view()), black_box(&r.view()), 200, 1e-10, None).unwrap()
+                })
             },
         );
 
@@ -497,7 +499,9 @@ fn bench_krylov_solvers(c: &mut Criterion) {
             BenchmarkId::new("minres", size),
             &(&spd_matrix, &rhs),
             |b, (m, r)| {
-                b.iter(|| minres(black_box(&m.view()), black_box(&r.view()), 200, 1e-10).unwrap())
+                b.iter(|| {
+                    minres(black_box(&m.view()), black_box(&r.view()), 200, 1e-10, None).unwrap()
+                })
             },
         );
 
@@ -544,7 +548,8 @@ fn bench_stationary_solvers(c: &mut Criterion) {
             &(&matrix, &rhs),
             |b, (m, r)| {
                 b.iter(|| {
-                    gauss_seidel(black_box(&m.view()), black_box(&r.view()), 100, 1e-10).unwrap()
+                    gauss_seidel(black_box(&m.view()), black_box(&r.view()), 100, 1e-10, None)
+                        .unwrap()
                 })
             },
         );

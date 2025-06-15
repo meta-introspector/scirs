@@ -52,7 +52,7 @@
 //! // let filtered = filtfilt(&b, &a, &signal).unwrap();
 //! ```
 
-extern crate openblas_src;
+// BLAS backend linking handled through scirs2-core
 
 // Export error types
 pub mod error;
@@ -102,6 +102,7 @@ pub mod reassigned;
 pub mod resample;
 pub mod robust;
 pub mod savgol;
+pub mod separation;
 pub mod sparse;
 pub mod spectral;
 pub mod spline;
@@ -217,6 +218,9 @@ pub use reassigned::{reassigned_spectrogram, smoothed_reassigned_spectrogram, Re
 pub use robust::{
     alpha_trimmed_filter, hampel_filter, huber_filter, robust_filter_2d, winsorize_filter,
     RobustConfig,
+};
+pub use separation::{
+    harmonic_percussive_separation, multiband_separation, HarmonicPercussiveConfig, MultibandConfig,
 };
 pub use sparse::{
     basis_pursuit, compressed_sensing_recover, cosamp, estimate_rip_constant, fista, iht,

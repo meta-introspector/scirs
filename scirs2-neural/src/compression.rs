@@ -871,13 +871,13 @@ mod tests {
             .unwrap();
 
         // Weights with magnitude >= 0.5 should be kept
-        assert_eq!(mask[[0, 1]], true); // 0.6 >= 0.5
-        assert_eq!(mask[[1, 0]], true); // 0.8 >= 0.5
-        assert_eq!(mask[[1, 2]], true); // 0.7 >= 0.5
-        assert_eq!(mask[[2, 1]], true); // 0.9 >= 0.5
+        assert!(mask[[0, 1]]); // 0.6 >= 0.5
+        assert!(mask[[1, 0]]); // 0.8 >= 0.5
+        assert!(mask[[1, 2]]); // 0.7 >= 0.5
+        assert!(mask[[2, 1]]); // 0.9 >= 0.5
 
-        assert_eq!(mask[[0, 0]], false); // 0.1 < 0.5
-        assert_eq!(mask[[0, 2]], false); // 0.3 < 0.5
+        assert!(!mask[[0, 0]]); // 0.1 < 0.5
+        assert!(!mask[[0, 2]]); // 0.3 < 0.5
 
         let stats = pruner.get_sparsity_statistics();
         assert!(stats.contains_key("layer1"));
@@ -899,9 +899,9 @@ mod tests {
         let kept_count = mask.iter().filter(|&&x| x).count();
         assert_eq!(kept_count, 3);
 
-        assert_eq!(mask[[1, 0]], true); // 0.8
-        assert_eq!(mask[[1, 2]], true); // 0.7
-        assert_eq!(mask[[0, 1]], true); // 0.6
+        assert!(mask[[1, 0]]); // 0.8
+        assert!(mask[[1, 2]]); // 0.7
+        assert!(mask[[0, 1]]); // 0.6
     }
 
     #[test]

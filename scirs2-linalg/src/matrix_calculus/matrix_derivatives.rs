@@ -648,3 +648,258 @@ mod tests {
         assert_abs_diff_eq!(d_ab[[1, 1]], 0.0, epsilon = 1e-10);
     }
 }
+
+/// Matrix differential operators
+pub mod differential_operators {
+    use super::*;
+    use ndarray::{Array3, Axis};
+
+    /// Compute the matrix divergence operator.
+    ///
+    /// For a matrix field F(x, y), computes div(F) = ∂F₁₁/∂x + ∂F₁₂/∂y + ∂F₂₁/∂x + ∂F₂₂/∂y
+    ///
+    /// # Arguments
+    ///
+    /// * `field` - 3D array where field[i, j, k] represents F_ij at spatial location k
+    /// * `spacing` - Grid spacing for numerical differentiation
+    ///
+    /// # Returns
+    ///
+    /// * Scalar field representing the divergence
+    pub fn matrix_divergence<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array1<F>>
+    where
+        F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign,
+    {
+        let n_points = field.len_of(Axis(2));
+        let mut divergence = Array1::zeros(n_points);
+
+        for k in 1..n_points - 1 {
+            let mut div_k = F::zero();
+
+            // ∂F₁₁/∂x (using central difference)
+            div_k +=
+                (field[[0, 0, k + 1]] - field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+
+            // ∂F₁₂/∂y
+            div_k +=
+                (field[[0, 1, k + 1]] - field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+
+            // ∂F₂₁/∂x
+            div_k +=
+                (field[[1, 0, k + 1]] - field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+
+            // ∂F₂₂/∂y
+            div_k +=
+                (field[[1, 1, k + 1]] - field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+
+            divergence[k] = div_k;
+        }
+
+        // Handle boundaries with forward/backward differences
+        if n_points > 2 {
+            divergence[0] = divergence[1];
+            divergence[n_points - 1] = divergence[n_points - 2];
+        }
+
+        Ok(divergence)
+    }
+
+    /// Compute the matrix curl operator for 2D matrix fields.
+    ///
+    /// For a 2x2 matrix field F(x, y), computes the scalar curl:
+    /// curl(F) = ∂F₁₂/∂x - ∂F₁₁/∂y + ∂F₂₂/∂x - ∂F₂₁/∂y
+    ///
+    /// # Arguments
+    ///
+    /// * `field` - 3D array where field[i, j, k] represents F_ij at spatial location k
+    /// * `spacing` - Grid spacing for numerical differentiation
+    ///
+    /// # Returns
+    ///
+    /// * Scalar field representing the curl
+    pub fn matrix_curl_2d<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array1<F>>
+    where
+        F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign,
+    {
+        let n_points = field.len_of(Axis(2));
+        let mut curl = Array1::zeros(n_points);
+
+        for k in 1..n_points - 1 {
+            let mut curl_k = F::zero();
+
+            // ∂F₁₂/∂x
+            curl_k +=
+                (field[[0, 1, k + 1]] - field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+
+            // -∂F₁₁/∂y (approximated as derivative in k direction)
+            curl_k -=
+                (field[[0, 0, k + 1]] - field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+
+            // ∂F₂₂/∂x
+            curl_k +=
+                (field[[1, 1, k + 1]] - field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+
+            // -∂F₂₁/∂y
+            curl_k -=
+                (field[[1, 0, k + 1]] - field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+
+            curl[k] = curl_k;
+        }
+
+        // Handle boundaries
+        if n_points > 2 {
+            curl[0] = curl[1];
+            curl[n_points - 1] = curl[n_points - 2];
+        }
+
+        Ok(curl)
+    }
+
+    /// Compute the matrix Laplacian operator.
+    ///
+    /// For a matrix field F(x, y), computes ∇²F where each component undergoes Laplacian operation.
+    ///
+    /// # Arguments
+    ///
+    /// * `field` - 3D array where field[i, j, k] represents F_ij at spatial location k
+    /// * `spacing` - Grid spacing for numerical differentiation
+    ///
+    /// # Returns
+    ///
+    /// * Matrix field representing the Laplacian
+    pub fn matrix_laplacian<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
+    where
+        F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign,
+    {
+        let (n_rows, n_cols, n_points) = field.dim();
+        let mut laplacian = Array3::zeros((n_rows, n_cols, n_points));
+
+        let h_sq = spacing * spacing;
+
+        for i in 0..n_rows {
+            for j in 0..n_cols {
+                for k in 1..n_points - 1 {
+                    // Second derivative approximation: (f[k-1] - 2*f[k] + f[k+1]) / h²
+                    laplacian[[i, j, k]] = (field[[i, j, k - 1]]
+                        - F::from(2.0).unwrap() * field[[i, j, k]]
+                        + field[[i, j, k + 1]])
+                        / h_sq;
+                }
+            }
+        }
+
+        // Handle boundaries (set to zero)
+        for i in 0..n_rows {
+            for j in 0..n_cols {
+                laplacian[[i, j, 0]] = F::zero();
+                if n_points > 1 {
+                    laplacian[[i, j, n_points - 1]] = F::zero();
+                }
+            }
+        }
+
+        Ok(laplacian)
+    }
+
+    /// Compute the matrix gradient operator.
+    ///
+    /// For a matrix field F(x), computes the gradient ∇F where each component is differentiated.
+    ///
+    /// # Arguments
+    ///
+    /// * `field` - 3D array where field[i, j, k] represents F_ij at spatial location k
+    /// * `spacing` - Grid spacing for numerical differentiation
+    ///
+    /// # Returns
+    ///
+    /// * Matrix field representing the gradient
+    pub fn matrix_gradient<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
+    where
+        F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign,
+    {
+        let (n_rows, n_cols, n_points) = field.dim();
+        let mut gradient = Array3::zeros((n_rows, n_cols, n_points));
+
+        for i in 0..n_rows {
+            for j in 0..n_cols {
+                for k in 1..n_points - 1 {
+                    // Central difference: (f[k+1] - f[k-1]) / (2*h)
+                    gradient[[i, j, k]] = (field[[i, j, k + 1]] - field[[i, j, k - 1]])
+                        / (F::from(2.0).unwrap() * spacing);
+                }
+
+                // Handle boundaries with forward/backward differences
+                if n_points > 1 {
+                    gradient[[i, j, 0]] = (field[[i, j, 1]] - field[[i, j, 0]]) / spacing;
+                    gradient[[i, j, n_points - 1]] =
+                        (field[[i, j, n_points - 1]] - field[[i, j, n_points - 2]]) / spacing;
+                }
+            }
+        }
+
+        Ok(gradient)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use approx::assert_abs_diff_eq;
+
+        #[test]
+        fn test_matrix_divergence() {
+            // Create a simple 2x2 matrix field with 5 spatial points
+            let mut field = Array3::zeros((2, 2, 5));
+
+            // Linear field: F₁₁ = x, F₁₂ = y, F₂₁ = 0, F₂₂ = x
+            for k in 0..5 {
+                let x = k as f64;
+                field[[0, 0, k]] = x; // F₁₁ = x
+                field[[0, 1, k]] = x; // F₁₂ = x (using x as proxy for y)
+                field[[1, 0, k]] = 0.0; // F₂₁ = 0
+                field[[1, 1, k]] = x; // F₂₂ = x
+            }
+
+            let div = matrix_divergence(&field, 1.0).unwrap();
+
+            // For this field, divergence should be approximately constant = 1 + 1 + 0 + 1 = 3
+            assert!(div.len() == 5);
+            assert_abs_diff_eq!(div[2], 3.0, epsilon = 1e-10);
+        }
+
+        #[test]
+        fn test_matrix_laplacian() {
+            // Create a quadratic field
+            let mut field = Array3::zeros((2, 2, 5));
+
+            for k in 0..5 {
+                let x = k as f64;
+                field[[0, 0, k]] = x * x; // F₁₁ = x²
+                field[[1, 1, k]] = x * x; // F₂₂ = x²
+            }
+
+            let laplacian = matrix_laplacian(&field, 1.0).unwrap();
+
+            // For f(x) = x², d²f/dx² = 2, so laplacian should be approximately 2
+            assert_abs_diff_eq!(laplacian[[0, 0, 2]], 2.0, epsilon = 1e-10);
+            assert_abs_diff_eq!(laplacian[[1, 1, 2]], 2.0, epsilon = 1e-10);
+        }
+
+        #[test]
+        fn test_matrix_gradient() {
+            // Create a linear field
+            let mut field = Array3::zeros((2, 2, 5));
+
+            for k in 0..5 {
+                let x = k as f64;
+                field[[0, 0, k]] = 2.0 * x; // F₁₁ = 2x
+                field[[1, 1, k]] = 3.0 * x; // F₂₂ = 3x
+            }
+
+            let gradient = matrix_gradient(&field, 1.0).unwrap();
+
+            // For f(x) = ax, df/dx = a
+            assert_abs_diff_eq!(gradient[[0, 0, 2]], 2.0, epsilon = 1e-10);
+            assert_abs_diff_eq!(gradient[[1, 1, 2]], 3.0, epsilon = 1e-10);
+        }
+    }
+}

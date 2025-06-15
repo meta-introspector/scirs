@@ -37,24 +37,28 @@ use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
 
+mod distance_metrics;
+mod distance_simd;
 mod kmeans;
 mod kmeans2;
 mod minibatch_kmeans;
 mod parallel_kmeans;
-mod distance_simd;
 mod weighted_kmeans;
-mod distance_metrics;
-pub use kmeans::{kmeans, kmeans_with_metric, kmeans_init, kmeans_plus_plus, KMeansInit, KMeansOptions};
+pub use distance_metrics::{
+    create_metric, ChebyshevDistance, CorrelationDistance, CosineDistance,
+    DistanceMetric as VQDistanceMetric, EuclideanDistance, MahalanobisDistance, ManhattanDistance,
+    MetricType, MinkowskiDistance,
+};
+pub use distance_simd::{
+    distance_to_centroids_simd, pairwise_euclidean_parallel, pairwise_euclidean_simd,
+};
+pub use kmeans::{
+    kmeans, kmeans_init, kmeans_plus_plus, kmeans_with_metric, KMeansInit, KMeansOptions,
+};
 pub use kmeans2::{kmeans2, MinitMethod, MissingMethod};
 pub use minibatch_kmeans::*;
 pub use parallel_kmeans::{parallel_kmeans, ParallelKMeansOptions};
-pub use distance_simd::{pairwise_euclidean_simd, distance_to_centroids_simd, pairwise_euclidean_parallel};
 pub use weighted_kmeans::{weighted_kmeans, weighted_kmeans_plus_plus, WeightedKMeansOptions};
-pub use distance_metrics::{
-    DistanceMetric as VQDistanceMetric, EuclideanDistance, ManhattanDistance, ChebyshevDistance, 
-    MinkowskiDistance, CosineDistance, CorrelationDistance, MahalanobisDistance,
-    MetricType, create_metric
-};
 
 /// Computes the Euclidean distance between two vectors
 pub fn euclidean_distance<F>(x: ArrayView1<F>, y: ArrayView1<F>) -> F

@@ -95,6 +95,7 @@ where
     println!("  Weight decay: {}", options.weight_decay);
     println!("  Decoupled: {}", options.decouple_weight_decay);
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         // Update learning rate according to schedule
         let current_lr = update_learning_rate(
@@ -279,7 +280,7 @@ where
         let cycle_result = minimize_adamw_cycle(
             &mut grad_func,
             x.clone(),
-            &data_provider,
+            data_provider.as_ref(),
             &options,
             cycle_lr_max,
             eta_min,
@@ -325,7 +326,7 @@ where
 fn minimize_adamw_cycle<F>(
     grad_func: &mut F,
     mut x: Array1<f64>,
-    data_provider: &Box<dyn DataProvider>,
+    data_provider: &dyn DataProvider,
     options: &AdamWOptions,
     lr_max: f64,
     lr_min: f64,
@@ -343,6 +344,7 @@ where
     let batch_size = options.batch_size.unwrap_or(32.min(num_samples / 10));
     let actual_batch_size = batch_size.min(num_samples);
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         // Cosine annealing learning rate
         let progress = iteration as f64 / options.max_iter as f64;

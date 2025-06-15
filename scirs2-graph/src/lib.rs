@@ -26,6 +26,7 @@ pub mod io;
 pub mod layout;
 pub mod measures;
 pub mod spectral;
+pub mod temporal;
 
 // Re-export important types and functions
 pub use algorithms::{
@@ -37,22 +38,23 @@ pub use algorithms::{
     diameter, dinic_max_flow, edge_subgraph, eigenvector_centrality, eulerian_type,
     find_isomorphism, find_isomorphism_vf2, find_motifs, find_subgraph_matches, floyd_warshall,
     floyd_warshall_digraph, graph_edit_distance, greedy_coloring, greedy_modularity_optimization,
-    has_hamiltonian_circuit, has_hamiltonian_path, is_bipartite, jaccard_similarity,
-    k_core_decomposition, k_shortest_paths, label_propagation, line_digraph, line_graph,
-    louvain_communities, maximal_matching, maximum_bipartite_matching,
+    has_hamiltonian_circuit, has_hamiltonian_path, infomap_communities, is_bipartite,
+    jaccard_similarity, k_core_decomposition, k_shortest_paths, label_propagation, line_digraph,
+    line_graph, louvain_communities, maximal_matching, maximum_bipartite_matching,
     maximum_cardinality_matching, minimum_cut, minimum_spanning_tree,
     minimum_weight_bipartite_matching, modularity, modularity_optimization, pagerank,
     personalized_pagerank, push_relabel_max_flow, radius, random_walk, shortest_path,
     shortest_path_digraph, stable_marriage, strongly_connected_components, subdigraph, subgraph,
     tensor_product, topological_sort, transition_matrix, weight_filtered_subgraph, AStarResult,
     BipartiteMatching, BipartiteResult, CommunityStructure, EulerianType, GraphColoring,
-    MaximumMatching, MotifType,
+    InfomapResult, MaximumMatching, MotifType,
 };
 pub use attributes::{
     AttributeSummary, AttributeValue, AttributeView, AttributedDiGraph, AttributedGraph, Attributes,
 };
 pub use base::{
-    BipartiteGraph, DiGraph, Edge, EdgeWeight, Graph, IndexType, MultiDiGraph, MultiGraph, Node,
+    BipartiteGraph, DiGraph, Edge, EdgeWeight, Graph, Hyperedge, Hypergraph, IndexType,
+    MultiDiGraph, MultiGraph, Node,
 };
 pub use error::{GraphError, Result};
 pub use generators::{
@@ -67,3 +69,7 @@ pub use measures::{
     HitsScores,
 };
 pub use spectral::{laplacian, normalized_cut, spectral_radius};
+pub use temporal::{
+    temporal_betweenness_centrality, temporal_reachability, TemporalGraph, TemporalPath,
+    TimeInstant, TimeInterval,
+};

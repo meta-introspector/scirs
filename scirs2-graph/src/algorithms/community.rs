@@ -5,7 +5,7 @@
 use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use petgraph::visit::EdgeRef;
 use rand::seq::SliceRandom;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 /// Represents a community structure in a graph
@@ -598,6 +598,374 @@ where
     }
 }
 
+/// Represents the result of the Infomap algorithm
+#[derive(Debug, Clone)]
+pub struct InfomapResult<N: Node> {
+    /// Map from node to community ID
+    pub node_communities: HashMap<N, usize>,
+    /// The map equation (code length) of this partition - lower is better
+    pub code_length: f64,
+    /// The modularity score of this community structure
+    pub modularity: f64,
+}
+
+/// Infomap algorithm for community detection
+///
+/// The Infomap algorithm uses information theory to find communities that minimize
+/// the description length of random walks on the graph. It optimizes the map equation
+/// which balances the cost of describing the partition with the cost of describing
+/// random walks within and between communities.
+///
+/// # Arguments
+/// * `graph` - The undirected graph to analyze
+/// * `max_iterations` - Maximum number of optimization iterations
+/// * `tolerance` - Convergence tolerance for code length improvement
+///
+/// # Returns
+/// * An InfomapResult with node assignments, code length, and modularity
+pub fn infomap_communities<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iterations: usize,
+    tolerance: f64,
+) -> InfomapResult<N>
+where
+    N: Node + Clone + Hash + Eq,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let n = nodes.len();
+
+    if n == 0 {
+        return InfomapResult {
+            node_communities: HashMap::new(),
+            code_length: 0.0,
+            modularity: 0.0,
+        };
+    }
+
+    // Build transition probability matrix and compute steady-state probabilities
+    let (transition_matrix, node_weights) = build_transition_matrix(graph, &nodes);
+    let stationary_probs = compute_stationary_distribution(&transition_matrix, &node_weights);
+
+    // Initialize each node in its own community
+    let mut communities: HashMap<N, usize> = nodes
+        .iter()
+        .enumerate()
+        .map(|(i, node)| (node.clone(), i))
+        .collect();
+
+    let mut current_code_length = calculate_map_equation(
+        graph,
+        &communities,
+        &transition_matrix,
+        &stationary_probs,
+        &nodes,
+    );
+
+    let mut best_communities = communities.clone();
+    let mut best_code_length = current_code_length;
+    let mut improved = true;
+    let mut iterations = 0;
+
+    while improved && iterations < max_iterations {
+        improved = false;
+        iterations += 1;
+
+        // Try moving each node to the community that minimizes code length
+        for (node_idx, node) in nodes.iter().enumerate() {
+            let current_community = communities[node];
+            let mut best_community = current_community;
+            let mut best_delta = 0.0;
+
+            // Get neighboring communities
+            let mut candidate_communities = HashSet::new();
+            if let Ok(neighbors) = graph.neighbors(node) {
+                for neighbor in neighbors {
+                    if let Some(&comm) = communities.get(&neighbor) {
+                        candidate_communities.insert(comm);
+                    }
+                }
+            }
+
+            // Also consider creating a new community
+            let new_community_id = nodes.len() + node_idx;
+            candidate_communities.insert(new_community_id);
+
+            // Test each candidate community
+            for &candidate_community in &candidate_communities {
+                if candidate_community == current_community {
+                    continue;
+                }
+
+                // Temporarily move node to candidate community
+                communities.insert(node.clone(), candidate_community);
+
+                let new_code_length = calculate_map_equation(
+                    graph,
+                    &communities,
+                    &transition_matrix,
+                    &stationary_probs,
+                    &nodes,
+                );
+
+                let delta = current_code_length - new_code_length;
+
+                if delta > best_delta + tolerance {
+                    best_delta = delta;
+                    best_community = candidate_community;
+                }
+
+                // Restore original community for next test
+                communities.insert(node.clone(), current_community);
+            }
+
+            // Move to best community if improvement found
+            if best_community != current_community {
+                communities.insert(node.clone(), best_community);
+                current_code_length -= best_delta;
+                improved = true;
+
+                if current_code_length < best_code_length {
+                    best_code_length = current_code_length;
+                    best_communities = communities.clone();
+                }
+            }
+        }
+    }
+
+    // Renumber communities to be consecutive
+    let mut community_map: HashMap<usize, usize> = HashMap::new();
+    let mut next_id = 0;
+    for &comm in best_communities.values() {
+        if let std::collections::hash_map::Entry::Vacant(e) = community_map.entry(comm) {
+            e.insert(next_id);
+            next_id += 1;
+        }
+    }
+
+    // Apply renumbering
+    for (_, comm) in best_communities.iter_mut() {
+        *comm = community_map[comm];
+    }
+
+    // Calculate final modularity
+    let final_modularity = modularity(graph, &best_communities);
+
+    InfomapResult {
+        node_communities: best_communities,
+        code_length: best_code_length,
+        modularity: final_modularity,
+    }
+}
+
+/// Build transition probability matrix for random walks
+fn build_transition_matrix<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    nodes: &[N],
+) -> (Vec<Vec<f64>>, Vec<f64>)
+where
+    N: Node,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    let n = nodes.len();
+    let mut transition_matrix = vec![vec![0.0; n]; n];
+    let mut node_weights = vec![0.0; n];
+
+    // Create node index mapping
+    let node_to_idx: HashMap<&N, usize> = nodes.iter().enumerate().map(|(i, n)| (n, i)).collect();
+
+    // Calculate transition probabilities
+    for (i, node) in nodes.iter().enumerate() {
+        let mut total_weight = 0.0;
+
+        // First pass: calculate total outgoing weight
+        if let Ok(neighbors) = graph.neighbors(node) {
+            for neighbor in neighbors {
+                if let Ok(weight) = graph.edge_weight(node, &neighbor) {
+                    total_weight += weight.into();
+                }
+            }
+        }
+
+        node_weights[i] = total_weight;
+
+        // Second pass: set transition probabilities
+        if total_weight > 0.0 {
+            if let Ok(neighbors) = graph.neighbors(node) {
+                for neighbor in neighbors {
+                    if let Some(&j) = node_to_idx.get(&neighbor) {
+                        if let Ok(weight) = graph.edge_weight(node, &neighbor) {
+                            transition_matrix[i][j] = weight.into() / total_weight;
+                        }
+                    }
+                }
+            }
+        } else {
+            // Teleport to random node if no outgoing edges (dangling node)
+            for j in 0..n {
+                transition_matrix[i][j] = 1.0 / n as f64;
+            }
+        }
+    }
+
+    (transition_matrix, node_weights)
+}
+
+/// Compute stationary distribution using power iteration
+fn compute_stationary_distribution(
+    transition_matrix: &[Vec<f64>],
+    node_weights: &[f64],
+) -> Vec<f64> {
+    let n = transition_matrix.len();
+    if n == 0 {
+        return vec![];
+    }
+
+    // Initialize with degree-based probabilities
+    let total_weight: f64 = node_weights.iter().sum();
+    let mut pi = if total_weight > 0.0 {
+        node_weights.iter().map(|&w| w / total_weight).collect()
+    } else {
+        vec![1.0 / n as f64; n]
+    };
+
+    // Power iteration to find stationary distribution
+    for _ in 0..1000 {
+        let mut new_pi = vec![0.0; n];
+
+        for (i, new_pi_item) in new_pi.iter_mut().enumerate().take(n) {
+            for j in 0..n {
+                *new_pi_item += pi[j] * transition_matrix[j][i];
+            }
+        }
+
+        // Normalize
+        let sum: f64 = new_pi.iter().sum();
+        if sum > 0.0 {
+            for p in new_pi.iter_mut() {
+                *p /= sum;
+            }
+        }
+
+        // Check convergence
+        let diff: f64 = pi
+            .iter()
+            .zip(&new_pi)
+            .map(|(old, new)| (old - new).abs())
+            .sum();
+
+        pi = new_pi;
+
+        if diff < 1e-10 {
+            break;
+        }
+    }
+
+    pi
+}
+
+/// Calculate the map equation (code length) for a given partition
+fn calculate_map_equation<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    communities: &HashMap<N, usize>,
+    transition_matrix: &[Vec<f64>],
+    stationary_probs: &[f64],
+    nodes: &[N],
+) -> f64
+where
+    N: Node,
+    E: EdgeWeight + Into<f64> + Copy,
+    Ix: IndexType,
+{
+    let n = nodes.len();
+    if n == 0 {
+        return 0.0;
+    }
+
+    // Create node index mapping
+    let node_to_idx: HashMap<&N, usize> = nodes.iter().enumerate().map(|(i, n)| (n, i)).collect();
+
+    // Calculate exit probabilities and internal flow for each community
+    let mut community_exit_prob: HashMap<usize, f64> = HashMap::new();
+    let mut community_flow: HashMap<usize, f64> = HashMap::new();
+
+    // Initialize community maps
+    for &comm in communities.values() {
+        community_exit_prob.insert(comm, 0.0);
+        community_flow.insert(comm, 0.0);
+    }
+
+    // Calculate exit probabilities (flow leaving each community)
+    for (node, &comm) in communities {
+        if let Some(&i) = node_to_idx.get(node) {
+            let pi_i = stationary_probs[i];
+            *community_flow.get_mut(&comm).unwrap() += pi_i;
+
+            // Add transitions to other communities
+            if let Ok(neighbors) = graph.neighbors(node) {
+                for neighbor in neighbors {
+                    if let Some(&neighbor_comm) = communities.get(&neighbor) {
+                        if neighbor_comm != comm {
+                            if let Some(&j) = node_to_idx.get(&neighbor) {
+                                *community_exit_prob.get_mut(&comm).unwrap() +=
+                                    pi_i * transition_matrix[i][j];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Calculate map equation
+    let mut code_length = 0.0;
+
+    // Index codebook term: H(Q) = -sum(q_alpha * log(q_alpha))
+    let total_exit_flow: f64 = community_exit_prob.values().sum();
+    if total_exit_flow > 0.0 {
+        for &q_alpha in community_exit_prob.values() {
+            if q_alpha > 0.0 {
+                code_length -= q_alpha * (q_alpha / total_exit_flow).ln();
+            }
+        }
+    }
+
+    // Module codebook terms: sum_alpha(q_alpha + p_alpha) * H(P_alpha)
+    for (&comm, &q_alpha) in &community_exit_prob {
+        let p_alpha = community_flow[&comm];
+        let total_alpha = q_alpha + p_alpha;
+
+        if total_alpha > 0.0 {
+            // Entropy within community
+            let mut h_alpha = 0.0;
+
+            // Exit probability contribution
+            if q_alpha > 0.0 {
+                h_alpha -= (q_alpha / total_alpha) * (q_alpha / total_alpha).ln();
+            }
+
+            // Internal transition probabilities
+            for (node, &node_comm) in communities {
+                if node_comm == comm {
+                    if let Some(&i) = node_to_idx.get(node) {
+                        let pi_i = stationary_probs[i];
+                        if pi_i > 0.0 {
+                            let prob_in_module = pi_i / total_alpha;
+                            h_alpha -= prob_in_module * prob_in_module.ln();
+                        }
+                    }
+                }
+            }
+
+            code_length += total_alpha * h_alpha;
+        }
+    }
+
+    code_length
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -806,5 +1174,216 @@ mod tests {
         let result = modularity_optimization(&graph, 1.0, 0.9, 100);
         assert_eq!(result.modularity, 0.0);
         assert!(result.node_communities.is_empty());
+    }
+
+    #[test]
+    fn test_infomap_communities() -> GraphResult<()> {
+        // Create a graph with clear community structure
+        let mut graph = create_graph::<&str, f64>();
+
+        // Community 1: triangle
+        graph.add_edge("A", "B", 1.0)?;
+        graph.add_edge("B", "C", 1.0)?;
+        graph.add_edge("C", "A", 1.0)?;
+
+        // Community 2: triangle
+        graph.add_edge("D", "E", 1.0)?;
+        graph.add_edge("E", "F", 1.0)?;
+        graph.add_edge("F", "D", 1.0)?;
+
+        // Weak connection between communities
+        graph.add_edge("C", "D", 0.1)?;
+
+        let result = infomap_communities(&graph, 100, 1e-6);
+
+        // Check that all nodes are assigned to communities
+        assert_eq!(result.node_communities.len(), 6);
+
+        // Check that nodes in the same triangle tend to have the same community
+        let comm_a = result.node_communities[&"A"];
+        let comm_b = result.node_communities[&"B"];
+        let comm_c = result.node_communities[&"C"];
+        let comm_d = result.node_communities[&"D"];
+        let comm_e = result.node_communities[&"E"];
+        let comm_f = result.node_communities[&"F"];
+
+        // At least some structure should be detected
+        // (Exact community assignment can vary due to the algorithm's heuristic nature)
+        assert!(comm_a == comm_b || comm_a == comm_c || comm_b == comm_c);
+        assert!(comm_d == comm_e || comm_d == comm_f || comm_e == comm_f);
+
+        // Code length should be finite and positive
+        assert!(result.code_length.is_finite());
+        assert!(result.code_length >= 0.0);
+
+        // Modularity should be calculated
+        assert!(result.modularity.is_finite());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_infomap_single_community() -> GraphResult<()> {
+        // Create a complete graph (should form single community)
+        let mut graph = create_graph::<i32, f64>();
+
+        // Complete triangle
+        graph.add_edge(0, 1, 1.0)?;
+        graph.add_edge(1, 2, 1.0)?;
+        graph.add_edge(2, 0, 1.0)?;
+
+        let result = infomap_communities(&graph, 50, 1e-6);
+
+        // All nodes should be in the same community for a complete graph
+        let communities: HashSet<usize> = result.node_communities.values().cloned().collect();
+        assert_eq!(communities.len(), 1);
+
+        // Code length should be reasonable
+        assert!(result.code_length.is_finite());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_infomap_disconnected_components() -> GraphResult<()> {
+        // Create two disconnected triangles
+        let mut graph = create_graph::<i32, f64>();
+
+        // First triangle
+        graph.add_edge(0, 1, 1.0)?;
+        graph.add_edge(1, 2, 1.0)?;
+        graph.add_edge(2, 0, 1.0)?;
+
+        // Second triangle (disconnected)
+        graph.add_edge(3, 4, 1.0)?;
+        graph.add_edge(4, 5, 1.0)?;
+        graph.add_edge(5, 3, 1.0)?;
+
+        let result = infomap_communities(&graph, 100, 1e-6);
+
+        // Should detect two distinct communities
+        let communities: HashSet<usize> = result.node_communities.values().cloned().collect();
+        assert_eq!(communities.len(), 2);
+
+        // Nodes within each triangle should be in the same community
+        assert_eq!(result.node_communities[&0], result.node_communities[&1]);
+        assert_eq!(result.node_communities[&1], result.node_communities[&2]);
+
+        assert_eq!(result.node_communities[&3], result.node_communities[&4]);
+        assert_eq!(result.node_communities[&4], result.node_communities[&5]);
+
+        // The two components should be in different communities
+        assert_ne!(result.node_communities[&0], result.node_communities[&3]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_infomap_empty_graph() {
+        let graph = create_graph::<i32, f64>();
+        let result = infomap_communities(&graph, 100, 1e-6);
+
+        assert!(result.node_communities.is_empty());
+        assert_eq!(result.code_length, 0.0);
+        assert_eq!(result.modularity, 0.0);
+    }
+
+    #[test]
+    fn test_infomap_single_node() -> GraphResult<()> {
+        let mut graph = create_graph::<&str, f64>();
+        graph.add_node("A");
+
+        let result = infomap_communities(&graph, 100, 1e-6);
+
+        assert_eq!(result.node_communities.len(), 1);
+        assert!(result.node_communities.contains_key(&"A"));
+        assert!(result.code_length.is_finite());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_infomap_vs_modularity() -> GraphResult<()> {
+        // Create a graph and compare Infomap with modularity-based methods
+        let mut graph = create_graph::<i32, f64>();
+
+        // Create a graph with known community structure
+        // Community 1
+        graph.add_edge(0, 1, 1.0)?;
+        graph.add_edge(1, 2, 1.0)?;
+        graph.add_edge(2, 0, 1.0)?;
+
+        // Community 2
+        graph.add_edge(3, 4, 1.0)?;
+        graph.add_edge(4, 5, 1.0)?;
+
+        // Bridge
+        graph.add_edge(2, 3, 0.1)?;
+
+        let infomap_result = infomap_communities(&graph, 100, 1e-6);
+        let louvain_result = louvain_communities(&graph);
+
+        // Both should find some community structure
+        let infomap_communities_count: HashSet<usize> =
+            infomap_result.node_communities.values().cloned().collect();
+        let louvain_communities_count: HashSet<usize> =
+            louvain_result.node_communities.values().cloned().collect();
+
+        assert!(!infomap_communities_count.is_empty());
+        assert!(!louvain_communities_count.is_empty());
+
+        // Both should have reasonable modularity
+        assert!(infomap_result.modularity >= -0.5);
+        assert!(louvain_result.modularity >= -0.5);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_transition_matrix() -> GraphResult<()> {
+        let mut graph = create_graph::<i32, f64>();
+        graph.add_edge(0, 1, 2.0)?;
+        graph.add_edge(1, 2, 1.0)?;
+
+        let nodes = vec![0, 1, 2];
+        let (transition_matrix, node_weights) = build_transition_matrix(&graph, &nodes);
+
+        // Check dimensions
+        assert_eq!(transition_matrix.len(), 3);
+        assert_eq!(node_weights.len(), 3);
+
+        // Check that rows sum to 1 (or 0 for isolated nodes)
+        for (i, row) in transition_matrix.iter().enumerate() {
+            let row_sum: f64 = row.iter().sum();
+            if node_weights[i] > 0.0 {
+                assert!((row_sum - 1.0).abs() < 1e-10, "Row {} sum: {}", i, row_sum);
+            }
+        }
+
+        // Node 0 should transition to node 1 with probability 1
+        assert!((transition_matrix[0][1] - 1.0).abs() < 1e-10);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_compute_stationary_distribution() {
+        // Simple two-node case
+        let transition_matrix = vec![
+            vec![0.0, 1.0], // Node 0 always goes to node 1
+            vec![1.0, 0.0], // Node 1 always goes to node 0
+        ];
+        let node_weights = vec![1.0, 1.0];
+
+        let stationary = compute_stationary_distribution(&transition_matrix, &node_weights);
+
+        // Should be uniform distribution
+        assert_eq!(stationary.len(), 2);
+        assert!((stationary[0] - 0.5).abs() < 1e-6);
+        assert!((stationary[1] - 0.5).abs() < 1e-6);
+
+        // Check normalization
+        let sum: f64 = stationary.iter().sum();
+        assert!((sum - 1.0).abs() < 1e-10);
     }
 }

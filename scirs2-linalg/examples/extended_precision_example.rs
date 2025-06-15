@@ -311,7 +311,7 @@ fn main() -> LinalgResult<()> {
     }
 
     // Compute eigenvalues and eigenvectors with standard precision
-    let (eigvals_std, eigvecs_std) = match scirs2_linalg::eigh(&sym_matrix.view()) {
+    let (eigvals_std, eigvecs_std) = match scirs2_linalg::eigh(&sym_matrix.view(), None) {
         Ok(result) => result,
         Err(e) => {
             println!(

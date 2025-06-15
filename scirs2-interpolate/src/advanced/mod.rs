@@ -17,7 +17,7 @@
 //! - **[`FastKriging`]** - Scalable kriging for large datasets
 //!
 //! ### Robust Methods
-//! - **[`AkimaInterpolator`]** - Robust spline interpolation with outlier resistance
+//! - **[`AkimaSpline`]** - Robust spline interpolation with outlier resistance
 //! - **[`BarycentricInterpolator`]** - Numerically stable polynomial interpolation
 //!
 //! ## Choosing the Right Method
@@ -37,7 +37,7 @@
 //!
 //! ### For Noisy or Outlier-Prone Data
 //! ```rust
-//! use scirs2_interpolate::advanced::akima::AkimaInterpolator;
+//! use scirs2_interpolate::advanced::akima::AkimaSpline;
 //! // Akima splines are less sensitive to outliers than cubic splines
 //! ```
 //!

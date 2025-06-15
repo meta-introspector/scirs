@@ -4,40 +4,41 @@
 //! in the scirs2-interpolate library, showcasing the complete functionality
 //! from basic interpolation to advanced SIMD-optimized methods.
 
-use ndarray::{Array1, Array2, Array3};
+use ndarray::{Array1, Array2};
 use scirs2_interpolate::{
-    advanced::fast_kriging::{FastKrigingBuilder, FastKrigingMethod},
-    advanced::kriging::CovarianceFunction,
-
     // Advanced methods
     advanced::rbf::{RBFInterpolator, RBFKernel},
     bspline::{BSpline, ExtrapolateMode},
 
     // Constrained splines
-    constrained::{ConstrainedSpline, ConstraintType},
+    constrained::ConstrainedSpline,
 
     // Error handling
-    error::{InterpolateError, InterpolateResult},
+    error::InterpolateResult,
     // Grid data interpolation
     griddata::{griddata, GriddataMethod},
 
     high_dimensional::{DimensionReductionMethod, HighDimensionalInterpolatorBuilder},
 
     // Basic interpolation
-    interp1d::{Interp1d, InterpolationMethod},
+    interp1d::{ExtrapolateMode as Interp1dExtrapolateMode, Interp1d, InterpolationMethod},
     // Numerical stability
     numerical_stability::{assess_matrix_condition, StabilityLevel},
 
     // SIMD optimizations
-    simd_bspline::SimdBSplineEvaluator,
-    simd_optimized::{get_simd_config, simd_rbf_evaluate},
+    simd_optimized::get_simd_config,
 
     // High-dimensional methods
-    sparse_grid::{make_sparse_grid_interpolator, SparseGridBuilder},
+    sparse_grid::make_sparse_grid_interpolator,
     // Voronoi/Natural neighbor
-    voronoi::{make_natural_neighbor_interpolator, NaturalNeighborInterpolator},
+    voronoi::{
+        make_natural_neighbor_interpolator, InterpolationMethod as VoronoiInterpolationMethod,
+    },
 };
 use std::time::Instant;
+
+#[cfg(feature = "simd")]
+use scirs2_interpolate::SimdBSplineEvaluator;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 === SciRS2-Interpolate Comprehensive Library Showcase === 🎯\n");
@@ -98,21 +99,25 @@ fn demonstrate_basic_interpolation() -> InterpolateResult<()> {
 
     // Create test data
     let x = Array1::linspace(0.0, 10.0, 11);
-    let y = x.mapv(|x| (x * 0.5).sin() + 0.1 * x);
+    let y = x.mapv(|x| (x * 0.5_f64).sin() + 0.1 * x);
 
     // Test different methods
     let methods = vec![
         (InterpolationMethod::Linear, "Linear"),
         (InterpolationMethod::Cubic, "Cubic"),
         (InterpolationMethod::Pchip, "PCHIP"),
-        (InterpolationMethod::Akima, "Akima"),
     ];
 
     let query_points = Array1::linspace(2.5, 7.5, 6);
 
     for (method, name) in methods {
-        let interp = Interp1d::new(&x.view(), &y.view(), method)?;
-        let results = interp.interpolate(&query_points.view())?;
+        let interp = Interp1d::new(
+            &x.view(),
+            &y.view(),
+            method,
+            Interp1dExtrapolateMode::Extrapolate,
+        )?;
+        let results = interp.evaluate_array(&query_points.view())?;
 
         println!(
             "   {}: [{:.3}, {:.3}, ..., {:.3}]",
@@ -135,7 +140,7 @@ fn demonstrate_basic_interpolation() -> InterpolateResult<()> {
         ExtrapolateMode::Extrapolate,
     )?;
 
-    let spline_results = spline.evaluate_batch(&query_points.view())?;
+    let spline_results = spline.evaluate_array(&query_points.view())?;
     println!(
         "   B-spline: [{:.3}, {:.3}, ..., {:.3}]",
         spline_results[0],
@@ -224,54 +229,62 @@ fn demonstrate_simd_optimizations() -> InterpolateResult<()> {
 
     println!("\n2. SIMD B-spline Evaluation:");
 
-    // Create test B-spline
-    let knots = Array1::linspace(0.0, 5.0, 20);
-    let coeffs = Array1::from_iter((0..17).map(|i| (i as f64 * 0.3).sin()));
-    let spline = BSpline::new(
-        &knots.view(),
-        &coeffs.view(),
-        3,
-        ExtrapolateMode::Extrapolate,
-    )?;
+    #[cfg(feature = "simd")]
+    {
+        // Create test B-spline
+        let knots = Array1::linspace(0.0, 5.0, 20);
+        let coeffs = Array1::from_iter((0..17).map(|i| (i as f64 * 0.3).sin()));
+        let spline = BSpline::new(
+            &knots.view(),
+            &coeffs.view(),
+            3,
+            ExtrapolateMode::Extrapolate,
+        )?;
 
-    let simd_evaluator = SimdBSplineEvaluator::new(spline.clone());
+        let simd_evaluator = SimdBSplineEvaluator::new(spline.clone());
 
-    // Large batch for SIMD optimization
-    let large_batch = Array1::linspace(0.5, 4.5, 1000);
+        // Large batch for SIMD optimization
+        let large_batch = Array1::linspace(0.5, 4.5, 1000);
 
-    // Time SIMD evaluation
-    let start = Instant::now();
-    let simd_results = simd_evaluator.evaluate_batch(&large_batch.view())?;
-    let simd_time = start.elapsed();
+        // Time SIMD evaluation
+        let start = Instant::now();
+        let simd_results = simd_evaluator.evaluate_batch(&large_batch.view())?;
+        let simd_time = start.elapsed();
 
-    // Time scalar evaluation for comparison
-    let start = Instant::now();
-    let mut scalar_results = Array1::zeros(1000);
-    for (i, &point) in large_batch.iter().enumerate() {
-        scalar_results[i] = spline.evaluate(point)?;
+        // Time scalar evaluation for comparison
+        let start = Instant::now();
+        let mut scalar_results = Array1::zeros(1000);
+        for (i, &point) in large_batch.iter().enumerate() {
+            scalar_results[i] = spline.evaluate(point)?;
+        }
+        let scalar_time = start.elapsed();
+
+        let speedup = scalar_time.as_nanos() as f64 / simd_time.as_nanos() as f64;
+
+        println!("   1000-point evaluation:");
+        println!(
+            "   SIMD time: {:.2} µs",
+            simd_time.as_nanos() as f64 / 1000.0
+        );
+        println!(
+            "   Scalar time: {:.2} µs",
+            scalar_time.as_nanos() as f64 / 1000.0
+        );
+        println!("   Speedup: {:.1}x", speedup);
+
+        // Verify accuracy
+        let max_diff = simd_results
+            .iter()
+            .zip(scalar_results.iter())
+            .map(|(&a, &b)| (a - b).abs())
+            .fold(0.0, f64::max);
+        println!("   Max difference: {:.2e}", max_diff);
     }
-    let scalar_time = start.elapsed();
 
-    let speedup = scalar_time.as_nanos() as f64 / simd_time.as_nanos() as f64;
-
-    println!("   1000-point evaluation:");
-    println!(
-        "   SIMD time: {:.2} µs",
-        simd_time.as_nanos() as f64 / 1000.0
-    );
-    println!(
-        "   Scalar time: {:.2} µs",
-        scalar_time.as_nanos() as f64 / 1000.0
-    );
-    println!("   Speedup: {:.1}x", speedup);
-
-    // Verify accuracy
-    let max_diff = simd_results
-        .iter()
-        .zip(scalar_results.iter())
-        .map(|(&a, &b)| (a - b).abs())
-        .fold(0.0, f64::max);
-    println!("   Max difference: {:.2e}", max_diff);
+    #[cfg(not(feature = "simd"))]
+    {
+        println!("   SIMD B-spline evaluation requires 'simd' feature");
+    }
 
     Ok(())
 }
@@ -280,7 +293,7 @@ fn demonstrate_numerical_stability() -> InterpolateResult<()> {
     println!("\n1. Matrix Condition Assessment:");
 
     // Well-conditioned matrix
-    let good_matrix = Array2::eye(3);
+    let good_matrix = Array2::<f64>::eye(3);
     let good_report = assess_matrix_condition(&good_matrix.view())?;
     println!(
         "   Identity matrix: condition {:.2e} ({})",
@@ -293,7 +306,7 @@ fn demonstrate_numerical_stability() -> InterpolateResult<()> {
     );
 
     // Ill-conditioned matrix
-    let mut bad_matrix = Array2::eye(3);
+    let mut bad_matrix = Array2::<f64>::eye(3);
     bad_matrix[[2, 2]] = 1e-14;
     let bad_report = assess_matrix_condition(&bad_matrix.view())?;
     println!(
@@ -383,16 +396,13 @@ fn demonstrate_high_dimensional() -> InterpolateResult<()> {
     }
 
     let hd_interpolator = HighDimensionalInterpolatorBuilder::new()
-        .points(hd_points)
-        .values(hd_values)
-        .dimension_reduction(DimensionReductionMethod::PCA)
-        .target_dimension(3)
-        .build()?;
+        .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 3 })
+        .build(&hd_points.view(), &hd_values.view())?;
 
     println!("   10D -> 3D dimension reduction successful");
     println!(
         "   Effective dimension: {}",
-        hd_interpolator.effective_dimension()
+        hd_interpolator.effective_dimensions()
     );
 
     Ok(())
@@ -422,14 +432,18 @@ fn demonstrate_specialized_methods() -> InterpolateResult<()> {
         &grid_query.view(),
         GriddataMethod::Linear,
         None,
+        None,
     )?;
 
     println!("   Linear griddata at (0.5, 1.5): {:.3}", grid_result[0]);
 
     println!("\n2. Natural Neighbor Interpolation:");
 
-    let nn_interpolator =
-        make_natural_neighbor_interpolator(&grid_points.view(), &grid_values.view())?;
+    let nn_interpolator = make_natural_neighbor_interpolator(
+        grid_points.clone(),
+        grid_values.clone(),
+        VoronoiInterpolationMethod::Sibson,
+    )?;
 
     let nn_result = nn_interpolator.interpolate(&grid_query.row(0))?;
     println!("   Natural neighbor at (0.5, 1.5): {:.3}", nn_result);
@@ -437,13 +451,14 @@ fn demonstrate_specialized_methods() -> InterpolateResult<()> {
     println!("\n3. Constrained Spline Interpolation:");
 
     let x_data = Array1::linspace(0.0, 5.0, 11);
-    let y_data = x_data.mapv(|x| x.sin() + 0.1 * x);
+    let y_data = x_data.mapv(|x: f64| x.sin() + 0.1 * x);
 
-    let mut constrained_spline = ConstrainedSpline::new(3)?; // Cubic
-    constrained_spline.fit_with_constraints(
+    let constrained_spline = ConstrainedSpline::interpolate(
         &x_data.view(),
         &y_data.view(),
-        &[], // No constraints for this demo
+        vec![], // No constraints for this demo
+        3,      // Cubic
+        ExtrapolateMode::Extrapolate,
     )?;
 
     let constrained_result = constrained_spline.evaluate(2.5)?;
@@ -457,31 +472,52 @@ fn performance_comparison() -> InterpolateResult<()> {
 
     // Setup test data
     let x = Array1::linspace(0.0, 10.0, 100);
-    let y = x.mapv(|x| x.sin() + 0.1 * x.cos());
+    let y = x.mapv(|x: f64| x.sin() + 0.1 * x.cos());
     let query = Array1::linspace(1.0, 9.0, 1000);
 
     // Benchmark different methods
     let benchmarks = vec![
-        ("Linear 1D", || {
-            let interp = Interp1d::new(&x.view(), &y.view(), InterpolationMethod::Linear).unwrap();
-            interp.interpolate(&query.view()).unwrap();
-        }),
-        ("Cubic 1D", || {
-            let interp = Interp1d::new(&x.view(), &y.view(), InterpolationMethod::Cubic).unwrap();
-            interp.interpolate(&query.view()).unwrap();
-        }),
-        ("B-spline", || {
-            let knots = Array1::linspace(0.0, 10.0, 20);
-            let coeffs = Array1::from_iter((0..17).map(|i| (i as f64 * 0.3).sin()));
-            let spline = BSpline::new(
-                &knots.view(),
-                &coeffs.view(),
-                3,
-                ExtrapolateMode::Extrapolate,
-            )
-            .unwrap();
-            spline.evaluate_batch(&query.view()).unwrap();
-        }),
+        (
+            "Linear 1D",
+            Box::new(|| {
+                let interp = Interp1d::new(
+                    &x.view(),
+                    &y.view(),
+                    InterpolationMethod::Linear,
+                    Interp1dExtrapolateMode::Extrapolate,
+                )
+                .unwrap();
+                interp.evaluate_array(&query.view()).unwrap();
+            }) as Box<dyn Fn()>,
+        ),
+        (
+            "Cubic 1D",
+            Box::new(|| {
+                let interp = Interp1d::new(
+                    &x.view(),
+                    &y.view(),
+                    InterpolationMethod::Cubic,
+                    Interp1dExtrapolateMode::Extrapolate,
+                )
+                .unwrap();
+                interp.evaluate_array(&query.view()).unwrap();
+            }) as Box<dyn Fn()>,
+        ),
+        (
+            "B-spline",
+            Box::new(|| {
+                let knots = Array1::linspace(0.0, 10.0, 20);
+                let coeffs = Array1::from_iter((0..17).map(|i| (i as f64 * 0.3).sin()));
+                let spline = BSpline::new(
+                    &knots.view(),
+                    &coeffs.view(),
+                    3,
+                    ExtrapolateMode::Extrapolate,
+                )
+                .unwrap();
+                spline.evaluate_array(&query.view()).unwrap();
+            }) as Box<dyn Fn()>,
+        ),
     ];
 
     for (name, benchmark) in benchmarks {

@@ -29,9 +29,10 @@ num-complex = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
-blas = { workspace = true }
-openblas-src = { workspace = true }
+rand_chacha = { workspace = true }
+# BLAS dependencies handled through scirs2-core
 rayon = { workspace = true, optional = true }
+wide = { workspace = true, optional = true }
 
 # AI/ML specific dependencies
 autograd = { workspace = true }
@@ -46,6 +47,7 @@ serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 serde_cbor = { workspace = true }
 rmp-serde = { workspace = true }
+chrono = { workspace = true }
 
 # Future dependency for PandRS and NumRS with appropriate abstractions
 # pandrs_wrapper = { path = "../wrappers/pandrs_wrapper", optional = true }
@@ -59,7 +61,7 @@ gpu = ["core"]  # GPU acceleration requires core
 memory_efficient = ["core"]  # Memory efficiency requires core
 memory_management = ["core"]  # Memory management features
 cache = ["core"]  # Caching features
-simd = ["core"]  # SIMD acceleration requires core
+simd = ["core", "dep:wide"]  # SIMD acceleration requires core and wide
 rayon = ["dep:rayon"]  # Parallel processing support
 # Features temporarily disabled for publishing
 # linalg = ["dep:scirs2-linalg"] 
@@ -102,3 +104,7 @@ path = "examples/advanced_optimizers_example.rs"
 [[example]]
 name = "metrics_integration_example"
 path = "examples/metrics_integration_example.rs"
+
+[[example]]
+name = "neural_advanced_features"
+path = "examples/neural_advanced_features.rs"

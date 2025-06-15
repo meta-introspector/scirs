@@ -540,8 +540,8 @@ pub fn z_domain_iir_design(
     }
 
     // Ensure stability by keeping poles inside unit circle
-    for i in 1..a_coeffs.len() {
-        a_coeffs[i] = a_coeffs[i].max(-0.9).min(0.9);
+    for coeff in a_coeffs.iter_mut().skip(1) {
+        *coeff = coeff.clamp(-0.9, 0.9);
     }
 
     // Return the computed coefficients directly

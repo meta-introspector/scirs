@@ -40,9 +40,7 @@ chrono = { workspace = true }
 plotters = { workspace = true, optional = true }
 plotly = { workspace = true, optional = true }
 
-# BLAS dependencies for linear algebra operations
-openblas-src = { workspace = true, features = ["cblas", "lapacke"] }
-blas = { workspace = true }
+# BLAS dependencies handled through scirs2-core
 
 # Future dependency for PandRS with appropriate abstractions
 # pandrs_wrapper = { path = "../wrappers/pandrs_wrapper", optional = true }

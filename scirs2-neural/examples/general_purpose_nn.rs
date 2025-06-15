@@ -48,7 +48,7 @@ impl ActivationFunction {
     }
 
     /// Get a string representation of the activation function
-    fn to_string(&self) -> &str {
+    fn as_str(&self) -> &str {
         match self {
             ActivationFunction::ReLU => "ReLU",
             ActivationFunction::Sigmoid => "Sigmoid",
@@ -60,6 +60,7 @@ impl ActivationFunction {
 
 /// Loss function type
 #[derive(Debug, Clone, Copy)]
+#[allow(clippy::upper_case_acronyms)]
 enum LossFunction {
     MSE,
     BinaryCrossEntropy,
@@ -111,7 +112,7 @@ impl LossFunction {
     }
 
     /// Get a string representation of the loss function
-    fn to_string(&self) -> &str {
+    fn as_str(&self) -> &str {
         match self {
             LossFunction::MSE => "Mean Squared Error",
             LossFunction::BinaryCrossEntropy => "Binary Cross Entropy",
@@ -315,7 +316,7 @@ impl NeuralNetwork {
     fn summary(&self) {
         println!("Neural Network Summary:");
         println!("------------------------");
-        println!("Loss function: {}", self.loss_fn.to_string());
+        println!("Loss function: {}", self.loss_fn.as_str());
         println!("Number of layers: {}", self.layers.len());
 
         for (i, layer) in self.layers.iter().enumerate() {
@@ -328,7 +329,7 @@ impl NeuralNetwork {
                 i + 1,
                 input_size,
                 output_size,
-                layer.activation.to_string(),
+                layer.activation.as_str(),
                 num_params
             );
         }
@@ -418,7 +419,7 @@ fn train_xor_network() -> Result<()> {
     for activation in &activations {
         println!(
             "\nTraining with hidden layer activation: {}",
-            activation.to_string()
+            activation.as_str()
         );
 
         let mut network = NeuralNetwork::new(
@@ -433,7 +434,7 @@ fn train_xor_network() -> Result<()> {
         let predictions = network.predict(&x);
         println!(
             "Final predictions with {}:\n{:.3?}",
-            activation.to_string(),
+            activation.as_str(),
             predictions
         );
     }
@@ -444,7 +445,7 @@ fn train_xor_network() -> Result<()> {
     let loss_functions = [LossFunction::MSE, LossFunction::BinaryCrossEntropy];
 
     for loss_fn in &loss_functions {
-        println!("\nTraining with loss function: {}", loss_fn.to_string());
+        println!("\nTraining with loss function: {}", loss_fn.as_str());
 
         let mut network = NeuralNetwork::new(
             &[2, 4, 1],
@@ -458,7 +459,7 @@ fn train_xor_network() -> Result<()> {
         let predictions = network.predict(&x);
         println!(
             "Final predictions with {}:\n{:.3?}",
-            loss_fn.to_string(),
+            loss_fn.as_str(),
             predictions
         );
     }

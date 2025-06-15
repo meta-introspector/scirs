@@ -159,7 +159,7 @@ fn main() -> LinalgResult<()> {
     println!("-------------------");
 
     // Matrix exponential (SciPy: scipy.linalg.expm)
-    let exp_result = compat::expm(&a.view())?;
+    let exp_result = compat::expm(&a.view(), None)?;
     println!("Matrix exponential:\n{:.4}", exp_result);
 
     // Matrix square root (SciPy: scipy.linalg.sqrtm)
@@ -281,7 +281,7 @@ mod tests {
         let a = array![[1.0, 0.1], [0.1, 1.0]];
 
         // Test matrix exponential
-        let exp_result = compat::expm(&a.view()).unwrap();
+        let exp_result = compat::expm(&a.view(), None).unwrap();
         assert_eq!(exp_result.shape(), [2, 2]);
 
         // Test matrix square root

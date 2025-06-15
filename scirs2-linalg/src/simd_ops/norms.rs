@@ -4,7 +4,9 @@
 //! and vector norms for improved performance over scalar implementations.
 
 // LinalgError and LinalgResult imports removed as they are not used in this module
+#[cfg(feature = "simd")]
 use ndarray::{ArrayView1, ArrayView2};
+#[cfg(feature = "simd")]
 use wide::{f32x8, f64x4};
 
 /// SIMD-accelerated Frobenius norm for f32 matrices

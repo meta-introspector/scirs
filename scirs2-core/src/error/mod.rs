@@ -207,7 +207,7 @@ mod tests {
 
         assert!(matches!(report.error, CoreError::MemoryError(_)));
         assert_eq!(report.performance_impact, PerformanceImpact::High);
-        assert!(report.contextual_suggestions.len() > 0);
+        assert!(!report.contextual_suggestions.is_empty());
     }
 
     #[test]

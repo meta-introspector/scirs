@@ -250,7 +250,7 @@ pub struct GenericEigen<T: LinalgScalar> {
 
 /// Generic eigendecomposition (only for real floats, returns complex)
 pub fn geig<T: LinalgScalar + Float>(a: &ArrayView2<T>) -> LinalgResult<GenericEigen<T>> {
-    let (eigenvalues, eigenvectors) = crate::eigen::eig(a)?;
+    let (eigenvalues, eigenvectors) = crate::eigen::eig(a, None)?;
     Ok(GenericEigen {
         eigenvalues,
         eigenvectors,

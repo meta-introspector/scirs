@@ -203,7 +203,7 @@ where
 ///
 /// let a = array![[3.0_f64, -1.0], [-1.0, 2.0]]; // Diagonally dominant
 /// let b = array![5.0_f64, 1.0];
-/// let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10).unwrap();
+/// let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     3.0 * x[0] - 1.0 * x[1],
@@ -217,10 +217,15 @@ pub fn jacobi_method<F>(
     b: &ArrayView1<F>,
     max_iter: usize,
     tol: F,
+    workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + One,
 {
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
             "Expected square matrix, got shape {:?}",
@@ -325,7 +330,7 @@ where
 ///
 /// let a = array![[3.0_f64, -1.0], [-1.0, 2.0]]; // Diagonally dominant
 /// let b = array![5.0_f64, 1.0];
-/// let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10).unwrap();
+/// let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     3.0 * x[0] - 1.0 * x[1],
@@ -339,10 +344,16 @@ pub fn gauss_seidel<F>(
     b: &ArrayView1<F>,
     max_iter: usize,
     tol: F,
+    workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + One,
 {
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
             "Expected square matrix, got shape {:?}",
@@ -452,7 +463,7 @@ where
 ///
 /// let a = array![[3.0_f64, -1.0], [-1.0, 2.0]]; // Diagonally dominant
 /// let b = array![5.0_f64, 1.0];
-/// let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10).unwrap();
+/// let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None).unwrap();
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     3.0 * x[0] - 1.0 * x[1],
@@ -467,10 +478,15 @@ pub fn successive_over_relaxation<F>(
     omega: F,
     max_iter: usize,
     tol: F,
+    workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + One,
 {
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
             "Expected square matrix, got shape {:?}",
@@ -600,7 +616,7 @@ where
 /// let b = Array1::ones(n);
 ///
 /// // Solve using multigrid method
-/// let x = geometric_multigrid(&a.view(), &b.view(), 3, 10, 2, 2, 1e-6).unwrap();
+/// let x = geometric_multigrid(&a.view(), &b.view(), 3, 10, 2, 2, 1e-6, None).unwrap();
 /// ```
 pub fn geometric_multigrid<F>(
     a: &ArrayView2<F>,
@@ -610,10 +626,16 @@ pub fn geometric_multigrid<F>(
     pre_smooth: usize,
     post_smooth: usize,
     tol: F,
+    workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + One + 'static,
 {
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
             "Expected square matrix, got shape {:?}",
@@ -643,7 +665,7 @@ where
     // If levels is 0, just use a direct solver
     if levels == 0 {
         // Direct solve using Gauss-Seidel
-        return gauss_seidel(a, b, 100, tol);
+        return gauss_seidel(a, b, 100, tol, workers);
     }
 
     // Calculate minimum size needed for the given levels
@@ -894,7 +916,7 @@ where
 ///
 /// let a = array![[4.0_f64, 1.0], [2.0, 3.0]]; // Non-symmetric
 /// let b = array![1.0_f64, 2.0];
-/// let x = bicgstab(&a.view(), &b.view(), 100, 1e-10).unwrap();
+/// let x = bicgstab(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     4.0 * x[0] + 1.0 * x[1],
@@ -908,10 +930,15 @@ pub fn bicgstab<F>(
     b: &ArrayView1<F>,
     max_iter: usize,
     tol: F,
+    workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + One + 'static,
 {
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
             "Expected square matrix, got shape {:?}",
@@ -1100,7 +1127,7 @@ where
 /// // For the doctests, we'll use a positive definite matrix which works better with MINRES
 /// let a = array![[4.0_f64, 1.0], [1.0, 3.0]]; // Symmetric positive definite
 /// let b = array![1.0_f64, 2.0];
-/// let x = minres(&a.view(), &b.view(), 100, 1e-6).unwrap();
+/// let x = minres(&a.view(), &b.view(), 100, 1e-6, None).unwrap();
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     4.0 * x[0] + 1.0 * x[1],
@@ -1114,10 +1141,15 @@ pub fn minres<F>(
     b: &ArrayView1<F>,
     max_iter: usize,
     tol: F,
+    workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + One + 'static,
 {
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
             "Expected square matrix, got shape {:?}",
@@ -1425,7 +1457,7 @@ mod tests {
         let a = array![[3.0, -1.0], [-1.0, 2.0]];
         let b = array![5.0, 1.0];
 
-        let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10).unwrap();
+        let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1436,7 +1468,7 @@ mod tests {
         let a = array![[3.0, -1.0], [-1.0, 2.0]];
         let b = array![5.0, 1.0];
 
-        let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10).unwrap();
+        let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1447,7 +1479,7 @@ mod tests {
         let a = array![[3.0, -1.0], [-1.0, 2.0]];
         let b = array![5.0, 1.0];
 
-        let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10).unwrap();
+        let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None).unwrap();
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1475,9 +1507,10 @@ mod tests {
 
         // Solve using all methods
         let x_cg = conjugate_gradient(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
-        let x_jacobi = jacobi_method(&a.view(), &b.view(), 100, 1e-10).unwrap();
-        let x_gs = gauss_seidel(&a.view(), &b.view(), 100, 1e-10).unwrap();
-        let x_sor = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10).unwrap();
+        let x_jacobi = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+        let x_gs = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+        let x_sor =
+            successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None).unwrap();
 
         // All solutions should satisfy the system
         assert!(check_solution(&a.view(), &x_cg.view(), &b.view(), 1e-8));
@@ -1516,7 +1549,7 @@ mod tests {
         let b = Array1::ones(n);
 
         // Solve using multigrid method with 2 levels
-        let x_mg = geometric_multigrid(&a.view(), &b.view(), 2, 5, 2, 2, 1e-6).unwrap();
+        let x_mg = geometric_multigrid(&a.view(), &b.view(), 2, 5, 2, 2, 1e-6, None).unwrap();
 
         // Just verify that the multigrid solution satisfies the system
         assert!(check_solution(&a.view(), &x_mg.view(), &b.view(), 1e-4));
@@ -1537,7 +1570,7 @@ mod tests {
         let a = array![[4.0, 1.0], [1.0, 3.0]];
         let b = array![1.0, 2.0];
 
-        let x = minres(&a.view(), &b.view(), 100, 1e-10).unwrap();
+        let x = minres(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
 
         // Calculate Ax
         let n = a.nrows();
@@ -1569,7 +1602,7 @@ mod tests {
         let a_indef = array![[4.0, 1.0], [1.0, -0.5]]; // Less negative eigenvalue
         let b_indef = array![1.0, 2.0];
 
-        let x_indef = minres(&a_indef.view(), &b_indef.view(), 100, 1e-6).unwrap();
+        let x_indef = minres(&a_indef.view(), &b_indef.view(), 100, 1e-6, None).unwrap();
 
         // Print the solution for debugging
         println!("Indefinite solution: {:?}", x_indef);
@@ -1599,7 +1632,7 @@ mod tests {
 
         let b_large = Array1::ones(n);
 
-        let x_large = minres(&a_large.view(), &b_large.view(), 100, 1e-10).unwrap();
+        let x_large = minres(&a_large.view(), &b_large.view(), 100, 1e-10, None).unwrap();
 
         // Check the solution with higher tolerance
         assert!(check_solution(
@@ -1616,7 +1649,7 @@ mod tests {
         let a = array![[4.0, 1.0], [2.0, 3.0]];
         let b = array![1.0, 2.0];
 
-        let x = bicgstab(&a.view(), &b.view(), 100, 1e-10).unwrap();
+        let x = bicgstab(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1640,7 +1673,7 @@ mod tests {
 
         let b_large = Array1::ones(n);
 
-        let x_large = bicgstab(&a_large.view(), &b_large.view(), 100, 1e-10).unwrap();
+        let x_large = bicgstab(&a_large.view(), &b_large.view(), 100, 1e-10, None).unwrap();
 
         // Check the solution
         assert!(check_solution(

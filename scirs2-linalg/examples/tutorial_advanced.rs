@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", a);
 
     // Matrix exponential
-    let exp_a = expm(&a.view())?;
+    let exp_a = expm(&a.view(), None)?;
     println!("\nexp(A) =");
     println!("{}", exp_a);
 

@@ -37,6 +37,7 @@ glob = { workspace = true }
 netcdf3 = { workspace = true }
 kamadak-exif = { workspace = true }
 hdf5 = { workspace = true, optional = true }
+rayon = { workspace = true }
 thiserror = { workspace = true }
 
 [features]

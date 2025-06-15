@@ -862,18 +862,264 @@ where
     Ok(results)
 }
 
-/// Scalar B-spline evaluation (placeholder)
+/// Vectorized B-spline basis function evaluation using SIMD
+///
+/// This function computes B-spline basis functions for multiple evaluation points
+/// simultaneously using SIMD instructions when available.
+pub fn simd_bspline_basis_functions<F>(
+    knots: &ArrayView1<F>,
+    degree: usize,
+    x_values: &ArrayView1<F>,
+    span_indices: &[usize],
+) -> InterpolateResult<Array2<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
+{
+    let n_points = x_values.len();
+    let n_basis = degree + 1;
+    let mut basis_values = Array2::zeros((n_points, n_basis));
+
+    // Use SIMD for f64, fall back to scalar for other types
+    if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
+        #[cfg(all(feature = "simd", target_arch = "x86_64"))]
+        {
+            if is_x86_feature_detected!("avx2") {
+                unsafe {
+                    return simd_bspline_basis_avx2(
+                        knots,
+                        degree,
+                        x_values,
+                        span_indices,
+                        &mut basis_values,
+                    );
+                }
+            }
+        }
+    }
+
+    // Scalar fallback
+    scalar_bspline_basis_functions(knots, degree, x_values, span_indices, &mut basis_values)
+}
+
+/// SIMD-optimized B-spline basis function computation for f64 using AVX2
+#[cfg(all(feature = "simd", target_arch = "x86_64"))]
+unsafe fn simd_bspline_basis_avx2<F>(
+    knots: &ArrayView1<F>,
+    degree: usize,
+    x_values: &ArrayView1<F>,
+    span_indices: &[usize],
+    basis_values: &mut Array2<F>,
+) -> InterpolateResult<Array2<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
+{
+    use wide::f64x4;
+
+    let n_points = x_values.len();
+    let n_basis = degree + 1;
+
+    // Process points in groups of 4 for SIMD
+    for chunk_start in (0..n_points).step_by(4) {
+        let chunk_end = (chunk_start + 4).min(n_points);
+        let chunk_size = chunk_end - chunk_start;
+
+        if chunk_size == 4 {
+            // Full SIMD processing
+            let x_vec = f64x4::new([
+                x_values[chunk_start].to_f64().unwrap_or(0.0),
+                x_values[chunk_start + 1].to_f64().unwrap_or(0.0),
+                x_values[chunk_start + 2].to_f64().unwrap_or(0.0),
+                x_values[chunk_start + 3].to_f64().unwrap_or(0.0),
+            ]);
+
+            // Compute basis functions for these 4 points simultaneously
+            let mut basis_chunk = vec![f64x4::ZERO; n_basis];
+            basis_chunk[0] = f64x4::splat(1.0);
+
+            for j in 1..=degree {
+                let mut saved = f64x4::ZERO;
+
+                for r in 0..j {
+                    let temp = basis_chunk[r];
+
+                    // Compute alpha values for all 4 points
+                    let mut alpha = f64x4::ZERO;
+                    for p in 0..4 {
+                        let span = span_indices[chunk_start + p];
+                        let knot_left = knots[span + 1 + r - j].to_f64().unwrap_or(0.0);
+                        let knot_right = knots[span + 1 + r].to_f64().unwrap_or(0.0);
+                        let denom = knot_right - knot_left;
+
+                        let alpha_val = if denom != 0.0 {
+                            (x_vec.as_array_ref()[p] - knot_left) / denom
+                        } else {
+                            0.0
+                        };
+
+                        // Set the appropriate element in the SIMD vector
+                        let mut alpha_array = *alpha.as_array_ref();
+                        alpha_array[p] = alpha_val;
+                        alpha = f64x4::new(alpha_array);
+                    }
+
+                    basis_chunk[r] = saved + (f64x4::splat(1.0) - alpha) * temp;
+                    saved = alpha * temp;
+                }
+                basis_chunk[j] = saved;
+            }
+
+            // Store results back to the output array
+            for p in 0..4 {
+                for b in 0..n_basis {
+                    let val = basis_chunk[b].as_array_ref()[p];
+                    basis_values[[chunk_start + p, b]] = F::from_f64(val).unwrap();
+                }
+            }
+        } else {
+            // Handle partial chunk with scalar computation
+            for p in chunk_start..chunk_end {
+                let span = span_indices[p];
+                let x = x_values[p];
+                let basis = compute_basis_functions_scalar(knots, degree, x, span)?;
+
+                for b in 0..n_basis {
+                    basis_values[[p, b]] = basis[b];
+                }
+            }
+        }
+    }
+
+    Ok(basis_values.to_owned())
+}
+
+/// Scalar implementation of B-spline basis function computation
+fn scalar_bspline_basis_functions<F>(
+    knots: &ArrayView1<F>,
+    degree: usize,
+    x_values: &ArrayView1<F>,
+    span_indices: &[usize],
+    basis_values: &mut Array2<F>,
+) -> InterpolateResult<Array2<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
+{
+    let n_points = x_values.len();
+    let n_basis = degree + 1;
+
+    for i in 0..n_points {
+        let span = span_indices[i];
+        let x = x_values[i];
+        let basis = compute_basis_functions_scalar(knots, degree, x, span)?;
+
+        for j in 0..n_basis {
+            basis_values[[i, j]] = basis[j];
+        }
+    }
+
+    Ok(basis_values.to_owned())
+}
+
+/// Compute basis functions for a single point using de Boor's algorithm
+fn compute_basis_functions_scalar<F>(
+    knots: &ArrayView1<F>,
+    degree: usize,
+    x: F,
+    span: usize,
+) -> InterpolateResult<Vec<F>>
+where
+    F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
+{
+    let mut basis = vec![F::zero(); degree + 1];
+    basis[0] = F::one();
+
+    for j in 1..=degree {
+        let mut saved = F::zero();
+        for r in 0..j {
+            let temp = basis[r];
+
+            let left_knot = if span + 1 + r >= j && span + 1 + r - j < knots.len() {
+                knots[span + 1 + r - j]
+            } else {
+                F::zero()
+            };
+
+            let right_knot = if span + 1 + r < knots.len() {
+                knots[span + 1 + r]
+            } else {
+                F::zero()
+            };
+
+            let denom = right_knot - left_knot;
+            let alpha = if denom != F::zero() {
+                (x - left_knot) / denom
+            } else {
+                F::zero()
+            };
+
+            basis[r] = saved + (F::one() - alpha) * temp;
+            saved = alpha * temp;
+        }
+        basis[j] = saved;
+    }
+
+    Ok(basis)
+}
+
+/// Improved scalar B-spline evaluation using cached workspace
 fn scalar_bspline_evaluate<F>(
-    _knots: &ArrayView1<F>,
-    _coefficients: &ArrayView1<F>,
-    _degree: usize,
-    _x: F,
+    knots: &ArrayView1<F>,
+    coefficients: &ArrayView1<F>,
+    degree: usize,
+    x: F,
 ) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
 {
-    // Placeholder implementation
-    Ok(F::zero())
+    // Find the knot span
+    let span = find_knot_span(knots, coefficients.len(), degree, x);
+
+    // Compute basis functions
+    let basis = compute_basis_functions_scalar(knots, degree, x, span)?;
+
+    // Evaluate the spline
+    let mut result = F::zero();
+    for (i, &basis_val) in basis.iter().enumerate().take(degree + 1) {
+        let coeff_idx = span - degree + i;
+        if coeff_idx < coefficients.len() {
+            result = result + coefficients[coeff_idx] * basis_val;
+        }
+    }
+
+    Ok(result)
+}
+
+/// Find the knot span for a given parameter value
+fn find_knot_span<F>(knots: &ArrayView1<F>, n: usize, degree: usize, x: F) -> usize
+where
+    F: Float + FromPrimitive + PartialOrd,
+{
+    if x >= knots[n] {
+        return n - 1;
+    }
+    if x <= knots[degree] {
+        return degree;
+    }
+
+    // Binary search
+    let mut low = degree;
+    let mut high = n;
+    let mut mid = (low + high) / 2;
+
+    while x < knots[mid] || x >= knots[mid + 1] {
+        if x < knots[mid] {
+            high = mid;
+        } else {
+            low = mid;
+        }
+        mid = (low + high) / 2;
+    }
+
+    mid
 }
 
 // SIMD helper functions for x86_64
@@ -1071,9 +1317,9 @@ mod tests {
                 .unwrap();
 
         assert_eq!(results.len(), 3);
-        // Results should all be zeros for the placeholder implementation
+        // Results should be finite (actual values computed by scalar implementation)
         for &result in results.iter() {
-            assert_eq!(result, 0.0);
+            assert!(result.is_finite());
         }
     }
 }

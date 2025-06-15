@@ -199,6 +199,7 @@ fn main() -> Result<()> {
                 metrics: vec![],
                 history: &epoch_history,
                 stop_training: false,
+                model: None,
             };
 
             visualization_cb.on_event(CallbackTiming::AfterEpoch, &mut context)?;
@@ -217,6 +218,7 @@ fn main() -> Result<()> {
         metrics: vec![],
         history: &epoch_history,
         stop_training: false,
+        model: None,
     };
 
     visualization_cb.on_event(CallbackTiming::AfterTraining, &mut context)?;

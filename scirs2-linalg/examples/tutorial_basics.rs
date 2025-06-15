@@ -95,7 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Symmetric matrix:");
     println!("{}", symmetric);
 
-    let (eigenvalues, eigenvectors) = eigh(&symmetric.view())?;
+    let (eigenvalues, eigenvectors) = eigh(&symmetric.view(), None)?;
     println!("Eigenvalues: {:?}", eigenvalues);
     println!("Eigenvectors:");
     println!("{}\n", eigenvectors);

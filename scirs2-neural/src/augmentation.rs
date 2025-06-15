@@ -665,9 +665,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         let mut mixed_images = images.clone();
         let mut mixed_labels = labels.clone();
 
-        for i in 0..batch_size {
-            let j = indices[i];
-
+        for (i, &j) in indices.iter().enumerate().take(batch_size) {
             // Mix images: x_mixed = lambda * x_i + (1 - lambda) * x_j
             let x_i = images.index_axis(ndarray::Axis(0), i);
             let x_j = images.index_axis(ndarray::Axis(0), j);

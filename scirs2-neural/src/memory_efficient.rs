@@ -530,7 +530,7 @@ pub struct MemoryEfficientLayer {
 impl MemoryEfficientLayer {
     /// Create a new memory-efficient layer
     pub fn new(input_size: usize, output_size: usize, chunk_size: Option<usize>) -> Result<Self> {
-        let _weights_shape = vec![input_size, output_size];
+        let _weights_shape = [input_size, output_size];
         let default_chunk_size = chunk_size.unwrap_or(1024);
 
         #[cfg(feature = "memory_efficient")]
@@ -583,7 +583,7 @@ impl MemoryEfficientLayer {
         let mut output = Array::zeros((batch_size, output_size));
 
         // Process in chunks to minimize memory usage
-        let chunks = (batch_size + self.chunk_size - 1) / self.chunk_size;
+        let chunks = batch_size.div_ceil(self.chunk_size);
 
         for chunk_idx in 0..chunks {
             let start_idx = chunk_idx * self.chunk_size;

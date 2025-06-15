@@ -6,6 +6,9 @@
 use crate::error::OptimizeError;
 use std::collections::HashMap;
 
+/// Type alias for batch processor function
+type BatchProcessor = Box<dyn Fn(&[TapeNode]) -> Result<(), OptimizeError>>;
+
 /// A variable in the computational tape
 #[derive(Debug, Clone)]
 pub struct Variable {
@@ -400,7 +403,7 @@ pub struct StreamingTape {
     /// Batch size for processing
     batch_size: usize,
     /// Function to process completed batches
-    batch_processor: Option<Box<dyn Fn(&[TapeNode]) -> Result<(), OptimizeError>>>,
+    batch_processor: Option<BatchProcessor>,
 }
 
 impl StreamingTape {

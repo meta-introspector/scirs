@@ -4,9 +4,9 @@
 //! that provides a foundation for GPU acceleration while currently using
 //! optimized CPU implementations.
 
-use ndarray::{array, Array2, ArrayD};
+use ndarray::{array, Array2};
 use scirs2_neural::error::Result;
-use scirs2_neural::gpu::{create_neural_ops, create_neural_ops_with_backend, NeuralOps};
+use scirs2_neural::gpu::{create_neural_ops, create_neural_ops_with_backend};
 
 fn main() -> Result<()> {
     println!("=== Accelerated Neural Operations Demo ===\n");

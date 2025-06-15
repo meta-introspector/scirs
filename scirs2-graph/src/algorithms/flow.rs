@@ -119,131 +119,6 @@ where
     Ok((best_cut_value, best_partition))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::error::Result as GraphResult;
-    use crate::generators::create_graph;
-
-    #[test]
-    fn test_minimum_cut_simple() -> GraphResult<()> {
-        let mut graph = create_graph::<&str, f64>();
-
-        // Create two clusters connected by a single edge
-        // Cluster 1: A-B-C
-        graph.add_edge("A", "B", 10.0)?;
-        graph.add_edge("B", "C", 10.0)?;
-        graph.add_edge("C", "A", 10.0)?;
-
-        // Cluster 2: D-E-F
-        graph.add_edge("D", "E", 10.0)?;
-        graph.add_edge("E", "F", 10.0)?;
-        graph.add_edge("F", "D", 10.0)?;
-
-        // Bridge between clusters
-        graph.add_edge("C", "D", 1.0)?;
-
-        let (cut_value, partition) = minimum_cut(&graph)?;
-
-        // The minimum cut should be 1.0 (the bridge edge)
-        assert!((cut_value - 1.0).abs() < 1e-6);
-
-        // Check that the partition separates the two clusters
-        let nodes: Vec<&str> = graph.nodes().into_iter().cloned().collect();
-        let cluster1: Vec<bool> = nodes.iter().map(|n| ["A", "B", "C"].contains(n)).collect();
-        let cluster2: Vec<bool> = nodes.iter().map(|n| ["D", "E", "F"].contains(n)).collect();
-
-        // Partition should match one of the clusters
-        let matches_cluster1 = partition.iter().zip(&cluster1).all(|(a, b)| a == b);
-        let matches_cluster2 = partition.iter().zip(&cluster2).all(|(a, b)| a == b);
-
-        assert!(matches_cluster1 || matches_cluster2);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_minimum_cut_single_edge() -> GraphResult<()> {
-        let mut graph = create_graph::<&str, f64>();
-
-        // Simple two-node graph
-        graph.add_edge("A", "B", 5.0)?;
-
-        let (cut_value, partition) = minimum_cut(&graph)?;
-
-        // The only cut has value 5.0
-        assert_eq!(cut_value, 5.0);
-
-        // One node in each partition
-        assert_eq!(partition.iter().filter(|&&x| x).count(), 1);
-        assert_eq!(partition.iter().filter(|&&x| !x).count(), 1);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_dinic_max_flow() -> GraphResult<()> {
-        let mut graph = crate::generators::create_digraph::<&str, f64>();
-
-        // Create a simple flow network:
-        //   A --2--> B --3--> D
-        //   |        |        ^
-        //   1        1        |
-        //   v        v        2
-        //   C -------4------> E
-        graph.add_edge("A", "B", 2.0)?;
-        graph.add_edge("A", "C", 1.0)?;
-        graph.add_edge("B", "D", 3.0)?;
-        graph.add_edge("B", "E", 1.0)?;
-        graph.add_edge("C", "E", 4.0)?;
-        graph.add_edge("E", "D", 2.0)?;
-
-        let max_flow = dinic_max_flow(&graph, &"A", &"D")?;
-
-        // Maximum flow from A to D should be 3.0
-        // Path 1: A->B->D (flow 2)
-        // Path 2: A->C->E->D (flow 1)
-        assert!((max_flow - 3.0).abs() < 1e-6);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_push_relabel_max_flow() -> GraphResult<()> {
-        let mut graph = crate::generators::create_digraph::<&str, f64>();
-
-        // Create a simple flow network
-        graph.add_edge("S", "A", 10.0)?;
-        graph.add_edge("S", "B", 10.0)?;
-        graph.add_edge("A", "T", 10.0)?;
-        graph.add_edge("B", "T", 10.0)?;
-        graph.add_edge("A", "B", 1.0)?;
-
-        let max_flow = push_relabel_max_flow(&graph, &"S", &"T")?;
-
-        // Maximum flow should be 20.0
-        assert!((max_flow - 20.0).abs() < 1e-6);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_dinic_single_path() -> GraphResult<()> {
-        let mut graph = crate::generators::create_digraph::<&str, f64>();
-
-        // Simple path: A -> B -> C
-        graph.add_edge("A", "B", 5.0)?;
-        graph.add_edge("B", "C", 3.0)?;
-
-        let max_flow = dinic_max_flow(&graph, &"A", &"C")?;
-
-        // Bottleneck is 3.0
-        assert!((max_flow - 3.0).abs() < 1e-6);
-
-        Ok(())
-    }
-}
-
 /// Dinic's algorithm for maximum flow
 ///
 /// Implements Dinic's algorithm for finding maximum flow in a directed graph.
@@ -559,4 +434,129 @@ where
     // Calculate total flow leaving source
     let total_flow: f64 = (0..n).map(|i| flow[source_idx][i]).sum();
     Ok(total_flow)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::Result as GraphResult;
+    use crate::generators::create_graph;
+
+    #[test]
+    fn test_minimum_cut_simple() -> GraphResult<()> {
+        let mut graph = create_graph::<&str, f64>();
+
+        // Create two clusters connected by a single edge
+        // Cluster 1: A-B-C
+        graph.add_edge("A", "B", 10.0)?;
+        graph.add_edge("B", "C", 10.0)?;
+        graph.add_edge("C", "A", 10.0)?;
+
+        // Cluster 2: D-E-F
+        graph.add_edge("D", "E", 10.0)?;
+        graph.add_edge("E", "F", 10.0)?;
+        graph.add_edge("F", "D", 10.0)?;
+
+        // Bridge between clusters
+        graph.add_edge("C", "D", 1.0)?;
+
+        let (cut_value, partition) = minimum_cut(&graph)?;
+
+        // The minimum cut should be 1.0 (the bridge edge)
+        assert!((cut_value - 1.0).abs() < 1e-6);
+
+        // Check that the partition separates the two clusters
+        let nodes: Vec<&str> = graph.nodes().into_iter().cloned().collect();
+        let cluster1: Vec<bool> = nodes.iter().map(|n| ["A", "B", "C"].contains(n)).collect();
+        let cluster2: Vec<bool> = nodes.iter().map(|n| ["D", "E", "F"].contains(n)).collect();
+
+        // Partition should match one of the clusters
+        let matches_cluster1 = partition.iter().zip(&cluster1).all(|(a, b)| a == b);
+        let matches_cluster2 = partition.iter().zip(&cluster2).all(|(a, b)| a == b);
+
+        assert!(matches_cluster1 || matches_cluster2);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_minimum_cut_single_edge() -> GraphResult<()> {
+        let mut graph = create_graph::<&str, f64>();
+
+        // Simple two-node graph
+        graph.add_edge("A", "B", 5.0)?;
+
+        let (cut_value, partition) = minimum_cut(&graph)?;
+
+        // The only cut has value 5.0
+        assert_eq!(cut_value, 5.0);
+
+        // One node in each partition
+        assert_eq!(partition.iter().filter(|&&x| x).count(), 1);
+        assert_eq!(partition.iter().filter(|&&x| !x).count(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_dinic_max_flow() -> GraphResult<()> {
+        let mut graph = crate::generators::create_digraph::<&str, f64>();
+
+        // Create a simple flow network:
+        //   A --2--> B --3--> D
+        //   |        |        ^
+        //   1        1        |
+        //   v        v        2
+        //   C -------4------> E
+        graph.add_edge("A", "B", 2.0)?;
+        graph.add_edge("A", "C", 1.0)?;
+        graph.add_edge("B", "D", 3.0)?;
+        graph.add_edge("B", "E", 1.0)?;
+        graph.add_edge("C", "E", 4.0)?;
+        graph.add_edge("E", "D", 2.0)?;
+
+        let max_flow = dinic_max_flow(&graph, &"A", &"D")?;
+
+        // Maximum flow from A to D should be 3.0
+        // Path 1: A->B->D (flow 2)
+        // Path 2: A->C->E->D (flow 1)
+        assert!((max_flow - 3.0).abs() < 1e-6);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_push_relabel_max_flow() -> GraphResult<()> {
+        let mut graph = crate::generators::create_digraph::<&str, f64>();
+
+        // Create a simple flow network
+        graph.add_edge("S", "A", 10.0)?;
+        graph.add_edge("S", "B", 10.0)?;
+        graph.add_edge("A", "T", 10.0)?;
+        graph.add_edge("B", "T", 10.0)?;
+        graph.add_edge("A", "B", 1.0)?;
+
+        let max_flow = push_relabel_max_flow(&graph, &"S", &"T")?;
+
+        // Maximum flow should be 20.0
+        assert!((max_flow - 20.0).abs() < 1e-6);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_dinic_single_path() -> GraphResult<()> {
+        let mut graph = crate::generators::create_digraph::<&str, f64>();
+
+        // Simple path: A -> B -> C
+        graph.add_edge("A", "B", 5.0)?;
+        graph.add_edge("B", "C", 3.0)?;
+
+        let max_flow = dinic_max_flow(&graph, &"A", &"C")?;
+
+        // Bottleneck is 3.0
+        assert!((max_flow - 3.0).abs() < 1e-6);
+
+        Ok(())
+    }
 }

@@ -23,7 +23,7 @@ pub use self::features::{
 
 // Filters module exports
 pub use self::filters::{
-    bilateral_filter, convolve, gaussian_filter, gaussian_filter_f32, gaussian_filter_f64, laplace,
+    bilateral_filter, convolve, filter_functions, generic_filter, gaussian_filter, gaussian_filter_f32, gaussian_filter_f64, laplace,
     maximum_filter, median_filter, minimum_filter, percentile_filter, rank_filter, sobel,
     uniform_filter, BorderMode,
 };
@@ -52,7 +52,7 @@ pub use self::measurements::{
 
 // Morphology module exports
 pub use self::morphology::{
-    binary_closing, binary_dilation, binary_erosion, binary_fill_holes, binary_opening,
+    binary_closing, binary_dilation, binary_erosion, binary_fill_holes, binary_hit_or_miss, binary_opening,
     black_tophat, box_structure, disk_structure, find_boundaries, generate_binary_structure,
     grey_closing, grey_dilation, grey_erosion, grey_opening, iterate_structure, label,
     morphological_gradient, morphological_laplace, remove_small_holes, remove_small_objects,

@@ -415,3 +415,295 @@ mod tests {
         assert!(sample.iter().all(|&x| x.is_finite()));
     }
 }
+
+/// Inverse Wishart distribution parameters
+#[derive(Debug, Clone)]
+pub struct InverseWishartParams<F: Float> {
+    /// Scale matrix (must be positive definite)
+    pub scale: Array2<F>,
+    /// Degrees of freedom (must be > dimension - 1)
+    pub dof: F,
+}
+
+impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> InverseWishartParams<F> {
+    /// Create new inverse Wishart parameters with validation
+    ///
+    /// # Arguments
+    ///
+    /// * `scale` - Scale matrix (must be positive definite)
+    /// * `dof` - Degrees of freedom (must be > dimension - 1)
+    ///
+    /// # Returns
+    ///
+    /// * Validated InverseWishartParams
+    pub fn new(scale: Array2<F>, dof: F) -> LinalgResult<Self> {
+        if scale.nrows() != scale.ncols() {
+            return Err(LinalgError::ShapeError(format!(
+                "Scale matrix must be square, got shape {:?}",
+                scale.shape()
+            )));
+        }
+
+        let p = F::from(scale.nrows()).unwrap();
+        if dof <= p - F::one() {
+            return Err(LinalgError::InvalidInputError(format!(
+                "Degrees of freedom must be > dimension - 1, got dof = {} for dimension {}",
+                dof,
+                scale.nrows()
+            )));
+        }
+
+        Ok(InverseWishartParams { scale, dof })
+    }
+}
+
+/// Compute the log probability density of an inverse Wishart distribution
+///
+/// For an inverse Wishart distribution IW(Ψ, ν), computes log p(X|Ψ, ν)
+///
+/// # Arguments
+///
+/// * `x` - Input matrix (must be positive definite)
+/// * `params` - Inverse Wishart parameters
+///
+/// # Returns
+///
+/// * Log probability density
+pub fn inverse_wishart_logpdf<F>(
+    x: &ArrayView2<F>,
+    params: &InverseWishartParams<F>,
+) -> LinalgResult<F>
+where
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + std::fmt::Debug
+        + std::fmt::Display
+        + num_traits::NumAssign
+        + std::iter::Sum
+        + 'static,
+{
+    let p = F::from(x.nrows()).unwrap();
+    let nu = params.dof;
+
+    // Compute log determinant of X
+    let log_det_x = det(x, None)?.ln();
+    if !log_det_x.is_finite() {
+        return Err(LinalgError::ComputationError(
+            "Matrix must be positive definite".to_string(),
+        ));
+    }
+
+    // Compute log determinant of scale matrix
+    let log_det_psi = det(&params.scale.view(), None)?.ln();
+    if !log_det_psi.is_finite() {
+        return Err(LinalgError::ComputationError(
+            "Scale matrix must be positive definite".to_string(),
+        ));
+    }
+
+    // Compute X^{-1}
+    let x_inv = inv(x, None)?;
+
+    // Compute trace(Ψ * X^{-1})
+    let psi_x_inv = params.scale.dot(&x_inv);
+    let trace_psi_x_inv = (0..psi_x_inv.nrows()).map(|i| psi_x_inv[[i, i]]).sum::<F>();
+
+    // Compute normalization constant
+    let half = F::from(0.5).unwrap();
+    let two = F::from(2.0).unwrap();
+    let pi = F::from(PI).unwrap();
+
+    // Log normalization: nu/2 * log|Ψ| - nu*p/2 * log(2) - p(p-1)/4 * log(π) - log Γ_p(ν/2)
+    let log_norm = half * nu * log_det_psi
+        - half * nu * p * two.ln()
+        - F::from(0.25).unwrap() * p * (p - F::one()) * pi.ln();
+
+    // For simplicity, we approximate the multivariate gamma function using Stirling's approximation
+    // This is not exact but gives a reasonable approximation for moderate dimensions
+    let mut log_gamma_p = F::zero();
+    for j in 0..p.to_usize().unwrap() {
+        let arg = half * (nu - F::from(j).unwrap());
+        if arg > F::one() {
+            // Stirling's approximation: ln Γ(x) ≈ (x - 0.5) ln(x) - x + 0.5 ln(2π)
+            let ln_2pi = F::from(2.0 * PI).unwrap().ln();
+            log_gamma_p += (arg - half) * arg.ln() - arg + half * ln_2pi;
+        }
+    }
+
+    // Final log density
+    let log_density =
+        log_norm - log_gamma_p - half * (nu + p + F::one()) * log_det_x - half * trace_psi_x_inv;
+
+    Ok(log_density)
+}
+
+/// Matrix-variate Student's t-distribution parameters
+#[derive(Debug, Clone)]
+pub struct MatrixTParams<F: Float> {
+    /// Location matrix
+    pub location: Array2<F>,
+    /// Scale matrix U (row covariance)
+    pub scale_u: Array2<F>,
+    /// Scale matrix V (column covariance)  
+    pub scale_v: Array2<F>,
+    /// Degrees of freedom
+    pub dof: F,
+}
+
+impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> MatrixTParams<F> {
+    /// Create new matrix t-distribution parameters with validation
+    pub fn new(
+        location: Array2<F>,
+        scale_u: Array2<F>,
+        scale_v: Array2<F>,
+        dof: F,
+    ) -> LinalgResult<Self> {
+        if location.nrows() != scale_u.nrows() || location.ncols() != scale_v.nrows() {
+            return Err(LinalgError::ShapeError(
+                "Incompatible matrix dimensions".to_string(),
+            ));
+        }
+
+        if scale_u.nrows() != scale_u.ncols() || scale_v.nrows() != scale_v.ncols() {
+            return Err(LinalgError::ShapeError(
+                "Scale matrices must be square".to_string(),
+            ));
+        }
+
+        if dof <= F::zero() {
+            return Err(LinalgError::InvalidInputError(
+                "Degrees of freedom must be positive".to_string(),
+            ));
+        }
+
+        Ok(MatrixTParams {
+            location,
+            scale_u,
+            scale_v,
+            dof,
+        })
+    }
+}
+
+/// Compute the log probability density of a matrix t-distribution
+///
+/// # Arguments
+///
+/// * `x` - Input matrix
+/// * `params` - Matrix t-distribution parameters
+///
+/// # Returns
+///
+/// * Log probability density
+pub fn matrix_t_logpdf<F>(x: &ArrayView2<F>, params: &MatrixTParams<F>) -> LinalgResult<F>
+where
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + std::fmt::Debug
+        + std::fmt::Display
+        + num_traits::NumAssign
+        + std::iter::Sum
+        + 'static,
+{
+    let (n, p) = (x.nrows(), x.ncols());
+    let nu = params.dof;
+
+    // Compute residual matrix: X - M
+    let residual = x - &params.location;
+
+    // Compute U^{-1} and V^{-1}
+    let u_inv = inv(&params.scale_u.view(), None)?;
+    let v_inv = inv(&params.scale_v.view(), None)?;
+
+    // Compute the quadratic form: tr((X-M)^T U^{-1} (X-M) V^{-1})
+    let temp1 = u_inv.dot(&residual);
+    let temp2 = temp1.t().dot(&residual);
+    let temp3 = temp2.dot(&v_inv);
+
+    let quadratic_form = (0..temp3.nrows()).map(|i| temp3[[i, i]]).sum::<F>();
+
+    // Compute log determinants
+    let log_det_u = det(&params.scale_u.view(), None)?.ln();
+    let log_det_v = det(&params.scale_v.view(), None)?.ln();
+
+    // Compute normalization constant (approximated)
+    let half = F::from(0.5).unwrap();
+    let pi = F::from(PI).unwrap();
+    let n_f = F::from(n).unwrap();
+    let p_f = F::from(p).unwrap();
+
+    // Log normalization is complex for matrix t-distribution
+    // This is a simplified approximation
+    let log_norm = -half * n_f * log_det_u - half * p_f * log_det_v - half * n_f * p_f * pi.ln();
+
+    // Final log density (simplified)
+    let log_density =
+        log_norm - half * (nu + n_f + p_f - F::one()) * (F::one() + quadratic_form / nu).ln();
+
+    Ok(log_density)
+}
+
+#[cfg(test)]
+mod extended_tests {
+    use super::*;
+    use ndarray::array;
+
+    #[test]
+    fn test_inverse_wishart_params() {
+        let scale = array![[2.0, 0.5], [0.5, 1.0]];
+        let dof = 5.0;
+
+        let params = InverseWishartParams::new(scale, dof).unwrap();
+        assert_eq!(params.dof, 5.0);
+
+        // Test invalid degrees of freedom
+        let invalid_params = InverseWishartParams::new(params.scale.clone(), 1.0);
+        assert!(invalid_params.is_err());
+    }
+
+    #[test]
+    fn test_matrix_t_params() {
+        let location = array![[0.0, 0.0], [0.0, 0.0]];
+        let scale_u = array![[1.0, 0.0], [0.0, 1.0]];
+        let scale_v = array![[1.0, 0.0], [0.0, 1.0]];
+        let dof = 3.0;
+
+        let params = MatrixTParams::new(location, scale_u, scale_v, dof).unwrap();
+        assert_eq!(params.dof, 3.0);
+
+        // Test invalid degrees of freedom
+        let invalid_params = MatrixTParams::new(
+            params.location.clone(),
+            params.scale_u.clone(),
+            params.scale_v.clone(),
+            -1.0,
+        );
+        assert!(invalid_params.is_err());
+    }
+
+    #[test]
+    fn test_inverse_wishart_logpdf() {
+        let x = array![[2.0, 0.5], [0.5, 1.5]];
+        let scale = array![[1.0, 0.0], [0.0, 1.0]];
+        let params = InverseWishartParams::new(scale, 5.0).unwrap();
+
+        let logpdf = inverse_wishart_logpdf(&x.view(), &params).unwrap();
+        assert!(logpdf.is_finite());
+    }
+
+    #[test]
+    fn test_matrix_t_logpdf() {
+        let x = array![[1.0, 0.5], [0.5, 1.0]];
+        let location = array![[0.0, 0.0], [0.0, 0.0]];
+        let scale_u = array![[1.0, 0.0], [0.0, 1.0]];
+        let scale_v = array![[1.0, 0.0], [0.0, 1.0]];
+        let params = MatrixTParams::new(location, scale_u, scale_v, 3.0).unwrap();
+
+        let logpdf = matrix_t_logpdf(&x.view(), &params).unwrap();
+        assert!(logpdf.is_finite());
+    }
+}

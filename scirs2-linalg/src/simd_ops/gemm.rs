@@ -4,12 +4,16 @@
 //! using cache-friendly blocking strategies, micro-kernels, and vectorized
 //! inner loops for maximum performance on modern CPUs.
 
+#[cfg(feature = "simd")]
 use crate::error::{LinalgError, LinalgResult};
+#[cfg(feature = "simd")]
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+#[cfg(feature = "simd")]
 use wide::{f32x8, f64x4};
 
 /// Cache-friendly block sizes for GEMM operations
 /// These should be tuned for target CPU cache hierarchy
+#[cfg(feature = "simd")]
 pub struct GemmBlockSizes {
     /// Block size for M dimension (rows of A, rows of C)
     pub mc: usize,
@@ -23,6 +27,7 @@ pub struct GemmBlockSizes {
     pub nr: usize,
 }
 
+#[cfg(feature = "simd")]
 impl Default for GemmBlockSizes {
     fn default() -> Self {
         Self {

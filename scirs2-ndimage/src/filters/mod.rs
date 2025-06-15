@@ -15,6 +15,7 @@ mod convolve;
 mod edge;
 mod extrema;
 mod gaussian;
+mod generic;
 mod median;
 mod rank;
 mod tests;
@@ -36,6 +37,9 @@ pub use extrema::{maximum_filter, minimum_filter};
 
 // Gaussian module exports
 pub use gaussian::{gaussian_filter, gaussian_filter_f32, gaussian_filter_f64};
+
+// Generic module exports
+pub use generic::{generic_filter, filter_functions};
 
 // Median module exports
 pub use median::*;

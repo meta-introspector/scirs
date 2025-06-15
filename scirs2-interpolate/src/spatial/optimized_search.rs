@@ -7,6 +7,9 @@
 //! - Batch query processing
 //! - Multi-threaded search operations
 
+#[cfg(feature = "simd")]
+use wide::f64x4;
+
 use crate::error::{InterpolateError, InterpolateResult};
 use crate::spatial::{BallTree, KdTree};
 use ndarray::{Array1, ArrayView2, Axis};
@@ -51,7 +54,7 @@ pub struct SIMDDistanceCalculator<F: Float> {
     _phantom: std::marker::PhantomData<F>,
 }
 
-impl<F: Float + FromPrimitive> SIMDDistanceCalculator<F> {
+impl<F: Float + FromPrimitive + 'static> SIMDDistanceCalculator<F> {
     /// Create a new SIMD distance calculator
     pub fn new() -> Self {
         Self {
@@ -77,16 +80,150 @@ impl<F: Float + FromPrimitive> SIMDDistanceCalculator<F> {
         distances
     }
 
-    /// AVX2-accelerated distance computation for f64
-    #[cfg(target_arch = "x86_64")]
+    /// SIMD-accelerated distance computation for f64
+    #[cfg(all(feature = "simd", target_arch = "x86_64"))]
     fn batch_squared_distances_avx2_f64(
         &self,
         query: &[F],
         points: &ArrayView2<F>,
         distances: &mut Array1<F>,
     ) {
-        // This is a simplified implementation - in practice, you'd use raw AVX2 intrinsics
-        // For now, we'll use the scalar version as a placeholder
+        use std::any::TypeId;
+
+        // Only use SIMD for f64
+        if TypeId::of::<F>() == TypeId::of::<f64>() {
+            self.batch_squared_distances_simd_f64_impl(query, points, distances);
+        } else {
+            self.batch_squared_distances_scalar(query, points, distances);
+        }
+    }
+
+    /// SIMD implementation specifically for f64
+    #[cfg(all(feature = "simd", target_arch = "x86_64"))]
+    fn batch_squared_distances_simd_f64_impl(
+        &self,
+        query: &[F],
+        points: &ArrayView2<F>,
+        distances: &mut Array1<F>,
+    ) {
+        let n_points = points.nrows();
+        let n_dims = points.ncols();
+
+        // Convert query to f64 for SIMD processing
+        let query_f64: Vec<f64> = query.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+
+        // Process points in chunks of 4 for SIMD
+        for i in (0..n_points).step_by(4) {
+            let chunk_size = (n_points - i).min(4);
+
+            if chunk_size == 4 && n_dims >= 2 {
+                // Full SIMD processing for 4 points
+                let mut sum_sq = f64x4::ZERO;
+
+                // Process dimensions in groups to make efficient use of SIMD
+                let mut dim_idx = 0;
+                while dim_idx + 4 <= n_dims {
+                    // Load 4 dimensions from the query
+                    let query_chunk = f64x4::new([
+                        query_f64[dim_idx],
+                        query_f64[dim_idx + 1],
+                        query_f64[dim_idx + 2],
+                        query_f64[dim_idx + 3],
+                    ]);
+
+                    // For each of the 4 points, accumulate distance for these dimensions
+                    for point_offset in 0..4 {
+                        let point_row = points.row(i + point_offset);
+                        let point_chunk = f64x4::new([
+                            point_row[dim_idx].to_f64().unwrap_or(0.0),
+                            point_row[dim_idx + 1].to_f64().unwrap_or(0.0),
+                            point_row[dim_idx + 2].to_f64().unwrap_or(0.0),
+                            point_row[dim_idx + 3].to_f64().unwrap_or(0.0),
+                        ]);
+
+                        let diff = point_chunk - query_chunk;
+                        let sq_diff = diff * diff;
+
+                        // Horizontal add to accumulate this point's distance
+                        let horizontal_sum = sq_diff.as_array_ref();
+                        let point_distance_contribution = horizontal_sum[0]
+                            + horizontal_sum[1]
+                            + horizontal_sum[2]
+                            + horizontal_sum[3];
+
+                        // Add to the appropriate slot in sum_sq
+                        match point_offset {
+                            0 => {
+                                sum_sq = sum_sq
+                                    + f64x4::new([point_distance_contribution, 0.0, 0.0, 0.0])
+                            }
+                            1 => {
+                                sum_sq = sum_sq
+                                    + f64x4::new([0.0, point_distance_contribution, 0.0, 0.0])
+                            }
+                            2 => {
+                                sum_sq = sum_sq
+                                    + f64x4::new([0.0, 0.0, point_distance_contribution, 0.0])
+                            }
+                            3 => {
+                                sum_sq = sum_sq
+                                    + f64x4::new([0.0, 0.0, 0.0, point_distance_contribution])
+                            }
+                            _ => unreachable!(),
+                        }
+                    }
+
+                    dim_idx += 4;
+                }
+
+                // Handle remaining dimensions with scalar processing
+                while dim_idx < n_dims {
+                    for point_offset in 0..4 {
+                        let point_row = points.row(i + point_offset);
+                        let diff = point_row[dim_idx].to_f64().unwrap_or(0.0) - query_f64[dim_idx];
+                        let sq_diff = diff * diff;
+
+                        match point_offset {
+                            0 => sum_sq = sum_sq + f64x4::new([sq_diff, 0.0, 0.0, 0.0]),
+                            1 => sum_sq = sum_sq + f64x4::new([0.0, sq_diff, 0.0, 0.0]),
+                            2 => sum_sq = sum_sq + f64x4::new([0.0, 0.0, sq_diff, 0.0]),
+                            3 => sum_sq = sum_sq + f64x4::new([0.0, 0.0, 0.0, sq_diff]),
+                            _ => unreachable!(),
+                        }
+                    }
+                    dim_idx += 1;
+                }
+
+                // Store results
+                let result_array = sum_sq.as_array_ref();
+                for j in 0..4 {
+                    distances[i + j] = F::from_f64(result_array[j]).unwrap();
+                }
+            } else {
+                // Fallback to scalar for partial chunks or when SIMD isn't beneficial
+                for j in 0..chunk_size {
+                    let mut sum_sq = 0.0f64;
+                    let point_row = points.row(i + j);
+                    for (dim, &q_val_f) in query.iter().enumerate() {
+                        let q_val = q_val_f.to_f64().unwrap_or(0.0);
+                        let p_val = point_row[dim].to_f64().unwrap_or(0.0);
+                        let diff = p_val - q_val;
+                        sum_sq += diff * diff;
+                    }
+                    distances[i + j] = F::from_f64(sum_sq).unwrap();
+                }
+            }
+        }
+    }
+
+    /// Non-SIMD fallback for when SIMD is not available
+    #[cfg(not(all(feature = "simd", target_arch = "x86_64")))]
+    fn batch_squared_distances_avx2_f64(
+        &self,
+        query: &[F],
+        points: &ArrayView2<F>,
+        distances: &mut Array1<F>,
+    ) {
         self.batch_squared_distances_scalar(query, points, distances);
     }
 
@@ -117,7 +254,7 @@ impl<F: Float + FromPrimitive> SIMDDistanceCalculator<F> {
     }
 }
 
-impl<F: Float + FromPrimitive> Default for SIMDDistanceCalculator<F> {
+impl<F: Float + FromPrimitive + 'static> Default for SIMDDistanceCalculator<F> {
     fn default() -> Self {
         Self::new()
     }
@@ -233,7 +370,7 @@ pub struct SearchStats {
 
 impl<F> AdaptiveSearchStrategy<F>
 where
-    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + Copy,
+    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + Copy + 'static,
 {
     /// Create a new adaptive search strategy
     pub fn new(points: &ArrayView2<F>) -> InterpolateResult<Self> {
@@ -350,7 +487,7 @@ pub struct BatchQueryProcessor<F: Float + FromPrimitive + Debug + std::cmp::Part
 
 impl<F> BatchQueryProcessor<F>
 where
-    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + Copy,
+    F: Float + FromPrimitive + Debug + std::cmp::PartialOrd + Copy + 'static,
 {
     /// Create a new batch query processor
     pub fn new(points: &ArrayView2<F>) -> InterpolateResult<Self> {

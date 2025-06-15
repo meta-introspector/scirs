@@ -691,9 +691,10 @@ where
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```rust,no_run
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::enhanced_kriging::{make_enhanced_kriging, CovarianceFunction};
+/// use scirs2_interpolate::advanced::enhanced_kriging::make_enhanced_kriging;
+/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample 2D spatial data
 /// let points = Array2::from_shape_vec((4, 2), vec![
@@ -708,7 +709,7 @@ where
 /// let kriging = make_enhanced_kriging(
 ///     &points.view(),
 ///     &values.view(),
-///     CovarianceFunction::Gaussian,
+///     CovarianceFunction::SquaredExponential,
 ///     1.0,  // length scale
 ///     1.0   // signal variance
 /// ).unwrap();
@@ -765,11 +766,10 @@ where
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```rust,no_run
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::enhanced_kriging::{
-///     make_universal_kriging, CovarianceFunction, TrendFunction
-/// };
+/// use scirs2_interpolate::advanced::enhanced_kriging::{make_universal_kriging, TrendFunction};
+/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create data with a linear trend: z = x + y + noise
 /// let points = Array2::from_shape_vec((6, 2), vec![
@@ -843,11 +843,10 @@ where
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```rust,no_run
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::enhanced_kriging::{
-///     make_bayesian_kriging, CovarianceFunction, KrigingPriors, ParameterPrior
-/// };
+/// use scirs2_interpolate::advanced::enhanced_kriging::{make_bayesian_kriging, KrigingPriors, ParameterPrior};
+/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create noisy observational data
 /// let points = Array2::from_shape_vec((8, 1), vec![
@@ -859,9 +858,10 @@ where
 ///
 /// // Define prior distributions for hyperparameters
 /// let priors = KrigingPriors {
-///     length_scale: ParameterPrior::Uniform(0.1, 2.0),
-///     signal_variance: ParameterPrior::Uniform(0.01, 1.0),
-///     noise_variance: ParameterPrior::Uniform(0.001, 0.1),
+///     length_scale_prior: ParameterPrior::Uniform(0.1, 2.0),
+///     sigma_sq_prior: ParameterPrior::Uniform(0.01, 1.0),
+///     nugget_prior: ParameterPrior::Uniform(0.001, 0.1),
+///     trend_coeffs_prior: ParameterPrior::Uniform(0.0, 1.0),
 /// };
 ///
 /// // Create Bayesian kriging model

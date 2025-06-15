@@ -384,13 +384,21 @@ impl ReedsSheppPlanner {
 
             if t >= 0.0 && p >= 0.0 && q >= 0.0 {
                 return Ok(vec![
-                    ReedsSheppSegment::new(Motion::Forward, Turn::Left, t * self.turning_radius),
+                    ReedsSheppSegment::new(
+                        Motion::Forward,
+                        Turn::Left,
+                        t.abs() * self.turning_radius,
+                    ),
                     ReedsSheppSegment::new(
                         Motion::Forward,
                         Turn::Straight,
-                        p * self.turning_radius,
+                        p.abs() * self.turning_radius,
                     ),
-                    ReedsSheppSegment::new(Motion::Forward, Turn::Left, q * self.turning_radius),
+                    ReedsSheppSegment::new(
+                        Motion::Forward,
+                        Turn::Left,
+                        q.abs() * self.turning_radius,
+                    ),
                 ]);
             }
         }
@@ -418,17 +426,17 @@ impl ReedsSheppPlanner {
                         ReedsSheppSegment::new(
                             Motion::Forward,
                             Turn::Left,
-                            t * self.turning_radius,
+                            t.abs() * self.turning_radius,
                         ),
                         ReedsSheppSegment::new(
                             Motion::Backward,
                             Turn::Right,
-                            u * self.turning_radius,
+                            u.abs() * self.turning_radius,
                         ),
                         ReedsSheppSegment::new(
                             Motion::Forward,
                             Turn::Left,
-                            v * self.turning_radius,
+                            v.abs() * self.turning_radius,
                         ),
                     ]);
                 }
@@ -445,70 +453,106 @@ impl ReedsSheppPlanner {
         let xi = x + phi.sin();
         let eta = y - 1.0 + phi.cos();
         let rho = 0.25 * (xi * xi + eta * eta);
-        
+
         if rho <= 1.0 {
             let u = (4.0 - rho * rho).sqrt().acos();
             if u.is_finite() && u >= 0.0 {
                 let v = eta.atan2(xi);
                 let t = Self::normalize_angle(v + u + PI);
                 let s = Self::normalize_angle(phi - t + 2.0 * u);
-                
+
                 if t >= 0.0 && s >= 0.0 {
                     return Ok(vec![
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, t * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Right, u * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, u * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Right, s * self.turning_radius),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            t * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Right,
+                            u * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            u * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Right,
+                            s * self.turning_radius,
+                        ),
                     ]);
                 }
             }
         }
-        
-        Err(SpatialError::ComputationError("No valid LRLR path found".to_string()))
+
+        Err(SpatialError::ComputationError(
+            "No valid LRLR path found".to_string(),
+        ))
     }
-    
+
     /// Compute RLRL path
     fn rlrl_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x - phi.sin();
         let eta = y - 1.0 - phi.cos();
         let rho = 0.25 * (xi * xi + eta * eta);
-        
+
         if rho <= 1.0 {
             let u = (4.0 - rho * rho).sqrt().acos();
             if u.is_finite() && u >= 0.0 {
                 let v = eta.atan2(xi);
                 let t = Self::normalize_angle(v - u - PI);
                 let s = Self::normalize_angle(t - phi + 2.0 * u);
-                
+
                 if t <= 0.0 && s <= 0.0 {
                     return Ok(vec![
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Right, t.abs() * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Left, u * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Right, u * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Left, s.abs() * self.turning_radius),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Right,
+                            t.abs() * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Left,
+                            u * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Right,
+                            u * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Left,
+                            s.abs() * self.turning_radius,
+                        ),
                     ]);
                 }
             }
         }
-        
-        Err(SpatialError::ComputationError("No valid RLRL path found".to_string()))
+
+        Err(SpatialError::ComputationError(
+            "No valid RLRL path found".to_string(),
+        ))
     }
 
     /// Compute CCCC paths (Curvature-Curvature-Curvature-Curvature)
     fn cccc_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         // CCCC paths are complex 4-segment paths
         // We implement the LRLR and RLRL path types
-        
+
         // Try LRLR path
         if let Ok(lrlr_path) = self.lrlr_path(x, y, phi) {
             return Ok(lrlr_path);
         }
-        
+
         // Try RLRL path
         if let Ok(rlrl_path) = self.rlrl_path(x, y, phi) {
             return Ok(rlrl_path);
         }
-        
+
         Err(SpatialError::ComputationError(
             "No valid CCCC path found".to_string(),
         ))
@@ -519,7 +563,7 @@ impl ReedsSheppPlanner {
         let xi = x - phi.sin();
         let eta = y - 1.0 + phi.cos();
         let rho_squared = xi * xi + eta * eta;
-        
+
         if rho_squared >= 4.0 {
             let rho = rho_squared.sqrt();
             let u = (rho - 2.0).acos();
@@ -527,28 +571,46 @@ impl ReedsSheppPlanner {
                 let v = eta.atan2(xi);
                 let t = Self::normalize_angle(v - u);
                 let s = Self::normalize_angle(t - phi + u);
-                
+
                 if t >= 0.0 && s >= 0.0 {
                     let p = rho - 2.0;
                     return Ok(vec![
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, t * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Right, u * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Straight, p * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, s * self.turning_radius),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            t * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Right,
+                            u * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Straight,
+                            p * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            s * self.turning_radius,
+                        ),
                     ]);
                 }
             }
         }
-        
-        Err(SpatialError::ComputationError("No valid LRSL path found".to_string()))
+
+        Err(SpatialError::ComputationError(
+            "No valid LRSL path found".to_string(),
+        ))
     }
-    
+
     /// Compute LRSR path
     fn lrsr_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x + phi.sin();
         let eta = y - 1.0 - phi.cos();
         let rho_squared = xi * xi + eta * eta;
-        
+
         if rho_squared >= 4.0 {
             let rho = rho_squared.sqrt();
             let u = (rho - 2.0).acos();
@@ -556,28 +618,46 @@ impl ReedsSheppPlanner {
                 let v = eta.atan2(xi);
                 let t = Self::normalize_angle(v + u);
                 let s = Self::normalize_angle(phi - t + u);
-                
+
                 if t >= 0.0 && s >= 0.0 {
                     let p = rho - 2.0;
                     return Ok(vec![
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, t * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Right, u * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Straight, p * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Right, s * self.turning_radius),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            t * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Right,
+                            u * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Straight,
+                            p * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Right,
+                            s * self.turning_radius,
+                        ),
                     ]);
                 }
             }
         }
-        
-        Err(SpatialError::ComputationError("No valid LRSR path found".to_string()))
+
+        Err(SpatialError::ComputationError(
+            "No valid LRSR path found".to_string(),
+        ))
     }
-    
+
     /// Compute RLSL path
     fn rlsl_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x + phi.sin();
         let eta = y - 1.0 - phi.cos();
         let rho_squared = xi * xi + eta * eta;
-        
+
         if rho_squared >= 4.0 {
             let rho = rho_squared.sqrt();
             let u = (rho - 2.0).acos();
@@ -585,28 +665,46 @@ impl ReedsSheppPlanner {
                 let v = eta.atan2(xi);
                 let t = Self::normalize_angle(v - u);
                 let s = Self::normalize_angle(phi - t + u);
-                
+
                 if t <= 0.0 && s <= 0.0 {
                     let p = rho - 2.0;
                     return Ok(vec![
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Right, t.abs() * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Left, u * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Straight, p * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, s.abs() * self.turning_radius),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Right,
+                            t.abs() * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Left,
+                            u * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Straight,
+                            p * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            s.abs() * self.turning_radius,
+                        ),
                     ]);
                 }
             }
         }
-        
-        Err(SpatialError::ComputationError("No valid RLSL path found".to_string()))
+
+        Err(SpatialError::ComputationError(
+            "No valid RLSL path found".to_string(),
+        ))
     }
-    
+
     /// Compute RLSR path
     fn rlsr_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x - phi.sin();
         let eta = y - 1.0 + phi.cos();
         let rho_squared = xi * xi + eta * eta;
-        
+
         if rho_squared >= 4.0 {
             let rho = rho_squared.sqrt();
             let u = (rho - 2.0).acos();
@@ -614,47 +712,65 @@ impl ReedsSheppPlanner {
                 let v = eta.atan2(xi);
                 let t = Self::normalize_angle(v + u);
                 let s = Self::normalize_angle(t - phi + u);
-                
+
                 if t <= 0.0 && s <= 0.0 {
                     let p = rho - 2.0;
                     return Ok(vec![
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Right, t.abs() * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Left, u * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Straight, p * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Right, s.abs() * self.turning_radius),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Right,
+                            t.abs() * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Left,
+                            u * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Straight,
+                            p * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Right,
+                            s.abs() * self.turning_radius,
+                        ),
                     ]);
                 }
             }
         }
-        
-        Err(SpatialError::ComputationError("No valid RLSR path found".to_string()))
+
+        Err(SpatialError::ComputationError(
+            "No valid RLSR path found".to_string(),
+        ))
     }
 
     /// Compute CCSC paths (Curvature-Curvature-Straight-Curvature)
     fn ccsc_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         // CCSC paths have two curves, then a straight segment, then another curve
         // We implement LRSL, LRSR, RLSL, RLSR path types
-        
+
         // Try LRSL path
         if let Ok(lrsl_path) = self.lrsl_path(x, y, phi) {
             return Ok(lrsl_path);
         }
-        
-        // Try LRSR path  
+
+        // Try LRSR path
         if let Ok(lrsr_path) = self.lrsr_path(x, y, phi) {
             return Ok(lrsr_path);
         }
-        
+
         // Try RLSL path
         if let Ok(rlsl_path) = self.rlsl_path(x, y, phi) {
             return Ok(rlsl_path);
         }
-        
+
         // Try RLSR path
         if let Ok(rlsr_path) = self.rlsr_path(x, y, phi) {
             return Ok(rlsr_path);
         }
-        
+
         Err(SpatialError::ComputationError(
             "No valid CCSC path found".to_string(),
         ))
@@ -665,78 +781,122 @@ impl ReedsSheppPlanner {
         let xi = x + phi.sin();
         let eta = y - 1.0 + phi.cos();
         let rho = 0.25 * (xi * xi + eta * eta);
-        
+
         if (1.0..=4.0).contains(&rho) {
             let u1 = (rho - 1.0).sqrt().acos();
             let u2 = (4.0 - rho).sqrt().acos();
-            
+
             if u1.is_finite() && u2.is_finite() {
                 let v = eta.atan2(xi);
                 let t = Self::normalize_angle(v + u1 + u2 + PI);
                 let s = Self::normalize_angle(phi - t + u1 + u2);
-                
+
                 if t >= 0.0 && s >= 0.0 {
                     let p = (rho - 1.0).sqrt();
                     return Ok(vec![
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, t * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Right, u1 * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, u2 * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Straight, p * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, s * self.turning_radius),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            t * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Right,
+                            u1 * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            u2 * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Straight,
+                            p * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            s * self.turning_radius,
+                        ),
                     ]);
                 }
             }
         }
-        
-        Err(SpatialError::ComputationError("No valid LRLSL path found".to_string()))
+
+        Err(SpatialError::ComputationError(
+            "No valid LRLSL path found".to_string(),
+        ))
     }
-    
+
     /// Compute RLRLR path
     fn rlrlr_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x - phi.sin();
         let eta = y - 1.0 - phi.cos();
         let rho = 0.25 * (xi * xi + eta * eta);
-        
+
         if (1.0..=4.0).contains(&rho) {
             let u1 = (rho - 1.0).sqrt().acos();
             let u2 = (4.0 - rho).sqrt().acos();
-            
+
             if u1.is_finite() && u2.is_finite() {
                 let v = eta.atan2(xi);
                 let t = Self::normalize_angle(v - u1 - u2 - PI);
                 let s = Self::normalize_angle(t - phi + u1 + u2);
-                
+
                 if t <= 0.0 && s <= 0.0 {
                     let _p = (rho - 1.0).sqrt(); // Reserved for potential future use
                     return Ok(vec![
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Right, t.abs() * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Left, u1 * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Right, u2 * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Forward, Turn::Left, u1 * self.turning_radius),
-                        ReedsSheppSegment::new(Motion::Backward, Turn::Right, s.abs() * self.turning_radius),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Right,
+                            t.abs() * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Left,
+                            u1 * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Right,
+                            u2 * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Forward,
+                            Turn::Left,
+                            u1 * self.turning_radius,
+                        ),
+                        ReedsSheppSegment::new(
+                            Motion::Backward,
+                            Turn::Right,
+                            s.abs() * self.turning_radius,
+                        ),
                     ]);
                 }
             }
         }
-        
-        Err(SpatialError::ComputationError("No valid RLRLR path found".to_string()))
+
+        Err(SpatialError::ComputationError(
+            "No valid RLRLR path found".to_string(),
+        ))
     }
 
     /// Compute CCSCC paths (Curvature-Curvature-Straight-Curvature-Curvature)
     fn ccscc_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         // CCSCC paths are the most complex with 5 segments
         // We implement LRLSL and RLRLR path types
-        
+
         // Try LRLSL path
         if let Ok(lrlsl_path) = self.lrlsl_path(x, y, phi) {
             return Ok(lrlsl_path);
         }
-        
+
         // Try RLRLR path
         if let Ok(rlrlr_path) = self.rlrlr_path(x, y, phi) {
             return Ok(rlrlr_path);
         }
-        
+
         Err(SpatialError::ComputationError(
             "No valid CCSCC path found".to_string(),
         ))
@@ -872,9 +1032,9 @@ mod tests {
             // depending on the angle normalization
             assert!(path.length() >= 0.0);
             assert!(!path.segments().is_empty());
-            
+
             // Should have at least 1 segment for a valid path
-            assert!(path.segments().len() >= 1);
+            assert!(!path.segments().is_empty());
         }
     }
 
@@ -889,7 +1049,7 @@ mod tests {
         if let Ok(path) = path {
             assert!(path.length() > 0.0);
             assert!(!path.segments().is_empty());
-            
+
             // Verify that we have a reasonable path length
             assert!(path.length() < 20.0 * planner.turning_radius); // Reasonable upper bound
         }
@@ -906,7 +1066,7 @@ mod tests {
         if let Ok(path) = path {
             assert!(path.length() > 0.0);
             assert!(!path.segments().is_empty());
-            
+
             // For CCSCC paths, we might have up to 5 segments
             assert!(path.segments().len() >= 3);
             assert!(path.segments().len() <= 5);
@@ -932,12 +1092,15 @@ mod tests {
             for segment in path.segments() {
                 assert!(segment.length >= 0.0);
                 assert!(segment.length.is_finite());
-                
+
                 // Motion should be either Forward or Backward
                 assert!(matches!(segment.motion, Motion::Forward | Motion::Backward));
-                
+
                 // Turn should be Left, Right, or Straight
-                assert!(matches!(segment.turn, Turn::Left | Turn::Right | Turn::Straight));
+                assert!(matches!(
+                    segment.turn,
+                    Turn::Left | Turn::Right | Turn::Straight
+                ));
             }
         }
     }
@@ -952,18 +1115,26 @@ mod tests {
         if let Ok(path) = path {
             // Test segment properties
             for segment in path.segments() {
-                // All segments should have non-negative length
-                assert!(segment.length >= 0.0);
+                // All segments should have non-negative length (allow zero for degenerate cases)
+                assert!(
+                    segment.length >= 0.0,
+                    "Segment length should be non-negative, got: {}",
+                    segment.length
+                );
                 assert!(segment.length.is_finite());
-                
+
                 // Test signed_length method
                 let signed_length = segment.signed_length();
                 match segment.motion {
-                    Motion::Forward => assert_relative_eq!(signed_length, segment.length, epsilon = 1e-10),
-                    Motion::Backward => assert_relative_eq!(signed_length, -segment.length, epsilon = 1e-10),
+                    Motion::Forward => {
+                        assert_relative_eq!(signed_length, segment.length, epsilon = 1e-10)
+                    }
+                    Motion::Backward => {
+                        assert_relative_eq!(signed_length, -segment.length, epsilon = 1e-10)
+                    }
                 }
             }
-            
+
             // The total path should have positive length since start != goal
             assert!(path.length() > 0.0);
         }
@@ -973,21 +1144,24 @@ mod tests {
     fn test_reedshepp_different_turning_radii() {
         let start = Pose2D::new(0.0, 0.0, 0.0);
         let goal = Pose2D::new(2.0, 2.0, PI);
-        
+
         let radii = [0.5, 1.0, 2.0, 5.0];
         let mut path_lengths = Vec::new();
-        
+
         for &radius in &radii {
             let planner = ReedsSheppPlanner::new(radius);
             if let Ok(path) = planner.plan(&start, &goal) {
                 path_lengths.push(path.length());
             }
         }
-        
+
         // Generally, smaller turning radius should allow shorter paths
         // (though this isn't always guaranteed due to different path types)
-        assert!(!path_lengths.is_empty(), "Should find valid paths for some turning radii");
-        
+        assert!(
+            !path_lengths.is_empty(),
+            "Should find valid paths for some turning radii"
+        );
+
         for &length in &path_lengths {
             assert!(length > 0.0);
             assert!(length.is_finite());
@@ -1006,7 +1180,7 @@ mod tests {
             // Sample the path at the beginning and end
             let start_sample = path.sample(0.0).unwrap();
             let end_sample = path.sample(1.0).unwrap();
-            
+
             // Should be close to the actual start and goal
             assert_relative_eq!(start_sample.x, start.x, epsilon = 1e-2);
             assert_relative_eq!(start_sample.y, start.y, epsilon = 1e-2);
@@ -1018,20 +1192,20 @@ mod tests {
     #[test]
     fn test_reedshepp_extreme_cases() {
         let planner = ReedsSheppPlanner::new(1.0);
-        
+
         // Test very close points
         let close_start = Pose2D::new(0.0, 0.0, 0.0);
         let close_goal = Pose2D::new(0.01, 0.01, 0.1);
-        
+
         if let Ok(path) = planner.plan(&close_start, &close_goal) {
             assert!(path.length() > 0.0);
             assert!(path.length() < 1.0); // Should be short for close points
         }
-        
+
         // Test points that require significant maneuvering
         let complex_start = Pose2D::new(0.0, 0.0, 0.0);
         let complex_goal = Pose2D::new(-1.0, -1.0, PI);
-        
+
         if let Ok(path) = planner.plan(&complex_start, &complex_goal) {
             assert!(path.length() > 2.0); // Should be longer for complex maneuvers
         }

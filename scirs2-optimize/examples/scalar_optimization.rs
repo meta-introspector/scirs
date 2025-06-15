@@ -1,6 +1,6 @@
 //! Examples of scalar optimization using various methods
 
-extern crate openblas_src;
+// BLAS backend linking handled through scirs2-core
 use scirs2_optimize::scalar::{minimize_scalar, Method, Options};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

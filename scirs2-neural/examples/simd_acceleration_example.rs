@@ -4,8 +4,12 @@
 //! neural network operations including activations, matrix operations,
 //! normalization, and loss functions.
 
-use ndarray::{Array, Array2, ArrayD};
+use ndarray::Array2;
 use scirs2_neural::error::Result;
+#[cfg(not(feature = "simd"))]
+#[allow(unused_imports)]
+use scirs2_neural::performance::PerformanceOptimizer;
+#[cfg(feature = "simd")]
 use scirs2_neural::performance::{PerformanceOptimizer, SIMDOperations, SIMDStats};
 use std::time::Instant;
 
@@ -188,7 +192,8 @@ fn demo_simd_matrix_operations() -> Result<()> {
 
     // Create test matrices
     let a = Array2::from_shape_fn((128, 256), |(i, j)| (i + j) as f32 * 0.01).into_dyn();
-    let b = Array2::from_shape_fn((256, 64), |(i, j)| (i - j) as f32 * 0.01).into_dyn();
+    let b =
+        Array2::from_shape_fn((256, 64), |(i, j)| (i as i32 - j as i32) as f32 * 0.01).into_dyn();
 
     println!("Matrix A shape: {:?}", a.shape());
     println!("Matrix B shape: {:?}", b.shape());
@@ -422,7 +427,7 @@ fn demo_performance_comparison() -> Result<()> {
 
     // Scalar version
     let start = Instant::now();
-    let scalar_result = input.mapv(|x| x.max(0.0));
+    let _scalar_result = input.mapv(|x| x.max(0.0));
     let scalar_time = start.elapsed();
     println!("  Scalar ReLU time: {:?}", scalar_time);
 
@@ -440,7 +445,7 @@ fn demo_performance_comparison() -> Result<()> {
         }
 
         // Verify results are the same
-        let diff = (&scalar_result - &simd_result).mapv(|x| x.abs()).sum();
+        let diff = (&_scalar_result - &simd_result).mapv(|x| x.abs()).sum();
         println!("  Result difference: {:.2e}", diff);
     }
 
@@ -483,7 +488,7 @@ fn demo_neural_network_forward_pass() -> Result<()> {
     })
     .into_dyn();
     let w2 = Array2::from_shape_fn((hidden_size, output_size), |(i, j)| {
-        ((i - j) as f32 * 0.001).cos() * 0.1
+        ((i as i32 - j as i32) as f32 * 0.001).cos() * 0.1
     })
     .into_dyn();
 

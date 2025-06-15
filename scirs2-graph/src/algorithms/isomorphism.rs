@@ -632,11 +632,7 @@ where
     }
 
     /// Count neighbors in terminal set for graph1 nodes
-    fn count_terminal_neighbors_1<E, Ix>(
-        &self,
-        node: &N1,
-        graph: &Graph<N1, E, Ix>,
-    ) -> usize
+    fn count_terminal_neighbors_1<E, Ix>(&self, node: &N1, graph: &Graph<N1, E, Ix>) -> usize
     where
         E: EdgeWeight,
         Ix: IndexType,
@@ -652,11 +648,7 @@ where
     }
 
     /// Count neighbors in terminal set for graph2 nodes
-    fn count_terminal_neighbors_2<E, Ix>(
-        &self,
-        node: &N2,
-        graph: &Graph<N2, E, Ix>,
-    ) -> usize
+    fn count_terminal_neighbors_2<E, Ix>(&self, node: &N2, graph: &Graph<N2, E, Ix>) -> usize
     where
         E: EdgeWeight,
         Ix: IndexType,
@@ -672,11 +664,7 @@ where
     }
 
     /// Count unmapped neighbors for graph1 nodes (not in terminal or mapped sets)
-    fn count_unmapped_neighbors_1<E, Ix>(
-        &self,
-        node: &N1,
-        graph: &Graph<N1, E, Ix>,
-    ) -> usize
+    fn count_unmapped_neighbors_1<E, Ix>(&self, node: &N1, graph: &Graph<N1, E, Ix>) -> usize
     where
         E: EdgeWeight,
         Ix: IndexType,
@@ -692,11 +680,7 @@ where
     }
 
     /// Count unmapped neighbors for graph2 nodes (not in terminal or mapped sets)
-    fn count_unmapped_neighbors_2<E, Ix>(
-        &self,
-        node: &N2,
-        graph: &Graph<N2, E, Ix>,
-    ) -> usize
+    fn count_unmapped_neighbors_2<E, Ix>(&self, node: &N2, graph: &Graph<N2, E, Ix>) -> usize
     where
         E: EdgeWeight,
         Ix: IndexType,
@@ -1067,12 +1051,12 @@ mod tests {
         // Create graphs with different degree sequences (quick rejection test)
         let mut graph1 = create_graph::<i32, ()>(); // Star graph: 1 connects to 2,3
         graph1.add_edge(1, 2, ())?;
-        graph1.add_edge(1, 3, ())?; 
+        graph1.add_edge(1, 3, ())?;
         // Degree sequence: [2, 1, 1] - node 1 has degree 2, nodes 2,3 have degree 1
 
         let mut graph2 = create_graph::<i32, ()>(); // Path graph: 1-2-3
         graph2.add_edge(1, 2, ())?;
-        graph2.add_edge(2, 3, ())?; 
+        graph2.add_edge(2, 3, ())?;
         // Degree sequence: [1, 2, 1] - node 2 has degree 2, nodes 1,3 have degree 1
 
         // Both have same degree sequence [2,1,1] when sorted, so they might be isomorphic

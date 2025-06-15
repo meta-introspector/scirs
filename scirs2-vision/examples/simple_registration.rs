@@ -3,7 +3,7 @@
 //! This example demonstrates basic image registration techniques using
 //! synthetic point matches and intensity-based methods.
 
-use image::{DynamicImage, ImageBuffer, Luma, Rgb, RgbImage};
+use image::{DynamicImage, ImageBuffer, Luma};
 use ndarray::Array2;
 use rand::prelude::*;
 use scirs2_vision::error::Result;

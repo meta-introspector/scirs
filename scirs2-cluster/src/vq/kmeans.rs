@@ -785,7 +785,8 @@ where
         let centroids = kmeans_init(data, k, Some(opts.init_method), opts.random_seed)?;
 
         // Run k-means with custom distance metric
-        let (centroids, labels, inertia) = _kmeans_single_with_metric(data, centroids.view(), &metric, &opts)?;
+        let (centroids, labels, inertia) =
+            _kmeans_single_with_metric(data, centroids.view(), &metric, &opts)?;
 
         if inertia < best_inertia {
             best_centroids = Some(centroids);

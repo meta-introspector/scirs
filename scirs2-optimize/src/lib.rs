@@ -184,7 +184,7 @@
 //! # }
 //! ```
 
-extern crate openblas_src;
+// BLAS backend linking handled through scirs2-core
 
 // Export error types
 pub mod error;

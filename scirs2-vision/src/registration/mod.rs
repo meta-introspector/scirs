@@ -431,7 +431,7 @@ fn estimate_affine_transform(matches: &[PointMatch]) -> Result<TransformMatrix> 
         ));
     }
 
-    use ndarray_linalg::Solve;
+    use ndarray_linalg::LeastSquaresSvd;
 
     let n = matches.len();
     let mut a = Array2::zeros((2 * n, 6));
@@ -454,9 +454,10 @@ fn estimate_affine_transform(matches: &[PointMatch]) -> Result<TransformMatrix> 
         b[row2] = m.target.y;
     }
 
-    let params = a.solve(&b).map_err(|e| {
-        VisionError::OperationError(format!("Failed to solve affine system: {}", e))
-    })?;
+    let params = a
+        .least_squares(&b)
+        .map_err(|e| VisionError::OperationError(format!("Failed to solve affine system: {}", e)))?
+        .solution;
 
     let mut transform = Array2::zeros((3, 3));
     transform[[0, 0]] = params[0];

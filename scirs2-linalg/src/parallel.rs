@@ -270,16 +270,25 @@ mod tests {
 
     #[test]
     fn test_global_workers() {
+        // Save initial state to restore later
+        let original_state = get_global_workers();
+
         // Test setting and getting global workers
         set_global_workers(Some(4));
         assert_eq!(get_global_workers(), Some(4));
 
         set_global_workers(None);
         assert_eq!(get_global_workers(), None);
+
+        // Restore original state to avoid test interference
+        set_global_workers(original_state);
     }
 
     #[test]
     fn test_scoped_workers() {
+        // Save initial state to restore later
+        let original_state = get_global_workers();
+
         // Set initial global workers
         set_global_workers(Some(2));
 
@@ -291,6 +300,9 @@ mod tests {
 
         // Should be restored after scope
         assert_eq!(get_global_workers(), Some(2));
+
+        // Restore original state to avoid test interference
+        set_global_workers(original_state);
     }
 
     #[test]

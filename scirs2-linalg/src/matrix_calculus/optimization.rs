@@ -597,9 +597,11 @@ mod tests {
         }
 
         let x0 = array![[1.0, 1.0], [1.0, 1.0]];
-        let mut config = OptimizationConfig::default();
-        config.max_iterations = 100;
-        config.gradient_tolerance = 1e-4;
+        let config = OptimizationConfig {
+            max_iterations: 100,
+            gradient_tolerance: 1e-4,
+            ..Default::default()
+        };
 
         let result = matrix_gradient_descent(objective, &x0.view(), &config).unwrap();
 
@@ -628,10 +630,12 @@ mod tests {
         }
 
         let x0 = array![[1.0, 0.5], [0.5, 1.0]];
-        let mut config = OptimizationConfig::default();
-        config.max_iterations = 200;
-        config.gradient_tolerance = 1e-4;
-        config.initial_step_size = 0.1;
+        let config = OptimizationConfig {
+            max_iterations: 200,
+            gradient_tolerance: 1e-4,
+            initial_step_size: 0.1,
+            ..Default::default()
+        };
 
         let result = projected_gradient_descent(objective, project, &x0.view(), &config).unwrap();
 

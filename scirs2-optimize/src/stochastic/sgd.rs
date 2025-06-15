@@ -72,6 +72,7 @@ where
     println!("  Batch size: {}", actual_batch_size);
     println!("  Initial learning rate: {}", options.learning_rate);
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         // Update learning rate according to schedule
         let current_lr = update_learning_rate(
@@ -324,7 +325,7 @@ where
 
     let num_samples = data_provider.num_samples();
     let batch_size = options.batch_size.unwrap_or(32.min(num_samples / 10));
-    let batches_per_epoch = (num_samples + batch_size - 1) / batch_size;
+    let batches_per_epoch = num_samples.div_ceil(batch_size);
 
     let mut best_x = x.clone();
     let mut best_f = f64::INFINITY;

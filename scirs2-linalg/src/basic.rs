@@ -265,6 +265,85 @@ where
     ))
 }
 
+/// Compute the trace of a square matrix.
+///
+/// The trace is the sum of the diagonal elements.
+///
+/// # Arguments
+///
+/// * `a` - A square matrix
+///
+/// # Returns
+///
+/// * Trace of the matrix
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::basic::trace;
+///
+/// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
+/// let tr = trace(&a.view()).unwrap();
+/// assert!((tr - 5.0).abs() < 1e-10);
+/// ```
+#[allow(dead_code)]
+pub fn trace<F>(a: &ArrayView2<F>) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Sum,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::DimensionError(format!(
+            "Matrix must be square to compute trace, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let mut tr = F::zero();
+    for i in 0..a.nrows() {
+        tr += a[[i, i]];
+    }
+
+    Ok(tr)
+}
+
+//
+// Backward compatibility wrapper functions
+//
+
+/// Compute the determinant of a square matrix (backward compatibility wrapper).
+///
+/// This is a convenience function that calls `det` with `workers = None`.
+/// For new code, prefer using `det` directly with explicit workers parameter.
+pub fn det_default<F>(a: &ArrayView2<F>) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Sum,
+{
+    det(a, None)
+}
+
+/// Compute the inverse of a square matrix (backward compatibility wrapper).
+///
+/// This is a convenience function that calls `inv` with `workers = None`.
+/// For new code, prefer using `inv` directly with explicit workers parameter.
+pub fn inv_default<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum,
+{
+    inv(a, None)
+}
+
+/// Raise a square matrix to the given power (backward compatibility wrapper).
+///
+/// This is a convenience function that calls `matrix_power` with `workers = None`.
+/// For new code, prefer using `matrix_power` directly with explicit workers parameter.
+pub fn matrix_power_default<F>(a: &ArrayView2<F>, n: i32) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum,
+{
+    matrix_power(a, n, None)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -399,81 +478,4 @@ mod tests {
         let d = det(&c.view(), None).unwrap();
         assert_relative_eq!(d, 0.0, epsilon = 1e-10);
     }
-}
-
-/// Compute the trace of a square matrix (sum of diagonal elements).
-///
-/// # Arguments
-///
-/// * `a` - Input square matrix
-///
-/// # Returns
-///
-/// * Trace of the matrix
-///
-/// # Examples
-///
-/// ```
-/// use ndarray::array;
-/// use scirs2_linalg::basic::trace;
-///
-/// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let tr = trace(&a.view()).unwrap();
-/// assert!((tr - 5.0).abs() < 1e-10);
-/// ```
-#[allow(dead_code)]
-pub fn trace<F>(a: &ArrayView2<F>) -> LinalgResult<F>
-where
-    F: Float + NumAssign + Sum,
-{
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::DimensionError(format!(
-            "Matrix must be square to compute trace, got shape {:?}",
-            a.shape()
-        )));
-    }
-
-    let mut tr = F::zero();
-    for i in 0..a.nrows() {
-        tr += a[[i, i]];
-    }
-
-    Ok(tr)
-}
-
-//
-// Backward compatibility wrapper functions
-//
-
-/// Compute the determinant of a square matrix (backward compatibility wrapper).
-///
-/// This is a convenience function that calls `det` with `workers = None`.
-/// For new code, prefer using `det` directly with explicit workers parameter.
-pub fn det_default<F>(a: &ArrayView2<F>) -> LinalgResult<F>
-where
-    F: Float + NumAssign + Sum,
-{
-    det(a, None)
-}
-
-/// Compute the inverse of a square matrix (backward compatibility wrapper).
-///
-/// This is a convenience function that calls `inv` with `workers = None`.
-/// For new code, prefer using `inv` directly with explicit workers parameter.
-pub fn inv_default<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
-where
-    F: Float + NumAssign + Sum,
-{
-    inv(a, None)
-}
-
-/// Raise a square matrix to the given power (backward compatibility wrapper).
-///
-/// This is a convenience function that calls `matrix_power` with `workers = None`.
-/// For new code, prefer using `matrix_power` directly with explicit workers parameter.
-pub fn matrix_power_default<F>(a: &ArrayView2<F>, n: i32) -> LinalgResult<Array2<F>>
-where
-    F: Float + NumAssign + Sum,
-{
-    matrix_power(a, n, None)
 }

@@ -300,19 +300,19 @@ where
         return Ok(SVDDecomposition { u, s, vt });
     }
 
-    // Use a more stable approach: compute SVD via eigendecomposition 
+    // Use a more stable approach: compute SVD via eigendecomposition
     // but with better numerical stability
-    
+
     // For numerical stability, choose the smaller dimension
     let use_ata = n >= m; // Use A^T*A if tall matrix, A*A^T if wide matrix
-    
+
     let (eigenvalues, eigenvectors) = if use_ata {
         // Compute A^T * A for right singular vectors (when n >= m)
         let a_t = a.t();
         let ata = a_t.dot(a);
-        
+
         use crate::eigen::eigh;
-        match eigh(&ata.view()) {
+        match eigh(&ata.view(), None) {
             Ok(result) => result,
             Err(_) => {
                 return Err(LinalgError::ComputationError(
@@ -323,9 +323,9 @@ where
     } else {
         // Compute A * A^T for left singular vectors (when m > n)
         let aat = a.dot(&a.t());
-        
+
         use crate::eigen::eigh;
-        match eigh(&aat.view()) {
+        match eigh(&aat.view(), None) {
             Ok(result) => result,
             Err(_) => {
                 return Err(LinalgError::ComputationError(
@@ -337,7 +337,11 @@ where
 
     // Sort eigenvalues in descending order and filter out negative ones
     let mut indices: Vec<usize> = (0..eigenvalues.len()).collect();
-    indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+    indices.sort_by(|&i, &j| {
+        eigenvalues[j]
+            .partial_cmp(&eigenvalues[i])
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     // Create singular values (square roots of eigenvalues, taking absolute value for stability)
     let rank = n.min(m);
@@ -351,13 +355,16 @@ where
         // We computed V from A^T*A, now compute U = A*V*S^(-1)
         let mut v_sorted = Array2::<F>::zeros((m, rank));
         for (new_idx, &old_idx) in indices.iter().enumerate().take(rank) {
-            v_sorted.column_mut(new_idx).assign(&eigenvectors.column(old_idx));
+            v_sorted
+                .column_mut(new_idx)
+                .assign(&eigenvectors.column(old_idx));
         }
 
         // Compute U with better numerical stability
         let mut u = Array2::<F>::zeros((n, rank));
         for i in 0..rank {
-            if s[i] > F::from(1e-14).unwrap() { // More conservative threshold
+            if s[i] > F::from(1e-14).unwrap() {
+                // More conservative threshold
                 let av_col = a.dot(&v_sorted.column(i));
                 let norm = av_col.dot(&av_col).sqrt();
                 if norm > F::from(1e-14).unwrap() {
@@ -377,7 +384,9 @@ where
         // We computed U from A*A^T, now compute V = A^T*U*S^(-1)
         let mut u_sorted = Array2::<F>::zeros((n, rank));
         for (new_idx, &old_idx) in indices.iter().enumerate().take(rank) {
-            u_sorted.column_mut(new_idx).assign(&eigenvectors.column(old_idx));
+            u_sorted
+                .column_mut(new_idx)
+                .assign(&eigenvectors.column(old_idx));
         }
 
         // Compute V with better numerical stability
@@ -419,25 +428,27 @@ where
     // Ensure singular values are sorted in descending order (required by SciPy compatibility)
     let mut sort_indices: Vec<usize> = (0..s.len()).collect();
     sort_indices.sort_by(|&i, &j| s[j].partial_cmp(&s[i]).unwrap());
-    
+
     // Check if sorting is needed
     let needs_sorting = sort_indices.iter().enumerate().any(|(i, &j)| i != j);
-    
+
     let (final_u_sorted, final_s, final_vt_sorted) = if needs_sorting {
         // Create sorted singular values
         let mut s_sorted = Array1::<F>::zeros(s.len());
         for (new_idx, &old_idx) in sort_indices.iter().enumerate() {
             s_sorted[new_idx] = s[old_idx];
         }
-        
+
         // Reorder U columns
         let mut u_sorted = Array2::<F>::zeros(final_u.raw_dim());
         for (new_idx, &old_idx) in sort_indices.iter().enumerate() {
             if old_idx < final_u.ncols() && new_idx < u_sorted.ncols() {
-                u_sorted.column_mut(new_idx).assign(&final_u.column(old_idx));
+                u_sorted
+                    .column_mut(new_idx)
+                    .assign(&final_u.column(old_idx));
             }
         }
-        
+
         // Reorder Vt rows
         let mut vt_sorted = Array2::<F>::zeros(final_vt.raw_dim());
         for (new_idx, &old_idx) in sort_indices.iter().enumerate() {
@@ -445,13 +456,17 @@ where
                 vt_sorted.row_mut(new_idx).assign(&final_vt.row(old_idx));
             }
         }
-        
+
         (u_sorted, s_sorted, vt_sorted)
     } else {
         (final_u, s, final_vt)
     };
-    
-    Ok(SVDDecomposition { u: final_u_sorted, s: final_s, vt: final_vt_sorted })
+
+    Ok(SVDDecomposition {
+        u: final_u_sorted,
+        s: final_s,
+        vt: final_vt_sorted,
+    })
 }
 
 /// Modified Gram-Schmidt orthogonalization for better numerical stability
@@ -460,16 +475,16 @@ where
     F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum,
 {
     let n_cols = matrix.ncols();
-    
+
     for i in 0..n_cols {
         // Normalize column i
         let mut col_i = matrix.column(i).to_owned();
         let norm = col_i.dot(&col_i).sqrt();
-        
+
         if norm > F::from(1e-14).unwrap() {
             col_i /= norm;
             matrix.column_mut(i).assign(&col_i);
-            
+
             // Orthogonalize subsequent columns against column i
             for j in (i + 1)..n_cols {
                 let mut col_j = matrix.column(j).to_owned();
@@ -493,7 +508,9 @@ where
 
     let n_rows = matrix.nrows();
     let mut extended = Array2::<F>::zeros((n_rows, target_size));
-    extended.slice_mut(ndarray::s![.., 0..current_cols]).assign(&matrix);
+    extended
+        .slice_mut(ndarray::s![.., 0..current_cols])
+        .assign(&matrix);
 
     // Add orthogonal vectors using QR decomposition approach
     for k in current_cols..target_size {
@@ -518,13 +535,13 @@ where
         if norm > F::from(1e-14).unwrap() {
             new_vec /= norm;
         }
-        
+
         extended.column_mut(k).assign(&new_vec);
     }
 
     // Apply final Gram-Schmidt pass for better orthogonality
     modified_gram_schmidt(&mut extended);
-    
+
     extended
 }
 

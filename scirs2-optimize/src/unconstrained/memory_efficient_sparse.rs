@@ -106,7 +106,7 @@ impl UltraScaleState {
                 .memory_options
                 .temp_dir
                 .clone()
-                .unwrap_or_else(|| std::env::temp_dir());
+                .unwrap_or_else(std::env::temp_dir);
 
             std::fs::create_dir_all(&temp_dir).map_err(|e| {
                 OptimizeError::ComputationError(format!("Failed to create temp directory: {}", e))
@@ -242,7 +242,7 @@ impl Drop for UltraScaleState {
 /// Create variable blocks for progressive processing
 fn create_variable_blocks(n: usize, block_size: usize) -> Vec<VariableBlock> {
     let mut blocks = Vec::new();
-    let num_blocks = (n + block_size - 1) / block_size;
+    let num_blocks = n.div_ceil(block_size);
 
     for i in 0..num_blocks {
         let start_idx = i * block_size;

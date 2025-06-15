@@ -89,7 +89,7 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 - [x] Community detection
   - [x] Modularity optimization
   - [x] Label propagation
-  - [ ] Infomap algorithm
+  - [x] Infomap algorithm
   - [x] Louvain method
   - [ ] Fluid communities
   - [ ] Hierarchical community structure

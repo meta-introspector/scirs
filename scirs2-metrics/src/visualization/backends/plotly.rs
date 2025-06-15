@@ -2,6 +2,8 @@
 //!
 //! This module provides an adapter for rendering visualizations using the plotly crate.
 
+#![cfg(feature = "plotly_backend")]
+
 use std::error::Error;
 use std::path::Path;
 

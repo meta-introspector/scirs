@@ -157,10 +157,13 @@ where
         }
 
         // Safely convert T to f64
-        let points_f64: Vec<f64> = points.iter().map(|&x| {
-            // Safe conversion using to_f64
-            x.to_f64().unwrap_or(0.0)
-        }).collect();
+        let points_f64: Vec<f64> = points
+            .iter()
+            .map(|&x| {
+                // Safe conversion using to_f64
+                x.to_f64().unwrap_or(0.0)
+            })
+            .collect();
 
         match self.evaluate_batch_simd_f64_impl(&points_f64) {
             Ok(results_f64) => {
@@ -184,13 +187,19 @@ where
     #[allow(dead_code)]
     fn evaluate_batch_simd_f64_impl(&self, points: &[f64]) -> InterpolateResult<Vec<f64>> {
         // Safely convert knots and coefficients to f64
-        let knots: Vec<f64> = self.spline.knot_vector().iter().map(|&x| {
-            x.to_f64().unwrap_or(0.0)
-        }).collect();
+        let knots: Vec<f64> = self
+            .spline
+            .knot_vector()
+            .iter()
+            .map(|&x| x.to_f64().unwrap_or(0.0))
+            .collect();
 
-        let coeffs: Vec<f64> = self.spline.coefficients().iter().map(|&x| {
-            x.to_f64().unwrap_or(0.0)
-        }).collect();
+        let coeffs: Vec<f64> = self
+            .spline
+            .coefficients()
+            .iter()
+            .map(|&x| x.to_f64().unwrap_or(0.0))
+            .collect();
 
         let degree = self.spline.degree();
         let n_points = points.len();

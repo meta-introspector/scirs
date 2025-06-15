@@ -376,12 +376,10 @@ impl NSGAII {
         }
 
         // If both are feasible or both infeasible with same violation, check rank and crowding
-        if a.rank < b.rank {
-            true
-        } else if a.rank == b.rank {
-            a.crowding_distance > b.crowding_distance
-        } else {
-            false
+        match a.rank.cmp(&b.rank) {
+            std::cmp::Ordering::Less => true,
+            std::cmp::Ordering::Equal => a.crowding_distance > b.crowding_distance,
+            std::cmp::Ordering::Greater => false,
         }
     }
 
@@ -489,7 +487,7 @@ impl NSGAII {
     /// Non-dominated sorting
     fn non_dominated_sorting(
         &self,
-        population: &mut Vec<MultiObjectiveSolution>,
+        population: &mut [MultiObjectiveSolution],
     ) -> Vec<Vec<MultiObjectiveSolution>> {
         let n = population.len();
         let mut domination_count = vec![0; n];
@@ -578,7 +576,7 @@ impl NSGAII {
     }
 
     /// Calculate crowding distance for a front
-    fn calculate_crowding_distance(&self, front: &mut Vec<MultiObjectiveSolution>) {
+    fn calculate_crowding_distance(&self, front: &mut [MultiObjectiveSolution]) {
         let n = front.len();
 
         // Initialize crowding distances
@@ -824,7 +822,7 @@ impl NSGAIII {
         points: &mut Array2<f64>,
         point_idx: &mut usize,
         n_objectives: usize,
-        n_divisions: usize,
+        _n_divisions: usize,
         current_objective: usize,
         mut current_point: Array1<f64>,
         remaining_sum: usize,
@@ -844,7 +842,7 @@ impl NSGAIII {
                 points,
                 point_idx,
                 n_objectives,
-                n_divisions,
+                _n_divisions,
                 current_objective + 1,
                 current_point.clone(),
                 remaining_sum - i,
@@ -1262,7 +1260,7 @@ impl NSGAIII {
     /// Non-dominated sorting (reuse from NSGA-II)
     fn non_dominated_sorting(
         &self,
-        population: &mut Vec<MultiObjectiveSolution>,
+        population: &mut [MultiObjectiveSolution],
     ) -> Vec<Vec<MultiObjectiveSolution>> {
         let n = population.len();
         let mut domination_count = vec![0; n];
@@ -1375,12 +1373,10 @@ impl NSGAIII {
         }
 
         // If both are feasible or both infeasible with same violation, check rank and crowding
-        if a.rank < b.rank {
-            true
-        } else if a.rank == b.rank {
-            a.crowding_distance > b.crowding_distance
-        } else {
-            false
+        match a.rank.cmp(&b.rank) {
+            std::cmp::Ordering::Less => true,
+            std::cmp::Ordering::Equal => a.crowding_distance > b.crowding_distance,
+            std::cmp::Ordering::Greater => false,
         }
     }
 

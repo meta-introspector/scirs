@@ -10,7 +10,7 @@
 
 use ndarray::{Array, Array2, Array4};
 use scirs2_neural::{
-    augmentation::{AugmentationPipelineBuilder, ImageAugmentation, MixAugmentation},
+    augmentation::AugmentationPipelineBuilder,
     compression::{
         CalibrationMethod, ModelPruner, PostTrainingQuantizer, PruningMethod, QuantizationBits,
         QuantizationScheme,
@@ -18,10 +18,7 @@ use scirs2_neural::{
     distillation::{DistillationMethod, DistillationTrainer},
     error::Result,
     interpretation::{AttributionMethod, BaselineMethod, ModelInterpreter},
-    model_evaluation::{
-        ClassificationMetric, CrossValidationStrategy, EvaluationBuilder, EvaluationMetric,
-        RegressionMetric,
-    },
+    model_evaluation::{CrossValidationStrategy, EvaluationBuilder},
     transfer_learning::{TransferLearningManager, TransferStrategy},
 };
 
@@ -197,7 +194,7 @@ fn demonstrate_model_compression() -> Result<()> {
     quantizer.calibrate("conv1".to_string(), &activations)?;
 
     let quantized = quantizer.quantize_tensor("conv1", &activations)?;
-    let dequantized = quantizer.dequantize_tensor("conv1", &quantized)?;
+    let _dequantized = quantizer.dequantize_tensor("conv1", &quantized)?;
 
     println!("   Original shape: {:?}", activations.shape());
     println!("   Quantized shape: {:?}", quantized.shape());
@@ -260,7 +257,7 @@ fn demonstrate_knowledge_distillation() -> Result<()> {
                 if c == b % 3 {
                     2.0
                 } else {
-                    (c as f64 * 0.1)
+                    c as f64 * 0.1
                 }
             },
         )
@@ -275,7 +272,7 @@ fn demonstrate_knowledge_distillation() -> Result<()> {
                 if c == b % 3 {
                     1.8
                 } else {
-                    (c as f64 * 0.12)
+                    c as f64 * 0.12
                 }
             },
         )

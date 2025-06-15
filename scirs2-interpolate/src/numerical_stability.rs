@@ -26,7 +26,7 @@
 //!
 //! // Assess the condition of a matrix
 //! let matrix = Array2::eye(3);
-//! let report = assess_matrix_condition(&matrix).unwrap();
+//! let report = assess_matrix_condition(&matrix.view()).unwrap();
 //!
 //! match report.stability_level {
 //!     StabilityLevel::Excellent => println!("Matrix is well-conditioned"),

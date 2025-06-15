@@ -7,7 +7,7 @@
 //! - Memory-aware batch processing
 //! - Memory usage tracking and monitoring
 
-use ndarray::{Array, Array2, Array3, ArrayD};
+use ndarray::{Array2, Array3};
 use scirs2_neural::error::Result;
 use scirs2_neural::memory_efficient::{
     BatchProcessorStats, GradientCheckpointing, InPlaceOperations, MemoryAwareBatchProcessor,

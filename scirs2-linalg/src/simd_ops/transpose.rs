@@ -3,8 +3,11 @@
 //! This module provides cache-friendly, SIMD-accelerated matrix transpose
 //! operations with blocking to optimize memory access patterns.
 
+#[cfg(feature = "simd")]
 use crate::error::{LinalgError, LinalgResult};
+#[cfg(feature = "simd")]
 use ndarray::{Array2, ArrayView2};
+#[cfg(feature = "simd")]
 use wide::{f32x8, f64x4};
 
 /// SIMD-accelerated matrix transpose for f32 values with cache-friendly blocking

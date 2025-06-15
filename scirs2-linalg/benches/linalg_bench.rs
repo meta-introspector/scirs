@@ -89,7 +89,7 @@ fn bench_iterative_solvers(c: &mut Criterion) {
             &(&matrix, &rhs),
             |b, (m, r)| {
                 b.iter(|| {
-                    conjugate_gradient(black_box(&m.view()), black_box(&r.view()), 100, 1e-10)
+                    conjugate_gradient(black_box(&m.view()), black_box(&r.view()), 100, 1e-10, None)
                 })
             },
         );

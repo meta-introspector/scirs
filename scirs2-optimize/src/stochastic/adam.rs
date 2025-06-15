@@ -93,6 +93,7 @@ where
     println!("  Beta1: {}, Beta2: {}", options.beta1, options.beta2);
     println!("  AMSGrad: {}", options.amsgrad);
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         // Update learning rate according to schedule
         let current_lr = update_learning_rate(
@@ -292,6 +293,7 @@ where
     let mut best_x = x.clone();
     let mut best_f = f64::INFINITY;
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         // Use custom learning rate schedule
         let current_lr = lr_scheduler(iteration, options.max_iter, &options.lr_schedule);

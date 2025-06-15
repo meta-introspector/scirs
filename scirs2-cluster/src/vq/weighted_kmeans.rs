@@ -131,7 +131,8 @@ where
         let centroids = kmeans_init(data, k, Some(opts.init_method), opts.random_seed)?;
 
         // Run weighted k-means
-        let (centroids, labels, inertia) = weighted_kmeans_single(data, weights, centroids.view(), &opts)?;
+        let (centroids, labels, inertia) =
+            weighted_kmeans_single(data, weights, centroids.view(), &opts)?;
 
         if inertia < best_inertia {
             best_centroids = Some(centroids);
@@ -408,8 +409,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{Array1, Array2};
     use approx::assert_abs_diff_eq;
+    use ndarray::{Array1, Array2};
 
     #[test]
     fn test_weighted_kmeans_simple() {
@@ -429,7 +430,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (centroids, labels) = weighted_kmeans(data.view(), weights.view(), 2, Some(options)).unwrap();
+        let (centroids, labels) =
+            weighted_kmeans(data.view(), weights.view(), 2, Some(options)).unwrap();
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -463,7 +465,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (centroids, labels) = weighted_kmeans(data.view(), weights.view(), 2, Some(options)).unwrap();
+        let (centroids, labels) =
+            weighted_kmeans(data.view(), weights.view(), 2, Some(options)).unwrap();
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -472,15 +475,15 @@ mod tests {
         // The centroid of the first cluster should be closer to the weighted center of the first 3 points
         let first_cluster_label = labels[0];
         let first_centroid = if first_cluster_label == 0 { 0 } else { 1 };
-        
+
         // The first cluster centroid should be close to the mean of the first 3 points
         // because they have much higher weights
         let expected_centroid_x = (1.0 * 10.0 + 1.2 * 10.0 + 0.8 * 10.0) / (10.0 + 10.0 + 10.0);
         let expected_centroid_y = (2.0 * 10.0 + 1.8 * 10.0 + 1.9 * 10.0) / (10.0 + 10.0 + 10.0);
-        
+
         let actual_centroid_x = centroids[[first_centroid, 0]];
         let actual_centroid_y = centroids[[first_centroid, 1]];
-        
+
         // The centroids should be close to the expected weighted means
         assert_abs_diff_eq!(actual_centroid_x, expected_centroid_x, epsilon = 0.2);
         assert_abs_diff_eq!(actual_centroid_y, expected_centroid_y, epsilon = 0.2);
@@ -496,7 +499,8 @@ mod tests {
 
         let weights = Array1::from_vec(vec![1.0, 1.0, 1.0, 10.0, 10.0, 10.0]);
 
-        let centroids = weighted_kmeans_plus_plus(data.view(), weights.view(), 2, Some(42)).unwrap();
+        let centroids =
+            weighted_kmeans_plus_plus(data.view(), weights.view(), 2, Some(42)).unwrap();
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -509,11 +513,8 @@ mod tests {
 
     #[test]
     fn test_weighted_kmeans_zero_weights() {
-        let data = Array2::from_shape_vec(
-            (4, 2),
-            vec![1.0, 2.0, 1.2, 1.8, 4.0, 5.0, 4.2, 4.8],
-        )
-        .unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 4.0, 5.0, 4.2, 4.8]).unwrap();
 
         // Some zero weights should still work
         let weights = Array1::from_vec(vec![1.0, 0.0, 1.0, 0.0]);
@@ -534,11 +535,8 @@ mod tests {
 
     #[test]
     fn test_weighted_kmeans_negative_weights() {
-        let data = Array2::from_shape_vec(
-            (4, 2),
-            vec![1.0, 2.0, 1.2, 1.8, 4.0, 5.0, 4.2, 4.8],
-        )
-        .unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 4.0, 5.0, 4.2, 4.8]).unwrap();
 
         // Negative weights should cause an error
         let weights = Array1::from_vec(vec![1.0, -1.0, 1.0, 1.0]);

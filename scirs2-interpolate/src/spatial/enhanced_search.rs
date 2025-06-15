@@ -344,7 +344,7 @@ where
     ///     1.0, 1.0,
     /// ]).unwrap();
     ///
-    /// let searcher = EnhancedNearestNeighborSearcher::new(
+    /// let mut searcher = EnhancedNearestNeighborSearcher::new(
     ///     points, IndexType::BruteForce, SearchConfig::default()
     /// ).unwrap();
     ///
@@ -519,13 +519,37 @@ where
         let queries_owned = queries.to_owned();
         let points = &self.points;
 
-        let results: Result<Vec<_>, InterpolateError> = (0..queries_owned.nrows())
-            .into_par_iter()
-            .map(|i| {
-                let query = queries_owned.slice(ndarray::s![i, ..]);
-                Self::parallel_brute_force_knn(&query, k, points)
+        // Configure thread pool based on config
+        let results: Result<Vec<_>, InterpolateError> = if let Some(num_threads) =
+            self.config.num_threads
+        {
+            // Use custom thread pool with specified number of threads
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(num_threads)
+                .build()
+                .map_err(|_| {
+                    InterpolateError::ComputationError("Failed to create thread pool".to_string())
+                })?;
+
+            pool.install(|| {
+                (0..queries_owned.nrows())
+                    .into_par_iter()
+                    .map(|i| {
+                        let query = queries_owned.slice(ndarray::s![i, ..]);
+                        Self::parallel_brute_force_knn(&query, k, points)
+                    })
+                    .collect()
             })
-            .collect();
+        } else {
+            // Use default thread pool
+            (0..queries_owned.nrows())
+                .into_par_iter()
+                .map(|i| {
+                    let query = queries_owned.slice(ndarray::s![i, ..]);
+                    Self::parallel_brute_force_knn(&query, k, points)
+                })
+                .collect()
+        };
 
         results
     }

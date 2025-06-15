@@ -881,7 +881,9 @@ impl ParallelSpectralProcessor {
         overlap: f64,
     ) -> SignalResult<Vec<(Vec<f64>, Vec<Complex64>)>> {
         if signal_pairs.is_empty() {
-            return Err(SignalError::ValueError("No signal pairs provided".to_string()));
+            return Err(SignalError::ValueError(
+                "No signal pairs provided".to_string(),
+            ));
         }
 
         // Process signal pairs in parallel
@@ -963,7 +965,9 @@ impl ParallelSpectralProcessor {
         hop_size: usize,
     ) -> SignalResult<Vec<TimeFrequencyCoherenceResult>> {
         if signal_pairs.is_empty() {
-            return Err(SignalError::ValueError("No signal pairs provided".to_string()));
+            return Err(SignalError::ValueError(
+                "No signal pairs provided".to_string(),
+            ));
         }
 
         // Process signal pairs in parallel
@@ -1043,7 +1047,9 @@ impl ParallelSpectralProcessor {
         fs: f64,
     ) -> SignalResult<Array2<f64>> {
         if signals.is_empty() || bands.is_empty() {
-            return Err(SignalError::ValueError("No signals or bands provided".to_string()));
+            return Err(SignalError::ValueError(
+                "No signals or bands provided".to_string(),
+            ));
         }
 
         let mut power_matrix = Array2::zeros((signals.len(), bands.len()));
@@ -1101,9 +1107,8 @@ impl ParallelSpectralProcessor {
         }
 
         let hop_size = ((1.0 - overlap) * window_size as f64) as usize;
-        let window = window::hann(window_size, true).map_err(|_| {
-            SignalError::ValueError("Failed to create window".to_string())
-        })?;
+        let window = window::hann(window_size, true)
+            .map_err(|_| SignalError::ValueError("Failed to create window".to_string()))?;
 
         let mut fft_planner = self.fft_planner.lock().map_err(|_| {
             SignalError::ComputationError("Failed to acquire FFT planner".to_string())
@@ -1167,8 +1172,16 @@ impl ParallelSpectralProcessor {
         use crate::hilbert::hilbert;
 
         // Design filters for phase and amplitude bands
-        let (b_phase, a_phase) = butter(4, phase_band.1 / (fs / 2.0), crate::filter::FilterType::Lowpass)?;
-        let (b_amp, a_amp) = butter(4, amplitude_band.1 / (fs / 2.0), crate::filter::FilterType::Lowpass)?;
+        let (b_phase, a_phase) = butter(
+            4,
+            phase_band.1 / (fs / 2.0),
+            crate::filter::FilterType::Lowpass,
+        )?;
+        let (b_amp, a_amp) = butter(
+            4,
+            amplitude_band.1 / (fs / 2.0),
+            crate::filter::FilterType::Lowpass,
+        )?;
 
         // Filter signals (simplified - in practice would use proper bandpass filters)
         let phase_filtered = self.apply_filter(signal, &b_phase, &a_phase)?;
@@ -1194,8 +1207,8 @@ impl ParallelSpectralProcessor {
             sum_imag += amplitude * phase.sin();
         }
 
-        let mean_vector_length = (sum_real * sum_real + sum_imag * sum_imag).sqrt() / 
-                                (amplitudes.iter().sum::<f64>() / n as f64);
+        let mean_vector_length = (sum_real * sum_real + sum_imag * sum_imag).sqrt()
+            / (amplitudes.iter().sum::<f64>() / n as f64);
 
         Ok(mean_vector_length)
     }
@@ -1219,9 +1232,8 @@ impl ParallelSpectralProcessor {
         let n_freqs = window_size / 2 + 1;
 
         let mut coherence = Array2::zeros((n_freqs, n_frames));
-        let window = window::hann(window_size, true).map_err(|_| {
-            SignalError::ValueError("Failed to create window".to_string())
-        })?;
+        let window = window::hann(window_size, true)
+            .map_err(|_| SignalError::ValueError("Failed to create window".to_string()))?;
 
         let mut fft_planner = self.fft_planner.lock().map_err(|_| {
             SignalError::ComputationError("Failed to acquire FFT planner".to_string())
@@ -1301,21 +1313,22 @@ impl ParallelSpectralProcessor {
 
         // Compute entropy based on method
         let entropy = match method.to_lowercase().as_str() {
-            "shannon" => {
-                -probabilities.iter()
-                    .filter(|&&p| p > 0.0)
-                    .map(|&p| p * p.ln())
-                    .sum::<f64>()
-            }
+            "shannon" => -probabilities
+                .iter()
+                .filter(|&&p| p > 0.0)
+                .map(|&p| p * p.ln())
+                .sum::<f64>(),
             "renyi" => {
                 if (q - 1.0).abs() < 1e-10 {
                     // Limit case q -> 1 gives Shannon entropy
-                    -probabilities.iter()
+                    -probabilities
+                        .iter()
                         .filter(|&&p| p > 0.0)
                         .map(|&p| p * p.ln())
                         .sum::<f64>()
                 } else {
-                    let sum_q: f64 = probabilities.iter()
+                    let sum_q: f64 = probabilities
+                        .iter()
                         .filter(|&&p| p > 0.0)
                         .map(|&p| p.powf(q))
                         .sum();
@@ -1323,15 +1336,18 @@ impl ParallelSpectralProcessor {
                 }
             }
             "tsallis" => {
-                let sum_q: f64 = probabilities.iter()
+                let sum_q: f64 = probabilities
+                    .iter()
                     .filter(|&&p| p > 0.0)
                     .map(|&p| p.powf(q))
                     .sum();
                 (1.0 - sum_q) / (q - 1.0)
             }
-            _ => return Err(SignalError::ValueError(
-                "Unknown entropy method. Use 'shannon', 'renyi', or 'tsallis'".to_string()
-            )),
+            _ => {
+                return Err(SignalError::ValueError(
+                    "Unknown entropy method. Use 'shannon', 'renyi', or 'tsallis'".to_string(),
+                ))
+            }
         };
 
         Ok(entropy)
@@ -1349,7 +1365,8 @@ impl ParallelSpectralProcessor {
         let mut band_powers = Vec::with_capacity(bands.len());
 
         for &(low_freq, high_freq) in bands {
-            let power = frequencies.iter()
+            let power = frequencies
+                .iter()
                 .zip(psd.iter())
                 .filter(|(&freq, _)| freq >= low_freq && freq <= high_freq)
                 .map(|(_, &power)| power)

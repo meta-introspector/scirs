@@ -299,7 +299,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
         }
 
         // Compute log normalization
-        let log_prob_norm = self.logsumexp(log_prob.view(), Axis(1));
+        let log_prob_norm = self.logsumexp(log_prob.view(), Axis(1))?;
 
         // Compute responsibilities
         let mut resp = log_prob.clone();
@@ -421,7 +421,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
     }
 
     /// Compute log-sum-exp along an axis
-    fn logsumexp(&self, arr: ArrayView2<F>, axis: Axis) -> Array1<F> {
+    fn logsumexp(&self, arr: ArrayView2<F>, axis: Axis) -> Result<Array1<F>> {
         let max_vals = arr.fold_axis(axis, F::neg_infinity(), |&a, &b| a.max(b));
         let mut result = Array1::zeros(max_vals.len());
 
@@ -435,10 +435,14 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
                     result[i] = max_vals[i] + sum.ln();
                 }
             }
-            _ => unimplemented!("Only axis 1 is supported"),
+            _ => {
+                return Err(ClusteringError::InvalidInput(
+                    "Only axis 1 is supported for logsumexp".to_string(),
+                ));
+            }
         }
 
-        result
+        Ok(result)
     }
 
     /// Compute outer product of two vectors

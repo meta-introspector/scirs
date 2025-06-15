@@ -51,6 +51,15 @@ pub mod compression;
 /// - Column-based operations with flexible configuration
 pub mod csv;
 pub mod error;
+/// Harwell-Boeing sparse matrix format module
+///
+/// Provides functionality for reading and writing Harwell-Boeing sparse matrix files:
+/// - Support for real and complex matrices
+/// - Different matrix symmetry types (general, symmetric, hermitian, skew-symmetric)
+/// - Pattern matrices (structure only, no values)
+/// - Conversion to/from column-compressed sparse (CCS) format
+/// - Integration with ndarray for efficient matrix operations
+pub mod harwell_boeing;
 /// HDF5 file format module
 ///
 /// Provides functionality for reading and writing HDF5 (Hierarchical Data Format) files:
@@ -94,6 +103,15 @@ pub mod netcdf;
 /// - Structured data serialization
 /// - Sparse matrix serialization
 pub mod serialize;
+/// Thread pool for parallel I/O operations
+///
+/// Provides a high-performance thread pool optimized for I/O operations:
+/// - Separate thread pools for I/O-bound and CPU-bound tasks
+/// - Work stealing for load balancing
+/// - Performance monitoring and statistics
+/// - Configurable thread counts and queue sizes
+/// - Global thread pool for convenience
+pub mod thread_pool;
 /// Data validation and integrity checking module
 ///
 /// Provides functionality for validating data integrity through checksums,

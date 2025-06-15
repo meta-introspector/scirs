@@ -222,11 +222,48 @@ where
     Ok(())
 }
 
+/// Cache-friendly blocked matrix multiplication with explicit workers parameter
+pub fn blocked_matmul_with_workers<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView2<F>,
+    workers: Option<usize>,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + Send + Sync + 'static,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    let config = OptConfig {
+        num_threads: workers,
+        ..OptConfig::default()
+    };
+
+    blocked_matmul(a, b, &config)
+}
+
 /// Optimized matrix transpose for better memory access patterns
 pub fn optimized_transpose<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + Send + Sync,
 {
+    optimized_transpose_with_workers(a, None)
+}
+
+/// Optimized matrix transpose with explicit workers parameter
+pub fn optimized_transpose_with_workers<F>(
+    a: &ArrayView2<F>,
+    workers: Option<usize>,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + Send + Sync,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
     let (m, n) = (a.nrows(), a.ncols());
     let mut result = Array2::zeros((n, m));
 
@@ -304,6 +341,28 @@ where
     Ok(result)
 }
 
+/// Parallel matrix-vector multiplication with explicit workers parameter
+pub fn parallel_matvec_with_workers<F>(
+    a: &ArrayView2<F>,
+    x: &ArrayView2<F>,
+    workers: Option<usize>,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + Send + Sync,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    let config = OptConfig {
+        num_threads: workers,
+        ..OptConfig::default()
+    };
+
+    parallel_matvec(a, x, &config)
+}
+
 /// Memory-efficient in-place matrix operations
 pub mod inplace {
     use super::*;
@@ -369,6 +428,23 @@ pub fn adaptive_matmul<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static,
 {
+    adaptive_matmul_with_workers(a, b, None)
+}
+
+/// Adaptive matrix multiplication with explicit workers parameter
+pub fn adaptive_matmul_with_workers<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView2<F>,
+    workers: Option<usize>,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + Send + Sync + 'static,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
     let size = a.nrows() * a.ncols() + b.nrows() * b.ncols();
 
     // Choose algorithm based on matrix size
@@ -377,12 +453,16 @@ where
         Ok(a.dot(b))
     } else if size < 1000000 {
         // Medium matrices: use blocked algorithm
-        let config = OptConfig::default();
+        let config = OptConfig {
+            num_threads: workers,
+            ..OptConfig::default()
+        };
         blocked_matmul(a, b, &config)
     } else {
         // Large matrices: use parallel blocked algorithm
         let config = OptConfig {
             parallel_threshold: 50000,
+            num_threads: workers,
             ..OptConfig::default()
         };
         blocked_matmul(a, b, &config)

@@ -544,7 +544,7 @@ mod tests {
         // Check the distances
         assert_abs_diff_eq!(distances[[0, 0]], 0.0, epsilon = 1e-10);
         assert_abs_diff_eq!(distances[[0, 1]], 1.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(distances[[0, 2]], 1.4142, epsilon = 1e-4);
+        assert_abs_diff_eq!(distances[[0, 2]], std::f64::consts::SQRT_2, epsilon = 1e-4);
         assert_abs_diff_eq!(distances[[0, 3]], 2.2361, epsilon = 1e-4);
         assert_abs_diff_eq!(distances[[0, 4]], 3.0, epsilon = 1e-10);
 
@@ -626,7 +626,7 @@ mod tests {
         // Check euclidean distances
         assert_abs_diff_eq!(euclidean[[0, 0]], 0.0, epsilon = 1e-10);
         assert_abs_diff_eq!(euclidean[[0, 1]], 1.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(euclidean[[0, 2]], 1.4142, epsilon = 1e-4);
+        assert_abs_diff_eq!(euclidean[[0, 2]], std::f64::consts::SQRT_2, epsilon = 1e-4);
         assert_abs_diff_eq!(euclidean[[0, 3]], 2.2361, epsilon = 1e-4);
         assert_abs_diff_eq!(euclidean[[0, 4]], 3.0, epsilon = 1e-10);
 

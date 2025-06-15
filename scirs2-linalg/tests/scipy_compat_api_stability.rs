@@ -938,6 +938,7 @@ mod version_compatibility_tests {
         // Test that function signatures accept the expected types
 
         let f64_matrix = array![[1.0_f64, 2.0], [3.0, 4.0]];
+        let f64_matrix_symmetric = array![[2.0_f64, 1.0], [1.0, 3.0]];
         let f64_vector = array![1.0_f64, 2.0];
 
         // These should all compile and run without type issues
@@ -952,7 +953,7 @@ mod version_compatibility_tests {
         let (q_opt, r): (Option<Array2<f64>>, Array2<f64>) =
             compat::qr(&f64_matrix.view(), false, None, "full", false, true).unwrap();
         let (eigenvals, eigenvecs_opt): (Array1<f64>, Option<Array2<f64>>) = compat::eigh(
-            &f64_matrix.view(),
+            &f64_matrix_symmetric.view(),
             None,
             false,
             false,
@@ -1061,7 +1062,7 @@ mod integration_stability_tests {
             workflow_results.insert("solution_norm", solution_norm);
 
             // Step 4: Matrix functions
-            let matrix_exp = compat::expm(&(base_matrix.clone() * 0.1).view()).unwrap();
+            let matrix_exp = compat::expm(&(base_matrix.clone() * 0.1).view(), None).unwrap();
             let exp_norm =
                 compat::norm(&matrix_exp.view(), Some("fro"), None, false, true).unwrap();
             workflow_results.insert("exp_norm", exp_norm);

@@ -91,6 +91,7 @@ pub mod bivariate;
 pub mod boundarymode;
 pub mod bspline;
 pub mod cache;
+pub mod cache_aware;
 pub mod constrained;
 pub mod extrapolation;
 pub mod fast_bspline;
@@ -107,6 +108,7 @@ pub mod numerical_stability;
 pub mod nurbs;
 pub mod parallel;
 pub mod penalized;
+pub mod scattered_optimized;
 pub mod simd_optimized;
 
 // SIMD-optimized interpolation methods (optional)
@@ -159,6 +161,10 @@ pub use bspline::{
 pub use cache::{
     make_cached_bspline, make_cached_bspline_with_config, BSplineCache, CacheConfig, CacheStats,
     CachedBSpline, DistanceMatrixCache,
+};
+pub use cache_aware::{
+    make_cache_aware_rbf, CacheAwareBSpline, CacheAwareRBF, CacheOptimizedConfig,
+    CacheOptimizedStats, CacheSizes,
 };
 pub use constrained::{
     ConstrainedSpline, Constraint, ConstraintRegion, ConstraintType, FittingMethod,
@@ -222,9 +228,15 @@ pub use parallel::{
     ParallelEvaluate, ParallelLocalPolynomialRegression, ParallelMovingLeastSquares,
 };
 pub use penalized::{cross_validate_lambda, pspline_with_custom_penalty, PSpline, PenaltyType};
+pub use scattered_optimized::{
+    make_optimized_scattered_interpolator, OptimizedScatteredInterpolator, OptimizedScatteredStats,
+    ScatteredConfig,
+};
+#[cfg(feature = "simd")]
+pub use simd_bspline::SimdBSplineEvaluator;
 pub use simd_optimized::{
-    get_simd_config, is_simd_available, simd_bspline_batch_evaluate, simd_distance_matrix,
-    simd_rbf_evaluate, RBFKernel as SimdRBFKernel, SimdConfig,
+    get_simd_config, is_simd_available, simd_bspline_basis_functions, simd_bspline_batch_evaluate,
+    simd_distance_matrix, simd_rbf_evaluate, RBFKernel as SimdRBFKernel, SimdConfig,
 };
 pub use smoothing::{
     make_adaptive_smoothing_spline, make_error_based_smoothing_spline,

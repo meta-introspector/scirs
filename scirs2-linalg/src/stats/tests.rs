@@ -231,7 +231,7 @@ where
     let cov = covariance_matrix(data, Some(1))?;
 
     // Compute eigenvalues
-    let (eigenvals, _) = eigen_symmetric(&cov.view())?;
+    let (eigenvals, _) = eigen_symmetric(&cov.view(), None)?;
 
     // Mauchly's W statistic
     let geometric_mean = eigenvals
@@ -535,94 +535,91 @@ where
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use ndarray::array;
+use ndarray::array;
 
-    #[test]
-    fn test_hotelling_t2_test() {
-        // Test data with some variation to avoid singular covariance matrix
-        let data = array![
-            [1.0, 2.1],
-            [2.1, 2.9],
-            [2.9, 4.1],
-            [4.1, 4.8],
-            [4.8, 6.2],
-            [0.5, 1.8],
-            [3.2, 3.7]
-        ];
+#[test]
+fn test_hotelling_t2_test() {
+    // Test data with some variation to avoid singular covariance matrix
+    let data = array![
+        [1.0, 2.1],
+        [2.1, 2.9],
+        [2.9, 4.1],
+        [4.1, 4.8],
+        [4.8, 6.2],
+        [0.5, 1.8],
+        [3.2, 3.7]
+    ];
 
-        let result = hotelling_t2_test(&data.view(), None, 0.05).unwrap();
+    let result = hotelling_t2_test(&data.view(), None, 0.05).unwrap();
 
-        // Should produce finite statistics
-        assert!(result.statistic.is_finite());
-        assert!(result.p_value.is_finite());
-        assert!(result.p_value >= 0.0 && result.p_value <= 1.0);
-    }
+    // Should produce finite statistics
+    assert!(result.statistic.is_finite());
+    assert!(result.p_value.is_finite());
+    assert!(result.p_value >= 0.0 && result.p_value <= 1.0);
+}
 
-    #[test]
-    fn test_mauchly_sphericity_test() {
-        // Test with identity-like covariance (should not reject sphericity)
-        let data = array![
-            [1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0],
-            [1.0, 1.0, 1.0],
-            [-1.0, -1.0, -1.0]
-        ];
+#[test]
+fn test_mauchly_sphericity_test() {
+    // Test with identity-like covariance (should not reject sphericity)
+    let data = array![
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [-1.0, -1.0, -1.0]
+    ];
 
-        let result = mauchly_sphericity_test(&data.view(), 0.05).unwrap();
+    let result = mauchly_sphericity_test(&data.view(), 0.05).unwrap();
 
-        assert!(result.statistic.is_finite());
-        assert!(result.p_value.is_finite());
-        assert!(result.p_value >= 0.0 && result.p_value <= 1.0);
-    }
+    assert!(result.statistic.is_finite());
+    assert!(result.p_value.is_finite());
+    assert!(result.p_value >= 0.0 && result.p_value <= 1.0);
+}
 
-    #[test]
-    fn test_mardia_normality_test() {
-        // Simple test data
-        let data = array![
-            [0.0, 0.0],
-            [1.0, 1.0],
-            [-1.0, -1.0],
-            [0.5, -0.5],
-            [-0.5, 0.5]
-        ];
+#[test]
+fn test_mardia_normality_test() {
+    // Simple test data
+    let data = array![
+        [0.0, 0.0],
+        [1.0, 1.0],
+        [-1.0, -1.0],
+        [0.5, -0.5],
+        [-0.5, 0.5]
+    ];
 
-        let (skewness_result, kurtosis_result) = mardia_normality_test(&data.view(), 0.05).unwrap();
+    let (skewness_result, kurtosis_result) = mardia_normality_test(&data.view(), 0.05).unwrap();
 
-        assert!(skewness_result.statistic.is_finite());
-        assert!(skewness_result.p_value.is_finite());
-        assert!(kurtosis_result.statistic.is_finite());
-        assert!(kurtosis_result.p_value.is_finite());
-    }
+    assert!(skewness_result.statistic.is_finite());
+    assert!(skewness_result.p_value.is_finite());
+    assert!(kurtosis_result.statistic.is_finite());
+    assert!(kurtosis_result.p_value.is_finite());
+}
 
-    #[test]
-    fn test_box_m_test() {
-        // Create two groups with more samples and variation to avoid singular matrices
-        let group1 = array![
-            [1.0, 0.1],
-            [2.1, 1.2],
-            [2.8, 1.9],
-            [4.1, 3.2],
-            [1.5, 0.8],
-            [3.2, 2.1]
-        ];
+#[test]
+fn test_box_m_test() {
+    // Create two groups with more samples and variation to avoid singular matrices
+    let group1 = array![
+        [1.0, 0.1],
+        [2.1, 1.2],
+        [2.8, 1.9],
+        [4.1, 3.2],
+        [1.5, 0.8],
+        [3.2, 2.1]
+    ];
 
-        let group2 = array![
-            [0.2, 1.1],
-            [1.1, 2.2],
-            [1.9, 2.8],
-            [3.2, 4.1],
-            [0.8, 1.9],
-            [2.5, 3.3]
-        ];
+    let group2 = array![
+        [0.2, 1.1],
+        [1.1, 2.2],
+        [1.9, 2.8],
+        [3.2, 4.1],
+        [0.8, 1.9],
+        [2.5, 3.3]
+    ];
 
-        let groups = vec![group1.view(), group2.view()];
-        let result = box_m_test(&groups, 0.05).unwrap();
+    let groups = vec![group1.view(), group2.view()];
+    let result = box_m_test(&groups, 0.05).unwrap();
 
-        assert!(result.statistic.is_finite());
-        assert!(result.p_value.is_finite());
-        assert!(result.p_value >= 0.0 && result.p_value <= 1.0);
-    }
+    assert!(result.statistic.is_finite());
+    assert!(result.p_value.is_finite());
+    assert!(result.p_value >= 0.0 && result.p_value <= 1.0);
 }

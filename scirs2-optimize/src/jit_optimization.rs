@@ -11,6 +11,25 @@ use ndarray::{Array1, Array2, ArrayView1};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+/// Type alias for compiled objective function
+type CompiledObjectiveFn = Box<dyn Fn(&ArrayView1<f64>) -> f64 + Send + Sync>;
+
+/// Type alias for compiled gradient function
+type CompiledGradientFn = Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64> + Send + Sync>;
+
+/// Type alias for compiled hessian function
+type CompiledHessianFn = Box<dyn Fn(&ArrayView1<f64>) -> Array2<f64> + Send + Sync>;
+
+/// Type alias for JIT compilation result
+type JitCompilationResult = Result<CompiledObjectiveFn, OptimizeError>;
+
+/// Type alias for derivative compilation result
+type DerivativeCompilationResult =
+    Result<(Option<CompiledGradientFn>, Option<CompiledHessianFn>), OptimizeError>;
+
+/// Type alias for simple function optimization result
+type OptimizedFunctionResult = Result<Box<dyn Fn(&ArrayView1<f64>) -> f64>, OptimizeError>;
+
 /// JIT compilation options
 #[derive(Debug, Clone)]
 pub struct JitOptions {
@@ -70,11 +89,11 @@ pub struct CompiledFunction {
     /// Detected pattern
     pub pattern: FunctionPattern,
     /// Optimized implementation
-    pub implementation: Box<dyn Fn(&ArrayView1<f64>) -> f64 + Send + Sync>,
+    pub implementation: CompiledObjectiveFn,
     /// Gradient implementation if available
-    pub gradient: Option<Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64> + Send + Sync>>,
+    pub gradient: Option<CompiledGradientFn>,
     /// Hessian implementation if available
-    pub hessian: Option<Box<dyn Fn(&ArrayView1<f64>) -> Array2<f64> + Send + Sync>>,
+    pub hessian: Option<CompiledHessianFn>,
     /// Compilation metadata
     pub metadata: FunctionMetadata,
 }
@@ -183,7 +202,6 @@ impl JitCompiler {
             if cache.len() >= self.options.max_cache_size {
                 // Remove oldest entry (simple FIFO eviction)
                 if let Some((&oldest_key, _)) = cache.iter().next() {
-                    let oldest_key = oldest_key;
                     cache.remove(&oldest_key);
                 }
             }
@@ -216,7 +234,7 @@ impl JitCompiler {
         fun: F,
         n_vars: usize,
         pattern: &FunctionPattern,
-    ) -> Result<Box<dyn Fn(&ArrayView1<f64>) -> f64 + Send + Sync>, OptimizeError>
+    ) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -249,11 +267,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for quadratic functions
-    fn create_quadratic_implementation<F>(
-        &self,
-        fun: F,
-        _n_vars: usize,
-    ) -> Result<Box<dyn Fn(&ArrayView1<f64>) -> f64 + Send + Sync>, OptimizeError>
+    fn create_quadratic_implementation<F>(&self, fun: F, _n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -271,7 +285,7 @@ impl JitCompiler {
         &self,
         fun: F,
         _n_vars: usize,
-    ) -> Result<Box<dyn Fn(&ArrayView1<f64>) -> f64 + Send + Sync>, OptimizeError>
+    ) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -283,11 +297,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for separable functions
-    fn create_separable_implementation<F>(
-        &self,
-        fun: F,
-        n_vars: usize,
-    ) -> Result<Box<dyn Fn(&ArrayView1<f64>) -> f64 + Send + Sync>, OptimizeError>
+    fn create_separable_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -322,11 +332,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for polynomial functions
-    fn create_polynomial_implementation<F>(
-        &self,
-        fun: F,
-        _n_vars: usize,
-    ) -> Result<Box<dyn Fn(&ArrayView1<f64>) -> f64 + Send + Sync>, OptimizeError>
+    fn create_polynomial_implementation<F>(&self, fun: F, _n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -335,11 +341,7 @@ impl JitCompiler {
     }
 
     /// Create vectorized implementation using SIMD
-    fn create_vectorized_implementation<F>(
-        &self,
-        fun: F,
-        n_vars: usize,
-    ) -> Result<Box<dyn Fn(&ArrayView1<f64>) -> f64 + Send + Sync>, OptimizeError>
+    fn create_vectorized_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -360,13 +362,7 @@ impl JitCompiler {
         &self,
         pattern: &FunctionPattern,
         n_vars: usize,
-    ) -> Result<
-        (
-            Option<Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64> + Send + Sync>>,
-            Option<Box<dyn Fn(&ArrayView1<f64>) -> Array2<f64> + Send + Sync>>,
-        ),
-        OptimizeError,
-    > {
+    ) -> DerivativeCompilationResult {
         match pattern {
             FunctionPattern::Quadratic => {
                 // For quadratic functions f(x) = x^T Q x + b^T x + c
@@ -430,6 +426,12 @@ impl JitCompiler {
 /// Pattern detector for automatic function specialization
 pub struct PatternDetector {
     sample_points: Vec<Array1<f64>>,
+}
+
+impl Default for PatternDetector {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PatternDetector {
@@ -527,13 +529,13 @@ impl PatternDetector {
 impl FunctionPattern {
     /// Check if this pattern supports vectorization
     pub fn supports_vectorization(&self) -> bool {
-        match self {
-            FunctionPattern::Quadratic => true,
-            FunctionPattern::SumOfSquares => true,
-            FunctionPattern::Separable => true,
-            FunctionPattern::Polynomial(_) => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            FunctionPattern::Quadratic
+                | FunctionPattern::SumOfSquares
+                | FunctionPattern::Separable
+                | FunctionPattern::Polynomial(_)
+        )
     }
 }
 
@@ -548,6 +550,12 @@ struct ProfileData {
     total_time_ns: u64,
     #[allow(dead_code)]
     hot_paths: Vec<String>,
+}
+
+impl Default for FunctionProfiler {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl FunctionProfiler {
@@ -594,7 +602,7 @@ pub fn optimize_function<F>(
     fun: F,
     n_vars: usize,
     options: Option<JitOptions>,
-) -> Result<Box<dyn Fn(&ArrayView1<f64>) -> f64>, OptimizeError>
+) -> OptimizedFunctionResult
 where
     F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
 {

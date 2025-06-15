@@ -10,8 +10,7 @@
 
 use ndarray::Array2;
 use scirs2_interpolate::spatial::{
-    AdaptiveSearchStrategy, BatchQueryProcessor, CacheFriendlyIndex, KdTree,
-    SIMDDistanceCalculator,
+    AdaptiveSearchStrategy, BatchQueryProcessor, CacheFriendlyIndex, KdTree, SIMDDistanceCalculator,
 };
 use std::time::Instant;
 

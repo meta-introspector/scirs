@@ -82,8 +82,7 @@
 //! // Fast matrix multiplication for large matrices
 //! let c = blas_accelerated::matmul(&a.view(), &b.view()).unwrap();
 //! ```
-extern crate blas as _;
-extern crate openblas_src;
+// Note: BLAS/LAPACK functionality is provided through ndarray-linalg from scirs2-core
 
 // Export error types
 pub mod error;
@@ -102,16 +101,7 @@ pub mod eigen;
 pub use self::eigen::{eig, eigh, eigvals, eigvalsh, power_iteration};
 
 // Specialized eigen solvers in separate module
-pub mod eigen_specialized {
-    pub mod banded;
-    pub mod sparse;
-    pub mod symmetric;
-    pub mod tridiagonal;
-    pub use banded::{banded_eigh, banded_eigvalsh};
-    pub use sparse::{largest_k_eigh, smallest_k_eigh};
-    pub use symmetric::{symmetric_eigh, symmetric_eigvalsh};
-    pub use tridiagonal::{tridiagonal_eigh, tridiagonal_eigvalsh};
-}
+pub mod eigen_specialized;
 pub mod extended_precision;
 pub mod generic;
 pub mod gradient;
@@ -180,7 +170,10 @@ pub mod accelerated {
 
 // Re-exports for user convenience
 pub use self::basic::{det, inv, matrix_power};
-pub use self::eigen_specialized::sparse::{largest_k_eigh, smallest_k_eigh};
+pub use self::eigen_specialized::{
+    banded_eigen, banded_eigh, banded_eigvalsh, circulant_eigenvalues, largest_k_eigh,
+    partial_eigen, smallest_k_eigh, tridiagonal_eigen, tridiagonal_eigh, tridiagonal_eigvalsh,
+};
 // Re-export complex module functions explicitly to avoid conflicts
 pub use self::complex::enhanced_ops::{
     det as complex_det, frobenius_norm, hermitian_part, inner_product, is_hermitian, is_unitary,
@@ -197,7 +190,6 @@ pub use self::basic::{det_default, inv_default, matrix_power_default};
 // Backward compatibility versions for iterative solvers (deprecated)
 pub use self::iterative_solvers::conjugate_gradient_default;
 // Eigen module exports included in other use statements
-pub use self::eigen_specialized::*;
 pub use self::extended_precision::*;
 pub use self::iterative_solvers::*;
 // pub use self::matrix_calculus::*; // Temporarily disabled
@@ -264,10 +256,10 @@ pub mod prelude {
     };
     pub use super::decomposition::{cholesky, lu, qr, schur, svd};
     pub use super::eigen::{eig, eigh, eigvals, eigvalsh, power_iteration};
-    pub use super::eigen_specialized::banded::{banded_eigh, banded_eigvalsh};
-    pub use super::eigen_specialized::sparse::{largest_k_eigh, smallest_k_eigh};
-    pub use super::eigen_specialized::symmetric::{symmetric_eigh, symmetric_eigvalsh};
-    pub use super::eigen_specialized::tridiagonal::{tridiagonal_eigh, tridiagonal_eigvalsh};
+    pub use super::eigen_specialized::{
+        banded_eigen, banded_eigh, banded_eigvalsh, circulant_eigenvalues, largest_k_eigh,
+        partial_eigen, smallest_k_eigh, tridiagonal_eigen, tridiagonal_eigh, tridiagonal_eigvalsh,
+    };
     pub use super::extended_precision::eigen::{
         extended_eig, extended_eigh, extended_eigvals, extended_eigvalsh,
     };
@@ -391,8 +383,8 @@ pub mod prelude {
     };
     pub use super::special::block_diag;
     pub use super::specialized::{
-        specialized_to_operator, BandedMatrix, SpecializedMatrix, SymmetricMatrix,
-        TridiagonalMatrix,
+        specialized_to_operator, BandedMatrix, BlockTridiagonalMatrix, SpecializedMatrix,
+        SymmetricMatrix, TridiagonalMatrix,
     };
     pub use super::stats::{correlation_matrix, covariance_matrix};
     pub use super::structured::{

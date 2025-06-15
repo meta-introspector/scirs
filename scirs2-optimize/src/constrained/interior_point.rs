@@ -8,6 +8,18 @@ use crate::error::OptimizeError;
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, Array2, ArrayView1};
 
+/// Type alias for equality constraint function
+type EqualityConstraintFn = dyn FnMut(&ArrayView1<f64>) -> Array1<f64>;
+
+/// Type alias for equality constraint jacobian function  
+type EqualityJacobianFn = dyn FnMut(&ArrayView1<f64>) -> Array2<f64>;
+
+/// Type alias for inequality constraint function
+type InequalityConstraintFn = dyn FnMut(&ArrayView1<f64>) -> Array1<f64>;
+
+/// Type alias for inequality constraint jacobian function
+type InequalityJacobianFn = dyn FnMut(&ArrayView1<f64>) -> Array2<f64>;
+
 /// Type alias for Newton direction result to reduce type complexity
 type NewtonDirectionResult = (Array1<f64>, Array1<f64>, Array1<f64>, Array1<f64>);
 
@@ -112,10 +124,10 @@ impl<'a> InteriorPointSolver<'a> {
         &mut self,
         fun: &mut F,
         grad: &mut G,
-        mut eq_con: Option<&mut dyn FnMut(&ArrayView1<f64>) -> Array1<f64>>,
-        mut eq_jac: Option<&mut dyn FnMut(&ArrayView1<f64>) -> Array2<f64>>,
-        mut ineq_con: Option<&mut dyn FnMut(&ArrayView1<f64>) -> Array1<f64>>,
-        mut ineq_jac: Option<&mut dyn FnMut(&ArrayView1<f64>) -> Array2<f64>>,
+        mut eq_con: Option<&mut EqualityConstraintFn>,
+        mut eq_jac: Option<&mut EqualityJacobianFn>,
+        mut ineq_con: Option<&mut InequalityConstraintFn>,
+        mut ineq_jac: Option<&mut InequalityJacobianFn>,
         x0: &Array1<f64>,
     ) -> Result<InteriorPointResult, OptimizeError>
     where

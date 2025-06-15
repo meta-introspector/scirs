@@ -8,12 +8,13 @@ Multidimensional image processing functionality for the SciRS2 scientific comput
 
 ## Features
 
-- **Filters**: Various filters including Gaussian, median, rank, and edge filters
-- **Morphology**: Binary and grayscale morphological operations
-- **Measurements**: Region properties, moments, extrema detection
+- **Filters**: Various filters including Gaussian, median, rank, and edge filters (Sobel, Prewitt, Laplace)
+- **Morphology**: Binary and grayscale morphological operations with distance transforms
+- **Measurements**: Region properties, moments (raw, central, normalized, Hu), extrema detection, statistics
 - **Segmentation**: Thresholding and watershed algorithms
-- **Feature Detection**: Corner and edge detection
-- **Interpolation**: Spline and geometric interpolation algorithms
+- **Feature Detection**: Corner and edge detection algorithms
+- **Interpolation**: Comprehensive spline and geometric interpolation algorithms with transforms
+- **Performance**: Optimized implementations with optional parallel processing support
 
 ## Installation
 
@@ -21,14 +22,14 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-ndimage = "0.1.0-alpha.4"
+scirs2-ndimage = "0.1.0-alpha.5"
 ```
 
 To enable optimizations through the core module, add feature flags:
 
 ```toml
 [dependencies]
-scirs2-ndimage = { version = "0.1.0-alpha.4", features = ["parallel"] }
+scirs2-ndimage = { version = "0.1.0-alpha.5", features = ["parallel"] }
 ```
 
 ## Usage
@@ -157,7 +158,11 @@ use scirs2_ndimage::measurements::{
     moments,                 // Calculate all raw moments
     moments_central,         // Calculate central moments
     moments_normalized,      // Calculate normalized moments
-    moments_hu,              // Calculate Hu moments
+    moments_hu,              // Calculate Hu moments (rotation invariant)
+    
+    // Advanced measurements
+    center_of_mass,          // Calculate center of mass
+    histogram,               // Calculate histogram of array values
     
     // Region properties
     label,                   // Label features in an array
@@ -229,8 +234,15 @@ use scirs2_ndimage::interpolation::{
 The module includes benchmarks for performance-critical operations:
 
 - Rank filter benchmarks
-- Convolution benchmarks
+- Convolution benchmarks  
 - Morphological operations benchmarks
+- Distance transform benchmarks
+- Interpolation benchmarks
+
+Run benchmarks with:
+```bash
+cargo bench
+```
 
 ## Contributing
 

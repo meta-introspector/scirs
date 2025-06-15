@@ -269,3 +269,6 @@ where
 
     Ok(dir_deriv)
 }
+
+// Re-export the differential operators module
+pub use matrix_derivatives::differential_operators;

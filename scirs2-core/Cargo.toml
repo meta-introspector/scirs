@@ -91,7 +91,7 @@ profiling = []  # Performance profiling tools
 random = []  # Random number generation utilities
 types = []  # Type conversion utilities
 ufuncs = []  # Universal Functions (ufuncs) system
-linalg = ["ndarray-linalg/blas"]  # Linear algebra with BLAS/LAPACK bindings
+linalg = ["ndarray-linalg"]  # Linear algebra with BLAS/LAPACK bindings
 # LAPACK backends - these are mutually exclusive, use only one at a time
 openblas = ["linalg", "ndarray-linalg/openblas-system"]  # Use OpenBLAS backend (system)
 intel-mkl = ["linalg", "ndarray-linalg/intel-mkl-system"]  # Use Intel MKL backend (system)  

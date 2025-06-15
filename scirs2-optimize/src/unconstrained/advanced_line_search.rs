@@ -245,6 +245,7 @@ where
     stats.max_f_eval = stats.max_f_eval.max(phi);
 
     // Hager-Zhang bracketing
+    #[allow(clippy::explicit_counter_loop)]
     for i in 0..options.max_ls_iter {
         // Check Armijo condition with Hager-Zhang modification
         if phi <= f0 + options.c1 * alpha * dphi0 {
@@ -504,6 +505,7 @@ where
     }
 
     // Non-monotone Armijo search
+    #[allow(clippy::explicit_counter_loop)]
     for i in 0..options.max_ls_iter {
         let x_new = x + alpha * direction;
         let phi = fun(&x_new.view());
@@ -621,6 +623,7 @@ where
     let alpha_max = options.alpha_max;
 
     // Main search loop
+    #[allow(clippy::explicit_counter_loop)]
     for i in 0..options.max_ls_iter {
         let x_new = x + alpha * direction;
         let phi = fun(&x_new.view());

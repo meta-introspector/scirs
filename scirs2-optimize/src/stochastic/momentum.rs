@@ -87,6 +87,7 @@ where
     println!("  Nesterov: {}", options.nesterov);
     println!("  Dampening: {}", options.dampening);
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         // Update learning rate according to schedule
         let current_lr = update_learning_rate(
@@ -251,6 +252,7 @@ where
     println!("  Batch size: {}", actual_batch_size);
     println!("  Momentum: {}", options.momentum);
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         let current_lr = update_learning_rate(
             options.learning_rate,
@@ -350,6 +352,7 @@ where
     println!("  Parameters: {}", x.len());
     println!("  Correlation window: {}", correlation_window);
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         let current_lr = update_learning_rate(
             options.learning_rate,

@@ -754,25 +754,25 @@ mod matrix_function_tests {
 
         // Zero matrix: exp(0) = I
         let zero_matrix = Array2::zeros((2, 2));
-        let exp_zero = compat::expm(&zero_matrix.view()).unwrap();
+        let exp_zero = compat::expm(&zero_matrix.view(), None).unwrap();
         let identity = Array2::eye(2);
         assert!(arrays_close(&exp_zero, &identity, TEST_TOL));
 
         // Diagonal matrix: exp(diag(a,b)) = diag(exp(a), exp(b))
         let diag_matrix = array![[1.0, 0.0], [0.0, 2.0]];
-        let exp_diag = compat::expm(&diag_matrix.view()).unwrap();
+        let exp_diag = compat::expm(&diag_matrix.view(), None).unwrap();
         let expected = array![[1.0_f64.exp(), 0.0], [0.0, 2.0_f64.exp()]];
         assert!(arrays_close(&exp_diag, &expected, 1e-8));
 
         // Nilpotent matrix: N^2 = 0, so exp(N) = I + N
         let nilpotent = array![[0.0, 1.0], [0.0, 0.0]];
-        let exp_nilpotent = compat::expm(&nilpotent.view()).unwrap();
+        let exp_nilpotent = compat::expm(&nilpotent.view(), None).unwrap();
         let expected_nilpotent = &identity + &nilpotent;
         assert!(arrays_close(&exp_nilpotent, &expected_nilpotent, 1e-8));
 
         // Antisymmetric matrix (should preserve orthogonality)
         let antisymmetric = array![[0.0, 1.0], [-1.0, 0.0]];
-        let exp_antisym = compat::expm(&antisymmetric.view()).unwrap();
+        let exp_antisym = compat::expm(&antisymmetric.view(), None).unwrap();
 
         // exp(antisymmetric) should be orthogonal: R^T * R = I
         let rtr = exp_antisym.t().dot(&exp_antisym);
@@ -798,7 +798,7 @@ mod matrix_function_tests {
         let log_pos_def = compat::logm(&pos_def.view()).unwrap();
 
         // Verify exp(log(A)) = A
-        let exp_log = compat::expm(&log_pos_def.view()).unwrap();
+        let exp_log = compat::expm(&log_pos_def.view(), None).unwrap();
         assert!(arrays_close(&exp_log, &pos_def, 1e-8));
 
         // Diagonal matrix: log(diag(a,b)) = diag(log(a), log(b))
@@ -844,7 +844,7 @@ mod matrix_function_tests {
 
         // Test exp via funm
         let exp_via_funm = compat::funm(&test_matrix.view(), "exp", false).unwrap();
-        let exp_direct = compat::expm(&test_matrix.view()).unwrap();
+        let exp_direct = compat::expm(&test_matrix.view(), None).unwrap();
         assert!(arrays_close(&exp_via_funm, &exp_direct, 1e-8));
 
         // Test log via funm
@@ -1069,7 +1069,7 @@ mod integration_tests {
         }
 
         // 7. Matrix functions
-        let exp_a = compat::expm(&a.view()).unwrap();
+        let exp_a = compat::expm(&a.view(), None).unwrap();
         let log_exp_a = compat::logm(&exp_a.view()).unwrap();
         assert!(arrays_close(&log_exp_a, &a, 1e-6)); // exp and log are inverses
 

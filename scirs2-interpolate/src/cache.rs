@@ -870,10 +870,10 @@ impl<F: Float + FromPrimitive> DistanceMatrixCache<F> {
         computer: impl FnOnce(&Array2<T>) -> Array2<F>,
     ) -> Array2<F>
     where
-        T: Float + Hash,
+        T: Float,
     {
         // Create a hash of the points array for cache key
-        let key = self.hash_points(points);
+        let key = self.hash_points_safe(points);
 
         if let Some(cached_matrix) = self.matrix_cache.get(&key) {
             if self.config.track_stats {
@@ -897,13 +897,14 @@ impl<F: Float + FromPrimitive> DistanceMatrixCache<F> {
         }
     }
 
-    /// Create a hash of the points array
-    fn hash_points<T: Float + Hash>(&self, points: &Array2<T>) -> u64 {
+    /// Create a hash of the points array using a safe approach for floating point
+    fn hash_points_safe<T: Float>(&self, points: &Array2<T>) -> u64 {
         use std::collections::hash_map::DefaultHasher;
         let mut hasher = DefaultHasher::new();
 
         // Hash the shape
-        points.shape().hash(&mut hasher);
+        points.shape()[0].hash(&mut hasher);
+        points.shape()[1].hash(&mut hasher);
 
         // Hash a subset of points for efficiency (or all if small)
         let hash_stride = if points.len() > 1000 {
@@ -911,9 +912,15 @@ impl<F: Float + FromPrimitive> DistanceMatrixCache<F> {
         } else {
             1
         };
+
         for (i, &val) in points.iter().enumerate() {
             if i % hash_stride == 0 {
-                val.hash(&mut hasher);
+                // Convert to f64 and then to bits for consistent hashing
+                let val_f64 = val.to_f64().unwrap_or(0.0);
+                // Quantize to tolerance for consistent hashing of similar values
+                let quantized = (val_f64 / self.config.tolerance).round() * self.config.tolerance;
+                let bits = quantized.to_bits();
+                bits.hash(&mut hasher);
             }
         }
 
@@ -1072,15 +1079,51 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix Hash requirement for floating point types
     fn test_distance_matrix_cache() {
-        // TODO: Implement a proper test for DistanceMatrixCache that doesn't require
-        // Hash on floating point types. This requires either:
-        // 1. Removing the Hash bound and using a different caching strategy
-        // 2. Creating a hash-compatible wrapper for floating point arrays
-        // 3. Using a different approach for cache keys
+        let config = CacheConfig {
+            track_stats: true,
+            max_distance_cache_size: 10,
+            ..Default::default()
+        };
+        let mut cache = DistanceMatrixCache::<f64>::new(config);
 
-        // For now, this test is disabled to avoid compilation errors
-        assert!(true);
+        // Create test points
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+
+        // First computation should be a cache miss
+        let result1 = cache.get_or_compute_distance_matrix(&points, |pts| {
+            let n = pts.nrows();
+            let mut distances = Array2::zeros((n, n));
+            for i in 0..n {
+                for j in 0..n {
+                    let diff = &pts.slice(ndarray::s![i, ..]) - &pts.slice(ndarray::s![j, ..]);
+                    distances[[i, j]] = diff.iter().map(|&x| x * x).sum::<f64>().sqrt();
+                }
+            }
+            distances
+        });
+
+        assert_eq!(result1.shape(), &[3, 3]);
+        assert_eq!(cache.stats().misses, 1);
+        assert_eq!(cache.stats().hits, 0);
+
+        // Second computation with same points should be a cache hit
+        let result2 = cache.get_or_compute_distance_matrix(&points, |_| {
+            panic!("Should not be called on cache hit");
+        });
+
+        assert_eq!(result1, result2);
+        assert_eq!(cache.stats().misses, 1);
+        assert_eq!(cache.stats().hits, 1);
+
+        // Different points should be a cache miss
+        let different_points = Array2::from_shape_vec((2, 2), vec![2.0, 2.0, 3.0, 3.0]).unwrap();
+        let _result3 = cache.get_or_compute_distance_matrix(&different_points, |pts| {
+            let n = pts.nrows();
+            Array2::zeros((n, n))
+        });
+
+        assert_eq!(cache.stats().misses, 2);
+        assert_eq!(cache.stats().hits, 1);
     }
 }

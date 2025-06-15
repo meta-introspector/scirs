@@ -103,6 +103,7 @@ where
         println!("  Momentum: {}", mom);
     }
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         // Update learning rate according to schedule
         let current_lr = update_learning_rate(
@@ -287,6 +288,7 @@ where
     println!("  Dataset size: {}", num_samples);
     println!("  Batch size: {}", actual_batch_size);
 
+    #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
         let current_lr = update_learning_rate(
             options.learning_rate,

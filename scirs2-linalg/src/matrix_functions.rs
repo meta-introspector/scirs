@@ -19,6 +19,7 @@ use crate::solve::solve_multiple;
 /// # Arguments
 ///
 /// * `a` - Input square matrix
+/// * `workers` - Number of worker threads (None = use default)
 ///
 /// # Returns
 ///
@@ -31,16 +32,21 @@ use crate::solve::solve_multiple;
 /// use scirs2_linalg::matrix_functions::expm;
 ///
 /// let a = array![[0.0_f64, 1.0], [-1.0, 0.0]]; // Rotation matrix
-/// let exp_a = expm(&a.view()).unwrap();
+/// let exp_a = expm(&a.view(), None).unwrap();
 ///
 /// // Expected values are approximately cos(1) and sin(1)
 /// // Exact values would be:
 /// // [[cos(1), sin(1)], [-sin(1), cos(1)]]
 /// ```
-pub fn expm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+pub fn expm<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
 {
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
             "Matrix must be square to compute exponential, got shape {:?}",
@@ -958,7 +964,7 @@ mod tests {
     fn test_expm_identity() {
         // exp(0) = I
         let a = array![[0.0, 0.0], [0.0, 0.0]];
-        let exp_a = expm(&a.view()).unwrap();
+        let exp_a = expm(&a.view(), None).unwrap();
 
         assert_relative_eq!(exp_a[[0, 0]], 1.0, epsilon = 1e-10);
         assert_relative_eq!(exp_a[[0, 1]], 0.0, epsilon = 1e-10);
@@ -1010,7 +1016,7 @@ mod tests {
     fn test_expm_diagonal() {
         // For diagonal matrix, exp(D) = diag(exp(d_1), exp(d_2), ...)
         let a = array![[1.0, 0.0], [0.0, 2.0]];
-        let exp_a = expm(&a.view()).unwrap();
+        let exp_a = expm(&a.view(), None).unwrap();
 
         // We don't use exact values for comparison, so we don't need these variables
 
@@ -1046,7 +1052,7 @@ mod tests {
             [0.0, -std::f64::consts::FRAC_PI_2],
             [std::f64::consts::FRAC_PI_2, 0.0]
         ];
-        let exp_a = expm(&a.view()).unwrap();
+        let exp_a = expm(&a.view(), None).unwrap();
 
         // Should be approximately [[0, -1], [1, 0]]
         assert!(

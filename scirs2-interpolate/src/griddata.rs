@@ -19,7 +19,7 @@
 //!
 //! // Interpolate using linear method
 //! let result = griddata(&points.view(), &values.view(), &xi.view(),
-//!                       GriddataMethod::Linear, None)?;
+//!                       GriddataMethod::Linear, None, None)?;
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
@@ -86,7 +86,7 @@ pub enum GriddataMethod {
 ///
 /// // Linear interpolation
 /// let result = griddata(&points.view(), &values.view(), &xi.view(),
-///                       GriddataMethod::Linear, None)?;
+///                       GriddataMethod::Linear, None, None)?;
 ///
 /// println!("Interpolated values: {:?}", result);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -103,11 +103,11 @@ pub enum GriddataMethod {
 ///
 /// // Compare different methods
 /// let linear = griddata(&points.view(), &values.view(), &xi.view(),
-///                      GriddataMethod::Linear, None)?;
+///                      GriddataMethod::Linear, None, None)?;
 /// let nearest = griddata(&points.view(), &values.view(), &xi.view(),
-///                       GriddataMethod::Nearest, None)?;
+///                       GriddataMethod::Nearest, None, None)?;
 /// let rbf = griddata(&points.view(), &values.view(), &xi.view(),
-///                    GriddataMethod::Rbf, None)?;
+///                    GriddataMethod::Rbf, None, None)?;
 ///
 /// println!("Linear: {}, Nearest: {}, RBF: {}", linear[0], nearest[0], rbf[0]);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -211,7 +211,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, Array2};
 /// use scirs2_interpolate::griddata::{griddata_parallel, GriddataMethod};
 ///
 /// // Large dataset interpolation

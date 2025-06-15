@@ -23,6 +23,7 @@ pub mod community;
 pub mod connectivity;
 pub mod decomposition;
 pub mod flow;
+pub mod hypergraph;
 pub mod isomorphism;
 pub mod matching;
 pub mod motifs;
@@ -37,12 +38,13 @@ pub mod traversal;
 // Re-export all public items for convenience
 pub use coloring::*;
 pub use community::{
-    greedy_modularity_optimization, label_propagation, louvain_communities, modularity,
-    modularity_optimization, CommunityStructure,
+    greedy_modularity_optimization, infomap_communities, label_propagation, louvain_communities,
+    modularity, modularity_optimization, CommunityStructure, InfomapResult,
 };
 pub use connectivity::*;
 pub use decomposition::*;
 pub use flow::{dinic_max_flow, minimum_cut, push_relabel_max_flow};
+pub use hypergraph::*;
 pub use isomorphism::*;
 pub use matching::*;
 pub use motifs::*;

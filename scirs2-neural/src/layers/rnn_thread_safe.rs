@@ -589,6 +589,7 @@ pub struct ThreadSafeLSTM<F: Float + Debug + Send + Sync> {
     /// Input cache for backward pass
     input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
     /// Hidden and cell states cache for backward pass
+    #[allow(clippy::type_complexity)]
     states_cache: Arc<RwLock<Option<(Array<F, IxDyn>, Array<F, IxDyn>)>>>,
 }
 
