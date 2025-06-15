@@ -102,7 +102,8 @@ pub mod utils;
 
 // Re-export commonly used functionality
 pub use cache::{
-    get_cache_dir, CacheFileInfo, CacheManager, CacheStats, DatasetCache, DetailedCacheStats,
+    get_cache_dir, BatchOperations, BatchResult, CacheFileInfo, CacheManager, CacheStats,
+    DatasetCache, DetailedCacheStats,
 };
 pub use generators::{
     add_time_series_noise, inject_missing_data, inject_outliers, make_anisotropic_blobs,

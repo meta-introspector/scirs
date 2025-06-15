@@ -193,7 +193,7 @@ fn solve_jacobi(
         }
 
         // Check convergence
-        let mut residual_norm = 0.0;
+        let mut residual_norm = 0.0f64;
         for i in 0..n {
             let diff = x_new[i] - x[i];
             residual_norm += diff * diff;

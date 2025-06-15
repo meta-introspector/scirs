@@ -40,7 +40,7 @@ Add scirs2-stats to your Cargo.toml:
 
 ```toml
 [dependencies]
-scirs2-stats = "0.1.0-alpha.4"
+scirs2-stats = "0.1.0-alpha.5"
 ndarray = "0.16.1"
 ```
 

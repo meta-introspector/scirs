@@ -10,15 +10,17 @@
 //! - Validating metadata preservation
 
 use ndarray::{array, Array1, Array2};
+#[cfg(feature = "hdf5")]
+use scirs2_io::hdf5::{self, AttributeValue, CompressionOptions, DatasetOptions};
 use scirs2_io::{
     csv,
-    hdf5::{self, AttributeValue, CompressionOptions, DatasetOptions},
     matrix_market::{
         self, MMDataType, MMFormat, MMHeader, MMSparseMatrix, MMSymmetry, ParallelConfig,
         SparseEntry,
     },
     serialize, validation,
 };
+#[cfg(feature = "hdf5")]
 use std::collections::HashMap;
 use tempfile::tempdir;
 
@@ -134,7 +136,16 @@ fn test_csv_round_trip_with_options() {
         Array2::from_shape_vec((0, cols), Vec::new()).unwrap()
     };
 
-    csv::write_csv(&file_path, &data_only, headers.as_ref(), None).unwrap();
+    // Create write options that match read options
+    let mut write_options = csv::CsvWriterConfig::default();
+    write_options.delimiter = ';';
+    csv::write_csv(
+        &file_path,
+        &data_only,
+        headers.as_ref(),
+        Some(write_options),
+    )
+    .unwrap();
     let (_headers, read_array) = csv::read_csv(&file_path, Some(options)).unwrap();
 
     // Verify round-trip
@@ -315,6 +326,7 @@ fn test_matrix_market_parallel_round_trip() {
 }
 
 #[test]
+#[cfg(feature = "hdf5")]
 fn test_hdf5_round_trip_basic() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join("test.h5");
@@ -376,6 +388,7 @@ fn test_hdf5_round_trip_basic() {
 }
 
 #[test]
+#[cfg(feature = "hdf5")]
 fn test_hdf5_round_trip_with_groups_and_attributes() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join("structured.h5");
@@ -642,6 +655,7 @@ fn test_validation_round_trip() {
 }
 
 #[test]
+#[cfg(feature = "hdf5")]
 fn test_compression_round_trip() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join("compressed.h5");

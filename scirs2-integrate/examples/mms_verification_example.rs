@@ -6,7 +6,6 @@
 use ndarray::{Array1, Array2};
 use scirs2_integrate::{
     ode::{solve_ivp, ODEMethod, ODEOptions},
-    pde::finite_difference::{second_derivative_matrix, FiniteDifferenceScheme},
     verification::{
         polynomial_solution, trigonometric_solution_2d, ConvergenceAnalysis, ErrorAnalysis,
         MMSODEProblem, MMSPDEProblem,
@@ -31,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn ode_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 ODE Method Verification");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Create manufactured problem with exact solution y(t) = 1 + 2t + 3t²
     let exact_solution = polynomial_solution(vec![1.0, 2.0, 3.0]);
@@ -45,7 +44,7 @@ fn ode_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     let mut errors = Vec::new();
 
     println!("\nStep Size   Final Error   Expected: y(1) = 6.0");
-    println!("─".repeat(45));
+    println!("{}", "─".repeat(45));
 
     for &h in &step_sizes {
         // Solve the manufactured ODE: y' = 2 + 6t
@@ -72,7 +71,7 @@ fn ode_verification_example() -> Result<(), Box<dyn std::error::Error>> {
         let error = (numerical_final - exact_final).abs();
 
         println!(
-            "{:8.4f}   {:11.2e}   Numerical: {:.6f}",
+            "{:8.4}   {:11.2e}   Numerical: {:.6}",
             h, error, numerical_final
         );
         errors.push(error);
@@ -96,7 +95,7 @@ fn ode_verification_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn pde_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌊 PDE Method Verification");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Create manufactured 2D Poisson problem: -∇²u = f
     // Exact solution: u(x,y) = sin(πx) * sin(2πy)
@@ -111,7 +110,7 @@ fn pde_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     let mut errors = Vec::new();
 
     println!("\nGrid Size   L2 Error      Max Error");
-    println!("─".repeat(35));
+    println!("{}", "─".repeat(35));
 
     for &h in &grid_sizes {
         let n = (1.0 / h) as usize + 1;
@@ -167,7 +166,7 @@ fn pde_verification_example() -> Result<(), Box<dyn std::error::Error>> {
         let l2_error = ErrorAnalysis::l2_norm_2d(u_exact.view(), u_numerical.view())?;
         let max_error = (0.0_f64).max(0.0); // Simplified for demonstration
 
-        println!("{:8.3f}   {:9.2e}   {:9.2e}", h, l2_error, max_error);
+        println!("{:8.3}   {:9.2e}   {:9.2e}", h, l2_error, max_error);
         errors.push(l2_error);
     }
 
@@ -178,7 +177,7 @@ fn pde_verification_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn convergence_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 Convergence Analysis Example");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Create theoretical convergence data
     let grid_sizes = vec![0.2, 0.1, 0.05, 0.025, 0.0125];

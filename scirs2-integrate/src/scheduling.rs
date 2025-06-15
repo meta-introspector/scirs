@@ -192,6 +192,8 @@ pub struct WorkStealingPool<T: WorkStealingTask> {
     worker_states: Arc<Vec<WorkerState<T>>>,
     /// Global task queue for initial distribution
     global_queue: Arc<Mutex<WorkStealingDeque<T>>>,
+    /// Number of tasks currently being executed
+    active_tasks: Arc<AtomicUsize>,
     /// Shutdown flag
     shutdown: Arc<AtomicBool>,
     /// Condition variable for thread coordination
@@ -230,6 +232,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
         );
 
         let global_queue = Arc::new(Mutex::new(WorkStealingDeque::new()));
+        let active_tasks = Arc::new(AtomicUsize::new(0));
         let shutdown = Arc::new(AtomicBool::new(false));
         let cv = Arc::new(Condvar::new());
         let cv_mutex = Arc::new(Mutex::new(()));
@@ -239,6 +242,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
             .map(|worker_id| {
                 let worker_states = Arc::clone(&worker_states);
                 let global_queue = Arc::clone(&global_queue);
+                let active_tasks = Arc::clone(&active_tasks);
                 let shutdown = Arc::clone(&shutdown);
                 let cv = Arc::clone(&cv);
                 let cv_mutex = Arc::clone(&cv_mutex);
@@ -249,6 +253,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
                         worker_id,
                         worker_states,
                         global_queue,
+                        active_tasks,
                         shutdown,
                         cv,
                         cv_mutex,
@@ -262,6 +267,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
             workers,
             worker_states,
             global_queue,
+            active_tasks,
             shutdown,
             cv,
             cv_mutex,
@@ -295,14 +301,15 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     pub fn execute_and_wait(&self) -> IntegrateResult<()> {
         // Wait for all tasks to complete
         loop {
-            // Check if all queues are empty
+            // Check if all queues are empty AND no tasks are currently being executed
             let global_empty = self.global_queue.lock().unwrap().is_empty();
             let locals_empty = self
                 .worker_states
                 .iter()
                 .all(|state| state.local_queue.lock().unwrap().is_empty());
+            let no_active_tasks = self.active_tasks.load(Ordering::Relaxed) == 0;
 
-            if global_empty && locals_empty {
+            if global_empty && locals_empty && no_active_tasks {
                 break;
             }
 
@@ -359,6 +366,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
         worker_id: usize,
         worker_states: Arc<Vec<WorkerState<T>>>,
         global_queue: Arc<Mutex<WorkStealingDeque<T>>>,
+        active_tasks: Arc<AtomicUsize>,
         shutdown: Arc<AtomicBool>,
         cv: Arc<Condvar>,
         cv_mutex: Arc<Mutex<()>>,
@@ -381,10 +389,16 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
             }
 
             if let Some(task) = task_opt {
+                // Mark task as active
+                active_tasks.fetch_add(1, Ordering::Relaxed);
+
                 // Execute the task
                 let start_time = Instant::now();
                 let _result = task.execute();
                 let computation_time = start_time.elapsed();
+
+                // Mark task as completed
+                active_tasks.fetch_sub(1, Ordering::Relaxed);
 
                 // Update statistics
                 my_state.completed_tasks.fetch_add(1, Ordering::Relaxed);

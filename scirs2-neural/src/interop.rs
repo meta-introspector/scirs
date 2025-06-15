@@ -104,15 +104,24 @@ pub enum ShapeTransform {
     /// No transformation needed
     Identity,
     /// Transpose dimensions
-    Transpose { axes: Vec<usize> },
+    Transpose {
+        /// Permutation axes for transposition
+        axes: Vec<usize>,
+    },
     /// Reshape tensor
-    Reshape { target_shape: Vec<usize> },
+    Reshape {
+        /// Target shape after reshaping
+        target_shape: Vec<usize>,
+    },
     /// Channel-first to channel-last
     ChannelsFirstToLast,
     /// Channel-last to channel-first
     ChannelsLastToFirst,
     /// Custom transformation function
-    Custom { transform_id: String },
+    Custom {
+        /// Identifier for the custom transform
+        transform_id: String,
+    },
 }
 
 /// Model metadata for cross-framework compatibility
@@ -289,9 +298,20 @@ pub enum ValidationMode {
     /// Validate shapes only
     ShapeOnly,
     /// Validate numerical outputs (requires test data)
-    Numerical { tolerance: f64 },
+    Numerical {
+        /// Tolerance for numerical comparison
+        tolerance: f64,
+    },
     /// Full validation including training behavior
     Full,
+}
+
+impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand> Default
+    for InteropManager<F>
+{
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand>
@@ -881,7 +901,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     ) {
         self.layer_mappings
             .entry((source, target))
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(mapping);
     }
 }
@@ -900,6 +920,7 @@ struct ONNXModel<F: Float + Debug> {
 /// ONNX graph representation
 #[derive(Debug, Clone)]
 struct ONNXGraph<F: Float + Debug> {
+    #[allow(dead_code)]
     nodes: Vec<ONNXNode>,
     inputs: Vec<TensorSpec>,
     outputs: Vec<TensorSpec>,
@@ -909,15 +930,21 @@ struct ONNXGraph<F: Float + Debug> {
 /// ONNX node representation
 #[derive(Debug, Clone)]
 struct ONNXNode {
+    #[allow(dead_code)]
     name: String,
+    #[allow(dead_code)]
     op_type: String,
+    #[allow(dead_code)]
     inputs: Vec<String>,
+    #[allow(dead_code)]
     outputs: Vec<String>,
+    #[allow(dead_code)]
     attributes: HashMap<String, AttributeValue>,
 }
 
 /// ONNX attribute value
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum AttributeValue {
     Int(i64),
     Float(f64),
@@ -930,16 +957,22 @@ enum AttributeValue {
 /// Internal TensorFlow model representation
 #[derive(Debug, Clone)]
 struct TensorFlowModel<F: Float + Debug> {
+    #[allow(dead_code)]
     graph_def: Vec<u8>,
+    #[allow(dead_code)]
     variables: HashMap<String, ArrayD<F>>,
+    #[allow(dead_code)]
     signatures: HashMap<String, SignatureDef>,
 }
 
 /// TensorFlow signature definition
 #[derive(Debug, Clone)]
 struct SignatureDef {
+    #[allow(dead_code)]
     inputs: HashMap<String, TensorSpec>,
+    #[allow(dead_code)]
     outputs: HashMap<String, TensorSpec>,
+    #[allow(dead_code)]
     method_name: String,
 }
 

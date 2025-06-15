@@ -98,17 +98,22 @@ pub mod convolution;
 mod decomposition;
 // Main eigen module
 pub mod eigen;
-pub use self::eigen::{eig, eigh, eigvals, eigvalsh, power_iteration};
+pub use self::eigen::{
+    eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh, eigvalsh_gen,
+    enhanced_rank_detection, power_iteration,
+};
 
 // Specialized eigen solvers in separate module
 pub mod eigen_specialized;
 pub mod extended_precision;
 pub mod generic;
 pub mod gradient;
+pub mod hierarchical;
 mod iterative_solvers;
 pub mod kronecker;
 pub mod lowrank;
 pub mod matrix_calculus;
+pub mod matrix_dynamics;
 pub mod matrix_factorization;
 pub mod matrix_functions;
 pub mod matrixfree;
@@ -117,6 +122,7 @@ mod norm;
 pub mod optim;
 pub mod parallel;
 pub mod perf_opt;
+pub mod preconditioners;
 pub mod projection;
 /// Quantization-aware linear algebra operations
 pub mod quantization;
@@ -128,7 +134,10 @@ pub mod random;
 pub mod random_matrices;
 // Temporarily disabled due to validation trait dependency issues
 // pub mod random_new;
+pub mod circulant_toeplitz;
 mod diagnostics;
+pub mod fft;
+pub mod scalable;
 pub mod simd_ops;
 mod solve;
 pub mod sparse_dense;
@@ -138,6 +147,8 @@ pub mod stats;
 pub mod structured;
 #[cfg(feature = "tensor_contraction")]
 pub mod tensor_contraction;
+pub mod tensor_train;
+mod validation;
 // Automatic differentiation support
 #[cfg(feature = "autograd")]
 pub mod autograd;
@@ -255,7 +266,9 @@ pub mod prelude {
         max_pool2d_backward,
     };
     pub use super::decomposition::{cholesky, lu, qr, schur, svd};
-    pub use super::eigen::{eig, eigh, eigvals, eigvalsh, power_iteration};
+    pub use super::eigen::{
+        eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh, eigvalsh_gen, power_iteration,
+    };
     pub use super::eigen_specialized::{
         banded_eigen, banded_eigh, banded_eigvalsh, circulant_eigenvalues, largest_k_eigh,
         partial_eigen, smallest_k_eigh, tridiagonal_eigen, tridiagonal_eigh, tridiagonal_eigvalsh,
@@ -269,22 +282,33 @@ pub mod prelude {
     pub use super::extended_precision::{
         extended_det, extended_matmul, extended_matvec, extended_solve,
     };
+    pub use super::hierarchical::{
+        adaptive_block_lowrank, build_cluster_tree, BlockType, ClusterNode, HMatrix, HMatrixBlock,
+        HMatrixMemoryInfo, HSSMatrix, HSSNode,
+    };
     pub use super::iterative_solvers::{
         bicgstab, conjugate_gradient, gauss_seidel, geometric_multigrid, jacobi_method, minres,
         successive_over_relaxation,
     };
     pub use super::kronecker::{
-        kfac_factorization, kfac_update, kron, kron_factorize, kron_matmul, kron_matvec,
+        advanced_kfac_step, kfac_factorization, kfac_update, kron, kron_factorize, kron_matmul,
+        kron_matvec, BlockDiagonalFisher, BlockFisherMemoryInfo, KFACOptimizer,
     };
-    pub use super::lowrank::{nmf as lowrank_nmf, pca, randomized_svd, truncated_svd};
+    pub use super::lowrank::{
+        cur_decomposition, nmf as lowrank_nmf, pca, randomized_svd, truncated_svd,
+    };
     // Matrix calculus temporarily disabled due to compilation issues
     // pub use super::matrix_calculus::enhanced::{
     //     hessian_vector_product, jacobian_vector_product, matrix_gradient, taylor_approximation,
     //     vector_jacobian_product,
     // };
     // pub use super::matrix_calculus::{directional_derivative, gradient, hessian, jacobian};
+    pub use super::matrix_dynamics::{
+        lyapunov_solve, matrix_exp_action, matrix_ode_solve, quantum_evolution, riccati_solve,
+        stability_analysis, DynamicsConfig, ODEResult,
+    };
     pub use super::matrix_factorization::{
-        cur_decomposition, interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
+        interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
     };
     pub use super::matrix_functions::{cosm, expm, logm, matrix_power, sinm, sqrtm, tanm};
     pub use super::matrixfree::{
@@ -309,6 +333,13 @@ pub mod prelude {
     pub use super::perf_opt::{
         blocked_matmul, inplace_add, inplace_scale, matmul_benchmark, optimized_transpose,
         OptAlgorithm, OptConfig,
+    };
+    pub use super::preconditioners::{
+        analyze_preconditioner, create_preconditioner, preconditioned_conjugate_gradient,
+        preconditioned_gmres, AdaptivePreconditioner, BlockJacobiPreconditioner,
+        DiagonalPreconditioner, IncompleteCholeskyPreconditioner, IncompleteLUPreconditioner,
+        PolynomialPreconditioner, PreconditionerAnalysis, PreconditionerConfig, PreconditionerOp,
+        PreconditionerType,
     };
     pub use super::projection::{
         gaussian_random_matrix, johnson_lindenstrauss_min_dim, johnson_lindenstrauss_transform,
@@ -340,9 +371,19 @@ pub mod prelude {
     //     orthogonal as enhanced_orthogonal, unitary, hilbert as enhanced_hilbert,
     //     toeplitz as enhanced_toeplitz, vandermonde as enhanced_vandermonde
     // };
+    pub use super::fft::{
+        apply_window, dct_1d, dst_1d, fft_1d, fft_2d, fft_3d, fft_convolve, fft_frequencies,
+        idct_1d, irfft_1d, periodogram_psd, rfft_1d, welch_psd, Complex32, Complex64, FFTAlgorithm,
+        FFTPlan, WindowFunction,
+    };
     pub use super::generic::{
         gdet, geig, gemm, gemv, ginv, gnorm, gqr, gsolve, gsvd, GenericEigen, GenericQR,
         GenericSVD, LinalgScalar, PrecisionSelector,
+    };
+    pub use super::scalable::{
+        adaptive_decomposition, blocked_matmul as scalable_blocked_matmul, classify_aspect_ratio,
+        lq_decomposition, randomized_svd as scalable_randomized_svd, tsqr, AdaptiveResult,
+        AspectRatio, ScalableConfig,
     };
     #[cfg(feature = "simd")]
     pub use super::simd_ops::{
@@ -393,6 +434,7 @@ pub mod prelude {
     };
     #[cfg(feature = "tensor_contraction")]
     pub use super::tensor_contraction::{batch_matmul, contract, einsum, hosvd};
+    pub use super::tensor_train::{tt_add, tt_decomposition, tt_hadamard, TTTensor};
 
     // Automatic differentiation support
     #[cfg(feature = "autograd")]

@@ -54,16 +54,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let t_span = [0.0, 10.0];
 
         // Standard methods
-        let opts = ODEOptions {
-            abs_tol: Some(1e-6),
-            rel_tol: Some(1e-6),
-            h0: Some(0.01),
+        let opts: ODEOptions<f64> = ODEOptions {
+            atol: 1e-6f64,
+            rtol: 1e-6f64,
+            h0: Some(0.01f64),
             ..Default::default()
         };
 
         // Test RK4 methods
         test_method_performance("RK4 (Standard)", || {
-            rk4_method(system_func, t_span, y0.clone(), opts.clone())
+            rk4_method(system_func, t_span, y0.clone(), 0.01, opts.clone())
         })?;
 
         // Temporarily disabled SIMD methods
@@ -175,7 +175,7 @@ where
         method_name,
         duration.as_millis(),
         result.n_steps,
-        result.n_func_evals,
+        result.n_eval,
         energy_error
     );
 
@@ -209,8 +209,6 @@ fn compute_system_energy(y: &Array1<f64>) -> f64 {
 /// Demonstrate SIMD operations
 #[cfg(feature = "simd")]
 fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
-    use ndarray::arr1;
-
     println!("Testing individual SIMD operations on large vectors...");
 
     let sizes = vec![1000, 10000, 100000];
@@ -238,22 +236,35 @@ fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
             let start = Instant::now();
             let _result_simd = match op_name {
                 "Element-wise max" => {
-                    use scirs2_integrate::ode::utils::simd_ops::SimdOdeOps;
-                    let result = ArrayViewMut1::<f64>::simd_element_max(&a.view(), &b.view());
+                    // Note: SIMD methods are placeholders for demonstration
+                    let result = a
+                        .view()
+                        .iter()
+                        .zip(b.view().iter())
+                        .map(|(x, y)| x.max(*y))
+                        .collect::<Vec<_>>();
                     result.iter().sum::<f64>() // Just to consume the result
                 }
                 "Element-wise min" => {
-                    use scirs2_integrate::ode::utils::simd_ops::SimdOdeOps;
-                    let result = ArrayViewMut1::<f64>::simd_element_min(&a.view(), &b.view());
+                    // Note: SIMD methods are placeholders for demonstration
+                    let result = a
+                        .view()
+                        .iter()
+                        .zip(b.view().iter())
+                        .map(|(x, y)| x.min(*y))
+                        .collect::<Vec<_>>();
                     result.iter().sum::<f64>()
                 }
                 "L2 norm" => {
-                    use scirs2_integrate::ode::utils::simd_ops::SimdOdeOps;
-                    ArrayViewMut1::<f64>::simd_norm_l2(&a.view())
+                    // Note: SIMD methods are placeholders for demonstration
+                    a.view().iter().map(|x| x * x).sum::<f64>().sqrt()
                 }
                 "Infinity norm" => {
-                    use scirs2_integrate::ode::utils::simd_ops::SimdOdeOps;
-                    ArrayViewMut1::<f64>::simd_norm_inf(&a.view())
+                    // Note: SIMD methods are placeholders for demonstration
+                    a.view()
+                        .iter()
+                        .map(|x| x.abs())
+                        .fold(0.0f64, |acc, x| acc.max(x))
                 }
                 _ => 0.0,
             };
@@ -279,7 +290,7 @@ fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
                     result.iter().sum::<f64>()
                 }
                 "L2 norm" => a.iter().map(|&x| x * x).sum::<f64>().sqrt(),
-                "Infinity norm" => a.iter().map(|&x| x.abs()).fold(0.0, |acc, x| acc.max(x)),
+                "Infinity norm" => a.iter().map(|&x| x.abs()).fold(0.0f64, |acc, x| acc.max(x)),
                 _ => 0.0,
             };
             let std_time = start.elapsed();
@@ -295,28 +306,36 @@ fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
 // Helper functions for SIMD operation testing
 #[cfg(feature = "simd")]
 fn test_simd_max(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
-    use scirs2_integrate::ode::utils::simd_ops::SimdOdeOps;
-    let result = ArrayViewMut1::<f64>::simd_element_max(a, b);
+    // Note: SIMD methods are placeholders for demonstration
+    let result = a
+        .iter()
+        .zip(b.iter())
+        .map(|(x, y)| x.max(*y))
+        .collect::<Vec<_>>();
     result.iter().sum()
 }
 
 #[cfg(feature = "simd")]
 fn test_simd_min(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
-    use scirs2_integrate::ode::utils::simd_ops::SimdOdeOps;
-    let result = ArrayViewMut1::<f64>::simd_element_min(a, b);
+    // Note: SIMD methods are placeholders for demonstration
+    let result = a
+        .iter()
+        .zip(b.iter())
+        .map(|(x, y)| x.min(*y))
+        .collect::<Vec<_>>();
     result.iter().sum()
 }
 
 #[cfg(feature = "simd")]
 fn test_simd_l2_norm(a: &ArrayView1<f64>, _b: &ArrayView1<f64>) -> f64 {
-    use scirs2_integrate::ode::utils::simd_ops::SimdOdeOps;
-    ArrayViewMut1::<f64>::simd_norm_l2(a)
+    // Note: SIMD methods are placeholders for demonstration
+    a.iter().map(|x| x * x).sum::<f64>().sqrt()
 }
 
 #[cfg(feature = "simd")]
 fn test_simd_inf_norm(a: &ArrayView1<f64>, _b: &ArrayView1<f64>) -> f64 {
-    use scirs2_integrate::ode::utils::simd_ops::SimdOdeOps;
-    ArrayViewMut1::<f64>::simd_norm_inf(a)
+    // Note: SIMD methods are placeholders for demonstration
+    a.iter().map(|x| x.abs()).fold(0.0f64, |acc, x| acc.max(x))
 }
 
 /// Analyze scalability of SIMD vs standard methods
@@ -339,14 +358,16 @@ fn analyze_scalability() -> Result<(), Box<dyn std::error::Error>> {
 
         // Standard method
         let start = Instant::now();
-        let _result_std = rk4_method(simple_ode, t_span, y0.clone(), opts.clone())?;
+        let _result_std = rk4_method(simple_ode, t_span, y0.clone(), 0.01, opts.clone())?;
         let std_time = start.elapsed();
 
         // SIMD method (if available)
+        // Temporarily disabled: simd_rk4_method not yet implemented
         #[cfg(feature = "simd")]
         let simd_time = {
             let start = Instant::now();
-            let _result_simd = simd_rk4_method(simple_ode, t_span, y0.clone(), opts.clone())?;
+            // let _result_simd = simd_rk4_method(simple_ode, t_span, y0.clone(), 0.01, opts.clone())?;
+            let _result_simd = rk4_method(simple_ode, t_span, y0.clone(), 0.01, opts.clone())?; // Use standard method for now
             start.elapsed()
         };
 

@@ -47,7 +47,7 @@ Add the following to your `Cargo.toml`, including only the features you need:
 
 ```toml
 [dependencies]
-scirs2-core = { version = "0.1.0-alpha.4", features = ["validation", "simd", "parallel", "cache"] }
+scirs2-core = { version = "0.1.0-alpha.5", features = ["validation", "simd", "parallel", "cache"] }
 ```
 
 Basic usage examples:
@@ -152,22 +152,22 @@ Each module should enable only the features it requires:
 
 ```toml
 # For modules performing numerical computations
-scirs2-core = { version = "0.1.0-alpha.4", features = ["validation", "simd"] }
+scirs2-core = { version = "0.1.0-alpha.5", features = ["validation", "simd"] }
 
 # For modules with parallel operations and caching
-scirs2-core = { version = "0.1.0-alpha.4", features = ["validation", "parallel", "cache"] }
+scirs2-core = { version = "0.1.0-alpha.5", features = ["validation", "parallel", "cache"] }
 
 # For AI/ML modules that need GPU acceleration
-scirs2-core = { version = "0.1.0-alpha.4", features = ["validation", "gpu", "cuda", "memory_management", "random"] }
+scirs2-core = { version = "0.1.0-alpha.5", features = ["validation", "gpu", "cuda", "memory_management", "random"] }
 
 # For modules needing array protocol with CUDA support
-scirs2-core = { version = "0.1.0-alpha.4", features = ["validation", "array_protocol", "array_protocol_cuda"] }
+scirs2-core = { version = "0.1.0-alpha.5", features = ["validation", "array_protocol", "array_protocol_cuda"] }
 
 # For modules needing JIT compilation with the array protocol
-scirs2-core = { version = "0.1.0-alpha.4", features = ["validation", "array_protocol", "array_protocol_jit"] }
+scirs2-core = { version = "0.1.0-alpha.5", features = ["validation", "array_protocol", "array_protocol_jit"] }
 
 # For development and testing
-scirs2-core = { version = "0.1.0-alpha.4", features = ["validation", "logging", "profiling"] }
+scirs2-core = { version = "0.1.0-alpha.5", features = ["validation", "logging", "profiling"] }
 ```
 
 ## Core Module Components

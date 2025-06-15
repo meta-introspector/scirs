@@ -39,6 +39,13 @@ kamadak-exif = { workspace = true }
 hdf5 = { workspace = true, optional = true }
 rayon = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true, optional = true, features = ["fs", "io-util", "time", "rt"] }
+futures = { workspace = true, optional = true }
+memmap2 = { workspace = true }
+bytemuck = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
 
 [features]
 default = ["csv", "compression", "validation"]
@@ -46,9 +53,15 @@ csv = []
 compression = []
 validation = []
 hdf5 = ["dep:hdf5"]
-all = ["csv", "compression", "validation", "hdf5"]
+async = ["dep:tokio", "dep:futures"]
+all = ["csv", "compression", "validation", "hdf5", "async"]
 
 [[example]]
 name = "hdf5_example"
 path = "examples/hdf5_example.rs"
 required-features = ["hdf5"]
+
+[[example]]
+name = "async_io_example"
+path = "examples/async_io_example.rs"
+required-features = ["async"]

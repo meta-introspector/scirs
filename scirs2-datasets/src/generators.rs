@@ -1913,7 +1913,7 @@ mod tests {
 
     #[test]
     fn test_missing_patterns() {
-        let mut data =
+        let data =
             Array2::from_shape_vec((20, 4), (0..80).map(|x| x as f64).collect()).unwrap();
 
         // Test different missing patterns
@@ -1937,7 +1937,7 @@ mod tests {
 
     #[test]
     fn test_outlier_types() {
-        let mut data = Array2::ones((30, 3));
+        let data = Array2::ones((30, 3));
 
         // Test different outlier types
         for outlier_type in [

@@ -609,11 +609,14 @@ where
     Ok((result_eigenvals, result_eigenvecs))
 }
 
+/// Type alias for tridiagonal reduction result
+type TridiagonalReduction<F> = LinalgResult<(Array1<F>, Array1<F>, Option<Array2<F>>)>;
+
 /// Helper function to reduce banded matrix to tridiagonal form
 fn reduce_banded_to_tridiagonal<F>(
     matrix: &ArrayView2<F>,
     bandwidth: usize,
-) -> LinalgResult<(Array1<F>, Array1<F>, Option<Array2<F>>)>
+) -> TridiagonalReduction<F>
 where
     F: Float + NumAssign + Zero + One + Sum + 'static,
 {

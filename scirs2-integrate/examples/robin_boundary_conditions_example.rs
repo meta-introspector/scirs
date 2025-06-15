@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn heat_conduction_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔥 Heat Conduction with Convective Boundary Conditions");
-    println!("=".repeat(60));
+    println!("{}", "=".repeat(60));
 
     // Solve: u'' = -q (constant heat generation)
     // with convective boundary conditions:
@@ -91,7 +91,7 @@ fn heat_conduction_example() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("\nTemperature profile:");
         println!("x [m]     T [°C]     u' [°C/m]");
-        println!("─".repeat(35));
+        println!("{}", "─".repeat(35));
 
         let n_print = 11;
         for i in 0..n_print {
@@ -132,7 +132,7 @@ fn heat_conduction_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn beam_deflection_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏗️  Beam Deflection with Mixed Boundary Conditions");
-    println!("=".repeat(60));
+    println!("{}", "=".repeat(60));
 
     // Solve beam deflection: EI * u'''' = q(x)
     // Convert to first-order system: y = [u, u', u'', u''']
@@ -203,7 +203,7 @@ fn beam_deflection_example() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("\nDeflection profile:");
         println!("x [m]     u [m]        u' [rad]     M [N·m]");
-        println!("─".repeat(45));
+        println!("{}", "─".repeat(45));
 
         let n_print = 11;
         for i in 0..n_print {
@@ -226,7 +226,7 @@ fn beam_deflection_example() -> Result<(), Box<dyn std::error::Error>> {
             .y
             .iter()
             .map(|y| y[0].abs())
-            .fold(0.0, |a, b| a.max(b));
+            .fold(0.0f64, |a, b| a.max(b));
 
         println!("\nMaximum deflection: {:.5} m", max_deflection);
 
@@ -254,7 +254,7 @@ fn beam_deflection_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn reaction_diffusion_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧪 Reaction-Diffusion with Robin Boundary Conditions");
-    println!("=".repeat(60));
+    println!("{}", "=".repeat(60));
 
     // Solve: D*u'' - k*u + S = 0 (steady-state reaction-diffusion)
     // Robin BC: a*u + b*u' = c at both ends
@@ -295,7 +295,7 @@ fn reaction_diffusion_example() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("\nConcentration profile:");
         println!("x        u        u'       Reaction");
-        println!("─".repeat(35));
+        println!("{}", "─".repeat(35));
 
         for (i, &x) in result.x.iter().enumerate() {
             let u = result.y[i][0];
@@ -338,7 +338,7 @@ fn reaction_diffusion_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn periodic_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Periodic Boundary Conditions");
-    println!("=".repeat(60));
+    println!("{}", "=".repeat(60));
 
     // Solve: u'' + u = sin(2πx) with periodic BCs: u(0) = u(1), u'(0) = u'(1)
 
@@ -367,7 +367,7 @@ fn periodic_example() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("\nPeriodic solution profile:");
         println!("x        u        u'");
-        println!("─".repeat(25));
+        println!("{}", "─".repeat(25));
 
         for (i, &x) in result.x.iter().enumerate() {
             let u = result.y[i][0];

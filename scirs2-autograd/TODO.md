@@ -58,8 +58,8 @@ This module provides automatic differentiation functionality comparable to PyTor
   - [x] Matrix decompositions (QR, LU, SVD)
   - [x] Matrix norms (Frobenius, etc.)
   - [x] Scalar operations with matrices
-  - [ ] Inverse (planned)
-  - [ ] Determinant (planned)
+  - [x] Inverse (with gradient computation)
+  - [x] Determinant (with gradient computation)
 - [x] Tensor manipulation
   - [x] Reshape
   - [x] Slicing
@@ -88,17 +88,18 @@ This module provides automatic differentiation functionality comparable to PyTor
   - [x] Frobenius norm
   - [x] Spectral norm (basic implementation)
   - [x] Nuclear norm (basic implementation)
-  - [ ] Matrix norm gradient enhancements (issue #42)
-    - [ ] Numerically stable Frobenius norm gradients
-    - [ ] SVD-based spectral norm gradients with proper backpropagation
-    - [ ] Nuclear norm gradient calculation via full SVD
-    - [ ] Optimized gradient implementations for large matrices
-    - [ ] Comprehensive gradient tests and validation
-    - [ ] See MATRIX_NORM_GRADIENTS.md for detailed implementation guide
-- [ ] Matrix functions
-  - [ ] Matrix exponential
-  - [ ] Matrix logarithm
-  - [ ] Matrix power
+  - [x] Matrix norm gradient enhancements (issue #42)
+    - [x] Numerically stable Frobenius norm gradients
+    - [x] SVD-based spectral norm gradients with proper backpropagation
+    - [x] Nuclear norm gradient calculation via full SVD
+    - [x] Optimized gradient implementations for large matrices
+    - [x] Comprehensive gradient tests and validation
+    - [x] See MATRIX_NORM_GRADIENTS.md for detailed implementation guide
+- [x] Matrix functions
+  - [x] Matrix exponential (with gradient computation)
+  - [x] Matrix logarithm (with gradient computation)
+  - [x] Matrix square root (with gradient computation)
+  - [x] Matrix power (with gradient computation)
 - [x] Matrix solvers
   - [x] Linear system solution
   - [x] Least squares
@@ -284,6 +285,11 @@ This module provides automatic differentiation functionality comparable to PyTor
   - [x] Matrix decomposition tests
   - [x] Norm computation tests
   - [x] Basic operation tests
+- [x] Gradient system tests
+  - [x] Matrix operations gradient tests
+  - [x] Norm gradients validation
+  - [x] Placeholder/feeder system tests
+  - [x] Numerical stability tests
 - [ ] Additional testing
   - [ ] Edge case handling
   - [ ] Numerical stability
@@ -303,14 +309,14 @@ This module provides automatic differentiation functionality comparable to PyTor
 ## Short-term Improvements (Next 3-6 months)
 
 ### Immediate Priorities
-- [ ] Matrix norm gradient fixes (issue #42)
-  - [ ] Complete implementation following MATRIX_NORM_GRADIENTS.md guide
-  - [ ] Reactivate and expand gradient tests
-  - [ ] Performance benchmarking against reference implementations
-- [ ] Gradient system robustness
-  - [ ] Fix placeholder/feeder system issues causing test failures
-  - [ ] Improve error handling in gradient computation
-  - [ ] Add gradient verification utilities
+- [x] Matrix norm gradient fixes (issue #42)
+  - [x] Complete implementation following MATRIX_NORM_GRADIENTS.md guide
+  - [x] Reactivate and expand gradient tests
+  - [x] Performance benchmarking against reference implementations
+- [x] Gradient system robustness
+  - [x] Fix placeholder/feeder system issues causing test failures
+  - [x] Improve error handling in gradient computation
+  - [x] Add gradient verification utilities
 - [ ] Memory optimization
   - [ ] Implement more efficient gradient checkpointing strategies
   - [ ] Reduce memory allocations in hot paths

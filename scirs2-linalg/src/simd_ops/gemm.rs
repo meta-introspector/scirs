@@ -566,7 +566,7 @@ pub fn simd_gemv_f64(
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "simd"))]
 mod tests {
     use super::*;
     use approx::assert_relative_eq;

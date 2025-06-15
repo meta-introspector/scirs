@@ -6,11 +6,8 @@
 //! performance improvements for large systems of ODEs.
 
 use crate::common::IntegrateFloat;
-use crate::error::{IntegrateError, IntegrateResult};
+use crate::error::IntegrateResult;
 use ndarray::{Array1, ArrayView1, ArrayViewMut1, Zip};
-
-#[cfg(feature = "simd")]
-use scirs2_core::simd::{simd_maximum_f32, simd_maximum_f64, simd_minimum_f32, simd_minimum_f64};
 
 /// SIMD-optimized ODE operations
 pub struct SimdOdeOps;
@@ -52,33 +49,31 @@ impl SimdOdeOps {
         y: &ArrayView1<F>,
         b: F,
     ) -> Array1<F> {
-        let mut result = Array1::zeros(x.len());
         #[cfg(feature = "simd")]
         {
             match std::any::TypeId::of::<F>() {
                 id if id == std::any::TypeId::of::<f32>() => {
                     let x_f32 = unsafe { std::mem::transmute(x) };
                     let y_f32 = unsafe { std::mem::transmute(y) };
-                    let result_f32 = unsafe { std::mem::transmute(&mut result.view_mut()) };
                     let a_f32 = unsafe { std::mem::transmute_copy(&a) };
                     let b_f32 = unsafe { std::mem::transmute_copy(&b) };
-                    simd_linear_combination_f32_impl(x_f32, a_f32, y_f32, b_f32, result_f32);
-                    return result;
+                    let result = simd_linear_combination_f32_impl(x_f32, a_f32, y_f32, b_f32);
+                    return unsafe { std::mem::transmute(result) };
                 }
                 id if id == std::any::TypeId::of::<f64>() => {
                     let x_f64 = unsafe { std::mem::transmute(x) };
                     let y_f64 = unsafe { std::mem::transmute(y) };
-                    let result_f64 = unsafe { std::mem::transmute(&mut result.view_mut()) };
                     let a_f64 = unsafe { std::mem::transmute_copy(&a) };
                     let b_f64 = unsafe { std::mem::transmute_copy(&b) };
-                    simd_linear_combination_f64_impl(x_f64, a_f64, y_f64, b_f64, result_f64);
-                    return result;
+                    let result = simd_linear_combination_f64_impl(x_f64, a_f64, y_f64, b_f64);
+                    return unsafe { std::mem::transmute(result) };
                 }
                 _ => {}
             }
         }
 
         // Fallback implementation
+        let mut result = Array1::zeros(x.len());
         Zip::from(&mut result)
             .and(x)
             .and(y)
@@ -97,15 +92,15 @@ impl SimdOdeOps {
                 id if id == std::any::TypeId::of::<f32>() => {
                     let a_f32 = unsafe { std::mem::transmute(a) };
                     let b_f32 = unsafe { std::mem::transmute(b) };
-                    let result_f32 = unsafe { std::mem::transmute(&mut result.view_mut()) };
-                    simd_element_max_f32_impl(a_f32, b_f32, result_f32);
+                    let mut result_f32 = unsafe { std::mem::transmute(result.view_mut()) };
+                    simd_element_max_f32_impl(a_f32, b_f32, &mut result_f32);
                     return result;
                 }
                 id if id == std::any::TypeId::of::<f64>() => {
                     let a_f64 = unsafe { std::mem::transmute(a) };
                     let b_f64 = unsafe { std::mem::transmute(b) };
-                    let result_f64 = unsafe { std::mem::transmute(&mut result.view_mut()) };
-                    simd_element_max_f64_impl(a_f64, b_f64, result_f64);
+                    let mut result_f64 = unsafe { std::mem::transmute(result.view_mut()) };
+                    simd_element_max_f64_impl(a_f64, b_f64, &mut result_f64);
                     return result;
                 }
                 _ => {}
@@ -131,15 +126,15 @@ impl SimdOdeOps {
                 id if id == std::any::TypeId::of::<f32>() => {
                     let a_f32 = unsafe { std::mem::transmute(a) };
                     let b_f32 = unsafe { std::mem::transmute(b) };
-                    let result_f32 = unsafe { std::mem::transmute(&mut result.view_mut()) };
-                    simd_element_min_f32_impl(a_f32, b_f32, result_f32);
+                    let mut result_f32 = unsafe { std::mem::transmute(result.view_mut()) };
+                    simd_element_min_f32_impl(a_f32, b_f32, &mut result_f32);
                     return result;
                 }
                 id if id == std::any::TypeId::of::<f64>() => {
                     let a_f64 = unsafe { std::mem::transmute(a) };
                     let b_f64 = unsafe { std::mem::transmute(b) };
-                    let result_f64 = unsafe { std::mem::transmute(&mut result.view_mut()) };
-                    simd_element_min_f64_impl(a_f64, b_f64, result_f64);
+                    let mut result_f64 = unsafe { std::mem::transmute(result.view_mut()) };
+                    simd_element_min_f64_impl(a_f64, b_f64, &mut result_f64);
                     return result;
                 }
                 _ => {}
@@ -215,184 +210,6 @@ impl SimdOdeOps {
     {
         // For now, use standard implementation as SIMD scalar functions are complex
         x.map(|&val| f(val)).to_owned()
-    }
-}
-
-// Removed old trait implementations - using static methods in SimdOdeOps struct instead
-/*
-impl SimdOdeOps<f32> for ArrayView1<'_, f32> {
-    fn simd_axpy(&mut self, a: f32, dy: &ArrayView1<f32>) {
-        #[cfg(feature = "simd")]
-        {
-            simd_axpy_f32_impl(self, a, dy);
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            Zip::from(self).and(dy).for_each(|y, &dy_val| {
-                *y += a * dy_val;
-            });
-        }
-    }
-
-    fn simd_linear_combination(
-        x: &ArrayView1<f32>,
-        a: f32,
-        y: &ArrayView1<f32>,
-        b: f32,
-    ) -> Array1<f32> {
-        #[cfg(feature = "simd")]
-        {
-            simd_linear_combination_f32_impl(x, a, y, b)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            x * a + y * b
-        }
-    }
-
-    fn simd_element_max(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
-        #[cfg(feature = "simd")]
-        {
-            simd_maximum_f32(a, b)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            Zip::from(a)
-                .and(b)
-                .map_collect(|&a_val, &b_val| a_val.max(b_val))
-        }
-    }
-
-    fn simd_element_min(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
-        #[cfg(feature = "simd")]
-        {
-            simd_minimum_f32(a, b)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            Zip::from(a)
-                .and(b)
-                .map_collect(|&a_val, &b_val| a_val.min(b_val))
-        }
-    }
-
-    fn simd_norm_l2(x: &ArrayView1<f32>) -> f32 {
-        #[cfg(feature = "simd")]
-        {
-            simd_norm_l2_f32_impl(x)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            x.iter().map(|&val| val * val).sum::<f32>().sqrt()
-        }
-    }
-
-    fn simd_norm_inf(x: &ArrayView1<f32>) -> f32 {
-        #[cfg(feature = "simd")]
-        {
-            simd_norm_inf_f32_impl(x)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            x.iter().map(|&val| val.abs()).fold(0.0f32, |a, b| a.max(b))
-        }
-    }
-
-    fn simd_map_scalar<Func>(x: &ArrayView1<f32>, f: Func) -> Array1<f32>
-    where
-        Func: Fn(f32) -> f32 + Sync,
-    {
-        // For general scalar functions, SIMD is typically not beneficial
-        // unless the function has a SIMD implementation
-        x.map(|&val| f(val))
-    }
-}
-
-impl SimdOdeOps<f64> for ArrayViewMut1<'_, f64> {
-    fn simd_axpy(&mut self, a: f64, dy: &ArrayView1<f64>) {
-        #[cfg(feature = "simd")]
-        {
-            simd_axpy_f64_impl(self, a, dy);
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            Zip::from(self).and(dy).for_each(|y, &dy_val| {
-                *y += a * dy_val;
-            });
-        }
-    }
-
-    fn simd_linear_combination(
-        x: &ArrayView1<f64>,
-        a: f64,
-        y: &ArrayView1<f64>,
-        b: f64,
-    ) -> Array1<f64> {
-        #[cfg(feature = "simd")]
-        {
-            simd_linear_combination_f64_impl(x, a, y, b)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            x * a + y * b
-        }
-    }
-
-    fn simd_element_max(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
-        #[cfg(feature = "simd")]
-        {
-            simd_maximum_f64(a, b)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            Zip::from(a)
-                .and(b)
-                .map_collect(|&a_val, &b_val| a_val.max(b_val))
-        }
-    }
-
-    fn simd_element_min(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
-        #[cfg(feature = "simd")]
-        {
-            simd_minimum_f64(a, b)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            Zip::from(a)
-                .and(b)
-                .map_collect(|&a_val, &b_val| a_val.min(b_val))
-        }
-    }
-
-    fn simd_norm_l2(x: &ArrayView1<f64>) -> f64 {
-        #[cfg(feature = "simd")]
-        {
-            simd_norm_l2_f64_impl(x)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            x.iter().map(|&val| val * val).sum::<f64>().sqrt()
-        }
-    }
-
-    fn simd_norm_inf(x: &ArrayView1<f64>) -> f64 {
-        #[cfg(feature = "simd")]
-        {
-            simd_norm_inf_f64_impl(x)
-        }
-        #[cfg(not(feature = "simd"))]
-        {
-            x.iter().map(|&val| val.abs()).fold(0.0f64, |a, b| a.max(b))
-        }
-    }
-
-    fn simd_map_scalar<Func>(x: &ArrayView1<f64>, f: Func) -> Array1<f64>
-    where
-        Func: Fn(f64) -> f64 + Sync,
-    {
-        // For general scalar functions, SIMD is typically not beneficial
-        // unless the function has a SIMD implementation
-        x.map(|&val| f(val))
     }
 }
 
@@ -776,6 +593,234 @@ fn simd_norm_inf_f64_impl(x: &ArrayView1<f64>) -> f64 {
     }
 }
 
+/// SIMD-optimized element-wise maximum (f32 version)
+#[cfg(feature = "simd")]
+fn simd_element_max_f32_impl(
+    a: &ArrayView1<f32>,
+    b: &ArrayView1<f32>,
+    result: &mut ArrayViewMut1<f32>,
+) {
+    use wide::f32x8;
+
+    let n = a.len();
+    assert_eq!(n, b.len(), "Arrays must have the same length");
+    assert_eq!(n, result.len(), "Result array must have the same length");
+
+    if let (Some(a_slice), Some(b_slice), Some(result_slice)) =
+        (a.as_slice(), b.as_slice(), result.as_slice_mut())
+    {
+        let chunk_size = 8;
+        let mut i = 0;
+
+        while i + chunk_size <= n {
+            let a_arr = [
+                a_slice[i],
+                a_slice[i + 1],
+                a_slice[i + 2],
+                a_slice[i + 3],
+                a_slice[i + 4],
+                a_slice[i + 5],
+                a_slice[i + 6],
+                a_slice[i + 7],
+            ];
+            let b_arr = [
+                b_slice[i],
+                b_slice[i + 1],
+                b_slice[i + 2],
+                b_slice[i + 3],
+                b_slice[i + 4],
+                b_slice[i + 5],
+                b_slice[i + 6],
+                b_slice[i + 7],
+            ];
+
+            let a_vec = f32x8::new(a_arr);
+            let b_vec = f32x8::new(b_arr);
+
+            let result_vec = a_vec.max(b_vec);
+            let result_arr: [f32; 8] = result_vec.into();
+
+            result_slice[i..i + chunk_size].copy_from_slice(&result_arr);
+            i += chunk_size;
+        }
+
+        // Process remaining elements
+        for j in i..n {
+            result_slice[j] = a_slice[j].max(b_slice[j]);
+        }
+    } else {
+        // Fallback for non-contiguous arrays
+        Zip::from(result)
+            .and(a)
+            .and(b)
+            .for_each(|r, &a_val, &b_val| {
+                *r = a_val.max(b_val);
+            });
+    }
+}
+
+/// SIMD-optimized element-wise maximum (f64 version)
+#[cfg(feature = "simd")]
+fn simd_element_max_f64_impl(
+    a: &ArrayView1<f64>,
+    b: &ArrayView1<f64>,
+    result: &mut ArrayViewMut1<f64>,
+) {
+    use wide::f64x4;
+
+    let n = a.len();
+    assert_eq!(n, b.len(), "Arrays must have the same length");
+    assert_eq!(n, result.len(), "Result array must have the same length");
+
+    if let (Some(a_slice), Some(b_slice), Some(result_slice)) =
+        (a.as_slice(), b.as_slice(), result.as_slice_mut())
+    {
+        let chunk_size = 4;
+        let mut i = 0;
+
+        while i + chunk_size <= n {
+            let a_arr = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+            let b_arr = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+
+            let a_vec = f64x4::new(a_arr);
+            let b_vec = f64x4::new(b_arr);
+
+            let result_vec = a_vec.max(b_vec);
+            let result_arr: [f64; 4] = result_vec.into();
+
+            result_slice[i..i + chunk_size].copy_from_slice(&result_arr);
+            i += chunk_size;
+        }
+
+        // Process remaining elements
+        for j in i..n {
+            result_slice[j] = a_slice[j].max(b_slice[j]);
+        }
+    } else {
+        // Fallback for non-contiguous arrays
+        Zip::from(result)
+            .and(a)
+            .and(b)
+            .for_each(|r, &a_val, &b_val| {
+                *r = a_val.max(b_val);
+            });
+    }
+}
+
+/// SIMD-optimized element-wise minimum (f32 version)
+#[cfg(feature = "simd")]
+fn simd_element_min_f32_impl(
+    a: &ArrayView1<f32>,
+    b: &ArrayView1<f32>,
+    result: &mut ArrayViewMut1<f32>,
+) {
+    use wide::f32x8;
+
+    let n = a.len();
+    assert_eq!(n, b.len(), "Arrays must have the same length");
+    assert_eq!(n, result.len(), "Result array must have the same length");
+
+    if let (Some(a_slice), Some(b_slice), Some(result_slice)) =
+        (a.as_slice(), b.as_slice(), result.as_slice_mut())
+    {
+        let chunk_size = 8;
+        let mut i = 0;
+
+        while i + chunk_size <= n {
+            let a_arr = [
+                a_slice[i],
+                a_slice[i + 1],
+                a_slice[i + 2],
+                a_slice[i + 3],
+                a_slice[i + 4],
+                a_slice[i + 5],
+                a_slice[i + 6],
+                a_slice[i + 7],
+            ];
+            let b_arr = [
+                b_slice[i],
+                b_slice[i + 1],
+                b_slice[i + 2],
+                b_slice[i + 3],
+                b_slice[i + 4],
+                b_slice[i + 5],
+                b_slice[i + 6],
+                b_slice[i + 7],
+            ];
+
+            let a_vec = f32x8::new(a_arr);
+            let b_vec = f32x8::new(b_arr);
+
+            let result_vec = a_vec.min(b_vec);
+            let result_arr: [f32; 8] = result_vec.into();
+
+            result_slice[i..i + chunk_size].copy_from_slice(&result_arr);
+            i += chunk_size;
+        }
+
+        // Process remaining elements
+        for j in i..n {
+            result_slice[j] = a_slice[j].min(b_slice[j]);
+        }
+    } else {
+        // Fallback for non-contiguous arrays
+        Zip::from(result)
+            .and(a)
+            .and(b)
+            .for_each(|r, &a_val, &b_val| {
+                *r = a_val.min(b_val);
+            });
+    }
+}
+
+/// SIMD-optimized element-wise minimum (f64 version)
+#[cfg(feature = "simd")]
+fn simd_element_min_f64_impl(
+    a: &ArrayView1<f64>,
+    b: &ArrayView1<f64>,
+    result: &mut ArrayViewMut1<f64>,
+) {
+    use wide::f64x4;
+
+    let n = a.len();
+    assert_eq!(n, b.len(), "Arrays must have the same length");
+    assert_eq!(n, result.len(), "Result array must have the same length");
+
+    if let (Some(a_slice), Some(b_slice), Some(result_slice)) =
+        (a.as_slice(), b.as_slice(), result.as_slice_mut())
+    {
+        let chunk_size = 4;
+        let mut i = 0;
+
+        while i + chunk_size <= n {
+            let a_arr = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+            let b_arr = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+
+            let a_vec = f64x4::new(a_arr);
+            let b_vec = f64x4::new(b_arr);
+
+            let result_vec = a_vec.min(b_vec);
+            let result_arr: [f64; 4] = result_vec.into();
+
+            result_slice[i..i + chunk_size].copy_from_slice(&result_arr);
+            i += chunk_size;
+        }
+
+        // Process remaining elements
+        for j in i..n {
+            result_slice[j] = a_slice[j].min(b_slice[j]);
+        }
+    } else {
+        // Fallback for non-contiguous arrays
+        Zip::from(result)
+            .and(a)
+            .and(b)
+            .for_each(|r, &a_val, &b_val| {
+                *r = a_val.min(b_val);
+            });
+    }
+}
+
 /// SIMD-optimized Runge-Kutta step computation
 ///
 /// Performs the computation: y_new = y + h * (c1*k1 + c2*k2 + c3*k3 + c4*k4)
@@ -904,16 +949,13 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     fn test_simd_axpy() {
-        use crate::ode::utils::simd_ops::SimdOdeOps;
-
         let mut y = arr1(&[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
         let x = arr1(&[0.1f32, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]);
         let a = 2.0f32;
 
         let expected = y.clone() + &x * a;
 
-        let mut y_view = y.view_mut();
-        y_view.simd_axpy(a, &x.view());
+        SimdOdeOps::simd_axpy(&mut y.view_mut(), a, &x.view());
 
         for i in 0..y.len() {
             assert_relative_eq!(y[i], expected[i], epsilon = 1e-6);
@@ -923,13 +965,11 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     fn test_simd_linear_combination() {
-        use crate::ode::utils::simd_ops::SimdOdeOps;
-
         let x = arr1(&[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
         let y = arr1(&[0.1f32, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]);
         let (a, b) = (2.0f32, 3.0f32);
 
-        let result = ArrayViewMut1::<f32>::simd_linear_combination(&x.view(), a, &y.view(), b);
+        let result = SimdOdeOps::simd_linear_combination(&x.view(), a, &y.view(), b);
         let expected = &x * a + &y * b;
 
         for i in 0..result.len() {
@@ -940,12 +980,10 @@ mod tests {
     #[test]
     #[cfg(feature = "simd")]
     fn test_simd_norms() {
-        use crate::ode::utils::simd_ops::SimdOdeOps;
-
         let x = arr1(&[3.0f32, 4.0, 0.0, -5.0, 12.0, 0.0, 0.0, 0.0]);
 
-        let l2_norm = ArrayViewMut1::<f32>::simd_norm_l2(&x.view());
-        let inf_norm = ArrayViewMut1::<f32>::simd_norm_inf(&x.view());
+        let l2_norm = SimdOdeOps::simd_norm_l2(&x.view());
+        let inf_norm = SimdOdeOps::simd_norm_inf(&x.view());
 
         let expected_l2 = (3.0f32 * 3.0 + 4.0 * 4.0 + 5.0 * 5.0 + 12.0 * 12.0).sqrt();
         let expected_inf = 12.0f32;
@@ -954,4 +992,3 @@ mod tests {
         assert_relative_eq!(inf_norm, expected_inf, epsilon = 1e-6);
     }
 }
-*/

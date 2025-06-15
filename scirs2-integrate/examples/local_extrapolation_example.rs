@@ -113,18 +113,18 @@ where
 
         for (method_name, method_id) in &methods {
             let opts = ODEOptions {
-                abs_tol: Some(1e-8),
-                rel_tol: Some(1e-8),
+                atol: 1e-8,
+                rtol: 1e-8,
                 h0: Some(step_size),
                 max_step: Some(step_size),
                 min_step: Some(step_size / 1000.0),
-                max_steps: Some(10000),
+                max_steps: 10000,
                 ..Default::default()
             };
 
             let result = match *method_id {
-                "euler" => euler_method(f, t_span, y0.clone(), opts),
-                "rk4" => rk4_method(f, t_span, y0.clone(), opts),
+                "euler" => euler_method(f, t_span, y0.clone(), step_size, opts),
+                "rk4" => rk4_method(f, t_span, y0.clone(), step_size, opts),
                 "gbs_mm" => {
                     let ext_opts = ExtrapolationOptions {
                         base_method: ExtrapolationBaseMethod::ModifiedMidpoint,
@@ -162,11 +162,7 @@ where
 
                     println!(
                         "{:<20}\\t{:.6e}\\t\\t{:.2e}\\t\\t{}\\t{}",
-                        method_name,
-                        final_value,
-                        error,
-                        ode_result.n_steps,
-                        ode_result.n_func_evals
+                        method_name, final_value, error, ode_result.n_steps, ode_result.n_eval
                     );
                 }
                 Err(e) => {
@@ -192,10 +188,10 @@ where
     println!("{}", "-".repeat(75));
 
     let opts = ODEOptions {
-        abs_tol: Some(1e-6),
-        rel_tol: Some(1e-6),
+        atol: 1e-6,
+        rtol: 1e-6,
         h0: Some(0.1),
-        max_steps: Some(10000),
+        max_steps: 10000,
         ..Default::default()
     };
 
@@ -221,8 +217,8 @@ where
             Ok(result) => {
                 let final_y = result.y.last().unwrap();
                 println!(
-                    "{:<20}\\t{:.6f}\\t\\t{:.6f}\\t\\t{}\\t{}",
-                    method_name, final_y[0], final_y[1], result.n_steps, result.n_func_evals
+                    "{:<20}\\t{:.6}\\t\\t{:.6}\\t\\t{}\\t{}",
+                    method_name, final_y[0], final_y[1], result.n_steps, result.n_eval
                 );
             }
             Err(e) => {
@@ -242,7 +238,7 @@ fn demonstrate_richardson_extrapolation() -> Result<(), Box<dyn std::error::Erro
     let f = |_t: f64, y: ArrayView1<f64>| -> Array1<f64> { -y.to_owned() };
 
     let y0 = Array1::from_vec(vec![1.0]);
-    let h = 0.1;
+    let h = 0.1f64;
     let exact = (-h).exp();
 
     // Simple Euler step
@@ -263,7 +259,7 @@ fn demonstrate_richardson_extrapolation() -> Result<(), Box<dyn std::error::Erro
     let (y_rich, error_est) = richardson_extrapolation_step(
         |f, t, y, h| {
             euler_step(f, t, y, h)
-                .map_err(|e| scirs2_integrate::error::IntegrateError::Other(e.to_string()))
+                .map_err(|e| scirs2_integrate::error::IntegrateError::ValueError(e.to_string()))
         },
         &f,
         0.0,

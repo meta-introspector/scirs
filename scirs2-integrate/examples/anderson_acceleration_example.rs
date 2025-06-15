@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn scalar_fixed_point_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Scalar Fixed-Point Iteration");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Solve x = 0.8*cos(x) using fixed-point iteration
     // This has solution approximately x ≈ 0.6947
@@ -36,25 +36,25 @@ fn scalar_fixed_point_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Exact solution: x ≈ 0.6947");
 
     // Standard fixed-point iteration
-    let mut x_standard = 0.5;
-    let mut x_anderson = Array1::from_vec(vec![0.5]);
+    let mut x_standard = 0.5f64;
+    let mut x_anderson = Array1::from_vec(vec![0.5f64]);
 
     let mut accelerator = AndersonAccelerator::new(1, AcceleratorOptions::default());
 
     println!("\nIteration   Standard FP   Anderson Acc   Speedup Factor");
-    println!("─".repeat(60));
+    println!("{}", "─".repeat(60));
 
     for iter in 1..=15 {
         // Standard iteration
-        x_standard = 0.8 * x_standard.cos();
+        x_standard = 0.8f64 * x_standard.cos();
 
         // Anderson accelerated iteration
-        let g_x = Array1::from_vec(vec![0.8 * x_anderson[0].cos()]);
+        let g_x = Array1::from_vec(vec![0.8f64 * x_anderson[0].cos()]);
         if let Some(x_new) = accelerator.accelerate(x_anderson.view(), g_x.view()) {
             x_anderson = x_new;
         }
 
-        let exact = 0.6947;
+        let exact = 0.6947f64;
         let error_standard = (x_standard - exact).abs();
         let error_anderson = (x_anderson[0] - exact).abs();
 
@@ -65,7 +65,7 @@ fn scalar_fixed_point_example() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         println!(
-            "{:9}   {:11.6f}   {:12.6f}   {:10.2f}",
+            "{:9}   {:11.6}   {:12.6}   {:10.2}",
             iter, x_standard, x_anderson[0], speedup
         );
 
@@ -81,7 +81,7 @@ fn scalar_fixed_point_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn nonlinear_system_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Nonlinear System Solving");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Solve system:
     // x₁ = 0.3*x₁ + 0.2*x₂ + 1.0
@@ -96,21 +96,21 @@ fn nonlinear_system_example() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut options = AcceleratorOptions::default();
     options.memory_depth = 5;
-    options.damping = 0.8;
+    options.damping = 0.8f64;
 
     let mut accelerator = AndersonAccelerator::new(2, options);
-    let mut x = Array1::from_vec(vec![0.0, 0.0]);
+    let mut x = Array1::from_vec(vec![0.0f64, 0.0f64]);
 
-    let exact = Array1::from_vec(vec![1.875, 1.25]);
+    let exact = Array1::from_vec(vec![1.875f64, 1.25f64]);
 
     println!("\nIteration   x₁        x₂        Error     Active");
-    println!("─".repeat(50));
+    println!("{}", "─".repeat(50));
 
     for iter in 1..=20 {
         // Define the fixed-point map G(x)
         let g_x = Array1::from_vec(vec![
-            0.3 * x[0] + 0.2 * x[1] + 1.0,
-            0.1 * x[0] + 0.4 * x[1] + 0.5,
+            0.3f64 * x[0] + 0.2f64 * x[1] + 1.0f64,
+            0.1f64 * x[0] + 0.4f64 * x[1] + 0.5f64,
         ]);
 
         if let Some(x_new) = accelerator.accelerate(x.view(), g_x.view()) {
@@ -121,7 +121,7 @@ fn nonlinear_system_example() -> Result<(), Box<dyn std::error::Error>> {
         let active = if accelerator.is_active() { "Yes" } else { "No" };
 
         println!(
-            "{:9}   {:7.4f}   {:7.4f}   {:8.2e}   {}",
+            "{:9}   {:7.4}   {:7.4}   {:8.2e}   {}",
             iter, x[0], x[1], error, active
         );
 
@@ -137,7 +137,7 @@ fn nonlinear_system_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn performance_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Performance Comparison");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Compare standard vs Anderson acceleration for a challenging problem
     let problems = vec![
@@ -150,16 +150,16 @@ fn performance_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     println!("Problem           Standard  Anderson  Speedup");
-    println!("─".repeat(45));
+    println!("{}", "─".repeat(45));
 
     for (name, problem_fn) in problems {
         let start = Instant::now();
         let iters_standard = solve_standard(&problem_fn, 1000, 1e-8);
-        let time_standard = start.elapsed();
+        let _time_standard = start.elapsed();
 
         let start = Instant::now();
         let iters_anderson = solve_anderson(&problem_fn, 1000, 1e-8);
-        let time_anderson = start.elapsed();
+        let _time_anderson = start.elapsed();
 
         let speedup = if iters_anderson > 0 {
             iters_standard as f64 / iters_anderson as f64
@@ -168,7 +168,7 @@ fn performance_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         println!(
-            "{:15}   {:7}   {:7}   {:6.2f}x",
+            "{:15}   {:7}   {:7}   {:6.2}x",
             name, iters_standard, iters_anderson, speedup
         );
     }
@@ -179,7 +179,7 @@ fn performance_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn aitken_acceleration_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 Aitken Acceleration for Sequences");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Accelerate convergence of sequence: x_n = 1 - 1/n → 1
     println!("Sequence: x_n = 1 - 1/n → 1");
@@ -187,7 +187,7 @@ fn aitken_acceleration_example() -> Result<(), Box<dyn std::error::Error>> {
     let mut aitken = AitkenAccelerator::new();
 
     println!("\nn    x_n      Aitken   Error     Improvement");
-    println!("─".repeat(45));
+    println!("{}", "─".repeat(45));
 
     for n in 1..=10 {
         let x_n = 1.0 - 1.0 / (n as f64);
@@ -203,7 +203,7 @@ fn aitken_acceleration_example() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         println!(
-            "{:2}   {:6.4f}   {:6.4f}   {:8.2e}   {:8.2f}x",
+            "{:2}   {:6.4}   {:6.4}   {:8.2e}   {:8.2}x",
             n, x_n, x_aitken, error_aitken, improvement
         );
     }

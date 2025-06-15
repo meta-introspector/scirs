@@ -23,6 +23,7 @@ where
 }
 
 /// Average timing over multiple runs
+#[allow(dead_code)]
 fn time_function_averaged<F, R>(mut f: F, name: &str, runs: usize) -> (f64, R)
 where
     F: FnMut() -> R,
@@ -101,7 +102,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         };
 
-        let (time, result) = time_function(
+        let (_time, result) = time_function(
             || {
                 solve_ivp(
                     exponential_decay,
@@ -136,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         };
 
-        let (time, result) = time_function(
+        let (_time, result) = time_function(
             || {
                 solve_ivp(
                     harmonic_oscillator,
@@ -171,7 +172,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         };
 
-        let (time, result) = time_function(
+        let (_time, result) = time_function(
             || solve_ivp(van_der_pol_stiff, t_span_vdp, y0_vdp.clone(), Some(opts)),
             &format!("Van der Pol stiff ({})", name),
         );
@@ -191,7 +192,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("-----------------------");
 
     // Polynomial integration (exact answer known)
-    let (time, result) = time_function(
+    let (_time, result) = time_function(
         || {
             let opts = QuadOptions {
                 abs_tol: 1e-12,
@@ -214,7 +215,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Oscillatory function
-    let (time, result) = time_function(
+    let (_time, result) = time_function(
         || {
             let opts = QuadOptions {
                 abs_tol: 1e-10,
@@ -243,7 +244,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sample_counts = vec![1_000, 10_000, 100_000];
 
     for &n_samples in &sample_counts {
-        let (time, result) = time_function(
+        let (_time, result) = time_function(
             || {
                 let ranges = vec![(-2.0, 2.0), (-2.0, 2.0)];
                 let opts = MonteCarloOptions {
@@ -282,7 +283,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let ranges = vec![(-2.0, 2.0), (-2.0, 2.0)];
 
         // Sequential
-        let (seq_time, seq_result) = time_function(
+        let (seq_time, _seq_result) = time_function(
             || {
                 let opts = MonteCarloOptions {
                     n_samples,
@@ -294,11 +295,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         // Parallel
-        let (par_time, par_result) = time_function(
+        let (par_time, _par_result) = time_function(
             || {
                 let opts = ParallelMonteCarloOptions {
                     n_samples,
-                    chunk_size: Some(n_samples / 8),
+                    batch_size: n_samples / 8,
                     ..Default::default()
                 };
                 parallel_monte_carlo(gaussian_2d, &ranges, Some(opts))
@@ -322,7 +323,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for &n in &system_sizes {
         // Create a large linear ODE system: dy/dt = A*y
-        let (time, result) = time_function(
+        let (_time, result) = time_function(
             || {
                 use ndarray::Array2;
 

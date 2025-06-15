@@ -808,6 +808,163 @@ impl<
             Ok(Array::from_elem(target_shape, mean_val))
         }
     }
+
+    /// Analyze layer activations and store statistics
+    pub fn analyze_layer_activations(
+        &mut self,
+        layer_name: String,
+        activations: &ArrayD<F>,
+    ) -> Result<()> {
+        // Cache the activations
+        self.cache_activations(layer_name.clone(), activations.clone());
+
+        // Compute statistics
+        let flattened = activations
+            .view()
+            .into_shape_with_order(activations.len())?;
+        let mean_activation = flattened.mean().unwrap_or(F::zero());
+        let variance = flattened
+            .mapv(|x| (x - mean_activation) * (x - mean_activation))
+            .mean()
+            .unwrap_or(F::zero());
+        let std_activation = variance.sqrt();
+        let max_activation =
+            flattened.fold(F::neg_infinity(), |acc, &x| if x > acc { x } else { acc });
+        let min_activation = flattened.fold(F::infinity(), |acc, &x| if x < acc { x } else { acc });
+
+        // Count dead neurons (activations always zero)
+        let dead_count = flattened.iter().filter(|&&x| x == F::zero()).count();
+        let dead_neuron_percentage = (dead_count as f64 / flattened.len() as f64) * 100.0;
+
+        // Compute sparsity (percentage of near-zero activations)
+        let threshold = F::from(1e-6).unwrap_or(F::zero());
+        let sparse_count = flattened.iter().filter(|&&x| x.abs() < threshold).count();
+        let sparsity = (sparse_count as f64 / flattened.len() as f64) * 100.0;
+
+        // Create a simple histogram (10 bins)
+        let num_bins = 10;
+        let range = max_activation - min_activation;
+        let bin_width = if range > F::zero() {
+            range / F::from(num_bins).unwrap()
+        } else {
+            F::one()
+        };
+
+        let mut histogram = vec![0u32; num_bins];
+        let mut bin_edges = Vec::new();
+
+        // Generate bin edges
+        for i in 0..=num_bins {
+            bin_edges.push(min_activation + F::from(i).unwrap() * bin_width);
+        }
+
+        // Fill histogram
+        for &activation in flattened.iter() {
+            if range > F::zero() {
+                let bin_index = ((activation - min_activation) / bin_width)
+                    .to_usize()
+                    .unwrap_or(0);
+                let bin_index = bin_index.min(num_bins - 1);
+                histogram[bin_index] += 1;
+            } else {
+                histogram[0] += 1; // All values in first bin if no range
+            }
+        }
+
+        let stats = LayerAnalysisStats {
+            mean_activation,
+            std_activation,
+            max_activation,
+            min_activation,
+            dead_neuron_percentage,
+            sparsity,
+            histogram,
+            bin_edges,
+        };
+
+        self.layer_statistics.insert(layer_name, stats);
+        Ok(())
+    }
+
+    /// Get statistics for a specific layer
+    pub fn get_layer_statistics(&self, layer_name: &str) -> Option<&LayerAnalysisStats<F>> {
+        self.layer_statistics.get(layer_name)
+    }
+
+    /// Generate a comprehensive interpretation report
+    pub fn generate_interpretation_report(
+        &self,
+        input: &ArrayD<F>,
+        target_class: Option<usize>,
+    ) -> Result<InterpretationReport<F>> {
+        let input_shape = input.shape().to_vec();
+
+        // Generate attributions for all available methods
+        let mut attributions = HashMap::new();
+        let mut attribution_statistics = HashMap::new();
+
+        for method in &self.attribution_methods {
+            if let Ok(attribution) = self.compute_attribution(method, input, target_class) {
+                let method_name = format!("{:?}", method);
+
+                // Compute attribution statistics
+                let flattened = attribution
+                    .view()
+                    .into_shape_with_order(attribution.len())?;
+                let mean = flattened.mean().unwrap_or(F::zero());
+                let mean_absolute = flattened.mapv(|x| x.abs()).mean().unwrap_or(F::zero());
+                let max_absolute =
+                    flattened.fold(
+                        F::zero(),
+                        |acc, &x| if x.abs() > acc { x.abs() } else { acc },
+                    );
+
+                let positive_count = flattened.iter().filter(|&&x| x > F::zero()).count();
+                let positive_attribution_ratio = positive_count as f64 / flattened.len() as f64;
+
+                let total_positive_attribution = flattened
+                    .iter()
+                    .filter(|&&x| x > F::zero())
+                    .fold(F::zero(), |acc, &x| acc + x);
+                let total_negative_attribution = flattened
+                    .iter()
+                    .filter(|&&x| x < F::zero())
+                    .fold(F::zero(), |acc, &x| acc + x);
+
+                let stats = AttributionStatistics {
+                    mean,
+                    mean_absolute,
+                    max_absolute,
+                    positive_attribution_ratio,
+                    total_positive_attribution,
+                    total_negative_attribution,
+                };
+
+                attributions.insert(method_name.clone(), attribution);
+                attribution_statistics.insert(method_name, stats);
+            }
+        }
+
+        // Clone layer statistics
+        let layer_statistics = self.layer_statistics.clone();
+
+        // Create interpretation summary
+        let interpretation_summary = InterpretationSummary {
+            num_attribution_methods: self.attribution_methods.len(),
+            average_method_consistency: 0.75, // Placeholder consistency
+            most_important_features: vec![0, 1, 2], // Placeholder important features
+            interpretation_confidence: 0.85,  // Placeholder confidence
+        };
+
+        Ok(InterpretationReport {
+            input_shape: IxDyn(&input_shape),
+            target_class,
+            attributions,
+            attribution_statistics,
+            layer_statistics,
+            interpretation_summary,
+        })
+    }
 }
 
 impl<

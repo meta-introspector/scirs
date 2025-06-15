@@ -1,9 +1,19 @@
 //! MATLAB file format (.mat) handling module
 //!
 //! This module provides functionality for reading and writing MATLAB .mat files.
-//! Currently supporting MATLAB v5 format (Level 5 MAT-File).
+//! Supports MATLAB v5 format (Level 5 MAT-File) and enhanced v7.3+ format.
+//!
+//! # Submodules
+//!
+//! - `enhanced`: Enhanced MATLAB format support with v7.3+ and HDF5 integration
+//! - `write_impl`: Internal implementation details for MAT file writing
 
-use byteorder::{ByteOrder, LittleEndian, WriteBytesExt};
+/// Enhanced MATLAB format support with v7.3+ and HDF5 integration
+pub mod enhanced;
+/// Internal MAT file writing implementation
+mod write_impl;
+
+use byteorder::{ByteOrder, LittleEndian};
 use ndarray::{Array, ArrayD, IxDyn};
 use std::collections::HashMap;
 use std::fs::File;
@@ -562,46 +572,18 @@ fn bytes_to_u64_vec(bytes: &[u8]) -> Vec<u64> {
 ///
 /// write_mat(Path::new("output.mat"), &vars).unwrap();
 /// ```
-pub fn write_mat<P: AsRef<Path>>(path: P, _vars: &HashMap<String, MatType>) -> Result<()> {
+pub fn write_mat<P: AsRef<Path>>(path: P, vars: &HashMap<String, MatType>) -> Result<()> {
     let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write MAT file header
+    write_impl::write_mat_header(&mut writer)?;
 
-    // Write "MATLAB" magic string
-    writer
-        .write_all(b"MATLAB ")
-        .map_err(|e| IoError::FileError(format!("Failed to write MAT header: {}", e)))?;
+    // Write each variable
+    for (name, mat_type) in vars {
+        write_impl::write_variable(&mut writer, name, mat_type)?;
+    }
 
-    // Write version platform info (padding to 116 bytes total)
-    let version = format!(
-        "7.0 MAT-file, Platform: SCIRS2, Created by: scirs2-io {}",
-        env!("CARGO_PKG_VERSION")
-    );
-    let version_bytes = version.as_bytes();
-    let version_len = version_bytes.len().min(110); // Ensure it fits in the header
-
-    writer
-        .write_all(&version_bytes[0..version_len])
-        .map_err(|e| IoError::FileError(format!("Failed to write version info: {}", e)))?;
-
-    // Pad to 116 bytes
-    let padding = vec![0u8; 116 - 6 - version_len];
-    writer
-        .write_all(&padding)
-        .map_err(|e| IoError::FileError(format!("Failed to write header padding: {}", e)))?;
-
-    // Write version (0x0100 for MAT 5) and endianness indicator (0x4D49 for little endian)
-    writer
-        .write_u16::<LittleEndian>(0x0100)
-        .map_err(|e| IoError::FileError(format!("Failed to write version: {}", e)))?;
-    writer
-        .write_u16::<LittleEndian>(0x4D49)
-        .map_err(|e| IoError::FileError(format!("Failed to write endianness: {}", e)))?;
-
-    // TODO: Implement full writing of variables
-    // For now, return a placeholder message
-    Err(IoError::Other(
-        "MATLAB file writing not fully implemented yet".to_string(),
-    ))
+    writer.flush().map_err(|e| IoError::FileError(format!("Failed to flush writer: {}", e)))?;
+    Ok(())
 }

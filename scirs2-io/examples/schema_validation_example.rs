@@ -3,9 +3,7 @@
 //! This example demonstrates the new schema validation capabilities
 //! for validating structured data against defined schemas.
 
-use scirs2_io::validation::{
-    schema_helpers, SchemaConstraint, SchemaDataType, SchemaDefinition, SchemaValidator,
-};
+use scirs2_io::validation::{schema_helpers, SchemaConstraint, SchemaValidator};
 use serde_json::json;
 use std::collections::HashMap;
 use tempfile::tempdir;

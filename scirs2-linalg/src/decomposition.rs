@@ -6,6 +6,7 @@ use std::iter::Sum;
 
 use crate::error::{LinalgError, LinalgResult};
 use crate::lapack::{cholesky as lapack_cholesky, lu_factor, qr_factor, svd as lapack_svd};
+use crate::validation::validate_decomposition;
 
 // Type aliases for complex return types
 /// Result type for QZ decomposition: (Q, A_decomp, B_decomp, Z)
@@ -44,14 +45,39 @@ pub fn cholesky<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Ar
 where
     F: Float + NumAssign + Sum,
 {
+    // Parameter validation using helper function
+    validate_decomposition(a, "Cholesky decomposition", true)?;
+
     // Configure OpenMP thread count if workers specified
     // Note: This affects BLAS/LAPACK operations that use OpenMP
     if let Some(num_workers) = workers {
         std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
     }
 
-    // Use the LAPACK implementation
-    lapack_cholesky(a)
+    // Use the LAPACK implementation with enhanced error handling
+    match lapack_cholesky(a) {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            // Enhanced error handling for common Cholesky failures
+            match e {
+                LinalgError::NonPositiveDefiniteError(_) => {
+                    Err(LinalgError::non_positive_definite_with_suggestions(
+                        "Cholesky decomposition",
+                        a.dim(),
+                        None,
+                    ))
+                }
+                LinalgError::SingularMatrixError(_) => {
+                    Err(LinalgError::singular_matrix_with_suggestions(
+                        "Cholesky decomposition",
+                        a.dim(),
+                        None,
+                    ))
+                }
+                _ => Err(e),
+            }
+        }
+    }
 }
 
 /// Compute the LU decomposition of a matrix.
@@ -86,12 +112,44 @@ pub fn lu<F>(
 where
     F: Float + NumAssign + One + Sum,
 {
+    // Parameter validation
+    if a.is_empty() {
+        return Err(LinalgError::ShapeError(
+            "LU decomposition failed: Input matrix cannot be empty".to_string(),
+        ));
+    }
+
+    // Check for finite values
+    for &val in a.iter() {
+        if !val.is_finite() {
+            return Err(LinalgError::InvalidInputError(
+                "LU decomposition failed: Matrix contains non-finite values".to_string(),
+            ));
+        }
+    }
+
     // Configure OpenMP thread count if workers specified
     if let Some(num_workers) = workers {
         std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
     }
 
-    let lu_result = lu_factor(a)?;
+    // Use the LAPACK implementation with enhanced error handling
+    let lu_result = match lu_factor(a) {
+        Ok(result) => result,
+        Err(e) => {
+            // Enhanced error handling for common LU failures
+            match e {
+                LinalgError::SingularMatrixError(_) => {
+                    return Err(LinalgError::singular_matrix_with_suggestions(
+                        "LU decomposition",
+                        a.dim(),
+                        None,
+                    ));
+                }
+                _ => return Err(e),
+            }
+        }
+    };
 
     let n = a.nrows();
     let m = a.ncols();
@@ -151,13 +209,44 @@ pub fn qr<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<(Array2<
 where
     F: Float + NumAssign + Sum,
 {
+    // Parameter validation
+    if a.is_empty() {
+        return Err(LinalgError::ShapeError(
+            "QR decomposition failed: Input matrix cannot be empty".to_string(),
+        ));
+    }
+
+    // Check for finite values
+    for &val in a.iter() {
+        if !val.is_finite() {
+            return Err(LinalgError::InvalidInputError(
+                "QR decomposition failed: Matrix contains non-finite values".to_string(),
+            ));
+        }
+    }
+
     // Configure OpenMP thread count if workers specified
     if let Some(num_workers) = workers {
         std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
     }
 
-    let qr_result = qr_factor(a)?;
-    Ok((qr_result.q, qr_result.r))
+    // Use the LAPACK implementation with enhanced error handling
+    match qr_factor(a) {
+        Ok(qr_result) => Ok((qr_result.q, qr_result.r)),
+        Err(e) => {
+            // Enhanced error handling for common QR failures
+            match e {
+                LinalgError::SingularMatrixError(_) => {
+                    Err(LinalgError::singular_matrix_with_suggestions(
+                        "QR decomposition",
+                        a.dim(),
+                        None,
+                    ))
+                }
+                _ => Err(e),
+            }
+        }
+    }
 }
 
 /// Compute the singular value decomposition of a matrix.
@@ -194,13 +283,43 @@ pub fn svd<F>(
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand,
 {
+    // Parameter validation
+    if a.is_empty() {
+        return Err(LinalgError::ShapeError(
+            "SVD computation failed: Input matrix cannot be empty".to_string(),
+        ));
+    }
+
+    // Check for finite values
+    for &val in a.iter() {
+        if !val.is_finite() {
+            return Err(LinalgError::InvalidInputError(
+                "SVD computation failed: Matrix contains non-finite values".to_string(),
+            ));
+        }
+    }
+
     // Configure OpenMP thread count if workers specified
     if let Some(num_workers) = workers {
         std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
     }
 
-    let svd_result = lapack_svd(a, full_matrices)?;
-    Ok((svd_result.u, svd_result.s, svd_result.vt))
+    // Use the LAPACK implementation with enhanced error handling
+    match lapack_svd(a, full_matrices) {
+        Ok(svd_result) => Ok((svd_result.u, svd_result.s, svd_result.vt)),
+        Err(e) => {
+            // Enhanced error handling for common SVD failures
+            match e {
+                LinalgError::ConvergenceError(_) => {
+                    Err(LinalgError::ConvergenceError(format!(
+                        "SVD computation failed to converge\nMatrix shape: {}×{}\nSuggestions:\n1. Try different SVD algorithm or increase iteration limit\n2. Check matrix conditioning - use condition number estimation\n3. Consider rank-revealing QR decomposition for rank-deficient matrices",
+                        a.nrows(), a.ncols()
+                    )))
+                }
+                _ => Err(e),
+            }
+        }
+    }
 }
 
 // Convenience wrapper functions for backward compatibility

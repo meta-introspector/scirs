@@ -30,14 +30,21 @@ pub mod impute;
 /// Categorical data encoding utilities
 pub mod encoding;
 
+/// Feature selection utilities
+pub mod selection;
+
 // Re-export important types and functions
-pub use encoding::{OneHotEncoder, OrdinalEncoder};
+pub use encoding::{BinaryEncoder, OneHotEncoder, OrdinalEncoder, TargetEncoder};
 pub use error::{Result, TransformError};
 pub use features::{
     binarize, discretize_equal_frequency, discretize_equal_width, log_transform, power_transform,
-    PolynomialFeatures,
+    PolynomialFeatures, PowerTransformer,
 };
-pub use impute::{ImputeStrategy, MissingIndicator, SimpleImputer};
+pub use impute::{
+    DistanceMetric, ImputeStrategy, IterativeImputer, KNNImputer, MissingIndicator, SimpleImputer,
+    WeightingScheme,
+};
 pub use normalize::{normalize_array, normalize_vector, NormalizationMethod, Normalizer};
 pub use reduction::{trustworthiness, TruncatedSVD, LDA, PCA, TSNE};
-pub use scaling::QuantileTransformer;
+pub use scaling::{MaxAbsScaler, QuantileTransformer};
+pub use selection::VarianceThreshold;

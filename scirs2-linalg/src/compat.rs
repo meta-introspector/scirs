@@ -572,16 +572,16 @@ where
     }
 
     match (ord, axis) {
-        (None, None) | (Some("fro"), None) => norm_mod::matrix_norm(a, "frobenius"),
+        (None, None) | (Some("fro"), None) => norm_mod::matrix_norm(a, "frobenius", None),
         (Some("nuc"), None) => Err(LinalgError::NotImplementedError(
             "Nuclear norm not yet implemented".to_string(),
         )),
-        (Some("1"), None) => norm_mod::matrix_norm(a, "1"),
-        (Some("-1"), None) => norm_mod::matrix_norm(a, "-1"),
-        (Some("2"), None) => norm_mod::matrix_norm(a, "2"),
-        (Some("-2"), None) => norm_mod::matrix_norm(a, "-2"),
-        (Some("inf"), None) => norm_mod::matrix_norm(a, "inf"),
-        (Some("-inf"), None) => norm_mod::matrix_norm(a, "-inf"),
+        (Some("1"), None) => norm_mod::matrix_norm(a, "1", None),
+        (Some("-1"), None) => norm_mod::matrix_norm(a, "-1", None),
+        (Some("2"), None) => norm_mod::matrix_norm(a, "2", None),
+        (Some("-2"), None) => norm_mod::matrix_norm(a, "-2", None),
+        (Some("inf"), None) => norm_mod::matrix_norm(a, "inf", None),
+        (Some("-inf"), None) => norm_mod::matrix_norm(a, "-inf", None),
         _ => Err(LinalgError::NotImplementedError(
             "Specified norm parameters not yet implemented".to_string(),
         )),
@@ -705,23 +705,23 @@ where
     F: Float + Sum + NumAssign + ndarray::ScalarOperand,
 {
     match p {
-        None | Some("2") => norm_mod::cond(a, p),
+        None | Some("2") => norm_mod::cond(a, p, None),
         Some("1") => {
-            let norm_a = norm_mod::matrix_norm(a, "1")?;
+            let norm_a = norm_mod::matrix_norm(a, "1", None)?;
             let inv_a = basic::inv(a, None)?;
-            let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "1")?;
+            let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "1", None)?;
             Ok(norm_a * norm_inv_a)
         }
         Some("inf") => {
-            let norm_a = norm_mod::matrix_norm(a, "inf")?;
+            let norm_a = norm_mod::matrix_norm(a, "inf", None)?;
             let inv_a = basic::inv(a, None)?;
-            let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "inf")?;
+            let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "inf", None)?;
             Ok(norm_a * norm_inv_a)
         }
         Some("fro") => {
-            let norm_a = norm_mod::matrix_norm(a, "frobenius")?;
+            let norm_a = norm_mod::matrix_norm(a, "frobenius", None)?;
             let inv_a = basic::inv(a, None)?;
-            let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "frobenius")?;
+            let norm_inv_a = norm_mod::matrix_norm(&inv_a.view(), "frobenius", None)?;
             Ok(norm_a * norm_inv_a)
         }
         _ => Err(LinalgError::InvalidInput(format!(
@@ -760,7 +760,7 @@ where
         }
     }
 
-    norm_mod::matrix_rank(a, tol)
+    norm_mod::matrix_rank(a, tol, None)
 }
 
 /// Solve linear least squares problem (SciPy-compatible interface)

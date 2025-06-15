@@ -413,7 +413,7 @@ where
     match norm_type {
         "fro" | "frobenius" => {
             // d(||X||_F)/dX = X / ||X||_F
-            let norm_val = matrix_norm(x, norm_type)?;
+            let norm_val = matrix_norm(x, norm_type, None)?;
 
             if norm_val < F::epsilon() {
                 return Err(LinalgError::InvalidInputError(

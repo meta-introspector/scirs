@@ -7,7 +7,7 @@
 use ndarray::{Array1, ArrayView1};
 use scirs2_integrate::{
     autotuning::{AlgorithmTuner, AutoTuner, HardwareDetector, TuningProfile},
-    memory::{CacheAwareAlgorithms, CacheFriendlyMatrix, MatrixLayout, MemoryPool},
+    memory::{CacheAwareAlgorithms, CacheFriendlyMatrix, MatrixLayout},
     monte_carlo::{monte_carlo, MonteCarloOptions},
 };
 use std::time::{Duration, Instant};
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn hardware_detection_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🖥️  Hardware Detection");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     // Detect hardware characteristics
     let hardware = HardwareDetector::detect();
@@ -82,7 +82,7 @@ fn hardware_detection_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn algorithm_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚙️  Algorithm-Specific Auto-Tuning");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     let hardware = HardwareDetector::detect();
     let tuner = AutoTuner::new(hardware.clone());
@@ -91,7 +91,7 @@ fn algorithm_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     let problem_sizes = vec![100, 1000, 10000, 100000];
 
     println!("Problem Size   Threads   Block Size   Chunk Size   SIMD   Memory Pool");
-    println!("─".repeat(70));
+    println!("{}", "─".repeat(70));
 
     for &size in &problem_sizes {
         let profile = tuner.tune_for_problem_size(size);
@@ -136,15 +136,15 @@ fn algorithm_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn benchmark_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Benchmark-Based Tuning");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     let hardware = HardwareDetector::detect();
     let mut tuner = AutoTuner::new(hardware);
 
     // Define a simple benchmark function for matrix-vector multiplication
-    let benchmark_fn = |profile: &TuningProfile| -> Duration {
+    let benchmark_fn = |_profile: &TuningProfile| -> Duration {
         let size = 1000;
-        let matrix = CacheFriendlyMatrix::new(size, size, MatrixLayout::RowMajor);
+        let matrix = CacheFriendlyMatrix::<f64>::new(size, size, MatrixLayout::RowMajor);
         let vector = Array1::ones(size);
 
         let start = Instant::now();
@@ -164,7 +164,7 @@ fn benchmark_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Base configuration: {:.2?}", base_time);
 
-    let optimized_profile = tuner.benchmark_tune("matvec", benchmark_fn, 1000 * 1000);
+    let optimized_profile = tuner.benchmark_tune::<f64>("matvec", benchmark_fn, 1000 * 1000);
     let optimized_time = benchmark_fn(&optimized_profile);
 
     println!("Optimized configuration: {:.2?}", optimized_time);
@@ -184,7 +184,7 @@ fn benchmark_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
 
 fn memory_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧠 Memory-Aware Optimization");
-    println!("=".repeat(50));
+    println!("{}", "=".repeat(50));
 
     let hardware = HardwareDetector::detect();
 
@@ -217,7 +217,7 @@ fn memory_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     println!("Block Size        Time       Efficiency");
-    println!("─".repeat(40));
+    println!("{}", "─".repeat(40));
 
     let mut baseline_time = None;
 
@@ -269,7 +269,7 @@ fn memory_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
         duration
     );
     println!("Result: {:.6} (exact: 1.0)", result.value);
-    println!("Error estimate: {:.2e}", result.error_estimate);
+    println!("Error estimate: {:.2e}", result.std_error);
 
     println!();
     Ok(())

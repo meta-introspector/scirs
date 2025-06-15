@@ -204,7 +204,7 @@ pub fn ginv<T: LinalgScalar + Float>(a: &ArrayView2<T>) -> LinalgResult<Array2<T
 
 /// Generic matrix norm (only for real floats)
 pub fn gnorm<T: LinalgScalar + Float>(a: &ArrayView2<T>, norm_type: &str) -> LinalgResult<T> {
-    crate::norm::matrix_norm(a, norm_type)
+    crate::norm::matrix_norm(a, norm_type, None)
 }
 
 /// Generic SVD decomposition result

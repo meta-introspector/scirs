@@ -465,7 +465,7 @@ impl AlgorithmTuner {
         let mut profile = tuner.tune_for_problem_size(matrix_size * matrix_size);
 
         // Matrix-specific adjustments
-        if matrix_size > 1000 {
+        if matrix_size >= 1000 {
             profile.block_size = 64; // Good block size for matrix multiplication
             profile.use_simd = true;
         }

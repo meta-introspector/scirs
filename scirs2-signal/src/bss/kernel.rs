@@ -177,7 +177,7 @@ pub fn kernel_ica(
 
         // Decorrelate using symmetric decorrelation
         let ww_t = w.dot(&w.t());
-        let (eigvals, eigvecs) = match eigh(&ww_t.view()) {
+        let (eigvals, eigvecs) = match eigh(&ww_t.view(), None) {
             Ok((vals, vecs)) => (vals, vecs),
             Err(_) => {
                 return Err(SignalError::Compute(

@@ -303,7 +303,7 @@ where
     use crate::basic::det;
     use crate::norm::matrix_norm;
 
-    let norm_a = matrix_norm(a, "1")?;
+    let norm_a = matrix_norm(a, "1", None)?;
 
     // Check for zero matrix
     if norm_a < F::epsilon() {

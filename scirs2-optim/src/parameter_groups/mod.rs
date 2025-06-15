@@ -11,6 +11,169 @@ use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+/// Parameter constraints that can be applied to parameter groups
+#[derive(Debug, Clone)]
+pub enum ParameterConstraint<A: Float> {
+    /// Clip values to a range [min, max]
+    ValueClip {
+        /// Minimum allowed value
+        min: A,
+        /// Maximum allowed value
+        max: A,
+    },
+    /// Constrain L2 norm to a maximum value
+    L2NormConstraint {
+        /// Maximum allowed L2 norm
+        max_norm: A,
+    },
+    /// Constrain L1 norm to a maximum value
+    L1NormConstraint {
+        /// Maximum allowed L1 norm
+        max_norm: A,
+    },
+    /// Ensure all values are non-negative
+    NonNegative,
+    /// Constrain to unit sphere (normalize to unit L2 norm)
+    UnitSphere,
+    /// Constrain parameters to be within a probability simplex (sum to 1, all non-negative)
+    Simplex,
+    /// Constrain matrix parameters to be orthogonal
+    Orthogonal {
+        /// Tolerance for orthogonality check
+        tolerance: A,
+    },
+    /// Constrain symmetric matrices to be positive definite
+    PositiveDefinite {
+        /// Minimum eigenvalue to ensure positive definiteness
+        min_eigenvalue: A,
+    },
+    /// Spectral norm constraint (maximum singular value)
+    SpectralNorm {
+        /// Maximum allowed spectral norm
+        max_norm: A,
+    },
+    /// Nuclear norm constraint (sum of singular values)
+    NuclearNorm {
+        /// Maximum allowed nuclear norm
+        max_norm: A,
+    },
+    /// Custom constraint function
+    Custom {
+        /// Name of the custom constraint
+        name: String,
+    },
+}
+
+impl<A: Float> ParameterConstraint<A> {
+    /// Apply the constraint to a parameter array
+    pub fn apply<D: Dimension>(&self, params: &mut Array<A, D>) -> Result<()>
+    where
+        A: ScalarOperand,
+    {
+        match self {
+            ParameterConstraint::ValueClip { min, max } => {
+                params.mapv_inplace(|x| {
+                    if x < *min {
+                        *min
+                    } else if x > *max {
+                        *max
+                    } else {
+                        x
+                    }
+                });
+            }
+            ParameterConstraint::L2NormConstraint { max_norm } => {
+                let norm = params.mapv(|x| x * x).sum().sqrt();
+                if norm > *max_norm {
+                    let scale = *max_norm / norm;
+                    params.mapv_inplace(|x| x * scale);
+                }
+            }
+            ParameterConstraint::L1NormConstraint { max_norm } => {
+                let norm = params.mapv(|x| x.abs()).sum();
+                if norm > *max_norm {
+                    let scale = *max_norm / norm;
+                    params.mapv_inplace(|x| x * scale);
+                }
+            }
+            ParameterConstraint::NonNegative => {
+                params.mapv_inplace(|x| if x < A::zero() { A::zero() } else { x });
+            }
+            ParameterConstraint::UnitSphere => {
+                let norm = params.mapv(|x| x * x).sum().sqrt();
+                if norm > A::zero() {
+                    let scale = A::one() / norm;
+                    params.mapv_inplace(|x| x * scale);
+                }
+            }
+            ParameterConstraint::Simplex => {
+                // First make all values non-negative
+                params.mapv_inplace(|x| if x < A::zero() { A::zero() } else { x });
+
+                // Then normalize to sum to 1
+                let sum = params.sum();
+                if sum > A::zero() {
+                    let scale = A::one() / sum;
+                    params.mapv_inplace(|x| x * scale);
+                } else {
+                    // If all values are zero, set to uniform distribution
+                    let uniform_val = A::one() / A::from(params.len()).unwrap_or(A::one());
+                    params.fill(uniform_val);
+                }
+            }
+            ParameterConstraint::Orthogonal { tolerance: _ } => {
+                // For now, implement a simple orthogonal projection for matrices
+                // This is a simplified implementation - full orthogonal constraints
+                // would require SVD decomposition
+                if params.ndim() == 2 {
+                    // Apply Gram-Schmidt process for small matrices
+                    // For large matrices, this would need SVD-based orthogonalization
+                    return Err(OptimError::InvalidConfig(
+                        "Orthogonal constraint requires specialized linear algebra operations"
+                            .to_string(),
+                    ));
+                } else {
+                    return Err(OptimError::InvalidConfig(
+                        "Orthogonal constraint only applies to 2D arrays (matrices)".to_string(),
+                    ));
+                }
+            }
+            ParameterConstraint::PositiveDefinite { min_eigenvalue: _ } => {
+                // Positive definite constraint requires eigenvalue computation
+                return Err(OptimError::InvalidConfig(
+                    "Positive definite constraint requires specialized eigenvalue operations"
+                        .to_string(),
+                ));
+            }
+            ParameterConstraint::SpectralNorm { max_norm } => {
+                // Spectral norm constraint requires SVD computation
+                // For now, approximate with Frobenius norm
+                let frobenius_norm = params.mapv(|x| x * x).sum().sqrt();
+                if frobenius_norm > *max_norm {
+                    let scale = *max_norm / frobenius_norm;
+                    params.mapv_inplace(|x| x * scale);
+                }
+            }
+            ParameterConstraint::NuclearNorm { max_norm } => {
+                // Nuclear norm constraint requires SVD computation
+                // For now, approximate with L1 norm
+                let l1_norm = params.mapv(|x| x.abs()).sum();
+                if l1_norm > *max_norm {
+                    let scale = *max_norm / l1_norm;
+                    params.mapv_inplace(|x| x * scale);
+                }
+            }
+            ParameterConstraint::Custom { name } => {
+                return Err(OptimError::InvalidConfig(format!(
+                    "Custom constraint '{}' not implemented",
+                    name
+                )));
+            }
+        }
+        Ok(())
+    }
+}
+
 /// Configuration for a parameter group
 #[derive(Debug, Clone)]
 pub struct ParameterGroupConfig<A: Float> {
@@ -20,6 +183,8 @@ pub struct ParameterGroupConfig<A: Float> {
     pub weight_decay: Option<A>,
     /// Momentum for this group (if applicable)
     pub momentum: Option<A>,
+    /// Parameter constraints for this group
+    pub constraints: Vec<ParameterConstraint<A>>,
     /// Custom parameters as key-value pairs
     pub custom_params: HashMap<String, A>,
 }
@@ -30,6 +195,7 @@ impl<A: Float> Default for ParameterGroupConfig<A> {
             learning_rate: None,
             weight_decay: None,
             momentum: None,
+            constraints: Vec::new(),
             custom_params: HashMap::new(),
         }
     }
@@ -62,6 +228,85 @@ impl<A: Float> ParameterGroupConfig<A> {
     /// Add custom parameter
     pub fn with_custom_param(mut self, key: String, value: A) -> Self {
         self.custom_params.insert(key, value);
+        self
+    }
+
+    /// Add a parameter constraint
+    pub fn with_constraint(mut self, constraint: ParameterConstraint<A>) -> Self {
+        self.constraints.push(constraint);
+        self
+    }
+
+    /// Add value clipping constraint
+    pub fn with_value_clip(mut self, min: A, max: A) -> Self {
+        self.constraints
+            .push(ParameterConstraint::ValueClip { min, max });
+        self
+    }
+
+    /// Add L2 norm constraint
+    pub fn with_l2_norm_constraint(mut self, max_norm: A) -> Self {
+        self.constraints
+            .push(ParameterConstraint::L2NormConstraint { max_norm });
+        self
+    }
+
+    /// Add L1 norm constraint
+    pub fn with_l1_norm_constraint(mut self, max_norm: A) -> Self {
+        self.constraints
+            .push(ParameterConstraint::L1NormConstraint { max_norm });
+        self
+    }
+
+    /// Add non-negativity constraint
+    pub fn with_non_negative(mut self) -> Self {
+        self.constraints.push(ParameterConstraint::NonNegative);
+        self
+    }
+
+    /// Add unit sphere constraint
+    pub fn with_unit_sphere(mut self) -> Self {
+        self.constraints.push(ParameterConstraint::UnitSphere);
+        self
+    }
+
+    /// Add simplex constraint (sum to 1, all non-negative)
+    pub fn with_simplex(mut self) -> Self {
+        self.constraints.push(ParameterConstraint::Simplex);
+        self
+    }
+
+    /// Add orthogonal constraint for matrices
+    pub fn with_orthogonal(mut self, tolerance: A) -> Self {
+        self.constraints
+            .push(ParameterConstraint::Orthogonal { tolerance });
+        self
+    }
+
+    /// Add positive definite constraint for symmetric matrices
+    pub fn with_positive_definite(mut self, min_eigenvalue: A) -> Self {
+        self.constraints
+            .push(ParameterConstraint::PositiveDefinite { min_eigenvalue });
+        self
+    }
+
+    /// Add spectral norm constraint
+    pub fn with_spectral_norm(mut self, max_norm: A) -> Self {
+        self.constraints
+            .push(ParameterConstraint::SpectralNorm { max_norm });
+        self
+    }
+
+    /// Add nuclear norm constraint
+    pub fn with_nuclear_norm(mut self, max_norm: A) -> Self {
+        self.constraints
+            .push(ParameterConstraint::NuclearNorm { max_norm });
+        self
+    }
+
+    /// Add custom constraint
+    pub fn with_custom_constraint(mut self, name: String) -> Self {
+        self.constraints.push(ParameterConstraint::Custom { name });
         self
     }
 }
@@ -117,6 +362,35 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterGroup<A, D> {
             .get(key)
             .copied()
             .unwrap_or(default)
+    }
+
+    /// Apply constraints to all parameters in this group
+    pub fn apply_constraints(&mut self) -> Result<()>
+    where
+        A: ScalarOperand,
+    {
+        for constraint in &self.config.constraints {
+            for param in &mut self.params {
+                constraint.apply(param)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Apply constraints to a specific parameter
+    pub fn apply_constraints_to_param(&self, param: &mut Array<A, D>) -> Result<()>
+    where
+        A: ScalarOperand,
+    {
+        for constraint in &self.config.constraints {
+            constraint.apply(param)?;
+        }
+        Ok(())
+    }
+
+    /// Get the constraints for this group
+    pub fn constraints(&self) -> &[ParameterConstraint<A>] {
+        &self.config.constraints
     }
 }
 
@@ -282,5 +556,226 @@ mod tests {
 
         let group2 = manager.get_group(id2).unwrap();
         assert_eq!(group2.learning_rate(0.0), 0.001);
+    }
+
+    #[test]
+    fn test_parameter_constraints() {
+        use approx::assert_relative_eq;
+
+        // Test value clipping
+        let mut params = Array1::from_vec(vec![-2.0, 0.5, 3.0]);
+        let clip_constraint = ParameterConstraint::ValueClip { min: 0.0, max: 1.0 };
+        clip_constraint.apply(&mut params).unwrap();
+        assert_eq!(params.as_slice().unwrap(), &[0.0, 0.5, 1.0]);
+
+        // Test L2 norm constraint
+        let mut params = Array1::from_vec(vec![3.0, 4.0]); // norm = 5
+        let l2_constraint = ParameterConstraint::L2NormConstraint { max_norm: 2.0 };
+        l2_constraint.apply(&mut params).unwrap();
+        let new_norm = params.mapv(|x| x * x).sum().sqrt();
+        assert_relative_eq!(new_norm, 2.0, epsilon = 1e-6);
+
+        // Test non-negativity constraint
+        let mut params = Array1::from_vec(vec![-1.0, 2.0, -3.0]);
+        let non_neg_constraint = ParameterConstraint::NonNegative;
+        non_neg_constraint.apply(&mut params).unwrap();
+        assert_eq!(params.as_slice().unwrap(), &[0.0, 2.0, 0.0]);
+
+        // Test unit sphere constraint
+        let mut params = Array1::from_vec(vec![3.0, 4.0]); // norm = 5
+        let unit_sphere_constraint = ParameterConstraint::UnitSphere;
+        unit_sphere_constraint.apply(&mut params).unwrap();
+        let new_norm = params.mapv(|x| x * x).sum().sqrt();
+        assert_relative_eq!(new_norm, 1.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn test_parameter_group_with_constraints() {
+        let params = vec![Array1::from_vec(vec![-2.0, 3.0])];
+        let config = ParameterGroupConfig::new()
+            .with_learning_rate(0.01)
+            .with_value_clip(0.0, 1.0);
+
+        let mut group = ParameterGroup::new(0, params, config);
+
+        // Apply constraints
+        group.apply_constraints().unwrap();
+
+        // Check that constraints were applied
+        assert_eq!(group.params[0].as_slice().unwrap(), &[0.0, 1.0]);
+    }
+
+    #[test]
+    fn test_parameter_config_builder() {
+        let config = ParameterGroupConfig::new()
+            .with_learning_rate(0.01)
+            .with_l2_norm_constraint(1.0)
+            .with_non_negative()
+            .with_custom_param("beta".to_string(), 0.9);
+
+        assert_eq!(config.learning_rate, Some(0.01));
+        assert_eq!(config.constraints.len(), 2);
+        assert_eq!(config.custom_params.get("beta"), Some(&0.9));
+    }
+
+    #[test]
+    fn test_simplex_constraint() {
+        use approx::assert_relative_eq;
+
+        // Test simplex constraint with positive values
+        let mut params = Array1::from_vec(vec![2.0, 3.0, 5.0]);
+        let simplex_constraint = ParameterConstraint::Simplex;
+        simplex_constraint.apply(&mut params).unwrap();
+
+        // Check that values sum to 1 and are non-negative
+        let sum: f64 = params.sum();
+        assert_relative_eq!(sum, 1.0, epsilon = 1e-6);
+        assert!(params.iter().all(|&x| x >= 0.0));
+
+        // Values should be proportional to original
+        assert_relative_eq!(params[0], 0.2, epsilon = 1e-6); // 2/10
+        assert_relative_eq!(params[1], 0.3, epsilon = 1e-6); // 3/10
+        assert_relative_eq!(params[2], 0.5, epsilon = 1e-6); // 5/10
+    }
+
+    #[test]
+    fn test_simplex_constraint_with_negatives() {
+        use approx::assert_relative_eq;
+
+        // Test simplex constraint with negative values
+        let mut params = Array1::from_vec(vec![-1.0, 2.0, 3.0]);
+        let simplex_constraint = ParameterConstraint::Simplex;
+        simplex_constraint.apply(&mut params).unwrap();
+
+        // Check that values sum to 1 and are non-negative
+        let sum: f64 = params.sum();
+        assert_relative_eq!(sum, 1.0, epsilon = 1e-6);
+        assert!(params.iter().all(|&x| x >= 0.0));
+
+        // Negative value should become 0, others normalized
+        assert_relative_eq!(params[0], 0.0, epsilon = 1e-6);
+        assert_relative_eq!(params[1], 0.4, epsilon = 1e-6); // 2/5
+        assert_relative_eq!(params[2], 0.6, epsilon = 1e-6); // 3/5
+    }
+
+    #[test]
+    fn test_simplex_constraint_all_zeros() {
+        use approx::assert_relative_eq;
+
+        // Test simplex constraint with all zeros
+        let mut params = Array1::from_vec(vec![0.0, 0.0, 0.0]);
+        let simplex_constraint = ParameterConstraint::Simplex;
+        simplex_constraint.apply(&mut params).unwrap();
+
+        // Should result in uniform distribution
+        let sum: f64 = params.sum();
+        assert_relative_eq!(sum, 1.0, epsilon = 1e-6);
+        for &val in params.iter() {
+            assert_relative_eq!(val, 1.0 / 3.0, epsilon = 1e-6);
+        }
+    }
+
+    #[test]
+    fn test_spectral_norm_constraint() {
+        use approx::assert_relative_eq;
+
+        // Test spectral norm constraint (approximated with Frobenius norm)
+        let mut params = Array1::from_vec(vec![3.0, 4.0]); // Frobenius norm = 5
+        let spectral_constraint = ParameterConstraint::SpectralNorm { max_norm: 2.0 };
+        spectral_constraint.apply(&mut params).unwrap();
+
+        let new_norm = params.mapv(|x| x * x).sum().sqrt();
+        assert_relative_eq!(new_norm, 2.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn test_nuclear_norm_constraint() {
+        use approx::assert_relative_eq;
+
+        // Test nuclear norm constraint (approximated with L1 norm)
+        let mut params = Array1::from_vec(vec![3.0, -4.0, 2.0]); // L1 norm = 9
+        let nuclear_constraint = ParameterConstraint::NuclearNorm { max_norm: 3.0 };
+        nuclear_constraint.apply(&mut params).unwrap();
+
+        let new_l1_norm = params.mapv(|x| x.abs()).sum();
+        assert_relative_eq!(new_l1_norm, 3.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn test_orthogonal_constraint_error() {
+        // Test that orthogonal constraint returns appropriate error
+        let mut params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
+        let orthogonal_constraint = ParameterConstraint::Orthogonal { tolerance: 1e-6 };
+        let result = orthogonal_constraint.apply(&mut params);
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("2D arrays"));
+    }
+
+    #[test]
+    fn test_positive_definite_constraint_error() {
+        // Test that positive definite constraint returns appropriate error
+        let mut params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
+        let pd_constraint = ParameterConstraint::PositiveDefinite {
+            min_eigenvalue: 0.01,
+        };
+        let result = pd_constraint.apply(&mut params);
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("eigenvalue"));
+    }
+
+    #[test]
+    fn test_enhanced_config_builder() {
+        let config = ParameterGroupConfig::new()
+            .with_learning_rate(0.01)
+            .with_simplex()
+            .with_spectral_norm(2.0)
+            .with_nuclear_norm(1.5)
+            .with_custom_constraint("my_constraint".to_string());
+
+        assert_eq!(config.learning_rate, Some(0.01));
+        assert_eq!(config.constraints.len(), 4);
+
+        // Check that the right constraint types were added
+        match &config.constraints[0] {
+            ParameterConstraint::Simplex => (),
+            _ => panic!("Expected Simplex constraint"),
+        }
+
+        match &config.constraints[1] {
+            ParameterConstraint::SpectralNorm { max_norm } => {
+                assert_eq!(*max_norm, 2.0);
+            }
+            _ => panic!("Expected SpectralNorm constraint"),
+        }
+    }
+
+    #[test]
+    fn test_constraint_combination() {
+        use approx::assert_relative_eq;
+
+        // Test applying multiple constraints in sequence
+        let params = vec![Array1::from_vec(vec![-1.0, 2.0, 3.0])];
+        let config = ParameterGroupConfig::new()
+            .with_learning_rate(0.01)
+            .with_non_negative()
+            .with_simplex();
+
+        let mut group = ParameterGroup::new(0, params, config);
+
+        // Apply constraints
+        group.apply_constraints().unwrap();
+
+        // Check that both non-negative and simplex constraints were applied
+        let result = &group.params[0];
+        let sum: f64 = result.sum();
+        assert_relative_eq!(sum, 1.0, epsilon = 1e-6);
+        assert!(result.iter().all(|&x| x >= 0.0));
+
+        // Should be [0, 0.4, 0.6] after non-negative then simplex
+        assert_relative_eq!(result[0], 0.0, epsilon = 1e-6);
+        assert_relative_eq!(result[1], 0.4, epsilon = 1e-6);
+        assert_relative_eq!(result[2], 0.6, epsilon = 1e-6);
     }
 }

@@ -7,6 +7,7 @@ use std::iter::Sum;
 use crate::error::{LinalgError, LinalgResult};
 use crate::norm::matrix_norm;
 use crate::solve::solve_multiple;
+use crate::validation::validate_decomposition;
 
 /// Compute the matrix exponential using Padé approximation.
 ///
@@ -47,12 +48,8 @@ where
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
 
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Matrix must be square to compute exponential, got shape {:?}",
-            a.shape()
-        )));
-    }
+    // Parameter validation using validation helpers
+    validate_decomposition(a, "Matrix exponential computation", true)?;
 
     let n = a.nrows();
 
@@ -64,7 +61,7 @@ where
     }
 
     // Choose a suitable scaling factor and Padé order
-    let norm_a = matrix_norm(a, "1")?;
+    let norm_a = matrix_norm(a, "1", None)?;
     let scaling_f = norm_a.log2().ceil().max(F::zero());
     let scaling = scaling_f.to_i32().unwrap_or(0);
     let s = F::from(2.0_f64.powi(-scaling)).unwrap_or(F::one());

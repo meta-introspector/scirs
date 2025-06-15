@@ -428,7 +428,7 @@ where
     }
 
     // Use the stabilized matrix for eigenvalue decomposition
-    let (eigenvalues, eigenvectors) = eigh(&stabilized_laplacian.view())?;
+    let (eigenvalues, eigenvectors) = eigh(&stabilized_laplacian.view(), None)?;
 
     // Determine the actual number of clusters
     let actual_n_clusters = if opts.auto_n_clusters {

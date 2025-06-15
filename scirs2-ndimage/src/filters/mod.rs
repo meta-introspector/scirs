@@ -39,7 +39,7 @@ pub use extrema::{maximum_filter, minimum_filter};
 pub use gaussian::{gaussian_filter, gaussian_filter_f32, gaussian_filter_f64};
 
 // Generic module exports
-pub use generic::{generic_filter, filter_functions};
+pub use generic::{filter_functions, generic_filter};
 
 // Median module exports
 pub use median::*;

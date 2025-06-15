@@ -7,6 +7,11 @@ use std::iter::Sum;
 use crate::basic::inv;
 use crate::decomposition::{lu, qr, svd};
 use crate::error::{LinalgError, LinalgResult};
+use crate::validation::{
+    validate_finite_matrix, validate_finite_vector, validate_least_squares, validate_linear_system,
+    validate_matrix_vector_dimensions, validate_multiple_linear_systems, validate_not_empty_matrix,
+    validate_not_empty_vector, validate_square_matrix,
+};
 
 /// Solution to a least-squares problem
 pub struct LstsqResult<F: Float> {
@@ -54,20 +59,8 @@ pub fn solve<F>(
 where
     F: Float + NumAssign + One + Sum,
 {
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
-
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using helper function
+    validate_linear_system(a, b, "Linear system solve")?;
 
     // For small matrices, we can solve directly using the inverse
     if a.nrows() <= 4 {
@@ -89,12 +82,12 @@ where
 
     // For larger systems, use LU decomposition
     let (p, l, u) = match lu(a, workers) {
-        Err(LinalgError::SingularMatrixError(msg)) => {
-            return Err(LinalgError::SingularMatrixError(format!(
-                "{}\nMatrix shape: {:?}\nOperation: solve linear system",
-                msg,
-                a.shape()
-            )))
+        Err(LinalgError::SingularMatrixError(_)) => {
+            return Err(LinalgError::singular_matrix_with_suggestions(
+                "linear system solve",
+                a.dim(),
+                None,
+            ))
         }
         Err(e) => return Err(e),
         Ok(result) => result,
@@ -152,20 +145,13 @@ pub fn solve_triangular<F>(
 where
     F: Float + NumAssign + Sum,
 {
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
-
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using helper functions
+    validate_not_empty_matrix(a, "Triangular system solve")?;
+    validate_not_empty_vector(b, "Triangular system solve")?;
+    validate_square_matrix(a, "Triangular system solve")?;
+    validate_matrix_vector_dimensions(a, b, "Triangular system solve")?;
+    validate_finite_matrix(a, "Triangular system solve")?;
+    validate_finite_vector(b, "Triangular system solve")?;
 
     let n = a.nrows();
     let mut x = Array1::zeros(n);
@@ -181,10 +167,11 @@ where
                 x[i] = sum;
             } else {
                 if a[[i, i]].abs() < F::epsilon() {
-                    return Err(LinalgError::SingularMatrixError(format!(
-                        "Diagonal element is zero in triangular solve\nMatrix shape: {:?}",
-                        a.shape()
-                    )));
+                    return Err(LinalgError::singular_matrix_with_suggestions(
+                        "triangular system solve (forward substitution)",
+                        a.dim(),
+                        Some(1e16), // Very high condition number due to zero diagonal
+                    ));
                 }
                 x[i] = sum / a[[i, i]];
             }
@@ -200,10 +187,11 @@ where
                 x[i] = sum;
             } else {
                 if a[[i, i]].abs() < F::epsilon() {
-                    return Err(LinalgError::SingularMatrixError(format!(
-                        "Diagonal element is zero in triangular solve\nMatrix shape: {:?}",
-                        a.shape()
-                    )));
+                    return Err(LinalgError::singular_matrix_with_suggestions(
+                        "triangular system solve (back substitution)",
+                        a.dim(),
+                        Some(1e16), // Very high condition number due to zero diagonal
+                    ));
                 }
                 x[i] = sum / a[[i, i]];
             }
@@ -251,13 +239,8 @@ pub fn lstsq<F>(
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
 {
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using helper function
+    validate_least_squares(a, b, "Least squares solve")?;
 
     // Configure OpenMP thread count if workers specified
     if let Some(num_workers) = workers {
@@ -388,20 +371,8 @@ pub fn solve_multiple<F>(
 where
     F: Float + NumAssign + One + Sum,
 {
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
-
-    if a.nrows() != b.nrows() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, right-hand sides shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using helper function
+    validate_multiple_linear_systems(a, b, "Multiple linear systems solve")?;
 
     // Configure OpenMP thread count if workers specified
     if let Some(num_workers) = workers {
@@ -410,12 +381,12 @@ where
 
     // For efficiency, perform LU decomposition once
     let (p, l, u) = match lu(a, workers) {
-        Err(LinalgError::SingularMatrixError(msg)) => {
-            return Err(LinalgError::SingularMatrixError(format!(
-                "{}\nMatrix shape: {:?}\nOperation: solve multiple linear systems",
-                msg,
-                a.shape()
-            )))
+        Err(LinalgError::SingularMatrixError(_)) => {
+            return Err(LinalgError::singular_matrix_with_suggestions(
+                "multiple linear systems solve",
+                a.dim(),
+                None,
+            ))
         }
         Err(e) => return Err(e),
         Ok(result) => result,

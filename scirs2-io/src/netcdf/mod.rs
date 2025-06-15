@@ -22,9 +22,7 @@ use std::fs;
 use std::path::Path;
 
 use crate::error::{IoError, Result};
-use crate::hdf5::{
-    AttributeValue as HDF5AttributeValue, DataArray, FileMode as HDF5FileMode, HDF5File,
-};
+use crate::hdf5::{AttributeValue as HDF5AttributeValue, FileMode as HDF5FileMode, HDF5File};
 
 /// NetCDF data type mapping
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,7 +53,6 @@ pub enum NetCDFFormat {
 }
 
 /// NetCDF file containing dimensions, variables, and attributes
-#[derive(Debug)]
 pub struct NetCDFFile {
     /// File path
     #[allow(dead_code)]
@@ -982,7 +979,7 @@ mod tests {
         assert_eq!(file.dimensions()["y"], Some(3));
 
         // Check that variable was auto-created
-        assert!(file.variables().contains("test_data"));
+        assert!(file.variables().contains(&"test_data".to_string()));
     }
 
     #[test]

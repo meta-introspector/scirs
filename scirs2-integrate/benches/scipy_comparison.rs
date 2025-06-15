@@ -5,42 +5,42 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
-use scirs2_integrate::common::IntegrateFloat;
 use scirs2_integrate::cubature::{cubature, CubatureOptions};
-use scirs2_integrate::monte_carlo::{monte_carlo_integrate, MonteCarloOptions};
+use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use scirs2_integrate::quad::{quad, QuadOptions};
-use std::time::Instant;
 
 /// Test problems for ODE benchmarking
 mod ode_problems {
-    use super::*;
+    use ndarray::Array1;
 
     /// Simple exponential decay: dy/dt = -y, y(0) = 1
-    pub fn exponential_decay(t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
+    pub fn exponential_decay(_t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
         Array1::from_vec(vec![-y[0]])
     }
 
     /// Harmonic oscillator: d²x/dt² + x = 0, converted to first order system
-    pub fn harmonic_oscillator(t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
+    pub fn harmonic_oscillator(_t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
         Array1::from_vec(vec![y[1], -y[0]])
     }
 
     /// Van der Pol oscillator (stiff for large mu): d²x/dt² - mu*(1-x²)*dx/dt + x = 0
+    #[allow(dead_code)]
     pub fn van_der_pol(mu: f64) -> impl Fn(f64, ndarray::ArrayView1<f64>) -> Array1<f64> + 'static {
-        move |t: f64, y: ndarray::ArrayView1<f64>| {
+        move |_t: f64, y: ndarray::ArrayView1<f64>| {
             Array1::from_vec(vec![y[1], mu * (1.0 - y[0] * y[0]) * y[1] - y[0]])
         }
     }
 
     /// Lotka-Volterra predator-prey model
+    #[allow(dead_code)]
     pub fn lotka_volterra(
         a: f64,
         b: f64,
         c: f64,
         d: f64,
     ) -> impl Fn(f64, ndarray::ArrayView1<f64>) -> Array1<f64> + 'static {
-        move |t: f64, y: ndarray::ArrayView1<f64>| {
+        move |_t: f64, y: ndarray::ArrayView1<f64>| {
             let x = y[0]; // prey
             let y_val = y[1]; // predator
             Array1::from_vec(vec![
@@ -51,7 +51,7 @@ mod ode_problems {
     }
 
     /// N-body problem (simplified 3-body)
-    pub fn three_body_problem(t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
+    pub fn three_body_problem(_t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
         let mut dydt = Array1::zeros(y.len());
 
         // Positions: x1, y1, x2, y2, x3, y3
@@ -89,7 +89,6 @@ mod ode_problems {
 
 /// Integration test problems for quadrature benchmarking
 mod quadrature_problems {
-    use super::*;
 
     /// Simple polynomial: f(x) = x^3
     pub fn polynomial_cubic(x: f64) -> f64 {
@@ -122,6 +121,7 @@ mod quadrature_problems {
     }
 
     /// High-dimensional oscillatory function
+    #[allow(dead_code)]
     pub fn high_dim_oscillatory(x: &[f64]) -> f64 {
         let sum: f64 = x
             .iter()
@@ -157,7 +157,7 @@ fn bench_ode_solvers(c: &mut Criterion) {
     let methods = vec![
         ODEMethod::RK45,
         ODEMethod::DOP853,
-        ODEMethod::BDF,
+        ODEMethod::Bdf,
         ODEMethod::Radau,
         ODEMethod::LSODA,
     ];
@@ -192,24 +192,50 @@ fn bench_ode_solvers(c: &mut Criterion) {
                                 y0_array,
                                 Some(opts),
                             ),
-                            "van_der_pol_mild" => solve_ivp(
-                                ode_problems::van_der_pol(1.0),
-                                t_span,
-                                y0_array,
-                                Some(opts),
-                            ),
-                            "van_der_pol_stiff" => solve_ivp(
-                                ode_problems::van_der_pol(100.0),
-                                t_span,
-                                y0_array,
-                                Some(opts),
-                            ),
-                            "lotka_volterra" => solve_ivp(
-                                ode_problems::lotka_volterra(1.5, 1.0, 3.0, 1.0),
-                                t_span,
-                                y0_array,
-                                Some(opts),
-                            ),
+                            "van_der_pol_mild" => {
+                                let mu = 1.0;
+                                solve_ivp(
+                                    move |_t, y| {
+                                        Array1::from_vec(vec![
+                                            y[1],
+                                            mu * (1.0 - y[0] * y[0]) * y[1] - y[0],
+                                        ])
+                                    },
+                                    t_span,
+                                    y0_array,
+                                    Some(opts),
+                                )
+                            }
+                            "van_der_pol_stiff" => {
+                                let mu = 100.0;
+                                solve_ivp(
+                                    move |_t, y| {
+                                        Array1::from_vec(vec![
+                                            y[1],
+                                            mu * (1.0 - y[0] * y[0]) * y[1] - y[0],
+                                        ])
+                                    },
+                                    t_span,
+                                    y0_array,
+                                    Some(opts),
+                                )
+                            }
+                            "lotka_volterra" => {
+                                let (a, b, c, d) = (1.5, 1.0, 3.0, 1.0);
+                                solve_ivp(
+                                    move |_t, y| {
+                                        let x = y[0]; // prey
+                                        let y_val = y[1]; // predator
+                                        Array1::from_vec(vec![
+                                            a * x - b * x * y_val,      // dx/dt
+                                            -c * y_val + d * x * y_val, // dy/dt
+                                        ])
+                                    },
+                                    t_span,
+                                    y0_array,
+                                    Some(opts),
+                                )
+                            }
                             "three_body" => solve_ivp(
                                 ode_problems::three_body_problem,
                                 t_span,
@@ -249,9 +275,9 @@ fn bench_quadrature_methods(c: &mut Criterion) {
             |bench, &(prob_name, a, b)| {
                 bench.iter(|| {
                     let opts = QuadOptions {
-                        epsabs: 1e-10,
-                        epsrel: 1e-10,
-                        limit: 1000,
+                        abs_tol: 1e-10,
+                        rel_tol: 1e-10,
+                        max_evals: 1000,
                         ..Default::default()
                     };
 
@@ -295,8 +321,8 @@ fn bench_multidimensional_integration(c: &mut Criterion) {
                         ..Default::default()
                     };
 
-                    let result = monte_carlo_integrate(
-                        quadrature_problems::multivariate_gaussian,
+                    let result = monte_carlo(
+                        |x| quadrature_problems::multivariate_gaussian(x.as_slice().unwrap()),
                         &ranges,
                         Some(opts),
                     );
@@ -313,7 +339,17 @@ fn bench_multidimensional_integration(c: &mut Criterion) {
                 &dim,
                 |b, &dim| {
                     b.iter(|| {
-                        let ranges: Vec<(f64, f64)> = (0..dim).map(|_| (-2.0, 2.0)).collect();
+                        let ranges: Vec<(
+                            scirs2_integrate::cubature::Bound<f64>,
+                            scirs2_integrate::cubature::Bound<f64>,
+                        )> = (0..dim)
+                            .map(|_| {
+                                (
+                                    scirs2_integrate::cubature::Bound::Finite(-2.0),
+                                    scirs2_integrate::cubature::Bound::Finite(2.0),
+                                )
+                            })
+                            .collect();
                         let opts = CubatureOptions {
                             rel_tol: 1e-6,
                             abs_tol: 1e-9,
@@ -322,7 +358,9 @@ fn bench_multidimensional_integration(c: &mut Criterion) {
                         };
 
                         let result = cubature(
-                            quadrature_problems::multivariate_gaussian,
+                            |x: &Array1<f64>| {
+                                quadrature_problems::multivariate_gaussian(x.as_slice().unwrap())
+                            },
                             &ranges,
                             Some(opts),
                         );
@@ -357,15 +395,15 @@ fn bench_parallel_operations(c: &mut Criterion) {
                     format!("{}d_{}k", dim, n_samples / 1000),
                 ),
                 &(dim, n_samples),
-                |b, &(dim, n_samples)| {
+                |b, &(_dim, n_samples)| {
                     b.iter(|| {
                         let opts = MonteCarloOptions {
                             n_samples,
                             ..Default::default()
                         };
 
-                        let result = monte_carlo_integrate(
-                            quadrature_problems::multivariate_gaussian,
+                        let result = monte_carlo(
+                            |x| quadrature_problems::multivariate_gaussian(x.as_slice().unwrap()),
                             &ranges,
                             Some(opts),
                         );
@@ -382,7 +420,7 @@ fn bench_parallel_operations(c: &mut Criterion) {
                     format!("{}d_{}k", dim, n_samples / 1000),
                 ),
                 &(dim, n_samples),
-                |b, &(dim, n_samples)| {
+                |b, &(_dim, n_samples)| {
                     b.iter(|| {
                         use scirs2_integrate::monte_carlo_parallel::{
                             parallel_monte_carlo, ParallelMonteCarloOptions,
@@ -390,12 +428,14 @@ fn bench_parallel_operations(c: &mut Criterion) {
 
                         let opts = ParallelMonteCarloOptions {
                             n_samples,
-                            chunk_size: Some(n_samples / 8),
+                            batch_size: n_samples / 8,
                             ..Default::default()
                         };
 
                         let result = parallel_monte_carlo(
-                            quadrature_problems::multivariate_gaussian,
+                            |x: ndarray::ArrayView1<f64>| {
+                                quadrature_problems::multivariate_gaussian(x.as_slice().unwrap())
+                            },
                             &ranges,
                             Some(opts),
                         );
@@ -434,14 +474,14 @@ fn bench_memory_usage(c: &mut Criterion) {
                         }
                     });
 
-                    let linear_system = move |t: f64, y: ndarray::ArrayView1<f64>| {
+                    let linear_system = move |_t: f64, y: ndarray::ArrayView1<f64>| {
                         let y_owned = y.to_owned();
                         a_matrix.dot(&y_owned)
                     };
 
                     let y0 = Array1::ones(n);
                     let opts = ODEOptions {
-                        method: ODEMethod::BDF, // Good for large systems
+                        method: ODEMethod::Bdf, // Good for large systems
                         rtol: 1e-3,
                         atol: 1e-6,
                         ..Default::default()

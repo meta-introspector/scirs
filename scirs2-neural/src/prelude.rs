@@ -32,6 +32,11 @@ pub use crate::performance::{
     OptimizationCapabilities, PerformanceOptimizer, PerformanceProfiler, ThreadPoolManager,
 };
 
+// JIT compilation
+pub use crate::performance::jit::{
+    CompiledElementOp, CompiledMatrixOp, JitContext, JitProfiler, JitStats, JitStrategy,
+};
+
 // Data augmentation
 pub use crate::augmentation::{
     AudioAugmentation, AugmentationManager, AugmentationPipelineBuilder, FillMode,

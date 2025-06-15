@@ -36,9 +36,9 @@ where
     parallel::configure_workers(workers);
 
     if a.nrows() != a.ncols() {
-        return Err(LinalgError::DimensionError(format!(
-            "Matrix must be square to compute determinant, got shape {:?}",
-            a.shape()
+        return Err(LinalgError::ShapeError(format!(
+            "Determinant computation failed: Matrix must be square\nMatrix shape: {}×{}\nExpected: Square matrix (n×n)",
+            a.nrows(), a.ncols()
         )));
     }
 
@@ -124,9 +124,9 @@ where
     parallel::configure_workers(workers);
 
     if a.nrows() != a.ncols() {
-        return Err(LinalgError::DimensionError(format!(
-            "Matrix must be square to compute inverse, got shape {:?}",
-            a.shape()
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix inverse computation failed: Matrix must be square\nMatrix shape: {}×{}\nExpected: Square matrix (n×n)",
+            a.nrows(), a.ncols()
         )));
     }
 
@@ -222,9 +222,9 @@ where
     parallel::configure_workers(workers);
 
     if a.nrows() != a.ncols() {
-        return Err(LinalgError::DimensionError(format!(
-            "Matrix must be square to compute power, got shape {:?}",
-            a.shape()
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix power computation failed: Matrix must be square\nMatrix shape: {}×{}\nExpected: Square matrix (n×n)",
+            a.nrows(), a.ncols()
         )));
     }
 
@@ -293,9 +293,9 @@ where
     F: Float + NumAssign + Sum,
 {
     if a.nrows() != a.ncols() {
-        return Err(LinalgError::DimensionError(format!(
-            "Matrix must be square to compute trace, got shape {:?}",
-            a.shape()
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix trace computation failed: Matrix must be square\nMatrix shape: {}×{}\nExpected: Square matrix (n×n)",
+            a.nrows(), a.ncols()
         )));
     }
 

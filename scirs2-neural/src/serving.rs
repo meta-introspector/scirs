@@ -8,16 +8,16 @@
 //! - Runtime optimization and serving infrastructure
 
 use crate::error::{NeuralError, Result};
-use crate::serialization::{save_model, SerializationFormat, SerializedModel};
 use crate::models::sequential::Sequential;
 use crate::models::Model;
+use crate::serialization::{save_model, SerializationFormat};
 use ndarray::ArrayD;
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
 
 /// Model package format for deployment
 #[derive(Debug, Clone, PartialEq)]
@@ -31,7 +31,7 @@ pub enum PackageFormat {
     /// Android AAR package
     AndroidAAR,
     /// iOS Framework
-    iOSFramework,
+    IOSFramework,
     /// Python wheel
     PythonWheel,
     /// Docker container
@@ -56,9 +56,9 @@ pub enum TargetPlatform {
     /// Android x86_64
     AndroidX64,
     /// iOS ARM64
-    iOSArm64,
+    IOSArm64,
     /// iOS x86_64 (Simulator)
-    iOSX64,
+    IOSX64,
     /// WebAssembly
     WASM,
 }
@@ -250,7 +250,7 @@ pub struct MobileConfig {
 #[derive(Debug, Clone, PartialEq)]
 pub enum MobilePlatform {
     /// iOS platform
-    iOS,
+    IOS,
     /// Android platform
     Android,
     /// Both platforms
@@ -306,7 +306,10 @@ pub struct ModelPackager<F: Float + Debug + ndarray::ScalarOperand> {
     optimization: OptimizationLevel,
 }
 
-impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync> ModelPackager<F> {
+impl<
+        F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync,
+    > ModelPackager<F>
+{
     /// Create a new model packager
     pub fn new(model: Sequential<F>, output_dir: PathBuf) -> Self {
         let metadata = PackageMetadata {
@@ -315,7 +318,11 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             description: "SciRS2 Neural Network Model".to_string(),
             author: "SciRS2".to_string(),
             license: "MIT".to_string(),
-            platforms: vec!["linux".to_string(), "windows".to_string(), "macos".to_string()],
+            platforms: vec![
+                "linux".to_string(),
+                "windows".to_string(),
+                "macos".to_string(),
+            ],
             dependencies: HashMap::new(),
             input_specs: Vec::new(),
             output_specs: Vec::new(),
@@ -366,17 +373,22 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     }
 
     /// Package model for target platform
-    pub fn package(&self, format: PackageFormat, platform: TargetPlatform) -> Result<PackageResult> {
+    pub fn package(
+        &self,
+        format: PackageFormat,
+        platform: TargetPlatform,
+    ) -> Result<PackageResult> {
         // Create output directory
-        fs::create_dir_all(&self.output_dir)
-            .map_err(|e| NeuralError::IOError(format!("Failed to create output directory: {}", e)))?;
+        fs::create_dir_all(&self.output_dir).map_err(|e| {
+            NeuralError::IOError(format!("Failed to create output directory: {}", e))
+        })?;
 
         match format {
             PackageFormat::Native => self.package_native(platform),
             PackageFormat::WebAssembly => self.package_wasm(),
             PackageFormat::CSharedLibrary => self.package_c_library(platform),
             PackageFormat::AndroidAAR => self.package_android(),
-            PackageFormat::iOSFramework => self.package_ios(),
+            PackageFormat::IOSFramework => self.package_ios(),
             PackageFormat::PythonWheel => self.package_python_wheel(),
             PackageFormat::Docker => self.package_docker(platform),
         }
@@ -412,17 +424,15 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             enable_simd: true,
             enable_threads: false,
             memory_config: WasmMemoryConfig {
-                initial_pages: 256, // 16MB initial
+                initial_pages: 256,    // 16MB initial
                 max_pages: Some(1024), // 64MB max
                 allow_growth: true,
             },
-            imports: vec![
-                WasmImport {
-                    module: "env".to_string(),
-                    name: "memory".to_string(),
-                    signature: "memory".to_string(),
-                },
-            ],
+            imports: vec![WasmImport {
+                module: "env".to_string(),
+                name: "memory".to_string(),
+                signature: "memory".to_string(),
+            }],
             exports: vec!["predict".to_string(), "initialize".to_string()],
         };
 
@@ -474,7 +484,9 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             TargetPlatform::MacOSX64 | TargetPlatform::MacOSArm64 => "dylib",
             _ => "so",
         };
-        let lib_path = self.output_dir.join(format!("libscirs2_model.{}", lib_extension));
+        let lib_path = self
+            .output_dir
+            .join(format!("libscirs2_model.{}", lib_extension));
         self.generate_shared_library(&lib_path, &config, &platform)?;
 
         Ok(PackageResult {
@@ -526,7 +538,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn package_ios(&self) -> Result<PackageResult> {
         let config = MobileConfig {
-            platform: MobilePlatform::iOS,
+            platform: MobilePlatform::IOS,
             min_os_version: "12.0".to_string(),
             architecture: MobileArchitecture::ARM64,
             optimization: MobileOptimization {
@@ -556,8 +568,8 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         self.generate_swift_bindings(&swift_path, &config)?;
 
         Ok(PackageResult {
-            format: PackageFormat::iOSFramework,
-            platform: TargetPlatform::iOSArm64,
+            format: PackageFormat::IOSFramework,
+            platform: TargetPlatform::IOSArm64,
             output_paths: vec![model_path, framework_path, swift_path],
             metadata: self.metadata.clone(),
         })
@@ -591,7 +603,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
         // Generate Dockerfile
         let dockerfile_path = self.output_dir.join("Dockerfile");
-        self.generate_dockerfile(&dockerfile_path, &platform)?;
+        self.generate_dockerfile(&dockerfile_path, platform.clone())?;
 
         // Generate Docker compose file
         let compose_path = self.output_dir.join("docker-compose.yml");
@@ -610,7 +622,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     }
 
     // Implementation stub methods (would contain actual code generation logic)
-    
+
     fn generate_runtime_binary(&self, path: &Path, _platform: &TargetPlatform) -> Result<()> {
         // Stub: Generate native runtime binary
         fs::write(path, b"#!/bin/bash\necho 'SciRS2 Model Runtime'\n")
@@ -648,13 +660,13 @@ class SciRS2Model {
 
 export default SciRS2Model;
 "#;
-        fs::write(path, js_code)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(path, js_code).map_err(|e| NeuralError::IOError(e.to_string()))?;
         Ok(())
     }
 
     fn generate_c_header(&self, path: &Path, config: &CBindingConfig) -> Result<()> {
-        let header_content = format!(r#"
+        let header_content = format!(
+            r#"
 #ifndef {}
 #define {}
 
@@ -696,10 +708,11 @@ void scirs2_tensor_free(scirs2_tensor_t* tensor);
 #endif
 
 #endif // {}
-"#, config.header_guard, config.header_guard, config.header_guard);
+"#,
+            config.header_guard, config.header_guard, config.header_guard
+        );
 
-        fs::write(path, header_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(path, header_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
         Ok(())
     }
 
@@ -742,12 +755,16 @@ void scirs2_tensor_free(scirs2_tensor_t* tensor) {
     }
 }
 "#;
-        fs::write(path, source_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(path, source_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
         Ok(())
     }
 
-    fn generate_shared_library(&self, path: &Path, _config: &CBindingConfig, _platform: &TargetPlatform) -> Result<()> {
+    fn generate_shared_library(
+        &self,
+        path: &Path,
+        _config: &CBindingConfig,
+        _platform: &TargetPlatform,
+    ) -> Result<()> {
         // Stub: Generate shared library binary
         fs::write(path, b"\x7fELF") // ELF magic for Linux
             .map_err(|e| NeuralError::IOError(e.to_string()))?;
@@ -795,8 +812,7 @@ public class SciRS2Model {
     private native void nativeFreeModel(long handle);
 }
 "#;
-        fs::write(path, java_code)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(path, java_code).map_err(|e| NeuralError::IOError(e.to_string()))?;
         Ok(())
     }
 
@@ -804,12 +820,12 @@ public class SciRS2Model {
         // Create framework directory structure
         fs::create_dir_all(path.join("Headers"))
             .map_err(|e| NeuralError::IOError(e.to_string()))?;
-        
+
         // Stub: Generate framework binary
         let binary_path = path.join("SciRS2Model");
         fs::write(&binary_path, b"\xca\xfe\xba\xbe") // Mach-O magic
             .map_err(|e| NeuralError::IOError(e.to_string()))?;
-        
+
         // Generate Info.plist
         let plist_content = r#"<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -823,11 +839,10 @@ public class SciRS2Model {
     <string>1.0.0</string>
 </dict>
 </plist>"#;
-        
+
         let plist_path = path.join("Info.plist");
-        fs::write(&plist_path, plist_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
-        
+        fs::write(&plist_path, plist_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
+
         Ok(())
     }
 
@@ -877,8 +892,7 @@ private func scirs2_model_free(_ handle: OpaquePointer) {
     // Stub implementation
 }
 "#;
-        fs::write(path, swift_code)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(path, swift_code).map_err(|e| NeuralError::IOError(e.to_string()))?;
         Ok(())
     }
 
@@ -955,8 +969,7 @@ def load_model(model_path: str) -> SciRS2Model:
     """
     return SciRS2Model(model_path)
 "#;
-        fs::write(path, python_code)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(path, python_code).map_err(|e| NeuralError::IOError(e.to_string()))?;
         Ok(())
     }
 
@@ -966,8 +979,9 @@ def load_model(model_path: str) -> SciRS2Model:
             TargetPlatform::LinuxArm64 => "arm64v8/ubuntu:20.04",
             _ => "ubuntu:20.04",
         };
-        
-        let dockerfile_content = format!(r#"
+
+        let dockerfile_content = format!(
+            r#"
 FROM {}
 
 # Install dependencies
@@ -989,10 +1003,11 @@ EXPOSE 8080
 
 # Set entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
-"#, base_image);
+"#,
+            base_image
+        );
 
-        fs::write(path, dockerfile_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(path, dockerfile_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
         Ok(())
     }
 
@@ -1022,8 +1037,7 @@ services:
       - scirs2-model
     restart: unless-stopped
 "#;
-        fs::write(path, compose_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(path, compose_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
         Ok(())
     }
 
@@ -1043,9 +1057,8 @@ echo "Setting up health check..."
 echo "Model server ready on port ${PORT:-8080}"
 exec tail -f /dev/null
 "#;
-        fs::write(path, script_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
-        
+        fs::write(path, script_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
+
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -1053,10 +1066,9 @@ exec tail -f /dev/null
                 .map_err(|e| NeuralError::IOError(e.to_string()))?
                 .permissions();
             perms.set_mode(0o755);
-            fs::set_permissions(path, perms)
-                .map_err(|e| NeuralError::IOError(e.to_string()))?;
+            fs::set_permissions(path, perms).map_err(|e| NeuralError::IOError(e.to_string()))?;
         }
-        
+
         Ok(())
     }
 }
@@ -1114,7 +1126,10 @@ pub struct ServerStats {
     pub active_requests: usize,
 }
 
-impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync> ModelServer<F> {
+impl<
+        F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync,
+    > ModelServer<F>
+{
     /// Create a new model server
     pub fn new(model: Sequential<F>, config: ServerConfig) -> Self {
         Self {
@@ -1135,10 +1150,10 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         println!("Starting SciRS2 Model Server on port {}", self.config.port);
         println!("Max batch size: {}", self.config.max_batch_size);
         println!("Timeout: {}s", self.config.timeout_seconds);
-        
+
         // In a real implementation, this would start an HTTP server
         // using a framework like warp, axum, or actix-web
-        
+
         Ok(())
     }
 
@@ -1146,15 +1161,15 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     pub fn predict(&mut self, input: &ArrayD<F>) -> Result<ArrayD<F>> {
         self.stats.total_requests += 1;
         self.stats.active_requests += 1;
-        
+
         let start_time = std::time::Instant::now();
-        
+
         // Run model inference
         let result = self.model.forward(input);
-        
+
         let elapsed = start_time.elapsed();
         self.stats.active_requests -= 1;
-        
+
         match result {
             Ok(output) => {
                 self.stats.successful_predictions += 1;
@@ -1176,9 +1191,9 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     fn update_response_time(&mut self, response_time_ms: f64) {
         let total_responses = self.stats.successful_predictions + self.stats.total_errors;
         if total_responses > 0 {
-            self.stats.avg_response_time_ms = 
-                (self.stats.avg_response_time_ms * (total_responses - 1) as f64 + response_time_ms) 
-                / total_responses as f64;
+            self.stats.avg_response_time_ms =
+                (self.stats.avg_response_time_ms * (total_responses - 1) as f64 + response_time_ms)
+                    / total_responses as f64;
         }
     }
 }
@@ -1186,11 +1201,11 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::layers::Dense;
     use crate::models::sequential::Sequential;
-    use crate::layers::dense::Dense;
+    use rand::SeedableRng;
     use std::collections::HashMap;
     use tempfile::TempDir;
-    use rand::SeedableRng;
 
     #[test]
     fn test_package_metadata_creation() {
@@ -1239,13 +1254,13 @@ mod tests {
     fn test_model_packager_creation() {
         let temp_dir = TempDir::new().unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
-        
-        let mut model = Sequential::new();
+
+        let mut model: Sequential<f32> = Sequential::new();
         let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
-        model.add_layer(Box::new(dense));
+        model.add_layer(dense);
 
         let packager = ModelPackager::new(model, temp_dir.path().to_path_buf());
-        
+
         assert_eq!(packager.metadata.name, "scirs2_model");
         assert_eq!(packager.optimization, OptimizationLevel::Basic);
     }
@@ -1317,7 +1332,7 @@ mod tests {
     #[test]
     fn test_mobile_config() {
         let config = MobileConfig {
-            platform: MobilePlatform::iOS,
+            platform: MobilePlatform::IOS,
             min_os_version: "12.0".to_string(),
             architecture: MobileArchitecture::ARM64,
             optimization: MobileOptimization {
@@ -1334,7 +1349,7 @@ mod tests {
             },
         };
 
-        assert_eq!(config.platform, MobilePlatform::iOS);
+        assert_eq!(config.platform, MobilePlatform::IOS);
         assert_eq!(config.architecture, MobileArchitecture::ARM64);
         assert!(config.optimization.enable_quantization);
         assert!(config.framework_config.use_metal);
@@ -1361,9 +1376,9 @@ mod tests {
     #[test]
     fn test_model_server_stats() {
         let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
-        let mut model = Sequential::new();
+        let mut model: Sequential<f32> = Sequential::new();
         let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
-        model.add_layer(Box::new(dense));
+        model.add_layer(dense);
 
         let config = ServerConfig {
             port: 8080,

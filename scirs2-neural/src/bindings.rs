@@ -9,13 +9,13 @@
 
 use crate::error::{NeuralError, Result};
 use crate::models::sequential::Sequential;
-use crate::serving::{CallingConvention, PackageMetadata, TensorSpec};
+use crate::serving::PackageMetadata;
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
-use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+// Serde imports removed as unused
 
 /// C/C++ binding generation configuration
 #[derive(Debug, Clone)]
@@ -262,16 +262,21 @@ pub struct BindingResult {
 /// C/C++ binding generator
 pub struct BindingGenerator<F: Float + Debug + ndarray::ScalarOperand> {
     /// Model to generate bindings for
+    #[allow(dead_code)]
     model: Sequential<F>,
     /// Binding configuration
     config: BindingConfig,
     /// Package metadata
+    #[allow(dead_code)]
     metadata: PackageMetadata,
     /// Output directory
     output_dir: PathBuf,
 }
 
-impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync> BindingGenerator<F> {
+impl<
+        F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync,
+    > BindingGenerator<F>
+{
     /// Create a new binding generator
     pub fn new(
         model: Sequential<F>,
@@ -334,15 +339,23 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         let dirs = vec!["include", "src", "examples", "docs", "build"];
         for dir in dirs {
             let path = self.output_dir.join(dir);
-            fs::create_dir_all(&path)
-                .map_err(|e| NeuralError::IOError(format!("Failed to create directory {}: {}", path.display(), e)))?;
+            fs::create_dir_all(&path).map_err(|e| {
+                NeuralError::IOError(format!(
+                    "Failed to create directory {}: {}",
+                    path.display(),
+                    e
+                ))
+            })?;
         }
         Ok(())
     }
 
     fn generate_header(&self) -> Result<PathBuf> {
-        let header_path = self.output_dir.join("include").join(format!("{}.h", self.config.library_name));
-        
+        let header_path = self
+            .output_dir
+            .join("include")
+            .join(format!("{}.h", self.config.library_name));
+
         let header_guard = format!("{}_H", self.config.library_name.to_uppercase());
         let mut header_content = String::new();
 
@@ -355,7 +368,9 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 #include <stdlib.h>
 #include <stdbool.h>
 
-"#, header_guard, header_guard));
+"#,
+            header_guard, header_guard
+        ));
 
         // Add custom includes
         for custom_type in &self.config.type_mappings.custom_types {
@@ -365,12 +380,14 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         }
 
         // C++ compatibility
-        header_content.push_str(r#"
+        header_content.push_str(
+            r#"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-"#);
+"#,
+        );
 
         // Generate type definitions
         header_content.push_str(&self.generate_type_definitions()?);
@@ -379,18 +396,19 @@ extern "C" {
         header_content.push_str(&self.generate_api_declarations()?);
 
         // Close C++ compatibility
-        header_content.push_str(r#"
+        header_content.push_str(
+            r#"
 #ifdef __cplusplus
 }
 #endif
 
-"#);
+"#,
+        );
 
         // Close header guard
         header_content.push_str(&format!("#endif // {}\n", header_guard));
 
-        fs::write(&header_path, header_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&header_path, header_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(header_path)
     }
@@ -401,7 +419,8 @@ extern "C" {
         // Generate tensor type based on array mapping
         match self.config.type_mappings.arrays {
             ArrayMapping::PlainArrays => {
-                defs.push_str(r#"
+                defs.push_str(
+                    r#"
 // Plain array interface
 typedef struct {
     void* data;
@@ -411,10 +430,12 @@ typedef struct {
     size_t total_elements;
 } scirs2_tensor_t;
 
-"#);
+"#,
+                );
             }
             ArrayMapping::StructuredArrays => {
-                defs.push_str(r#"
+                defs.push_str(
+                    r#"
 // Structured array interface
 typedef struct {
     void* data;
@@ -425,31 +446,38 @@ typedef struct {
     bool owns_data;
 } scirs2_tensor_t;
 
-"#);
+"#,
+                );
             }
             ArrayMapping::CustomArrayType(ref type_name) => {
-                defs.push_str(&format!(r#"
+                defs.push_str(&format!(
+                    r#"
 // Custom array type
 typedef {} scirs2_tensor_t;
 
-"#, type_name));
+"#,
+                    type_name
+                ));
             }
         }
 
         // Generate model handle type
-        defs.push_str(r#"
+        defs.push_str(
+            r#"
 // Model handle
 typedef struct {
     void* internal_handle;
     bool is_valid;
 } scirs2_model_t;
 
-"#);
+"#,
+        );
 
         // Generate error type based on error handling strategy
         match self.config.error_handling {
             ErrorHandling::ErrorCodes => {
-                defs.push_str(r#"
+                defs.push_str(
+                    r#"
 // Error codes
 typedef enum {
     SCIRS2_SUCCESS = 0,
@@ -463,10 +491,12 @@ typedef enum {
     SCIRS2_ERROR_UNKNOWN = -99
 } scirs2_error_t;
 
-"#);
+"#,
+                );
             }
             ErrorHandling::Callbacks => {
-                defs.push_str(r#"
+                defs.push_str(
+                    r#"
 // Error callback type
 typedef void (*scirs2_error_callback_t)(int error_code, const char* message, void* user_data);
 
@@ -476,7 +506,8 @@ typedef struct {
     void* user_data;
 } scirs2_error_context_t;
 
-"#);
+"#,
+                );
             }
             _ => {}
         }
@@ -642,7 +673,8 @@ void scirs2_set_error_callback(scirs2_error_callback_t callback, void* user_data
 
         // Add threading functions if threading is enabled
         if self.config.threading.safety_level != ThreadSafety::None {
-            api.push_str(r#"
+            api.push_str(
+                r#"
 // === Threading Functions ===
 
 /**
@@ -658,7 +690,8 @@ scirs2_error_t scirs2_set_num_threads(size_t num_threads);
  */
 size_t scirs2_get_num_threads(void);
 
-"#);
+"#,
+            );
         }
 
         Ok(api)
@@ -669,7 +702,8 @@ size_t scirs2_get_num_threads(void);
 
         // Object-oriented API is primarily for C++
         if self.config.language == BindingLanguage::Cpp {
-            api.push_str(r#"
+            api.push_str(
+                r#"
 // === C++ Object-Oriented API ===
 
 class SciRS2Model {
@@ -812,7 +846,8 @@ private:
     DataType dtype_;
 };
 
-"#);
+"#,
+            );
         } else {
             // For C, provide a more object-like API using function pointers
             api.push_str(&self.generate_procedural_api()?);
@@ -823,25 +858,27 @@ private:
 
     fn generate_hybrid_api(&self) -> Result<String> {
         let mut api = String::new();
-        
+
         // Combine procedural and object-oriented approaches
         api.push_str(&self.generate_procedural_api()?);
-        
+
         if self.config.language == BindingLanguage::Cpp {
             api.push_str(&self.generate_oo_api()?);
         }
-        
+
         Ok(api)
     }
 
     fn generate_source(&self) -> Result<PathBuf> {
         let source_path = match self.config.language {
-            BindingLanguage::C | BindingLanguage::CWithCppWrapper => {
-                self.output_dir.join("src").join(format!("{}.c", self.config.library_name))
-            }
-            BindingLanguage::Cpp => {
-                self.output_dir.join("src").join(format!("{}.cpp", self.config.library_name))
-            }
+            BindingLanguage::C | BindingLanguage::CWithCppWrapper => self
+                .output_dir
+                .join("src")
+                .join(format!("{}.c", self.config.library_name)),
+            BindingLanguage::Cpp => self
+                .output_dir
+                .join("src")
+                .join(format!("{}.cpp", self.config.library_name)),
         };
 
         let mut source_content = String::new();
@@ -855,8 +892,7 @@ private:
         // Add implementation
         source_content.push_str(&self.generate_implementation()?);
 
-        fs::write(&source_path, source_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&source_path, source_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(source_path)
     }
@@ -1038,11 +1074,18 @@ void scirs2_set_error_callback(scirs2_error_callback_t callback, void* user_data
     }
 
     fn generate_cpp_wrapper(&self) -> Result<(PathBuf, PathBuf)> {
-        let header_path = self.output_dir.join("include").join(format!("{}_cpp.hpp", self.config.library_name));
-        let source_path = self.output_dir.join("src").join(format!("{}_cpp.cpp", self.config.library_name));
+        let header_path = self
+            .output_dir
+            .join("include")
+            .join(format!("{}_cpp.hpp", self.config.library_name));
+        let source_path = self
+            .output_dir
+            .join("src")
+            .join(format!("{}_cpp.cpp", self.config.library_name));
 
         // Generate C++ header
-        let header_content = format!(r#"#ifndef {}_CPP_HPP
+        let header_content = format!(
+            r#"#ifndef {}_CPP_HPP
 #define {}_CPP_HPP
 
 #include "{}.h"
@@ -1107,18 +1150,18 @@ private:
 }} // namespace scirs2
 
 #endif // {}_CPP_HPP
-"#, 
+"#,
             self.config.library_name.to_uppercase(),
             self.config.library_name.to_uppercase(),
             self.config.library_name,
             self.config.library_name.to_uppercase()
         );
 
-        fs::write(&header_path, header_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&header_path, header_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         // Generate C++ source
-        let source_content = format!(r#"#include "{}_cpp.hpp"
+        let source_content = format!(
+            r#"#include "{}_cpp.hpp"
 #include <cstring>
 
 namespace scirs2 {{
@@ -1231,10 +1274,11 @@ std::vector<Tensor> Model::predict_batch(const std::vector<Tensor>& inputs) {{
 }}
 
 }} // namespace scirs2
-"#, self.config.library_name);
+"#,
+            self.config.library_name
+        );
 
-        fs::write(&source_path, source_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&source_path, source_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok((header_path, source_path))
     }
@@ -1269,8 +1313,9 @@ std::vector<Tensor> Model::predict_batch(const std::vector<Tensor>& inputs) {{
 
     fn generate_cmake(&self) -> Result<PathBuf> {
         let cmake_path = self.output_dir.join("CMakeLists.txt");
-        
-        let cmake_content = format!(r#"cmake_minimum_required(VERSION 3.12)
+
+        let cmake_content = format!(
+            r#"cmake_minimum_required(VERSION 3.12)
 project({} VERSION 1.0.0 LANGUAGES C CXX)
 
 # Set C/C++ standards
@@ -1347,7 +1392,7 @@ write_basic_package_version_file(
 install(FILES "{}-config.cmake" "${{CMAKE_CURRENT_BINARY_DIR}}/{}-config-version.cmake"
     DESTINATION lib/cmake/{}
 )
-"#, 
+"#,
             self.config.library_name,
             self.config.library_name,
             self.config.library_name,
@@ -1364,16 +1409,16 @@ install(FILES "{}-config.cmake" "${{CMAKE_CURRENT_BINARY_DIR}}/{}-config-version
             self.config.library_name
         );
 
-        fs::write(&cmake_path, cmake_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&cmake_path, cmake_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(cmake_path)
     }
 
     fn generate_makefile(&self) -> Result<PathBuf> {
         let make_path = self.output_dir.join("Makefile");
-        
-        let make_content = format!(r#"# Makefile for {}
+
+        let make_content = format!(
+            r#"# Makefile for {}
 
 CC = gcc
 CXX = g++
@@ -1440,18 +1485,22 @@ tests: $(LIBRARY)
 	$(MAKE) -C tests
 
 .SECONDARY: $(OBJECTS)
-"#, self.config.library_name, self.config.library_name, self.config.library_name);
+"#,
+            self.config.library_name, self.config.library_name, self.config.library_name
+        );
 
-        fs::write(&make_path, make_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&make_path, make_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(make_path)
     }
 
     fn generate_pkgconfig(&self) -> Result<PathBuf> {
-        let pc_path = self.output_dir.join(format!("{}.pc.in", self.config.library_name));
-        
-        let pc_content = format!(r#"prefix=@CMAKE_INSTALL_PREFIX@
+        let pc_path = self
+            .output_dir
+            .join(format!("{}.pc.in", self.config.library_name));
+
+        let pc_content = format!(
+            r#"prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix=${{prefix}}
 libdir=${{exec_prefix}}/lib
 includedir=${{prefix}}/include
@@ -1461,10 +1510,11 @@ Description: SciRS2 Neural Network Library C/C++ Bindings
 Version: @PROJECT_VERSION@
 Libs: -L${{libdir}} -l{}
 Cflags: -I${{includedir}}
-"#, self.config.library_name, self.config.library_name);
+"#,
+            self.config.library_name, self.config.library_name
+        );
 
-        fs::write(&pc_path, pc_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&pc_path, pc_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(pc_path)
     }
@@ -1474,7 +1524,8 @@ Cflags: -I${{includedir}}
 
         // Generate C example
         let c_example_path = self.output_dir.join("examples").join("basic_usage.c");
-        let c_example_content = format!(r#"#include <stdio.h>
+        let c_example_content = format!(
+            r#"#include <stdio.h>
 #include <stdlib.h>
 #include "{}.h"
 
@@ -1545,16 +1596,21 @@ int main() {{
     
     return 0;
 }}
-"#, self.config.library_name);
+"#,
+            self.config.library_name
+        );
 
         fs::write(&c_example_path, c_example_content)
             .map_err(|e| NeuralError::IOError(e.to_string()))?;
         examples.push(c_example_path);
 
         // Generate C++ example if applicable
-        if self.config.language == BindingLanguage::Cpp || self.config.language == BindingLanguage::CWithCppWrapper {
+        if self.config.language == BindingLanguage::Cpp
+            || self.config.language == BindingLanguage::CWithCppWrapper
+        {
             let cpp_example_path = self.output_dir.join("examples").join("basic_usage.cpp");
-            let cpp_example_content = format!(r#"#include <iostream>
+            let cpp_example_content = format!(
+                r#"#include <iostream>
 #include <vector>
 #include "{}_cpp.hpp"
 
@@ -1600,7 +1656,9 @@ int main() {{
     
     return 0;
 }}
-"#, self.config.library_name);
+"#,
+                self.config.library_name
+            );
 
             fs::write(&cpp_example_path, cpp_example_content)
                 .map_err(|e| NeuralError::IOError(e.to_string()))?;
@@ -1609,7 +1667,8 @@ int main() {{
 
         // Generate example CMakeLists.txt
         let example_cmake_path = self.output_dir.join("examples").join("CMakeLists.txt");
-        let example_cmake_content = format!(r#"# Examples CMakeLists.txt
+        let example_cmake_content = format!(
+            r#"# Examples CMakeLists.txt
 
 # C example
 add_executable(basic_usage_c basic_usage.c)
@@ -1621,7 +1680,9 @@ if(ENABLE_CPP_WRAPPER)
     target_link_libraries(basic_usage_cpp {})
     set_target_properties(basic_usage_cpp PROPERTIES LINKER_LANGUAGE CXX)
 endif()
-"#, self.config.library_name, self.config.library_name);
+"#,
+            self.config.library_name, self.config.library_name
+        );
 
         fs::write(&example_cmake_path, example_cmake_content)
             .map_err(|e| NeuralError::IOError(e.to_string()))?;
@@ -1635,7 +1696,8 @@ endif()
 
         // Generate README
         let readme_path = self.output_dir.join("README.md");
-        let readme_content = format!(r#"# {} - SciRS2 Neural Network C/C++ Bindings
+        let readme_content = format!(
+            r#"# {} - SciRS2 Neural Network C/C++ Bindings
 
 This library provides C/C++ bindings for SciRS2 neural network models.
 
@@ -1711,10 +1773,11 @@ Check the `examples/` directory for usage examples.
 ## License
 
 MIT License
-"#, self.config.library_name, self.config.library_name, self.config.library_name);
+"#,
+            self.config.library_name, self.config.library_name, self.config.library_name
+        );
 
-        fs::write(&readme_path, readme_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&readme_path, readme_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
         docs.push(readme_path);
 
         Ok(docs)
@@ -1766,10 +1829,10 @@ impl Default for BindingConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::layers::Dense;
     use crate::models::sequential::Sequential;
-    use crate::layers::dense::Dense;
-    use tempfile::TempDir;
     use rand::SeedableRng;
+    use tempfile::TempDir;
 
     #[test]
     fn test_binding_config_default() {
@@ -1791,10 +1854,10 @@ mod tests {
     fn test_binding_generator_creation() {
         let temp_dir = TempDir::new().unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
-        
-        let mut model = Sequential::new();
+
+        let mut model: Sequential<f32> = Sequential::new();
         let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
-        model.add_layer(Box::new(dense));
+        model.add_layer(dense);
 
         let config = BindingConfig::default();
         let metadata = PackageMetadata {
@@ -1821,12 +1884,8 @@ mod tests {
             checksum: "test".to_string(),
         };
 
-        let generator = BindingGenerator::new(
-            model,
-            config,
-            metadata,
-            temp_dir.path().to_path_buf(),
-        );
+        let generator =
+            BindingGenerator::new(model, config, metadata, temp_dir.path().to_path_buf());
 
         assert_eq!(generator.config.library_name, "scirs2_model");
     }

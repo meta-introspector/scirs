@@ -12,11 +12,11 @@ use crate::error::{NeuralError, Result};
 use crate::models::sequential::Sequential;
 use crate::serving::PackageMetadata;
 use num_traits::Float;
-use std::collections::HashMap;
+// HashMap import removed as unused
 use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
+// Serde imports removed as unused
 
 /// WebAssembly compilation configuration
 #[derive(Debug, Clone)]
@@ -659,12 +659,15 @@ pub struct WorkerPoolConfig {
 /// WebAssembly compiler and deployment manager
 pub struct WasmCompiler<F: Float + Debug + ndarray::ScalarOperand> {
     /// Model to compile
+    #[allow(dead_code)]
     model: Sequential<F>,
     /// Compilation configuration
+    #[allow(dead_code)]
     config: WasmCompilationConfig,
     /// Web integration configuration
     web_config: WebIntegrationConfig,
     /// Package metadata
+    #[allow(dead_code)]
     metadata: PackageMetadata,
     /// Output directory
     output_dir: PathBuf,
@@ -700,7 +703,10 @@ pub struct BundleInfo {
     pub estimated_load_time_ms: u64,
 }
 
-impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync> WasmCompiler<F> {
+impl<
+        F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync,
+    > WasmCompiler<F>
+{
     /// Create a new WASM compiler
     pub fn new(
         model: Sequential<F>,
@@ -749,36 +755,33 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn create_directory_structure(&self) -> Result<()> {
         let dirs = vec![
-            "wasm",
-            "js",
-            "ts",
-            "docs",
-            "examples",
-            "tests",
-            "build",
-            "dist",
+            "wasm", "js", "ts", "docs", "examples", "tests", "build", "dist",
         ];
-        
+
         for dir in dirs {
             let path = self.output_dir.join(dir);
-            fs::create_dir_all(&path)
-                .map_err(|e| NeuralError::IOError(format!("Failed to create directory {}: {}", path.display(), e)))?;
+            fs::create_dir_all(&path).map_err(|e| {
+                NeuralError::IOError(format!(
+                    "Failed to create directory {}: {}",
+                    path.display(),
+                    e
+                ))
+            })?;
         }
-        
+
         Ok(())
     }
 
     fn generate_wasm_module(&self) -> Result<PathBuf> {
         let wasm_path = self.output_dir.join("wasm").join("model.wasm");
-        
+
         // Stub implementation - in real code, this would use wasm-pack or similar tools
         let wasm_header = vec![
             0x00, 0x61, 0x73, 0x6d, // Magic number (\0asm)
             0x01, 0x00, 0x00, 0x00, // Version
         ];
 
-        fs::write(&wasm_path, wasm_header)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&wasm_path, wasm_header).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(wasm_path)
     }
@@ -787,17 +790,23 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         let mut bindings = Vec::new();
 
         match self.web_config.bindings.target_language {
-            WebBindingLanguage::JavaScript | WebBindingLanguage::Both => {
+            WebBindingLanguage::JavaScript => {
                 let js_path = self.generate_javascript_bindings()?;
                 bindings.push(js_path);
             }
-            WebBindingLanguage::TypeScript | WebBindingLanguage::Both => {
+            WebBindingLanguage::TypeScript => {
                 let ts_path = self.generate_typescript_bindings()?;
                 bindings.push(ts_path);
             }
             WebBindingLanguage::ModernJavaScript => {
                 let js_path = self.generate_modern_javascript_bindings()?;
                 bindings.push(js_path);
+            }
+            WebBindingLanguage::Both => {
+                let js_path = self.generate_javascript_bindings()?;
+                bindings.push(js_path);
+                let ts_path = self.generate_typescript_bindings()?;
+                bindings.push(ts_path);
             }
         }
 
@@ -806,7 +815,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn generate_javascript_bindings(&self) -> Result<PathBuf> {
         let js_path = self.output_dir.join("js").join("scirs2-model.js");
-        
+
         let js_content = r#"/**
  * SciRS2 Model WebAssembly Bindings
  * 
@@ -1084,15 +1093,14 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 "#;
 
-        fs::write(&js_path, js_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&js_path, js_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(js_path)
     }
 
     fn generate_typescript_bindings(&self) -> Result<PathBuf> {
         let ts_path = self.output_dir.join("ts").join("scirs2-model.ts");
-        
+
         let ts_content = r#"/**
  * SciRS2 Model WebAssembly TypeScript Bindings
  * 
@@ -1442,15 +1450,14 @@ export { SciRS2Model };
 export type { ModelInfo, WasmSupport, InitializationOptions, LoadingOptions, PredictionOptions };
 "#;
 
-        fs::write(&ts_path, ts_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&ts_path, ts_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(ts_path)
     }
 
     fn generate_modern_javascript_bindings(&self) -> Result<PathBuf> {
         let js_path = self.output_dir.join("js").join("scirs2-model.mjs");
-        
+
         let js_content = r#"/**
  * SciRS2 Model WebAssembly Modern JavaScript Bindings (ES2020+)
  * 
@@ -1831,8 +1838,7 @@ export function checkWasmSupport() {
 export { SciRS2Model };
 "#;
 
-        fs::write(&js_path, js_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&js_path, js_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(js_path)
     }
@@ -1861,7 +1867,7 @@ export { SciRS2Model };
 
     fn generate_package_json(&self) -> Result<PathBuf> {
         let package_json_path = self.output_dir.join("package.json");
-        
+
         let package_json = serde_json::json!({
             "name": "@scirs2/neural-wasm",
             "version": "1.0.0",
@@ -1926,7 +1932,7 @@ export { SciRS2Model };
 
     fn generate_webpack_config(&self) -> Result<PathBuf> {
         let webpack_path = self.output_dir.join("webpack.config.js");
-        
+
         let webpack_content = r#"const path = require('path');
 
 module.exports = {
@@ -1990,7 +1996,7 @@ module.exports = {
 
     fn generate_example_html(&self) -> Result<PathBuf> {
         let html_path = self.output_dir.join("examples").join("index.html");
-        
+
         let html_content = r#"<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2301,15 +2307,14 @@ module.exports = {
 </html>
 "#;
 
-        fs::write(&html_path, html_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&html_path, html_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(html_path)
     }
 
     fn generate_web_worker(&self) -> Result<PathBuf> {
         let worker_path = self.output_dir.join("js").join("scirs2-worker.js");
-        
+
         let worker_content = r#"/**
  * SciRS2 Model Web Worker
  * 
@@ -2468,8 +2473,7 @@ self.onunhandledrejection = function(event) {
 postMessage({ type: 'WORKER_READY' });
 "#;
 
-        fs::write(&worker_path, worker_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&worker_path, worker_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
 
         Ok(worker_path)
     }
@@ -2479,7 +2483,7 @@ postMessage({ type: 'WORKER_READY' });
 
         // Generate README
         let readme_path = self.output_dir.join("README.md");
-        let readme_content = format!(r#"# SciRS2 Neural Network WebAssembly
+        let readme_content = r#"# SciRS2 Neural Network WebAssembly
 
 High-performance neural network inference in the browser using WebAssembly.
 
@@ -2723,10 +2727,10 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-"#);
+"#
+        .to_string();
 
-        fs::write(&readme_path, readme_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&readme_path, readme_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
         docs.push(readme_path);
 
         // Generate TypeScript declarations
@@ -2808,14 +2812,17 @@ export function loadModel(modelUrl: string, options?: LoadingOptions): Promise<S
 export function checkWasmSupport(): WasmSupport;
 "#;
 
-        fs::write(&dts_path, dts_content)
-            .map_err(|e| NeuralError::IOError(e.to_string()))?;
+        fs::write(&dts_path, dts_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
         docs.push(dts_path);
 
         Ok(docs)
     }
 
-    fn calculate_bundle_info(&self, wasm_path: &Path, binding_paths: &[PathBuf]) -> Result<BundleInfo> {
+    fn calculate_bundle_info(
+        &self,
+        wasm_path: &Path,
+        binding_paths: &[PathBuf],
+    ) -> Result<BundleInfo> {
         let wasm_size = fs::metadata(wasm_path)
             .map_err(|e| NeuralError::IOError(e.to_string()))?
             .len() as usize;
@@ -2829,7 +2836,8 @@ export function checkWasmSupport(): WasmSupport;
 
         let total_size = wasm_size + js_size;
         let compression_ratio = 0.7; // Assume 70% compression with gzip
-        let estimated_load_time_ms = (total_size as f64 * compression_ratio / 1024.0 / 1024.0 * 1000.0) as u64; // Rough estimate
+        let estimated_load_time_ms =
+            (total_size as f64 * compression_ratio / 1024.0 / 1024.0 * 1000.0) as u64; // Rough estimate
 
         Ok(BundleInfo {
             total_size,
@@ -2875,17 +2883,18 @@ impl Default for WasmCompilationConfig {
                 },
             },
             exports: WasmExports {
-                functions: vec![
-                    WasmFunctionExport {
-                        name: "predict".to_string(),
-                        signature: WasmSignature {
-                            params: vec![WasmType::I32, WasmType::I32, WasmType::I32],
-                            returns: vec![WasmType::I32],
-                        },
-                        documentation: Some("Run neural network inference".to_string()),
-                        performance_hints: vec![PerformanceHint::Intensive, PerformanceHint::SIMDFriendly],
+                functions: vec![WasmFunctionExport {
+                    name: "predict".to_string(),
+                    signature: WasmSignature {
+                        params: vec![WasmType::I32, WasmType::I32, WasmType::I32],
+                        returns: vec![WasmType::I32],
                     },
-                ],
+                    documentation: Some("Run neural network inference".to_string()),
+                    performance_hints: vec![
+                        PerformanceHint::Intensive,
+                        PerformanceHint::SIMDFriendly,
+                    ],
+                }],
                 memory: vec![],
                 globals: vec![],
                 tables: vec![],
@@ -2986,10 +2995,11 @@ impl Default for WebIntegrationConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::layers::Dense;
     use crate::models::sequential::Sequential;
-    use crate::layers::dense::Dense;
-    use tempfile::TempDir;
     use rand::SeedableRng;
+    use std::collections::HashMap;
+    use tempfile::TempDir;
 
     #[test]
     fn test_wasm_compilation_config_default() {
@@ -3013,10 +3023,10 @@ mod tests {
     fn test_wasm_compiler_creation() {
         let temp_dir = TempDir::new().unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
-        
-        let mut model = Sequential::new();
+
+        let mut model: Sequential<f32> = Sequential::new();
         let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
-        model.add_layer(Box::new(dense));
+        model.add_layer(dense);
 
         let wasm_config = WasmCompilationConfig::default();
         let web_config = WebIntegrationConfig::default();
@@ -3091,7 +3101,10 @@ mod tests {
         assert_eq!(memory_config.initial_pages, 256);
         assert_eq!(memory_config.maximum_pages, Some(1024));
         assert!(!memory_config.shared);
-        assert_eq!(memory_config.growth_strategy, MemoryGrowthStrategy::OnDemand);
+        assert_eq!(
+            memory_config.growth_strategy,
+            MemoryGrowthStrategy::OnDemand
+        );
     }
 
     #[test]

@@ -560,7 +560,7 @@ fn simd_vector_norm_inf_flat_f64(data: &[f64]) -> f64 {
     max_val
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "simd"))]
 mod tests {
     use super::*;
     use approx::assert_relative_eq;

@@ -59,6 +59,8 @@ pub mod training;
 pub mod transfer_learning;
 pub mod transformer;
 pub mod utils;
+/// Visualization tools module
+pub mod visualization;
 /// WebAssembly module
 pub mod wasm;
 

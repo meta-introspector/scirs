@@ -104,13 +104,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("6. Matrix Norms");
     println!("--------------");
 
-    let norm_fro = matrix_norm(&a.view(), "fro")?;
+    let norm_fro = matrix_norm(&a.view(), "fro", None)?;
     println!("Frobenius norm of A: {}", norm_fro);
 
-    let norm_1 = matrix_norm(&a.view(), "1")?;
+    let norm_1 = matrix_norm(&a.view(), "1", None)?;
     println!("1-norm of A: {}", norm_1);
 
-    let norm_inf = matrix_norm(&a.view(), "inf")?;
+    let norm_inf = matrix_norm(&a.view(), "inf", None)?;
     println!("Infinity norm of A: {}\n", norm_inf);
 
     // 7. Error Handling

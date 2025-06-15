@@ -68,7 +68,7 @@ Add scirs2-linalg to your Cargo.toml:
 
 ```toml
 [dependencies]
-scirs2-linalg = "0.1.0-alpha.4"
+scirs2-linalg = "0.1.0-alpha.5"
 ndarray = "0.16.1"
 ```
 
@@ -76,9 +76,9 @@ For accelerated performance with native BLAS/LAPACK:
 
 ```toml
 [dependencies]
-scirs2-linalg = { version = "0.1.0-alpha.4", features = ["openblas"] }
+scirs2-linalg = { version = "0.1.0-alpha.5", features = ["openblas"] }
 # Or use Intel MKL:
-# scirs2-linalg = { version = "0.1.0-alpha.4", features = ["mkl"] }
+# scirs2-linalg = { version = "0.1.0-alpha.5", features = ["mkl"] }
 ```
 
 ## Quick Start
@@ -283,13 +283,13 @@ The library supports multiple BLAS/LAPACK backends:
 
 ```toml
 # OpenBLAS (default, good general performance)
-scirs2-linalg = { version = "0.1.0-alpha.4", features = ["openblas"] }
+scirs2-linalg = { version = "0.1.0-alpha.5", features = ["openblas"] }
 
 # Intel MKL (best for Intel CPUs)
-scirs2-linalg = { version = "0.1.0-alpha.4", features = ["mkl"] }
+scirs2-linalg = { version = "0.1.0-alpha.5", features = ["mkl"] }
 
 # Netlib (reference implementation)
-scirs2-linalg = { version = "0.1.0-alpha.4", features = ["netlib"] }
+scirs2-linalg = { version = "0.1.0-alpha.5", features = ["netlib"] }
 ```
 
 ### Optimization Features

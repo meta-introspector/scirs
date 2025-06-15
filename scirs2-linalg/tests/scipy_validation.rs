@@ -159,19 +159,19 @@ fn test_norm_against_scipy() {
     // Frobenius norm
     // SciPy result: 16.881943016134134
     let expected_frobenius = 16.881943016134134;
-    let actual_frobenius = matrix_norm(&a.view(), "fro").unwrap();
+    let actual_frobenius = matrix_norm(&a.view(), "fro", None).unwrap();
     assert_abs_diff_eq!(actual_frobenius, expected_frobenius, epsilon = TOLERANCE);
 
     // 1-norm (max absolute column sum)
     // SciPy result: 18.0
     let expected_1norm = 18.0;
-    let actual_1norm = matrix_norm(&a.view(), "1").unwrap();
+    let actual_1norm = matrix_norm(&a.view(), "1", None).unwrap();
     assert_abs_diff_eq!(actual_1norm, expected_1norm, epsilon = TOLERANCE);
 
     // inf-norm (max absolute row sum)
     // SciPy result: 24.0
     let expected_infnorm = 24.0;
-    let actual_infnorm = matrix_norm(&a.view(), "inf").unwrap();
+    let actual_infnorm = matrix_norm(&a.view(), "inf", None).unwrap();
     assert_abs_diff_eq!(actual_infnorm, expected_infnorm, epsilon = TOLERANCE);
 }
 

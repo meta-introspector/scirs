@@ -3,7 +3,6 @@
 //! This example demonstrates the new parallel compression capabilities
 //! that can significantly improve performance when working with large datasets.
 
-use ndarray::Array1;
 use scirs2_io::compression::{
     self, benchmark_compression_algorithms, compress_data_parallel, decompress_data_parallel,
     CompressionAlgorithm, ParallelCompressionConfig,
@@ -49,9 +48,9 @@ fn generate_test_data(size: usize) -> Vec<u8> {
     // Create patterns that will compress well but still represent realistic data
     for i in 0..size {
         let pattern = match i % 4 {
-            0 => (i / 1000) as u8,  // Slowly changing values
-            1 => 0x42,              // Repeated bytes
-            2 => ((i % 256) as u8), // Cycling pattern
+            0 => (i / 1000) as u8, // Slowly changing values
+            1 => 0x42,             // Repeated bytes
+            2 => (i % 256) as u8,  // Cycling pattern
             3 => {
                 if i % 10 == 0 {
                     0xFF
@@ -84,7 +83,7 @@ fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std
     let start_time = Instant::now();
     let (compressed_data, compression_stats) =
         compress_data_parallel(data, algorithm, level, config.clone())?;
-    let compression_time = start_time.elapsed();
+    let _compression_time = start_time.elapsed();
 
     println!("  📊 Compression Results:");
     println!(
@@ -114,7 +113,7 @@ fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std
     let start_time = Instant::now();
     let (decompressed_data, decompression_stats) =
         decompress_data_parallel(&compressed_data, algorithm, config)?;
-    let decompression_time = start_time.elapsed();
+    let _decompression_time = start_time.elapsed();
 
     println!("  📊 Decompression Results:");
     println!(

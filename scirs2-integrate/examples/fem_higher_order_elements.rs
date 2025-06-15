@@ -5,7 +5,6 @@
 //! on a unit square with different element types (linear, quadratic, cubic)
 //! to show convergence improvement with higher-order elements.
 
-use ndarray::{Array1, Array2};
 use scirs2_integrate::pde::{
     finite_element::{ElementType, FEMOptions, FEMPoissonSolver, TriangularMesh},
     BoundaryCondition as GenericBoundaryCondition, BoundaryConditionType, BoundaryLocation,
@@ -19,9 +18,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // So f(x,y) = 2π²*sin(π*x)*sin(π*y)
 
     let pi = std::f64::consts::PI;
-    let exact_solution = |x: f64, y: f64| -> f64 { (pi * x).sin() * (pi * y).sin() };
+    let exact_solution = move |x: f64, y: f64| -> f64 { (pi * x).sin() * (pi * y).sin() };
 
-    let source_term = |x: f64, y: f64| -> f64 { 2.0 * pi * pi * (pi * x).sin() * (pi * y).sin() };
+    let source_term =
+        move |x: f64, y: f64| -> f64 { 2.0 * pi * pi * (pi * x).sin() * (pi * y).sin() };
 
     // Test different mesh resolutions and element types
     let mesh_sizes = vec![4, 8, 16];
@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("=== {} Elements ===", type_name);
         println!("Mesh Size\\tNodes\\t\\tL2 Error\\t\\tMax Error\\t\\tRate");
 
-        let mut prev_error = None;
+        let mut prev_error: Option<f64> = None;
 
         for &nx in &mesh_sizes {
             // Create triangular mesh on unit square
@@ -109,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let (l2_error, max_error) = compute_errors(&result, &exact_solution)?;
 
             // Compute convergence rate
-            let rate = if let Some(prev_err) = prev_error {
+            let rate: f64 = if let Some(prev_err) = prev_error {
                 (prev_err / l2_error).log2()
             } else {
                 0.0
@@ -148,7 +148,7 @@ fn compute_errors(
 ) -> Result<(f64, f64), Box<dyn std::error::Error>> {
     let mut l2_error_squared = 0.0;
     let mut max_error = 0.0;
-    let mut total_area = 0.0;
+    let mut _total_area = 0.0;
 
     // For each triangle in the mesh, compute the error
     for element in &result.mesh.elements {
@@ -159,7 +159,7 @@ fn compute_errors(
 
         // Triangle area
         let area = result.mesh.triangle_area(element);
-        total_area += area;
+        _total_area += area;
 
         // Simple 3-point quadrature for error computation
         let quad_points = vec![

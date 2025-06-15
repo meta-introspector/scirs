@@ -33,6 +33,21 @@
 //!   - Structural time series models
 //!   - Dynamic linear models
 //!   - Unobserved components models
+//! - Causality testing and relationship analysis
+//!   - Granger causality testing with F-statistics and p-values
+//!   - Transfer entropy measures with bootstrap significance testing
+//!   - Convergent cross mapping for nonlinear causality detection
+//!   - Causal impact analysis for intervention assessment
+//! - Correlation and relationship analysis
+//!   - Cross-correlation functions with confidence intervals
+//!   - Dynamic time warping with multiple constraint types
+//!   - Time-frequency analysis (STFT, CWT, Morlet wavelets)
+//!   - Coherence analysis for frequency domain relationships
+//! - Time series clustering and classification
+//!   - K-means, hierarchical, and DBSCAN clustering algorithms
+//!   - Multiple distance measures (DTW, Euclidean, correlation-based)
+//!   - k-NN classification with DTW and other distance functions
+//!   - Shapelet discovery and shapelet-based classification
 //! - Vector autoregressive models
 //!   - VAR model fitting and prediction
 //!   - Impulse response functions
@@ -56,6 +71,11 @@
 //!   - Functional PCA for functional time series data
 //!   - Dynamic Time Warping barycenter averaging
 //!   - Symbolic approximation methods (SAX, APCA, PLA)
+//! - Time series regression models
+//!   - Distributed lag models (DL) with flexible lag structures
+//!   - Autoregressive distributed lag (ARDL) models with automatic lag selection
+//!   - Error correction models (ECM) for cointegrated series
+//!   - Regression with ARIMA errors for correlated residuals
 //! - Forecasting methods (ARIMA, exponential smoothing)
 //!   - Automatic model selection
 //!   - Seasonal and non-seasonal models
@@ -71,7 +91,10 @@
 
 pub mod anomaly;
 pub mod arima_models;
+pub mod causality;
 pub mod change_point;
+pub mod clustering;
+pub mod correlation;
 pub mod decomposition; // Directory-based modular structure
 pub mod decomposition_compat; // For backward compatibility
 pub mod detection;
@@ -83,6 +106,7 @@ pub mod feature_selection;
 pub mod features;
 pub mod forecasting;
 pub mod optimization;
+pub mod regression;
 pub mod sarima_models;
 pub mod state_space;
 pub mod tests;

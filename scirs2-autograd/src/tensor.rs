@@ -117,8 +117,8 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///
     /// ag::run(|c| {
     ///     // Create two independent computations
-    ///     let a = T::constant(array![1., 2.], c);
-    ///     let b = T::constant(array![3., 4.], c);
+    ///     let a = T::convert_to_tensor(array![1., 2.], c);
+    ///     let b = T::convert_to_tensor(array![3., 4.], c);
     ///     
     ///     // These operations are independent
     ///     let mul_a = a * 2.;
@@ -126,8 +126,8 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///     
     ///     // Force mul_c to depend on both mul_a and mul_b
     ///     // This ensures mul_a and mul_b are evaluated before mul_c
-    ///     let c = T::constant(array![5., 6.], c);
-    ///     let mul_c = (c * 4.).depends_on(&[mul_a, mul_b]);
+    ///     let d = T::convert_to_tensor(array![5., 6.], c);
+    ///     let mul_c = (d * 4.).depends_on(&[mul_a, mul_b]);
     ///     
     ///     // Evaluation order is now guaranteed: mul_a, mul_b, then mul_c
     ///     assert_eq!(mul_c.eval(c), Ok(array![20., 24.].into_dyn()));

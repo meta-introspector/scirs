@@ -6,6 +6,7 @@ use std::iter::Sum;
 
 use crate::error::{LinalgError, LinalgResult};
 use crate::norm::vector_norm;
+use crate::validation::validate_linear_system;
 
 /// Solve a linear system Ax = b using the Conjugate Gradient method.
 ///
@@ -56,20 +57,8 @@ where
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
 
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
-
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using validation helpers
+    validate_linear_system(a, b, "Conjugate Gradient method")?;
 
     let n = a.nrows();
 
@@ -226,20 +215,9 @@ where
 
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
 
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using validation helpers
+    validate_linear_system(a, b, "Jacobi method")?;
 
     let n = a.nrows();
 
@@ -354,20 +332,8 @@ where
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
 
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
-
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using validation helpers
+    validate_linear_system(a, b, "Gauss-Seidel method")?;
 
     let n = a.nrows();
 
@@ -487,20 +453,9 @@ where
 
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
 
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using validation helpers
+    validate_linear_system(a, b, "Successive Over-Relaxation method")?;
 
     // Check omega range for convergence
     if omega <= F::zero() || omega >= F::from(2.0).unwrap() {
@@ -636,20 +591,8 @@ where
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
 
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
-
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using validation helpers
+    validate_linear_system(a, b, "Geometric Multigrid method")?;
 
     let n = a.nrows();
 
@@ -939,20 +882,9 @@ where
 
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
 
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using validation helpers
+    validate_linear_system(a, b, "BiCGSTAB method")?;
 
     let n = a.nrows();
 
@@ -1150,20 +1082,9 @@ where
 
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
-    if a.nrows() != a.ncols() {
-        return Err(LinalgError::ShapeError(format!(
-            "Expected square matrix, got shape {:?}",
-            a.shape()
-        )));
-    }
 
-    if a.nrows() != b.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Shape mismatch: matrix shape {:?}, vector shape {:?}",
-            a.shape(),
-            b.shape()
-        )));
-    }
+    // Parameter validation using validation helpers
+    validate_linear_system(a, b, "MINRES method")?;
 
     let n = a.nrows();
 

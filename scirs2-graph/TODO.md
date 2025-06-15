@@ -32,8 +32,8 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 - [x] Enhanced graph representations
   - [x] MultiGraph (parallel edges)
   - [x] MultiDiGraph (directed with parallel edges)
-  - [ ] Hypergraph implementation
-  - [ ] Temporal graph structures
+  - [x] Hypergraph implementation
+  - [x] Temporal graph structures
   - [x] Bipartite graph specialization
 - [x] Attribute handling
   - [x] Node/edge attribute system
@@ -91,8 +91,8 @@ This module provides graph data structures and algorithms similar to SciPy's gra
   - [x] Label propagation
   - [x] Infomap algorithm
   - [x] Louvain method
-  - [ ] Fluid communities
-  - [ ] Hierarchical community structure
+  - [x] Fluid communities
+  - [x] Hierarchical community structure
 
 ## Graph Generation
 
@@ -172,12 +172,12 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 
 ## Interoperability
 
-- [ ] I/O formats
+- [x] I/O formats
   - [ ] GraphML support
   - [ ] GML format
-  - [ ] DOT format (Graphviz)
-  - [ ] Edge list and adjacency list formats
-  - [ ] JSON graph format
+  - [x] DOT format (Graphviz)
+  - [x] Edge list and adjacency list formats
+  - [x] JSON graph format
 - [ ] Integration with other libraries
   - [ ] NetworkX conversion utilities
   - [ ] SNAP format support

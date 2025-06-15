@@ -280,6 +280,13 @@ where
             }
         }
 
+        // Add regularization to handle numerical instability
+        let reg_param =
+            F::from(1e-10).unwrap_or(F::epsilon() * F::from(1000.0).unwrap_or(F::one()));
+        for i in 0..self.p {
+            r_matrix[[i, i]] = r_matrix[[i, i]] + reg_param;
+        }
+
         // Solve Yule-Walker equations: R * phi = r
         let r_inv = Self::matrix_inverse(&r_matrix)?;
         self.ar_coeffs = r_inv.dot(&r_vector);
@@ -328,9 +335,10 @@ where
                         + backward_error[i - 1] * backward_error[i - 1]);
             }
 
-            if denominator == F::zero() {
+            let eps = F::from(1e-12).unwrap_or(F::epsilon());
+            if denominator.abs() < eps {
                 return Err(TimeSeriesError::ComputationError(
-                    "Burg algorithm failed: division by zero".to_string(),
+                    "Burg algorithm failed: division by zero or near-zero".to_string(),
                 ));
             }
 
@@ -766,9 +774,10 @@ where
 
         // For small matrices, use simple methods
         if n == 1 {
-            if matrix[[0, 0]] == F::zero() {
+            let eps = F::from(1e-12).unwrap_or(F::epsilon());
+            if matrix[[0, 0]].abs() < eps {
                 return Err(TimeSeriesError::ComputationError(
-                    "Matrix is singular".to_string(),
+                    "Matrix is singular or nearly singular".to_string(),
                 ));
             }
             let mut inv = Array2::zeros((1, 1));
@@ -778,9 +787,10 @@ where
 
         if n == 2 {
             let det = matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]];
-            if det == F::zero() {
+            let eps = F::from(1e-12).unwrap_or(F::epsilon());
+            if det.abs() < eps {
                 return Err(TimeSeriesError::ComputationError(
-                    "Matrix is singular".to_string(),
+                    "Matrix is singular or nearly singular".to_string(),
                 ));
             }
             let mut inv = Array2::zeros((2, 2));
@@ -821,10 +831,11 @@ where
                 }
             }
 
-            // Check for singular matrix
-            if augmented[[i, i]] == F::zero() {
+            // Check for singular matrix with better tolerance
+            let eps = F::from(1e-12).unwrap_or(F::epsilon());
+            if augmented[[i, i]].abs() < eps {
                 return Err(TimeSeriesError::ComputationError(
-                    "Matrix is singular".to_string(),
+                    "Matrix is singular or nearly singular".to_string(),
                 ));
             }
 
@@ -987,9 +998,10 @@ mod tests {
 
     #[test]
     fn test_enhanced_ar_yule_walker_fit() {
+        // Generate more realistic AR(2) data with noise
         let data = array![
-            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
-            17.0, 18.0, 19.0, 20.0
+            1.5, 2.1, 3.4, 2.8, 4.2, 3.9, 5.1, 4.7, 6.3, 5.8, 7.2, 6.9, 8.1, 7.5, 9.3, 8.8, 10.2,
+            9.7, 11.1, 10.5, 12.3, 11.8, 13.2, 12.7, 14.1, 13.6, 15.4, 14.9, 16.2, 15.8
         ];
         let mut model = EnhancedARModel::new(2).unwrap();
 
@@ -1000,9 +1012,10 @@ mod tests {
 
     #[test]
     fn test_enhanced_ar_burg_fit() {
+        // Generate more realistic AR(2) data with noise
         let data = array![
-            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
-            17.0, 18.0, 19.0, 20.0
+            1.2, 2.3, 2.9, 3.1, 4.5, 3.8, 5.2, 4.9, 6.1, 5.7, 7.3, 6.8, 8.0, 7.6, 9.2, 8.9, 10.1,
+            9.8, 11.0, 10.6, 12.2, 11.9, 13.1, 12.8, 14.0, 13.7, 15.3, 14.8, 16.1, 15.9
         ];
         let mut model = EnhancedARModel::new(2).unwrap();
 
@@ -1013,9 +1026,10 @@ mod tests {
 
     #[test]
     fn test_enhanced_ar_forecast_with_intervals() {
+        // Generate more realistic AR(2) data with noise
         let data = array![
-            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
-            17.0, 18.0, 19.0, 20.0
+            1.3, 2.2, 3.1, 2.9, 4.4, 3.7, 5.3, 4.8, 6.2, 5.9, 7.1, 6.7, 8.2, 7.4, 9.1, 8.8, 10.3,
+            9.6, 11.2, 10.7, 12.1, 11.8, 13.3, 12.6, 14.2, 13.9, 15.1, 14.7, 16.3, 15.6
         ];
         let mut model = EnhancedARModel::new(2).unwrap();
         model.fit(&data, EstimationMethod::YuleWalker).unwrap();

@@ -12,11 +12,11 @@ use crate::error::{NeuralError, Result};
 use crate::models::sequential::Sequential;
 use crate::serving::PackageMetadata;
 use num_traits::Float;
-use std::collections::HashMap;
+// HashMap import removed as unused
 use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
+// Serde imports removed as unused
 
 /// Mobile platform specification
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -38,9 +38,9 @@ pub enum MobilePlatform {
     /// Universal mobile package
     Universal {
         /// iOS configuration
-        ios_config: Option<IOSConfig>,
+        ios_config: Box<Option<IOSConfig>>,
         /// Android configuration
-        android_config: Option<AndroidConfig>,
+        android_config: Box<Option<AndroidConfig>>,
     },
 }
 
@@ -73,7 +73,7 @@ pub enum AndroidArchitecture {
 }
 
 /// iOS-specific configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IOSConfig {
     /// Framework bundle identifier
     pub bundle_identifier: String,
@@ -90,7 +90,7 @@ pub struct IOSConfig {
 }
 
 /// Code signing configuration for iOS
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CodeSigningConfig {
     /// Development team ID
     pub team_id: Option<String>,
@@ -103,7 +103,7 @@ pub struct CodeSigningConfig {
 }
 
 /// Metal Performance Shaders configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MetalConfig {
     /// Enable Metal acceleration
     pub enable: bool,
@@ -116,7 +116,7 @@ pub struct MetalConfig {
 }
 
 /// Metal kernel specification
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MetalKernel {
     /// Kernel name
     pub name: String,
@@ -129,7 +129,7 @@ pub struct MetalKernel {
 }
 
 /// Metal memory optimization settings
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MetalMemoryOptimization {
     /// Use unified memory
     pub unified_memory: bool,
@@ -142,7 +142,7 @@ pub struct MetalMemoryOptimization {
 }
 
 /// Core ML integration configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CoreMLConfig {
     /// Enable Core ML integration
     pub enable: bool,
@@ -155,7 +155,7 @@ pub struct CoreMLConfig {
 }
 
 /// Core ML model format version
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CoreMLVersion {
     /// Core ML 1.0
     V1_0,
@@ -172,7 +172,7 @@ pub enum CoreMLVersion {
 }
 
 /// Core ML compute units preference
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CoreMLComputeUnits {
     /// CPU only
     CPUOnly,
@@ -185,7 +185,7 @@ pub enum CoreMLComputeUnits {
 }
 
 /// Core ML compilation options
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CoreMLCompilationOptions {
     /// Optimization level
     pub optimization_level: OptimizationLevel,
@@ -196,7 +196,7 @@ pub struct CoreMLCompilationOptions {
 }
 
 /// Privacy configuration for iOS
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PrivacyConfig {
     /// Privacy manifest requirements
     pub privacy_manifest: bool,
@@ -207,7 +207,7 @@ pub struct PrivacyConfig {
 }
 
 /// Data collection description
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct DataCollection {
     /// Data type
     pub data_type: String,
@@ -218,7 +218,7 @@ pub struct DataCollection {
 }
 
 /// iOS permission requirement
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Permission {
     /// Camera access
     Camera,
@@ -235,7 +235,7 @@ pub enum Permission {
 }
 
 /// Android-specific configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AndroidConfig {
     /// Package name
     pub package_name: String,
@@ -254,7 +254,7 @@ pub struct AndroidConfig {
 }
 
 /// Android Neural Networks API configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NNAPIConfig {
     /// Enable NNAPI acceleration
     pub enable: bool,
@@ -267,7 +267,7 @@ pub struct NNAPIConfig {
 }
 
 /// NNAPI execution provider
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NNAPIProvider {
     /// CPU execution
     CPU,
@@ -282,7 +282,7 @@ pub enum NNAPIProvider {
 }
 
 /// NNAPI fallback strategy
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NNAPIFallback {
     /// Fast fallback to CPU
     Fast,
@@ -293,7 +293,7 @@ pub enum NNAPIFallback {
 }
 
 /// Android GPU delegate configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AndroidGPUConfig {
     /// Enable GPU acceleration
     pub enable: bool,
@@ -306,7 +306,7 @@ pub struct AndroidGPUConfig {
 }
 
 /// OpenGL ES version
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum OpenGLVersion {
     /// OpenGL ES 2.0
     ES2_0,
@@ -319,7 +319,7 @@ pub enum OpenGLVersion {
 }
 
 /// GPU memory management strategy
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GPUMemoryManagement {
     /// Buffer pooling
     pub buffer_pooling: bool,
@@ -332,7 +332,7 @@ pub struct GPUMemoryManagement {
 }
 
 /// Code obfuscation configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ObfuscationConfig {
     /// Enable obfuscation
     pub enable: bool,
@@ -345,7 +345,7 @@ pub struct ObfuscationConfig {
 }
 
 /// Obfuscation tool selection
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ObfuscationTool {
     /// ProGuard
     ProGuard,
@@ -356,7 +356,7 @@ pub enum ObfuscationTool {
 }
 
 /// Android permissions configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AndroidPermissionsConfig {
     /// Required permissions
     pub required: Vec<AndroidPermission>,
@@ -367,7 +367,7 @@ pub struct AndroidPermissionsConfig {
 }
 
 /// Android permission types
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AndroidPermission {
     /// Internet access
     Internet,
@@ -704,7 +704,7 @@ pub struct LowBatteryMode {
 }
 
 /// Thermal management configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ThermalManagementConfig {
     /// Thermal monitoring
     pub monitoring: ThermalMonitoringConfig,
@@ -715,7 +715,7 @@ pub struct ThermalManagementConfig {
 }
 
 /// Thermal monitoring configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ThermalMonitoringConfig {
     /// Enable thermal monitoring
     pub enable: bool,
@@ -743,7 +743,7 @@ pub enum ThermalSensor {
 }
 
 /// Temperature thresholds for thermal management
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ThermalThresholds {
     /// Warning temperature (°C)
     pub warning: f32,
@@ -754,7 +754,7 @@ pub struct ThermalThresholds {
 }
 
 /// Thermal throttling configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ThermalThrottlingConfig {
     /// Enable throttling
     pub enable: bool,
@@ -778,7 +778,7 @@ pub enum ThrottlingStrategy {
 }
 
 /// Performance degradation configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PerformanceDegradation {
     /// Temperature threshold for this step
     pub temperature_threshold: f32,
@@ -793,7 +793,7 @@ pub struct PerformanceDegradation {
 }
 
 /// Cooling strategies configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CoolingConfig {
     /// Active cooling methods
     pub active_cooling: Vec<ActiveCooling>,
@@ -828,7 +828,7 @@ pub enum PassiveCooling {
 }
 
 /// Workload distribution for thermal management
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct WorkloadDistributionConfig {
     /// Distribute across cores
     pub distribute_cores: bool,
@@ -841,7 +841,7 @@ pub struct WorkloadDistributionConfig {
 }
 
 /// Optimization level for mobile deployment
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum OptimizationLevel {
     /// No optimization
     None,
@@ -854,7 +854,7 @@ pub enum OptimizationLevel {
 }
 
 /// Individual optimization pass
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum OptimizationPass {
     /// Dead code elimination
     DeadCodeElimination,
@@ -871,7 +871,7 @@ pub enum OptimizationPass {
 }
 
 /// Precision mode for mobile inference
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PrecisionMode {
     /// Full precision (FP32)
     Full,
@@ -884,7 +884,7 @@ pub enum PrecisionMode {
 }
 
 /// Specialization mode for mobile optimization
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SpecializationMode {
     /// No specialization
     None,
@@ -903,6 +903,7 @@ pub struct MobileDeploymentGenerator<F: Float + Debug + ndarray::ScalarOperand> 
     /// Target platform
     platform: MobilePlatform,
     /// Optimization configuration
+    #[allow(dead_code)]
     optimization: MobileOptimizationConfig,
     /// Package metadata
     metadata: PackageMetadata,
@@ -1114,7 +1115,10 @@ pub struct ThermalMetrics {
     pub time_to_limit_s: f32,
 }
 
-impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync> MobileDeploymentGenerator<F> {
+impl<
+        F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync,
+    > MobileDeploymentGenerator<F>
+{
     /// Create a new mobile deployment generator
     pub fn new(
         model: Sequential<F>,
@@ -1160,140 +1164,149 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn create_directory_structure(&self) -> Result<()> {
         let dirs = match &self.platform {
-            MobilePlatform::iOS { .. } => vec!["ios", "docs", "examples", "tests"],
+            MobilePlatform::IOS { .. } => vec!["ios", "docs", "examples", "tests"],
             MobilePlatform::Android { .. } => vec!["android", "docs", "examples", "tests"],
-            MobilePlatform::Universal { .. } => vec!["ios", "android", "universal", "docs", "examples", "tests"],
+            MobilePlatform::Universal { .. } => {
+                vec!["ios", "android", "universal", "docs", "examples", "tests"]
+            }
         };
 
         for dir in dirs {
             let path = self.output_dir.join(dir);
-            fs::create_dir_all(&path)
-                .map_err(|e| NeuralError::IOError(format!("Failed to create directory {}: {}", path.display(), e)))?;
+            fs::create_dir_all(&path).map_err(|e| {
+                NeuralError::IOError(format!(
+                    "Failed to create directory {}: {}",
+                    path.display(),
+                    e
+                ))
+            })?;
         }
 
         Ok(())
     }
 
     fn optimize_model(&self) -> Result<Sequential<F>> {
-        // Apply mobile-specific optimizations
-        let mut optimized_model = self.model.clone();
-
-        // Apply quantization
-        if let Some(quantized) = self.apply_quantization(&optimized_model)? {
-            optimized_model = quantized;
-        }
-
-        // Apply pruning
-        if let Some(pruned) = self.apply_pruning(&optimized_model)? {
-            optimized_model = pruned;
-        }
-
-        // Apply compression
-        if let Some(compressed) = self.apply_compression(&optimized_model)? {
-            optimized_model = compressed;
-        }
-
-        Ok(optimized_model)
+        // Mobile optimization is not yet implemented
+        // TODO: Implement mobile-specific optimizations including quantization, pruning, and compression
+        Err(NeuralError::NotImplementedError(
+            "Mobile model optimization not yet implemented".to_string(),
+        ))
     }
 
-    fn apply_quantization(&self, model: &Sequential<F>) -> Result<Option<Sequential<F>>> {
+    #[allow(dead_code)]
+    fn apply_quantization(&self, _model: &Sequential<F>) -> Result<Option<Sequential<F>>> {
         match self.optimization.quantization.strategy {
             QuantizationStrategy::PostTraining => {
                 // Post-training quantization implementation
                 // This would involve statistical analysis of activations
                 // and conversion to lower precision
-                Ok(Some(model.clone())) // Stub
+                Err(NeuralError::NotImplementedError(
+                    "Post-training quantization not yet implemented".to_string(),
+                ))
             }
             QuantizationStrategy::QAT => {
                 // Quantization-aware training implementation
                 // This would require retraining with fake quantization
-                Ok(Some(model.clone())) // Stub
+                Err(NeuralError::NotImplementedError(
+                    "Quantization-aware training not yet implemented".to_string(),
+                ))
             }
             QuantizationStrategy::Dynamic => {
                 // Dynamic quantization implementation
                 // This would quantize only weights, not activations
-                Ok(Some(model.clone())) // Stub
+                Err(NeuralError::NotImplementedError(
+                    "Dynamic quantization not yet implemented".to_string(),
+                ))
             }
             QuantizationStrategy::MixedPrecision => {
                 // Mixed precision implementation
                 // Different layers use different precisions
-                Ok(Some(model.clone())) // Stub
+                Err(NeuralError::NotImplementedError(
+                    "Mixed precision quantization not yet implemented".to_string(),
+                ))
             }
         }
     }
 
-    fn apply_pruning(&self, model: &Sequential<F>) -> Result<Option<Sequential<F>>> {
+    #[allow(dead_code)]
+    fn apply_pruning(&self, _model: &Sequential<F>) -> Result<Option<Sequential<F>>> {
         let pruning_config = &self.optimization.compression.pruning;
-        
+
         match pruning_config.pruning_type {
             PruningType::Magnitude => {
                 // Magnitude-based pruning implementation
                 // Remove weights with smallest absolute values
-                Ok(Some(model.clone())) // Stub
+                Err(NeuralError::NotImplementedError(
+                    "Magnitude-based pruning not yet implemented".to_string(),
+                ))
             }
             PruningType::Gradient => {
                 // Gradient-based pruning implementation
                 // Use gradient information to determine importance
-                Ok(Some(model.clone())) // Stub
+                Err(NeuralError::NotImplementedError(
+                    "Gradient-based pruning not yet implemented".to_string(),
+                ))
             }
             PruningType::Fisher => {
                 // Fisher information pruning implementation
                 // Use Fisher information matrix for importance
-                Ok(Some(model.clone())) // Stub
+                Err(NeuralError::NotImplementedError(
+                    "Fisher information pruning not yet implemented".to_string(),
+                ))
             }
             PruningType::LotteryTicket => {
                 // Lottery ticket hypothesis implementation
                 // Find sparse subnetwork that can be trained in isolation
-                Ok(Some(model.clone())) // Stub
+                Err(NeuralError::NotImplementedError(
+                    "Lottery ticket hypothesis not yet implemented".to_string(),
+                ))
             }
         }
     }
 
-    fn apply_compression(&self, model: &Sequential<F>) -> Result<Option<Sequential<F>>> {
-        let compression_config = &self.optimization.compression;
+    #[allow(dead_code)]
+    fn apply_compression(&self, _model: &Sequential<F>) -> Result<Option<Sequential<F>>> {
+        let _compression_config = &self.optimization.compression;
 
-        let mut compressed_model = model.clone();
-
-        // Apply layer fusion
-        if compression_config.layer_fusion {
-            // Fuse compatible layers (e.g., conv + batch norm + activation)
-            compressed_model = self.fuse_layers(&compressed_model)?;
-        }
-
-        // Apply weight sharing
-        if compression_config.weight_sharing {
-            // Share weights between similar layers
-            compressed_model = self.share_weights(&compressed_model)?;
-        }
-
-        // Apply knowledge distillation if enabled
-        if compression_config.distillation.enable {
-            compressed_model = self.apply_distillation(&compressed_model)?;
-        }
-
-        Ok(Some(compressed_model))
+        // Compression is not yet implemented
+        // TODO: Implement model compression with layer fusion, weight sharing, and knowledge distillation
+        Err(NeuralError::NotImplementedError(
+            "Model compression not yet implemented".to_string(),
+        ))
     }
 
-    fn fuse_layers(&self, model: &Sequential<F>) -> Result<Sequential<F>> {
+    #[allow(dead_code)]
+    fn fuse_layers(&self, _model: &Sequential<F>) -> Result<Sequential<F>> {
         // Layer fusion implementation
         // This would identify patterns like Conv2D + BatchNorm + ReLU
         // and fuse them into a single optimized layer
-        Ok(model.clone()) // Stub
+        Err(NeuralError::NotImplementedError(
+            "Layer fusion not yet implemented".to_string(),
+        ))
     }
 
-    fn share_weights(&self, model: &Sequential<F>) -> Result<Sequential<F>> {
+    #[allow(dead_code)]
+    fn share_weights(&self, _model: &Sequential<F>) -> Result<Sequential<F>> {
         // Weight sharing implementation
         // This would identify similar weight matrices and share them
-        Ok(model.clone()) // Stub
+        Err(NeuralError::NotImplementedError(
+            "Weight sharing not yet implemented".to_string(),
+        ))
     }
 
-    fn apply_distillation(&self, model: &Sequential<F>) -> Result<Sequential<F>> {
+    #[allow(dead_code)]
+    fn apply_distillation(&self, _model: &Sequential<F>) -> Result<Sequential<F>> {
         // Knowledge distillation implementation
         // This would use a larger teacher model to train a smaller student
-        Ok(model.clone()) // Stub
+        Err(NeuralError::NotImplementedError(
+            "Knowledge distillation not yet implemented".to_string(),
+        ))
     }
 
-    fn generate_optimization_report(&self, optimized_model: &Sequential<F>) -> Result<OptimizationReport> {
+    fn generate_optimization_report(
+        &self,
+        optimized_model: &Sequential<F>,
+    ) -> Result<OptimizationReport> {
         // Calculate optimization metrics
         let original_size = self.estimate_model_size(&self.model)?;
         let optimized_size = self.estimate_model_size(optimized_model)?;
@@ -1302,23 +1315,23 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         let techniques = vec![
             OptimizationTechnique {
                 name: "Quantization".to_string(),
-                size_reduction: 0.5, // 50% size reduction
+                size_reduction: 0.5,    // 50% size reduction
                 speed_improvement: 1.2, // 20% faster
                 accuracy_impact: -0.02, // 2% accuracy loss
             },
             OptimizationTechnique {
                 name: "Pruning".to_string(),
-                size_reduction: 0.3, // 30% size reduction
+                size_reduction: 0.3,     // 30% size reduction
                 speed_improvement: 1.15, // 15% faster
-                accuracy_impact: -0.01, // 1% accuracy loss
+                accuracy_impact: -0.01,  // 1% accuracy loss
             },
         ];
 
         let improvements = PerformanceImprovement {
             inference_time_reduction: 35.0, // 35% faster
-            memory_reduction: 60.0, // 60% less memory
-            energy_improvement: 40.0, // 40% more energy efficient
-            throughput_increase: 50.0, // 50% higher throughput
+            memory_reduction: 60.0,         // 60% less memory
+            energy_improvement: 40.0,       // 40% more energy efficient
+            throughput_increase: 50.0,      // 50% higher throughput
         };
 
         Ok(OptimizationReport {
@@ -1340,7 +1353,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         let mut packages = Vec::new();
 
         match &self.platform {
-            MobilePlatform::iOS { .. } => {
+            MobilePlatform::IOS { .. } => {
                 let ios_package = self.generate_ios_package(model)?;
                 packages.push(ios_package);
             }
@@ -1348,7 +1361,10 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 let android_package = self.generate_android_package(model)?;
                 packages.push(android_package);
             }
-            MobilePlatform::Universal { ios_config, android_config } => {
+            MobilePlatform::Universal {
+                ios_config,
+                android_config,
+            } => {
                 if ios_config.is_some() {
                     let ios_package = self.generate_ios_package(model)?;
                     packages.push(ios_package);
@@ -1381,7 +1397,13 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         let objc_impl_path = self.output_dir.join("ios").join("SciRS2Model.m");
         self.generate_objc_wrapper(&objc_header_path, &objc_impl_path)?;
 
-        let files = vec![model_path, framework_path, swift_path, objc_header_path, objc_impl_path];
+        let files = vec![
+            model_path,
+            framework_path,
+            swift_path,
+            objc_header_path,
+            objc_impl_path,
+        ];
 
         let integration = IntegrationInstructions {
             installation_steps: vec![
@@ -1389,38 +1411,37 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 "Import the framework in your Swift/Objective-C files".to_string(),
                 "Initialize the model and run inference".to_string(),
             ],
-            configuration: vec![
-                ConfigurationStep {
-                    description: "Add framework to project".to_string(),
-                    changes: vec![
-                        ConfigurationChange {
-                            file: "*.xcodeproj/project.pbxproj".to_string(),
-                            change_type: ChangeType::Add,
-                            content: "Framework reference and build settings".to_string(),
-                        },
-                    ],
-                    optional: false,
-                },
-            ],
-            code_examples: vec![
-                CodeExample {
-                    title: "Basic Swift Usage".to_string(),
-                    language: "swift".to_string(),
-                    code: r#"import SciRS2Neural
+            configuration: vec![ConfigurationStep {
+                description: "Add framework to project".to_string(),
+                changes: vec![ConfigurationChange {
+                    file: "*.xcodeproj/project.pbxproj".to_string(),
+                    change_type: ChangeType::Add,
+                    content: "Framework reference and build settings".to_string(),
+                }],
+                optional: false,
+            }],
+            code_examples: vec![CodeExample {
+                title: "Basic Swift Usage".to_string(),
+                language: "swift".to_string(),
+                code: r#"import SciRS2Neural
 
 let model = SciRS2Model()
 let input = MLMultiArray(...)
-let output = try model.predict(input: input)"#.to_string(),
-                    description: "Basic model usage in Swift".to_string(),
-                },
-            ],
-            troubleshooting: vec![
-                TroubleshootingStep {
-                    problem: "Framework not found".to_string(),
-                    solution: vec!["Check framework is added to project".to_string(), "Verify build settings".to_string()],
-                    causes: vec!["Missing framework reference".to_string(), "Incorrect build path".to_string()],
-                },
-            ],
+let output = try model.predict(input: input)"#
+                    .to_string(),
+                description: "Basic model usage in Swift".to_string(),
+            }],
+            troubleshooting: vec![TroubleshootingStep {
+                problem: "Framework not found".to_string(),
+                solution: vec![
+                    "Check framework is added to project".to_string(),
+                    "Verify build settings".to_string(),
+                ],
+                causes: vec![
+                    "Missing framework reference".to_string(),
+                    "Incorrect build path".to_string(),
+                ],
+            }],
         };
 
         Ok(PlatformPackage {
@@ -1453,7 +1474,14 @@ let output = try model.predict(input: input)"#.to_string(),
         let jni_impl_path = self.output_dir.join("android").join("scirs2_jni.cpp");
         self.generate_jni_wrapper(&jni_header_path, &jni_impl_path)?;
 
-        let files = vec![model_path, aar_path, java_path, kotlin_path, jni_header_path, jni_impl_path];
+        let files = vec![
+            model_path,
+            aar_path,
+            java_path,
+            kotlin_path,
+            jni_header_path,
+            jni_impl_path,
+        ];
 
         let integration = IntegrationInstructions {
             installation_steps: vec![
@@ -1461,38 +1489,37 @@ let output = try model.predict(input: input)"#.to_string(),
                 "Import the SciRS2Model class".to_string(),
                 "Initialize the model and run inference".to_string(),
             ],
-            configuration: vec![
-                ConfigurationStep {
-                    description: "Add dependency to build.gradle".to_string(),
-                    changes: vec![
-                        ConfigurationChange {
-                            file: "app/build.gradle".to_string(),
-                            change_type: ChangeType::Add,
-                            content: "implementation 'com.scirs2:neural:1.0.0'".to_string(),
-                        },
-                    ],
-                    optional: false,
-                },
-            ],
-            code_examples: vec![
-                CodeExample {
-                    title: "Basic Kotlin Usage".to_string(),
-                    language: "kotlin".to_string(),
-                    code: r#"import com.scirs2.neural.SciRS2Model
+            configuration: vec![ConfigurationStep {
+                description: "Add dependency to build.gradle".to_string(),
+                changes: vec![ConfigurationChange {
+                    file: "app/build.gradle".to_string(),
+                    change_type: ChangeType::Add,
+                    content: "implementation 'com.scirs2:neural:1.0.0'".to_string(),
+                }],
+                optional: false,
+            }],
+            code_examples: vec![CodeExample {
+                title: "Basic Kotlin Usage".to_string(),
+                language: "kotlin".to_string(),
+                code: r#"import com.scirs2.neural.SciRS2Model
 
 val model = SciRS2Model(context, "scirs2_model.tflite")
 val input = floatArrayOf(...)
-val output = model.predict(input)"#.to_string(),
-                    description: "Basic model usage in Kotlin".to_string(),
-                },
-            ],
-            troubleshooting: vec![
-                TroubleshootingStep {
-                    problem: "Model loading failed".to_string(),
-                    solution: vec!["Check model file is in assets".to_string(), "Verify file permissions".to_string()],
-                    causes: vec!["Missing model file".to_string(), "Incorrect file path".to_string()],
-                },
-            ],
+val output = model.predict(input)"#
+                    .to_string(),
+                description: "Basic model usage in Kotlin".to_string(),
+            }],
+            troubleshooting: vec![TroubleshootingStep {
+                problem: "Model loading failed".to_string(),
+                solution: vec![
+                    "Check model file is in assets".to_string(),
+                    "Verify file permissions".to_string(),
+                ],
+                causes: vec![
+                    "Missing model file".to_string(),
+                    "Incorrect file path".to_string(),
+                ],
+            }],
         };
 
         Ok(PlatformPackage {
@@ -1812,7 +1839,7 @@ Java_com_scirs2_neural_SciRS2Model_destroyNativeModel(JNIEnv *env, jobject thiz,
     fn benchmark_performance(&self, _model: &Sequential<F>) -> Result<PerformanceMetrics> {
         // Performance benchmarking implementation
         // This would run actual inference tests and measure performance
-        
+
         Ok(PerformanceMetrics {
             latency: LatencyMetrics {
                 average_ms: 15.2,
@@ -1846,7 +1873,7 @@ Java_com_scirs2_neural_SciRS2Model_destroyNativeModel(JNIEnv *env, jobject thiz,
 
         // Generate platform-specific integration guides
         match &self.platform {
-            MobilePlatform::iOS { .. } => {
+            MobilePlatform::IOS { .. } => {
                 let ios_guide = self.generate_ios_integration_guide()?;
                 guides.push(ios_guide);
             }
@@ -1870,7 +1897,7 @@ Java_com_scirs2_neural_SciRS2Model_destroyNativeModel(JNIEnv *env, jobject thiz,
 
     fn generate_ios_integration_guide(&self) -> Result<PathBuf> {
         let guide_path = self.output_dir.join("docs").join("ios_integration.md");
-        
+
         let guide_content = r#"# iOS Integration Guide
 
 ## Prerequisites
@@ -2038,7 +2065,7 @@ let commandQueue = metalDevice?.makeCommandQueue()
 
     fn generate_android_integration_guide(&self) -> Result<PathBuf> {
         let guide_path = self.output_dir.join("docs").join("android_integration.md");
-        
+
         let guide_content = r#"# Android Integration Guide
 
 ## Prerequisites
@@ -2232,7 +2259,7 @@ options.setNumThreads(4)
 
     fn generate_optimization_guide(&self) -> Result<PathBuf> {
         let guide_path = self.output_dir.join("docs").join("optimization_guide.md");
-        
+
         let guide_content = r#"# Mobile Optimization Guide
 
 ## Overview
@@ -2567,7 +2594,10 @@ impl Default for MobileOptimizationConfig {
                 },
                 cooling: CoolingConfig {
                     active_cooling: vec![],
-                    passive_cooling: vec![PassiveCooling::ThermalThrottling, PassiveCooling::DutyCycling],
+                    passive_cooling: vec![
+                        PassiveCooling::ThermalThrottling,
+                        PassiveCooling::DutyCycling,
+                    ],
                     workload_distribution: WorkloadDistributionConfig {
                         distribute_cores: true,
                         migrate_hot_tasks: true,
@@ -2583,24 +2613,28 @@ impl Default for MobileOptimizationConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::layers::Dense;
     use crate::models::sequential::Sequential;
-    use crate::layers::dense::Dense;
-    use tempfile::TempDir;
     use rand::SeedableRng;
+    use std::collections::HashMap;
+    use tempfile::TempDir;
 
     #[test]
     fn test_mobile_platform_ios() {
-        let platform = MobilePlatform::iOS {
+        let platform = MobilePlatform::IOS {
             min_version: "12.0".to_string(),
-            devices: vec![iOSDevice::iPhone, iOSDevice::iPad],
+            devices: vec![IOSDevice::IPhone, IOSDevice::IPad],
         };
 
         match platform {
-            MobilePlatform::iOS { min_version, devices } => {
+            MobilePlatform::IOS {
+                min_version,
+                devices,
+            } => {
                 assert_eq!(min_version, "12.0");
                 assert_eq!(devices.len(), 2);
-                assert!(devices.contains(&iOSDevice::iPhone));
-                assert!(devices.contains(&iOSDevice::iPad));
+                assert!(devices.contains(&IOSDevice::IPhone));
+                assert!(devices.contains(&IOSDevice::IPad));
             }
             _ => panic!("Expected iOS platform"),
         }
@@ -2614,7 +2648,10 @@ mod tests {
         };
 
         match platform {
-            MobilePlatform::Android { min_api_level, architectures } => {
+            MobilePlatform::Android {
+                min_api_level,
+                architectures,
+            } => {
                 assert_eq!(min_api_level, 21);
                 assert_eq!(architectures.len(), 2);
                 assert!(architectures.contains(&AndroidArchitecture::ARM64));
@@ -2627,11 +2664,17 @@ mod tests {
     #[test]
     fn test_mobile_optimization_config_default() {
         let config = MobileOptimizationConfig::default();
-        
-        assert_eq!(config.compression.pruning.pruning_type, PruningType::Magnitude);
+
+        assert_eq!(
+            config.compression.pruning.pruning_type,
+            PruningType::Magnitude
+        );
         assert_eq!(config.compression.pruning.sparsity_level, 0.5);
         assert!(config.compression.distillation.enable);
-        assert_eq!(config.quantization.strategy, QuantizationStrategy::PostTraining);
+        assert_eq!(
+            config.quantization.strategy,
+            QuantizationStrategy::PostTraining
+        );
         assert_eq!(config.quantization.precision.weights, 8);
         assert_eq!(config.power.power_mode, PowerMode::Balanced);
     }
@@ -2640,14 +2683,14 @@ mod tests {
     fn test_mobile_deployment_generator_creation() {
         let temp_dir = TempDir::new().unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
-        
-        let mut model = Sequential::new();
-        let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
-        model.add_layer(Box::new(dense));
 
-        let platform = MobilePlatform::iOS {
+        let mut model: Sequential<f32> = Sequential::new();
+        let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
+        model.add_layer(dense);
+
+        let platform = MobilePlatform::IOS {
             min_version: "12.0".to_string(),
-            devices: vec![iOSDevice::iPhone],
+            devices: vec![IOSDevice::IPhone],
         };
 
         let optimization = MobileOptimizationConfig::default();
@@ -2684,7 +2727,9 @@ mod tests {
         );
 
         match generator.platform {
-            MobilePlatform::iOS { ref min_version, .. } => {
+            MobilePlatform::IOS {
+                ref min_version, ..
+            } => {
                 assert_eq!(min_version, "12.0");
             }
             _ => panic!("Expected iOS platform"),

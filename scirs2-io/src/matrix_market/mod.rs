@@ -756,7 +756,7 @@ pub fn read_sparse_matrix_parallel<P: AsRef<Path>>(
                 continue;
             }
 
-            let entry = parse_matrix_entry(&line, &header)?;
+            let entry = parse_matrix_entry(line, &header)?;
             entries.push(entry);
         }
 

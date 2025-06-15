@@ -952,10 +952,694 @@ fn format_bytes(bytes: u64) -> String {
     }
 }
 
+/// Batch operation result containing success/failure information
+#[derive(Debug, Clone)]
+pub struct BatchResult {
+    /// Number of successful operations
+    pub success_count: usize,
+    /// Number of failed operations
+    pub failure_count: usize,
+    /// List of failed items with error messages
+    pub failures: Vec<(String, String)>,
+    /// Total bytes processed
+    pub total_bytes: u64,
+    /// Total time taken for the batch operation
+    pub elapsed_time: std::time::Duration,
+}
+
+impl BatchResult {
+    /// Create a new empty batch result
+    pub fn new() -> Self {
+        Self {
+            success_count: 0,
+            failure_count: 0,
+            failures: Vec::new(),
+            total_bytes: 0,
+            elapsed_time: std::time::Duration::ZERO,
+        }
+    }
+
+    /// Check if all operations were successful
+    pub fn is_all_success(&self) -> bool {
+        self.failure_count == 0
+    }
+
+    /// Get success rate as percentage
+    pub fn success_rate(&self) -> f64 {
+        let total = self.success_count + self.failure_count;
+        if total == 0 {
+            0.0
+        } else {
+            (self.success_count as f64 / total as f64) * 100.0
+        }
+    }
+
+    /// Get formatted summary
+    pub fn summary(&self) -> String {
+        format!(
+            "Batch completed: {}/{} successful ({:.1}%), {} bytes processed in {:.2}s",
+            self.success_count,
+            self.success_count + self.failure_count,
+            self.success_rate(),
+            format_bytes(self.total_bytes),
+            self.elapsed_time.as_secs_f64()
+        )
+    }
+}
+
+impl Default for BatchResult {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Batch operations manager for dataset caching
+pub struct BatchOperations {
+    cache: CacheManager,
+    parallel: bool,
+    max_retries: usize,
+    retry_delay: std::time::Duration,
+}
+
+impl BatchOperations {
+    /// Create a new batch operations manager
+    pub fn new(cache: CacheManager) -> Self {
+        Self {
+            cache,
+            parallel: true,
+            max_retries: 3,
+            retry_delay: std::time::Duration::from_millis(1000),
+        }
+    }
+
+    /// Configure parallel processing
+    pub fn with_parallel(mut self, parallel: bool) -> Self {
+        self.parallel = parallel;
+        self
+    }
+
+    /// Configure retry settings
+    pub fn with_retry_config(
+        mut self,
+        max_retries: usize,
+        retry_delay: std::time::Duration,
+    ) -> Self {
+        self.max_retries = max_retries;
+        self.retry_delay = retry_delay;
+        self
+    }
+
+    /// Download multiple datasets in batch
+    #[cfg(feature = "download")]
+    pub fn batch_download(&self, urls_and_names: &[(&str, &str)]) -> BatchResult {
+        let start_time = std::time::Instant::now();
+        let mut result = BatchResult::new();
+
+        if self.parallel {
+            self.batch_download_parallel(urls_and_names, &mut result)
+        } else {
+            self.batch_download_sequential(urls_and_names, &mut result)
+        }
+
+        result.elapsed_time = start_time.elapsed();
+        result
+    }
+
+    #[cfg(feature = "download")]
+    fn batch_download_parallel(&self, urls_and_names: &[(&str, &str)], result: &mut BatchResult) {
+        use std::sync::{Arc, Mutex};
+        use std::thread;
+        use std::fs::File;
+        use std::io::Write;
+
+        // Ensure cache directory exists before spawning threads
+        if let Err(e) = self.cache.cache.ensure_cache_dir() {
+            result.failure_count += urls_and_names.len();
+            for &(_, name) in urls_and_names {
+                result.failures.push((name.to_string(), format!("Cache setup failed: {}", e)));
+            }
+            return;
+        }
+
+        let result = Arc::new(Mutex::new(result));
+        let cache_dir = self.cache.cache.cache_dir.clone();
+        let max_retries = self.max_retries;
+        let retry_delay = self.retry_delay;
+
+        let handles: Vec<_> = urls_and_names
+            .iter()
+            .map(|&(url, name)| {
+                let result_clone = Arc::clone(&result);
+                let url = url.to_string();
+                let name = name.to_string();
+                let cache_dir = cache_dir.clone();
+
+                thread::spawn(move || {
+                    let mut success = false;
+                    let mut last_error = String::new();
+                    let mut downloaded_data = Vec::new();
+
+                    for attempt in 0..=max_retries {
+                        match download_data(&url, false) {
+                            Ok(data) => {
+                                // Write directly to filesystem (bypassing RefCell memory cache)
+                                let path = cache_dir.join(&name);
+                                match File::create(&path) {
+                                    Ok(mut file) => match file.write_all(&data) {
+                                        Ok(_) => {
+                                            let mut r = result_clone.lock().unwrap();
+                                            r.success_count += 1;
+                                            r.total_bytes += data.len() as u64;
+                                            downloaded_data = data;
+                                            success = true;
+                                            break;
+                                        }
+                                        Err(e) => {
+                                            last_error = format!("Failed to write cache file: {}", e);
+                                        }
+                                    },
+                                    Err(e) => {
+                                        last_error = format!("Failed to create cache file: {}", e);
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                last_error = format!("Download failed: {}", e);
+                                if attempt < max_retries {
+                                    thread::sleep(retry_delay);
+                                }
+                            }
+                        }
+                    }
+
+                    if !success {
+                        let mut r = result_clone.lock().unwrap();
+                        r.failure_count += 1;
+                        r.failures.push((name, last_error));
+                    }
+
+                    (name, success, downloaded_data)
+                })
+            })
+            .collect();
+
+        // Collect results and update memory cache for successful downloads
+        let mut successful_downloads = Vec::new();
+        for handle in handles {
+            if let Ok((name, success, data)) = handle.join() {
+                if success && !data.is_empty() {
+                    successful_downloads.push((name, data));
+                }
+            }
+        }
+
+        // Update memory cache after all threads complete
+        for (name, data) in successful_downloads {
+            let key = FileCacheKey(name);
+            self.cache.cache.mem_cache.borrow_mut().insert(key, data);
+        }
+    }
+
+    #[cfg(feature = "download")]
+    fn batch_download_sequential(&self, urls_and_names: &[(&str, &str)], result: &mut BatchResult) {
+        for &(url, name) in urls_and_names {
+            let mut success = false;
+            let mut last_error = String::new();
+
+            for attempt in 0..=self.max_retries {
+                match download_data(url, false) {
+                    Ok(data) => match self.cache.cache.write_cached(name, &data) {
+                        Ok(_) => {
+                            result.success_count += 1;
+                            result.total_bytes += data.len() as u64;
+                            success = true;
+                            break;
+                        }
+                        Err(e) => {
+                            last_error = format!("Cache write failed: {}", e);
+                        }
+                    },
+                    Err(e) => {
+                        last_error = format!("Download failed: {}", e);
+                        if attempt < self.max_retries {
+                            std::thread::sleep(self.retry_delay);
+                        }
+                    }
+                }
+            }
+
+            if !success {
+                result.failure_count += 1;
+                result.failures.push((name.to_string(), last_error));
+            }
+        }
+    }
+
+    /// Verify integrity of multiple cached files
+    pub fn batch_verify_integrity(&self, files_and_hashes: &[(&str, &str)]) -> BatchResult {
+        let start_time = std::time::Instant::now();
+        let mut result = BatchResult::new();
+
+        for &(filename, expected_hash) in files_and_hashes {
+            match self.cache.cache.get_cached_path(filename).exists() {
+                true => match sha256_hash_file(&self.cache.cache.get_cached_path(filename)) {
+                    Ok(actual_hash) => {
+                        if actual_hash == expected_hash {
+                            result.success_count += 1;
+                            if let Ok(metadata) =
+                                std::fs::metadata(self.cache.cache.get_cached_path(filename))
+                            {
+                                result.total_bytes += metadata.len();
+                            }
+                        } else {
+                            result.failure_count += 1;
+                            result.failures.push((
+                                filename.to_string(),
+                                format!(
+                                    "Hash mismatch: expected {}, got {}",
+                                    expected_hash, actual_hash
+                                ),
+                            ));
+                        }
+                    }
+                    Err(e) => {
+                        result.failure_count += 1;
+                        result.failures.push((
+                            filename.to_string(),
+                            format!("Hash computation failed: {}", e),
+                        ));
+                    }
+                },
+                false => {
+                    result.failure_count += 1;
+                    result
+                        .failures
+                        .push((filename.to_string(), "File not found in cache".to_string()));
+                }
+            }
+        }
+
+        result.elapsed_time = start_time.elapsed();
+        result
+    }
+
+    /// Clean up cache selectively based on patterns
+    pub fn selective_cleanup(
+        &self,
+        patterns: &[&str],
+        max_age_days: Option<u32>,
+    ) -> Result<BatchResult> {
+        let start_time = std::time::Instant::now();
+        let mut result = BatchResult::new();
+
+        let cached_files = self.cache.list_cached_files()?;
+        let now = std::time::SystemTime::now();
+
+        for filename in cached_files {
+            let should_remove = patterns.iter().any(|pattern| {
+                filename.contains(pattern) || matches_glob_pattern(&filename, pattern)
+            });
+
+            if should_remove {
+                let file_path = self.cache.cache.get_cached_path(&filename);
+
+                // Check age if max_age_days is specified
+                let remove_due_to_age = if let Some(max_age) = max_age_days {
+                    if let Ok(metadata) = std::fs::metadata(&file_path) {
+                        if let Ok(modified) = metadata.modified() {
+                            if let Ok(age) = now.duration_since(modified) {
+                                age.as_secs() > (max_age as u64 * 24 * 3600)
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    }
+                } else {
+                    true // Remove regardless of age if no age limit specified
+                };
+
+                if remove_due_to_age {
+                    match self.cache.remove(&filename) {
+                        Ok(_) => {
+                            result.success_count += 1;
+                            if let Ok(metadata) = std::fs::metadata(&file_path) {
+                                result.total_bytes += metadata.len();
+                            }
+                        }
+                        Err(e) => {
+                            result.failure_count += 1;
+                            result
+                                .failures
+                                .push((filename, format!("Removal failed: {}", e)));
+                        }
+                    }
+                }
+            }
+        }
+
+        result.elapsed_time = start_time.elapsed();
+        Ok(result)
+    }
+
+    /// Process multiple datasets with a given function
+    pub fn batch_process<F, T, E>(&self, names: &[String], processor: F) -> BatchResult
+    where
+        F: Fn(&str, &[u8]) -> std::result::Result<T, E> + Sync + Send + 'static,
+        E: std::fmt::Display,
+        T: Send,
+    {
+        let start_time = std::time::Instant::now();
+        let mut result = BatchResult::new();
+
+        if self.parallel {
+            self.batch_process_parallel(names, processor, &mut result)
+        } else {
+            self.batch_process_sequential(names, processor, &mut result)
+        }
+
+        result.elapsed_time = start_time.elapsed();
+        result
+    }
+
+    fn batch_process_parallel<F, T, E>(
+        &self,
+        names: &[String],
+        processor: F,
+        result: &mut BatchResult,
+    ) where
+        F: Fn(&str, &[u8]) -> std::result::Result<T, E> + Sync + Send + 'static,
+        E: std::fmt::Display,
+        T: Send,
+    {
+        // For thread safety with the current cache implementation,
+        // we need to read all data first, then process in parallel
+        let mut data_pairs = Vec::new();
+
+        // Sequential read phase
+        for name in names {
+            match self.cache.cache.read_cached(name) {
+                Ok(data) => data_pairs.push((name.clone(), data)),
+                Err(e) => {
+                    result.failure_count += 1;
+                    result
+                        .failures
+                        .push((name.clone(), format!("Cache read failed: {}", e)));
+                }
+            }
+        }
+
+        // Parallel processing phase
+        if !data_pairs.is_empty() {
+            use std::sync::{Arc, Mutex};
+            use std::thread;
+
+            let parallel_result = Arc::new(Mutex::new(BatchResult::new()));
+            let processor = Arc::new(processor);
+
+            let handles: Vec<_> = data_pairs
+                .into_iter()
+                .map(|(name, data)| {
+                    let result_clone = Arc::clone(&parallel_result);
+                    let processor_clone = Arc::clone(&processor);
+
+                    thread::spawn(move || match processor_clone(&name, &data) {
+                        Ok(_) => {
+                            let mut r = result_clone.lock().unwrap();
+                            r.success_count += 1;
+                            r.total_bytes += data.len() as u64;
+                        }
+                        Err(e) => {
+                            let mut r = result_clone.lock().unwrap();
+                            r.failure_count += 1;
+                            r.failures.push((name, format!("Processing failed: {}", e)));
+                        }
+                    })
+                })
+                .collect();
+
+            for handle in handles {
+                let _ = handle.join();
+            }
+
+            // Merge parallel results into main result
+            let parallel_result = parallel_result.lock().unwrap();
+            result.success_count += parallel_result.success_count;
+            result.failure_count += parallel_result.failure_count;
+            result.total_bytes += parallel_result.total_bytes;
+            result.failures.extend(parallel_result.failures.clone());
+        }
+    }
+
+    fn batch_process_sequential<F, T, E>(
+        &self,
+        names: &[String],
+        processor: F,
+        result: &mut BatchResult,
+    ) where
+        F: Fn(&str, &[u8]) -> std::result::Result<T, E>,
+        E: std::fmt::Display,
+    {
+        for name in names {
+            match self.cache.cache.read_cached(name) {
+                Ok(data) => match processor(name, &data) {
+                    Ok(_) => {
+                        result.success_count += 1;
+                        result.total_bytes += data.len() as u64;
+                    }
+                    Err(e) => {
+                        result.failure_count += 1;
+                        result
+                            .failures
+                            .push((name.clone(), format!("Processing failed: {}", e)));
+                    }
+                },
+                Err(e) => {
+                    result.failure_count += 1;
+                    result
+                        .failures
+                        .push((name.clone(), format!("Cache read failed: {}", e)));
+                }
+            }
+        }
+    }
+
+    /// Get access to the underlying cache manager
+    pub fn cache_manager(&self) -> &CacheManager {
+        &self.cache
+    }
+
+    /// Write data to cache
+    pub fn write_cached(&self, name: &str, data: &[u8]) -> Result<()> {
+        self.cache.cache.write_cached(name, data)
+    }
+
+    /// Read data from cache
+    pub fn read_cached(&self, name: &str) -> Result<Vec<u8>> {
+        self.cache.cache.read_cached(name)
+    }
+
+    /// List cached files
+    pub fn list_cached_files(&self) -> Result<Vec<String>> {
+        self.cache.list_cached_files()
+    }
+
+    /// Print cache report
+    pub fn print_cache_report(&self) -> Result<()> {
+        self.cache.print_cache_report()
+    }
+
+    /// Get statistics about cached datasets
+    pub fn get_cache_statistics(&self) -> Result<BatchResult> {
+        let start_time = std::time::Instant::now();
+        let mut result = BatchResult::new();
+
+        let cached_files = self.cache.list_cached_files()?;
+
+        for filename in cached_files {
+            let file_path = self.cache.cache.get_cached_path(&filename);
+            match std::fs::metadata(&file_path) {
+                Ok(metadata) => {
+                    result.success_count += 1;
+                    result.total_bytes += metadata.len();
+                }
+                Err(e) => {
+                    result.failure_count += 1;
+                    result
+                        .failures
+                        .push((filename, format!("Metadata read failed: {}", e)));
+                }
+            }
+        }
+
+        result.elapsed_time = start_time.elapsed();
+        Ok(result)
+    }
+}
+
+/// Simple glob pattern matching for filenames
+fn matches_glob_pattern(filename: &str, pattern: &str) -> bool {
+    if pattern == "*" {
+        return true;
+    }
+
+    if pattern.contains('*') {
+        let parts: Vec<&str> = pattern.split('*').collect();
+        if parts.len() == 2 {
+            let prefix = parts[0];
+            let suffix = parts[1];
+            return filename.starts_with(prefix) && filename.ends_with(suffix);
+        }
+    }
+
+    filename == pattern
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use tempfile::TempDir;
+
+    #[test]
+    fn test_batch_result() {
+        let mut result = BatchResult::new();
+        assert_eq!(result.success_count, 0);
+        assert_eq!(result.failure_count, 0);
+        assert!(result.is_all_success());
+        assert_eq!(result.success_rate(), 0.0);
+
+        result.success_count = 8;
+        result.failure_count = 2;
+        result.total_bytes = 1024;
+
+        assert!(!result.is_all_success());
+        assert_eq!(result.success_rate(), 80.0);
+        assert!(result.summary().contains("8/10 successful"));
+        assert!(result.summary().contains("80.0%"));
+    }
+
+    #[test]
+    fn test_batch_operations_creation() {
+        let temp_dir = TempDir::new().unwrap();
+        let cache_manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let batch_ops = BatchOperations::new(cache_manager)
+            .with_parallel(false)
+            .with_retry_config(2, std::time::Duration::from_millis(500));
+
+        assert!(!batch_ops.parallel);
+        assert_eq!(batch_ops.max_retries, 2);
+    }
+
+    #[test]
+    fn test_selective_cleanup() {
+        let temp_dir = TempDir::new().unwrap();
+        let cache_manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let batch_ops = BatchOperations::new(cache_manager);
+
+        // Create some test files
+        let test_data = vec![0u8; 100];
+        batch_ops
+            .cache
+            .cache
+            .write_cached("test1.csv", &test_data)
+            .unwrap();
+        batch_ops
+            .cache
+            .cache
+            .write_cached("test2.csv", &test_data)
+            .unwrap();
+        batch_ops
+            .cache
+            .cache
+            .write_cached("data.json", &test_data)
+            .unwrap();
+
+        // Clean up files matching pattern
+        let result = batch_ops.selective_cleanup(&["*.csv"], None).unwrap();
+
+        assert_eq!(result.success_count, 2); // Should remove test1.csv and test2.csv
+        assert!(!batch_ops.cache.is_cached("test1.csv"));
+        assert!(!batch_ops.cache.is_cached("test2.csv"));
+        assert!(batch_ops.cache.is_cached("data.json")); // Should remain
+    }
+
+    #[test]
+    fn test_batch_process() {
+        let temp_dir = TempDir::new().unwrap();
+        let cache_manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let batch_ops = BatchOperations::new(cache_manager).with_parallel(false);
+
+        // Create test files
+        let test_data1 = vec![1u8; 100];
+        let test_data2 = vec![2u8; 200];
+        batch_ops
+            .cache
+            .cache
+            .write_cached("file1.dat", &test_data1)
+            .unwrap();
+        batch_ops
+            .cache
+            .cache
+            .write_cached("file2.dat", &test_data2)
+            .unwrap();
+
+        let files = vec!["file1.dat".to_string(), "file2.dat".to_string()];
+
+        // Process files (verify they're non-empty)
+        let result = batch_ops.batch_process(&files, |_name, data| {
+            if data.is_empty() {
+                Err("Empty file")
+            } else {
+                Ok(data.len())
+            }
+        });
+
+        assert_eq!(result.success_count, 2);
+        assert_eq!(result.failure_count, 0);
+        assert_eq!(result.total_bytes, 300); // 100 + 200
+    }
+
+    #[test]
+    fn test_get_cache_statistics() {
+        let temp_dir = TempDir::new().unwrap();
+        let cache_manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let batch_ops = BatchOperations::new(cache_manager);
+
+        // Start with empty cache
+        let result = batch_ops.get_cache_statistics().unwrap();
+        assert_eq!(result.success_count, 0);
+
+        // Add some files
+        let test_data = vec![0u8; 500];
+        batch_ops
+            .cache
+            .cache
+            .write_cached("test1.dat", &test_data)
+            .unwrap();
+        batch_ops
+            .cache
+            .cache
+            .write_cached("test2.dat", &test_data)
+            .unwrap();
+
+        let result = batch_ops.get_cache_statistics().unwrap();
+        assert_eq!(result.success_count, 2);
+        assert_eq!(result.total_bytes, 1000);
+    }
+
+    #[test]
+    fn test_matches_glob_pattern() {
+        assert!(matches_glob_pattern("test.csv", "*"));
+        assert!(matches_glob_pattern("test.csv", "*.csv"));
+        assert!(matches_glob_pattern("test.csv", "test.*"));
+        assert!(matches_glob_pattern("test.csv", "test.csv"));
+
+        assert!(!matches_glob_pattern("test.json", "*.csv"));
+        assert!(!matches_glob_pattern("other.csv", "test.*"));
+    }
 
     #[test]
     fn test_cache_manager_creation() {
@@ -1021,10 +1705,10 @@ mod tests {
         // Write multiple small files to approach the limit
         let small_data1 = vec![0u8; 400];
         cache.write_cached("small1.dat", &small_data1).unwrap();
-        
+
         let small_data2 = vec![0u8; 400];
         cache.write_cached("small2.dat", &small_data2).unwrap();
-        
+
         let small_data3 = vec![0u8; 400];
         cache.write_cached("small3.dat", &small_data3).unwrap();
 
@@ -1035,7 +1719,7 @@ mod tests {
         // The cache should have cleaned up to stay under the limit
         let stats = cache.get_detailed_stats().unwrap();
         assert!(stats.total_size_bytes <= cache.max_cache_size());
-        
+
         // The most recent file should still be cached
         assert!(cache.is_cached("medium.dat"));
     }

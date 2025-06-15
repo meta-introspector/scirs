@@ -3,7 +3,6 @@ use ag::tensor_ops as T;
 use scirs2_autograd as ag;
 
 #[test]
-#[ignore = "Placeholder/feeder system needs investigation"]
 fn test_minimal_matmul() {
     ag::run::<f32, _, _>(|ctx| {
         // Create two simple test matrices
@@ -17,16 +16,16 @@ fn test_minimal_matmul() {
         let a = ctx.placeholder("a", &[2, 2]);
         let b = ctx.placeholder("b", &[2, 2]);
 
-        // Create feeder
-        let feeder = ag::Feeder::new()
-            .push(a, a_data.view().into_dyn())
-            .push(b, b_data.view().into_dyn());
-
         // Compute matrix multiplication
         let c = T::matmul(&a, &b);
 
-        // Evaluate with feeder
-        let result = ctx.evaluator().push(&c).set_feeder(feeder).run()[0]
+        // Evaluate using evaluator.feed() approach instead of Feeder
+        let result = ctx
+            .evaluator()
+            .push(&c)
+            .feed(a, a_data.view().into_dyn())
+            .feed(b, b_data.view().into_dyn())
+            .run()[0]
             .clone()
             .unwrap();
 

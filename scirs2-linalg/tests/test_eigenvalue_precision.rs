@@ -14,7 +14,8 @@ fn test_3x3_eigenvalue_precision() {
     let mut max_error = 0.0f64;
     for i in 0..3 {
         for j in 0..3 {
-            let error = (av[[i, j]] - vl[[i, j]]).abs();
+            let diff: f64 = av[[i, j]] - vl[[i, j]];
+            let error = diff.abs();
             if error > max_error {
                 max_error = error;
             }
@@ -26,12 +27,13 @@ fn test_3x3_eigenvalue_precision() {
 
     // Check orthogonality
     let vtv = eigenvecs.t().dot(&eigenvecs);
-    let identity = ndarray::Array2::eye(3);
+    let identity = ndarray::Array2::<f64>::eye(3);
 
     let mut max_ortho_error = 0.0f64;
     for i in 0..3 {
         for j in 0..3 {
-            let error = (vtv[[i, j]] - identity[[i, j]]).abs();
+            let diff: f64 = vtv[[i, j]] - identity[[i, j]];
+            let error = diff.abs();
             if error > max_ortho_error {
                 max_ortho_error = error;
             }

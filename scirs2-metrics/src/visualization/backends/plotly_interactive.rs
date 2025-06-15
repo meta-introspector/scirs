@@ -3,8 +3,6 @@
 //! This module provides a backend adapter for creating interactive visualizations
 //! using Plotly.
 
-#![cfg(feature = "plotly_backend")]
-
 use plotly::Plot;
 use plotly::{
     common::Mode,

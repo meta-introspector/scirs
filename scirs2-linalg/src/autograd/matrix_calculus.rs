@@ -169,7 +169,7 @@ pub mod matrix_derivatives {
     where
         F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
     {
-        let norm_val = crate::norm::matrix_norm(x, "frobenius")?;
+        let norm_val = crate::norm::matrix_norm(x, "frobenius", None)?;
 
         if norm_val.abs() < F::epsilon() {
             // If norm is zero, derivative is undefined - return zeros

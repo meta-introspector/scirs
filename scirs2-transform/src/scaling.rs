@@ -115,7 +115,7 @@ impl QuantileTransformer {
             Array1::from_shape_fn(self.n_quantiles, |i| {
                 let u = i as f64 / (self.n_quantiles - 1) as f64;
                 // Clamp u to avoid extreme values
-                let u_clamped = u.max(1e-7).min(1.0 - 1e-7);
+                let u_clamped = u.clamp(1e-7, 1.0 - 1e-7);
                 inverse_normal_cdf(u_clamped)
             })
         };
@@ -212,7 +212,7 @@ impl QuantileTransformer {
         if self.clip && self.output_distribution == "uniform" {
             for i in 0..n_samples {
                 for j in 0..n_features {
-                    transformed[[i, j]] = transformed[[i, j]].max(0.0).min(1.0);
+                    transformed[[i, j]] = transformed[[i, j]].clamp(0.0, 1.0);
                 }
             }
         }
@@ -287,6 +287,220 @@ fn inverse_normal_cdf(u: f64) -> f64 {
         } else {
             result
         }
+    }
+}
+
+/// MaxAbsScaler for scaling features by their maximum absolute value
+///
+/// This scaler scales each feature individually such that the maximal absolute value
+/// of each feature in the training set will be 1.0. It does not shift/center the data,
+/// and thus does not destroy any sparsity.
+pub struct MaxAbsScaler {
+    /// Maximum absolute values for each feature (learned during fit)
+    max_abs_: Option<Array1<f64>>,
+    /// Scale factors for each feature (1 / max_abs_)
+    scale_: Option<Array1<f64>>,
+}
+
+impl MaxAbsScaler {
+    /// Creates a new MaxAbsScaler
+    ///
+    /// # Returns
+    /// * A new MaxAbsScaler instance
+    ///
+    /// # Examples
+    /// ```
+    /// use scirs2_transform::scaling::MaxAbsScaler;
+    ///
+    /// let scaler = MaxAbsScaler::new();
+    /// ```
+    pub fn new() -> Self {
+        MaxAbsScaler {
+            max_abs_: None,
+            scale_: None,
+        }
+    }
+
+    /// Creates a MaxAbsScaler with default settings (same as new())
+    pub fn with_defaults() -> Self {
+        Self::new()
+    }
+
+    /// Fits the MaxAbsScaler to the input data
+    ///
+    /// # Arguments
+    /// * `x` - The input data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<()>` - Ok if successful, Err otherwise
+    pub fn fit<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<()>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        let x_f64 = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+
+        let n_samples = x_f64.shape()[0];
+        let n_features = x_f64.shape()[1];
+
+        if n_samples == 0 || n_features == 0 {
+            return Err(TransformError::InvalidInput("Empty input data".to_string()));
+        }
+
+        // Compute maximum absolute value for each feature
+        let mut max_abs = Array1::zeros(n_features);
+
+        for j in 0..n_features {
+            let feature_data = x_f64.column(j);
+            let max_abs_value = feature_data
+                .iter()
+                .map(|&x| x.abs())
+                .fold(0.0, |acc, x| acc.max(x));
+
+            max_abs[j] = max_abs_value;
+        }
+
+        // Compute scale factors (avoid division by zero)
+        let scale = max_abs.mapv(|max_abs_val| {
+            if max_abs_val > EPSILON {
+                1.0 / max_abs_val
+            } else {
+                1.0 // If max_abs is 0, don't scale (feature is constant zero)
+            }
+        });
+
+        self.max_abs_ = Some(max_abs);
+        self.scale_ = Some(scale);
+
+        Ok(())
+    }
+
+    /// Transforms the input data using the fitted MaxAbsScaler
+    ///
+    /// # Arguments
+    /// * `x` - The input data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The scaled data
+    pub fn transform<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        let x_f64 = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+
+        let n_samples = x_f64.shape()[0];
+        let n_features = x_f64.shape()[1];
+
+        if self.scale_.is_none() {
+            return Err(TransformError::TransformationError(
+                "MaxAbsScaler has not been fitted".to_string(),
+            ));
+        }
+
+        let scale = self.scale_.as_ref().unwrap();
+
+        if n_features != scale.len() {
+            return Err(TransformError::InvalidInput(format!(
+                "x has {} features, but MaxAbsScaler was fitted with {} features",
+                n_features,
+                scale.len()
+            )));
+        }
+
+        let mut transformed = Array2::zeros((n_samples, n_features));
+
+        // Scale each feature by its scale factor
+        for i in 0..n_samples {
+            for j in 0..n_features {
+                transformed[[i, j]] = x_f64[[i, j]] * scale[j];
+            }
+        }
+
+        Ok(transformed)
+    }
+
+    /// Fits the MaxAbsScaler to the input data and transforms it
+    ///
+    /// # Arguments
+    /// * `x` - The input data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The scaled data
+    pub fn fit_transform<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        self.fit(x)?;
+        self.transform(x)
+    }
+
+    /// Inverse transforms the scaled data back to original scale
+    ///
+    /// # Arguments
+    /// * `x` - The scaled data, shape (n_samples, n_features)
+    ///
+    /// # Returns
+    /// * `Result<Array2<f64>>` - The data in original scale
+    pub fn inverse_transform<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    where
+        S: Data,
+        S::Elem: Float + NumCast,
+    {
+        let x_f64 = x.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+
+        let n_samples = x_f64.shape()[0];
+        let n_features = x_f64.shape()[1];
+
+        if self.max_abs_.is_none() {
+            return Err(TransformError::TransformationError(
+                "MaxAbsScaler has not been fitted".to_string(),
+            ));
+        }
+
+        let max_abs = self.max_abs_.as_ref().unwrap();
+
+        if n_features != max_abs.len() {
+            return Err(TransformError::InvalidInput(format!(
+                "x has {} features, but MaxAbsScaler was fitted with {} features",
+                n_features,
+                max_abs.len()
+            )));
+        }
+
+        let mut transformed = Array2::zeros((n_samples, n_features));
+
+        // Scale back by multiplying with max_abs values
+        for i in 0..n_samples {
+            for j in 0..n_features {
+                transformed[[i, j]] = x_f64[[i, j]] * max_abs[j];
+            }
+        }
+
+        Ok(transformed)
+    }
+
+    /// Returns the maximum absolute values for each feature
+    ///
+    /// # Returns
+    /// * `Option<&Array1<f64>>` - The maximum absolute values
+    pub fn max_abs(&self) -> Option<&Array1<f64>> {
+        self.max_abs_.as_ref()
+    }
+
+    /// Returns the scale factors for each feature
+    ///
+    /// # Returns
+    /// * `Option<&Array1<f64>>` - The scale factors (1 / max_abs)
+    pub fn scale(&self) -> Option<&Array1<f64>> {
+        self.scale_.as_ref()
+    }
+}
+
+impl Default for MaxAbsScaler {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -368,5 +582,183 @@ mod tests {
         assert_abs_diff_eq!(inverse_normal_cdf(0.5), 0.0, epsilon = 1e-6);
         assert!(inverse_normal_cdf(0.1) < 0.0); // Should be negative
         assert!(inverse_normal_cdf(0.9) > 0.0); // Should be positive
+    }
+
+    #[test]
+    fn test_max_abs_scaler_basic() {
+        // Create test data with different ranges
+        // Feature 0: [-4, -2, 0, 2, 4] -> max_abs = 4
+        // Feature 1: [-10, -5, 0, 5, 10] -> max_abs = 10
+        let data = Array::from_shape_vec(
+            (5, 2),
+            vec![-4.0, -10.0, -2.0, -5.0, 0.0, 0.0, 2.0, 5.0, 4.0, 10.0],
+        )
+        .unwrap();
+
+        let mut scaler = MaxAbsScaler::new();
+        let scaled = scaler.fit_transform(&data).unwrap();
+
+        // Check that the shape is preserved
+        assert_eq!(scaled.shape(), &[5, 2]);
+
+        // Check the maximum absolute values
+        let max_abs = scaler.max_abs().unwrap();
+        assert_abs_diff_eq!(max_abs[0], 4.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(max_abs[1], 10.0, epsilon = 1e-10);
+
+        // Check the scale factors
+        let scale = scaler.scale().unwrap();
+        assert_abs_diff_eq!(scale[0], 0.25, epsilon = 1e-10); // 1/4
+        assert_abs_diff_eq!(scale[1], 0.1, epsilon = 1e-10); // 1/10
+
+        // Check that the maximum absolute value in each feature is 1.0
+        for j in 0..2 {
+            let feature_max = scaled
+                .column(j)
+                .iter()
+                .map(|&x| x.abs())
+                .fold(0.0, f64::max);
+            assert_abs_diff_eq!(feature_max, 1.0, epsilon = 1e-10);
+        }
+
+        // Check specific scaled values
+        assert_abs_diff_eq!(scaled[[0, 0]], -1.0, epsilon = 1e-10); // -4 / 4 = -1
+        assert_abs_diff_eq!(scaled[[0, 1]], -1.0, epsilon = 1e-10); // -10 / 10 = -1
+        assert_abs_diff_eq!(scaled[[2, 0]], 0.0, epsilon = 1e-10); // 0 / 4 = 0
+        assert_abs_diff_eq!(scaled[[2, 1]], 0.0, epsilon = 1e-10); // 0 / 10 = 0
+        assert_abs_diff_eq!(scaled[[4, 0]], 1.0, epsilon = 1e-10); // 4 / 4 = 1
+        assert_abs_diff_eq!(scaled[[4, 1]], 1.0, epsilon = 1e-10); // 10 / 10 = 1
+    }
+
+    #[test]
+    fn test_max_abs_scaler_positive_only() {
+        // Test with positive-only data
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 6.0, 5.0, 10.0]).unwrap();
+
+        let mut scaler = MaxAbsScaler::new();
+        let scaled = scaler.fit_transform(&data).unwrap();
+
+        // Check maximum absolute values
+        let max_abs = scaler.max_abs().unwrap();
+        assert_abs_diff_eq!(max_abs[0], 5.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(max_abs[1], 10.0, epsilon = 1e-10);
+
+        // Check scaled values
+        assert_abs_diff_eq!(scaled[[0, 0]], 0.2, epsilon = 1e-10); // 1 / 5
+        assert_abs_diff_eq!(scaled[[0, 1]], 0.2, epsilon = 1e-10); // 2 / 10
+        assert_abs_diff_eq!(scaled[[2, 0]], 1.0, epsilon = 1e-10); // 5 / 5
+        assert_abs_diff_eq!(scaled[[2, 1]], 1.0, epsilon = 1e-10); // 10 / 10
+    }
+
+    #[test]
+    fn test_max_abs_scaler_inverse_transform() {
+        let data = Array::from_shape_vec((3, 2), vec![-6.0, 8.0, 0.0, -4.0, 3.0, 12.0]).unwrap();
+
+        let mut scaler = MaxAbsScaler::new();
+        let scaled = scaler.fit_transform(&data).unwrap();
+        let inverse = scaler.inverse_transform(&scaled).unwrap();
+
+        // Check that inverse transform recovers original data
+        assert_eq!(inverse.shape(), data.shape());
+        for i in 0..3 {
+            for j in 0..2 {
+                assert_abs_diff_eq!(inverse[[i, j]], data[[i, j]], epsilon = 1e-10);
+            }
+        }
+    }
+
+    #[test]
+    fn test_max_abs_scaler_constant_feature() {
+        // Test with a constant feature (all zeros)
+        let data = Array::from_shape_vec((3, 2), vec![0.0, 5.0, 0.0, 10.0, 0.0, 15.0]).unwrap();
+
+        let mut scaler = MaxAbsScaler::new();
+        let scaled = scaler.fit_transform(&data).unwrap();
+
+        // Constant zero feature should remain zero
+        for i in 0..3 {
+            assert_abs_diff_eq!(scaled[[i, 0]], 0.0, epsilon = 1e-10);
+        }
+
+        // Second feature should be scaled normally
+        assert_abs_diff_eq!(scaled[[0, 1]], 1.0 / 3.0, epsilon = 1e-10); // 5 / 15
+        assert_abs_diff_eq!(scaled[[2, 1]], 1.0, epsilon = 1e-10); // 15 / 15
+    }
+
+    #[test]
+    fn test_max_abs_scaler_errors() {
+        // Test with empty data
+        let empty_data = Array::<f64, _>::zeros((0, 2));
+        let mut scaler = MaxAbsScaler::new();
+        assert!(scaler.fit(&empty_data).is_err());
+
+        // Test transform before fit
+        let data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let unfitted_scaler = MaxAbsScaler::new();
+        assert!(unfitted_scaler.transform(&data).is_err());
+        assert!(unfitted_scaler.inverse_transform(&data).is_err());
+
+        // Test feature dimension mismatch
+        let train_data = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let test_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+
+        let mut scaler = MaxAbsScaler::new();
+        scaler.fit(&train_data).unwrap();
+        assert!(scaler.transform(&test_data).is_err());
+        assert!(scaler.inverse_transform(&test_data).is_err());
+    }
+
+    #[test]
+    fn test_max_abs_scaler_single_feature() {
+        // Test with single feature
+        let data = Array::from_shape_vec((4, 1), vec![-8.0, -2.0, 4.0, 6.0]).unwrap();
+
+        let mut scaler = MaxAbsScaler::new();
+        let scaled = scaler.fit_transform(&data).unwrap();
+
+        // Maximum absolute value should be 8.0
+        let max_abs = scaler.max_abs().unwrap();
+        assert_abs_diff_eq!(max_abs[0], 8.0, epsilon = 1e-10);
+
+        // Check scaled values
+        assert_abs_diff_eq!(scaled[[0, 0]], -1.0, epsilon = 1e-10); // -8 / 8
+        assert_abs_diff_eq!(scaled[[1, 0]], -0.25, epsilon = 1e-10); // -2 / 8
+        assert_abs_diff_eq!(scaled[[2, 0]], 0.5, epsilon = 1e-10); // 4 / 8
+        assert_abs_diff_eq!(scaled[[3, 0]], 0.75, epsilon = 1e-10); // 6 / 8
+    }
+
+    #[test]
+    fn test_max_abs_scaler_sparse_preservation() {
+        // Test that zero values remain zero (sparsity preservation)
+        let data = Array::from_shape_vec(
+            (4, 3),
+            vec![
+                0.0, 5.0, 0.0, // Row with zeros
+                10.0, 0.0, -8.0, // Another row with zeros
+                0.0, 0.0, 4.0, // Row with multiple zeros
+                -5.0, 10.0, 0.0, // Row with zero at end
+            ],
+        )
+        .unwrap();
+
+        let mut scaler = MaxAbsScaler::new();
+        let scaled = scaler.fit_transform(&data).unwrap();
+
+        // Check that zeros remain zeros
+        assert_abs_diff_eq!(scaled[[0, 0]], 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(scaled[[0, 2]], 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(scaled[[1, 1]], 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(scaled[[2, 0]], 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(scaled[[2, 1]], 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(scaled[[3, 2]], 0.0, epsilon = 1e-10);
+
+        // Check that non-zero values are scaled correctly
+        // Feature 0: max_abs = 10, Feature 1: max_abs = 10, Feature 2: max_abs = 8
+        assert_abs_diff_eq!(scaled[[0, 1]], 0.5, epsilon = 1e-10); // 5 / 10
+        assert_abs_diff_eq!(scaled[[1, 0]], 1.0, epsilon = 1e-10); // 10 / 10
+        assert_abs_diff_eq!(scaled[[1, 2]], -1.0, epsilon = 1e-10); // -8 / 8
+        assert_abs_diff_eq!(scaled[[2, 2]], 0.5, epsilon = 1e-10); // 4 / 8
+        assert_abs_diff_eq!(scaled[[3, 0]], -0.5, epsilon = 1e-10); // -5 / 10
+        assert_abs_diff_eq!(scaled[[3, 1]], 1.0, epsilon = 1e-10); // 10 / 10
     }
 }

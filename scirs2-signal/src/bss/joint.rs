@@ -81,7 +81,7 @@ pub fn joint_bss(
     }
 
     // Perform joint diagonalization on the covariance matrices
-    let (_eigvals, eigvecs) = match eigh(&joint_cov.view()) {
+    let (_eigvals, eigvecs) = match eigh(&joint_cov.view(), None) {
         Ok((vals, vecs)) => (vals, vecs),
         Err(_) => {
             return Err(SignalError::Compute(

@@ -1482,6 +1482,7 @@ impl SchemaValidator {
     }
 
     /// Validate data type
+    #[allow(clippy::only_used_in_recursion)]
     fn validate_type(&self, data: &serde_json::Value, schema_type: &SchemaDataType) -> bool {
         match schema_type {
             SchemaDataType::String => data.is_string(),
@@ -1586,7 +1587,7 @@ impl SchemaValidator {
                         path: path.to_string(),
                         expected: format!("one of: {:?}", allowed_values),
                         actual: data.to_string(),
-                        message: format!("Value is not in the allowed enumeration"),
+                        message: "Value is not in the allowed enumeration".to_string(),
                     });
                 }
             }

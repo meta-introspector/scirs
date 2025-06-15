@@ -38,8 +38,9 @@ pub mod traversal;
 // Re-export all public items for convenience
 pub use coloring::*;
 pub use community::{
-    greedy_modularity_optimization, infomap_communities, label_propagation, louvain_communities,
-    modularity, modularity_optimization, CommunityStructure, InfomapResult,
+    fluid_communities, greedy_modularity_optimization, hierarchical_communities,
+    infomap_communities, label_propagation, louvain_communities, modularity,
+    modularity_optimization, CommunityStructure, InfomapResult,
 };
 pub use connectivity::*;
 pub use decomposition::*;

@@ -242,7 +242,7 @@ where
                     let weight = q1_pos - q1_idx_low as f64;
                     data[q1_idx_low] * (1.0 - weight) + data[q1_idx_high] * weight
                 };
-                
+
                 // Calculate Q3 (75th percentile)
                 let q3_pos = 0.75 * (n - 1) as f64;
                 let q3_idx_low = q3_pos.floor() as usize;
@@ -411,7 +411,7 @@ where
                 let weight = q1_pos - q1_idx_low as f64;
                 data[q1_idx_low] * (1.0 - weight) + data[q1_idx_high] * weight
             };
-            
+
             // Calculate Q3 (75th percentile)
             let q3_pos = 0.75 * (n - 1) as f64;
             let q3_idx_low = q3_pos.floor() as usize;
@@ -636,7 +636,7 @@ impl Normalizer {
                         let weight = q1_pos - q1_idx_low as f64;
                         data[q1_idx_low] * (1.0 - weight) + data[q1_idx_high] * weight
                     };
-                    
+
                     // Calculate Q3 (75th percentile)
                     let q3_pos = 0.75 * (n - 1) as f64;
                     let q3_idx_low = q3_pos.floor() as usize;

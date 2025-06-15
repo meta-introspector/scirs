@@ -23,12 +23,23 @@ cached = { workspace = true }
 [features]
 default = []
 simd = ["scirs2-core/simd"]
+parallel = ["scirs2-core/parallel"]
 
 [dev-dependencies]
 criterion = { workspace = true }
 
-# Temporarily commented out for publishing
-# [[bench]]
-# name = "rank_filter_bench"
-# path = "../benches/ndimage/rank_filter_bench.rs"
-# harness = false
+[[bench]]
+name = "filters_bench"
+harness = false
+
+[[bench]]
+name = "morphology_bench"
+harness = false
+
+[[bench]]
+name = "interpolation_bench"
+harness = false
+
+[[bench]]
+name = "distance_transform_bench"
+harness = false

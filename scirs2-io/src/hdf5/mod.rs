@@ -692,6 +692,7 @@ impl HDF5File {
     }
 
     /// Helper method to recursively collect dataset paths
+    #[allow(clippy::only_used_in_recursion)]
     fn collect_datasets(&self, group: &Group, prefix: String, datasets: &mut Vec<String>) {
         for dataset_name in group.dataset_names() {
             let full_path = if prefix.is_empty() {
@@ -713,6 +714,7 @@ impl HDF5File {
     }
 
     /// Helper method to recursively collect group paths
+    #[allow(clippy::only_used_in_recursion)]
     fn collect_groups(&self, group: &Group, prefix: String, groups: &mut Vec<String>) {
         for (group_name, subgroup) in &group.groups {
             let full_path = if prefix.is_empty() {
@@ -733,6 +735,7 @@ impl HDF5File {
     }
 
     /// Helper method to collect file statistics
+    #[allow(clippy::only_used_in_recursion)]
     fn collect_stats(&self, group: &Group, stats: &mut FileStats) {
         stats.num_groups += group.groups.len();
         stats.num_datasets += group.datasets.len();
