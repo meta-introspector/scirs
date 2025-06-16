@@ -93,6 +93,8 @@ profiling = []  # Performance profiling tools
 random = []  # Random number generation utilities
 types = []  # Type conversion utilities
 ufuncs = []  # Universal Functions (ufuncs) system
+testing = ["tempfile", "serde", "serde_json"]  # Testing framework for production systems
+benchmarking = ["testing", "serde", "serde_json"]  # Comprehensive benchmarking system
 linalg = ["ndarray-linalg"]  # Linear algebra with BLAS/LAPACK bindings
 # LAPACK backends - these are mutually exclusive, use only one at a time
 openblas = ["linalg", "ndarray-linalg/openblas-system"]  # Use OpenBLAS backend (system)
@@ -110,7 +112,7 @@ array_protocol_all = ["array_protocol", "array_protocol_jit", "array_protocol_cu
 all = [
     "simd", "parallel", "cache", "validation", "logging",
     "gpu", "cuda", "memory_management", "memory_efficient", "memory_compression",
-    "array", "profiling", "random", "types", "ufuncs",
+    "array", "profiling", "random", "types", "ufuncs", "testing", "benchmarking",
     "array_protocol_all"
 ]  # Enable all features except mutually exclusive BLAS backends
 # NOTE: BLAS backends (openblas, intel-mkl, netlib) are mutually exclusive

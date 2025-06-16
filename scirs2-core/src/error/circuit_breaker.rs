@@ -783,17 +783,20 @@ mod tests {
         let retry_executor = RetryExecutor::new(policy);
         let mut attempt_count = 0;
 
-        let result = retry_executor.execute(|| {
-            attempt_count += 1;
-            if attempt_count < 3 {
+        let result = std::cell::RefCell::new(attempt_count);
+        let execute_result = retry_executor.execute(|| {
+            let mut count = result.borrow_mut();
+            *count += 1;
+            if *count < 3 {
                 Err(CoreError::ComputationError(ErrorContext::new("retry test")))
             } else {
                 Ok("success")
             }
         });
+        attempt_count = *result.borrow();
 
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "success");
+        assert!(execute_result.is_ok());
+        assert_eq!(execute_result.unwrap(), "success");
         assert_eq!(attempt_count, 3);
     }
 

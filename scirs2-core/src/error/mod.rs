@@ -233,15 +233,18 @@ mod tests {
 
     #[test]
     fn test_retry_executor() {
-        let executor = RetryExecutor::new(RecoveryStrategy::LinearBackoff {
+        let policy = RetryPolicy {
             max_attempts: 2,
-            delay: Duration::from_millis(1),
-        });
+            base_delay: Duration::from_millis(1),
+            ..Default::default()
+        };
+        let executor = RetryExecutor::new(policy);
 
-        let mut attempts = 0;
+        let attempts = std::cell::RefCell::new(0);
         let result = executor.execute(|| {
-            attempts += 1;
-            if attempts == 1 {
+            let mut count = attempts.borrow_mut();
+            *count += 1;
+            if *count == 1 {
                 Err(CoreError::ComputationError(error_context!(
                     "Temporary failure"
                 )))
@@ -251,7 +254,7 @@ mod tests {
         });
 
         assert_eq!(result.unwrap(), 42);
-        assert_eq!(attempts, 2);
+        assert_eq!(*attempts.borrow(), 2);
     }
 
     #[test]
@@ -266,11 +269,7 @@ mod tests {
 
     #[test]
     fn test_circuit_breaker() {
-        let breaker = CircuitBreaker::new(
-            1, // failure threshold
-            Duration::from_millis(100),
-            Duration::from_millis(200),
-        );
+        let breaker = CircuitBreaker::new("test_breaker".to_string());
 
         // First failure should work
         let result: std::result::Result<(), _> =
@@ -281,7 +280,7 @@ mod tests {
         let result = breaker.execute(|| Ok(42));
         assert!(result.is_err());
 
-        let status = breaker.status();
+        let status = breaker.status().unwrap();
         assert_eq!(status.failure_count, 1);
     }
 

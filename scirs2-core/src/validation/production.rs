@@ -843,7 +843,7 @@ mod tests {
         let mut allowed_chars = HashSet::new();
         allowed_chars.extend("abcdefghijklmnopqrstuvwxyz0123456789".chars());
 
-        let mut constraints = StringConstraints {
+        let constraints = StringConstraints {
             min_length: Some(3),
             max_length: Some(20),
             allowed_characters: Some(allowed_chars),

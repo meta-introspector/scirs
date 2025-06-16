@@ -100,8 +100,11 @@ pub mod parallel;
 pub mod profiling;
 #[cfg(feature = "random")]
 pub mod random;
+pub mod resource;
 #[cfg(feature = "simd")]
 pub mod simd;
+#[cfg(feature = "testing")]
+pub mod testing;
 // Universal Functions (ufuncs) module
 #[cfg(feature = "types")]
 pub mod types;
@@ -110,6 +113,10 @@ pub mod ufuncs;
 pub mod units;
 pub mod utils;
 pub mod validation;
+
+// Benchmarking module
+#[cfg(feature = "benchmarking")]
+pub mod benchmarking;
 
 // Re-exports
 #[cfg(feature = "cache")]
@@ -203,8 +210,17 @@ pub use crate::parallel::*;
 pub use crate::profiling::{profiling_memory_tracker, Profiler, Timer};
 #[cfg(feature = "random")]
 pub use crate::random::*;
+pub use crate::resource::{
+    get_system_resources, get_recommended_thread_count, get_recommended_chunk_size,
+    is_simd_supported, is_gpu_available, get_total_memory, get_available_memory,
+    get_performance_tier, SystemResources, PerformanceTier, DiscoveryConfig, ResourceDiscovery
+};
 #[cfg(feature = "simd")]
 pub use crate::simd::*;
+#[cfg(feature = "testing")]
+pub use crate::testing::{
+    TestConfig, TestResult, TestRunner, TestSuite
+};
 #[cfg(feature = "types")]
 pub use crate::types::{convert, ComplexConversionError, ComplexExt, ComplexOps};
 pub use crate::units::{
@@ -215,6 +231,13 @@ pub use crate::utils::*;
 pub use crate::validation::production as validation_production;
 pub use crate::validation::{
     check_array_finite, check_finite, check_in_bounds, check_positive, check_shape,
+};
+
+// Benchmarking re-exports
+#[cfg(feature = "benchmarking")]
+pub use crate::benchmarking::{
+    BenchmarkConfig, BenchmarkResult, BenchmarkRunner, BenchmarkSuite,
+    BenchmarkMeasurement, BenchmarkStatistics
 };
 
 /// SciRS2 core version information
