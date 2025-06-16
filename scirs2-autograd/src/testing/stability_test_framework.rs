@@ -5,13 +5,11 @@
 //! precision levels, and edge cases.
 
 use super::numerical_analysis::{
-    analyze_conditioning, analyze_error_propagation, quick_stability_check,
-    ConditionNumberAnalysis, ErrorPropagationAnalysis, NumericalAnalyzer,
+    analyze_conditioning, ConditionNumberAnalysis, ErrorPropagationAnalysis, NumericalAnalyzer,
 };
 use super::stability_metrics::{
-    compute_backward_stability, compute_forward_stability,
-    quick_stability_check as quick_metrics_check, BackwardStabilityMetrics,
-    ForwardStabilityMetrics, StabilityGrade, StabilityMetrics,
+    compute_backward_stability, compute_forward_stability, BackwardStabilityMetrics,
+    ForwardStabilityMetrics, StabilityGrade,
 };
 use super::StabilityError;
 use crate::tensor::Tensor;
@@ -20,18 +18,18 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 /// Comprehensive stability test suite
-pub struct StabilityTestSuite<F: Float> {
+pub struct StabilityTestSuite<'a, F: Float> {
     /// Test configuration
     config: TestConfig,
     /// Test results
-    results: TestResults,
+    results: TestResults<'a, F>,
     /// Test scenarios
-    scenarios: Vec<TestScenario<F>>,
+    scenarios: Vec<TestScenario<'a, F>>,
     /// Performance benchmarks
     benchmarks: Vec<BenchmarkResult>,
 }
 
-impl<F: Float> StabilityTestSuite<F> {
+impl<'a, F: Float> StabilityTestSuite<'a, F> {
     /// Create a new stability test suite
     pub fn new() -> Self {
         Self {
@@ -195,7 +193,10 @@ impl<F: Float> StabilityTestSuite<F> {
         )?;
 
         // Run quick stability check
-        let is_stable = quick_metrics_check(test_case.function.as_ref(), &test_case.input)?;
+        let is_stable = super::numerical_analysis::quick_stability_check(
+            test_case.function.as_ref(),
+            &test_case.input,
+        )?;
 
         // Analyze conditioning
         let conditioning_analysis =
@@ -342,7 +343,6 @@ impl<F: Float> StabilityTestSuite<F> {
     }
 
     /// Helper methods
-
     fn create_test_tensor(&self, _shape: Vec<usize>) -> Tensor<F> {
         // Placeholder - cannot create tensors without graph context
         panic!("Tensor creation requires graph context")
@@ -393,7 +393,7 @@ impl<F: Float> StabilityTestSuite<F> {
 
     fn run_size_benchmark(&self, size: usize) -> Result<BenchmarkResult, StabilityError> {
         let input = self.create_test_tensor(vec![size]);
-        let function = |x: &Tensor<F>| Ok(x.clone());
+        let function = |x: &Tensor<F>| -> Result<Tensor<F>, StabilityError> { Ok(x.clone()) };
 
         let start_time = Instant::now();
         let _ = compute_forward_stability(function, &input, 1e-8)?;
@@ -421,10 +421,12 @@ impl<F: Float> StabilityTestSuite<F> {
 
         let duration = start_time.elapsed();
 
+        let passed = forward_metrics.stability_grade >= scenario.expected_grade;
+        
         Ok(ScenarioTestResult {
             scenario_name: scenario.name.clone(),
             forward_metrics,
-            passed: forward_metrics.stability_grade >= scenario.expected_grade,
+            passed,
             duration,
             additional_checks: scenario.additional_checks.clone(),
         })
@@ -531,7 +533,7 @@ impl<F: Float> StabilityTestSuite<F> {
     }
 }
 
-impl<F: Float> Default for StabilityTestSuite<F> {
+impl<'a, F: Float> Default for StabilityTestSuite<'a, F> {
     fn default() -> Self {
         Self::new()
     }
@@ -566,26 +568,32 @@ impl Default for TestConfig {
 }
 
 /// Basic test case structure
-pub struct BasicTestCase<F: Float> {
-    pub function: Box<dyn Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError> + Send + Sync>,
-    pub input: Tensor<F>,
+pub struct BasicTestCase<'a, F: Float> {
+    pub function: Box<
+        dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync,
+    >,
+    pub input: Tensor<'a, F>,
     pub expected_stability: StabilityGrade,
     pub perturbation_magnitude: f64,
 }
 
 /// Edge case test structure
-pub struct EdgeCaseTest<F: Float> {
-    pub input: Tensor<F>,
-    pub function: Box<dyn Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError> + Send + Sync>,
+pub struct EdgeCaseTest<'a, F: Float> {
+    pub input: Tensor<'a, F>,
+    pub function: Box<
+        dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync,
+    >,
     pub expected_behavior: EdgeCaseBehavior,
 }
 
 /// Test scenario for domain-specific testing
-pub struct TestScenario<F: Float> {
+pub struct TestScenario<'a, F: Float> {
     pub name: String,
     pub description: String,
-    pub function: Box<dyn Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError> + Send + Sync>,
-    pub input: Tensor<F>,
+    pub function: Box<
+        dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync,
+    >,
+    pub input: Tensor<'a, F>,
     pub expected_grade: StabilityGrade,
     pub perturbation_magnitude: f64,
     pub additional_checks: Vec<String>,
@@ -601,11 +609,11 @@ pub enum EdgeCaseBehavior {
 }
 
 /// Collection of all test results
-#[derive(Debug, Default)]
-pub struct TestResults {
+#[derive(Debug)]
+pub struct TestResults<'a, F: Float> {
     pub test_results: Vec<StabilityTestResult>,
     pub conditioning_analyses: Vec<ConditionNumberAnalysis>,
-    pub error_propagation_analyses: Vec<ErrorPropagationAnalysis>,
+    pub error_propagation_analyses: Vec<ErrorPropagationAnalysis<'a, F>>,
     pub stability_analyses: Vec<super::numerical_analysis::StabilityAnalysis>,
     pub roundoff_analyses: Vec<super::numerical_analysis::RoundoffErrorAnalysis>,
     pub edge_case_results: Vec<EdgeCaseTestResult>,
@@ -613,9 +621,18 @@ pub struct TestResults {
     pub scenario_results: Vec<ScenarioTestResult>,
 }
 
-impl TestResults {
+impl<'a, F: Float> TestResults<'a, F> {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            test_results: Vec::new(),
+            conditioning_analyses: Vec::new(),
+            error_propagation_analyses: Vec::new(),
+            stability_analyses: Vec::new(),
+            roundoff_analyses: Vec::new(),
+            edge_case_results: Vec::new(),
+            precision_results: Vec::new(),
+            scenario_results: Vec::new(),
+        }
     }
 
     pub fn clear(&mut self) {
@@ -761,23 +778,22 @@ pub struct PerformanceSummary {
 }
 
 /// Public API functions
-
 /// Run a comprehensive stability test suite
-pub fn run_comprehensive_stability_tests<F: Float>() -> Result<TestSummary, StabilityError> {
-    let mut suite = StabilityTestSuite::<F>::new();
+pub fn run_comprehensive_stability_tests<'a, F: Float>() -> Result<TestSummary, StabilityError> {
+    let suite = StabilityTestSuite::<'a, F>::new();
     suite.run_all_tests()
 }
 
 /// Run stability tests with custom configuration
-pub fn run_stability_tests_with_config<F: Float>(
+pub fn run_stability_tests_with_config<'a, F: Float>(
     config: TestConfig,
 ) -> Result<TestSummary, StabilityError> {
-    let mut suite = StabilityTestSuite::<F>::with_config(config);
+    let mut suite = StabilityTestSuite::<'a, F>::with_config(config);
     suite.run_all_tests()
 }
 
 /// Run basic stability tests only
-pub fn run_basic_stability_tests<F: Float>() -> Result<TestSummary, StabilityError> {
+pub fn run_basic_stability_tests<'a, F: Float>() -> Result<TestSummary, StabilityError> {
     let config = TestConfig {
         run_basic_tests: true,
         run_advanced_tests: false,
@@ -787,19 +803,22 @@ pub fn run_basic_stability_tests<F: Float>() -> Result<TestSummary, StabilityErr
         run_scenario_tests: false,
         ..Default::default()
     };
-    run_stability_tests_with_config(config)
+    run_stability_tests_with_config::<F>(config)
 }
 
 /// Test a specific function for stability
-pub fn test_function_stability<F: Float, Func>(
+pub fn test_function_stability<'a, F: Float, Func>(
     function: Func,
-    input: &Tensor<F>,
+    input: &'a Tensor<'a, F>,
     name: &str,
 ) -> Result<StabilityTestResult, StabilityError>
 where
-    Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError> + Send + Sync + 'static,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>
+        + Send
+        + Sync
+        + 'static,
 {
-    let mut suite = StabilityTestSuite::new();
+    let mut suite = StabilityTestSuite::<'a, F>::new();
     let test_case = BasicTestCase {
         function: Box::new(function),
         input: input.clone(),
@@ -811,15 +830,18 @@ where
 }
 
 /// Create a test scenario for domain-specific testing
-pub fn create_test_scenario<F: Float, Func>(
+pub fn create_test_scenario<'a, F: Float, Func>(
     name: String,
     description: String,
     function: Func,
-    input: Tensor<F>,
+    input: Tensor<'a, F>,
     expected_grade: StabilityGrade,
-) -> TestScenario<F>
+) -> TestScenario<'a, F>
 where
-    Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError> + Send + Sync + 'static,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>
+        + Send
+        + Sync
+        + 'static,
 {
     TestScenario {
         name,

@@ -4,7 +4,6 @@
 //! that can leverage multiple CPU cores for improved performance.
 
 use super::{execute_global, init_thread_pool, ThreadPoolError};
-use crate::tensor::Tensor;
 use crate::Float;
 use ndarray::{Array, Axis, IxDyn, Zip};
 use rayon::prelude::*;
@@ -279,7 +278,7 @@ impl ParallelReduction {
                     let diff = x - mean;
                     diff * diff
                 })
-                .sum::<F>()
+                .fold(F::zero(), |acc, x| acc + x)
         } else {
             array
                 .par_iter()
@@ -287,7 +286,8 @@ impl ParallelReduction {
                     let diff = x - mean;
                     diff * diff
                 })
-                .sum::<F>()
+                .fold(|| F::zero(), |acc, x| acc + x)
+                .reduce(|| F::zero(), |a, b| a + b)
         };
 
         let count = F::from(array.len()).unwrap();
@@ -320,11 +320,28 @@ impl ParallelMatrix {
         let total_ops = m * n * k;
         if total_ops < config.min_parallel_size {
             // Use sequential multiplication for small matrices
-            return Ok(left.dot(right));
+            // Use manual matrix multiplication for small matrices to avoid trait issues
+            let (m, k) = (left.shape()[0], left.shape()[1]);
+            let (k2, n) = (right.shape()[0], right.shape()[1]);
+            if k != k2 {
+                return Err(ThreadPoolError::ExecutionFailed);
+            }
+
+            let mut result = Array::zeros(IxDyn(&[m, n]));
+            for i in 0..m {
+                for j in 0..n {
+                    let mut sum = F::zero();
+                    for k_idx in 0..k {
+                        sum = sum + left[[i, k_idx]] * right[[k_idx, j]];
+                    }
+                    result[[i, j]] = sum;
+                }
+            }
+            return Ok(result);
         }
 
         // Parallel blocked matrix multiplication
-        let mut result = Array::zeros((m, n).into_dyn());
+        let mut result = Array::zeros(IxDyn(&[m, n]));
         let block_size = Self::calculate_block_size(m, n, k, config);
 
         // Parallel iteration over blocks
@@ -410,7 +427,7 @@ impl ParallelMatrix {
             return Ok(array.t().to_owned());
         }
 
-        let mut result = Array::zeros((cols, rows).into_dyn());
+        let mut result = Array::zeros(IxDyn(&[cols, rows]));
 
         // Parallel transpose with cache-friendly blocking
         let block_size = 64; // Cache-friendly block size
@@ -459,7 +476,7 @@ impl ParallelConvolution {
             return Self::conv1d_sequential(input, kernel);
         }
 
-        let mut output = Array::zeros(output_len.into_dyn());
+        let mut output = Array::zeros(IxDyn(&[output_len]));
 
         // Parallel convolution
         (0..output_len).into_par_iter().for_each(|i| {
@@ -486,7 +503,7 @@ impl ParallelConvolution {
         let input_len = input.len();
         let kernel_len = kernel.len();
         let output_len = input_len + kernel_len - 1;
-        let mut output = Array::zeros(output_len.into_dyn());
+        let mut output = Array::zeros(IxDyn(&[output_len]));
 
         for i in 0..output_len {
             let mut sum = F::zero();
@@ -606,16 +623,13 @@ impl ParallelDispatcher {
             }
         } else {
             // Parallel processing
-            result
-                .par_iter_mut()
-                .enumerate()
-                .for_each(|(i, result_elem)| {
-                    let values: Vec<F> = arrays
-                        .iter()
-                        .map(|arr| arr.as_slice().unwrap()[i])
-                        .collect();
-                    *result_elem = operation(&values);
-                });
+            result.iter_mut().enumerate().for_each(|(i, result_elem)| {
+                let values: Vec<F> = arrays
+                    .iter()
+                    .map(|arr| arr.as_slice().unwrap()[i])
+                    .collect();
+                *result_elem = operation(&values);
+            });
         }
 
         Ok(result)
@@ -641,6 +655,7 @@ impl Default for ParallelDispatcher {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[allow(unused_imports)]
     use ndarray::Array1;
 
     #[test]

@@ -32,10 +32,10 @@ pub use crate::performance::{
     OptimizationCapabilities, PerformanceOptimizer, PerformanceProfiler, ThreadPoolManager,
 };
 
-// JIT compilation
-pub use crate::performance::jit::{
-    CompiledElementOp, CompiledMatrixOp, JitContext, JitProfiler, JitStats, JitStrategy,
-};
+// JIT compilation - module not yet implemented
+// pub use crate::performance::jit::{
+//     CompiledElementOp, CompiledMatrixOp, JitContext, JitProfiler, JitStats, JitStrategy,
+// };
 
 // Data augmentation
 pub use crate::augmentation::{

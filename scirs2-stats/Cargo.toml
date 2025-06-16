@@ -15,8 +15,8 @@ ndarray = { workspace = true }
 num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
-ndarray-linalg = { workspace = true, default-features = false, features = ["openblas-system"] }
-scirs2-core = { workspace = true, features = ["validation", "parallel", "simd", "linalg", "openblas"] }
+ndarray-linalg = { workspace = true, default-features = false }
+scirs2-core = { workspace = true, features = ["validation", "parallel", "simd", "linalg"] }
 scirs2-linalg = { workspace = true }
 
 # Statistics specific dependencies
@@ -30,3 +30,10 @@ special-11 = { workspace = true }
 approx = { workspace = true }
 criterion = { workspace = true }
 plotters = { workspace = true }
+
+[features]
+default = ["openblas"]
+# BLAS backends - these are mutually exclusive
+openblas = ["scirs2-core/openblas", "ndarray-linalg/openblas-system"]
+intel-mkl = ["scirs2-core/intel-mkl", "ndarray-linalg/intel-mkl-system"]
+netlib = ["scirs2-core/netlib", "ndarray-linalg/netlib-system"]

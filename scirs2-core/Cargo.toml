@@ -109,9 +109,11 @@ array_protocol_all = ["array_protocol", "array_protocol_jit", "array_protocol_cu
 all = [
     "simd", "parallel", "cache", "validation", "logging",
     "gpu", "cuda", "memory_management", "memory_efficient", "memory_compression",
-    "array", "profiling", "random", "types", "openblas", "ufuncs",
+    "array", "profiling", "random", "types", "ufuncs",
     "array_protocol_all"
-]  # Enable all features with default openblas backend
+]  # Enable all features except mutually exclusive BLAS backends
+# NOTE: BLAS backends (openblas, intel-mkl, netlib) are mutually exclusive
+# Use --features openblas (default), --features intel-mkl, or --features netlib
 
 [[example]]
 name = "gpu_example"

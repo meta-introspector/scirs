@@ -3,14 +3,12 @@
 //! This module provides comprehensive tracing, debugging, and profiling
 //! capabilities for automatic differentiation computations.
 
-use crate::graph::{Graph, TensorID};
-use crate::op::Op;
 use crate::tensor::Tensor;
 use crate::Float;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 /// Global tracing system
 static GLOBAL_TRACER: std::sync::OnceLock<Arc<Mutex<ExecutionTracer>>> = std::sync::OnceLock::new();
@@ -86,9 +84,11 @@ impl ExecutionTracer {
 
     /// Record an execution event
     pub fn record_event(&mut self, event: ExecutionEvent) {
+        let should_record = self.should_record_event(&event);
+        
         if let Some(ref mut session) = self.current_session {
-            if self.should_record_event(&event) {
-                session.events.push(event);
+            if should_record {
+                session.events.push(event.clone());
             }
         }
 
@@ -372,7 +372,6 @@ impl ExecutionTracer {
     }
 
     /// Helper methods
-
     #[allow(dead_code)]
     fn should_record_event(&self, event: &ExecutionEvent) -> bool {
         match &event.event_type {
@@ -764,7 +763,6 @@ pub enum TracingError {
 }
 
 /// Global API functions
-
 /// Initialize the global tracer
 pub fn init_tracer() -> Arc<Mutex<ExecutionTracer>> {
     GLOBAL_TRACER

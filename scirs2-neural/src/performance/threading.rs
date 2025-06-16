@@ -4,7 +4,7 @@
 //! training capabilities for efficient parallel execution of neural network operations.
 
 use crate::error::{NeuralError, Result};
-use ndarray::{Array, ArrayD, ArrayView, IxDyn};
+use ndarray::{Array, ArrayD};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;

@@ -951,7 +951,7 @@ mod tests {
             .collect();
 
         // Should have multiple types when using combined strategy
-        assert!(info_types.len() >= 1);
+        assert!(!info_types.is_empty());
     }
 
     #[test]

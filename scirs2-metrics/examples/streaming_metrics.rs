@@ -243,15 +243,9 @@ fn performance_comparison_example() {
     let n_samples = 10_000;
 
     // Generate test data
-    let true_labels: Vec<i32> = (0..n_samples).map(|i| (i % 2) as i32).collect();
+    let true_labels: Vec<i32> = (0..n_samples).map(|i| (i % 2)).collect();
     let pred_labels: Vec<i32> = (0..n_samples)
-        .map(|i| {
-            if (i * 7) % 10 < 8 {
-                (i % 2) as i32
-            } else {
-                1 - (i % 2) as i32
-            }
-        })
+        .map(|i| if (i * 7) % 10 < 8 { i % 2 } else { 1 - i % 2 })
         .collect();
 
     // Streaming approach
@@ -301,7 +295,7 @@ fn performance_comparison_example() {
     );
 
     for i in 0..(n_samples * 2) {
-        let true_label = (i % 2) as i32;
+        let true_label = i % 2;
         let pred_label = if (i * 7) % 10 < 8 {
             true_label
         } else {

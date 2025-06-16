@@ -118,8 +118,8 @@ impl PerformanceOptimizer {
     /// ).unwrap();
     /// ```
     pub fn new(
-        chunk_size: Option<usize>,
-        max_memory_mb: Option<usize>,
+        _chunk_size: Option<usize>,
+        _max_memory_mb: Option<usize>,
         num_threads: Option<usize>,
         enable_profiling: bool,
     ) -> Result<Self> {

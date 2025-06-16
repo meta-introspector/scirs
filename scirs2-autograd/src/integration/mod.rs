@@ -4,20 +4,18 @@
 //! in the SciRS2 ecosystem, including tensor conversion utilities, shared
 //! configuration systems, and consistent API patterns.
 
+use crate::AutogradError;
+
+pub mod config;
 pub mod core;
+pub mod error_mapping;
 pub mod linalg;
 pub mod neural;
 pub mod optim;
 pub mod tensor_conversion;
-pub mod config;
-pub mod error_mapping;
-
-use crate::error::AutogradError;
-use crate::tensor::Tensor;
-use crate::Float;
 
 /// Integration error types for cross-module compatibility
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum IntegrationError {
     #[error("Tensor conversion error: {0}")]
     TensorConversion(String),
@@ -38,17 +36,17 @@ impl From<IntegrationError> for AutogradError {
 }
 
 /// Trait for SciRS2 module integration capabilities
-/// 
+///
 /// This trait provides basic integration patterns that work with autograd's
 /// computational graph design. Complex tensor operations should use tensor_ops
 /// functions rather than direct data access.
 pub trait SciRS2Integration {
     /// Module identifier
     fn module_name() -> &'static str;
-    
+
     /// Module version for compatibility checking
     fn module_version() -> &'static str;
-    
+
     /// Check compatibility with the autograd module
     fn check_compatibility() -> Result<(), IntegrationError>;
 }
@@ -127,62 +125,66 @@ impl IntegrationRegistry {
             config: IntegrationConfig::default(),
         }
     }
-    
+
     /// Register a module with the integration system
     pub fn register_module(&mut self, info: ModuleInfo) -> Result<(), IntegrationError> {
         // Check for version conflicts
         if let Some(existing) = self.modules.get(&info.name) {
             if existing.version != info.version {
-                return Err(IntegrationError::VersionIncompatibility(
-                    format!("Module {} version mismatch: {} vs {}", 
-                            info.name, existing.version, info.version)
-                ));
+                return Err(IntegrationError::VersionIncompatibility(format!(
+                    "Module {} version mismatch: {} vs {}",
+                    info.name, existing.version, info.version
+                )));
             }
         }
-        
+
         self.modules.insert(info.name.clone(), info);
         Ok(())
     }
-    
+
     /// Get module information
     pub fn get_module(&self, name: &str) -> Option<&ModuleInfo> {
         self.modules.get(name)
     }
-    
+
     /// Check compatibility between modules
-    pub fn check_module_compatibility(&self, module1: &str, module2: &str) -> Result<bool, IntegrationError> {
-        let mod1 = self.modules.get(module1)
-            .ok_or_else(|| IntegrationError::ModuleCompatibility(
-                format!("Module {} not found", module1)))?;
-        let mod2 = self.modules.get(module2)
-            .ok_or_else(|| IntegrationError::ModuleCompatibility(
-                format!("Module {} not found", module2)))?;
-        
+    pub fn check_module_compatibility(
+        &self,
+        module1: &str,
+        module2: &str,
+    ) -> Result<bool, IntegrationError> {
+        let mod1 = self.modules.get(module1).ok_or_else(|| {
+            IntegrationError::ModuleCompatibility(format!("Module {} not found", module1))
+        })?;
+        let mod2 = self.modules.get(module2).ok_or_else(|| {
+            IntegrationError::ModuleCompatibility(format!("Module {} not found", module2))
+        })?;
+
         // Simple version compatibility check
         Ok(self.are_versions_compatible(&mod1.version, &mod2.version))
     }
-    
+
     /// Update global configuration
     pub fn update_config(&mut self, config: IntegrationConfig) {
         self.config = config;
     }
-    
+
     /// Get current configuration
     pub fn config(&self) -> &IntegrationConfig {
         &self.config
     }
-    
+
     /// List all registered modules
     pub fn list_modules(&self) -> Vec<&ModuleInfo> {
         self.modules.values().collect()
     }
-    
+
     fn are_versions_compatible(&self, version1: &str, version2: &str) -> bool {
         // Simplified version compatibility check
         // In practice, this would implement semantic versioning rules
         let v1_parts: Vec<&str> = version1.split('.').collect();
         let v2_parts: Vec<&str> = version2.split('.').collect();
-        
+
         if v1_parts.len() >= 2 && v2_parts.len() >= 2 {
             // Check major.minor compatibility
             v1_parts[0] == v2_parts[0] && v1_parts[1] == v2_parts[1]
@@ -219,19 +221,19 @@ impl ModuleInfo {
             api_version: "1.0".to_string(),
         }
     }
-    
+
     /// Add a feature to the module
     pub fn with_feature(mut self, feature: String) -> Self {
         self.features.push(feature);
         self
     }
-    
+
     /// Add a dependency to the module
     pub fn with_dependency(mut self, dependency: String) -> Self {
         self.dependencies.push(dependency);
         self
     }
-    
+
     /// Set API version
     pub fn with_api_version(mut self, api_version: String) -> Self {
         self.api_version = api_version;
@@ -240,22 +242,26 @@ impl ModuleInfo {
 }
 
 /// Global integration registry instance
-static GLOBAL_REGISTRY: std::sync::OnceLock<std::sync::Mutex<IntegrationRegistry>> = std::sync::OnceLock::new();
+static GLOBAL_REGISTRY: std::sync::OnceLock<std::sync::Mutex<IntegrationRegistry>> =
+    std::sync::OnceLock::new();
 
 /// Initialize the global integration registry
 pub fn init_integration_registry() -> &'static std::sync::Mutex<IntegrationRegistry> {
     GLOBAL_REGISTRY.get_or_init(|| {
         let mut registry = IntegrationRegistry::new();
-        
+
         // Register autograd module
-        let autograd_info = ModuleInfo::new("scirs2-autograd".to_string(), "0.1.0-alpha.5".to_string())
-            .with_feature("automatic_differentiation".to_string())
-            .with_feature("computation_graphs".to_string())
-            .with_feature("gradient_computation".to_string())
-            .with_api_version("1.0".to_string());
-        
-        registry.register_module(autograd_info).expect("Failed to register autograd module");
-        
+        let autograd_info =
+            ModuleInfo::new("scirs2-autograd".to_string(), "0.1.0-alpha.5".to_string())
+                .with_feature("automatic_differentiation".to_string())
+                .with_feature("computation_graphs".to_string())
+                .with_feature("gradient_computation".to_string())
+                .with_api_version("1.0".to_string());
+
+        registry
+            .register_module(autograd_info)
+            .expect("Failed to register autograd module");
+
         std::sync::Mutex::new(registry)
     })
 }
@@ -263,32 +269,36 @@ pub fn init_integration_registry() -> &'static std::sync::Mutex<IntegrationRegis
 /// Register a module with the global registry
 pub fn register_module(info: ModuleInfo) -> Result<(), IntegrationError> {
     let registry = init_integration_registry();
-    let mut registry_guard = registry.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string()))?;
+    let mut registry_guard = registry.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
+    })?;
     registry_guard.register_module(info)
 }
 
 /// Get module information from the global registry
 pub fn get_module_info(name: &str) -> Result<Option<ModuleInfo>, IntegrationError> {
     let registry = init_integration_registry();
-    let registry_guard = registry.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string()))?;
+    let registry_guard = registry.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
+    })?;
     Ok(registry_guard.get_module(name).cloned())
 }
 
 /// Check compatibility between two modules
 pub fn check_compatibility(module1: &str, module2: &str) -> Result<bool, IntegrationError> {
     let registry = init_integration_registry();
-    let registry_guard = registry.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string()))?;
+    let registry_guard = registry.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
+    })?;
     registry_guard.check_module_compatibility(module1, module2)
 }
 
 /// Update global integration configuration
 pub fn update_global_config(config: IntegrationConfig) -> Result<(), IntegrationError> {
     let registry = init_integration_registry();
-    let mut registry_guard = registry.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string()))?;
+    let mut registry_guard = registry.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
+    })?;
     registry_guard.update_config(config);
     Ok(())
 }
@@ -296,16 +306,18 @@ pub fn update_global_config(config: IntegrationConfig) -> Result<(), Integration
 /// Get current global integration configuration
 pub fn get_global_config() -> Result<IntegrationConfig, IntegrationError> {
     let registry = init_integration_registry();
-    let registry_guard = registry.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string()))?;
+    let registry_guard = registry.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
+    })?;
     Ok(registry_guard.config().clone())
 }
 
 /// List all registered modules
 pub fn list_registered_modules() -> Result<Vec<ModuleInfo>, IntegrationError> {
     let registry = init_integration_registry();
-    let registry_guard = registry.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string()))?;
+    let registry_guard = registry.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
+    })?;
     Ok(registry_guard.list_modules().into_iter().cloned().collect())
 }
 
@@ -340,7 +352,7 @@ mod tests {
     #[test]
     fn test_integration_registry() {
         let mut registry = IntegrationRegistry::new();
-        
+
         let info = ModuleInfo::new("test-module".to_string(), "1.0.0".to_string());
         registry.register_module(info.clone()).unwrap();
 
@@ -363,9 +375,11 @@ mod tests {
         // Test that we can get module info
         let info = get_module_info("scirs2-autograd").unwrap();
         assert!(info.is_some());
-        
+
         let autograd_info = info.unwrap();
         assert_eq!(autograd_info.name, "scirs2-autograd");
-        assert!(autograd_info.features.contains(&"automatic_differentiation".to_string()));
+        assert!(autograd_info
+            .features
+            .contains(&"automatic_differentiation".to_string()));
     }
 }

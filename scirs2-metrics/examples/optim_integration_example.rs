@@ -211,7 +211,7 @@ fn external_scheduler_pattern_example() -> Result<(), Box<dyn std::error::Error>
     let mut metric_optimizer = MetricOptimizer::<f64>::new("validation_loss", false);
 
     // Simulate validation losses over epochs
-    let validation_losses = vec![0.8, 0.6, 0.5, 0.5, 0.51, 0.52, 0.48, 0.47];
+    let validation_losses = [0.8, 0.6, 0.5, 0.5, 0.51, 0.52, 0.48, 0.47];
 
     println!("Validation loss progression:");
     let mut lr = 0.01; // Starting learning rate
@@ -366,7 +366,7 @@ mod external_integration_example {
         println!("  Mode: {}", config.mode);
 
         // Simulate training
-        let metrics = vec![0.7, 0.8, 0.82, 0.81, 0.80]; // accuracy values
+        let metrics = [0.7, 0.8, 0.82, 0.81, 0.80]; // accuracy values
 
         for (step, &metric) in metrics.iter().enumerate() {
             let new_lr = external_scheduler.step_with_metric(metric);

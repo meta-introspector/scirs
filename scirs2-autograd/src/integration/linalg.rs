@@ -4,10 +4,9 @@
 //! including matrix operations, decompositions, and advanced linear algebra functions
 //! with automatic differentiation support.
 
-use super::{IntegrationError, SciRS2Integration, core::SciRS2Data};
+use super::{core::SciRS2Data, IntegrationError, SciRS2Integration};
 use crate::tensor::Tensor;
 use crate::Float;
-use ndarray::{Array, ArrayD, IxDyn};
 use std::collections::HashMap;
 
 /// Linear algebra operation context for autograd integration
@@ -36,25 +35,25 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             stability_config: StabilityConfig::default(),
         }
     }
-    
+
     /// Add input tensor
     pub fn add_input(mut self, tensor: Tensor<'a, F>) -> Self {
         self.inputs.push(tensor);
         self
     }
-    
+
     /// Add parameter
     pub fn add_parameter(mut self, name: String, param: LinalgParameter) -> Self {
         self.parameters.insert(name, param);
         self
     }
-    
+
     /// Set gradient mode
     pub fn gradient_mode(mut self, mode: GradientMode) -> Self {
         self.grad_mode = mode;
         self
     }
-    
+
     /// Execute the operation
     pub fn execute(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         match &self.operation {
@@ -72,22 +71,22 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             LinalgOperation::Custom(name) => self.execute_custom(name),
         }
     }
-    
+
     // Operation implementations
     fn execute_matmul(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 2 {
             return Err(IntegrationError::ModuleCompatibility(
-                "MatMul requires exactly 2 input tensors".to_string()
+                "MatMul requires exactly 2 input tensors".to_string(),
             ));
         }
-        
+
         let a = &self.inputs[0];
         let b = &self.inputs[1];
-        
+
         // Simplified matrix multiplication
         // In practice, would use optimized BLAS implementations
         let result = self.compute_matmul(a, b)?;
-        
+
         Ok(LinalgResult {
             primary_output: result,
             auxiliary_outputs: HashMap::new(),
@@ -99,22 +98,22 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_svd(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "SVD requires exactly 1 input tensor".to_string()
+                "SVD requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
         let (u, s, vt) = self.compute_svd(input)?;
-        
+
         let mut auxiliary = HashMap::new();
         auxiliary.insert("U".to_string(), u);
         auxiliary.insert("S".to_string(), s.clone());
         auxiliary.insert("VT".to_string(), vt);
-        
+
         Ok(LinalgResult {
             primary_output: s, // Return singular values as primary output
             auxiliary_outputs: auxiliary,
@@ -126,21 +125,21 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_qr(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "QR requires exactly 1 input tensor".to_string()
+                "QR requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
         let (q, r) = self.compute_qr(input)?;
-        
+
         let mut auxiliary = HashMap::new();
         auxiliary.insert("Q".to_string(), q.clone());
         auxiliary.insert("R".to_string(), r);
-        
+
         Ok(LinalgResult {
             primary_output: q, // Return Q matrix as primary output
             auxiliary_outputs: auxiliary,
@@ -152,22 +151,22 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_lu(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "LU requires exactly 1 input tensor".to_string()
+                "LU requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
         let (l, u, p) = self.compute_lu(input)?;
-        
+
         let mut auxiliary = HashMap::new();
         auxiliary.insert("L".to_string(), l.clone());
         auxiliary.insert("U".to_string(), u);
         auxiliary.insert("P".to_string(), p);
-        
+
         Ok(LinalgResult {
             primary_output: l, // Return L matrix as primary output
             auxiliary_outputs: auxiliary,
@@ -179,17 +178,17 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_cholesky(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "Cholesky requires exactly 1 input tensor".to_string()
+                "Cholesky requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
         let l = self.compute_cholesky(input)?;
-        
+
         Ok(LinalgResult {
             primary_output: l,
             auxiliary_outputs: HashMap::new(),
@@ -201,20 +200,20 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_eigenvalue(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "Eigenvalue requires exactly 1 input tensor".to_string()
+                "Eigenvalue requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
         let (eigenvalues, eigenvectors) = self.compute_eigenvalue(input)?;
-        
+
         let mut auxiliary = HashMap::new();
         auxiliary.insert("eigenvectors".to_string(), eigenvectors);
-        
+
         Ok(LinalgResult {
             primary_output: eigenvalues,
             auxiliary_outputs: auxiliary,
@@ -226,17 +225,17 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_inverse(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "Inverse requires exactly 1 input tensor".to_string()
+                "Inverse requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
         let inverse = self.compute_inverse(input)?;
-        
+
         Ok(LinalgResult {
             primary_output: inverse,
             auxiliary_outputs: HashMap::new(),
@@ -248,18 +247,18 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_solve(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 2 {
             return Err(IntegrationError::ModuleCompatibility(
-                "Solve requires exactly 2 input tensors (A, b)".to_string()
+                "Solve requires exactly 2 input tensors (A, b)".to_string(),
             ));
         }
-        
+
         let a = &self.inputs[0];
         let b = &self.inputs[1];
         let x = self.compute_solve(a, b)?;
-        
+
         Ok(LinalgResult {
             primary_output: x,
             auxiliary_outputs: HashMap::new(),
@@ -271,21 +270,23 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_norm(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "Norm requires exactly 1 input tensor".to_string()
+                "Norm requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
-        let norm_type = self.parameters.get("ord")
+        let norm_type = self
+            .parameters
+            .get("ord")
             .and_then(|p| p.as_string())
             .unwrap_or("2".to_string());
-        
+
         let norm_result = self.compute_norm(input, &norm_type)?;
-        
+
         Ok(LinalgResult {
             primary_output: norm_result,
             auxiliary_outputs: HashMap::new(),
@@ -297,17 +298,17 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_det(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "Det requires exactly 1 input tensor".to_string()
+                "Det requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
         let det = self.compute_det(input)?;
-        
+
         Ok(LinalgResult {
             primary_output: det,
             auxiliary_outputs: HashMap::new(),
@@ -319,265 +320,309 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             },
         })
     }
-    
+
     fn execute_trace(&self) -> Result<LinalgResult<F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
-                "Trace requires exactly 1 input tensor".to_string()
+                "Trace requires exactly 1 input tensor".to_string(),
             ));
         }
-        
+
         let input = &self.inputs[0];
         let trace = self.compute_trace(input)?;
-        
+
         Ok(LinalgResult {
             primary_output: trace,
             auxiliary_outputs: HashMap::new(),
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
-                computational_cost: ComputationalCost { flops: input.shape()[0] as u64, memory_accesses: input.data().len() as u64 },
+                computational_cost: ComputationalCost {
+                    flops: input.shape()[0] as u64,
+                    memory_accesses: input.data().len() as u64,
+                },
                 numerical_stability: self.assess_stability(&self.inputs),
                 memory_usage: self.estimate_memory_usage(&self.inputs),
             },
         })
     }
-    
+
     fn execute_custom(&self, _name: &str) -> Result<LinalgResult<F>, IntegrationError> {
         // Placeholder for custom operations
-        let dummy_result = Tensor::from_vec(vec![F::zero()], vec![1]);
-        
+        let graph = if !self.inputs.is_empty() {
+            self.inputs[0].graph()
+        } else {
+            return Err(IntegrationError::TensorConversion(
+                "No input tensors available".to_string(),
+            ));
+        };
+        let dummy_result = Tensor::from_vec(vec![F::zero()], vec![1], graph);
+
         Ok(LinalgResult {
             primary_output: dummy_result,
             auxiliary_outputs: HashMap::new(),
             operation_info: OperationInfo {
                 operation: self.operation.clone(),
-                computational_cost: ComputationalCost { flops: 1, memory_accesses: 1 },
+                computational_cost: ComputationalCost {
+                    flops: 1,
+                    memory_accesses: 1,
+                },
                 numerical_stability: NumericalStability::Stable,
                 memory_usage: 1,
             },
         })
     }
-    
+
     // Helper computation methods (simplified implementations)
     fn compute_matmul(&self, a: &Tensor<F>, b: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         // Simplified matrix multiplication
         // In practice, would use optimized BLAS routines
         let a_shape = a.shape();
         let b_shape = b.shape();
-        
+
         if a_shape.len() < 2 || b_shape.len() < 2 {
             return Err(IntegrationError::TensorConversion(
-                "Tensors must be at least 2D for matrix multiplication".to_string()
+                "Tensors must be at least 2D for matrix multiplication".to_string(),
             ));
         }
-        
+
         let m = a_shape[a_shape.len() - 2];
         let k = a_shape[a_shape.len() - 1];
         let n = b_shape[b_shape.len() - 1];
-        
+
         if k != b_shape[b_shape.len() - 2] {
             return Err(IntegrationError::TensorConversion(
-                "Matrix dimensions do not match for multiplication".to_string()
+                "Matrix dimensions do not match for multiplication".to_string(),
             ));
         }
-        
+
         // Create result tensor (simplified)
         let result_data = vec![F::zero(); m * n];
-        Ok(Tensor::from_vec(result_data, vec![m, n]))
+        Ok(Tensor::from_vec(result_data, vec![m, n], a.graph()))
     }
-    
-    fn compute_svd(&self, input: &Tensor<F>) -> Result<(Tensor<F>, Tensor<F>, Tensor<F>), IntegrationError> {
+
+    fn compute_svd(
+        &self,
+        input: &Tensor<F>,
+    ) -> Result<(Tensor<F>, Tensor<F>, Tensor<F>), IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 {
             return Err(IntegrationError::TensorConversion(
-                "SVD requires 2D tensor".to_string()
+                "SVD requires 2D tensor".to_string(),
             ));
         }
-        
+
         let m = shape[0];
         let n = shape[1];
         let min_dim = m.min(n);
-        
+
         // Simplified SVD computation (placeholder)
         let u_data = vec![F::zero(); m * m];
         let s_data = vec![F::one(); min_dim];
         let vt_data = vec![F::zero(); n * n];
-        
-        let u = Tensor::from_vec(u_data, vec![m, m]);
-        let s = Tensor::from_vec(s_data, vec![min_dim]);
-        let vt = Tensor::from_vec(vt_data, vec![n, n]);
-        
+
+        let u = Tensor::from_vec(u_data, vec![m, m], input.graph());
+        let s = Tensor::from_vec(s_data, vec![min_dim], input.graph());
+        let vt = Tensor::from_vec(vt_data, vec![n, n], input.graph());
+
         Ok((u, s, vt))
     }
-    
+
     fn compute_qr(&self, input: &Tensor<F>) -> Result<(Tensor<F>, Tensor<F>), IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 {
             return Err(IntegrationError::TensorConversion(
-                "QR requires 2D tensor".to_string()
+                "QR requires 2D tensor".to_string(),
             ));
         }
-        
+
         let m = shape[0];
         let n = shape[1];
-        
+
         // Simplified QR computation (placeholder)
         let q_data = vec![F::zero(); m * m];
         let r_data = vec![F::zero(); m * n];
-        
-        let q = Tensor::from_vec(q_data, vec![m, m]);
-        let r = Tensor::from_vec(r_data, vec![m, n]);
-        
+
+        let q = Tensor::from_vec(q_data, vec![m, m], input.graph());
+        let r = Tensor::from_vec(r_data, vec![m, n], input.graph());
+
         Ok((q, r))
     }
-    
-    fn compute_lu(&self, input: &Tensor<F>) -> Result<(Tensor<F>, Tensor<F>, Tensor<F>), IntegrationError> {
+
+    fn compute_lu(
+        &self,
+        input: &Tensor<F>,
+    ) -> Result<(Tensor<F>, Tensor<F>, Tensor<F>), IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
-                "LU requires square 2D tensor".to_string()
+                "LU requires square 2D tensor".to_string(),
             ));
         }
-        
+
         let n = shape[0];
-        
+
         // Simplified LU computation (placeholder)
         let l_data = vec![F::zero(); n * n];
         let u_data = vec![F::zero(); n * n];
         let p_data = vec![F::zero(); n * n];
-        
-        let l = Tensor::from_vec(l_data, vec![n, n]);
-        let u = Tensor::from_vec(u_data, vec![n, n]);
-        let p = Tensor::from_vec(p_data, vec![n, n]);
-        
+
+        let l = Tensor::from_vec(l_data, vec![n, n], input.graph());
+        let u = Tensor::from_vec(u_data, vec![n, n], input.graph());
+        let p = Tensor::from_vec(p_data, vec![n, n], input.graph());
+
         Ok((l, u, p))
     }
-    
+
     fn compute_cholesky(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
-                "Cholesky requires square 2D tensor".to_string()
+                "Cholesky requires square 2D tensor".to_string(),
             ));
         }
-        
+
         let n = shape[0];
         let l_data = vec![F::zero(); n * n];
-        Ok(Tensor::from_vec(l_data, vec![n, n]))
+        Ok(Tensor::from_vec(l_data, vec![n, n], input.graph()))
     }
-    
-    fn compute_eigenvalue(&self, input: &Tensor<F>) -> Result<(Tensor<F>, Tensor<F>), IntegrationError> {
+
+    fn compute_eigenvalue(
+        &self,
+        input: &Tensor<F>,
+    ) -> Result<(Tensor<F>, Tensor<F>), IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
-                "Eigenvalue requires square 2D tensor".to_string()
+                "Eigenvalue requires square 2D tensor".to_string(),
             ));
         }
-        
+
         let n = shape[0];
-        
+
         let eigenvalues_data = vec![F::one(); n];
         let eigenvectors_data = vec![F::zero(); n * n];
-        
-        let eigenvalues = Tensor::from_vec(eigenvalues_data, vec![n]);
-        let eigenvectors = Tensor::from_vec(eigenvectors_data, vec![n, n]);
-        
+
+        let eigenvalues = Tensor::from_vec(eigenvalues_data, vec![n], input.graph());
+        let eigenvectors = Tensor::from_vec(eigenvectors_data, vec![n, n], input.graph());
+
         Ok((eigenvalues, eigenvectors))
     }
-    
+
     fn compute_inverse(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
-                "Inverse requires square 2D tensor".to_string()
+                "Inverse requires square 2D tensor".to_string(),
             ));
         }
-        
+
         let n = shape[0];
         let inv_data = vec![F::zero(); n * n];
-        Ok(Tensor::from_vec(inv_data, vec![n, n]))
+        Ok(Tensor::from_vec(inv_data, vec![n, n], input.graph()))
     }
-    
+
     fn compute_solve(&self, a: &Tensor<F>, b: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         let a_shape = a.shape();
         let b_shape = b.shape();
-        
+
         if a_shape.len() != 2 || a_shape[0] != a_shape[1] {
             return Err(IntegrationError::TensorConversion(
-                "A matrix must be square".to_string()
+                "A matrix must be square".to_string(),
             ));
         }
-        
+
         if b_shape[0] != a_shape[0] {
             return Err(IntegrationError::TensorConversion(
-                "Dimension mismatch between A and b".to_string()
+                "Dimension mismatch between A and b".to_string(),
             ));
         }
-        
+
         let x_data = vec![F::zero(); b.data().len()];
-        Ok(Tensor::from_vec(x_data, b_shape.to_vec()))
+        Ok(Tensor::from_vec(x_data, b_shape.to_vec(), b.graph()))
     }
-    
-    fn compute_norm(&self, input: &Tensor<F>, norm_type: &str) -> Result<Tensor<F>, IntegrationError> {
+
+    fn compute_norm(
+        &self,
+        input: &Tensor<F>,
+        norm_type: &str,
+    ) -> Result<Tensor<F>, IntegrationError> {
         let norm_value = match norm_type {
             "1" => self.compute_l1_norm(input),
             "2" | "fro" => self.compute_l2_norm(input),
             "inf" => self.compute_inf_norm(input),
-            _ => return Err(IntegrationError::ModuleCompatibility(
-                format!("Unsupported norm type: {}", norm_type)
-            )),
+            _ => {
+                return Err(IntegrationError::ModuleCompatibility(format!(
+                    "Unsupported norm type: {}",
+                    norm_type
+                )))
+            }
         };
-        
-        Ok(Tensor::from_vec(vec![norm_value], vec![1]))
+
+        Ok(Tensor::from_vec(vec![norm_value], vec![1], input.graph()))
     }
-    
+
     fn compute_l1_norm(&self, input: &Tensor<F>) -> F {
-        input.data().iter().map(|&x| x.abs()).fold(F::zero(), |acc, x| acc + x)
+        input
+            .data()
+            .iter()
+            .map(|&x| x.abs())
+            .fold(F::zero(), |acc, x| acc + x)
     }
-    
+
     fn compute_l2_norm(&self, input: &Tensor<F>) -> F {
-        let sum_squares = input.data().iter().map(|&x| x * x).fold(F::zero(), |acc, x| acc + x);
+        let sum_squares = input
+            .data()
+            .iter()
+            .map(|&x| x * x)
+            .fold(F::zero(), |acc, x| acc + x);
         sum_squares.sqrt()
     }
-    
+
     fn compute_inf_norm(&self, input: &Tensor<F>) -> F {
-        input.data().iter().map(|&x| x.abs()).fold(F::zero(), |acc, x| {
-            if acc > x { acc } else { x }
-        })
+        input.data().iter().map(|&x| x.abs()).fold(
+            F::zero(),
+            |acc, x| {
+                if acc > x {
+                    acc
+                } else {
+                    x
+                }
+            },
+        )
     }
-    
+
     fn compute_det(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
-                "Determinant requires square 2D tensor".to_string()
+                "Determinant requires square 2D tensor".to_string(),
             ));
         }
-        
+
         // Simplified determinant computation
         let det_value = F::one(); // Placeholder
-        Ok(Tensor::from_vec(vec![det_value], vec![1]))
+        Ok(Tensor::from_vec(vec![det_value], vec![1], input.graph()))
     }
-    
+
     fn compute_trace(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
-                "Trace requires square 2D tensor".to_string()
+                "Trace requires square 2D tensor".to_string(),
             ));
         }
-        
+
         let n = shape[0];
         let data = input.data();
         let mut trace_value = F::zero();
-        
+
         for i in 0..n {
             trace_value = trace_value + data[i * n + i];
         }
-        
-        Ok(Tensor::from_vec(vec![trace_value], vec![1]))
+
+        Ok(Tensor::from_vec(vec![trace_value], vec![1], input.graph()))
     }
-    
+
     // Cost estimation methods
     fn estimate_matmul_cost(&self, a: &Tensor<F>, b: &Tensor<F>) -> ComputationalCost {
         let a_shape = a.shape();
@@ -585,103 +630,106 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         let m = a_shape[a_shape.len() - 2] as u64;
         let k = a_shape[a_shape.len() - 1] as u64;
         let n = b_shape[b_shape.len() - 1] as u64;
-        
+
         ComputationalCost {
             flops: 2 * m * k * n, // Multiply-add operations
             memory_accesses: (a.data().len() + b.data().len() + (m * n) as usize) as u64,
         }
     }
-    
+
     fn estimate_svd_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let shape = input.shape();
         let m = shape[0] as u64;
         let n = shape[1] as u64;
-        
+
         ComputationalCost {
             flops: 4 * m * n * n + 22 * n * n * n, // Rough SVD cost estimate
             memory_accesses: (input.data().len() * 3) as u64,
         }
     }
-    
+
     fn estimate_qr_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let shape = input.shape();
         let m = shape[0] as u64;
         let n = shape[1] as u64;
-        
+
         ComputationalCost {
             flops: 2 * m * n * n - (2 * n * n * n) / 3,
             memory_accesses: (input.data().len() * 2) as u64,
         }
     }
-    
+
     fn estimate_lu_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let n = input.shape()[0] as u64;
-        
+
         ComputationalCost {
             flops: (2 * n * n * n) / 3,
             memory_accesses: (input.data().len() * 2) as u64,
         }
     }
-    
+
     fn estimate_cholesky_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let n = input.shape()[0] as u64;
-        
+
         ComputationalCost {
             flops: n * n * n / 3,
             memory_accesses: input.data().len() as u64,
         }
     }
-    
+
     fn estimate_eigenvalue_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let n = input.shape()[0] as u64;
-        
+
         ComputationalCost {
             flops: 10 * n * n * n, // Rough estimate for eigenvalue decomposition
             memory_accesses: (input.data().len() * 3) as u64,
         }
     }
-    
+
     fn estimate_inverse_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let n = input.shape()[0] as u64;
-        
+
         ComputationalCost {
             flops: (2 * n * n * n) / 3,
             memory_accesses: (input.data().len() * 2) as u64,
         }
     }
-    
+
     fn estimate_solve_cost(&self, a: &Tensor<F>, _b: &Tensor<F>) -> ComputationalCost {
         let n = a.shape()[0] as u64;
-        
+
         ComputationalCost {
             flops: (2 * n * n * n) / 3 + 2 * n * n,
             memory_accesses: (a.data().len() + _b.data().len()) as u64,
         }
     }
-    
+
     fn estimate_norm_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         ComputationalCost {
             flops: input.data().len() as u64,
             memory_accesses: input.data().len() as u64,
         }
     }
-    
+
     fn estimate_det_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let n = input.shape()[0] as u64;
-        
+
         ComputationalCost {
             flops: (2 * n * n * n) / 3,
             memory_accesses: input.data().len() as u64,
         }
     }
-    
+
     fn assess_stability(&self, _inputs: &[Tensor<F>]) -> NumericalStability {
         // Simplified stability assessment
         NumericalStability::Stable
     }
-    
+
     fn estimate_memory_usage(&self, inputs: &[Tensor<F>]) -> usize {
-        inputs.iter().map(|t| t.data().len() * std::mem::size_of::<F>()).sum()
+        inputs
+            .iter()
+            .map(|t| t.data().len() * std::mem::size_of::<F>())
+            .sum()
     }
 }
 
@@ -721,7 +769,7 @@ impl LinalgParameter {
             _ => None,
         }
     }
-    
+
     /// Get as string
     pub fn as_string(&self) -> Option<String> {
         match self {
@@ -815,11 +863,11 @@ impl<'a, F: Float> SciRS2Integration for LinalgResult<'a, F> {
     fn module_name() -> &'static str {
         "scirs2-linalg"
     }
-    
+
     fn module_version() -> &'static str {
         "0.1.0-alpha.5"
     }
-    
+
     fn check_compatibility() -> Result<(), IntegrationError> {
         // Basic compatibility check
         Ok(())
@@ -827,7 +875,6 @@ impl<'a, F: Float> SciRS2Integration for LinalgResult<'a, F> {
 }
 
 /// Utility functions for linear algebra integration
-
 /// Create a matrix multiplication context
 pub fn create_matmul_context<'a, F: Float>(
     a: Tensor<'a, F>,
@@ -840,13 +887,13 @@ pub fn create_matmul_context<'a, F: Float>(
 }
 
 /// Create an SVD context
-pub fn create_svd_context<F: Float>(
-    input: Tensor<F>,
-    full_matrices: bool,
-) -> LinalgContext<F> {
+pub fn create_svd_context<F: Float>(input: Tensor<F>, full_matrices: bool) -> LinalgContext<F> {
     LinalgContext::new(LinalgOperation::SVD)
         .add_input(input)
-        .add_parameter("full_matrices".to_string(), LinalgParameter::Bool(full_matrices))
+        .add_parameter(
+            "full_matrices".to_string(),
+            LinalgParameter::Bool(full_matrices),
+        )
         .gradient_mode(GradientMode::Reverse)
 }
 
@@ -873,21 +920,30 @@ pub fn linalg_result_to_scirs2_data<'a, F: Float>(
     result: &LinalgResult<'a, F>,
 ) -> SciRS2Data<'a, F> {
     let mut data = SciRS2Data::new();
-    
+
     // Add primary output
     data = data.add_tensor("primary_output".to_string(), result.primary_output.clone());
-    
+
     // Add auxiliary outputs
     for (name, tensor) in &result.auxiliary_outputs {
         data = data.add_tensor(name.clone(), tensor.clone());
     }
-    
+
     // Add metadata
     data = data.add_metadata("module_name".to_string(), "scirs2-linalg".to_string());
-    data = data.add_metadata("operation".to_string(), format!("{:?}", result.operation_info.operation));
-    data = data.add_metadata("flops".to_string(), result.operation_info.computational_cost.flops.to_string());
-    data = data.add_metadata("stability".to_string(), format!("{:?}", result.operation_info.numerical_stability));
-    
+    data = data.add_metadata(
+        "operation".to_string(),
+        format!("{:?}", result.operation_info.operation),
+    );
+    data = data.add_metadata(
+        "flops".to_string(),
+        result.operation_info.computational_cost.flops.to_string(),
+    );
+    data = data.add_metadata(
+        "stability".to_string(),
+        format!("{:?}", result.operation_info.numerical_stability),
+    );
+
     data
 }
 
@@ -904,72 +960,84 @@ mod tests {
 
     #[test]
     fn test_matmul_context() {
-        let a = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2]);
-        let b = Tensor::from_vec(vec![5.0f32, 6.0, 7.0, 8.0], vec![2, 2]);
-        
-        let context = create_matmul_context(a, b);
-        assert_eq!(context.inputs.len(), 2);
-        assert_eq!(context.operation, LinalgOperation::MatMul);
+        crate::run(|g| {
+            let a = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
+            let b = Tensor::from_vec(vec![5.0f32, 6.0, 7.0, 8.0], vec![2, 2], g);
+
+            let context = create_matmul_context(a, b);
+            assert_eq!(context.inputs.len(), 2);
+            assert_eq!(context.operation, LinalgOperation::MatMul);
+        });
     }
 
     #[test]
     fn test_svd_context() {
-        let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
-        
-        let context = create_svd_context(input, true);
-        assert_eq!(context.inputs.len(), 1);
-        assert_eq!(context.operation, LinalgOperation::SVD);
-        assert!(context.parameters.contains_key("full_matrices"));
+        crate::run(|g| {
+            let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3], g);
+
+            let context = create_svd_context(input, true);
+            assert_eq!(context.inputs.len(), 1);
+            assert_eq!(context.operation, LinalgOperation::SVD);
+            assert!(context.parameters.contains_key("full_matrices"));
+        });
     }
 
     #[test]
     fn test_trace_computation() {
-        let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2]);
-        let context = LinalgContext::new(LinalgOperation::Trace).add_input(input);
-        
-        let result = context.execute().unwrap();
-        assert_eq!(result.primary_output.data()[0], 5.0f32); // trace = 1 + 4 = 5
+        crate::run(|g| {
+            let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
+            let context = LinalgContext::new(LinalgOperation::Trace).add_input(input);
+
+            let result = context.execute().unwrap();
+            assert_eq!(result.primary_output.data()[0], 5.0f32); // trace = 1 + 4 = 5
+        });
     }
 
     #[test]
     fn test_norm_computation() {
-        let input = Tensor::from_vec(vec![3.0f32, 4.0], vec![2]);
-        let context = LinalgContext::new(LinalgOperation::Norm)
-            .add_input(input)
-            .add_parameter("ord".to_string(), LinalgParameter::String("2".to_string()));
-        
-        let result = context.execute().unwrap();
-        assert_eq!(result.primary_output.data()[0], 5.0f32); // ||[3,4]||_2 = 5
+        crate::run(|g| {
+            let input = Tensor::from_vec(vec![3.0f32, 4.0], vec![2], g);
+            let context = LinalgContext::new(LinalgOperation::Norm)
+                .add_input(input)
+                .add_parameter("ord".to_string(), LinalgParameter::String("2".to_string()));
+
+            let result = context.execute().unwrap();
+            assert_eq!(result.primary_output.data()[0], 5.0f32); // ||[3,4]||_2 = 5
+        });
     }
 
     #[test]
     fn test_computational_cost() {
-        let a = Tensor::from_vec(vec![1.0f32; 100], vec![10, 10]);
-        let b = Tensor::from_vec(vec![1.0f32; 100], vec![10, 10]);
-        let context = LinalgContext::new(LinalgOperation::MatMul);
-        
-        let cost = context.estimate_matmul_cost(&a, &b);
-        assert_eq!(cost.flops, 2000); // 2 * 10 * 10 * 10
+        crate::run(|g| {
+            let a = Tensor::from_vec(vec![1.0f32; 100], vec![10, 10], g);
+            let b = Tensor::from_vec(vec![1.0f32; 100], vec![10, 10], g);
+            let context = LinalgContext::new(LinalgOperation::MatMul);
+
+            let cost = context.estimate_matmul_cost(&a, &b);
+            assert_eq!(cost.flops, 2000); // 2 * 10 * 10 * 10
+        });
     }
 
     #[test]
     fn test_linalg_parameter() {
         let float_param = LinalgParameter::Float(3.14);
         assert_eq!(float_param.as_float().unwrap(), 3.14);
-        
+
         let string_param = LinalgParameter::String("test".to_string());
         assert_eq!(string_param.as_string().unwrap(), "test");
     }
 
     #[test]
     fn test_scirs2_integration() {
-        let tensor = Tensor::from_vec(vec![1.0f32, 2.0], vec![2]);
-        let result = LinalgResult::from_autograd_tensor(&tensor).unwrap();
-        
-        assert_eq!(result.primary_output.data(), tensor.data());
-        
-        let reconstructed_tensor = result.to_autograd_tensor().unwrap();
-        assert_eq!(reconstructed_tensor.data(), tensor.data());
+        crate::run(|g| {
+            let tensor = Tensor::from_vec(vec![1.0f32, 2.0], vec![2], g);
+            let result = LinalgResult::from_autograd_tensor(&tensor).unwrap();
+
+            assert_eq!(result.primary_output.data(), tensor.data());
+
+            let reconstructed_tensor = result.to_autograd_tensor().unwrap();
+            assert_eq!(reconstructed_tensor.data(), tensor.data());
+        });
     }
 
     #[test]
@@ -979,7 +1047,7 @@ mod tests {
             iterative_refinement: true,
             ..Default::default()
         };
-        
+
         assert!(config.use_double_precision);
         assert!(config.iterative_refinement);
         assert_eq!(config.pivot_threshold, 1e-3);

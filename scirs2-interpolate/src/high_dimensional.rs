@@ -1175,7 +1175,7 @@ mod tests {
         let result = interpolator.interpolate(&query.view()).unwrap();
 
         // Should be close to the average of nearby points
-        assert!(result >= 0.5 && result <= 1.5);
+        assert!((0.5..=1.5).contains(&result));
     }
 
     #[test]
@@ -1197,7 +1197,7 @@ mod tests {
         let query = array![1.5, 1.5, 1.5];
         let result = interpolator.interpolate(&query.view()).unwrap();
 
-        assert!(result >= 0.5 && result <= 3.5);
+        assert!((0.5..=3.5).contains(&result));
     }
 
     #[test]
@@ -1211,7 +1211,7 @@ mod tests {
         let query = array![0.5, 0.5];
         let result = interpolator.interpolate(&query.view()).unwrap();
 
-        assert!(result >= 0.0 && result <= 2.0);
+        assert!((0.0..=2.0).contains(&result));
     }
 
     #[test]

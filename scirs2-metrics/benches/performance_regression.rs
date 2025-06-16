@@ -246,8 +246,8 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
             |b, &_size| {
                 b.iter(|| {
                     // This tests memory allocation patterns
-                    let result = mean_squared_error(&y_true, &y_pred).unwrap();
-                    result
+
+                    mean_squared_error(&y_true, &y_pred).unwrap()
                 })
             },
         );

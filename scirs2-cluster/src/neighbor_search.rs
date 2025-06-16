@@ -4,7 +4,7 @@
 //! which are crucial for density-based clustering and other algorithms that
 //! require neighborhood computations.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::BinaryHeap;
 use std::fmt::Debug;
@@ -275,6 +275,7 @@ impl<F: Float + FromPrimitive + Debug> KDTree<F> {
         })
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn search_knn(
         &self,
         node: &KDNode,
@@ -327,6 +328,7 @@ impl<F: Float + FromPrimitive + Debug> KDTree<F> {
         }
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn search_radius(
         &self,
         node: &KDNode,

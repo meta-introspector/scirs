@@ -31,7 +31,7 @@ impl<F: Float> StabilityMetrics<F> {
         perturbation_magnitude: f64,
     ) -> Result<ForwardStabilityMetrics, StabilityError>
     where
-        Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let mut metrics = ForwardStabilityMetrics::default();
 
@@ -88,7 +88,7 @@ impl<F: Float> StabilityMetrics<F> {
         target_output: &Tensor<F>,
     ) -> Result<BackwardStabilityMetrics, StabilityError>
     where
-        Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let mut metrics = BackwardStabilityMetrics::default();
 
@@ -119,13 +119,13 @@ impl<F: Float> StabilityMetrics<F> {
     }
 
     /// Compute mixed forward-backward stability metrics
-    pub fn compute_mixed_stability<Func>(
+    pub fn compute_mixed_stability<'a, Func>(
         &self,
         function: Func,
-        input: &Tensor<F>,
+        input: &'a Tensor<'a, F>,
     ) -> Result<MixedStabilityMetrics, StabilityError>
     where
-        Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError> + Clone,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Clone,
     {
         let forward_metrics = self.compute_forward_stability(function.clone(), input, 1e-8)?;
         let output = function(input)?;
@@ -159,7 +159,7 @@ impl<F: Float> StabilityMetrics<F> {
         input: &Tensor<F>,
     ) -> Result<SpectralStabilityMetrics, StabilityError>
     where
-        Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let mut metrics = SpectralStabilityMetrics::default();
 
@@ -195,7 +195,7 @@ impl<F: Float> StabilityMetrics<F> {
         neighborhood_size: f64,
     ) -> Result<LipschitzMetrics, StabilityError>
     where
-        Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let mut metrics = LipschitzMetrics::default();
 
@@ -241,7 +241,8 @@ impl<F: Float> StabilityMetrics<F> {
         parameters: &HashMap<String, Tensor<F>>,
     ) -> Result<ParameterSensitivityMetrics, StabilityError>
     where
-        Func: Fn(&HashMap<String, Tensor<F>>) -> Result<Tensor<F>, StabilityError>,
+        Func:
+            for<'a> Fn(&'a HashMap<String, Tensor<'a, F>>) -> Result<Tensor<'a, F>, StabilityError>,
     {
         let mut metrics = ParameterSensitivityMetrics::default();
         let original_output = function(parameters)?;
@@ -290,13 +291,13 @@ impl<F: Float> StabilityMetrics<F> {
     }
 
     /// Compute gradient stability metrics
-    pub fn compute_gradient_stability<GradFunc>(
+    pub fn compute_gradient_stability<'a, GradFunc>(
         &self,
         gradient_function: GradFunc,
-        input: &Tensor<F>,
+        input: &'a Tensor<'a, F>,
     ) -> Result<GradientStabilityMetrics, StabilityError>
     where
-        GradFunc: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+        GradFunc: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let mut metrics = GradientStabilityMetrics::default();
 
@@ -422,14 +423,14 @@ impl<F: Float> StabilityMetrics<F> {
         input: &Tensor<F>,
     ) -> Result<Array<F, IxDyn>, StabilityError>
     where
-        Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         // Simplified Jacobian computation using finite differences
         let input_size = input.data().len();
         let output = function(input)?;
         let output_size = output.data().len();
 
-        let mut jacobian = Array::zeros(vec![output_size, input_size].into_dyn());
+        let mut jacobian = Array::zeros(IxDyn(&[output_size, input_size]));
         // Simplified - would compute actual Jacobian
 
         Ok(jacobian)
@@ -481,7 +482,7 @@ impl<F: Float> StabilityMetrics<F> {
             return Ok(f64::INFINITY);
         }
 
-        let max_mag = magnitudes.iter().fold(0.0, |a, &b| a.max(b));
+        let max_mag = magnitudes.iter().fold(0.0f64, |a, &b| a.max(b));
         let min_mag = magnitudes.iter().fold(f64::INFINITY, |a, &b| a.min(b));
 
         if min_mag < 1e-15 {
@@ -497,7 +498,7 @@ impl<F: Float> StabilityMetrics<F> {
         _input: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where
-        Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         // Simplified condition number estimation
         Ok(1e6)
@@ -511,7 +512,8 @@ impl<F: Float> StabilityMetrics<F> {
         original_output: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where
-        Func: Fn(&HashMap<String, Tensor<F>>) -> Result<Tensor<F>, StabilityError>,
+        Func:
+            for<'a> Fn(&'a HashMap<String, Tensor<'a, F>>) -> Result<Tensor<'a, F>, StabilityError>,
     {
         let perturbation_magnitude = 1e-8;
 
@@ -747,40 +749,39 @@ impl Default for SpectralStabilityAssessment {
 }
 
 /// Public API functions
-
 /// Compute forward stability for a function
-pub fn compute_forward_stability<F: Float, Func>(
+pub fn compute_forward_stability<'a, F: Float, Func>(
     function: Func,
-    input: &Tensor<F>,
+    input: &'a Tensor<'a, F>,
     perturbation_magnitude: f64,
 ) -> Result<ForwardStabilityMetrics, StabilityError>
 where
-    Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
 {
     let metrics = StabilityMetrics::new();
     metrics.compute_forward_stability(function, input, perturbation_magnitude)
 }
 
 /// Compute backward stability for a function
-pub fn compute_backward_stability<F: Float, Func>(
+pub fn compute_backward_stability<'a, F: Float, Func>(
     function: Func,
-    input: &Tensor<F>,
-    target_output: &Tensor<F>,
+    input: &'a Tensor<'a, F>,
+    target_output: &'a Tensor<'a, F>,
 ) -> Result<BackwardStabilityMetrics, StabilityError>
 where
-    Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
 {
     let metrics = StabilityMetrics::new();
     metrics.compute_backward_stability(function, input, target_output)
 }
 
 /// Quick stability assessment
-pub fn quick_stability_check<F: Float, Func>(
+pub fn quick_stability_check<'a, F: Float, Func>(
     function: Func,
-    input: &Tensor<F>,
+    input: &'a Tensor<'a, F>,
 ) -> Result<StabilityGrade, StabilityError>
 where
-    Func: Fn(&Tensor<F>) -> Result<Tensor<F>, StabilityError>,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
 {
     let metrics = StabilityMetrics::new();
     let forward_metrics = metrics.compute_forward_stability(function, input, 1e-8)?;

@@ -92,7 +92,7 @@ fn test_metric_scheduler() {
 
     // Test history
     assert!(scheduler.history().len() > 1);
-    assert!(scheduler.metric_history().len() > 0);
+    assert!(!scheduler.metric_history().is_empty());
 
     // Test reset
     scheduler.reset();
@@ -149,7 +149,7 @@ fn test_hyperparameter_tuner() {
     assert!(random_params.contains_key("weight_decay"));
 
     let lr = random_params["learning_rate"];
-    assert!(lr >= 0.001 && lr <= 0.1);
+    assert!((0.001..=0.1).contains(&lr));
 
     // Test random search
     let eval_fn = |params: &HashMap<String, f64>| -> Result<f64> {

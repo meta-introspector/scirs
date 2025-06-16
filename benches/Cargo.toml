@@ -30,7 +30,7 @@ harness = false
 [dependencies]
 # SciRS2 modules
 scirs2-core = { path = "../scirs2-core", features = ["parallel", "simd", "profiling"] }
-scirs2-linalg = { path = "../scirs2-linalg", features = ["openblas-backend", "simd", "parallel"] }
+scirs2-linalg = { path = "../scirs2-linalg", features = ["simd", "parallel"] }
 scirs2-stats = { path = "../scirs2-stats" }
 scirs2-fft = { path = "../scirs2-fft" }
 scirs2-optimize = { path = "../scirs2-optimize" }

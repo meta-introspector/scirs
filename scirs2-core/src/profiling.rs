@@ -1843,11 +1843,15 @@ mod tests {
 /// Comprehensive profiling integration that combines application profiling with system monitoring
 pub mod comprehensive {
     use super::*;
-    use crate::profiling::flame_graph_svg::{SvgFlameGraphGenerator, SvgFlameGraphConfig, EnhancedFlameGraph};
-    use crate::profiling::system_monitor::{SystemMonitor, SystemMonitorConfig, SystemAlerter, AlertConfig, SystemAlert};
+    use crate::profiling::flame_graph_svg::{
+        EnhancedFlameGraph, SvgFlameGraphConfig, SvgFlameGraphGenerator,
+    };
+    use crate::profiling::system_monitor::{
+        AlertConfig, SystemAlert, SystemAlerter, SystemMonitor, SystemMonitorConfig,
+    };
     use std::sync::{Arc, Mutex};
     use std::time::{Duration, Instant};
-    
+
     /// Comprehensive profiling session that combines multiple profiling techniques
     pub struct ComprehensiveProfiler {
         /// Application profiler
@@ -1863,7 +1867,7 @@ pub mod comprehensive {
         /// Session configuration
         config: ComprehensiveConfig,
     }
-    
+
     /// Configuration for comprehensive profiling
     #[derive(Debug, Clone)]
     pub struct ComprehensiveConfig {
@@ -1882,7 +1886,7 @@ pub mod comprehensive {
         /// Session name for reports
         pub session_name: String,
     }
-    
+
     impl Default for ComprehensiveConfig {
         fn default() -> Self {
             Self {
@@ -1896,7 +1900,7 @@ pub mod comprehensive {
             }
         }
     }
-    
+
     impl ComprehensiveProfiler {
         /// Create a new comprehensive profiler
         pub fn new(config: ComprehensiveConfig) -> Self {
@@ -1909,25 +1913,27 @@ pub mod comprehensive {
                 config,
             }
         }
-        
+
         /// Start comprehensive profiling
-        pub fn start(&mut self) -> Result<(), crate::profiling::system_monitor::SystemMonitorError> {
+        pub fn start(
+            &mut self,
+        ) -> Result<(), crate::profiling::system_monitor::SystemMonitorError> {
             // Start application profiler
             self.app_profiler.lock().unwrap().start();
-            
+
             // Start system monitor
             self.system_monitor.start()?;
-            
+
             self.session_start = Instant::now();
             Ok(())
         }
-        
+
         /// Stop comprehensive profiling
         pub fn stop(&mut self) {
             self.app_profiler.lock().unwrap().stop();
             self.system_monitor.stop();
         }
-        
+
         /// Time a function with comprehensive profiling
         pub fn time_function<F, R>(&mut self, name: &str, f: F) -> R
         where
@@ -1935,13 +1941,13 @@ pub mod comprehensive {
         {
             // Start flame graph tracking
             self.flame_graph_generator.start_call(name);
-            
+
             // Execute with application profiling
             let result = Timer::time_function(name, f);
-            
+
             // End flame graph tracking
             self.flame_graph_generator.end_call();
-            
+
             // Check for alerts if enabled
             if self.config.enable_alerts {
                 if let Ok(current_metrics) = self.system_monitor.get_current_metrics() {
@@ -1951,28 +1957,29 @@ pub mod comprehensive {
                     }
                 }
             }
-            
+
             result
         }
-        
+
         /// Generate comprehensive profiling report
         pub fn generate_report(&mut self) -> ComprehensiveReport {
             let app_report = self.app_profiler.lock().unwrap().get_report();
             let system_metrics = self.system_monitor.get_metrics_history();
             let alerts = self.system_alerter.get_alert_history();
-            
+
             let mut bottleneck_reports = Vec::new();
             if self.config.enable_bottleneck_detection {
-                let detector = advanced::BottleneckDetector::new(advanced::BottleneckConfig::default());
+                let detector =
+                    advanced::BottleneckDetector::new(advanced::BottleneckConfig::default());
                 bottleneck_reports = detector.analyze(&self.app_profiler.lock().unwrap());
             }
-            
+
             let flame_graph = if self.config.enable_flame_graphs {
                 Some(self.flame_graph_generator.generate())
             } else {
                 None
             };
-            
+
             ComprehensiveReport {
                 session_name: self.config.session_name.clone(),
                 session_duration: self.session_start.elapsed(),
@@ -1984,74 +1991,86 @@ pub mod comprehensive {
                 generated_at: Instant::now(),
             }
         }
-        
+
         /// Export comprehensive report to multiple formats
         pub fn export_report(&mut self, base_path: &str) -> Result<(), std::io::Error> {
             let report = self.generate_report();
-            
+
             // Export text report
-            std::fs::write(
-                format!("{}_report.txt", base_path),
-                report.to_text_format(),
-            )?;
-            
+            std::fs::write(format!("{}_report.txt", base_path), report.to_text_format())?;
+
             // Export JSON report
             std::fs::write(
                 format!("{}_report.json", base_path),
                 report.to_json_format(),
             )?;
-            
+
             // Export flame graph if available
             if let Some(ref flame_graph) = report.flame_graph {
                 let svg_generator = SvgFlameGraphGenerator::new(self.config.svg_config.clone());
-                svg_generator.export_to_file(flame_graph, &format!("{}_flamegraph.svg", base_path))?;
-                
+                svg_generator
+                    .export_to_file(flame_graph, &format!("{}_flamegraph.svg", base_path))?;
+
                 // Export enhanced flame graph with system metrics
                 let enhanced = EnhancedFlameGraph {
                     performance: flame_graph.clone(),
                     memory: None,
-                    cpu_usage: report.system_metrics.iter()
+                    cpu_usage: report
+                        .system_metrics
+                        .iter()
                         .map(|m| (m.timestamp.duration_since(self.session_start), m.cpu_usage))
                         .collect(),
-                    memory_usage: report.system_metrics.iter()
-                        .map(|m| (m.timestamp.duration_since(self.session_start), m.memory_usage))
+                    memory_usage: report
+                        .system_metrics
+                        .iter()
+                        .map(|m| {
+                            (
+                                m.timestamp.duration_since(self.session_start),
+                                m.memory_usage,
+                            )
+                        })
                         .collect(),
                     total_duration: self.session_start.elapsed(),
                 };
                 enhanced.export_enhanced_svg(&format!("{}_enhanced_flamegraph.svg", base_path))?;
             }
-            
+
             Ok(())
         }
-        
+
         /// Handle system alerts
         fn handle_alert(&self, alert: &SystemAlert) {
             // In a real implementation, this could send notifications, log to files, etc.
             println!("ALERT: {}", alert.message);
         }
-        
+
         /// Get application profiler reference
         pub fn app_profiler(&self) -> Arc<Mutex<Profiler>> {
             Arc::clone(&self.app_profiler)
         }
-        
+
         /// Get current system metrics
-        pub fn get_current_system_metrics(&self) -> Result<crate::profiling::system_monitor::SystemMetrics, crate::profiling::system_monitor::SystemMonitorError> {
+        pub fn get_current_system_metrics(
+            &self,
+        ) -> Result<
+            crate::profiling::system_monitor::SystemMetrics,
+            crate::profiling::system_monitor::SystemMonitorError,
+        > {
             self.system_monitor.get_current_metrics()
         }
-        
+
         /// Get recent alerts
         pub fn get_recent_alerts(&self, duration: Duration) -> Vec<SystemAlert> {
             self.system_alerter.get_recent_alerts(duration)
         }
     }
-    
+
     impl Drop for ComprehensiveProfiler {
         fn drop(&mut self) {
             self.stop();
         }
     }
-    
+
     /// Comprehensive profiling report
     #[derive(Debug)]
     pub struct ComprehensiveReport {
@@ -2072,37 +2091,67 @@ pub mod comprehensive {
         /// Report generation timestamp
         pub generated_at: Instant,
     }
-    
+
     impl ComprehensiveReport {
         /// Convert report to text format
         pub fn to_text_format(&self) -> String {
             use std::fmt::Write;
             let mut report = String::new();
-            
+
             writeln!(report, "=== {} ===", self.session_name).unwrap();
-            writeln!(report, "Session Duration: {:.2} seconds", self.session_duration.as_secs_f64()).unwrap();
+            writeln!(
+                report,
+                "Session Duration: {:.2} seconds",
+                self.session_duration.as_secs_f64()
+            )
+            .unwrap();
             writeln!(report, "Generated At: {:?}", self.generated_at).unwrap();
             writeln!(report).unwrap();
-            
+
             // Application profiling
             writeln!(report, "=== Application Performance ===").unwrap();
             writeln!(report, "{}", self.application_report).unwrap();
-            
+
             // System metrics summary
             if !self.system_metrics.is_empty() {
                 writeln!(report, "=== System Resource Summary ===").unwrap();
-                let avg_cpu = self.system_metrics.iter().map(|m| m.cpu_usage).sum::<f64>() / self.system_metrics.len() as f64;
-                let avg_memory = self.system_metrics.iter().map(|m| m.memory_usage).sum::<usize>() / self.system_metrics.len();
-                let max_cpu = self.system_metrics.iter().map(|m| m.cpu_usage).fold(0.0, f64::max);
-                let max_memory = self.system_metrics.iter().map(|m| m.memory_usage).max().unwrap_or(0);
-                
+                let avg_cpu = self.system_metrics.iter().map(|m| m.cpu_usage).sum::<f64>()
+                    / self.system_metrics.len() as f64;
+                let avg_memory = self
+                    .system_metrics
+                    .iter()
+                    .map(|m| m.memory_usage)
+                    .sum::<usize>()
+                    / self.system_metrics.len();
+                let max_cpu = self
+                    .system_metrics
+                    .iter()
+                    .map(|m| m.cpu_usage)
+                    .fold(0.0, f64::max);
+                let max_memory = self
+                    .system_metrics
+                    .iter()
+                    .map(|m| m.memory_usage)
+                    .max()
+                    .unwrap_or(0);
+
                 writeln!(report, "Average CPU Usage: {:.1}%", avg_cpu).unwrap();
                 writeln!(report, "Maximum CPU Usage: {:.1}%", max_cpu).unwrap();
-                writeln!(report, "Average Memory Usage: {:.1} MB", avg_memory as f64 / (1024.0 * 1024.0)).unwrap();
-                writeln!(report, "Maximum Memory Usage: {:.1} MB", max_memory as f64 / (1024.0 * 1024.0)).unwrap();
+                writeln!(
+                    report,
+                    "Average Memory Usage: {:.1} MB",
+                    avg_memory as f64 / (1024.0 * 1024.0)
+                )
+                .unwrap();
+                writeln!(
+                    report,
+                    "Maximum Memory Usage: {:.1} MB",
+                    max_memory as f64 / (1024.0 * 1024.0)
+                )
+                .unwrap();
                 writeln!(report).unwrap();
             }
-            
+
             // Alerts
             if !self.alerts.is_empty() {
                 writeln!(report, "=== System Alerts ({}) ===", self.alerts.len()).unwrap();
@@ -2111,10 +2160,15 @@ pub mod comprehensive {
                 }
                 writeln!(report).unwrap();
             }
-            
+
             // Bottlenecks
             if !self.bottleneck_reports.is_empty() {
-                writeln!(report, "=== Performance Bottlenecks ({}) ===", self.bottleneck_reports.len()).unwrap();
+                writeln!(
+                    report,
+                    "=== Performance Bottlenecks ({}) ===",
+                    self.bottleneck_reports.len()
+                )
+                .unwrap();
                 for bottleneck in &self.bottleneck_reports {
                     writeln!(report, "Operation: {}", bottleneck.operation).unwrap();
                     writeln!(report, "Type: {:?}", bottleneck.bottleneck_type).unwrap();
@@ -2129,40 +2183,60 @@ pub mod comprehensive {
                     writeln!(report).unwrap();
                 }
             }
-            
+
             report
         }
-        
+
         /// Convert report to JSON format
         pub fn to_json_format(&self) -> String {
             // Simplified JSON generation - in a real implementation would use serde
             use std::fmt::Write;
             let mut json = String::new();
-            
+
             writeln!(json, "{{").unwrap();
             writeln!(json, "  \"session_name\": \"{}\",", self.session_name).unwrap();
-            writeln!(json, "  \"session_duration_seconds\": {},", self.session_duration.as_secs_f64()).unwrap();
+            writeln!(
+                json,
+                "  \"session_duration_seconds\": {},",
+                self.session_duration.as_secs_f64()
+            )
+            .unwrap();
             writeln!(json, "  \"alert_count\": {},", self.alerts.len()).unwrap();
-            writeln!(json, "  \"bottleneck_count\": {},", self.bottleneck_reports.len()).unwrap();
-            writeln!(json, "  \"system_sample_count\": {}", self.system_metrics.len()).unwrap();
-            
+            writeln!(
+                json,
+                "  \"bottleneck_count\": {},",
+                self.bottleneck_reports.len()
+            )
+            .unwrap();
+            writeln!(
+                json,
+                "  \"system_sample_count\": {}",
+                self.system_metrics.len()
+            )
+            .unwrap();
+
             if !self.system_metrics.is_empty() {
-                let avg_cpu = self.system_metrics.iter().map(|m| m.cpu_usage).sum::<f64>() / self.system_metrics.len() as f64;
-                let max_cpu = self.system_metrics.iter().map(|m| m.cpu_usage).fold(0.0, f64::max);
+                let avg_cpu = self.system_metrics.iter().map(|m| m.cpu_usage).sum::<f64>()
+                    / self.system_metrics.len() as f64;
+                let max_cpu = self
+                    .system_metrics
+                    .iter()
+                    .map(|m| m.cpu_usage)
+                    .fold(0.0, f64::max);
                 writeln!(json, "  \"average_cpu_usage\": {},", avg_cpu).unwrap();
                 writeln!(json, "  \"maximum_cpu_usage\": {}", max_cpu).unwrap();
             }
-            
+
             writeln!(json, "}}").unwrap();
             json
         }
-        
+
         /// Print comprehensive report to console
         pub fn print(&self) {
             println!("{}", self.to_text_format());
         }
     }
-    
+
     /// Convenience macro for comprehensive profiling
     #[macro_export]
     macro_rules! comprehensive_profile {
@@ -2170,38 +2244,38 @@ pub mod comprehensive {
             $profiler.time_function($name, || $body)
         }};
     }
-    
+
     #[cfg(test)]
     mod tests {
         use super::*;
         use std::thread;
-        
+
         #[test]
         fn test_comprehensive_profiler() {
             let config = ComprehensiveConfig {
                 session_name: "Test Session".to_string(),
                 ..Default::default()
             };
-            
+
             let mut profiler = ComprehensiveProfiler::new(config);
             profiler.start().unwrap();
-            
+
             // Profile some work
             let result = profiler.time_function("test_work", || {
                 thread::sleep(Duration::from_millis(10));
                 42
             });
-            
+
             assert_eq!(result, 42);
-            
+
             // Generate report
             let report = profiler.generate_report();
             assert_eq!(report.session_name, "Test Session");
             assert!(report.session_duration > Duration::from_millis(5));
-            
+
             profiler.stop();
         }
-        
+
         #[test]
         fn test_comprehensive_report() {
             let report = ComprehensiveReport {
@@ -2214,10 +2288,10 @@ pub mod comprehensive {
                 flame_graph: None,
                 generated_at: Instant::now(),
             };
-            
+
             let text = report.to_text_format();
             assert!(text.contains("Test"));
-            
+
             let json = report.to_json_format();
             assert!(json.contains("session_name"));
         }

@@ -250,7 +250,9 @@ impl<'graph, F: Float> GradientMap<'graph, F> {
                     // No gradients yet, create a zero gradient
                     let g = x.as_ref().graph();
                     let shape = x.as_ref().shape();
-                    let zero_grad = T::zeros(&shape, g);
+                    let data_len = shape.iter().product();
+                    let zero_data = vec![F::zero(); data_len];
+                    let zero_grad = Tensor::from_vec(zero_data, shape, g);
                     info.gradients.push(zero_grad);
                 }
                 return Some(info.gradient());

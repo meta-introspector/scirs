@@ -4,11 +4,10 @@
 //! scientific computing workloads with features like work stealing,
 //! NUMA awareness, and adaptive scheduling.
 
-use super::{LoadBalancingStrategy, ThreadPoolConfig, ThreadPoolError, WorkerStats};
-use crate::Float;
+use super::{ThreadPoolConfig, ThreadPoolError, WorkerStats};
 use std::collections::VecDeque;
 use std::sync::{
-    atomic::{AtomicBool, AtomicUsize, Ordering},
+    atomic::{AtomicBool, Ordering},
     Arc, Condvar, Mutex,
 };
 use std::thread::{self, JoinHandle};
@@ -100,19 +99,17 @@ impl AdvancedThreadPool {
 
     /// Find the least loaded worker
     fn find_least_loaded_worker(&self) -> Option<usize> {
-        match self.config.load_balancing {
-            LoadBalancingStrategy::LeastLoaded => self
-                .workers
+        // Use round-robin strategy by default since ThreadPoolConfig doesn't have load_balancing
+        if self.config.work_stealing {
+            self.workers
                 .iter()
                 .enumerate()
                 .min_by_key(|(_, worker)| worker.get_queue_size())
-                .map(|(id, _)| id),
-            LoadBalancingStrategy::RoundRobin => {
-                // Simple round-robin based on current time
-                let now = Instant::now();
-                Some(now.elapsed().as_nanos() as usize % self.workers.len())
-            }
-            _ => None,
+                .map(|(id, _)| id)
+        } else {
+            // Simple round-robin based on current time
+            let now = Instant::now();
+            Some(now.elapsed().as_nanos() as usize % self.workers.len())
         }
     }
 

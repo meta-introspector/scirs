@@ -333,8 +333,8 @@ fn advanced_configuration_example() -> Result<()> {
     println!("  Theme primary color: {}", config.theme.primary_color);
 
     // Add metrics with complex metadata
-    let experiments = vec!["baseline", "experiment_a", "experiment_b", "experiment_c"];
-    let models = vec!["linear", "tree", "neural", "ensemble"];
+    let experiments = ["baseline", "experiment_a", "experiment_b", "experiment_c"];
+    let models = ["linear", "tree", "neural", "ensemble"];
 
     for (exp_idx, experiment) in experiments.iter().enumerate() {
         for (model_idx, model) in models.iter().enumerate() {
@@ -347,7 +347,7 @@ fn advanced_configuration_example() -> Result<()> {
             let base_perf = 0.7 + (exp_idx as f64 * 0.05) + (model_idx as f64 * 0.03);
             let noise = ((exp_idx + model_idx) as f64 * 0.3).sin() * 0.02;
 
-            let accuracy = (base_perf + noise).min(1.0).max(0.0);
+            let accuracy = (base_perf + noise).clamp(0.0, 1.0);
             let f1_score = accuracy - 0.02 + noise * 0.5;
 
             dashboard.add_metric_with_metadata(
@@ -378,7 +378,7 @@ fn advanced_configuration_example() -> Result<()> {
     // Show a sample of the HTML
     println!("  HTML preview (first few lines):");
     for line in lines.iter().take(10) {
-        if line.trim().len() > 0 {
+        if !line.trim().is_empty() {
             println!("    {}", line.trim());
         }
     }

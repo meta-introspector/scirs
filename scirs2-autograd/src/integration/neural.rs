@@ -3,9 +3,9 @@
 //! This module provides seamless integration between scirs2-autograd and scirs2-neural,
 //! including layer definitions, network building utilities, and gradient flow management.
 
-use super::{IntegrationError, SciRS2Integration, core::SciRS2Data};
-use crate::tensor::Tensor;
+use super::{core::SciRS2Data, IntegrationError, SciRS2Integration};
 use crate::graph::Graph;
+use crate::tensor::Tensor;
 use crate::Float;
 use std::collections::HashMap;
 
@@ -32,23 +32,23 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
             state: None,
         }
     }
-    
+
     /// Add a parameter to the layer
     pub fn add_parameter(mut self, name: String, tensor: Tensor<F>) -> Self {
         self.parameters.insert(name, tensor);
         self
     }
-    
+
     /// Get parameter by name
     pub fn get_parameter(&self, name: &str) -> Option<&Tensor<F>> {
         self.parameters.get(name)
     }
-    
+
     /// Get mutable parameter by name
     pub fn get_parameter_mut(&mut self, name: &str) -> Option<&mut Tensor<F>> {
         self.parameters.get_mut(name)
     }
-    
+
     /// Forward pass through the layer
     pub fn forward(&mut self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         match self.layer_type {
@@ -63,7 +63,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
             LayerType::Custom(ref name) => self.forward_custom(input, name),
         }
     }
-    
+
     /// Initialize layer parameters
     pub fn initialize_parameters(&mut self, input_shape: &[usize]) -> Result<(), IntegrationError> {
         match self.layer_type {
@@ -73,50 +73,55 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
             _ => Ok(()), // No initialization needed for activation layers
         }
     }
-    
+
     /// Get parameter count
     pub fn parameter_count(&self) -> usize {
-        self.parameters.values()
+        self.parameters
+            .values()
             .map(|tensor| tensor.data().len())
             .sum()
     }
-    
+
     // Forward pass implementations
     fn forward_linear(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
-        let weight = self.get_parameter("weight")
-            .ok_or_else(|| IntegrationError::ModuleCompatibility(
-                "Linear layer missing weight parameter".to_string()))?;
-        
+        let weight = self.get_parameter("weight").ok_or_else(|| {
+            IntegrationError::ModuleCompatibility(
+                "Linear layer missing weight parameter".to_string(),
+            )
+        })?;
+
         // Simplified linear transformation: input @ weight.T + bias
         let mut output = input.clone(); // Placeholder implementation
-        
+
         if let Some(bias) = self.get_parameter("bias") {
             // Add bias (simplified)
             output = output.clone(); // Placeholder
         }
-        
+
         Ok(output)
     }
-    
+
     fn forward_conv2d(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
-        let _weight = self.get_parameter("weight")
-            .ok_or_else(|| IntegrationError::ModuleCompatibility(
-                "Conv2D layer missing weight parameter".to_string()))?;
-        
+        let _weight = self.get_parameter("weight").ok_or_else(|| {
+            IntegrationError::ModuleCompatibility(
+                "Conv2D layer missing weight parameter".to_string(),
+            )
+        })?;
+
         // Simplified convolution (placeholder)
         Ok(input.clone())
     }
-    
+
     fn forward_batch_norm(&mut self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         // Update running statistics if training
         if self.config.training {
             self.update_batch_norm_stats(input)?;
         }
-        
+
         // Apply normalization (placeholder)
         Ok(input.clone())
     }
-    
+
     fn forward_dropout(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         if self.config.training {
             // Apply dropout (placeholder)
@@ -125,68 +130,80 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
             Ok(input.clone())
         }
     }
-    
+
     fn forward_relu(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         // Apply ReLU activation (placeholder)
         Ok(input.clone())
     }
-    
+
     fn forward_softmax(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         // Apply softmax activation (placeholder)
         Ok(input.clone())
     }
-    
+
     fn forward_lstm(&mut self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         // LSTM forward pass with state management (placeholder)
         Ok(input.clone())
     }
-    
+
     fn forward_attention(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
         // Attention mechanism (placeholder)
         Ok(input.clone())
     }
-    
-    fn forward_custom(&self, input: &Tensor<F>, _name: &str) -> Result<Tensor<F>, IntegrationError> {
+
+    fn forward_custom(
+        &self,
+        input: &Tensor<F>,
+        _name: &str,
+    ) -> Result<Tensor<F>, IntegrationError> {
         // Custom layer implementation (placeholder)
         Ok(input.clone())
     }
-    
+
     // Parameter initialization methods
     fn init_linear_parameters(&mut self, input_shape: &[usize]) -> Result<(), IntegrationError> {
         if input_shape.is_empty() {
             return Err(IntegrationError::TensorConversion(
-                "Invalid input shape for linear layer".to_string()));
+                "Invalid input shape for linear layer".to_string(),
+            ));
         }
-        
+
         let input_size = input_shape[input_shape.len() - 1];
         let output_size = self.config.units.unwrap_or(128);
-        
+
         // Skip tensor initialization due to autograd's lazy evaluation
         // Parameters would be initialized when first needed
-        
+
         Ok(())
     }
-    
+
     fn init_conv2d_parameters(&mut self, input_shape: &[usize]) -> Result<(), IntegrationError> {
         let kernel_size = self.config.kernel_size.unwrap_or((3, 3));
         let out_channels = self.config.filters.unwrap_or(32);
-        let in_channels = if input_shape.len() >= 3 { input_shape[input_shape.len() - 3] } else { 1 };
-        
+        let in_channels = if input_shape.len() >= 3 {
+            input_shape[input_shape.len() - 3]
+        } else {
+            1
+        };
+
         // Skip tensor initialization due to autograd's lazy evaluation
         // Weight would be initialized when first needed
-        
+
         Ok(())
     }
-    
-    fn init_batch_norm_parameters(&mut self, input_shape: &[usize]) -> Result<(), IntegrationError> {
+
+    fn init_batch_norm_parameters(
+        &mut self,
+        input_shape: &[usize],
+    ) -> Result<(), IntegrationError> {
         let num_features = input_shape[input_shape.len() - 1];
-        
+
         // Skip tensor initialization due to autograd's lazy evaluation
         // Parameters would be initialized when first needed
-        
+
         Ok(())
     }
-    
+
     fn update_batch_norm_stats(&mut self, input: &Tensor<F>) -> Result<(), IntegrationError> {
         // Update running mean and variance (placeholder)
         Ok(())
@@ -272,26 +289,26 @@ impl<'a, F: Float> AutogradNetworkBuilder<'a, F> {
             current_shape: None,
         }
     }
-    
+
     /// Set input shape
     pub fn input_shape(mut self, shape: Vec<usize>) -> Self {
         self.current_shape = Some(shape);
         self
     }
-    
+
     /// Add a layer to the network
     pub fn add_layer(mut self, mut layer: AutogradLayer<F>) -> Result<Self, IntegrationError> {
         if let Some(ref shape) = self.current_shape {
             layer.initialize_parameters(shape)?;
-            
+
             // Update current shape based on layer type
             self.current_shape = Some(self.compute_output_shape(&layer, shape)?);
         }
-        
+
         self.layers.push(layer);
         Ok(self)
     }
-    
+
     /// Add a linear layer
     pub fn linear(self, units: usize) -> Result<Self, IntegrationError> {
         let config = LayerConfig {
@@ -301,13 +318,13 @@ impl<'a, F: Float> AutogradNetworkBuilder<'a, F> {
         let layer = AutogradLayer::new(LayerType::Linear, config);
         self.add_layer(layer)
     }
-    
+
     /// Add a ReLU activation layer
     pub fn relu(self) -> Result<Self, IntegrationError> {
         let layer = AutogradLayer::new(LayerType::ReLU, LayerConfig::default());
         self.add_layer(layer)
     }
-    
+
     /// Add a dropout layer
     pub fn dropout(self, rate: f64) -> Result<Self, IntegrationError> {
         let config = LayerConfig {
@@ -317,7 +334,7 @@ impl<'a, F: Float> AutogradNetworkBuilder<'a, F> {
         let layer = AutogradLayer::new(LayerType::Dropout, config);
         self.add_layer(layer)
     }
-    
+
     /// Build the network
     pub fn build(self) -> AutogradNetwork<'a, F> {
         AutogradNetwork {
@@ -325,7 +342,7 @@ impl<'a, F: Float> AutogradNetworkBuilder<'a, F> {
             config: self.config,
         }
     }
-    
+
     /// Compute output shape for a layer
     fn compute_output_shape(
         &self,
@@ -366,14 +383,14 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
     /// Forward pass through the entire network
     pub fn forward(&mut self, input: &Tensor<'a, F>) -> Result<Tensor<'a, F>, IntegrationError> {
         let mut current_input = input.clone();
-        
+
         for layer in &mut self.layers {
             current_input = layer.forward(&current_input)?;
         }
-        
+
         Ok(current_input)
     }
-    
+
     /// Get all trainable parameters
     pub fn parameters(&self) -> Vec<&Tensor<F>> {
         let mut params = Vec::new();
@@ -384,7 +401,7 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
         }
         params
     }
-    
+
     /// Get mutable trainable parameters
     pub fn parameters_mut(&mut self) -> Vec<&mut Tensor<F>> {
         let mut params = Vec::new();
@@ -395,23 +412,26 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
         }
         params
     }
-    
+
     /// Set training mode
     pub fn train(&mut self, training: bool) {
         for layer in &mut self.layers {
             layer.config.training = training;
         }
     }
-    
+
     /// Get parameter count
     pub fn parameter_count(&self) -> usize {
-        self.layers.iter().map(|layer| layer.parameter_count()).sum()
+        self.layers
+            .iter()
+            .map(|layer| layer.parameter_count())
+            .sum()
     }
-    
+
     /// Convert to SciRS2Data format
     pub fn to_scirs2_data(&self) -> SciRS2Data<F> {
         let mut data = SciRS2Data::new();
-        
+
         // Add network parameters
         for (layer_idx, layer) in self.layers.iter().enumerate() {
             for (param_name, tensor) in &layer.parameters {
@@ -419,15 +439,15 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
                 data = data.add_tensor(key, tensor.clone());
             }
         }
-        
+
         // Add metadata
         data = data.add_metadata("module_name".to_string(), "scirs2-neural".to_string());
         data = data.add_metadata("network_type".to_string(), "autograd_network".to_string());
         data = data.add_metadata("layer_count".to_string(), self.layers.len().to_string());
-        
+
         data
     }
-    
+
     /// Create from SciRS2Data format
     pub fn from_scirs2_data(data: &SciRS2Data<F>) -> Result<Self, IntegrationError> {
         // Simplified reconstruction from data
@@ -492,18 +512,22 @@ impl<'a, F: Float> SciRS2Integration for AutogradNetwork<'a, F> {
     fn module_name() -> &'static str {
         "scirs2-neural"
     }
-    
+
     fn module_version() -> &'static str {
         "0.1.0-alpha.5"
     }
-    
+
     fn check_compatibility() -> Result<(), IntegrationError> {
-        super::check_compatibility("scirs2-autograd", "scirs2-neural")
+        match super::check_compatibility("scirs2-autograd", "scirs2-neural")? {
+            true => Ok(()),
+            false => Err(IntegrationError::ModuleCompatibility(
+                "Version mismatch".to_string(),
+            )),
+        }
     }
 }
 
 /// Utility functions for neural integration
-
 /// Create a simple neural network for autograd
 pub fn create_simple_network<F: Float>(
     input_shape: Vec<usize>,
@@ -511,13 +535,13 @@ pub fn create_simple_network<F: Float>(
     output_units: usize,
 ) -> Result<AutogradNetwork<F>, IntegrationError> {
     let mut builder = AutogradNetworkBuilder::new().input_shape(input_shape);
-    
+
     for &units in hidden_units {
         builder = builder.linear(units)?.relu()?;
     }
-    
-    builder = builder.linear(output_units);
-    
+
+    builder = builder.linear(output_units)?;
+
     Ok(builder.build())
 }
 
@@ -526,9 +550,11 @@ pub fn network_to_graph<F: Float>(
     network: &AutogradNetwork<F>,
 ) -> Result<Graph<F>, IntegrationError> {
     // Create computation graph from network
-    let graph = Graph::new();
+    // Graph creation is handled by the run function, not directly accessible
     // In practice, would build graph from network layers
-    Ok(graph)
+    Err(IntegrationError::ModuleCompatibility(
+        "Direct graph creation not supported. Use run() function instead.".to_string(),
+    ))
 }
 
 #[cfg(test)]
@@ -542,7 +568,7 @@ mod tests {
             ..Default::default()
         };
         let layer = AutogradLayer::<f32>::new(LayerType::Linear, config);
-        
+
         assert_eq!(layer.layer_type, LayerType::Linear);
         assert_eq!(layer.config.units.unwrap(), 64);
         assert!(layer.config.use_bias);
@@ -552,49 +578,53 @@ mod tests {
     fn test_network_builder() {
         let network = AutogradNetworkBuilder::<f32>::new()
             .input_shape(vec![10])
-            .linear(64).unwrap()
-            .relu().unwrap()
-            .linear(32).unwrap()
-            .dropout(0.5).unwrap()
-            .linear(1).unwrap()
+            .linear(64)
+            .unwrap()
+            .relu()
+            .unwrap()
+            .linear(32)
+            .unwrap()
+            .dropout(0.5)
+            .unwrap()
+            .linear(1)
+            .unwrap()
             .build();
-        
+
         assert_eq!(network.layers.len(), 5);
     }
 
     #[test]
     fn test_parameter_initialization() {
         let mut layer = AutogradLayer::<f32>::new(
-            LayerType::Linear, 
-            LayerConfig { units: Some(10), ..Default::default() }
+            LayerType::Linear,
+            LayerConfig {
+                units: Some(10),
+                ..Default::default()
+            },
         );
-        
+
         layer.initialize_parameters(&[5]).unwrap();
-        
+
         // Skip tensor-based assertions due to autograd's lazy evaluation
         assert_eq!(layer.layer_type, LayerType::Linear);
     }
 
     #[test]
     fn test_simple_network_creation() {
-        let network = create_simple_network::<f32>(
-            vec![784],
-            &[128, 64],
-            10,
-        ).unwrap();
-        
+        let network = create_simple_network::<f32>(vec![784], &[128, 64], 10).unwrap();
+
         assert_eq!(network.layers.len(), 5); // 2 linear + 2 relu + 1 output linear
     }
 
     #[test]
     fn test_scirs2_integration() {
         let network = create_simple_network::<f32>(vec![10], &[5], 1).unwrap();
-        
+
         // Test conversion to SciRS2Data
         let data = network.to_scirs2_data();
         assert!(data.get_metadata("module_name").is_some());
         assert_eq!(data.get_metadata("module_name").unwrap(), "scirs2-neural");
-        
+
         // Skip tensor conversion tests due to autograd's lazy evaluation
         assert_eq!(network.layers.len(), 3);
     }
@@ -607,7 +637,7 @@ mod tests {
             attention_weights: None,
             extra_state: HashMap::new(),
         };
-        
+
         assert!(state.hidden_state.is_none());
         assert!(state.cell_state.is_none());
     }

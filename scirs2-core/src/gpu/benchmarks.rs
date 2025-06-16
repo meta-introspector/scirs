@@ -14,19 +14,19 @@ pub enum BenchmarkError {
     /// Benchmark setup failed
     #[error("Benchmark setup failed: {0}")]
     SetupFailed(String),
-    
+
     /// Benchmark execution failed
     #[error("Benchmark execution failed: {0}")]
     ExecutionFailed(String),
-    
+
     /// Invalid benchmark configuration
     #[error("Invalid benchmark configuration: {0}")]
     InvalidConfiguration(String),
-    
+
     /// Results comparison failed
     #[error("Results comparison failed: {0}")]
     ComparisonFailed(String),
-    
+
     /// Underlying GPU error
     #[error("GPU error: {0}")]
     GpuError(#[from] GpuError),
@@ -83,22 +83,23 @@ impl BenchmarkOperation {
     /// Get operation category
     pub fn category(&self) -> BenchmarkCategory {
         match self {
-            BenchmarkOperation::MatrixMultiply | 
-            BenchmarkOperation::LinearAlgebra | 
-            BenchmarkOperation::SparseMatrix => BenchmarkCategory::LinearAlgebra,
-            
-            BenchmarkOperation::VectorOperations |
-            BenchmarkOperation::Reduction => BenchmarkCategory::ElementWise,
-            
-            BenchmarkOperation::FastFourierTransform |
-            BenchmarkOperation::Convolution |
-            BenchmarkOperation::SignalProcessing => BenchmarkCategory::SignalProcessing,
-            
+            BenchmarkOperation::MatrixMultiply
+            | BenchmarkOperation::LinearAlgebra
+            | BenchmarkOperation::SparseMatrix => BenchmarkCategory::LinearAlgebra,
+
+            BenchmarkOperation::VectorOperations | BenchmarkOperation::Reduction => {
+                BenchmarkCategory::ElementWise
+            }
+
+            BenchmarkOperation::FastFourierTransform
+            | BenchmarkOperation::Convolution
+            | BenchmarkOperation::SignalProcessing => BenchmarkCategory::SignalProcessing,
+
             BenchmarkOperation::ImageProcessing => BenchmarkCategory::ImageProcessing,
-            
-            BenchmarkOperation::Sorting |
-            BenchmarkOperation::RandomGeneration |
-            BenchmarkOperation::Statistics => BenchmarkCategory::GeneralCompute,
+
+            BenchmarkOperation::Sorting
+            | BenchmarkOperation::RandomGeneration
+            | BenchmarkOperation::Statistics => BenchmarkCategory::GeneralCompute,
         }
     }
 }
@@ -147,11 +148,7 @@ impl Default for BenchmarkConfig {
                 BenchmarkOperation::VectorOperations,
                 BenchmarkOperation::Reduction,
             ],
-            problem_sizes: vec![
-                ProblemSize::Small,
-                ProblemSize::Medium,
-                ProblemSize::Large,
-            ],
+            problem_sizes: vec![ProblemSize::Small, ProblemSize::Medium, ProblemSize::Large],
             warmup_iterations: 3,
             benchmark_iterations: 10,
             data_types: vec![DataType::Float32, DataType::Float64],
@@ -336,7 +333,7 @@ impl BenchmarkSuite {
         let operations = self.config.operations.clone();
         let problem_sizes = self.config.problem_sizes.clone();
         let data_types = self.config.data_types.clone();
-        
+
         for operation in operations {
             for problem_size in problem_sizes.iter() {
                 for data_type in data_types.iter() {
@@ -406,7 +403,12 @@ impl BenchmarkSuite {
             execution_time: avg_time,
             time_stddev,
             throughput: self.calculate_throughput(operation, problem_size, avg_time),
-            memory_bandwidth: self.calculate_memory_bandwidth(operation, problem_size, data_type, avg_time),
+            memory_bandwidth: self.calculate_memory_bandwidth(
+                operation,
+                problem_size,
+                data_type,
+                avg_time,
+            ),
             energy_efficiency: None, // Would need power measurement
             peak_memory_usage: self.estimate_memory_usage(operation, problem_size, data_type),
             correctness_verified: true, // CPU is reference implementation
@@ -422,8 +424,8 @@ impl BenchmarkSuite {
         backend: GpuBackend,
     ) -> Result<BenchmarkResult, BenchmarkError> {
         // Create GPU context
-        let _context = GpuContext::new(backend)
-            .map_err(|e| BenchmarkError::SetupFailed(e.to_string()))?;
+        let _context =
+            GpuContext::new(backend).map_err(|e| BenchmarkError::SetupFailed(e.to_string()))?;
 
         // Warmup
         for _ in 0..self.config.warmup_iterations {
@@ -449,7 +451,12 @@ impl BenchmarkSuite {
             execution_time: avg_time,
             time_stddev,
             throughput: self.calculate_throughput(operation, problem_size, avg_time),
-            memory_bandwidth: self.calculate_memory_bandwidth(operation, problem_size, data_type, avg_time),
+            memory_bandwidth: self.calculate_memory_bandwidth(
+                operation,
+                problem_size,
+                data_type,
+                avg_time,
+            ),
             energy_efficiency: None,
             peak_memory_usage: self.estimate_memory_usage(operation, problem_size, data_type),
             correctness_verified: self.config.verify_correctness,
@@ -515,7 +522,10 @@ impl BenchmarkSuite {
 
     /// Generate comparison results
     fn generate_comparisons(&mut self) -> Result<(), BenchmarkError> {
-        let mut grouped_results: HashMap<(BenchmarkOperation, ProblemSize, DataType), Vec<&BenchmarkResult>> = HashMap::new();
+        let mut grouped_results: HashMap<
+            (BenchmarkOperation, ProblemSize, DataType),
+            Vec<&BenchmarkResult>,
+        > = HashMap::new();
 
         // Group results by operation, size, and data type
         for result in &self.results {
@@ -526,7 +536,8 @@ impl BenchmarkSuite {
         // Generate comparisons for each group
         for ((operation, problem_size, data_type), results) in grouped_results {
             if results.len() > 1 {
-                let comparison = self.create_comparison(operation, problem_size, data_type, &results)?;
+                let comparison =
+                    self.create_comparison(operation, problem_size, data_type, &results)?;
                 self.comparisons.push(comparison);
             }
         }
@@ -561,7 +572,7 @@ impl BenchmarkSuite {
                     let speedup = cpu_time.as_secs_f64() / result.execution_time.as_secs_f64();
                     speedups.insert(backend, speedup);
                 }
-                
+
                 // Energy comparison (placeholder)
                 energy_comparison.insert(result.platform, 1.0);
             }
@@ -589,7 +600,8 @@ impl BenchmarkSuite {
     ) -> PlatformRecommendation {
         // Find best GPU speedup
         let best_speedup = speedups.values().fold(0.0, |a, &b| a.max(b));
-        let best_backend = speedups.iter()
+        let best_backend = speedups
+            .iter()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
             .map(|(&backend, _)| backend);
 
@@ -609,7 +621,10 @@ impl BenchmarkSuite {
                 factors: vec![
                     format!("GPU shows modest {:.1}x speedup", best_speedup),
                     "Consider data transfer overhead".to_string(),
-                    format!("{} may benefit from GPU for larger problems", operation.name()),
+                    format!(
+                        "{} may benefit from GPU for larger problems",
+                        operation.name()
+                    ),
                 ],
             }
         } else {
@@ -625,18 +640,25 @@ impl BenchmarkSuite {
             return Duration::ZERO;
         }
 
-        let variance = times.iter()
+        let variance = times
+            .iter()
             .map(|&time| {
                 let diff = time.as_secs_f64() - avg.as_secs_f64();
                 diff * diff
             })
-            .sum::<f64>() / (times.len() - 1) as f64;
+            .sum::<f64>()
+            / (times.len() - 1) as f64;
 
         Duration::from_secs_f64(variance.sqrt())
     }
 
     /// Calculate throughput for an operation
-    fn calculate_throughput(&self, operation: BenchmarkOperation, problem_size: ProblemSize, time: Duration) -> f64 {
+    fn calculate_throughput(
+        &self,
+        operation: BenchmarkOperation,
+        problem_size: ProblemSize,
+        time: Duration,
+    ) -> f64 {
         let ops = match operation {
             BenchmarkOperation::MatrixMultiply => {
                 let n = problem_size.matrix_size();
@@ -674,7 +696,12 @@ impl BenchmarkSuite {
     }
 
     /// Estimate memory usage for an operation
-    fn estimate_memory_usage(&self, operation: BenchmarkOperation, problem_size: ProblemSize, data_type: DataType) -> usize {
+    fn estimate_memory_usage(
+        &self,
+        operation: BenchmarkOperation,
+        problem_size: ProblemSize,
+        data_type: DataType,
+    ) -> usize {
         match operation {
             BenchmarkOperation::MatrixMultiply => {
                 let n = problem_size.matrix_size();
@@ -729,9 +756,11 @@ impl BenchmarkReport {
         }
     }
 
-    fn generate_category_recommendations(comparisons: &[BenchmarkComparison]) -> HashMap<BenchmarkCategory, String> {
+    fn generate_category_recommendations(
+        comparisons: &[BenchmarkComparison],
+    ) -> HashMap<BenchmarkCategory, String> {
         let mut recommendations = HashMap::new();
-        
+
         // Group by category and analyze
         for category in [
             BenchmarkCategory::LinearAlgebra,
@@ -740,12 +769,14 @@ impl BenchmarkReport {
             BenchmarkCategory::ImageProcessing,
             BenchmarkCategory::GeneralCompute,
         ] {
-            let category_comps: Vec<_> = comparisons.iter()
+            let category_comps: Vec<_> = comparisons
+                .iter()
                 .filter(|c| c.operation.category() == category)
                 .collect();
 
             if !category_comps.is_empty() {
-                let gpu_wins = category_comps.iter()
+                let gpu_wins = category_comps
+                    .iter()
                     .filter(|c| matches!(c.recommendation, PlatformRecommendation::Gpu { .. }))
                     .count();
 
@@ -793,13 +824,15 @@ pub struct BenchmarkSummary {
 impl BenchmarkSummary {
     fn from_results(results: &[BenchmarkResult]) -> Self {
         let total_benchmarks = results.len();
-        
-        let cpu_times: Vec<_> = results.iter()
+
+        let cpu_times: Vec<_> = results
+            .iter()
             .filter(|r| matches!(r.platform, ComputePlatform::Cpu))
             .map(|r| r.execution_time)
             .collect();
-        
-        let gpu_times: Vec<_> = results.iter()
+
+        let gpu_times: Vec<_> = results
+            .iter()
             .filter(|r| matches!(r.platform, ComputePlatform::Gpu(_)))
             .map(|r| r.execution_time)
             .collect();
@@ -824,10 +857,14 @@ impl BenchmarkSummary {
 
         // Find best platform for each operation
         let mut best_platforms = HashMap::new();
-        let mut operation_results: HashMap<BenchmarkOperation, Vec<&BenchmarkResult>> = HashMap::new();
-        
+        let mut operation_results: HashMap<BenchmarkOperation, Vec<&BenchmarkResult>> =
+            HashMap::new();
+
         for result in results {
-            operation_results.entry(result.operation).or_default().push(result);
+            operation_results
+                .entry(result.operation)
+                .or_default()
+                .push(result);
         }
 
         for (operation, op_results) in operation_results {
@@ -852,8 +889,14 @@ mod tests {
 
     #[test]
     fn test_benchmark_operation_name() {
-        assert_eq!(BenchmarkOperation::MatrixMultiply.name(), "Matrix Multiplication");
-        assert_eq!(BenchmarkOperation::VectorOperations.name(), "Vector Operations");
+        assert_eq!(
+            BenchmarkOperation::MatrixMultiply.name(),
+            "Matrix Multiplication"
+        );
+        assert_eq!(
+            BenchmarkOperation::VectorOperations.name(),
+            "Vector Operations"
+        );
     }
 
     #[test]

@@ -7,7 +7,7 @@
 //!
 //! ```
 //! use ndarray::{Array2, ArrayView2};
-//! use scirs2_cluster::vq::{kmeans, KMeansInit, KMeansOptions};
+//! use scirs2_cluster::vq::kmeans;
 //!
 //! // Example data
 //! let data = Array2::from_shape_vec((6, 2), vec![
@@ -19,12 +19,8 @@
 //!     4.2, 4.1,
 //! ]).unwrap();
 //!
-//! // Run k-means with k=2 and parallel initialization
-//! let options = KMeansOptions {
-//!     init_method: KMeansInit::KMeansParallel,
-//!     ..Default::default()
-//! };
-//! let (centroids, labels) = kmeans(ArrayView2::from(&data), 2, Some(options)).unwrap();
+//! // Run k-means with k=2
+//! let (centroids, labels) = kmeans(ArrayView2::from(&data), 2, None, None, None, None).unwrap();
 //!
 //! // Print the results
 //! println!("Centroids: {:?}", centroids);

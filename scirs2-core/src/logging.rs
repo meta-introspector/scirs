@@ -59,8 +59,6 @@ use std::time::{Duration, Instant};
 // Enhanced progress tracking module
 pub mod progress;
 
-/// Distributed logging capabilities for multi-node computations
-pub mod distributed;
 
 /// Log level enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -258,7 +258,12 @@ fn demonstrate_glycolysis_pathway() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let t_span = [0.0, 10.0]; // Simulate for 10 seconds
-    let result = solve_ivp(ode_fn, t_span, initial_concentrations.clone(), Some(options))?;
+    let result = solve_ivp(
+        ode_fn,
+        t_span,
+        initial_concentrations.clone(),
+        Some(options),
+    )?;
 
     // Display results at key time points
     let time_points = vec![0.0, 1.0, 2.0, 5.0, 10.0];
@@ -340,7 +345,12 @@ fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let t_span = [0.0, 1.0]; // Simulate for 1 second
-    let result = solve_ivp(ode_fn, t_span, initial_concentrations.clone(), Some(options))?;
+    let result = solve_ivp(
+        ode_fn,
+        t_span,
+        initial_concentrations.clone(),
+        Some(options),
+    )?;
 
     // Check for steady-state approach
     let final_y = &result.y[result.y.len() - 1];
@@ -513,7 +523,7 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Demonstrating pathway regulation and feedback inhibition");
 
     // Create a simple linear pathway with feedback
-    let mut pathway = pathways::purine_biosynthesis();
+    let pathway = pathways::purine_biosynthesis();
 
     println!("   Pathway: {}", pathway.name);
     println!("   Enzymes: {}", pathway.enzymes.len());
@@ -555,7 +565,7 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("   Comparing different regulation types:");
 
-    let base_rate = 50.0; // Base enzyme rate
+    let _base_rate = 50.0; // Base enzyme rate
     let effector_conc = 1.0;
     let ki = 0.5; // Inhibition constant
 
@@ -576,7 +586,9 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
             RegulationType::AllostericInhibition => {
                 1.0 / (1.0 + (effector_conc as f64 / ki).powf(2.0))
             }
-            RegulationType::FeedbackInhibition => 1.0 / (1.0 + (effector_conc as f64 / ki).powf(4.0)),
+            RegulationType::FeedbackInhibition => {
+                1.0 / (1.0 + (effector_conc as f64 / ki).powf(4.0))
+            }
             _ => 1.0,
         };
 

@@ -40,7 +40,7 @@
 //! let standardized = standardize(data.view(), true).unwrap();
 //!
 //! // Run k-means with k=2
-//! let (centroids, labels) = kmeans(standardized.view(), 2, None).unwrap();
+//! let (centroids, labels) = kmeans(standardized.view(), 2, None, None, None, None).unwrap();
 //!
 //! // Print the results
 //! println!("Centroids: {:?}", centroids);

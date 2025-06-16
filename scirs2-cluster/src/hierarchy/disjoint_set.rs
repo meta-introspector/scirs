@@ -33,9 +33,9 @@ use std::collections::HashMap;
 /// ds.union(3, 4);
 ///
 /// // Check connectivity
-/// assert_eq!(ds.find(1), ds.find(2)); // 1 and 2 are connected
-/// assert_eq!(ds.find(3), ds.find(4)); // 3 and 4 are connected
-/// assert_ne!(ds.find(1), ds.find(3)); // 1 and 3 are in different sets
+/// assert_eq!(ds.find(&1), ds.find(&2)); // 1 and 2 are connected
+/// assert_eq!(ds.find(&3), ds.find(&4)); // 3 and 4 are connected
+/// assert_ne!(ds.find(&1), ds.find(&3)); // 1 and 3 are in different sets
 /// ```
 #[derive(Debug, Clone)]
 pub struct DisjointSet<T: Clone + std::hash::Hash + Eq> {

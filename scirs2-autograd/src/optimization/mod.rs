@@ -5,9 +5,9 @@
 //! constant folding, and graph-level transformations.
 
 use crate::graph::{Graph, TensorID};
-use crate::tensor::{Tensor, TensorInternal};
+use crate::tensor::TensorInternal;
 use crate::Float;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::HashSet;
 
 // pub mod constant_folding;
 // pub mod expression_simplification;
@@ -495,7 +495,6 @@ pub enum OptimizationError {
 }
 
 /// Public API functions for graph optimization
-
 /// Optimize a computation graph with default settings
 pub fn optimize_graph<F: Float>(
     graph: &mut Graph<F>,

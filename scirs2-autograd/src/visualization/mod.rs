@@ -4,7 +4,6 @@
 //! for debugging complex neural networks and understanding gradient flow.
 
 use crate::graph::{Graph, TensorID};
-use crate::tensor::TensorInternal;
 use crate::Float;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
@@ -256,9 +255,9 @@ impl<F: Float> GraphVisualizer<F> {
     #[allow(dead_code)]
     fn traverse_graph(
         &self,
-        graph: &Graph<F>,
-        tensor_ids: &mut Vec<TensorID>,
-        visited: &mut HashSet<TensorID>,
+        _graph: &Graph<F>,
+        _tensor_ids: &mut Vec<TensorID>,
+        _visited: &mut HashSet<TensorID>,
     ) -> Result<(), VisualizationError> {
         // This is a simplified traversal - in a real implementation,
         // we would need access to the graph's internal structure
@@ -331,7 +330,7 @@ impl<F: Float> GraphVisualizer<F> {
     fn generate_tensor_label(
         &self,
         tensor_id: TensorID,
-        analysis: &NodeAnalysis,
+        _analysis: &NodeAnalysis,
     ) -> Result<String, VisualizationError> {
         let mut label = String::new();
 

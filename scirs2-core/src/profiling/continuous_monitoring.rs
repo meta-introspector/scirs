@@ -3,9 +3,10 @@
 //! This module provides continuous performance monitoring capabilities for long-running
 //! processes with real-time alerts, trend analysis, and adaptive optimization.
 
-use crate::error::{ScirsCoreError, ScirsCoreResult};
-use crate::profiling::system_monitor::{SystemMonitor, SystemMetrics};
-use crate::profiling::hardware_counters::{HardwareCounterManager, CounterType, CounterValue};
+use crate::error::{CoreError, CoreResult};
+use crate::profiling::hardware_counters::{CounterType, CounterValue, HardwareCounterManager};
+use crate::profiling::system_monitor::{SystemMetrics, SystemMonitor};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -18,27 +19,27 @@ pub enum ContinuousMonitoringError {
     /// Monitor not running
     #[error("Continuous monitor is not running")]
     NotRunning,
-    
+
     /// Configuration error
     #[error("Configuration error: {0}")]
     ConfigurationError(String),
-    
+
     /// Alert configuration error
     #[error("Alert configuration error: {0}")]
     AlertConfigurationError(String),
-    
+
     /// Data collection error
     #[error("Data collection error: {0}")]
     DataCollectionError(String),
-    
+
     /// Storage error
     #[error("Storage error: {0}")]
     StorageError(String),
 }
 
-impl From<ContinuousMonitoringError> for ScirsCoreError {
+impl From<ContinuousMonitoringError> for CoreError {
     fn from(err: ContinuousMonitoringError) -> Self {
-        ScirsCoreError::ComputationError(err.to_string())
+        CoreError::ComputationError(err.to_string())
     }
 }
 
@@ -350,7 +351,7 @@ pub struct ContinuousPerformanceMonitor {
 pub trait ApplicationMetricsProvider: Send + Sync {
     /// Get current application metrics
     fn get_metrics(&self) -> ApplicationMetrics;
-    
+
     /// Get custom metric value
     fn get_custom_metric(&self, name: &str) -> Option<f64>;
 }
@@ -371,7 +372,7 @@ impl ContinuousPerformanceMonitor {
             app_metrics_provider: None,
         }
     }
-    
+
     /// Set application metrics provider
     pub fn set_application_metrics_provider<P>(&mut self, provider: P)
     where
@@ -379,53 +380,53 @@ impl ContinuousPerformanceMonitor {
     {
         self.app_metrics_provider = Some(Box::new(provider));
     }
-    
+
     /// Start continuous monitoring
-    pub fn start(&mut self) -> ScirsCoreResult<()> {
+    pub fn start(&mut self) -> CoreResult<()> {
         let mut running = self.running.lock().unwrap();
         if *running {
             return Ok(()); // Already running
         }
         *running = true;
-        
+
         // Initialize monitors based on configuration
         if self.config.monitor_system {
             let mut system_monitor = SystemMonitor::new(Default::default());
             system_monitor.start()?;
             self.system_monitor = Some(Arc::new(Mutex::new(system_monitor)));
         }
-        
+
         if self.config.monitor_hardware {
             if let Ok(hardware_manager) = HardwareCounterManager::new() {
                 self.hardware_manager = Some(Arc::new(Mutex::new(hardware_manager)));
             }
         }
-        
+
         // Start background monitoring thread
         self.start_monitoring_thread();
-        
+
         Ok(())
     }
-    
+
     /// Stop continuous monitoring
     pub fn stop(&mut self) {
         {
             let mut running = self.running.lock().unwrap();
             *running = false;
         }
-        
+
         // Stop system monitor
         if let Some(system_monitor) = &self.system_monitor {
             let mut monitor = system_monitor.lock().unwrap();
             monitor.stop();
         }
-        
+
         // Wait for background thread to finish
         if let Some(handle) = self.thread_handle.take() {
             let _ = handle.join();
         }
     }
-    
+
     /// Start the background monitoring thread
     fn start_monitoring_thread(&mut self) {
         let config = self.config.clone();
@@ -436,7 +437,7 @@ impl ContinuousPerformanceMonitor {
         let trend_analysis = Arc::clone(&self.trend_analysis);
         let recommendations = Arc::clone(&self.recommendations);
         let running = Arc::clone(&self.running);
-        
+
         self.thread_handle = Some(thread::spawn(move || {
             Self::monitoring_loop(
                 config,
@@ -450,7 +451,7 @@ impl ContinuousPerformanceMonitor {
             );
         }));
     }
-    
+
     /// Main monitoring loop
     fn monitoring_loop(
         config: MonitoringConfig,
@@ -464,28 +465,28 @@ impl ContinuousPerformanceMonitor {
     ) {
         let mut last_trend_analysis = Instant::now();
         let mut alert_cooldown_map: HashMap<String, Instant> = HashMap::new();
-        
+
         while *running.lock().unwrap() {
             let snapshot_start = Instant::now();
-            
+
             // Collect metrics snapshot
             let snapshot = Self::collect_metrics_snapshot(
                 &system_monitor,
                 &hardware_manager,
                 None, // Would pass app_metrics_provider here
             );
-            
+
             // Store snapshot
             {
                 let mut history = metrics_history.write().unwrap();
                 history.push_back(snapshot.clone());
-                
+
                 // Limit history size
                 while history.len() > config.max_samples {
                     history.pop_front();
                 }
             }
-            
+
             // Check for alerts
             Self::check_alerts(
                 &snapshot,
@@ -493,13 +494,13 @@ impl ContinuousPerformanceMonitor {
                 &active_alerts,
                 &mut alert_cooldown_map,
             );
-            
+
             // Perform trend analysis periodically
             if snapshot_start.duration_since(last_trend_analysis) >= config.trend_window {
                 if config.enable_trend_analysis {
                     Self::perform_trend_analysis(&metrics_history, &trend_analysis, &config);
                 }
-                
+
                 if config.enable_adaptive_optimization {
                     Self::generate_optimization_recommendations(
                         &metrics_history,
@@ -507,10 +508,10 @@ impl ContinuousPerformanceMonitor {
                         &recommendations,
                     );
                 }
-                
+
                 last_trend_analysis = snapshot_start;
             }
-            
+
             // Sleep until next sampling interval
             let elapsed = snapshot_start.elapsed();
             if elapsed < config.sampling_interval {
@@ -518,7 +519,7 @@ impl ContinuousPerformanceMonitor {
             }
         }
     }
-    
+
     /// Collect a metrics snapshot
     fn collect_metrics_snapshot(
         system_monitor: &Option<Arc<Mutex<SystemMonitor>>>,
@@ -526,24 +527,28 @@ impl ContinuousPerformanceMonitor {
         _app_provider: Option<&Box<dyn ApplicationMetricsProvider + Send + Sync>>,
     ) -> MetricsSnapshot {
         let timestamp = Instant::now();
-        
+
         // Collect system metrics
         let system_metrics = if let Some(monitor) = system_monitor {
             monitor.lock().unwrap().get_current_metrics().ok()
         } else {
             None
         };
-        
+
         // Collect hardware counter values
         let hardware_counters = if let Some(manager) = hardware_manager {
-            manager.lock().unwrap().sample_counters().unwrap_or_default()
+            manager
+                .lock()
+                .unwrap()
+                .sample_counters()
+                .unwrap_or_default()
         } else {
             HashMap::new()
         };
-        
+
         // Collect application metrics
         let application_metrics = ApplicationMetrics::default(); // Would use app_provider here
-        
+
         MetricsSnapshot {
             timestamp,
             system_metrics,
@@ -551,7 +556,7 @@ impl ContinuousPerformanceMonitor {
             application_metrics,
         }
     }
-    
+
     /// Check for performance alerts
     fn check_alerts(
         snapshot: &MetricsSnapshot,
@@ -560,15 +565,24 @@ impl ContinuousPerformanceMonitor {
         cooldown_map: &mut HashMap<String, Instant>,
     ) {
         let now = Instant::now();
-        
+
         // Check system metrics alerts
         if let Some(sys_metrics) = &snapshot.system_metrics {
             // CPU usage alert
             if sys_metrics.cpu_usage > alert_config.cpu_threshold {
                 let alert_key = "high_cpu_usage".to_string();
-                if Self::should_trigger_alert(&alert_key, cooldown_map, alert_config.alert_cooldown, now) {
+                if Self::should_trigger_alert(
+                    &alert_key,
+                    cooldown_map,
+                    alert_config.alert_cooldown,
+                    now,
+                ) {
                     let alert = PerformanceAlert {
-                        id: format!("cpu_{}_{}", now.elapsed().as_secs(), fastrand::u32(..)),
+                        id: format!(
+                            "cpu_{}_{}",
+                            now.elapsed().as_secs(),
+                            rand::thread_rng().gen::<u32>()
+                        ),
                         alert_type: AlertType::HighCpuUsage,
                         severity: if sys_metrics.cpu_usage > alert_config.cpu_threshold * 1.2 {
                             AlertSeverity::Critical
@@ -582,22 +596,36 @@ impl ContinuousPerformanceMonitor {
                         timestamp: now,
                         active: true,
                     };
-                    
-                    active_alerts.write().unwrap().insert(alert.id.clone(), alert);
+
+                    active_alerts
+                        .write()
+                        .unwrap()
+                        .insert(alert.id.clone(), alert);
                     cooldown_map.insert(alert_key, now);
                 }
             }
-            
+
             // Memory usage alert
             if sys_metrics.memory_total > 0 {
-                let memory_usage_percent = (sys_metrics.memory_usage as f64 / sys_metrics.memory_total as f64) * 100.0;
+                let memory_usage_percent =
+                    (sys_metrics.memory_usage as f64 / sys_metrics.memory_total as f64) * 100.0;
                 if memory_usage_percent > alert_config.memory_threshold {
                     let alert_key = "high_memory_usage".to_string();
-                    if Self::should_trigger_alert(&alert_key, cooldown_map, alert_config.alert_cooldown, now) {
+                    if Self::should_trigger_alert(
+                        &alert_key,
+                        cooldown_map,
+                        alert_config.alert_cooldown,
+                        now,
+                    ) {
                         let alert = PerformanceAlert {
-                            id: format!("mem_{}_{}", now.elapsed().as_secs(), fastrand::u32(..)),
+                            id: format!(
+                                "mem_{}_{}",
+                                now.elapsed().as_secs(),
+                                rand::thread_rng().gen::<u32>()
+                            ),
                             alert_type: AlertType::HighMemoryUsage,
-                            severity: if memory_usage_percent > alert_config.memory_threshold * 1.1 {
+                            severity: if memory_usage_percent > alert_config.memory_threshold * 1.1
+                            {
                                 AlertSeverity::Critical
                             } else {
                                 AlertSeverity::Warning
@@ -609,21 +637,33 @@ impl ContinuousPerformanceMonitor {
                             timestamp: now,
                             active: true,
                         };
-                        
-                        active_alerts.write().unwrap().insert(alert.id.clone(), alert);
+
+                        active_alerts
+                            .write()
+                            .unwrap()
+                            .insert(alert.id.clone(), alert);
                         cooldown_map.insert(alert_key, now);
                     }
                 }
             }
         }
-        
+
         // Check application metrics alerts
         let app_metrics = &snapshot.application_metrics;
         if app_metrics.avg_response_time > alert_config.response_time_threshold {
             let alert_key = "high_response_time".to_string();
-            if Self::should_trigger_alert(&alert_key, cooldown_map, alert_config.alert_cooldown, now) {
+            if Self::should_trigger_alert(
+                &alert_key,
+                cooldown_map,
+                alert_config.alert_cooldown,
+                now,
+            ) {
                 let alert = PerformanceAlert {
-                    id: format!("resp_{}_{}", now.elapsed().as_secs(), fastrand::u32(..)),
+                    id: format!(
+                        "resp_{}_{}",
+                        now.elapsed().as_secs(),
+                        rand::thread_rng().gen::<u32>()
+                    ),
                     alert_type: AlertType::HighResponseTime,
                     severity: AlertSeverity::Warning,
                     message: format!("High response time: {:.1}ms", app_metrics.avg_response_time),
@@ -633,13 +673,16 @@ impl ContinuousPerformanceMonitor {
                     timestamp: now,
                     active: true,
                 };
-                
-                active_alerts.write().unwrap().insert(alert.id.clone(), alert);
+
+                active_alerts
+                    .write()
+                    .unwrap()
+                    .insert(alert.id.clone(), alert);
                 cooldown_map.insert(alert_key, now);
             }
         }
     }
-    
+
     /// Check if an alert should be triggered based on cooldown
     fn should_trigger_alert(
         alert_key: &str,
@@ -653,7 +696,7 @@ impl ContinuousPerformanceMonitor {
             true
         }
     }
-    
+
     /// Perform trend analysis on metrics
     fn perform_trend_analysis(
         metrics_history: &Arc<RwLock<VecDeque<MetricsSnapshot>>>,
@@ -662,54 +705,50 @@ impl ContinuousPerformanceMonitor {
     ) {
         let history = metrics_history.read().unwrap();
         let window_start = Instant::now() - config.trend_window;
-        
+
         // Filter samples within the trend window
-        let recent_samples: Vec<_> = history.iter()
+        let recent_samples: Vec<_> = history
+            .iter()
             .filter(|snapshot| snapshot.timestamp >= window_start)
             .collect();
-        
+
         if recent_samples.len() < 2 {
             return; // Not enough data for trend analysis
         }
-        
+
         let mut analysis_results = HashMap::new();
-        
+
         // Analyze CPU usage trend
-        if let Some(trend) = Self::analyze_metric_trend(
-            &recent_samples,
-            |snapshot| snapshot.system_metrics.as_ref().map(|m| m.cpu_usage),
-        ) {
+        if let Some(trend) = Self::analyze_metric_trend(&recent_samples, |snapshot| {
+            snapshot.system_metrics.as_ref().map(|m| m.cpu_usage)
+        }) {
             analysis_results.insert("cpu_usage".to_string(), trend);
         }
-        
+
         // Analyze memory usage trend
-        if let Some(trend) = Self::analyze_metric_trend(
-            &recent_samples,
-            |snapshot| {
-                snapshot.system_metrics.as_ref().and_then(|m| {
-                    if m.memory_total > 0 {
-                        Some((m.memory_usage as f64 / m.memory_total as f64) * 100.0)
-                    } else {
-                        None
-                    }
-                })
-            },
-        ) {
+        if let Some(trend) = Self::analyze_metric_trend(&recent_samples, |snapshot| {
+            snapshot.system_metrics.as_ref().and_then(|m| {
+                if m.memory_total > 0 {
+                    Some((m.memory_usage as f64 / m.memory_total as f64) * 100.0)
+                } else {
+                    None
+                }
+            })
+        }) {
             analysis_results.insert("memory_usage".to_string(), trend);
         }
-        
+
         // Analyze response time trend
-        if let Some(trend) = Self::analyze_metric_trend(
-            &recent_samples,
-            |snapshot| Some(snapshot.application_metrics.avg_response_time),
-        ) {
+        if let Some(trend) = Self::analyze_metric_trend(&recent_samples, |snapshot| {
+            Some(snapshot.application_metrics.avg_response_time)
+        }) {
             analysis_results.insert("avg_response_time".to_string(), trend);
         }
-        
+
         // Update trend analysis results
         *trend_analysis.write().unwrap() = analysis_results;
     }
-    
+
     /// Analyze trend for a specific metric
     fn analyze_metric_trend<F>(
         samples: &[&MetricsSnapshot],
@@ -718,27 +757,26 @@ impl ContinuousPerformanceMonitor {
     where
         F: Fn(&MetricsSnapshot) -> Option<f64>,
     {
-        let values: Vec<(f64, f64)> = samples.iter()
+        let values: Vec<(f64, f64)> = samples
+            .iter()
             .enumerate()
-            .filter_map(|(i, snapshot)| {
-                metric_extractor(snapshot).map(|value| (i as f64, value))
-            })
+            .filter_map(|(i, snapshot)| metric_extractor(snapshot).map(|value| (i as f64, value)))
             .collect();
-        
+
         if values.len() < 2 {
             return None;
         }
-        
+
         // Calculate linear regression for trend
         let n = values.len() as f64;
         let sum_x: f64 = values.iter().map(|(x, _)| x).sum();
         let sum_y: f64 = values.iter().map(|(_, y)| y).sum();
         let sum_xy: f64 = values.iter().map(|(x, y)| x * y).sum();
         let sum_x2: f64 = values.iter().map(|(x, _)| x * x).sum();
-        
+
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
         let intercept = (sum_y - slope * sum_x) / n;
-        
+
         // Determine trend direction and strength
         let (trend, strength) = if slope.abs() < 0.01 {
             (TrendDirection::Stable, 0.0)
@@ -747,16 +785,16 @@ impl ContinuousPerformanceMonitor {
         } else {
             (TrendDirection::Decreasing, (-slope).min(1.0))
         };
-        
+
         // Predict next value
         let next_x = values.len() as f64;
         let prediction = slope * next_x + intercept;
-        
+
         // Calculate confidence interval (simplified)
         let last_value = values.last().unwrap().1;
         let confidence_range = (last_value - prediction).abs() * 0.2;
         let confidence_interval = (prediction - confidence_range, prediction + confidence_range);
-        
+
         Some(TrendAnalysis {
             metric_name: "unknown".to_string(), // Would be set by caller
             trend,
@@ -766,7 +804,7 @@ impl ContinuousPerformanceMonitor {
             timestamp: Instant::now(),
         })
     }
-    
+
     /// Generate optimization recommendations
     fn generate_optimization_recommendations(
         metrics_history: &Arc<RwLock<VecDeque<MetricsSnapshot>>>,
@@ -776,7 +814,7 @@ impl ContinuousPerformanceMonitor {
         let history = metrics_history.read().unwrap();
         let trends = trend_analysis.read().unwrap();
         let mut new_recommendations = Vec::new();
-        
+
         // Analyze CPU usage trend
         if let Some(cpu_trend) = trends.get("cpu_usage") {
             if cpu_trend.trend == TrendDirection::Increasing && cpu_trend.strength > 0.5 {
@@ -791,7 +829,7 @@ impl ContinuousPerformanceMonitor {
                 });
             }
         }
-        
+
         // Analyze memory usage trend
         if let Some(memory_trend) = trends.get("memory_usage") {
             if memory_trend.trend == TrendDirection::Increasing && memory_trend.strength > 0.3 {
@@ -806,7 +844,7 @@ impl ContinuousPerformanceMonitor {
                 });
             }
         }
-        
+
         // Analyze response time patterns
         if let Some(response_trend) = trends.get("avg_response_time") {
             if response_trend.trend == TrendDirection::Increasing && response_trend.strength > 0.4 {
@@ -821,62 +859,71 @@ impl ContinuousPerformanceMonitor {
                 });
             }
         }
-        
+
         // Update recommendations (keep only recent ones)
         let mut recs = recommendations.write().unwrap();
         recs.extend(new_recommendations);
-        
+
         // Remove old recommendations (keep last 10)
         if recs.len() > 10 {
             recs.drain(0..recs.len() - 10);
         }
     }
-    
+
     /// Get current active alerts
     pub fn get_active_alerts(&self) -> Vec<PerformanceAlert> {
-        self.active_alerts.read().unwrap().values().cloned().collect()
+        self.active_alerts
+            .read()
+            .unwrap()
+            .values()
+            .cloned()
+            .collect()
     }
-    
+
     /// Get current trend analysis
     pub fn get_trend_analysis(&self) -> HashMap<String, TrendAnalysis> {
         self.trend_analysis.read().unwrap().clone()
     }
-    
+
     /// Get optimization recommendations
     pub fn get_recommendations(&self) -> Vec<OptimizationRecommendation> {
         self.recommendations.read().unwrap().clone()
     }
-    
+
     /// Get recent metrics history
     pub fn get_metrics_history(&self, duration: Duration) -> Vec<MetricsSnapshot> {
         let history = self.metrics_history.read().unwrap();
         let cutoff = Instant::now() - duration;
-        
-        history.iter()
+
+        history
+            .iter()
             .filter(|snapshot| snapshot.timestamp >= cutoff)
             .cloned()
             .collect()
     }
-    
+
     /// Generate monitoring report
     pub fn generate_report(&self) -> MonitoringReport {
         let active_alerts = self.get_active_alerts();
         let trends = self.get_trend_analysis();
         let recommendations = self.get_recommendations();
         let recent_metrics = self.get_metrics_history(Duration::from_secs(3600)); // Last hour
-        
+
         MonitoringReport {
             timestamp: Instant::now(),
             monitoring_duration: self.config.sampling_interval,
             total_samples: recent_metrics.len(),
             active_alerts: active_alerts.len(),
-            critical_alerts: active_alerts.iter().filter(|a| a.severity == AlertSeverity::Critical).count(),
+            critical_alerts: active_alerts
+                .iter()
+                .filter(|a| a.severity == AlertSeverity::Critical)
+                .count(),
             trends_detected: trends.len(),
             recommendations_generated: recommendations.len(),
             summary: self.generate_summary(&recent_metrics, &active_alerts, &trends),
         }
     }
-    
+
     /// Generate monitoring summary
     fn generate_summary(
         &self,
@@ -885,36 +932,49 @@ impl ContinuousPerformanceMonitor {
         trends: &HashMap<String, TrendAnalysis>,
     ) -> String {
         let mut summary = String::new();
-        
+
         summary.push_str(&format!("Monitoring Summary ({} samples)\n", metrics.len()));
-        
+
         if !alerts.is_empty() {
             summary.push_str(&format!("- {} active alerts\n", alerts.len()));
-            let critical_count = alerts.iter().filter(|a| a.severity == AlertSeverity::Critical).count();
+            let critical_count = alerts
+                .iter()
+                .filter(|a| a.severity == AlertSeverity::Critical)
+                .count();
             if critical_count > 0 {
-                summary.push_str(&format!("- {} critical alerts require immediate attention\n", critical_count));
+                summary.push_str(&format!(
+                    "- {} critical alerts require immediate attention\n",
+                    critical_count
+                ));
             }
         } else {
             summary.push_str("- No active alerts\n");
         }
-        
+
         if !trends.is_empty() {
             summary.push_str(&format!("- {} trends detected:\n", trends.len()));
             for (metric, trend) in trends {
-                summary.push_str(&format!("  - {}: {:?} (strength: {:.1})\n", metric, trend.trend, trend.strength));
+                summary.push_str(&format!(
+                    "  - {}: {:?} (strength: {:.1})\n",
+                    metric, trend.trend, trend.strength
+                ));
             }
         }
-        
+
         if let Some(latest) = metrics.last() {
             if let Some(sys_metrics) = &latest.system_metrics {
-                summary.push_str(&format!("- Current CPU usage: {:.1}%\n", sys_metrics.cpu_usage));
+                summary.push_str(&format!(
+                    "- Current CPU usage: {:.1}%\n",
+                    sys_metrics.cpu_usage
+                ));
                 if sys_metrics.memory_total > 0 {
-                    let memory_percent = (sys_metrics.memory_usage as f64 / sys_metrics.memory_total as f64) * 100.0;
+                    let memory_percent =
+                        (sys_metrics.memory_usage as f64 / sys_metrics.memory_total as f64) * 100.0;
                     summary.push_str(&format!("- Current memory usage: {:.1}%\n", memory_percent));
                 }
             }
         }
-        
+
         summary
     }
 }
@@ -958,7 +1018,7 @@ impl SimpleApplicationMetricsProvider {
             metrics: Arc::new(Mutex::new(ApplicationMetrics::default())),
         }
     }
-    
+
     /// Update metrics
     pub fn update_metrics<F>(&self, updater: F)
     where
@@ -979,58 +1039,70 @@ impl ApplicationMetricsProvider for SimpleApplicationMetricsProvider {
     fn get_metrics(&self) -> ApplicationMetrics {
         self.metrics.lock().unwrap().clone()
     }
-    
+
     fn get_custom_metric(&self, name: &str) -> Option<f64> {
-        self.metrics.lock().unwrap().custom_metrics.get(name).copied()
+        self.metrics
+            .lock()
+            .unwrap()
+            .custom_metrics
+            .get(name)
+            .copied()
     }
 }
 
 /// Global continuous performance monitor instance
-static GLOBAL_MONITOR: std::sync::OnceLock<Arc<Mutex<ContinuousPerformanceMonitor>>> = std::sync::OnceLock::new();
+static GLOBAL_MONITOR: std::sync::OnceLock<Arc<Mutex<ContinuousPerformanceMonitor>>> =
+    std::sync::OnceLock::new();
 
 /// Get the global continuous performance monitor
 pub fn global_monitor() -> Arc<Mutex<ContinuousPerformanceMonitor>> {
-    GLOBAL_MONITOR.get_or_init(|| {
-        Arc::new(Mutex::new(ContinuousPerformanceMonitor::new(MonitoringConfig::default())))
-    }).clone()
+    GLOBAL_MONITOR
+        .get_or_init(|| {
+            Arc::new(Mutex::new(ContinuousPerformanceMonitor::new(
+                MonitoringConfig::default(),
+            )))
+        })
+        .clone()
 }
 
 /// Convenience functions for continuous monitoring
 pub mod utils {
     use super::*;
-    
+
     /// Start basic continuous monitoring
-    pub fn start_basic_monitoring() -> ScirsCoreResult<()> {
+    pub fn start_basic_monitoring() -> CoreResult<()> {
         let monitor = global_monitor();
         let mut monitor = monitor.lock().unwrap();
         monitor.start()
     }
-    
+
     /// Stop continuous monitoring
     pub fn stop_monitoring() {
         let monitor = global_monitor();
         let mut monitor = monitor.lock().unwrap();
         monitor.stop();
     }
-    
+
     /// Get current performance status
     pub fn get_performance_status() -> (usize, usize, usize) {
         let monitor = global_monitor();
         let monitor = monitor.lock().unwrap();
-        
+
         let alerts = monitor.get_active_alerts();
         let trends = monitor.get_trend_analysis();
         let recommendations = monitor.get_recommendations();
-        
+
         (alerts.len(), trends.len(), recommendations.len())
     }
-    
+
     /// Check if there are any critical alerts
     pub fn has_critical_alerts() -> bool {
         let monitor = global_monitor();
         let monitor = monitor.lock().unwrap();
-        
-        monitor.get_active_alerts().iter()
+
+        monitor
+            .get_active_alerts()
+            .iter()
             .any(|alert| alert.severity == AlertSeverity::Critical)
     }
 }
@@ -1038,7 +1110,7 @@ pub mod utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_monitoring_config() {
         let config = MonitoringConfig::default();
@@ -1047,7 +1119,7 @@ mod tests {
         assert!(config.monitor_system);
         assert!(!config.monitor_hardware);
     }
-    
+
     #[test]
     fn test_alert_configuration() {
         let config = AlertConfiguration::default();
@@ -1055,7 +1127,7 @@ mod tests {
         assert_eq!(config.memory_threshold, 85.0);
         assert_eq!(config.alert_cooldown, Duration::from_secs(300));
     }
-    
+
     #[test]
     fn test_metrics_snapshot() {
         let snapshot = MetricsSnapshot {
@@ -1064,11 +1136,11 @@ mod tests {
             hardware_counters: HashMap::new(),
             application_metrics: ApplicationMetrics::default(),
         };
-        
+
         assert!(snapshot.hardware_counters.is_empty());
         assert_eq!(snapshot.application_metrics.request_count, 0);
     }
-    
+
     #[test]
     fn test_performance_alert() {
         let alert = PerformanceAlert {
@@ -1082,12 +1154,12 @@ mod tests {
             timestamp: Instant::now(),
             active: true,
         };
-        
+
         assert_eq!(alert.alert_type, AlertType::HighCpuUsage);
         assert_eq!(alert.severity, AlertSeverity::Warning);
         assert!(alert.active);
     }
-    
+
     #[test]
     fn test_trend_analysis() {
         let trend = TrendAnalysis {
@@ -1098,12 +1170,12 @@ mod tests {
             confidence_interval: (80.0, 90.0),
             timestamp: Instant::now(),
         };
-        
+
         assert_eq!(trend.trend, TrendDirection::Increasing);
         assert_eq!(trend.strength, 0.7);
         assert_eq!(trend.prediction, 85.0);
     }
-    
+
     #[test]
     fn test_optimization_recommendation() {
         let recommendation = OptimizationRecommendation {
@@ -1115,39 +1187,41 @@ mod tests {
             complexity: ComplexityLevel::Medium,
             timestamp: Instant::now(),
         };
-        
+
         assert_eq!(recommendation.complexity, ComplexityLevel::Medium);
         assert_eq!(recommendation.expected_impact, 20.0);
     }
-    
+
     #[test]
     fn test_application_metrics_provider() {
         let provider = SimpleApplicationMetricsProvider::new();
-        
+
         provider.update_metrics(|metrics| {
             metrics.request_count = 100;
             metrics.avg_response_time = 250.0;
-            metrics.custom_metrics.insert("custom_metric".to_string(), 42.0);
+            metrics
+                .custom_metrics
+                .insert("custom_metric".to_string(), 42.0);
         });
-        
+
         let metrics = provider.get_metrics();
         assert_eq!(metrics.request_count, 100);
         assert_eq!(metrics.avg_response_time, 250.0);
-        
+
         let custom_value = provider.get_custom_metric("custom_metric");
         assert_eq!(custom_value, Some(42.0));
     }
-    
+
     #[test]
     fn test_continuous_monitor_creation() {
         let config = MonitoringConfig::default();
         let monitor = ContinuousPerformanceMonitor::new(config);
-        
+
         assert!(!*monitor.running.lock().unwrap());
         assert!(monitor.get_active_alerts().is_empty());
         assert!(monitor.get_recommendations().is_empty());
     }
-    
+
     #[test]
     fn test_monitoring_report() {
         let report = MonitoringReport {
@@ -1160,21 +1234,21 @@ mod tests {
             recommendations_generated: 1,
             summary: "Test summary".to_string(),
         };
-        
+
         assert_eq!(report.total_samples, 100);
         assert_eq!(report.active_alerts, 2);
         assert_eq!(report.critical_alerts, 1);
     }
-    
+
     #[test]
     fn test_global_monitor() {
         let monitor = global_monitor();
-        
+
         // Should return the same instance
         let monitor2 = global_monitor();
         assert!(Arc::ptr_eq(&monitor, &monitor2));
     }
-    
+
     #[test]
     fn test_utils_functions() {
         // Test performance status
@@ -1182,7 +1256,7 @@ mod tests {
         assert_eq!(alerts, 0);
         assert_eq!(trends, 0);
         assert_eq!(recommendations, 0);
-        
+
         // Test critical alerts check
         let has_critical = utils::has_critical_alerts();
         assert!(!has_critical);

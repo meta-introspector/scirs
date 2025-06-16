@@ -5,9 +5,7 @@
 //! and recovery strategies across the ecosystem.
 
 use super::IntegrationError;
-use crate::error::AutogradError;
 use std::collections::HashMap;
-use std::fmt;
 
 /// Error mapping registry for cross-module error handling
 pub struct ErrorMapper {
@@ -27,100 +25,124 @@ impl ErrorMapper {
             context_stack: Vec::new(),
             recovery_strategies: HashMap::new(),
         };
-        
+
         // Register built-in mappings
         mapper.register_builtin_mappings();
         mapper.register_builtin_recovery_strategies();
-        
+
         mapper
     }
-    
+
     /// Register an error mapping
-    pub fn register_mapping<M: ErrorMapping + 'static>(&mut self, source_module: String, mapping: M) {
+    pub fn register_mapping<M: ErrorMapping + 'static>(
+        &mut self,
+        source_module: String,
+        mapping: M,
+    ) {
         self.mappings.insert(source_module, Box::new(mapping));
     }
-    
+
     /// Register error recovery strategy
-    pub fn register_recovery<R: ErrorRecovery + 'static>(&mut self, error_type: String, recovery: R) {
-        self.recovery_strategies.insert(error_type, Box::new(recovery));
+    pub fn register_recovery<R: ErrorRecovery + 'static>(
+        &mut self,
+        error_type: String,
+        recovery: R,
+    ) {
+        self.recovery_strategies
+            .insert(error_type, Box::new(recovery));
     }
-    
+
     /// Map error from source module to integration error
-    pub fn map_error(&self, source_module: &str, source_error: &dyn std::error::Error) -> IntegrationError {
+    pub fn map_error(
+        &self,
+        source_module: &str,
+        source_error: &dyn std::error::Error,
+    ) -> IntegrationError {
         if let Some(mapping) = self.mappings.get(source_module) {
             mapping.map_error(source_error)
         } else {
-            IntegrationError::ModuleCompatibility(
-                format!("Unmapped error from {}: {}", source_module, source_error)
-            )
+            IntegrationError::ModuleCompatibility(format!(
+                "Unmapped error from {}: {}",
+                source_module, source_error
+            ))
         }
     }
-    
+
     /// Push error context
     pub fn push_context(&mut self, context: ErrorContext) {
         self.context_stack.push(context);
     }
-    
+
     /// Pop error context
     pub fn pop_context(&mut self) -> Option<ErrorContext> {
         self.context_stack.pop()
     }
-    
+
     /// Get current error context
     pub fn current_context(&self) -> Option<&ErrorContext> {
         self.context_stack.last()
     }
-    
+
     /// Attempt error recovery
-    pub fn attempt_recovery(&self, error: &IntegrationError) -> Result<RecoveryAction, IntegrationError> {
+    pub fn attempt_recovery(
+        &self,
+        error: &IntegrationError,
+    ) -> Result<RecoveryAction, IntegrationError> {
         let error_type = self.classify_error(error);
-        
+
         if let Some(recovery) = self.recovery_strategies.get(&error_type) {
             recovery.attempt_recovery(error)
         } else {
-            Err(IntegrationError::ModuleCompatibility(
-                format!("No recovery strategy for error type: {}", error_type)
-            ))
+            Err(IntegrationError::ModuleCompatibility(format!(
+                "No recovery strategy for error type: {}",
+                error_type
+            )))
         }
     }
-    
+
     /// Create enriched error with context
     pub fn enrich_error(&self, error: IntegrationError) -> EnrichedError {
+        let suggestions = self.generate_suggestions(&error);
         EnrichedError {
             original_error: error,
             context_stack: self.context_stack.clone(),
             module_trace: self.build_module_trace(),
-            suggestions: self.generate_suggestions(&error),
+            suggestions,
             related_errors: Vec::new(),
         }
     }
-    
+
     /// Aggregate multiple errors into a single report
     pub fn aggregate_errors(&self, errors: Vec<IntegrationError>) -> AggregatedError {
         let mut by_category = HashMap::new();
         let mut by_module = HashMap::new();
-        
+
         for error in &errors {
             let category = self.classify_error(error);
-            by_category.entry(category.clone()).or_insert_with(Vec::new).push(error);
-            
+            by_category
+                .entry(category.clone())
+                .or_insert_with(Vec::new)
+                .push(error);
+
             if let Some(module) = self.extract_module_from_error(error) {
                 by_module.entry(module).or_insert_with(Vec::new).push(error);
             }
         }
-        
+
+        let summary = self.generate_error_summary(&by_category);
+
         AggregatedError {
             errors,
             by_category,
             by_module,
-            summary: self.generate_error_summary(&by_category),
+            summary,
         }
     }
-    
+
     /// Generate error report
     pub fn generate_report(&self, error: &IntegrationError) -> ErrorReport {
         let enriched = self.enrich_error(error.clone());
-        
+
         ErrorReport {
             error_id: self.generate_error_id(&enriched),
             timestamp: std::time::SystemTime::now(),
@@ -131,54 +153,44 @@ impl ErrorMapper {
             related_documentation: self.find_related_documentation(error),
         }
     }
-    
+
     // Helper methods
     fn register_builtin_mappings(&mut self) {
         // Register neural module error mapping
-        self.mappings.insert(
-            "scirs2-neural".to_string(),
-            Box::new(NeuralErrorMapping)
-        );
-        
+        self.mappings
+            .insert("scirs2-neural".to_string(), Box::new(NeuralErrorMapping));
+
         // Register optimization module error mapping
-        self.mappings.insert(
-            "scirs2-optim".to_string(),
-            Box::new(OptimErrorMapping)
-        );
-        
+        self.mappings
+            .insert("scirs2-optim".to_string(), Box::new(OptimErrorMapping));
+
         // Register linear algebra module error mapping
-        self.mappings.insert(
-            "scirs2-linalg".to_string(),
-            Box::new(LinalgErrorMapping)
-        );
-        
+        self.mappings
+            .insert("scirs2-linalg".to_string(), Box::new(LinalgErrorMapping));
+
         // Register core module error mapping
-        self.mappings.insert(
-            "scirs2-core".to_string(),
-            Box::new(CoreErrorMapping)
-        );
+        self.mappings
+            .insert("scirs2-core".to_string(), Box::new(CoreErrorMapping));
     }
-    
+
     fn register_builtin_recovery_strategies(&mut self) {
         // Register tensor conversion recovery
         self.recovery_strategies.insert(
             "tensor_conversion".to_string(),
-            Box::new(TensorConversionRecovery)
+            Box::new(TensorConversionRecovery),
         );
-        
+
         // Register module compatibility recovery
         self.recovery_strategies.insert(
             "module_compatibility".to_string(),
-            Box::new(CompatibilityRecovery)
+            Box::new(CompatibilityRecovery),
         );
-        
+
         // Register configuration recovery
-        self.recovery_strategies.insert(
-            "configuration".to_string(),
-            Box::new(ConfigurationRecovery)
-        );
+        self.recovery_strategies
+            .insert("configuration".to_string(), Box::new(ConfigurationRecovery));
     }
-    
+
     fn classify_error(&self, error: &IntegrationError) -> String {
         match error {
             IntegrationError::TensorConversion(_) => "tensor_conversion".to_string(),
@@ -188,7 +200,7 @@ impl ErrorMapper {
             IntegrationError::ApiBoundary(_) => "api_boundary".to_string(),
         }
     }
-    
+
     fn assess_severity(&self, error: &IntegrationError) -> ErrorSeverity {
         match error {
             IntegrationError::TensorConversion(_) => ErrorSeverity::Medium,
@@ -198,15 +210,15 @@ impl ErrorMapper {
             IntegrationError::ApiBoundary(_) => ErrorSeverity::Medium,
         }
     }
-    
+
     fn extract_module_from_error(&self, error: &IntegrationError) -> Option<String> {
         // Extract module name from error message or context
         match error {
-            IntegrationError::ModuleCompatibility(msg) |
-            IntegrationError::TensorConversion(msg) |
-            IntegrationError::ConfigMismatch(msg) |
-            IntegrationError::VersionIncompatibility(msg) |
-            IntegrationError::ApiBoundary(msg) => {
+            IntegrationError::ModuleCompatibility(msg)
+            | IntegrationError::TensorConversion(msg)
+            | IntegrationError::ConfigMismatch(msg)
+            | IntegrationError::VersionIncompatibility(msg)
+            | IntegrationError::ApiBoundary(msg) => {
                 // Simple extraction based on known module names
                 if msg.contains("scirs2-neural") {
                     Some("scirs2-neural".to_string())
@@ -220,13 +232,14 @@ impl ErrorMapper {
             }
         }
     }
-    
+
     fn build_module_trace(&self) -> Vec<String> {
-        self.context_stack.iter()
+        self.context_stack
+            .iter()
             .map(|ctx| ctx.module_name.clone())
             .collect()
     }
-    
+
     fn generate_suggestions(&self, error: &IntegrationError) -> Vec<String> {
         match error {
             IntegrationError::TensorConversion(_) => vec![
@@ -256,55 +269,63 @@ impl ErrorMapper {
             ],
         }
     }
-    
-    fn generate_error_summary(&self, by_category: &HashMap<String, Vec<&IntegrationError>>) -> String {
+
+    fn generate_error_summary(
+        &self,
+        by_category: &HashMap<String, Vec<&IntegrationError>>,
+    ) -> String {
         let mut summary = String::new();
         summary.push_str(&format!("Found {} error categories:\n", by_category.len()));
-        
+
         for (category, errors) in by_category {
             summary.push_str(&format!("  {}: {} errors\n", category, errors.len()));
         }
-        
+
         summary
     }
-    
+
     fn generate_error_id(&self, _enriched: &EnrichedError) -> String {
         // Generate unique error ID
-        format!("ERR_{}", std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis())
+        format!(
+            "ERR_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis()
+        )
     }
-    
+
     fn generate_recovery_suggestions(&self, error: &IntegrationError) -> Vec<RecoverySuggestion> {
         let base_suggestions = self.generate_suggestions(error);
-        
-        base_suggestions.into_iter().enumerate().map(|(i, suggestion)| {
-            RecoverySuggestion {
-                priority: if i == 0 { Priority::High } else { Priority::Medium },
+
+        base_suggestions
+            .into_iter()
+            .enumerate()
+            .map(|(i, suggestion)| RecoverySuggestion {
+                priority: if i == 0 {
+                    Priority::High
+                } else {
+                    Priority::Medium
+                },
                 action: suggestion,
                 estimated_success_rate: 0.7 - (i as f64 * 0.1),
                 requires_restart: false,
-            }
-        }).collect()
+            })
+            .collect()
     }
-    
+
     fn find_related_documentation(&self, error: &IntegrationError) -> Vec<DocumentationLink> {
         match error {
-            IntegrationError::TensorConversion(_) => vec![
-                DocumentationLink {
-                    title: "Tensor Conversion Guide".to_string(),
-                    url: "https://scirs2.dev/docs/tensor-conversion".to_string(),
-                    section: Some("Basic Conversion".to_string()),
-                },
-            ],
-            IntegrationError::ModuleCompatibility(_) => vec![
-                DocumentationLink {
-                    title: "Module Compatibility Matrix".to_string(),
-                    url: "https://scirs2.dev/docs/compatibility".to_string(),
-                    section: None,
-                },
-            ],
+            IntegrationError::TensorConversion(_) => vec![DocumentationLink {
+                title: "Tensor Conversion Guide".to_string(),
+                url: "https://scirs2.dev/docs/tensor-conversion".to_string(),
+                section: Some("Basic Conversion".to_string()),
+            }],
+            IntegrationError::ModuleCompatibility(_) => vec![DocumentationLink {
+                title: "Module Compatibility Matrix".to_string(),
+                url: "https://scirs2.dev/docs/compatibility".to_string(),
+                section: None,
+            }],
             _ => Vec::new(),
         }
     }
@@ -323,7 +344,10 @@ pub trait ErrorMapping: Send {
 
 /// Trait for error recovery strategies
 pub trait ErrorRecovery: Send {
-    fn attempt_recovery(&self, error: &IntegrationError) -> Result<RecoveryAction, IntegrationError>;
+    fn attempt_recovery(
+        &self,
+        error: &IntegrationError,
+    ) -> Result<RecoveryAction, IntegrationError>;
 }
 
 /// Error context for tracking error origins
@@ -345,19 +369,19 @@ impl ErrorContext {
             additional_info: HashMap::new(),
         }
     }
-    
+
     /// Add function name
     pub fn with_function(mut self, function_name: String) -> Self {
         self.function_name = Some(function_name);
         self
     }
-    
+
     /// Add operation name
     pub fn with_operation(mut self, operation: String) -> Self {
         self.operation = Some(operation);
         self
     }
-    
+
     /// Add additional information
     pub fn with_info(mut self, key: String, value: String) -> Self {
         self.additional_info.insert(key, value);
@@ -449,19 +473,13 @@ struct NeuralErrorMapping;
 impl ErrorMapping for NeuralErrorMapping {
     fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string();
-        
+
         if error_str.contains("tensor") || error_str.contains("shape") {
-            IntegrationError::TensorConversion(
-                format!("Neural module tensor error: {}", error_str)
-            )
+            IntegrationError::TensorConversion(format!("Neural module tensor error: {}", error_str))
         } else if error_str.contains("gradient") {
-            IntegrationError::ApiBoundary(
-                format!("Neural module gradient error: {}", error_str)
-            )
+            IntegrationError::ApiBoundary(format!("Neural module gradient error: {}", error_str))
         } else {
-            IntegrationError::ModuleCompatibility(
-                format!("Neural module error: {}", error_str)
-            )
+            IntegrationError::ModuleCompatibility(format!("Neural module error: {}", error_str))
         }
     }
 }
@@ -472,19 +490,19 @@ struct OptimErrorMapping;
 impl ErrorMapping for OptimErrorMapping {
     fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string();
-        
+
         if error_str.contains("parameter") || error_str.contains("optimizer") {
-            IntegrationError::ConfigMismatch(
-                format!("Optimizer configuration error: {}", error_str)
-            )
+            IntegrationError::ConfigMismatch(format!(
+                "Optimizer configuration error: {}",
+                error_str
+            ))
         } else if error_str.contains("learning_rate") {
-            IntegrationError::ConfigMismatch(
-                format!("Learning rate error: {}", error_str)
-            )
+            IntegrationError::ConfigMismatch(format!("Learning rate error: {}", error_str))
         } else {
-            IntegrationError::ModuleCompatibility(
-                format!("Optimization module error: {}", error_str)
-            )
+            IntegrationError::ModuleCompatibility(format!(
+                "Optimization module error: {}",
+                error_str
+            ))
         }
     }
 }
@@ -495,19 +513,16 @@ struct LinalgErrorMapping;
 impl ErrorMapping for LinalgErrorMapping {
     fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string();
-        
+
         if error_str.contains("matrix") || error_str.contains("dimension") {
-            IntegrationError::TensorConversion(
-                format!("Matrix dimension error: {}", error_str)
-            )
+            IntegrationError::TensorConversion(format!("Matrix dimension error: {}", error_str))
         } else if error_str.contains("singular") || error_str.contains("decomposition") {
-            IntegrationError::ApiBoundary(
-                format!("Linear algebra operation error: {}", error_str)
-            )
+            IntegrationError::ApiBoundary(format!("Linear algebra operation error: {}", error_str))
         } else {
-            IntegrationError::ModuleCompatibility(
-                format!("Linear algebra module error: {}", error_str)
-            )
+            IntegrationError::ModuleCompatibility(format!(
+                "Linear algebra module error: {}",
+                error_str
+            ))
         }
     }
 }
@@ -518,19 +533,13 @@ struct CoreErrorMapping;
 impl ErrorMapping for CoreErrorMapping {
     fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string();
-        
+
         if error_str.contains("config") {
-            IntegrationError::ConfigMismatch(
-                format!("Core configuration error: {}", error_str)
-            )
+            IntegrationError::ConfigMismatch(format!("Core configuration error: {}", error_str))
         } else if error_str.contains("type") || error_str.contains("conversion") {
-            IntegrationError::TensorConversion(
-                format!("Core type conversion error: {}", error_str)
-            )
+            IntegrationError::TensorConversion(format!("Core type conversion error: {}", error_str))
         } else {
-            IntegrationError::ModuleCompatibility(
-                format!("Core module error: {}", error_str)
-            )
+            IntegrationError::ModuleCompatibility(format!("Core module error: {}", error_str))
         }
     }
 }
@@ -541,24 +550,29 @@ impl ErrorMapping for CoreErrorMapping {
 struct TensorConversionRecovery;
 
 impl ErrorRecovery for TensorConversionRecovery {
-    fn attempt_recovery(&self, error: &IntegrationError) -> Result<RecoveryAction, IntegrationError> {
+    fn attempt_recovery(
+        &self,
+        error: &IntegrationError,
+    ) -> Result<RecoveryAction, IntegrationError> {
         match error {
             IntegrationError::TensorConversion(msg) => {
                 if msg.contains("shape") {
                     Ok(RecoveryAction::RetryWithConfig(
-                        [("auto_reshape".to_string(), "true".to_string())].into()
+                        [("auto_reshape".to_string(), "true".to_string())].into(),
                     ))
                 } else if msg.contains("precision") {
                     Ok(RecoveryAction::RetryWithConfig(
-                        [("auto_convert_precision".to_string(), "true".to_string())].into()
+                        [("auto_convert_precision".to_string(), "true".to_string())].into(),
                     ))
                 } else {
-                    Ok(RecoveryAction::Fallback("Use manual conversion".to_string()))
+                    Ok(RecoveryAction::Fallback(
+                        "Use manual conversion".to_string(),
+                    ))
                 }
             }
             _ => Err(IntegrationError::ModuleCompatibility(
-                "Cannot recover from non-tensor-conversion error".to_string()
-            ))
+                "Cannot recover from non-tensor-conversion error".to_string(),
+            )),
         }
     }
 }
@@ -567,21 +581,20 @@ impl ErrorRecovery for TensorConversionRecovery {
 struct CompatibilityRecovery;
 
 impl ErrorRecovery for CompatibilityRecovery {
-    fn attempt_recovery(&self, error: &IntegrationError) -> Result<RecoveryAction, IntegrationError> {
+    fn attempt_recovery(
+        &self,
+        error: &IntegrationError,
+    ) -> Result<RecoveryAction, IntegrationError> {
         match error {
-            IntegrationError::ModuleCompatibility(_) => {
-                Ok(RecoveryAction::ManualIntervention(
-                    "Check module versions and update dependencies".to_string()
-                ))
-            }
-            IntegrationError::VersionIncompatibility(_) => {
-                Ok(RecoveryAction::ManualIntervention(
-                    "Update to compatible module versions".to_string()
-                ))
-            }
+            IntegrationError::ModuleCompatibility(_) => Ok(RecoveryAction::ManualIntervention(
+                "Check module versions and update dependencies".to_string(),
+            )),
+            IntegrationError::VersionIncompatibility(_) => Ok(RecoveryAction::ManualIntervention(
+                "Update to compatible module versions".to_string(),
+            )),
             _ => Err(IntegrationError::ModuleCompatibility(
-                "Cannot recover from non-compatibility error".to_string()
-            ))
+                "Cannot recover from non-compatibility error".to_string(),
+            )),
         }
     }
 }
@@ -590,22 +603,24 @@ impl ErrorRecovery for CompatibilityRecovery {
 struct ConfigurationRecovery;
 
 impl ErrorRecovery for ConfigurationRecovery {
-    fn attempt_recovery(&self, error: &IntegrationError) -> Result<RecoveryAction, IntegrationError> {
+    fn attempt_recovery(
+        &self,
+        error: &IntegrationError,
+    ) -> Result<RecoveryAction, IntegrationError> {
         match error {
-            IntegrationError::ConfigMismatch(_) => {
-                Ok(RecoveryAction::RetryWithConfig(
-                    [("use_defaults".to_string(), "true".to_string())].into()
-                ))
-            }
+            IntegrationError::ConfigMismatch(_) => Ok(RecoveryAction::RetryWithConfig(
+                [("use_defaults".to_string(), "true".to_string())].into(),
+            )),
             _ => Err(IntegrationError::ConfigMismatch(
-                "Cannot recover from non-configuration error".to_string()
-            ))
+                "Cannot recover from non-configuration error".to_string(),
+            )),
         }
     }
 }
 
 /// Global error mapper instance
-static GLOBAL_ERROR_MAPPER: std::sync::OnceLock<std::sync::Mutex<ErrorMapper>> = std::sync::OnceLock::new();
+static GLOBAL_ERROR_MAPPER: std::sync::OnceLock<std::sync::Mutex<ErrorMapper>> =
+    std::sync::OnceLock::new();
 
 /// Initialize global error mapper
 pub fn init_error_mapper() -> &'static std::sync::Mutex<ErrorMapper> {
@@ -613,23 +628,27 @@ pub fn init_error_mapper() -> &'static std::sync::Mutex<ErrorMapper> {
 }
 
 /// Map error using global mapper
-pub fn map_module_error(source_module: &str, source_error: &dyn std::error::Error) -> IntegrationError {
+pub fn map_module_error(
+    source_module: &str,
+    source_error: &dyn std::error::Error,
+) -> IntegrationError {
     let mapper = init_error_mapper();
     if let Ok(mapper_guard) = mapper.lock() {
         mapper_guard.map_error(source_module, source_error)
     } else {
-        IntegrationError::ModuleCompatibility(
-            format!("Failed to acquire error mapper lock for {}: {}", source_module, source_error)
-        )
+        IntegrationError::ModuleCompatibility(format!(
+            "Failed to acquire error mapper lock for {}: {}",
+            source_module, source_error
+        ))
     }
 }
 
 /// Push error context
 pub fn push_error_context(context: ErrorContext) -> Result<(), IntegrationError> {
     let mapper = init_error_mapper();
-    let mut mapper_guard = mapper.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility(
-            "Failed to acquire error mapper lock".to_string()))?;
+    let mut mapper_guard = mapper.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire error mapper lock".to_string())
+    })?;
     mapper_guard.push_context(context);
     Ok(())
 }
@@ -637,27 +656,29 @@ pub fn push_error_context(context: ErrorContext) -> Result<(), IntegrationError>
 /// Pop error context
 pub fn pop_error_context() -> Result<Option<ErrorContext>, IntegrationError> {
     let mapper = init_error_mapper();
-    let mut mapper_guard = mapper.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility(
-            "Failed to acquire error mapper lock".to_string()))?;
+    let mut mapper_guard = mapper.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire error mapper lock".to_string())
+    })?;
     Ok(mapper_guard.pop_context())
 }
 
 /// Generate error report
 pub fn generate_error_report(error: &IntegrationError) -> Result<ErrorReport, IntegrationError> {
     let mapper = init_error_mapper();
-    let mapper_guard = mapper.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility(
-            "Failed to acquire error mapper lock".to_string()))?;
+    let mapper_guard = mapper.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire error mapper lock".to_string())
+    })?;
     Ok(mapper_guard.generate_report(error))
 }
 
 /// Attempt error recovery
-pub fn attempt_error_recovery(error: &IntegrationError) -> Result<RecoveryAction, IntegrationError> {
+pub fn attempt_error_recovery(
+    error: &IntegrationError,
+) -> Result<RecoveryAction, IntegrationError> {
     let mapper = init_error_mapper();
-    let mapper_guard = mapper.lock()
-        .map_err(|_| IntegrationError::ModuleCompatibility(
-            "Failed to acquire error mapper lock".to_string()))?;
+    let mapper_guard = mapper.lock().map_err(|_| {
+        IntegrationError::ModuleCompatibility("Failed to acquire error mapper lock".to_string())
+    })?;
     mapper_guard.attempt_recovery(error)
 }
 
@@ -682,27 +703,30 @@ mod tests {
         assert_eq!(context.module_name, "test_module");
         assert_eq!(context.function_name, Some("test_function".to_string()));
         assert_eq!(context.operation, Some("test_operation".to_string()));
-        assert_eq!(context.additional_info.get("key"), Some(&"value".to_string()));
+        assert_eq!(
+            context.additional_info.get("key"),
+            Some(&"value".to_string())
+        );
     }
 
     #[test]
     fn test_neural_error_mapping() {
         let mapping = NeuralErrorMapping;
-        
+
         // Create a dummy error
         let dummy_error = IntegrationError::TensorConversion("tensor shape mismatch".to_string());
         let mapped = mapping.map_error(&dummy_error);
-        
+
         assert!(matches!(mapped, IntegrationError::TensorConversion(_)));
     }
 
     #[test]
     fn test_error_classification() {
         let mapper = ErrorMapper::new();
-        
+
         let tensor_error = IntegrationError::TensorConversion("test".to_string());
         assert_eq!(mapper.classify_error(&tensor_error), "tensor_conversion");
-        
+
         let compat_error = IntegrationError::ModuleCompatibility("test".to_string());
         assert_eq!(mapper.classify_error(&compat_error), "module_compatibility");
     }
@@ -710,10 +734,10 @@ mod tests {
     #[test]
     fn test_error_severity() {
         let mapper = ErrorMapper::new();
-        
+
         let config_error = IntegrationError::ConfigMismatch("test".to_string());
         assert_eq!(mapper.assess_severity(&config_error), ErrorSeverity::Low);
-        
+
         let compat_error = IntegrationError::ModuleCompatibility("test".to_string());
         assert_eq!(mapper.assess_severity(&compat_error), ErrorSeverity::High);
     }
@@ -721,26 +745,26 @@ mod tests {
     #[test]
     fn test_recovery_strategy() {
         let recovery = TensorConversionRecovery;
-        
+
         let shape_error = IntegrationError::TensorConversion("shape mismatch".to_string());
         let result = recovery.attempt_recovery(&shape_error).unwrap();
-        
+
         assert!(matches!(result, RecoveryAction::RetryWithConfig(_)));
     }
 
     #[test]
     fn test_context_stack() {
         let mut mapper = ErrorMapper::new();
-        
+
         let context1 = ErrorContext::new("module1".to_string());
         let context2 = ErrorContext::new("module2".to_string());
-        
+
         mapper.push_context(context1);
         mapper.push_context(context2);
-        
+
         assert_eq!(mapper.context_stack.len(), 2);
         assert_eq!(mapper.current_context().unwrap().module_name, "module2");
-        
+
         let popped = mapper.pop_context().unwrap();
         assert_eq!(popped.module_name, "module2");
         assert_eq!(mapper.context_stack.len(), 1);
@@ -750,7 +774,7 @@ mod tests {
     fn test_global_error_mapping() {
         let dummy_error = IntegrationError::TensorConversion("test error".to_string());
         let mapped = map_module_error("scirs2-neural", &dummy_error);
-        
+
         // Should successfully map without panicking
         assert!(matches!(mapped, IntegrationError::TensorConversion(_)));
     }
@@ -758,10 +782,10 @@ mod tests {
     #[test]
     fn test_global_context_management() {
         let context = ErrorContext::new("test_module".to_string());
-        
+
         push_error_context(context).unwrap();
         let popped = pop_error_context().unwrap();
-        
+
         assert!(popped.is_some());
         assert_eq!(popped.unwrap().module_name, "test_module");
     }

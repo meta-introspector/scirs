@@ -164,10 +164,10 @@ impl GpuEvent {
     pub(crate) fn complete(&self) {
         let start_time = self.timestamp.unwrap_or_else(Instant::now);
         let duration = start_time.elapsed();
-        
+
         *self.duration.lock().unwrap() = Some(duration);
         *self.state.lock().unwrap() = EventState::Completed;
-        
+
         // Execute callbacks
         let callbacks = std::mem::take(&mut *self.callbacks.lock().unwrap());
         for callback in callbacks {
@@ -200,7 +200,10 @@ impl std::fmt::Debug for GpuEvent {
             .field("timestamp", &self.timestamp)
             .field("duration", &self.duration)
             .field("dependencies", &self.dependencies)
-            .field("callbacks", &format!("{} callbacks", self.callbacks.lock().unwrap().len()))
+            .field(
+                "callbacks",
+                &format!("{} callbacks", self.callbacks.lock().unwrap().len()),
+            )
             .finish()
     }
 }
@@ -288,7 +291,9 @@ impl GpuStream {
     pub fn is_idle(&self) -> bool {
         let events = self.events.lock().unwrap();
         events.iter().all(|weak_event| {
-            weak_event.upgrade().map_or(true, |event| event.is_completed())
+            weak_event
+                .upgrade()
+                .map_or(true, |event| event.is_completed())
         })
     }
 
@@ -296,7 +301,9 @@ impl GpuStream {
     pub fn cleanup(&self) {
         let mut events = self.events.lock().unwrap();
         events.retain(|weak_event| {
-            weak_event.upgrade().map_or(false, |event| !event.is_completed())
+            weak_event
+                .upgrade()
+                .map_or(false, |event| !event.is_completed())
         });
     }
 }
@@ -313,19 +320,19 @@ pub enum AsyncGpuError {
     /// Stream not found
     #[error("Stream not found: {0:?}")]
     StreamNotFound(StreamId),
-    
+
     /// Event not found
     #[error("Event not found: {0:?}")]
     EventNotFound(EventId),
-    
+
     /// Operation timeout
     #[error("Operation timeout after {0:?}")]
     Timeout(Duration),
-    
+
     /// Dependency cycle detected
     #[error("Dependency cycle detected in events")]
     DependencyCycle,
-    
+
     /// Underlying GPU error
     #[error("GPU error: {0}")]
     GpuError(#[from] GpuError),
@@ -364,7 +371,10 @@ impl AsyncGpuManager {
     /// Create a new stream with priority
     pub fn create_stream_with_priority(&self, priority: StreamPriority) -> Arc<GpuStream> {
         let stream = Arc::new(GpuStream::with_priority(priority));
-        self.streams.lock().unwrap().insert(stream.id(), stream.clone());
+        self.streams
+            .lock()
+            .unwrap()
+            .insert(stream.id(), stream.clone());
         stream
     }
 
@@ -382,7 +392,10 @@ impl AsyncGpuManager {
     pub fn record_event(&self, stream: &Arc<GpuStream>) -> Arc<GpuEvent> {
         let event = Arc::new(GpuEvent::new());
         stream.add_event(&event);
-        self.events.lock().unwrap().insert(event.id(), event.clone());
+        self.events
+            .lock()
+            .unwrap()
+            .insert(event.id(), event.clone());
         event
     }
 
@@ -397,7 +410,10 @@ impl AsyncGpuManager {
 
         let event = Arc::new(GpuEvent::with_dependencies(dependencies));
         stream.add_event(&event);
-        self.events.lock().unwrap().insert(event.id(), event.clone());
+        self.events
+            .lock()
+            .unwrap()
+            .insert(event.id(), event.clone());
         Ok(event)
     }
 
@@ -415,7 +431,13 @@ impl AsyncGpuManager {
 
     /// Synchronize all streams
     pub fn synchronize_all(&self) -> AsyncResult<()> {
-        let streams = self.streams.lock().unwrap().values().cloned().collect::<Vec<_>>();
+        let streams = self
+            .streams
+            .lock()
+            .unwrap()
+            .values()
+            .cloned()
+            .collect::<Vec<_>>();
         for stream in streams {
             stream.synchronize()?;
         }
@@ -446,7 +468,10 @@ impl AsyncGpuManager {
         let total_events = events.len();
         let completed_events = events.values().filter(|e| e.is_completed()).count();
         let failed_events = events.values().filter(|e| e.is_failed()).count();
-        let pending_events = events.values().filter(|e| e.state() == EventState::Pending).count();
+        let pending_events = events
+            .values()
+            .filter(|e| e.state() == EventState::Pending)
+            .count();
 
         AsyncGpuStatistics {
             total_streams,
@@ -460,7 +485,7 @@ impl AsyncGpuManager {
     /// Check for dependency cycles in events
     fn check_dependency_cycles(&self, dependencies: &[EventId]) -> AsyncResult<()> {
         let events = self.events.lock().unwrap();
-        
+
         // Simple cycle detection using DFS
         fn has_cycle(
             event_id: EventId,
@@ -593,10 +618,10 @@ mod tests {
         let manager = AsyncGpuManager::new();
         let stream = manager.create_stream();
         let event = manager.record_event(&stream);
-        
+
         assert_eq!(stream.operations_count(), 1);
         assert!(!stream.is_idle());
-        
+
         event.complete();
         assert!(event.is_completed());
     }
@@ -605,7 +630,7 @@ mod tests {
     fn test_event_dependencies() {
         let event1 = GpuEvent::new();
         let event2 = GpuEvent::with_dependencies(vec![event1.id()]);
-        
+
         assert_eq!(event2.dependencies().len(), 1);
         assert_eq!(event2.dependencies()[0], event1.id());
     }
@@ -614,7 +639,7 @@ mod tests {
     fn test_stream_priority() {
         let low_stream = GpuStream::with_priority(StreamPriority::Low);
         let high_stream = GpuStream::with_priority(StreamPriority::High);
-        
+
         assert_eq!(low_stream.priority(), StreamPriority::Low);
         assert_eq!(high_stream.priority(), StreamPriority::High);
         assert!(high_stream.priority() > low_stream.priority());

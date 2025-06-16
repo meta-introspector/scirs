@@ -771,7 +771,7 @@ mod tests {
 
         // Test interpolation
         let result = interpolator.interpolate(&[0.5]).unwrap();
-        assert!(result >= 0.0 && result <= 1.0);
+        assert!((0.0..=1.0).contains(&result));
         assert!(interpolator.num_points() > 0);
     }
 
@@ -882,7 +882,7 @@ mod tests {
 
         // Check that results are reasonable
         for result in results {
-            assert!(result >= 0.0 && result <= 1.0);
+            assert!((0.0..=1.0).contains(&result));
         }
     }
 

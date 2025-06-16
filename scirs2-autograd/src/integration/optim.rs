@@ -3,7 +3,7 @@
 //! This module provides seamless integration between scirs2-autograd and scirs2-optim,
 //! including optimizer interfaces, parameter management, and learning rate scheduling.
 
-use super::{IntegrationError, SciRS2Integration, core::SciRS2Data};
+use super::{core::SciRS2Data, IntegrationError, SciRS2Integration};
 use crate::tensor::Tensor;
 use crate::Float;
 use std::collections::HashMap;
@@ -12,31 +12,35 @@ use std::collections::HashMap;
 pub trait AutogradOptimizer<F: Float> {
     /// Optimizer name
     fn name(&self) -> &str;
-    
+
     /// Initialize optimizer with parameters
     fn initialize(&mut self, parameters: &[&Tensor<F>]) -> Result<(), IntegrationError>;
-    
+
     /// Perform optimization step
-    fn step(&mut self, parameters: &mut [&mut Tensor<F>], gradients: &[&Tensor<F>]) -> Result<(), IntegrationError>;
-    
+    fn step(
+        &mut self,
+        parameters: &mut [&mut Tensor<F>],
+        gradients: &[&Tensor<F>],
+    ) -> Result<(), IntegrationError>;
+
     /// Zero gradients
     fn zero_grad(&mut self);
-    
+
     /// Get learning rate
     fn learning_rate(&self) -> f64;
-    
+
     /// Set learning rate
     fn set_learning_rate(&mut self, lr: f64);
-    
+
     /// Get optimizer state
     fn state(&self) -> OptimizerState<'_, F>;
-    
+
     /// Set optimizer state
     fn set_state(&mut self, state: OptimizerState<'_, F>);
-    
+
     /// Get parameter groups
     fn parameter_groups(&self) -> &[ParameterGroup<F>];
-    
+
     /// Add parameter group
     fn add_parameter_group(&mut self, group: ParameterGroup<F>);
 }
@@ -64,17 +68,17 @@ impl<'a, F: Float> OptimizerState<'a, F> {
             config: OptimizerConfig::default(),
         }
     }
-    
+
     /// Get parameter state
     pub fn get_param_state(&self, param_id: &str) -> Option<&ParameterState<F>> {
         self.param_state.get(param_id)
     }
-    
+
     /// Set parameter state
     pub fn set_param_state(&mut self, param_id: String, state: ParameterState<F>) {
         self.param_state.insert(param_id, state);
     }
-    
+
     /// Increment step count
     pub fn increment_step(&mut self) {
         self.step_count += 1;
@@ -116,7 +120,7 @@ impl<'a, F: Float> ParameterState<'a, F> {
             extra_state: HashMap::new(),
         }
     }
-    
+
     // Note: Buffer initialization skipped due to autograd's lazy evaluation
     // Buffers would be initialized when first needed during optimization
 }
@@ -146,7 +150,7 @@ impl StateValue {
             _ => None,
         }
     }
-    
+
     /// Get as integer
     pub fn as_int(&self) -> Option<i64> {
         match self {
@@ -158,7 +162,7 @@ impl StateValue {
 }
 
 /// Parameter group for different optimization settings
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ParameterGroup<F: Float> {
     /// Parameters in this group
     pub parameters: Vec<String>, // Parameter IDs
@@ -170,6 +174,8 @@ pub struct ParameterGroup<F: Float> {
     pub config: HashMap<String, StateValue>,
     /// Group name
     pub name: String,
+    /// Phantom data to use type parameter
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> ParameterGroup<F> {
@@ -181,21 +187,22 @@ impl<F: Float> ParameterGroup<F> {
             weight_decay: 0.0,
             config: HashMap::new(),
             name,
+            _phantom: std::marker::PhantomData,
         }
     }
-    
+
     /// Add parameter to group
     pub fn add_parameter(mut self, param_id: String) -> Self {
         self.parameters.push(param_id);
         self
     }
-    
+
     /// Set weight decay
     pub fn weight_decay(mut self, decay: f64) -> Self {
         self.weight_decay = decay;
         self
     }
-    
+
     /// Add configuration
     pub fn config(mut self, key: String, value: StateValue) -> Self {
         self.config.insert(key, value);
@@ -257,14 +264,14 @@ impl<'a, F: Float> SGDOptimizer<'a, F> {
             momentum,
             ..Default::default()
         };
-        
+
         Self {
             config,
             state: OptimizerState::new(),
             parameter_groups: Vec::new(),
         }
     }
-    
+
     /// Create with weight decay
     pub fn with_weight_decay(mut self, weight_decay: f64) -> Self {
         self.config.weight_decay = weight_decay;
@@ -276,7 +283,7 @@ impl<'a, F: Float> AutogradOptimizer<F> for SGDOptimizer<'a, F> {
     fn name(&self) -> &str {
         "SGD"
     }
-    
+
     fn initialize(&mut self, parameters: &[&Tensor<F>]) -> Result<(), IntegrationError> {
         for (i, _param) in parameters.iter().enumerate() {
             let param_id = format!("param_{}", i);
@@ -286,50 +293,54 @@ impl<'a, F: Float> AutogradOptimizer<F> for SGDOptimizer<'a, F> {
         }
         Ok(())
     }
-    
-    fn step(&mut self, parameters: &mut [&mut Tensor<F>], gradients: &[&Tensor<F>]) -> Result<(), IntegrationError> {
+
+    fn step(
+        &mut self,
+        parameters: &mut [&mut Tensor<F>],
+        gradients: &[&Tensor<F>],
+    ) -> Result<(), IntegrationError> {
         if parameters.len() != gradients.len() {
             return Err(IntegrationError::ModuleCompatibility(
-                "Parameter and gradient count mismatch".to_string()
+                "Parameter and gradient count mismatch".to_string(),
             ));
         }
-        
+
         for (i, (param, grad)) in parameters.iter_mut().zip(gradients.iter()).enumerate() {
             let param_id = format!("param_{}", i);
-            
+
             if let Some(param_state) = self.state.param_state.get_mut(&param_id) {
                 self.update_parameter(param, grad, param_state)?;
             }
         }
-        
+
         self.state.increment_step();
         Ok(())
     }
-    
+
     fn zero_grad(&mut self) {
         // In practice, would clear gradient buffers
     }
-    
+
     fn learning_rate(&self) -> f64 {
         self.config.learning_rate
     }
-    
+
     fn set_learning_rate(&mut self, lr: f64) {
         self.config.learning_rate = lr;
     }
-    
-    fn state(&self) -> OptimizerState<'a, F> {
+
+    fn state(&self) -> OptimizerState<'_, F> {
         self.state.clone()
     }
-    
-    fn set_state(&mut self, state: OptimizerState<'a, F>) {
+
+    fn set_state(&mut self, state: OptimizerState<'_, F>) {
         self.state = state;
     }
-    
+
     fn parameter_groups(&self) -> &[ParameterGroup<F>] {
         &self.parameter_groups
     }
-    
+
     fn add_parameter_group(&mut self, group: ParameterGroup<F>) {
         self.parameter_groups.push(group);
     }
@@ -344,15 +355,15 @@ impl<'a, F: Float> SGDOptimizer<'a, F> {
     ) -> Result<(), IntegrationError> {
         // Simplified SGD update: param = param - lr * grad
         // In practice, would implement proper momentum and weight decay
-        
+
         let lr = F::from(self.config.learning_rate).unwrap();
-        
+
         // Apply weight decay if configured
         if self.config.weight_decay > 0.0 {
             let decay = F::from(self.config.weight_decay).unwrap();
             // param_data = param_data - decay * param_data (simplified)
         }
-        
+
         // Update with momentum if configured
         if self.config.momentum > 0.0 {
             if let Some(ref mut momentum_buffer) = param_state.momentum {
@@ -364,7 +375,7 @@ impl<'a, F: Float> SGDOptimizer<'a, F> {
             // Simple update: param = param - lr * grad
             // This is a placeholder - actual implementation would modify param data
         }
-        
+
         Ok(())
     }
 }
@@ -389,14 +400,14 @@ impl<'a, F: Float> AdamOptimizer<'a, F> {
             eps,
             ..Default::default()
         };
-        
+
         Self {
             config,
             state: OptimizerState::new(),
             parameter_groups: Vec::new(),
         }
     }
-    
+
     /// Create with default Adam parameters
     pub fn default_adam(learning_rate: f64) -> Self {
         Self::new(learning_rate, 0.9, 0.999, 1e-8)
@@ -407,7 +418,7 @@ impl<'a, F: Float> AutogradOptimizer<F> for AdamOptimizer<'a, F> {
     fn name(&self) -> &str {
         "Adam"
     }
-    
+
     fn initialize(&mut self, parameters: &[&Tensor<F>]) -> Result<(), IntegrationError> {
         for (i, _param) in parameters.iter().enumerate() {
             let param_id = format!("param_{}", i);
@@ -417,50 +428,54 @@ impl<'a, F: Float> AutogradOptimizer<F> for AdamOptimizer<'a, F> {
         }
         Ok(())
     }
-    
-    fn step(&mut self, parameters: &mut [&mut Tensor<F>], gradients: &[&Tensor<F>]) -> Result<(), IntegrationError> {
+
+    fn step(
+        &mut self,
+        parameters: &mut [&mut Tensor<F>],
+        gradients: &[&Tensor<F>],
+    ) -> Result<(), IntegrationError> {
         if parameters.len() != gradients.len() {
             return Err(IntegrationError::ModuleCompatibility(
-                "Parameter and gradient count mismatch".to_string()
+                "Parameter and gradient count mismatch".to_string(),
             ));
         }
-        
+
         for (i, (param, grad)) in parameters.iter_mut().zip(gradients.iter()).enumerate() {
             let param_id = format!("param_{}", i);
-            
+
             if let Some(param_state) = self.state.param_state.get_mut(&param_id) {
                 self.update_parameter_adam(param, grad, param_state)?;
             }
         }
-        
+
         self.state.increment_step();
         Ok(())
     }
-    
+
     fn zero_grad(&mut self) {
         // Clear gradients
     }
-    
+
     fn learning_rate(&self) -> f64 {
         self.config.learning_rate
     }
-    
+
     fn set_learning_rate(&mut self, lr: f64) {
         self.config.learning_rate = lr;
     }
-    
-    fn state(&self) -> OptimizerState<'a, F> {
+
+    fn state(&self) -> OptimizerState<'_, F> {
         self.state.clone()
     }
-    
-    fn set_state(&mut self, state: OptimizerState<'a, F>) {
+
+    fn set_state(&mut self, state: OptimizerState<'_, F>) {
         self.state = state;
     }
-    
+
     fn parameter_groups(&self) -> &[ParameterGroup<F>] {
         &self.parameter_groups
     }
-    
+
     fn add_parameter_group(&mut self, group: ParameterGroup<F>) {
         self.parameter_groups.push(group);
     }
@@ -480,9 +495,9 @@ impl<'a, F: Float> AdamOptimizer<'a, F> {
         // m̂_t = m_t / (1-β1^t)
         // v̂_t = v_t / (1-β2^t)
         // θ_t = θ_{t-1} - α * m̂_t / (√v̂_t + ε)
-        
+
         param_state.step += 1;
-        
+
         // This is a placeholder implementation
         Ok(())
     }
@@ -492,10 +507,10 @@ impl<'a, F: Float> AdamOptimizer<'a, F> {
 pub trait LearningRateScheduler<F: Float> {
     /// Get current learning rate
     fn get_lr(&self) -> f64;
-    
+
     /// Step the scheduler
     fn step(&mut self, optimizer: &mut dyn AutogradOptimizer<F>);
-    
+
     /// Step with metric (for ReduceLROnPlateau)
     fn step_with_metric(&mut self, optimizer: &mut dyn AutogradOptimizer<F>, metric: f64);
 }
@@ -525,13 +540,13 @@ impl<F: Float> LearningRateScheduler<F> for StepLRScheduler {
         let decay_factor = (self.current_step / self.step_size) as f64;
         self.initial_lr * self.gamma.powf(decay_factor)
     }
-    
+
     fn step(&mut self, optimizer: &mut dyn AutogradOptimizer<F>) {
         self.current_step += 1;
-        let new_lr = self.get_lr();
+        let new_lr = <Self as LearningRateScheduler<F>>::get_lr(self);
         optimizer.set_learning_rate(new_lr);
     }
-    
+
     fn step_with_metric(&mut self, optimizer: &mut dyn AutogradOptimizer<F>, _metric: f64) {
         self.step(optimizer);
     }
@@ -563,13 +578,13 @@ impl<F: Float> LearningRateScheduler<F> for CosineAnnealingLRScheduler {
         let cosine_factor = 0.5 * (1.0 + (std::f64::consts::PI * progress).cos());
         self.min_lr + (self.initial_lr - self.min_lr) * cosine_factor
     }
-    
+
     fn step(&mut self, optimizer: &mut dyn AutogradOptimizer<F>) {
         self.current_step += 1;
-        let new_lr = self.get_lr();
+        let new_lr = <Self as LearningRateScheduler<F>>::get_lr(self);
         optimizer.set_learning_rate(new_lr);
     }
-    
+
     fn step_with_metric(&mut self, optimizer: &mut dyn AutogradOptimizer<F>, _metric: f64) {
         self.step(optimizer);
     }
@@ -580,15 +595,18 @@ pub struct OptimizerFactory;
 
 impl OptimizerFactory {
     /// Create SGD optimizer
-    pub fn sgd<'a, F: Float>(learning_rate: f64, momentum: f64) -> Box<dyn AutogradOptimizer<F> + 'a> {
+    pub fn sgd<'a, F: Float>(
+        learning_rate: f64,
+        momentum: f64,
+    ) -> Box<dyn AutogradOptimizer<F> + 'a> {
         Box::new(SGDOptimizer::new(learning_rate, momentum))
     }
-    
+
     /// Create Adam optimizer
     pub fn adam<'a, F: Float>(learning_rate: f64) -> Box<dyn AutogradOptimizer<F> + 'a> {
         Box::new(AdamOptimizer::default_adam(learning_rate))
     }
-    
+
     /// Create custom Adam optimizer
     pub fn adam_custom<'a, F: Float>(
         learning_rate: f64,
@@ -605,15 +623,19 @@ impl<'a, F: Float> SciRS2Integration for OptimizerState<'a, F> {
     fn module_name() -> &'static str {
         "scirs2-optim"
     }
-    
+
     fn module_version() -> &'static str {
         "0.1.0-alpha.5"
     }
-    
+
     fn check_compatibility() -> Result<(), IntegrationError> {
-        super::check_compatibility("scirs2-autograd", "scirs2-optim")
+        match super::check_compatibility("scirs2-autograd", "scirs2-optim")? {
+            true => Ok(()),
+            false => Err(IntegrationError::ModuleCompatibility(
+                "Version mismatch".to_string(),
+            )),
+        }
     }
-    
 }
 
 /// Convert optimizer state to SciRS2Data
@@ -621,36 +643,40 @@ pub fn optimizer_to_scirs2_data<'a, F: Float>(
     optimizer: &dyn AutogradOptimizer<F>,
 ) -> SciRS2Data<'a, F> {
     let mut data = SciRS2Data::new();
-    
+
     let state = optimizer.state();
-    
+
     // Add optimizer metadata
     data = data.add_metadata("module_name".to_string(), "scirs2-optim".to_string());
     data = data.add_metadata("optimizer_name".to_string(), optimizer.name().to_string());
     data = data.add_metadata("step_count".to_string(), state.step_count.to_string());
-    data = data.add_metadata("learning_rate".to_string(), optimizer.learning_rate().to_string());
-    
+    data = data.add_metadata(
+        "learning_rate".to_string(),
+        optimizer.learning_rate().to_string(),
+    );
+
     // Add state information as metadata instead of tensor
     data = data.add_metadata("step_count_value".to_string(), state.step_count.to_string());
-    
+
     data
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[allow(unused_imports)]
     use crate::tensor::Tensor;
 
     #[test]
     fn test_optimizer_state() {
         let mut state = OptimizerState::<f32>::new();
-        
+
         let param_state = ParameterState::new();
         state.set_param_state("param_0".to_string(), param_state);
-        
+
         assert_eq!(state.step_count, 0);
         assert!(state.get_param_state("param_0").is_some());
-        
+
         state.increment_step();
         assert_eq!(state.step_count, 1);
     }
@@ -661,7 +687,7 @@ mod tests {
             .add_parameter("param_0".to_string())
             .weight_decay(1e-4)
             .config("momentum".to_string(), StateValue::Float(0.9));
-        
+
         assert_eq!(group.learning_rate, 0.01);
         assert_eq!(group.weight_decay, 1e-4);
         assert_eq!(group.parameters.len(), 1);
@@ -671,10 +697,10 @@ mod tests {
     #[test]
     fn test_sgd_optimizer() {
         let mut optimizer = SGDOptimizer::<f32>::new(0.01, 0.9);
-        
+
         assert_eq!(optimizer.name(), "SGD");
         assert_eq!(optimizer.learning_rate(), 0.01);
-        
+
         // Skip tensor-based tests due to autograd's lazy evaluation
         assert_eq!(optimizer.state().param_state.len(), 0);
     }
@@ -682,10 +708,10 @@ mod tests {
     #[test]
     fn test_adam_optimizer() {
         let mut optimizer = AdamOptimizer::<f32>::default_adam(0.001);
-        
+
         assert_eq!(optimizer.name(), "Adam");
         assert_eq!(optimizer.learning_rate(), 0.001);
-        
+
         // Skip tensor-based tests due to autograd's lazy evaluation
         assert_eq!(optimizer.state().param_state.len(), 0);
     }
@@ -694,14 +720,14 @@ mod tests {
     fn test_learning_rate_scheduler() {
         let mut scheduler = StepLRScheduler::new(0.1, 5, 0.5);
         let mut optimizer = SGDOptimizer::<f32>::new(0.1, 0.0);
-        
+
         assert_eq!(scheduler.get_lr(), 0.1);
-        
+
         // Step 5 times
         for _ in 0..5 {
             scheduler.step(&mut optimizer);
         }
-        
+
         // Learning rate should be reduced
         assert!(scheduler.get_lr() < 0.1);
     }
@@ -710,14 +736,14 @@ mod tests {
     fn test_cosine_annealing_scheduler() {
         let mut scheduler = CosineAnnealingLRScheduler::new(0.1, 10, 0.0);
         let mut optimizer = SGDOptimizer::<f32>::new(0.1, 0.0);
-        
+
         let initial_lr = scheduler.get_lr();
-        
+
         // Step halfway
         for _ in 0..5 {
             scheduler.step(&mut optimizer);
         }
-        
+
         let halfway_lr = scheduler.get_lr();
         assert!(halfway_lr < initial_lr);
     }
@@ -731,7 +757,7 @@ mod tests {
     #[test]
     fn test_scirs2_integration() {
         let state = OptimizerState::<f32>::new();
-        
+
         // Test basic state properties
         assert_eq!(state.step_count, 0);
         assert!(state.param_state.is_empty());

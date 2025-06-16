@@ -100,7 +100,7 @@ mod decomposition;
 pub mod eigen;
 pub use self::eigen::{
     eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh, eigvalsh_gen,
-    enhanced_rank_detection, power_iteration,
+    power_iteration, ultra_precision_eig,
 };
 
 // Specialized eigen solvers in separate module
@@ -267,7 +267,8 @@ pub mod prelude {
     };
     pub use super::decomposition::{cholesky, lu, qr, schur, svd};
     pub use super::eigen::{
-        eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh, eigvalsh_gen, power_iteration,
+        eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh, eigvalsh_gen, 
+        power_iteration, ultra_precision_eig,
     };
     pub use super::eigen_specialized::{
         banded_eigen, banded_eigh, banded_eigvalsh, circulant_eigenvalues, largest_k_eigh,
@@ -318,10 +319,10 @@ pub mod prelude {
         LinearOperator, MatrixFreeOp,
     };
     pub use super::mixed_precision::{
-        convert, convert_2d, iterative_refinement_solve, mixed_precision_cholesky,
+        convert, convert_2d, iterative_refinement_solve,
         mixed_precision_cond, mixed_precision_det, mixed_precision_dot, mixed_precision_inv,
-        mixed_precision_lstsq, mixed_precision_lu, mixed_precision_matmul, mixed_precision_matvec,
-        mixed_precision_qr, mixed_precision_solve, mixed_precision_svd, MixedPrecisionLstsqResult,
+        mixed_precision_matmul, mixed_precision_matvec,
+        mixed_precision_qr, mixed_precision_solve, mixed_precision_svd,
     };
     #[cfg(feature = "simd")]
     pub use super::mixed_precision::{

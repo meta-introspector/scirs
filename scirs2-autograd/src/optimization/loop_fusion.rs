@@ -4,10 +4,10 @@
 //! to reduce memory bandwidth requirements and improve cache efficiency.
 
 use crate::graph::{Graph, TensorID};
-use crate::op::{Op, OpError};
+use crate::op::OpError;
 use crate::Float;
 use ndarray::{Array, IxDyn, Zip};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
 /// Types of operations that can be fused
@@ -144,7 +144,7 @@ pub struct LoopFusionOptimizer<F: Float> {
     /// Mapping from original operations to fused operations
     fusion_mapping: HashMap<TensorID, usize>,
     /// Performance statistics
-    stats: FusionStats,
+    stats: FusionStats<F>,
 }
 
 impl<F: Float> LoopFusionOptimizer<F> {
@@ -287,7 +287,7 @@ impl<F: Float> LoopFusionOptimizer<F> {
     }
 
     /// Get fusion statistics
-    pub fn get_stats(&self) -> &FusionStats {
+    pub fn get_stats(&self) -> &FusionStats<F> {
         &self.stats
     }
 }
@@ -321,7 +321,7 @@ impl<F: Float> FusedKernel<F> {
         Ok(Box::new(
             move |inputs: &[&Array<F, IxDyn>]| -> Result<Array<F, IxDyn>, OpError> {
                 if inputs.is_empty() {
-                    return Err(OpError::InvalidInput(
+                    return Err(OpError::RuntimeError(
                         "No input arrays provided".to_string(),
                     ));
                 }
@@ -417,8 +417,8 @@ impl<F: Float> FusedKernel<F> {
 }
 
 /// Statistics for fusion optimization
-#[derive(Debug, Default, Clone)]
-pub struct FusionStats {
+#[derive(Debug, Clone)]
+pub struct FusionStats<F: crate::Float> {
     /// Number of fusion chains identified
     pub chains_identified: usize,
     /// Total operations that were fused
@@ -427,9 +427,11 @@ pub struct FusionStats {
     pub memory_bandwidth_reduction: f64,
     /// Estimated performance improvement (speedup factor)
     pub estimated_speedup: f64,
+    /// Phantom data for type parameter
+    _phantom: std::marker::PhantomData<F>,
 }
 
-impl<F: Float> FusionStats {
+impl<F: crate::Float> FusionStats<F> {
     /// Calculate memory bandwidth reduction
     pub fn calculate_memory_reduction(&mut self, original_ops: usize) {
         if original_ops > 0 {
@@ -446,6 +448,18 @@ impl<F: Float> FusionStats {
                 .map(|kernel| kernel.estimate_speedup())
                 .sum::<f64>()
                 / kernels.len() as f64;
+        }
+    }
+}
+
+impl<F: crate::Float> Default for FusionStats<F> {
+    fn default() -> Self {
+        Self {
+            chains_identified: 0,
+            total_operations_fused: 0,
+            memory_bandwidth_reduction: 0.0,
+            estimated_speedup: 0.0,
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -501,14 +515,14 @@ impl<F: Float> LoopFusionManager<F> {
         inputs: &[&Array<F, IxDyn>],
     ) -> Result<Array<F, IxDyn>, OpError> {
         if kernel_id >= self.kernels.len() {
-            return Err(OpError::InvalidInput("Invalid kernel ID".to_string()));
+            return Err(OpError::RuntimeError("Invalid kernel ID".to_string()));
         }
 
         self.kernels[kernel_id].execute(inputs)
     }
 
     /// Get optimization statistics
-    pub fn get_stats(&self) -> &FusionStats {
+    pub fn get_stats(&self) -> &FusionStats<F> {
         self.optimizer.get_stats()
     }
 
@@ -566,7 +580,7 @@ pub fn configure_fusion(config: FusionConfig) -> Result<(), OpError> {
     let manager = init_fusion_manager();
     let mut manager_guard = manager
         .lock()
-        .map_err(|_| OpError::InvalidInput("Lock error".to_string()))?;
+        .map_err(|_| OpError::RuntimeError("Lock error".to_string()))?;
     *manager_guard = LoopFusionManager::with_config(config);
     Ok(())
 }
@@ -593,6 +607,7 @@ pub fn is_fusion_enabled() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[allow(unused_imports)]
     use ndarray::Array1;
 
     #[test]

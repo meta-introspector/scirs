@@ -103,7 +103,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         let n = input_shape.iter().product::<usize>();
 
         // Create Hessian matrix (simplified - assumes flattened input)
-        let mut hessian = Array::zeros(vec![n, n].into_dyn());
+        let mut hessian = Array::zeros(IxDyn(&[n, n]));
 
         let step = F::from(self.config.step_size).unwrap();
 
@@ -142,7 +142,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
         let f_x = function(input)?;
         let input_shape = input.shape();
-        let mut gradient = Array::zeros(input_shape.into_dyn());
+        let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
 
         // Compute partial derivatives
         for (i, mut input_perturbed) in self.create_perturbed_inputs(input, step).enumerate() {
@@ -155,7 +155,13 @@ impl<F: Float> FiniteDifferenceComputer<F> {
             self.set_gradient_component(&mut gradient, i, partial_derivative)?;
         }
 
-        Ok(Tensor::from_array(gradient))
+        let gradient_vec = gradient.into_raw_vec_and_offset().0;
+        let gradient_shape = input_shape.to_vec();
+        Ok(Tensor::from_vec(
+            gradient_vec,
+            gradient_shape,
+            input.graph(),
+        ))
     }
 
     /// Backward difference implementation
@@ -170,7 +176,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         let step = F::from(self.config.step_size).unwrap();
         let f_x = function(input)?;
         let input_shape = input.shape();
-        let mut gradient = Array::zeros(input_shape.into_dyn());
+        let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
 
         // Compute partial derivatives using backward differences
         for (i, input_perturbed) in self.create_perturbed_inputs(input, -step).enumerate() {
@@ -182,7 +188,13 @@ impl<F: Float> FiniteDifferenceComputer<F> {
             self.set_gradient_component(&mut gradient, i, partial_derivative)?;
         }
 
-        Ok(Tensor::from_array(gradient))
+        let gradient_vec = gradient.into_raw_vec_and_offset().0;
+        let gradient_shape = input_shape.to_vec();
+        Ok(Tensor::from_vec(
+            gradient_vec,
+            gradient_shape,
+            input.graph(),
+        ))
     }
 
     /// Central difference implementation
@@ -196,7 +208,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     {
         let step = F::from(self.config.step_size).unwrap();
         let input_shape = input.shape();
-        let mut gradient = Array::zeros(input_shape.into_dyn());
+        let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
 
         // Compute partial derivatives using central differences
         for (i, (input_plus, input_minus)) in self
@@ -213,7 +225,13 @@ impl<F: Float> FiniteDifferenceComputer<F> {
             self.set_gradient_component(&mut gradient, i, partial_derivative)?;
         }
 
-        Ok(Tensor::from_array(gradient))
+        let gradient_vec = gradient.into_raw_vec_and_offset().0;
+        let gradient_shape = input_shape.to_vec();
+        Ok(Tensor::from_vec(
+            gradient_vec,
+            gradient_shape,
+            input.graph(),
+        ))
     }
 
     /// High-order central difference with O(h^4) accuracy
@@ -227,7 +245,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     {
         let step = F::from(self.config.step_size).unwrap();
         let input_shape = input.shape();
-        let mut gradient = Array::zeros(input_shape.into_dyn());
+        let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
 
         // Use 5-point stencil: (-2h, -h, 0, h, 2h)
         for i in 0..input_shape.iter().product() {
@@ -245,11 +263,16 @@ impl<F: Float> FiniteDifferenceComputer<F> {
             self.set_gradient_component(&mut gradient, i, partial_derivative)?;
         }
 
-        Ok(Tensor::from_array(gradient))
+        let gradient_vec = gradient.into_raw_vec_and_offset().0;
+        let gradient_shape = input_shape.to_vec();
+        Ok(Tensor::from_vec(
+            gradient_vec,
+            gradient_shape,
+            input.graph(),
+        ))
     }
 
     /// Helper methods
-
     #[allow(dead_code)]
     fn select_optimal_step_size<Func>(
         &self,

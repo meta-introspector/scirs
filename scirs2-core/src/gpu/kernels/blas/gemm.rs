@@ -446,7 +446,14 @@ __kernel void gemm_standard(
         // ROCm (HIP) kernel - similar to CUDA
         let rocm_source = cuda_source.clone();
 
-        (name, cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
+        (
+            name,
+            cuda_source,
+            rocm_source,
+            wgpu_source,
+            metal_source,
+            opencl_source,
+        )
     }
 
     /// Generate a specialized kernel for the given dimensions

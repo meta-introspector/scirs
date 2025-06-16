@@ -3,8 +3,8 @@ use ndarray::Array1;
 use scirs2_interpolate::bspline::{
     generate_knots, make_interp_bspline, make_lsq_bspline, BSpline, ExtrapolateMode,
 };
-use scirs2_interpolate::cache::{make_cached_bspline, CacheConfig, CachedBSpline};
-use scirs2_interpolate::fast_bspline::{make_fast_bspline_evaluator, FastBSplineEvaluator};
+use scirs2_interpolate::cache::{CacheConfig, CachedBSpline};
+use scirs2_interpolate::fast_bspline::make_fast_bspline_evaluator;
 
 fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);

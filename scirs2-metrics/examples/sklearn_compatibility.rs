@@ -126,7 +126,7 @@ fn precision_recall_fscore_support_example() -> Result<()> {
         )?;
 
         println!("\n  {}:", description);
-        if let Some(_) = average {
+        if average.is_some() {
             // Single values for averaged results
             println!("    Precision: {:.4}", precision[0]);
             println!("    Recall: {:.4}", recall[0]);

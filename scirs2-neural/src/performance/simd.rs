@@ -5,12 +5,9 @@
 //! performance improvements. All functions are feature-gated with "simd" feature.
 
 use crate::error::{NeuralError, Result};
-use ndarray::{Array, ArrayD};
-#[cfg(feature = "simd")]
-use ndarray::{ArrayView, ArrayViewMut, IxDyn};
+use ndarray::{ArrayD, ArrayView, ArrayViewMut, IxDyn};
 #[allow(unused_imports)]
 use num_traits::Float;
-use std::fmt::Debug;
 
 #[cfg(feature = "simd")]
 use wide::{f32x8, CmpGt};

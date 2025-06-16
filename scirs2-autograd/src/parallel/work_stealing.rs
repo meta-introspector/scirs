@@ -102,7 +102,7 @@ impl<T> WorkStealingDeque<T> {
             return StealResult::Empty;
         }
 
-        let array_ptr = self.array.load(Ordering::Consume);
+        let array_ptr = self.array.load(Ordering::Acquire);
         let array = unsafe { &*array_ptr };
 
         let task = array.get(top);
@@ -499,7 +499,9 @@ impl<T> Default for LockFreeWorkStealingDeque<T> {
 mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
+    #[allow(unused_imports)]
+    use std::sync::Mutex;
 
     #[test]
     fn test_work_stealing_deque_basic() {

@@ -33,6 +33,7 @@ array-init = { workspace = true }
 scirs2-core = { workspace = true }
 # Remove dependency on scirs2-linalg to avoid circular dependency
 ndarray-linalg = { workspace = true, default-features = false }
+toml = { workspace = true }
 
 [features]
 default = []

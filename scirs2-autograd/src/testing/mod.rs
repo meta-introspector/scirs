@@ -6,8 +6,7 @@
 use crate::graph::Graph;
 use crate::tensor::Tensor;
 use crate::Float;
-use ndarray::{Array, IxDyn, Zip};
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::fmt;
 
 pub mod finite_differences;
@@ -73,7 +72,7 @@ impl<F: Float> NumericalStabilityTester<F> {
     }
 
     /// Test the numerical stability of a computation graph
-    pub fn test_graph(&self, graph: &Graph<F>) -> Result<StabilityReport, StabilityError> {
+    pub fn test_graph(&self, graph: &Graph<F>) -> Result<StabilityReport<F>, StabilityError> {
         let mut report = StabilityReport::new();
 
         // Test gradient accuracy using finite differences
@@ -234,7 +233,7 @@ impl<F: Float> NumericalStabilityTester<F> {
     fn test_overflow_underflow(
         &self,
         _graph: &Graph<F>,
-    ) -> Result<OverflowTestResults, StabilityError> {
+    ) -> Result<OverflowTestResults<F>, StabilityError> {
         let mut results = OverflowTestResults {
             overflow_risks: Vec::new(),
             underflow_risks: Vec::new(),
@@ -273,7 +272,6 @@ impl<F: Float> NumericalStabilityTester<F> {
     }
 
     /// Helper methods for computations
-
     fn compute_analytical_gradient(&self) -> Result<Vec<f64>, StabilityError> {
         // Simplified - would compute actual analytical gradient
         Ok(vec![1.0, 2.0, 3.0])
@@ -310,7 +308,7 @@ impl<F: Float> NumericalStabilityTester<F> {
         })
     }
 
-    fn compute_overall_grade(&self, report: &StabilityReport) -> StabilityGrade {
+    fn compute_overall_grade(&self, report: &StabilityReport<F>) -> StabilityGrade {
         let mut score = 100.0;
 
         // Penalize gradient test failures
@@ -349,15 +347,15 @@ impl<F: Float> Default for NumericalStabilityTester<F> {
 
 /// Results of stability testing
 #[derive(Debug, Clone)]
-pub struct StabilityReport {
+pub struct StabilityReport<F: Float> {
     pub gradient_tests: GradientTestResults,
     pub conditioning_tests: ConditioningTestResults,
     pub perturbation_tests: PerturbationTestResults,
-    pub overflow_tests: OverflowTestResults,
+    pub overflow_tests: OverflowTestResults<F>,
     pub overall_grade: StabilityGrade,
 }
 
-impl StabilityReport {
+impl<F: Float> StabilityReport<F> {
     pub fn new() -> Self {
         Self {
             gradient_tests: GradientTestResults::default(),
@@ -489,16 +487,26 @@ pub struct PerturbationTest {
 }
 
 /// Overflow/underflow test results  
-#[derive(Debug, Clone, Default)]
-pub struct OverflowTestResults {
-    pub overflow_risks: Vec<OverflowRisk>,
-    pub underflow_risks: Vec<UnderflowRisk>,
+#[derive(Debug, Clone)]
+pub struct OverflowTestResults<F: Float> {
+    pub overflow_risks: Vec<OverflowRisk<F>>,
+    pub underflow_risks: Vec<UnderflowRisk<F>>,
     pub safe_ranges: HashMap<String, (f64, f64)>,
+}
+
+impl<F: Float> Default for OverflowTestResults<F> {
+    fn default() -> Self {
+        Self {
+            overflow_risks: Vec::new(),
+            underflow_risks: Vec::new(),
+            safe_ranges: HashMap::new(),
+        }
+    }
 }
 
 /// Overflow risk information
 #[derive(Debug, Clone)]
-pub struct OverflowRisk {
+pub struct OverflowRisk<F: Float> {
     pub input_value: F,
     pub operation: String,
     pub probability: f64,
@@ -506,7 +514,7 @@ pub struct OverflowRisk {
 
 /// Underflow risk information
 #[derive(Debug, Clone)]
-pub struct UnderflowRisk {
+pub struct UnderflowRisk<F: Float> {
     pub input_value: F,
     pub operation: String,
     pub probability: f64,
@@ -558,11 +566,10 @@ pub enum StabilityError {
 }
 
 /// Public API functions
-
 /// Test the numerical stability of a computation graph
 pub fn test_numerical_stability<F: Float>(
     graph: &Graph<F>,
-) -> Result<StabilityReport, StabilityError> {
+) -> Result<StabilityReport<F>, StabilityError> {
     let tester = NumericalStabilityTester::new();
     tester.test_graph(graph)
 }
@@ -571,7 +578,7 @@ pub fn test_numerical_stability<F: Float>(
 pub fn test_numerical_stability_with_config<F: Float>(
     graph: &Graph<F>,
     config: StabilityTestConfig,
-) -> Result<StabilityReport, StabilityError> {
+) -> Result<StabilityReport<F>, StabilityError> {
     let tester = NumericalStabilityTester::with_config(config);
     tester.test_graph(graph)
 }

@@ -167,7 +167,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let simd_osc = simd_evaluator_osc.evaluate_batch(&osc_test_points.view())?;
 
         println!("\n   Oscillatory spline results:");
-        for (_i, (&point, &result)) in osc_test_points.iter().zip(simd_osc.iter()).enumerate() {
+        for (&point, &result) in osc_test_points.iter().zip(simd_osc.iter()) {
             println!("     f({:.3}) = {:8.5}", point, result);
         }
 
@@ -218,7 +218,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "   {} points -> {} results (SIMD chunks: {})",
                 size,
                 results.len(),
-                (size + 3) / 4
+                size.div_ceil(4)
             );
         }
 

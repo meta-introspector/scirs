@@ -9,7 +9,7 @@ use num_traits::{Float, One, Zero};
 use std::f64::consts::PI;
 
 use crate::basic::{det, inv};
-use crate::eigen::eigen_symmetric;
+use crate::eigen::eigh;
 use crate::error::{LinalgError, LinalgResult};
 use crate::stats::covariance::covariance_matrix;
 
@@ -231,7 +231,7 @@ where
     let cov = covariance_matrix(data, Some(1))?;
 
     // Compute eigenvalues
-    let (eigenvals, _) = eigen_symmetric(&cov.view(), None)?;
+    let (eigenvals, _) = eigh(&cov.view(), None)?;
 
     // Mauchly's W statistic
     let geometric_mean = eigenvals

@@ -900,7 +900,7 @@ mod tests {
         let sigmoid_result = interpolator
             .apply_activation(&x.view(), ActivationType::Sigmoid)
             .unwrap();
-        assert!(sigmoid_result.iter().all(|&val| val >= 0.0 && val <= 1.0));
+        assert!(sigmoid_result.iter().all(|&val| (0.0..=1.0).contains(&val)));
     }
 
     #[test]

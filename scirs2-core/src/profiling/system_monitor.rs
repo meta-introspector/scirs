@@ -15,15 +15,15 @@ pub enum SystemMonitorError {
     /// Failed to read system information
     #[error("Failed to read system information: {0}")]
     SystemReadError(String),
-    
+
     /// Monitoring not supported on this platform
     #[error("System monitoring not supported on this platform")]
     UnsupportedPlatform,
-    
+
     /// Permission denied for system monitoring
     #[error("Permission denied for system monitoring")]
     PermissionDenied,
-    
+
     /// Monitor not running
     #[error("System monitor is not running")]
     NotRunning,
@@ -125,7 +125,7 @@ impl SystemMonitor {
             handle: None,
         }
     }
-    
+
     /// Start monitoring system resources
     pub fn start(&mut self) -> Result<(), SystemMonitorError> {
         let mut running = self.running.lock().unwrap();
@@ -133,45 +133,50 @@ impl SystemMonitor {
             return Ok(()); // Already running
         }
         *running = true;
-        
+
         let config = self.config.clone();
         let metrics_history = Arc::clone(&self.metrics_history);
         let running_flag = Arc::clone(&self.running);
-        
+
         self.handle = Some(thread::spawn(move || {
             Self::monitoring_loop(config, metrics_history, running_flag);
         }));
-        
+
         Ok(())
     }
-    
+
     /// Stop monitoring
     pub fn stop(&mut self) {
         if let Ok(mut running) = self.running.lock() {
             *running = false;
         }
-        
+
         if let Some(handle) = self.handle.take() {
             let _ = handle.join();
         }
     }
-    
+
     /// Get current system metrics
     pub fn get_current_metrics(&self) -> Result<SystemMetrics, SystemMonitorError> {
         Self::collect_system_metrics(&self.config)
     }
-    
+
     /// Get metrics history
     pub fn get_metrics_history(&self) -> Vec<SystemMetrics> {
-        self.metrics_history.lock().unwrap().iter().cloned().collect()
+        self.metrics_history
+            .lock()
+            .unwrap()
+            .iter()
+            .cloned()
+            .collect()
     }
-    
+
     /// Get latest N metrics
     pub fn get_latest_metrics(&self, n: usize) -> Vec<SystemMetrics> {
         let history = self.metrics_history.lock().unwrap();
         history.iter().rev().take(n).cloned().collect()
     }
-    
+
     /// Get metrics within time range
     pub fn get_metrics_in_range(&self, start: Instant, end: Instant) -> Vec<SystemMetrics> {
         self.metrics_history
@@ -182,27 +187,33 @@ impl SystemMonitor {
             .cloned()
             .collect()
     }
-    
+
     /// Calculate average metrics over time period
     pub fn get_average_metrics(&self, duration: Duration) -> Option<SystemMetrics> {
         let now = Instant::now();
         let start = now - duration;
         let metrics = self.get_metrics_in_range(start, now);
-        
+
         if metrics.is_empty() {
             return None;
         }
-        
+
         let count = metrics.len() as f64;
         let avg_cpu = metrics.iter().map(|m| m.cpu_usage).sum::<f64>() / count;
-        let avg_memory = (metrics.iter().map(|m| m.memory_usage).sum::<usize>() as f64 / count) as usize;
-        let avg_disk_read = (metrics.iter().map(|m| m.disk_read_bps).sum::<u64>() as f64 / count) as u64;
-        let avg_disk_write = (metrics.iter().map(|m| m.disk_write_bps).sum::<u64>() as f64 / count) as u64;
-        let avg_network_rx = (metrics.iter().map(|m| m.network_rx_bps).sum::<u64>() as f64 / count) as u64;
-        let avg_network_tx = (metrics.iter().map(|m| m.network_tx_bps).sum::<u64>() as f64 / count) as u64;
-        let avg_processes = (metrics.iter().map(|m| m.process_count).sum::<usize>() as f64 / count) as usize;
+        let avg_memory =
+            (metrics.iter().map(|m| m.memory_usage).sum::<usize>() as f64 / count) as usize;
+        let avg_disk_read =
+            (metrics.iter().map(|m| m.disk_read_bps).sum::<u64>() as f64 / count) as u64;
+        let avg_disk_write =
+            (metrics.iter().map(|m| m.disk_write_bps).sum::<u64>() as f64 / count) as u64;
+        let avg_network_rx =
+            (metrics.iter().map(|m| m.network_rx_bps).sum::<u64>() as f64 / count) as u64;
+        let avg_network_tx =
+            (metrics.iter().map(|m| m.network_tx_bps).sum::<u64>() as f64 / count) as u64;
+        let avg_processes =
+            (metrics.iter().map(|m| m.process_count).sum::<usize>() as f64 / count) as usize;
         let avg_load = metrics.iter().map(|m| m.load_average).sum::<f64>() / count;
-        
+
         Some(SystemMetrics {
             timestamp: now,
             cpu_usage: avg_cpu,
@@ -217,7 +228,7 @@ impl SystemMonitor {
             load_average: avg_load,
         })
     }
-    
+
     /// Monitoring loop (runs in background thread)
     fn monitoring_loop(
         config: SystemMonitorConfig,
@@ -228,112 +239,114 @@ impl SystemMonitor {
             if let Ok(metrics) = Self::collect_system_metrics(&config) {
                 let mut history = metrics_history.lock().unwrap();
                 history.push_back(metrics);
-                
+
                 // Keep only the last max_samples
                 while history.len() > config.max_samples {
                     history.pop_front();
                 }
             }
-            
+
             thread::sleep(config.sampling_interval);
         }
     }
-    
+
     /// Collect current system metrics
-    fn collect_system_metrics(config: &SystemMonitorConfig) -> Result<SystemMetrics, SystemMonitorError> {
+    fn collect_system_metrics(
+        config: &SystemMonitorConfig,
+    ) -> Result<SystemMetrics, SystemMonitorError> {
         let mut metrics = SystemMetrics::default();
-        
+
         if config.monitor_cpu {
             metrics.cpu_usage = Self::get_cpu_usage()?;
         }
-        
+
         if config.monitor_memory {
             let (used, available, total) = Self::get_memory_info()?;
             metrics.memory_usage = used;
             metrics.memory_available = available;
             metrics.memory_total = total;
         }
-        
+
         if config.monitor_disk {
             let (read_bps, write_bps) = Self::get_disk_io()?;
             metrics.disk_read_bps = read_bps;
             metrics.disk_write_bps = write_bps;
         }
-        
+
         if config.monitor_network {
             let (rx_bps, tx_bps) = Self::get_network_io()?;
             metrics.network_rx_bps = rx_bps;
             metrics.network_tx_bps = tx_bps;
         }
-        
+
         if config.monitor_processes {
             metrics.process_count = Self::get_process_count()?;
         }
-        
+
         metrics.load_average = Self::get_load_average()?;
-        
+
         Ok(metrics)
     }
-    
+
     /// Get CPU usage percentage
     fn get_cpu_usage() -> Result<f64, SystemMonitorError> {
         #[cfg(target_os = "linux")]
         {
             Self::get_cpu_usage_linux()
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             Self::get_cpu_usage_macos()
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             Self::get_cpu_usage_windows()
         }
-        
+
         #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         {
             // Fallback for unsupported platforms
             Ok(0.0)
         }
     }
-    
+
     /// Get memory information (used, available, total)
     fn get_memory_info() -> Result<(usize, usize, usize), SystemMonitorError> {
         #[cfg(target_os = "linux")]
         {
             Self::get_memory_info_linux()
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             Self::get_memory_info_macos()
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             Self::get_memory_info_windows()
         }
-        
+
         #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
         {
             Ok((0, 0, 0))
         }
     }
-    
+
     /// Get disk I/O rates (read bps, write bps)
     fn get_disk_io() -> Result<(u64, u64), SystemMonitorError> {
         // Simplified implementation - real version would track deltas
         Ok((0, 0))
     }
-    
+
     /// Get network I/O rates (rx bps, tx bps)
     fn get_network_io() -> Result<(u64, u64), SystemMonitorError> {
         // Simplified implementation - real version would track deltas
         Ok((0, 0))
     }
-    
+
     /// Get number of running processes
     fn get_process_count() -> Result<usize, SystemMonitorError> {
         #[cfg(target_os = "linux")]
@@ -343,7 +356,11 @@ impl SystemMonitor {
                     let count = entries
                         .filter_map(|entry| entry.ok())
                         .filter(|entry| {
-                            entry.file_name().to_string_lossy().chars().all(|c| c.is_ascii_digit())
+                            entry
+                                .file_name()
+                                .to_string_lossy()
+                                .chars()
+                                .all(|c| c.is_ascii_digit())
                         })
                         .count();
                     Ok(count)
@@ -351,13 +368,13 @@ impl SystemMonitor {
                 Err(e) => Err(SystemMonitorError::SystemReadError(e.to_string())),
             }
         }
-        
+
         #[cfg(not(target_os = "linux"))]
         {
             Ok(0)
         }
     }
-    
+
     /// Get system load average
     fn get_load_average() -> Result<f64, SystemMonitorError> {
         #[cfg(target_os = "linux")]
@@ -374,39 +391,39 @@ impl SystemMonitor {
                 Err(e) => Err(SystemMonitorError::SystemReadError(e.to_string())),
             }
         }
-        
+
         #[cfg(not(target_os = "linux"))]
         {
             Ok(0.0)
         }
     }
-    
+
     // Platform-specific implementations
-    
+
     #[cfg(target_os = "linux")]
     fn get_cpu_usage_linux() -> Result<f64, SystemMonitorError> {
         use std::fs;
-        
+
         // Read /proc/stat for CPU usage
         let stat1 = fs::read_to_string("/proc/stat")
             .map_err(|e| SystemMonitorError::SystemReadError(e.to_string()))?;
-        
+
         thread::sleep(Duration::from_millis(100));
-        
+
         let stat2 = fs::read_to_string("/proc/stat")
             .map_err(|e| SystemMonitorError::SystemReadError(e.to_string()))?;
-        
+
         let cpu1 = Self::parse_cpu_line(&stat1)?;
         let cpu2 = Self::parse_cpu_line(&stat2)?;
-        
+
         let total1 = cpu1.iter().sum::<u64>();
         let total2 = cpu2.iter().sum::<u64>();
         let idle1 = cpu1[3]; // idle time
         let idle2 = cpu2[3];
-        
+
         let total_diff = total2 - total1;
         let idle_diff = idle2 - idle1;
-        
+
         if total_diff == 0 {
             Ok(0.0)
         } else {
@@ -414,31 +431,33 @@ impl SystemMonitor {
             Ok(usage.max(0.0).min(100.0))
         }
     }
-    
+
     #[cfg(target_os = "linux")]
     fn parse_cpu_line(stat: &str) -> Result<Vec<u64>, SystemMonitorError> {
-        let first_line = stat.lines().next()
+        let first_line = stat
+            .lines()
+            .next()
             .ok_or_else(|| SystemMonitorError::SystemReadError("Empty /proc/stat".to_string()))?;
-        
+
         let values: Result<Vec<u64>, _> = first_line
             .split_whitespace()
             .skip(1) // Skip "cpu"
             .map(|s| s.parse::<u64>())
             .collect();
-        
+
         values.map_err(|e| SystemMonitorError::SystemReadError(e.to_string()))
     }
-    
+
     #[cfg(target_os = "linux")]
     fn get_memory_info_linux() -> Result<(usize, usize, usize), SystemMonitorError> {
         use std::fs;
-        
+
         let meminfo = fs::read_to_string("/proc/meminfo")
             .map_err(|e| SystemMonitorError::SystemReadError(e.to_string()))?;
-        
+
         let mut mem_total = 0;
         let mut mem_available = 0;
-        
+
         for line in meminfo.lines() {
             if line.starts_with("MemTotal:") {
                 mem_total = Self::parse_memory_line(line)?;
@@ -446,40 +465,42 @@ impl SystemMonitor {
                 mem_available = Self::parse_memory_line(line)?;
             }
         }
-        
+
         let mem_used = mem_total.saturating_sub(mem_available);
         Ok((mem_used, mem_available, mem_total))
     }
-    
+
     #[cfg(target_os = "linux")]
     fn parse_memory_line(line: &str) -> Result<usize, SystemMonitorError> {
         let kb = line
             .split_whitespace()
             .nth(1)
             .and_then(|s| s.parse::<usize>().ok())
-            .ok_or_else(|| SystemMonitorError::SystemReadError("Invalid memory line".to_string()))?;
-        
+            .ok_or_else(|| {
+                SystemMonitorError::SystemReadError("Invalid memory line".to_string())
+            })?;
+
         Ok(kb * 1024) // Convert from KB to bytes
     }
-    
+
     #[cfg(target_os = "macos")]
     fn get_cpu_usage_macos() -> Result<f64, SystemMonitorError> {
         // Would use system APIs like host_processor_info
         Ok(0.0)
     }
-    
+
     #[cfg(target_os = "macos")]
     fn get_memory_info_macos() -> Result<(usize, usize, usize), SystemMonitorError> {
         // Would use system APIs like vm_statistics64
         Ok((0, 0, 0))
     }
-    
+
     #[cfg(target_os = "windows")]
     fn get_cpu_usage_windows() -> Result<f64, SystemMonitorError> {
         // Would use Windows APIs like GetSystemTimes
         Ok(0.0)
     }
-    
+
     #[cfg(target_os = "windows")]
     fn get_memory_info_windows() -> Result<(usize, usize, usize), SystemMonitorError> {
         // Would use Windows APIs like GlobalMemoryStatusEx
@@ -513,7 +534,7 @@ impl Default for AlertConfig {
         Self {
             cpu_threshold: 80.0,
             memory_threshold: 85.0,
-            disk_io_threshold: 100 * 1024 * 1024, // 100 MB/s
+            disk_io_threshold: 100 * 1024 * 1024,   // 100 MB/s
             network_io_threshold: 50 * 1024 * 1024, // 50 MB/s
             load_threshold: 2.0,
         }
@@ -571,11 +592,11 @@ impl SystemAlerter {
             max_alert_history: 1000,
         }
     }
-    
+
     /// Check metrics against thresholds and generate alerts
     pub fn check_alerts(&mut self, metrics: &SystemMetrics) -> Vec<SystemAlert> {
         let mut alerts = Vec::new();
-        
+
         // Check CPU usage
         if metrics.cpu_usage > self.config.cpu_threshold {
             alerts.push(self.create_alert(
@@ -585,10 +606,11 @@ impl SystemAlerter {
                 format!("High CPU usage: {:.1}%", metrics.cpu_usage),
             ));
         }
-        
+
         // Check memory usage
         if metrics.memory_total > 0 {
-            let memory_percent = (metrics.memory_usage as f64 / metrics.memory_total as f64) * 100.0;
+            let memory_percent =
+                (metrics.memory_usage as f64 / metrics.memory_total as f64) * 100.0;
             if memory_percent > self.config.memory_threshold {
                 alerts.push(self.create_alert(
                     AlertType::HighMemoryUsage,
@@ -598,7 +620,7 @@ impl SystemAlerter {
                 ));
             }
         }
-        
+
         // Check disk I/O
         let total_disk_io = metrics.disk_read_bps + metrics.disk_write_bps;
         if total_disk_io > self.config.disk_io_threshold {
@@ -606,10 +628,13 @@ impl SystemAlerter {
                 AlertType::HighDiskIo,
                 total_disk_io as f64,
                 self.config.disk_io_threshold as f64,
-                format!("High disk I/O: {:.1} MB/s", total_disk_io as f64 / (1024.0 * 1024.0)),
+                format!(
+                    "High disk I/O: {:.1} MB/s",
+                    total_disk_io as f64 / (1024.0 * 1024.0)
+                ),
             ));
         }
-        
+
         // Check network I/O
         let total_network_io = metrics.network_rx_bps + metrics.network_tx_bps;
         if total_network_io > self.config.network_io_threshold {
@@ -617,10 +642,13 @@ impl SystemAlerter {
                 AlertType::HighNetworkIo,
                 total_network_io as f64,
                 self.config.network_io_threshold as f64,
-                format!("High network I/O: {:.1} MB/s", total_network_io as f64 / (1024.0 * 1024.0)),
+                format!(
+                    "High network I/O: {:.1} MB/s",
+                    total_network_io as f64 / (1024.0 * 1024.0)
+                ),
             ));
         }
-        
+
         // Check load average
         if metrics.load_average > self.config.load_threshold {
             alerts.push(self.create_alert(
@@ -630,7 +658,7 @@ impl SystemAlerter {
                 format!("High load average: {:.2}", metrics.load_average),
             ));
         }
-        
+
         // Store alerts in history
         for alert in &alerts {
             self.alert_history.push_back(alert.clone());
@@ -638,12 +666,18 @@ impl SystemAlerter {
                 self.alert_history.pop_front();
             }
         }
-        
+
         alerts
     }
-    
+
     /// Create an alert with appropriate severity
-    fn create_alert(&self, alert_type: AlertType, current: f64, threshold: f64, message: String) -> SystemAlert {
+    fn create_alert(
+        &self,
+        alert_type: AlertType,
+        current: f64,
+        threshold: f64,
+        message: String,
+    ) -> SystemAlert {
         let severity = if current > threshold * 2.0 {
             AlertSeverity::Critical
         } else if current > threshold * 1.5 {
@@ -651,7 +685,7 @@ impl SystemAlerter {
         } else {
             AlertSeverity::Info
         };
-        
+
         SystemAlert {
             alert_type,
             current_value: current,
@@ -661,12 +695,12 @@ impl SystemAlerter {
             message,
         }
     }
-    
+
     /// Get alert history
     pub fn get_alert_history(&self) -> Vec<SystemAlert> {
         self.alert_history.iter().cloned().collect()
     }
-    
+
     /// Get recent alerts
     pub fn get_recent_alerts(&self, duration: Duration) -> Vec<SystemAlert> {
         let cutoff = Instant::now() - duration;
@@ -693,10 +727,10 @@ mod tests {
     fn test_alert_creation() {
         let config = AlertConfig::default();
         let mut alerter = SystemAlerter::new(config);
-        
+
         let mut metrics = SystemMetrics::default();
         metrics.cpu_usage = 90.0; // Above threshold
-        
+
         let alerts = alerter.check_alerts(&metrics);
         assert!(!alerts.is_empty());
         assert_eq!(alerts[0].alert_type, AlertType::HighCpuUsage);
@@ -706,7 +740,7 @@ mod tests {
     fn test_metrics_averaging() {
         let config = SystemMonitorConfig::default();
         let monitor = SystemMonitor::new(config);
-        
+
         // Simulate some metrics
         {
             let mut history = monitor.metrics_history.lock().unwrap();
@@ -717,7 +751,7 @@ mod tests {
                 history.push_back(metrics);
             }
         }
-        
+
         let avg = monitor.get_average_metrics(Duration::from_secs(100));
         assert!(avg.is_some());
     }

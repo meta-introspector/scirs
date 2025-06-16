@@ -7,8 +7,7 @@
 use super::StabilityError;
 use crate::tensor::Tensor;
 use crate::Float;
-use ndarray::{Array, Axis, IxDyn};
-use std::collections::HashMap;
+use ndarray::{Array, IxDyn};
 
 /// Numerical analysis engine
 pub struct NumericalAnalyzer<F: Float> {
@@ -54,16 +53,32 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     /// Analyze error propagation through a computation
-    pub fn analyze_error_propagation<Func>(
+    pub fn analyze_error_propagation<'a, Func>(
         &self,
         function: Func,
-        input: &Tensor<F>,
-        input_uncertainty: &Tensor<F>,
-    ) -> Result<ErrorPropagationAnalysis, StabilityError>
+        input: &'a Tensor<'a, F>,
+        input_uncertainty: &'a Tensor<'a, F>,
+    ) -> Result<ErrorPropagationAnalysis<'a, F>, StabilityError>
     where
-        Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
+        Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
-        let mut analysis = ErrorPropagationAnalysis::default();
+        // Create temporary tensors for analysis initialization
+        let graph = input.graph();
+        let shape = input.shape();
+        let temp_data = vec![F::zero(); shape.iter().product()];
+        let temp_tensor = Tensor::from_vec(temp_data, shape, graph);
+
+        let mut analysis = ErrorPropagationAnalysis {
+            linear_error_bound: 0.0,
+            monte_carlo_analysis: MonteCarloErrorAnalysis {
+                num_samples: 0,
+                output_mean: temp_tensor.clone(),
+                output_std: temp_tensor.clone(),
+                confidence_interval_95: (temp_tensor.clone(), temp_tensor),
+            },
+            first_order_error: 0.0,
+            amplification_factors: Vec::new(),
+        };
 
         // Compute sensitivity matrix (Jacobian)
         let sensitivity_matrix = self.compute_jacobian(&function, input)?;
@@ -147,7 +162,6 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     /// Helper methods for numerical computations
-
     fn compute_jacobian<Func>(
         &self,
         function: &Func,
@@ -161,7 +175,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         let output = function(input)?;
         let output_size = output.data().len();
 
-        let mut jacobian = Array::zeros(vec![output_size, input_size].into_dyn());
+        let mut jacobian = Array::zeros(IxDyn(&[output_size, input_size]));
         let step = F::from(1e-8).unwrap();
 
         for i in 0..input_size {
@@ -195,7 +209,7 @@ impl<F: Float> NumericalAnalyzer<F> {
             return Ok(f64::INFINITY);
         }
 
-        let max_sv = singular_values.iter().fold(0.0, |a, &b| a.max(b));
+        let max_sv = singular_values.iter().fold(0.0f64, |a, &b| a.max(b));
         let min_sv = singular_values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
 
         if min_sv < 1e-15 {
@@ -260,7 +274,7 @@ impl<F: Float> NumericalAnalyzer<F> {
             ));
         }
 
-        let mut max_col_sum = 0.0;
+        let mut max_col_sum: f64 = 0.0;
         for j in 0..shape[1] {
             let col_sum: f64 = (0..shape[0])
                 .map(|i| matrix[[i, j]].abs().to_f64().unwrap())
@@ -280,7 +294,7 @@ impl<F: Float> NumericalAnalyzer<F> {
             ));
         }
 
-        let mut max_row_sum = 0.0;
+        let mut max_row_sum: f64 = 0.0;
         for i in 0..shape[0] {
             let row_sum: f64 = (0..shape[1])
                 .map(|j| matrix[[i, j]].abs().to_f64().unwrap())
@@ -341,7 +355,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         };
 
         if !singular_values.is_empty() {
-            let max_sv = singular_values.iter().fold(0.0, |a, &b| a.max(b));
+            let max_sv = singular_values.iter().fold(0.0f64, |a, &b| a.max(b));
             let tolerance = max_sv * 1e-15; // Machine epsilon relative tolerance
 
             analysis.numerical_rank = singular_values.iter().filter(|&&sv| sv > tolerance).count();
@@ -370,14 +384,14 @@ impl<F: Float> NumericalAnalyzer<F> {
         Ok(jacobian_norm * uncertainty_norm)
     }
 
-    fn monte_carlo_error_propagation<Func>(
+    fn monte_carlo_error_propagation<'a, Func>(
         &self,
         function: &Func,
-        input: &Tensor<F>,
-        uncertainty: &Tensor<F>,
-    ) -> Result<MonteCarloErrorAnalysis, StabilityError>
+        input: &'a Tensor<'a, F>,
+        uncertainty: &'a Tensor<'a, F>,
+    ) -> Result<MonteCarloErrorAnalysis<'a, F>, StabilityError>
     where
-        Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
+        Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let num_samples = 1000;
         let mut output_samples = Vec::new();
@@ -457,7 +471,7 @@ impl<F: Float> NumericalAnalyzer<F> {
             output_variations.push(output_change);
         }
 
-        let max_variation = output_variations.iter().fold(0.0, |a, &b| a.max(b));
+        let max_variation = output_variations.iter().fold(0.0f64, |a, &b| a.max(b));
         let mean_variation = output_variations.iter().sum::<f64>() / output_variations.len() as f64;
 
         Ok(PerturbationStabilityTest {
@@ -641,7 +655,11 @@ impl<F: Float> NumericalAnalyzer<F> {
         let shape = input.shape();
         let uncertainty_value = F::from(magnitude).unwrap();
         let uncertainty_data = vec![uncertainty_value; input.data().len()];
-        Ok(Tensor::from_vec(uncertainty_data, shape.to_vec()))
+        Ok(Tensor::from_vec(
+            uncertainty_data,
+            shape.to_vec(),
+            input.graph(),
+        ))
     }
 
     fn compute_mean_tensor(&self, tensors: &[Tensor<F>]) -> Result<Tensor<F>, StabilityError> {
@@ -663,7 +681,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         // Simplified - would compute actual standard deviation
         let shape = _mean.shape();
         let std_data = vec![F::from(0.1).unwrap(); _mean.data().len()];
-        Ok(Tensor::from_vec(std_data, shape.to_vec()))
+        Ok(Tensor::from_vec(std_data, shape.to_vec(), _mean.graph()))
     }
 
     fn compute_confidence_interval(
@@ -778,10 +796,10 @@ pub struct SingularValueAnalysis {
 }
 
 /// Results of error propagation analysis
-#[derive(Debug, Clone, Default)]
-pub struct ErrorPropagationAnalysis {
+#[derive(Debug, Clone)]
+pub struct ErrorPropagationAnalysis<'a, F: Float> {
     pub linear_error_bound: f64,
-    pub monte_carlo_analysis: MonteCarloErrorAnalysis,
+    pub monte_carlo_analysis: MonteCarloErrorAnalysis<'a, F>,
     pub first_order_error: f64,
     pub amplification_factors: Vec<f64>,
 }
@@ -890,7 +908,6 @@ pub struct PrecisionSensitivityAnalysis {
 }
 
 /// Public API functions
-
 /// Analyze the condition number of a computation
 pub fn analyze_conditioning<F: Float, Func>(
     function: Func,
@@ -904,13 +921,13 @@ where
 }
 
 /// Analyze error propagation through a computation
-pub fn analyze_error_propagation<F: Float, Func>(
+pub fn analyze_error_propagation<'a, F: Float, Func>(
     function: Func,
-    input: &Tensor<F>,
-    uncertainty: &Tensor<F>,
-) -> Result<ErrorPropagationAnalysis, StabilityError>
+    input: &'a Tensor<'a, F>,
+    uncertainty: &'a Tensor<'a, F>,
+) -> Result<ErrorPropagationAnalysis<'a, F>, StabilityError>
 where
-    Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
+    Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
 {
     let analyzer = NumericalAnalyzer::new();
     analyzer.analyze_error_propagation(function, input, uncertainty)

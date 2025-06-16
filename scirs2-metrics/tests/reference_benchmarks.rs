@@ -108,16 +108,16 @@ fn test_mathematical_properties() {
     let y_pred = array![0.0, 1.0, 1.0, 0.0, 0.0];
 
     let accuracy = accuracy_score(&y_true, &y_pred).unwrap();
-    assert!(accuracy >= 0.0 && accuracy <= 1.0);
+    assert!((0.0..=1.0).contains(&accuracy));
 
     let precision = precision_score(&y_true, &y_pred, 1.0).unwrap();
-    assert!(precision >= 0.0 && precision <= 1.0);
+    assert!((0.0..=1.0).contains(&precision));
 
     let recall = recall_score(&y_true, &y_pred, 1.0).unwrap();
-    assert!(recall >= 0.0 && recall <= 1.0);
+    assert!((0.0..=1.0).contains(&recall));
 
     let f1 = f1_score(&y_true, &y_pred, 1.0).unwrap();
-    assert!(f1 >= 0.0 && f1 <= 1.0);
+    assert!((0.0..=1.0).contains(&f1));
 
     // Test regression metric properties
     let y_true_reg = array![1.0, 2.0, 3.0, 4.0];

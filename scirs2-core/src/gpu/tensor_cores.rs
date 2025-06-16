@@ -128,27 +128,27 @@ pub enum TensorCoreError {
     /// Tensor cores not available on this device
     #[error("Tensor cores not available on this device")]
     NotAvailable,
-    
+
     /// Unsupported data type for tensor core operations
     #[error("Unsupported data type: {0}")]
     UnsupportedDataType(TensorDataType),
-    
+
     /// Unsupported operation
     #[error("Unsupported operation: {0:?}")]
     UnsupportedOperation(TensorCoreOp),
-    
+
     /// Invalid matrix dimensions
     #[error("Invalid matrix dimensions: {m}x{n}x{k}")]
     InvalidDimensions { m: usize, n: usize, k: usize },
-    
+
     /// Memory alignment error
     #[error("Memory alignment error: {0}")]
     MemoryAlignment(String),
-    
+
     /// Performance hint
     #[error("Performance warning: {0}")]
     PerformanceWarning(String),
-    
+
     /// Underlying GPU error
     #[error("GPU error: {0}")]
     GpuError(#[from] GpuError),
@@ -165,7 +165,7 @@ impl TensorCoreManager {
     /// Create a new tensor core manager for the given backend
     pub fn new(backend: GpuBackend) -> Result<Self, TensorCoreError> {
         let capabilities = Self::detect_capabilities(backend)?;
-        
+
         if !capabilities.available {
             return Err(TensorCoreError::NotAvailable);
         }
@@ -192,7 +192,11 @@ impl TensorCoreManager {
     /// Update tensor core configuration
     pub fn set_config(&mut self, config: TensorCoreConfig) -> Result<(), TensorCoreError> {
         // Validate configuration against capabilities
-        if !self.capabilities.supported_types.contains(&config.data_type) {
+        if !self
+            .capabilities
+            .supported_types
+            .contains(&config.data_type)
+        {
             return Err(TensorCoreError::UnsupportedDataType(config.data_type));
         }
 
@@ -237,7 +241,9 @@ impl TensorCoreManager {
         }
 
         if self.config.use_mixed_precision && self.config.data_type == TensorDataType::Float32 {
-            hints.push("Consider using Float16 or BFloat16 for better tensor core utilization".to_string());
+            hints.push(
+                "Consider using Float16 or BFloat16 for better tensor core utilization".to_string(),
+            );
         }
 
         if m * n * k < 1024 * 1024 {
@@ -251,18 +257,34 @@ impl TensorCoreManager {
     pub fn suggest_optimal_type(&self, op: TensorCoreOp) -> Option<TensorDataType> {
         match op {
             TensorCoreOp::MatrixMultiply => {
-                if self.capabilities.supported_types.contains(&TensorDataType::BFloat16) {
+                if self
+                    .capabilities
+                    .supported_types
+                    .contains(&TensorDataType::BFloat16)
+                {
                     Some(TensorDataType::BFloat16)
-                } else if self.capabilities.supported_types.contains(&TensorDataType::Float16) {
+                } else if self
+                    .capabilities
+                    .supported_types
+                    .contains(&TensorDataType::Float16)
+                {
                     Some(TensorDataType::Float16)
                 } else {
                     Some(TensorDataType::Float32)
                 }
             }
             TensorCoreOp::Convolution => {
-                if self.capabilities.supported_types.contains(&TensorDataType::Int8) {
+                if self
+                    .capabilities
+                    .supported_types
+                    .contains(&TensorDataType::Int8)
+                {
                     Some(TensorDataType::Int8)
-                } else if self.capabilities.supported_types.contains(&TensorDataType::Float16) {
+                } else if self
+                    .capabilities
+                    .supported_types
+                    .contains(&TensorDataType::Float16)
+                {
                     Some(TensorDataType::Float16)
                 } else {
                     Some(TensorDataType::Float32)
@@ -270,7 +292,11 @@ impl TensorCoreManager {
             }
             TensorCoreOp::Attention => {
                 // Attention typically benefits from higher precision
-                if self.capabilities.supported_types.contains(&TensorDataType::BFloat16) {
+                if self
+                    .capabilities
+                    .supported_types
+                    .contains(&TensorDataType::BFloat16)
+                {
                     Some(TensorDataType::BFloat16)
                 } else {
                     Some(TensorDataType::Float32)
@@ -317,7 +343,7 @@ impl TensorCoreManager {
                 (32, 8, 16),  // Alternative configurations
                 (8, 32, 16),
             ],
-            peak_tops: Some(312.0), // Example for A100
+            peak_tops: Some(312.0),              // Example for A100
             memory_bandwidth_gbps: Some(2039.0), // Example for A100 HBM2e
             arch_features: vec![
                 "Sparsity 2:4".to_string(),
@@ -341,20 +367,14 @@ impl TensorCoreManager {
                     Box::new(TensorDataType::Float32),
                 ),
             ],
-            supported_ops: vec![
-                TensorCoreOp::MatrixMultiply,
-                TensorCoreOp::Convolution,
-            ],
+            supported_ops: vec![TensorCoreOp::MatrixMultiply, TensorCoreOp::Convolution],
             supported_dimensions: vec![
-                (32, 32, 8),  // MFMA instruction size
+                (32, 32, 8), // MFMA instruction size
                 (16, 16, 16),
             ],
-            peak_tops: Some(383.0), // Example for MI250X
+            peak_tops: Some(383.0),              // Example for MI250X
             memory_bandwidth_gbps: Some(3276.0), // Example for MI250X HBM2e
-            arch_features: vec![
-                "MFMA instructions".to_string(),
-                "Matrix cores".to_string(),
-            ],
+            arch_features: vec!["MFMA instructions".to_string(), "Matrix cores".to_string()],
         }
     }
 
@@ -372,39 +392,47 @@ impl TensorCoreManager {
                 TensorCoreOp::Convolution,
                 TensorCoreOp::Attention,
             ],
-            supported_dimensions: vec![
-                (16, 16, 16),
-            ],
-            peak_tops: Some(15.8), // Example for M1 Neural Engine
+            supported_dimensions: vec![(16, 16, 16)],
+            peak_tops: Some(15.8),              // Example for M1 Neural Engine
             memory_bandwidth_gbps: Some(68.25), // Example for M1 unified memory
-            arch_features: vec![
-                "Neural Engine".to_string(),
-                "Unified memory".to_string(),
-            ],
+            arch_features: vec!["Neural Engine".to_string(), "Unified memory".to_string()],
         }
     }
 
     /// Determine optimal configuration based on capabilities
     fn optimal_config(capabilities: &TensorCoreCapabilities) -> TensorCoreConfig {
-        let data_type = if capabilities.supported_types.contains(&TensorDataType::BFloat16) {
+        let data_type = if capabilities
+            .supported_types
+            .contains(&TensorDataType::BFloat16)
+        {
             TensorDataType::BFloat16
-        } else if capabilities.supported_types.contains(&TensorDataType::Float16) {
+        } else if capabilities
+            .supported_types
+            .contains(&TensorDataType::Float16)
+        {
             TensorDataType::Float16
         } else {
             TensorDataType::Float32
         };
 
-        let tile_size = capabilities.supported_dimensions
+        let tile_size = capabilities
+            .supported_dimensions
             .first()
             .map(|(m, n, _)| (*m, *n))
             .unwrap_or((16, 16));
 
         TensorCoreConfig {
             data_type,
-            use_mixed_precision: capabilities.supported_types.iter().any(|t| matches!(t, TensorDataType::Mixed(_, _))),
+            use_mixed_precision: capabilities
+                .supported_types
+                .iter()
+                .any(|t| matches!(t, TensorDataType::Mixed(_, _))),
             auto_convert: true,
             tile_size,
-            use_sparse: capabilities.arch_features.iter().any(|f| f.contains("Sparsity")),
+            use_sparse: capabilities
+                .arch_features
+                .iter()
+                .any(|f| f.contains("Sparsity")),
             arch_optimizations: capabilities.arch_features.clone(),
         }
     }
@@ -435,7 +463,10 @@ pub enum SparsePattern {
     /// Random sparsity with given ratio
     Random(f32),
     /// Block sparsity
-    Block { block_size: (usize, usize), sparsity: f32 },
+    Block {
+        block_size: (usize, usize),
+        sparsity: f32,
+    },
     /// Custom sparsity pattern
     Custom(String),
 }
@@ -463,7 +494,9 @@ where
 
     // Check if operation is supported
     if !manager.is_operation_supported(TensorCoreOp::MatrixMultiply) {
-        return Err(TensorCoreError::UnsupportedOperation(TensorCoreOp::MatrixMultiply));
+        return Err(TensorCoreError::UnsupportedOperation(
+            TensorCoreOp::MatrixMultiply,
+        ));
     }
 
     // In a real implementation, we would:
@@ -471,7 +504,7 @@ where
     // 2. Set up tensor core kernels
     // 3. Launch optimized GEMM operation
     // 4. Handle mixed precision accumulation
-    
+
     // For now, this is a placeholder
     Ok(())
 }
@@ -516,7 +549,7 @@ mod tests {
         // This would require a real GPU context, so we'll test the logic only
         let caps = TensorCoreManager::nvidia_tensor_capabilities();
         let config = TensorCoreManager::optimal_config(&caps);
-        
+
         // Test that we can create a config
         assert!(config.auto_convert);
         assert_eq!(config.tile_size, (16, 16));

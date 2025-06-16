@@ -1303,7 +1303,7 @@ mod tests {
         println!("SIMD available: {}", available);
 
         // Test should always pass regardless of SIMD availability
-        assert!(true);
+        // (just checking that the SIMD detection function doesn't panic)
     }
 
     #[test]

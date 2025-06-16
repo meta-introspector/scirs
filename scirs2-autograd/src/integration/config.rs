@@ -4,10 +4,10 @@
 //! consistent settings across different SciRS2 modules, with support
 //! for environment variables, configuration files, and runtime updates.
 
-use super::{IntegrationError, IntegrationConfig, PrecisionLevel, MemoryStrategy, ErrorMode};
+use super::{IntegrationConfig, IntegrationError, MemoryStrategy, PrecisionLevel};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 
 /// Global configuration manager for SciRS2 integration
 pub struct ConfigManager {
@@ -31,30 +31,31 @@ impl ConfigManager {
             watch_enabled: false,
         }
     }
-    
+
     /// Load configuration from file
     pub fn load_from_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), IntegrationError> {
-        let content = std::fs::read_to_string(path.as_ref())
-            .map_err(|e| IntegrationError::ConfigMismatch(
-                format!("Failed to read config file: {}", e)))?;
-        
-        let file_config: FileConfig = toml::from_str(&content)
-            .map_err(|e| IntegrationError::ConfigMismatch(
-                format!("Failed to parse config file: {}", e)))?;
-        
+        let content = std::fs::read_to_string(path.as_ref()).map_err(|e| {
+            IntegrationError::ConfigMismatch(format!("Failed to read config file: {}", e))
+        })?;
+
+        let file_config: FileConfig = toml::from_str(&content).map_err(|e| {
+            IntegrationError::ConfigMismatch(format!("Failed to parse config file: {}", e))
+        })?;
+
         // Merge file configuration
         self.merge_file_config(file_config)?;
-        
+
         // Add source
-        self.sources.push(ConfigSource::File(path.as_ref().to_path_buf()));
-        
+        self.sources
+            .push(ConfigSource::File(path.as_ref().to_path_buf()));
+
         Ok(())
     }
-    
+
     /// Load configuration from environment variables
     pub fn load_from_env(&mut self) -> Result<(), IntegrationError> {
         let mut env_config = HashMap::new();
-        
+
         // Check for SciRS2-specific environment variables
         for (key, value) in std::env::vars() {
             if key.starts_with("SCIRS2_") {
@@ -62,59 +63,60 @@ impl ConfigManager {
                 env_config.insert(config_key, value);
             }
         }
-        
+
         self.merge_env_config(env_config)?;
         self.sources.push(ConfigSource::Environment);
-        
+
         Ok(())
     }
-    
+
     /// Set configuration value
     pub fn set<T: Into<ConfigValue>>(&mut self, key: &str, value: T) {
         self.cache.insert(key.to_string(), value.into());
         self.apply_cached_values();
     }
-    
+
     /// Get configuration value
     pub fn get(&self, key: &str) -> Option<&ConfigValue> {
         self.cache.get(key)
     }
-    
+
     /// Get configuration value with default
     pub fn get_or_default<T: From<ConfigValue> + Default>(&self, key: &str) -> T {
-        self.cache.get(key)
+        self.cache
+            .get(key)
             .cloned()
             .map(T::from)
             .unwrap_or_default()
     }
-    
+
     /// Get integration configuration
     pub fn integration_config(&self) -> &IntegrationConfig {
         &self.config.integration
     }
-    
+
     /// Update integration configuration
     pub fn update_integration_config(&mut self, config: IntegrationConfig) {
         self.config.integration = config;
     }
-    
+
     /// Get module-specific configuration
     pub fn module_config(&self, module_name: &str) -> Option<&ModuleConfig> {
         self.config.modules.get(module_name)
     }
-    
+
     /// Set module-specific configuration
     pub fn set_module_config(&mut self, module_name: String, config: ModuleConfig) {
         self.config.modules.insert(module_name, config);
     }
-    
+
     /// Enable configuration watching
     pub fn enable_watch(&mut self) -> Result<(), IntegrationError> {
         self.watch_enabled = true;
         // In practice, would set up file system watchers
         Ok(())
     }
-    
+
     /// Validate configuration consistency
     pub fn validate(&self) -> Result<(), IntegrationError> {
         // Check integration config consistency
@@ -124,7 +126,7 @@ impl ConfigManager {
                 if !module_config.enabled {
                     continue;
                 }
-                
+
                 // Check version compatibility
                 if let Some(required_version) = &module_config.required_version {
                     // Validate version compatibility
@@ -132,33 +134,33 @@ impl ConfigManager {
                 }
             }
         }
-        
+
         // Check for conflicting settings
         self.check_conflicting_settings()?;
-        
+
         Ok(())
     }
-    
+
     /// Export configuration to file
     pub fn export_to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), IntegrationError> {
         let file_config = self.to_file_config();
-        let content = toml::to_string_pretty(&file_config)
-            .map_err(|e| IntegrationError::ConfigMismatch(
-                format!("Failed to serialize config: {}", e)))?;
-        
-        std::fs::write(path.as_ref(), content)
-            .map_err(|e| IntegrationError::ConfigMismatch(
-                format!("Failed to write config file: {}", e)))?;
-        
+        let content = toml::to_string_pretty(&file_config).map_err(|e| {
+            IntegrationError::ConfigMismatch(format!("Failed to serialize config: {}", e))
+        })?;
+
+        std::fs::write(path.as_ref(), content).map_err(|e| {
+            IntegrationError::ConfigMismatch(format!("Failed to write config file: {}", e))
+        })?;
+
         Ok(())
     }
-    
+
     /// Reset to default configuration
     pub fn reset_to_defaults(&mut self) {
         self.config = GlobalConfig::default();
         self.cache.clear();
     }
-    
+
     /// Get configuration summary
     pub fn summary(&self) -> ConfigSummary {
         ConfigSummary {
@@ -170,35 +172,44 @@ impl ConfigManager {
             cache_size: self.cache.len(),
         }
     }
-    
+
     // Helper methods
     fn merge_file_config(&mut self, file_config: FileConfig) -> Result<(), IntegrationError> {
         // Merge integration settings
         if let Some(integration) = file_config.integration {
             self.config.integration = self.merge_integration_config(integration)?;
         }
-        
+
         // Merge module configurations
         for (name, module_config) in file_config.modules.unwrap_or_default() {
             self.config.modules.insert(name, module_config);
         }
-        
+
         Ok(())
     }
-    
-    fn merge_env_config(&mut self, env_config: HashMap<String, String>) -> Result<(), IntegrationError> {
+
+    fn merge_env_config(
+        &mut self,
+        env_config: HashMap<String, String>,
+    ) -> Result<(), IntegrationError> {
         for (key, value) in env_config {
             match key.as_str() {
                 "auto_convert_tensors" => {
-                    let val = value.parse::<bool>()
-                        .map_err(|_| IntegrationError::ConfigMismatch(
-                            format!("Invalid boolean value for {}: {}", key, value)))?;
+                    let val = value.parse::<bool>().map_err(|_| {
+                        IntegrationError::ConfigMismatch(format!(
+                            "Invalid boolean value for {}: {}",
+                            key, value
+                        ))
+                    })?;
                     self.config.integration.auto_convert_tensors = val;
                 }
                 "strict_compatibility" => {
-                    let val = value.parse::<bool>()
-                        .map_err(|_| IntegrationError::ConfigMismatch(
-                            format!("Invalid boolean value for {}: {}", key, value)))?;
+                    let val = value.parse::<bool>().map_err(|_| {
+                        IntegrationError::ConfigMismatch(format!(
+                            "Invalid boolean value for {}: {}",
+                            key, value
+                        ))
+                    })?;
                     self.config.integration.strict_compatibility = val;
                 }
                 "default_precision" => {
@@ -207,8 +218,12 @@ impl ConfigManager {
                         "float64" => PrecisionLevel::Float64,
                         "mixed" => PrecisionLevel::Mixed,
                         "adaptive" => PrecisionLevel::Adaptive,
-                        _ => return Err(IntegrationError::ConfigMismatch(
-                            format!("Invalid precision level: {}", value))),
+                        _ => {
+                            return Err(IntegrationError::ConfigMismatch(format!(
+                                "Invalid precision level: {}",
+                                value
+                            )))
+                        }
                     };
                 }
                 "memory_strategy" => {
@@ -217,8 +232,12 @@ impl ConfigManager {
                         "copy" => MemoryStrategy::Copy,
                         "memory_mapped" => MemoryStrategy::MemoryMapped,
                         "adaptive" => MemoryStrategy::Adaptive,
-                        _ => return Err(IntegrationError::ConfigMismatch(
-                            format!("Invalid memory strategy: {}", value))),
+                        _ => {
+                            return Err(IntegrationError::ConfigMismatch(format!(
+                                "Invalid memory strategy: {}",
+                                value
+                            )))
+                        }
                     };
                 }
                 _ => {
@@ -227,46 +246,57 @@ impl ConfigManager {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
-    fn merge_integration_config(&self, file_integration: FileIntegrationConfig) -> Result<IntegrationConfig, IntegrationError> {
+
+    fn merge_integration_config(
+        &self,
+        file_integration: FileIntegrationConfig,
+    ) -> Result<IntegrationConfig, IntegrationError> {
         let mut config = self.config.integration.clone();
-        
+
         if let Some(val) = file_integration.auto_convert_tensors {
             config.auto_convert_tensors = val;
         }
-        
+
         if let Some(val) = file_integration.strict_compatibility {
             config.strict_compatibility = val;
         }
-        
+
         if let Some(precision) = file_integration.default_precision {
             config.default_precision = match precision.as_str() {
                 "float32" => PrecisionLevel::Float32,
                 "float64" => PrecisionLevel::Float64,
                 "mixed" => PrecisionLevel::Mixed,
                 "adaptive" => PrecisionLevel::Adaptive,
-                _ => return Err(IntegrationError::ConfigMismatch(
-                    format!("Invalid precision level: {}", precision))),
+                _ => {
+                    return Err(IntegrationError::ConfigMismatch(format!(
+                        "Invalid precision level: {}",
+                        precision
+                    )))
+                }
             };
         }
-        
+
         if let Some(strategy) = file_integration.memory_strategy {
             config.memory_strategy = match strategy.as_str() {
                 "shared" => MemoryStrategy::Shared,
                 "copy" => MemoryStrategy::Copy,
                 "memory_mapped" => MemoryStrategy::MemoryMapped,
                 "adaptive" => MemoryStrategy::Adaptive,
-                _ => return Err(IntegrationError::ConfigMismatch(
-                    format!("Invalid memory strategy: {}", strategy))),
+                _ => {
+                    return Err(IntegrationError::ConfigMismatch(format!(
+                        "Invalid memory strategy: {}",
+                        strategy
+                    )))
+                }
             };
         }
-        
+
         Ok(config)
     }
-    
+
     fn apply_cached_values(&mut self) {
         // Apply cached values to main configuration
         for (key, value) in &self.cache {
@@ -285,32 +315,42 @@ impl ConfigManager {
             }
         }
     }
-    
-    fn validate_module_version(&self, _module_name: &str, _version: &str) -> Result<(), IntegrationError> {
+
+    fn validate_module_version(
+        &self,
+        _module_name: &str,
+        _version: &str,
+    ) -> Result<(), IntegrationError> {
         // Simplified version validation
         Ok(())
     }
-    
+
     fn check_conflicting_settings(&self) -> Result<(), IntegrationError> {
         // Check for conflicting configuration settings
-        if self.config.integration.memory_strategy == MemoryStrategy::Shared &&
-           !self.config.integration.auto_convert_tensors {
+        if self.config.integration.memory_strategy == MemoryStrategy::Shared
+            && !self.config.integration.auto_convert_tensors
+        {
             return Err(IntegrationError::ConfigMismatch(
-                "Shared memory strategy requires auto tensor conversion".to_string()));
+                "Shared memory strategy requires auto tensor conversion".to_string(),
+            ));
         }
-        
+
         Ok(())
     }
-    
+
     fn to_file_config(&self) -> FileConfig {
         let integration = FileIntegrationConfig {
             auto_convert_tensors: Some(self.config.integration.auto_convert_tensors),
             strict_compatibility: Some(self.config.integration.strict_compatibility),
-            default_precision: Some(format!("{:?}", self.config.integration.default_precision).to_lowercase()),
-            memory_strategy: Some(format!("{:?}", self.config.integration.memory_strategy).to_lowercase()),
+            default_precision: Some(
+                format!("{:?}", self.config.integration.default_precision).to_lowercase(),
+            ),
+            memory_strategy: Some(
+                format!("{:?}", self.config.integration.memory_strategy).to_lowercase(),
+            ),
             error_mode: Some(format!("{:?}", self.config.integration.error_mode).to_lowercase()),
         };
-        
+
         FileConfig {
             integration: Some(integration),
             modules: Some(self.config.modules.clone()),
@@ -340,12 +380,12 @@ pub struct GlobalConfig {
 impl Default for GlobalConfig {
     fn default() -> Self {
         let mut modules = HashMap::new();
-        
+
         // Add default configurations for known modules
         modules.insert("scirs2-neural".to_string(), ModuleConfig::default_neural());
         modules.insert("scirs2-optim".to_string(), ModuleConfig::default_optim());
         modules.insert("scirs2-linalg".to_string(), ModuleConfig::default_linalg());
-        
+
         Self {
             integration: IntegrationConfig::default(),
             modules,
@@ -381,7 +421,7 @@ impl ModuleConfig {
             resource_limits: ResourceLimits::default(),
         }
     }
-    
+
     /// Default configuration for neural module
     pub fn default_neural() -> Self {
         let mut config = Self::new();
@@ -390,11 +430,15 @@ impl ModuleConfig {
             "gradient_checkpointing".to_string(),
             "mixed_precision".to_string(),
         ];
-        config.settings.insert("batch_size".to_string(), ConfigValue::Int(32));
-        config.settings.insert("learning_rate".to_string(), ConfigValue::Float(0.001));
+        config
+            .settings
+            .insert("batch_size".to_string(), ConfigValue::Int(32));
+        config
+            .settings
+            .insert("learning_rate".to_string(), ConfigValue::Float(0.001));
         config
     }
-    
+
     /// Default configuration for optimization module
     pub fn default_optim() -> Self {
         let mut config = Self::new();
@@ -403,11 +447,16 @@ impl ModuleConfig {
             "learning_rate_scheduling".to_string(),
             "gradient_clipping".to_string(),
         ];
-        config.settings.insert("default_optimizer".to_string(), ConfigValue::String("adam".to_string()));
-        config.settings.insert("weight_decay".to_string(), ConfigValue::Float(1e-4));
+        config.settings.insert(
+            "default_optimizer".to_string(),
+            ConfigValue::String("adam".to_string()),
+        );
+        config
+            .settings
+            .insert("weight_decay".to_string(), ConfigValue::Float(1e-4));
         config
     }
-    
+
     /// Default configuration for linear algebra module
     pub fn default_linalg() -> Self {
         let mut config = Self::new();
@@ -416,8 +465,12 @@ impl ModuleConfig {
             "gpu_support".to_string(),
             "numerical_stability".to_string(),
         ];
-        config.settings.insert("use_blas".to_string(), ConfigValue::Bool(true));
-        config.settings.insert("pivot_threshold".to_string(), ConfigValue::Float(1e-3));
+        config
+            .settings
+            .insert("use_blas".to_string(), ConfigValue::Bool(true));
+        config
+            .settings
+            .insert("pivot_threshold".to_string(), ConfigValue::Float(1e-3));
         config
     }
 }
@@ -469,9 +522,9 @@ impl Default for PerformanceConfig {
     fn default() -> Self {
         Self {
             enable_simd: true,
-            num_threads: None, // Use system default
+            num_threads: None,       // Use system default
             cache_size: 1024 * 1024, // 1MB
-            enable_gpu: false, // Disabled by default
+            enable_gpu: false,       // Disabled by default
         }
     }
 }
@@ -595,21 +648,22 @@ pub struct FileIntegrationConfig {
 }
 
 /// Global configuration manager instance
-static GLOBAL_CONFIG_MANAGER: std::sync::OnceLock<std::sync::Mutex<ConfigManager>> = std::sync::OnceLock::new();
+static GLOBAL_CONFIG_MANAGER: std::sync::OnceLock<std::sync::Mutex<ConfigManager>> =
+    std::sync::OnceLock::new();
 
 /// Initialize global configuration manager
 pub fn init_config_manager() -> &'static std::sync::Mutex<ConfigManager> {
     GLOBAL_CONFIG_MANAGER.get_or_init(|| {
         let mut manager = ConfigManager::new();
-        
+
         // Try to load from environment
         let _ = manager.load_from_env();
-        
+
         // Try to load from default config file
         if let Ok(config_path) = std::env::var("SCIRS2_CONFIG_PATH") {
             let _ = manager.load_from_file(config_path);
         }
-        
+
         std::sync::Mutex::new(manager)
     })
 }
@@ -617,16 +671,18 @@ pub fn init_config_manager() -> &'static std::sync::Mutex<ConfigManager> {
 /// Get global configuration value
 pub fn get_config_value(key: &str) -> Result<Option<ConfigValue>, IntegrationError> {
     let manager = init_config_manager();
-    let manager_guard = manager.lock()
-        .map_err(|_| IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string()))?;
+    let manager_guard = manager.lock().map_err(|_| {
+        IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
+    })?;
     Ok(manager_guard.get(key).cloned())
 }
 
 /// Set global configuration value
 pub fn set_config_value<T: Into<ConfigValue>>(key: &str, value: T) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
-    let mut manager_guard = manager.lock()
-        .map_err(|_| IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string()))?;
+    let mut manager_guard = manager.lock().map_err(|_| {
+        IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
+    })?;
     manager_guard.set(key, value);
     Ok(())
 }
@@ -634,16 +690,18 @@ pub fn set_config_value<T: Into<ConfigValue>>(key: &str, value: T) -> Result<(),
 /// Get module configuration
 pub fn get_module_config(module_name: &str) -> Result<Option<ModuleConfig>, IntegrationError> {
     let manager = init_config_manager();
-    let manager_guard = manager.lock()
-        .map_err(|_| IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string()))?;
+    let manager_guard = manager.lock().map_err(|_| {
+        IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
+    })?;
     Ok(manager_guard.module_config(module_name).cloned())
 }
 
 /// Update global integration configuration
 pub fn update_integration_config(config: IntegrationConfig) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
-    let mut manager_guard = manager.lock()
-        .map_err(|_| IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string()))?;
+    let mut manager_guard = manager.lock().map_err(|_| {
+        IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
+    })?;
     manager_guard.update_integration_config(config);
     Ok(())
 }
@@ -651,24 +709,27 @@ pub fn update_integration_config(config: IntegrationConfig) -> Result<(), Integr
 /// Load configuration from file
 pub fn load_config_from_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
-    let mut manager_guard = manager.lock()
-        .map_err(|_| IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string()))?;
+    let mut manager_guard = manager.lock().map_err(|_| {
+        IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
+    })?;
     manager_guard.load_from_file(path)
 }
 
 /// Export configuration to file
 pub fn export_config_to_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
-    let manager_guard = manager.lock()
-        .map_err(|_| IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string()))?;
+    let manager_guard = manager.lock().map_err(|_| {
+        IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
+    })?;
     manager_guard.export_to_file(path)
 }
 
 /// Get configuration summary
 pub fn get_config_summary() -> Result<ConfigSummary, IntegrationError> {
     let manager = init_config_manager();
-    let manager_guard = manager.lock()
-        .map_err(|_| IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string()))?;
+    let manager_guard = manager.lock().map_err(|_| {
+        IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
+    })?;
     Ok(manager_guard.summary())
 }
 
@@ -689,7 +750,7 @@ mod tests {
         let int_val = ConfigValue::Int(42);
         let float_val = ConfigValue::Float(3.14);
         let string_val = ConfigValue::String("test".to_string());
-        
+
         assert!(matches!(bool_val, ConfigValue::Bool(true)));
         assert!(matches!(int_val, ConfigValue::Int(42)));
         assert!(matches!(float_val, ConfigValue::Float(f) if (f - 3.14).abs() < 1e-10));
@@ -700,7 +761,9 @@ mod tests {
     fn test_module_config() {
         let neural_config = ModuleConfig::default_neural();
         assert!(neural_config.enabled);
-        assert!(neural_config.features.contains(&"automatic_differentiation".to_string()));
+        assert!(neural_config
+            .features
+            .contains(&"automatic_differentiation".to_string()));
         assert!(neural_config.settings.contains_key("batch_size"));
     }
 
@@ -710,7 +773,7 @@ mod tests {
         let int_val: ConfigValue = 42i64.into();
         let float_val: ConfigValue = 3.14f64.into();
         let string_val: ConfigValue = "test".into();
-        
+
         assert!(matches!(bool_val, ConfigValue::Bool(true)));
         assert!(matches!(int_val, ConfigValue::Int(42)));
         assert!(matches!(float_val, ConfigValue::Float(f) if (f - 3.14).abs() < 1e-10));
@@ -722,10 +785,10 @@ mod tests {
         let limits = ResourceLimits {
             max_memory: Some(1024 * 1024 * 1024), // 1GB
             max_threads: Some(8),
-            max_compute_time: Some(60.0), // 60 seconds
+            max_compute_time: Some(60.0),            // 60 seconds
             max_gpu_memory: Some(512 * 1024 * 1024), // 512MB
         };
-        
+
         assert_eq!(limits.max_memory, Some(1024 * 1024 * 1024));
         assert_eq!(limits.max_threads, Some(8));
         assert_eq!(limits.max_compute_time, Some(60.0));
@@ -744,10 +807,10 @@ mod tests {
     #[test]
     fn test_config_manager_set_get() {
         let mut manager = ConfigManager::new();
-        
+
         manager.set("test_key", ConfigValue::String("test_value".to_string()));
         let retrieved = manager.get("test_key");
-        
+
         assert!(retrieved.is_some());
         if let Some(ConfigValue::String(val)) = retrieved {
             assert_eq!(val, "test_value");
@@ -762,9 +825,9 @@ mod tests {
         let mut env_vars = HashMap::new();
         env_vars.insert("auto_convert_tensors".to_string(), "false".to_string());
         env_vars.insert("strict_compatibility".to_string(), "true".to_string());
-        
+
         manager.merge_env_config(env_vars).unwrap();
-        
+
         assert!(!manager.config.integration.auto_convert_tensors);
         assert!(manager.config.integration.strict_compatibility);
     }
@@ -772,7 +835,7 @@ mod tests {
     #[test]
     fn test_config_validation() {
         let manager = ConfigManager::new();
-        
+
         // Default config should be valid
         assert!(manager.validate().is_ok());
     }

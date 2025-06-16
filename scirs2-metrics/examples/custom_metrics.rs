@@ -69,9 +69,9 @@ impl ClassificationMetric<f64> for BalancedAccuracy {
 }
 
 /// Custom regression metric: Symmetric Mean Absolute Percentage Error (SMAPE)
-struct SMAPE;
+struct Smape;
 
-impl RegressionMetric<f64> for SMAPE {
+impl RegressionMetric<f64> for Smape {
     fn name(&self) -> &'static str {
         "smape"
     }
@@ -120,17 +120,17 @@ impl RegressionMetric<f64> for SMAPE {
 }
 
 /// Custom regression metric: Mean Absolute Scaled Error (MASE)
-struct MASE {
+struct Mase {
     baseline_mae: f64,
 }
 
-impl MASE {
+impl Mase {
     fn new(baseline_mae: f64) -> Self {
         Self { baseline_mae }
     }
 }
 
-impl RegressionMetric<f64> for MASE {
+impl RegressionMetric<f64> for Mase {
     fn name(&self) -> &'static str {
         "mase"
     }
@@ -202,7 +202,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let y_pred_reg = array![95.0, 155.0, 190.0, 125.0, 175.0];
 
     // SMAPE
-    let smape = SMAPE;
+    let smape = Smape;
     let smape_result = smape.compute(&y_true_reg, &y_pred_reg)?;
 
     println!("\nSMAPE:");
@@ -217,7 +217,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // MASE (using naive baseline MAE)
     let baseline_mae = 10.0; // Assume this comes from a baseline model
-    let mase = MASE::new(baseline_mae);
+    let mase = Mase::new(baseline_mae);
     let mase_result = mase.compute(&y_true_reg, &y_pred_reg)?;
 
     println!("\nMASE:");
@@ -237,8 +237,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let mut suite = CustomMetricSuite::new();
     suite.add_classification_metric(BalancedAccuracy);
-    suite.add_regression_metric(SMAPE);
-    suite.add_regression_metric(MASE::new(baseline_mae));
+    suite.add_regression_metric(Smape);
+    suite.add_regression_metric(Mase::new(baseline_mae));
 
     println!("Registered metrics: {:?}", suite.metric_names());
 

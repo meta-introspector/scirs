@@ -653,9 +653,9 @@ fn train_vae_model() -> StdResult<()> {
     let mut rng = SmallRng::seed_from_u64(42);
     let config = GenerativeConfig::default();
 
-    // Initialize JIT context
-    let _jit_context: JitContext<f32> = JitContext::new(JitStrategy::Aggressive);
-    println!("🚀 JIT compilation enabled with aggressive strategy");
+    // Initialize JIT context (currently not implemented)
+    // let _jit_context: JitContext<f32> = JitContext::new(JitStrategy::Aggressive);
+    // println!("🚀 JIT compilation enabled with aggressive strategy");
 
     // Create model
     println!("🏗️ Building VAE model...");

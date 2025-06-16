@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use scirs2_interpolate::interp1d::{
     cubic_interpolate, linear_interpolate, pchip_interpolate, InterpolationMethod,
     MonotonicInterpolator,

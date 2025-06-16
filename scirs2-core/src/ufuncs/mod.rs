@@ -1013,7 +1013,7 @@ mod tests {
     fn test_math_unary() {
         let a = array![1.0, 4.0, 9.0];
         let result = math::sqrt(&a.view());
-        assert_eq!(result, array![1.0, 2.0, 9.0.sqrt()]);
+        assert_eq!(result, array![1.0, 2.0, 9.0_f64.sqrt()]);
 
         let a = array![0.0, PI / 2.0, PI];
         let result = math::sin(&a.view());

@@ -27,7 +27,8 @@ impl AxpyKernel {
             backend_metadata: HashMap::new(),
         };
 
-        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
+        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) =
+            Self::get_kernel_sources();
 
         Self {
             base: BaseKernel::new(
@@ -134,7 +135,13 @@ extern "C" __global__ void axpy(
 "#
         .to_string();
 
-        (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
+        (
+            cuda_source,
+            rocm_source,
+            wgpu_source,
+            metal_source,
+            opencl_source,
+        )
     }
 
     /// Create a specialized version of the kernel with a hardcoded alpha value

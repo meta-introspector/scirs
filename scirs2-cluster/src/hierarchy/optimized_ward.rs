@@ -18,6 +18,7 @@ struct ClusterPair<F: Float> {
     distance: F,
     cluster1: usize,
     cluster2: usize,
+    #[allow(dead_code)]
     timestamp: usize, // For lazy deletion
 }
 
@@ -57,6 +58,7 @@ struct WardCluster<F: Float> {
     /// Whether this cluster is still active
     active: bool,
     /// Timestamp when this cluster was created
+    #[allow(dead_code)]
     timestamp: usize,
 }
 
@@ -214,8 +216,7 @@ where
                     format!(
                         "No valid cluster pairs found in priority queue at merge step {}",
                         merge_step
-                    )
-                    .into(),
+                    ),
                 ));
             }
         };
@@ -329,7 +330,7 @@ where
     let distance_matrix_size = n_samples * (n_samples - 1) / 2;
     let memory_per_float = std::mem::size_of::<F>();
     let estimated_memory_mb =
-        (distance_matrix_size * memory_per_float + 1024 * 1024 - 1) / (1024 * 1024); // Round up
+        (distance_matrix_size * memory_per_float).div_ceil(1024 * 1024);
 
     if estimated_memory_mb > max_memory_mb {
         return Err(ClusteringError::InvalidInput(format!(

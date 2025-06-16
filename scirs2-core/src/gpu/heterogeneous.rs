@@ -16,23 +16,23 @@ pub enum HeterogeneousError {
     /// No suitable compute device found
     #[error("No suitable compute device found for workload")]
     NoSuitableDevice,
-    
+
     /// Workload balancing failed
     #[error("Workload balancing failed: {0}")]
     BalancingFailed(String),
-    
+
     /// Data migration error
     #[error("Data migration error: {0}")]
     DataMigration(String),
-    
+
     /// Execution coordination error
     #[error("Execution coordination error: {0}")]
     ExecutionCoordination(String),
-    
+
     /// Resource exhaustion
     #[error("Resource exhausted: {0}")]
     ResourceExhausted(String),
-    
+
     /// Underlying GPU error
     #[error("GPU error: {0}")]
     GpuError(#[from] GpuError),
@@ -73,17 +73,17 @@ impl ComputeDevice {
             (ComputeDevice::Cpu, WorkloadType::VectorizedMath) => 0.2,
             (ComputeDevice::Cpu, WorkloadType::MatrixOperations) => 0.1,
             (ComputeDevice::Cpu, WorkloadType::ConvolutionalNN) => 0.05,
-            
+
             (ComputeDevice::Gpu(_), WorkloadType::Sequential) => 0.1,
             (ComputeDevice::Gpu(_), WorkloadType::Parallel) => 1.0,
             (ComputeDevice::Gpu(_), WorkloadType::VectorizedMath) => 1.0,
             (ComputeDevice::Gpu(_), WorkloadType::MatrixOperations) => 1.0,
             (ComputeDevice::Gpu(_), WorkloadType::ConvolutionalNN) => 1.0,
-            
+
             (ComputeDevice::Npu, WorkloadType::ConvolutionalNN) => 1.5,
             (ComputeDevice::Npu, WorkloadType::MatrixOperations) => 1.2,
             (ComputeDevice::Npu, _) => 0.8,
-            
+
             _ => 0.5, // Default conservative estimate
         }
     }
@@ -137,8 +137,8 @@ impl WorkloadCharacteristics {
             problem_size: m * n * k,
             memory_requirement: (m * k + k * n + m * n) * 8, // Assume f64
             computational_intensity: (2.0 * k as f64) / 3.0, // 2*K ops per 3 memory accesses
-            data_locality: 0.7, // Good with proper blocking
-            parallelization_factor: 0.9, // Scales well with many cores
+            data_locality: 0.7,                              // Good with proper blocking
+            parallelization_factor: 0.9,                     // Scales well with many cores
             preferred_data_types: vec!["f32".to_string(), "f16".to_string()],
         }
     }
@@ -153,13 +153,13 @@ impl WorkloadCharacteristics {
     ) -> Self {
         let input_size = batch_size * channels * height * width;
         let output_size = batch_size * channels * height * width; // Simplified
-        
+
         Self {
             workload_type: WorkloadType::ConvolutionalNN,
             problem_size: input_size * kernel_size * kernel_size,
             memory_requirement: (input_size + output_size) * 4, // Assume f32
             computational_intensity: (kernel_size * kernel_size * 2) as f64,
-            data_locality: 0.8, // Good spatial locality in convolutions
+            data_locality: 0.8,           // Good spatial locality in convolutions
             parallelization_factor: 0.95, // Excellent parallelization
             preferred_data_types: vec!["f16".to_string(), "i8".to_string()],
         }
@@ -172,8 +172,8 @@ impl WorkloadCharacteristics {
             problem_size: size,
             memory_requirement: size * 8, // Assume f64
             computational_intensity: ops_per_element as f64 / 2.0, // Read + write
-            data_locality: 1.0, // Perfect sequential access
-            parallelization_factor: 1.0, // Perfect parallelization
+            data_locality: 1.0,           // Perfect sequential access
+            parallelization_factor: 1.0,  // Perfect parallelization
             preferred_data_types: vec!["f32".to_string(), "f64".to_string()],
         }
     }
@@ -203,11 +203,11 @@ impl DeviceCharacteristics {
     pub fn typical_cpu() -> Self {
         Self {
             device: ComputeDevice::Cpu,
-            peak_gflops: 200.0, // Modern CPU with AVX
-            memory_bandwidth: 50.0, // DDR4-3200
-            available_memory: 16 * 1024 * 1024 * 1024, // 16 GB
-            compute_units: 8, // 8 cores
-            power_consumption: 95.0, // 95W TDP
+            peak_gflops: 200.0,                         // Modern CPU with AVX
+            memory_bandwidth: 50.0,                     // DDR4-3200
+            available_memory: 16 * 1024 * 1024 * 1024,  // 16 GB
+            compute_units: 8,                           // 8 cores
+            power_consumption: 95.0,                    // 95W TDP
             transfer_overhead: Duration::from_nanos(0), // No transfer needed
         }
     }
@@ -216,11 +216,11 @@ impl DeviceCharacteristics {
     pub fn typical_gpu() -> Self {
         Self {
             device: ComputeDevice::Gpu(GpuBackend::Cuda),
-            peak_gflops: 10000.0, // High-end GPU
-            memory_bandwidth: 900.0, // GDDR6X
-            available_memory: 12 * 1024 * 1024 * 1024, // 12 GB VRAM
-            compute_units: 80, // Streaming multiprocessors
-            power_consumption: 350.0, // 350W TGP
+            peak_gflops: 10000.0,                         // High-end GPU
+            memory_bandwidth: 900.0,                      // GDDR6X
+            available_memory: 12 * 1024 * 1024 * 1024,    // 12 GB VRAM
+            compute_units: 80,                            // Streaming multiprocessors
+            power_consumption: 350.0,                     // 350W TGP
             transfer_overhead: Duration::from_micros(10), // PCIe transfer
         }
     }
@@ -228,18 +228,16 @@ impl DeviceCharacteristics {
     /// Estimate execution time for a workload
     pub fn estimate_execution_time(&self, workload: &WorkloadCharacteristics) -> Duration {
         let performance_factor = self.device.performance_factor(&workload.workload_type);
-        
+
         // Simple performance model combining compute and memory bounds
-        let compute_time = (workload.problem_size as f64) / 
-                          (self.peak_gflops * 1e9 * performance_factor);
-        
-        let memory_time = (workload.memory_requirement as f64) / 
-                         (self.memory_bandwidth * 1e9);
-        
+        let compute_time =
+            (workload.problem_size as f64) / (self.peak_gflops * 1e9 * performance_factor);
+
+        let memory_time = (workload.memory_requirement as f64) / (self.memory_bandwidth * 1e9);
+
         // Take the maximum (bottleneck) and add transfer overhead
-        let execution_time = compute_time.max(memory_time) + 
-                           self.transfer_overhead.as_secs_f64();
-        
+        let execution_time = compute_time.max(memory_time) + self.transfer_overhead.as_secs_f64();
+
         Duration::from_secs_f64(execution_time)
     }
 }
@@ -252,7 +250,7 @@ pub enum ExecutionStrategy {
     /// Execute entirely on GPU
     GpuOnly(GpuBackend),
     /// Split workload between CPU and GPU
-    CpuGpuSplit { 
+    CpuGpuSplit {
         cpu_fraction: f64,
         gpu_backend: GpuBackend,
     },
@@ -273,7 +271,7 @@ impl HeterogeneousScheduler {
     /// Create a new heterogeneous scheduler
     pub fn new() -> Self {
         let mut available_devices = vec![DeviceCharacteristics::typical_cpu()];
-        
+
         // Detect available GPUs
         for backend in [GpuBackend::Cuda, GpuBackend::Rocm, GpuBackend::Metal] {
             if backend.is_available() {
@@ -305,7 +303,8 @@ impl HeterogeneousScheduler {
         }
 
         // Estimate execution time on each device
-        let mut device_times: Vec<_> = self.available_devices
+        let mut device_times: Vec<_> = self
+            .available_devices
             .iter()
             .map(|device| {
                 let time = device.estimate_execution_time(workload);
@@ -322,17 +321,19 @@ impl HeterogeneousScheduler {
         // Check if splitting between CPU and GPU would be beneficial
         if device_times.len() >= 2 {
             let second_best_time = device_times[1].1;
-            
+
             // If the times are close, consider splitting
             if best_time.as_secs_f64() * 1.5 > second_best_time.as_secs_f64() {
-                if let (ComputeDevice::Cpu, ComputeDevice::Gpu(backend)) = 
-                   (device_times[0].0, device_times[1].0) {
+                if let (ComputeDevice::Cpu, ComputeDevice::Gpu(backend)) =
+                    (device_times[0].0, device_times[1].0)
+                {
                     return Ok(ExecutionStrategy::CpuGpuSplit {
                         cpu_fraction: 0.3,
                         gpu_backend: backend,
                     });
-                } else if let (ComputeDevice::Gpu(backend), ComputeDevice::Cpu) = 
-                          (device_times[0].0, device_times[1].0) {
+                } else if let (ComputeDevice::Gpu(backend), ComputeDevice::Cpu) =
+                    (device_times[0].0, device_times[1].0)
+                {
                     return Ok(ExecutionStrategy::CpuGpuSplit {
                         cpu_fraction: 0.3,
                         gpu_backend: backend,
@@ -360,11 +361,11 @@ impl HeterogeneousScheduler {
         F: FnOnce(&ExecutionStrategy) -> Result<R, HeterogeneousError>,
     {
         let start_time = Instant::now();
-        
+
         let result = work_fn(&strategy)?;
-        
+
         let execution_time = start_time.elapsed();
-        
+
         // Store performance history for future optimization
         let key = format!("{:?}_{}", workload.workload_type, workload.problem_size);
         self.performance_history
@@ -378,7 +379,7 @@ impl HeterogeneousScheduler {
     /// Get performance statistics
     pub fn get_performance_stats(&self) -> HeterogeneousStats {
         let history = self.performance_history.lock().unwrap();
-        
+
         let total_executions = history.len();
         let avg_execution_time = if total_executions > 0 {
             let total_time: Duration = history.values().sum();
@@ -414,7 +415,7 @@ impl HeterogeneousScheduler {
     ) -> ExecutionStrategy {
         let key = format!("{:?}_{}", workload.workload_type, workload.problem_size);
         let history = self.performance_history.lock().unwrap();
-        
+
         // If we have historical data, use it to refine the strategy
         if let Some(&_historical_time) = history.get(&key) {
             // Simple heuristic: if historical time is much better than estimated,
@@ -547,7 +548,7 @@ mod tests {
     fn test_device_characteristics() {
         let cpu = DeviceCharacteristics::typical_cpu();
         let gpu = DeviceCharacteristics::typical_gpu();
-        
+
         assert_eq!(cpu.device, ComputeDevice::Cpu);
         assert!(matches!(gpu.device, ComputeDevice::Gpu(_)));
         assert!(gpu.peak_gflops > cpu.peak_gflops);
@@ -557,7 +558,7 @@ mod tests {
     fn test_execution_time_estimation() {
         let cpu = DeviceCharacteristics::typical_cpu();
         let workload = WorkloadCharacteristics::element_wise(1000000, 1);
-        
+
         let time = cpu.estimate_execution_time(&workload);
         assert!(time > Duration::ZERO);
     }
@@ -572,7 +573,7 @@ mod tests {
     fn test_strategy_selection() {
         let scheduler = HeterogeneousScheduler::new();
         let workload = WorkloadCharacteristics::matrix_multiply(100, 100, 100);
-        
+
         let strategy = scheduler.select_strategy(&workload);
         assert!(strategy.is_ok());
     }

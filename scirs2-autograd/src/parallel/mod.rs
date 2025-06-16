@@ -4,10 +4,8 @@
 //! optimizations for tensor operations, particularly targeting CPU performance
 //! improvements for large-scale computations.
 
-use crate::Float;
-use std::collections::VecDeque;
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
@@ -517,7 +515,6 @@ pub enum ThreadPoolError {
 }
 
 /// Public API functions for thread pool management
-
 /// Initialize the global thread pool with default configuration
 pub fn init_thread_pool() -> Result<(), ThreadPoolError> {
     let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();

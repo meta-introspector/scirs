@@ -4,6 +4,7 @@
 //! to achieve optimal performance on different hardware configurations and workloads.
 
 use crate::gpu::{GpuBackend, GpuError, GpuKernelHandle};
+use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -15,19 +16,19 @@ pub enum AutoTuningError {
     /// No tuning configurations available
     #[error("No tuning configurations available for kernel: {0}")]
     NoConfigurations(String),
-    
+
     /// Tuning process failed
     #[error("Auto-tuning failed: {0}")]
     TuningFailed(String),
-    
+
     /// Invalid parameter configuration
     #[error("Invalid parameter configuration: {0}")]
     InvalidConfiguration(String),
-    
+
     /// Benchmark execution failed
     #[error("Benchmark execution failed: {0}")]
     BenchmarkFailed(String),
-    
+
     /// Underlying GPU error
     #[error("GPU error: {0}")]
     GpuError(#[from] GpuError),
@@ -222,9 +223,14 @@ impl Default for TuningSpace {
     fn default() -> Self {
         Self {
             work_group_sizes: vec![
-                [8, 8, 1], [16, 16, 1], [32, 32, 1],
-                [64, 8, 1], [8, 64, 1], [128, 1, 1],
-                [256, 1, 1], [512, 1, 1],
+                [8, 8, 1],
+                [16, 16, 1],
+                [32, 32, 1],
+                [64, 8, 1],
+                [8, 64, 1],
+                [128, 1, 1],
+                [256, 1, 1],
+                [512, 1, 1],
             ],
             local_memory_sizes: vec![0, 1024, 2048, 4096, 8192, 16384],
             cache_configs: vec![
@@ -277,7 +283,7 @@ impl AutoTuner {
     /// Create a new auto-tuner for the given backend
     pub fn new(backend: GpuBackend, strategy: TuningStrategy) -> Result<Self, AutoTuningError> {
         let device_info = Self::detect_device_info(backend)?;
-        
+
         Ok(Self {
             backend,
             strategy,
@@ -295,7 +301,7 @@ impl AutoTuner {
         tuning_space: TuningSpace,
     ) -> Result<TuningResult, AutoTuningError> {
         let cache_key = self.generate_cache_key(kernel_name, problem_size);
-        
+
         // Check cache first
         if self.strategy.use_history {
             if let Some(cached_result) = self.tuning_cache.lock().unwrap().get(&cache_key) {
@@ -310,12 +316,12 @@ impl AutoTuner {
 
         // Generate parameter configurations to test
         let configurations = self.generate_configurations(&tuning_space)?;
-        
+
         for (i, params) in configurations.iter().enumerate() {
             if start_time.elapsed() > self.strategy.time_budget {
                 break;
             }
-            
+
             if evaluations >= self.strategy.max_evaluations {
                 break;
             }
@@ -324,9 +330,10 @@ impl AutoTuner {
             match self.benchmark_configuration(kernel, params, problem_size) {
                 Ok(metrics) => {
                     evaluations += 1;
-                    
-                    if best_performance.is_none() || 
-                       metrics.throughput > best_performance.as_ref().unwrap().throughput {
+
+                    if best_performance.is_none()
+                        || metrics.throughput > best_performance.as_ref().unwrap().throughput
+                    {
                         best_params = params.clone();
                         best_performance = Some(metrics);
                     }
@@ -345,8 +352,9 @@ impl AutoTuner {
             }
         }
 
-        let best_performance = best_performance
-            .ok_or_else(|| AutoTuningError::TuningFailed("No successful configurations".to_string()))?;
+        let best_performance = best_performance.ok_or_else(|| {
+            AutoTuningError::TuningFailed("No successful configurations".to_string())
+        })?;
 
         let tuning_time = start_time.elapsed();
         let improvement_factor = 1.0; // Would compare against baseline
@@ -361,7 +369,10 @@ impl AutoTuner {
         };
 
         // Cache the result
-        self.tuning_cache.lock().unwrap().insert(cache_key, result.clone());
+        self.tuning_cache
+            .lock()
+            .unwrap()
+            .insert(cache_key, result.clone());
 
         Ok(result)
     }
@@ -428,15 +439,12 @@ impl AutoTuner {
         let num_samples = self.strategy.max_evaluations.min(100);
 
         for _ in 0..num_samples {
-            let work_group_size = space.work_group_sizes[
-                fastrand::usize(..space.work_group_sizes.len())
-            ];
-            let local_memory_size = space.local_memory_sizes[
-                fastrand::usize(..space.local_memory_sizes.len())
-            ];
-            let cache_config = space.cache_configs[
-                fastrand::usize(..space.cache_configs.len())
-            ];
+            let work_group_size = space.work_group_sizes
+                [rand::thread_rng().gen_range(0..space.work_group_sizes.len())];
+            let local_memory_size = space.local_memory_sizes
+                [rand::thread_rng().gen_range(0..space.local_memory_sizes.len())];
+            let cache_config =
+                space.cache_configs[rand::thread_rng().gen_range(0..space.cache_configs.len())];
 
             if self.is_valid_configuration(work_group_size, local_memory_size) {
                 configurations.push(KernelParameters {
@@ -456,9 +464,9 @@ impl AutoTuner {
     /// Validate if a configuration is valid for the device
     fn is_valid_configuration(&self, work_group_size: [u32; 3], local_memory_size: usize) -> bool {
         let total_threads = work_group_size[0] * work_group_size[1] * work_group_size[2];
-        
-        total_threads <= self.device_info.max_work_group_size as u32 &&
-        local_memory_size <= self.device_info.max_local_memory_size
+
+        total_threads <= self.device_info.max_work_group_size as u32
+            && local_memory_size <= self.device_info.max_local_memory_size
     }
 
     /// Benchmark a specific configuration
@@ -473,23 +481,23 @@ impl AutoTuner {
         // Run multiple iterations for stable timing
         for _ in 0..self.strategy.benchmark_runs {
             let start = Instant::now();
-            
+
             // Execute kernel with these parameters
             kernel.dispatch(params.work_group_size);
-            
+
             // In a real implementation, we would:
             // 1. Set up proper synchronization
             // 2. Configure kernel parameters
             // 3. Measure actual GPU execution time
             // 4. Collect performance counters
-            
+
             let execution_time = start.elapsed();
             execution_times.push(execution_time);
         }
 
         // Calculate average execution time
         let avg_time = execution_times.iter().sum::<Duration>() / execution_times.len() as u32;
-        
+
         // Calculate throughput (simplified)
         let total_ops = problem_size.iter().product::<usize>() as f64;
         let throughput = total_ops / avg_time.as_secs_f64();
@@ -513,11 +521,10 @@ impl AutoTuner {
 
     /// Generate cache key for tuning results
     fn generate_cache_key(&self, kernel_name: &str, problem_size: &[usize]) -> String {
-        format!("{}_{}_{}_{:?}", 
-                self.backend, 
-                self.device_info.compute_capability,
-                kernel_name, 
-                problem_size)
+        format!(
+            "{}_{}_{}_{:?}",
+            self.backend, self.device_info.compute_capability, kernel_name, problem_size
+        )
     }
 
     /// Detect device information for tuning
@@ -536,7 +543,7 @@ impl AutoTuner {
                 memory_size: 16 * 1024 * 1024 * 1024, // 16 GB
                 max_work_group_size: 1024,
                 max_local_memory_size: 64 * 1024, // 64 KB
-                warp_size: 64, // Wavefront size
+                warp_size: 64,                    // Wavefront size
             }),
             _ => Ok(DeviceInfo {
                 compute_capability: "Unknown".to_string(),
@@ -557,8 +564,14 @@ pub mod presets {
     pub fn matrix_multiply_space() -> TuningSpace {
         TuningSpace {
             work_group_sizes: vec![
-                [16, 16, 1], [32, 32, 1], [8, 32, 1], [32, 8, 1],
-                [64, 4, 1], [4, 64, 1], [128, 2, 1], [2, 128, 1],
+                [16, 16, 1],
+                [32, 32, 1],
+                [8, 32, 1],
+                [32, 8, 1],
+                [64, 4, 1],
+                [4, 64, 1],
+                [128, 2, 1],
+                [2, 128, 1],
             ],
             local_memory_sizes: vec![0, 2048, 4096, 8192, 16384],
             cache_configs: vec![CacheConfig::PreferShared, CacheConfig::Balanced],
@@ -570,8 +583,13 @@ pub mod presets {
     pub fn convolution_space() -> TuningSpace {
         TuningSpace {
             work_group_sizes: vec![
-                [8, 8, 1], [16, 16, 1], [32, 8, 1], [8, 32, 1],
-                [64, 1, 1], [32, 4, 1], [4, 32, 1],
+                [8, 8, 1],
+                [16, 16, 1],
+                [32, 8, 1],
+                [8, 32, 1],
+                [64, 1, 1],
+                [32, 4, 1],
+                [4, 32, 1],
             ],
             local_memory_sizes: vec![1024, 2048, 4096, 8192],
             cache_configs: vec![CacheConfig::PreferL1, CacheConfig::ReadOnly],
@@ -583,8 +601,13 @@ pub mod presets {
     pub fn reduction_space() -> TuningSpace {
         TuningSpace {
             work_group_sizes: vec![
-                [64, 1, 1], [128, 1, 1], [256, 1, 1], [512, 1, 1],
-                [1024, 1, 1], [32, 2, 1], [16, 4, 1],
+                [64, 1, 1],
+                [128, 1, 1],
+                [256, 1, 1],
+                [512, 1, 1],
+                [1024, 1, 1],
+                [32, 2, 1],
+                [16, 4, 1],
             ],
             local_memory_sizes: vec![512, 1024, 2048, 4096],
             cache_configs: vec![CacheConfig::PreferShared],
@@ -640,7 +663,7 @@ mod tests {
     fn test_device_info_detection() {
         let device_info = AutoTuner::detect_device_info(GpuBackend::Cuda);
         assert!(device_info.is_ok());
-        
+
         let info = device_info.unwrap();
         assert!(info.max_work_group_size > 0);
         assert!(info.max_local_memory_size > 0);
