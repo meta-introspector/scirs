@@ -14,6 +14,9 @@
 pub mod types;
 
 // Public modules
+pub mod chemical;
+pub mod chemical_equilibrium;
+pub mod enzyme_kinetics;
 pub mod mechanical;
 pub mod methods;
 pub mod multirate;
@@ -23,10 +26,28 @@ pub mod utils;
 // Re-export core types
 pub use self::types::{MassMatrix, MassMatrixType, ODEMethod, ODEOptions, ODEResult};
 
+// Re-export chemical kinetics types
+pub use self::chemical::{
+    systems as chemical_systems, ChemicalConfig, ChemicalIntegrator, ChemicalProperties,
+    ChemicalState, ChemicalSystemType, Reaction, ReactionType,
+};
+
+// Re-export enzyme kinetics types
+pub use self::enzyme_kinetics::{
+    pathways as metabolic_pathways, EnzymeMechanism, EnzymeParameters, MetabolicPathway,
+    EnzymeDefinition, PathwayAnalysis, RegulationType,
+};
+
+// Re-export chemical equilibrium types
+pub use self::chemical_equilibrium::{
+    systems as equilibrium_systems, EquilibriumCalculator, EquilibriumResult, 
+    ActivityModel, ThermoData, EquilibriumType,
+};
+
 // Re-export mechanical systems types
 pub use self::mechanical::{
-    MechanicalConfig, MechanicalIntegrator, MechanicalProperties, MechanicalSystemType,
-    RigidBodyState, systems,
+    systems as mechanical_systems, MechanicalConfig, MechanicalIntegrator, MechanicalProperties,
+    MechanicalSystemType, RigidBodyState,
 };
 
 // Re-export solver functions
@@ -39,6 +60,4 @@ pub use self::utils::events::{
 };
 
 // Re-export multirate types
-pub use self::multirate::{
-    MultirateMethod, MultirateOptions, MultirateSolver, MultirateSystem,
-};
+pub use self::multirate::{MultirateMethod, MultirateOptions, MultirateSolver, MultirateSystem};

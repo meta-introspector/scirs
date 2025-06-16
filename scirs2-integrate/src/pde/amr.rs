@@ -388,89 +388,93 @@ impl<F: IntegrateFloat> AMRGrid<F> {
         if level == 0 {
             return Ok(0); // Can't coarsen the coarsest level
         }
-        
+
         let mut coarsened_count = 0;
         let parent_level = level - 1;
-        
+
         // Group cells into parent cell candidates
         let mut parent_candidates = HashMap::new();
-        
+
         for (i, j) in cells {
             // Find parent cell coordinates
             let parent_i = i / 2;
             let parent_j = j / 2;
             let child_offset = (i % 2, j % 2);
-            
+
             parent_candidates
                 .entry((parent_i, parent_j))
                 .or_insert_with(Vec::new)
                 .push((i, j, child_offset));
         }
-        
+
         // Process each parent cell candidate
         for ((parent_i, parent_j), children) in parent_candidates {
             // Check if all 4 children are ready for coarsening
             if children.len() == 4 {
                 // Verify the parent cell is actually refined
-                if parent_level < self.levels.len() && 
-                   parent_i < self.levels[parent_level].nx && 
-                   parent_j < self.levels[parent_level].ny &&
-                   self.levels[parent_level].refined[[parent_i, parent_j]] {
-                    
+                if parent_level < self.levels.len()
+                    && parent_i < self.levels[parent_level].nx
+                    && parent_j < self.levels[parent_level].ny
+                    && self.levels[parent_level].refined[[parent_i, parent_j]]
+                {
                     // Average/restrict solution values from children to parent
                     let mut averaged_value = F::zero();
                     let mut valid_children = 0;
-                    
+
                     for (child_i, child_j, _) in &children {
-                        if let Some(&child_value) = self.solution.get(&(level, *child_i, *child_j)) {
+                        if let Some(&child_value) = self.solution.get(&(level, *child_i, *child_j))
+                        {
                             averaged_value += child_value;
                             valid_children += 1;
                         }
                     }
-                    
+
                     if valid_children > 0 {
                         averaged_value /= F::from(valid_children).unwrap();
-                        
+
                         // Store averaged value in parent cell
-                        self.solution.insert((parent_level, parent_i, parent_j), averaged_value);
-                        
+                        self.solution
+                            .insert((parent_level, parent_i, parent_j), averaged_value);
+
                         // Remove child values
                         for (child_i, child_j, _) in &children {
                             self.solution.remove(&(level, *child_i, *child_j));
                         }
-                        
+
                         // Mark parent as not refined
                         self.levels[parent_level].refined[[parent_i, parent_j]] = false;
-                        
+
                         // Remove child information
-                        self.levels[parent_level].children.remove(&(parent_i, parent_j));
-                        
+                        self.levels[parent_level]
+                            .children
+                            .remove(&(parent_i, parent_j));
+
                         coarsened_count += 1;
                     }
                 }
             }
         }
-        
+
         // Clean up empty levels if they exist
         self.cleanup_empty_levels();
-        
+
         Ok(coarsened_count)
     }
-    
+
     /// Remove empty refinement levels from the hierarchy
     fn cleanup_empty_levels(&mut self) {
         // Find the highest level with any refined cells or solution data
         let mut max_active_level = 0;
-        
+
         for level in 0..self.levels.len() {
             let has_refined_cells = self.levels[level].refined.iter().any(|&x| x);
             let has_solution_data = self.solution.keys().any(|(l, _, _)| *l == level);
-            
+
             if has_refined_cells || has_solution_data {
                 max_active_level = level;
             }
         }
-        
+
         // Keep only active levels plus one extra for potential future refinement
         let keep_levels = (max_active_level + 2).min(self.levels.len());
         self.levels.truncate(keep_levels);

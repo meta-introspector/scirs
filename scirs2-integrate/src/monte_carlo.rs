@@ -607,7 +607,7 @@ where
     {
         if workers.is_some() {
             use crate::monte_carlo_parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
-            
+
             let opts = options.unwrap_or_default();
             let parallel_opts = ParallelMonteCarloOptions {
                 n_samples: opts.n_samples,
@@ -619,11 +619,11 @@ where
                 use_chunking: true,
                 _phantom: PhantomData,
             };
-            
+
             return parallel_monte_carlo(f, ranges, Some(parallel_opts));
         }
     }
-    
+
     // Fall back to standard monte carlo implementation
     let _ = workers; // Silence unused variable warning if parallel feature is not enabled
     monte_carlo(f, ranges, options)

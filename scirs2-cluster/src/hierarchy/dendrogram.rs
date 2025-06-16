@@ -229,6 +229,7 @@ fn get_descendants<F: Float>(z: &Array2<F>, idx: usize, depth: usize) -> Result<
 /// Calculates the optimal leaf ordering for a dendrogram
 ///
 /// This reorders the leaves to minimize the sum of distances between adjacent leaves.
+/// Uses automatic algorithm selection: exact for small dendrograms, heuristic for large ones.
 ///
 /// # Arguments
 ///
@@ -238,19 +239,12 @@ fn get_descendants<F: Float>(z: &Array2<F>, idx: usize, depth: usize) -> Result<
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - The optimal leaf ordering
-pub fn optimal_leaf_ordering<F: Float + FromPrimitive + PartialOrd>(
+pub fn optimal_leaf_ordering<F: Float + FromPrimitive + PartialOrd + Debug>(
     z: &Array2<F>,
-    _d: &Array1<F>,
+    d: &Array1<F>,
 ) -> Result<Array1<usize>> {
-    let n_samples = z.shape()[0] + 1;
-
-    // Initialize the leaf order as identity mapping
-    let order = Array1::from_iter(0..n_samples);
-
-    // Not a full implementation - would require extensive dynamic programming
-    // For now, we return the original ordering
-
-    Ok(order)
+    // Use the new implementation from leaf_ordering module
+    crate::hierarchy::leaf_ordering::optimal_leaf_ordering(z.view(), d.view())
 }
 
 /// Converts a linkage matrix to a dendrogram dictionary for visualization
@@ -523,7 +517,8 @@ mod tests {
     fn test_cophenet_error_cases() {
         // Create valid test data first
         let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
-        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
 
         // Test with zero variance (all distances identical)
         let identical_distances = Array1::from_vec(vec![1.0, 1.0, 1.0]);

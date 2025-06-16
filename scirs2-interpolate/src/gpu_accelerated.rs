@@ -46,7 +46,7 @@
 //! # }
 //! ```
 
-use crate::advanced::rbf::{RBFKernel, RBFInterpolator};
+use crate::advanced::rbf::{RBFInterpolator, RBFKernel};
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ScalarOperand};
 use num_traits::{Float, FromPrimitive, ToPrimitive};
@@ -410,10 +410,10 @@ where
         };
 
         // Convert 1D data to 2D format expected by RBFInterpolator
-        let points_2d = Array2::from_shape_vec(
-            (self.x_data.len(), 1),
-            self.x_data.to_vec(),
-        ).map_err(|e| InterpolateError::ComputationError(format!("Failed to reshape points: {}", e)))?;
+        let points_2d = Array2::from_shape_vec((self.x_data.len(), 1), self.x_data.to_vec())
+            .map_err(|e| {
+                InterpolateError::ComputationError(format!("Failed to reshape points: {}", e))
+            })?;
 
         let cpu_interpolator = RBFInterpolator::new(
             &points_2d.view(),
@@ -430,11 +430,14 @@ where
     fn evaluate_cpu(&self, x_eval: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if let Some(ref cpu_interpolator) = self.cpu_fallback {
             // Convert 1D evaluation points to 2D format
-            let eval_points_2d = Array2::from_shape_vec(
-                (x_eval.len(), 1),
-                x_eval.to_vec(),
-            ).map_err(|e| InterpolateError::ComputationError(format!("Failed to reshape eval points: {}", e)))?;
-            
+            let eval_points_2d = Array2::from_shape_vec((x_eval.len(), 1), x_eval.to_vec())
+                .map_err(|e| {
+                    InterpolateError::ComputationError(format!(
+                        "Failed to reshape eval points: {}",
+                        e
+                    ))
+                })?;
+
             cpu_interpolator.interpolate(&eval_points_2d.view())
         } else {
             // Direct CPU implementation if no fallback is available
@@ -447,19 +450,21 @@ where
             // Simple linear interpolation as fallback
             for i in 0..m {
                 let x_i = x_eval[i];
-                
+
                 // Find the two closest points
                 if n >= 2 {
                     if x_i <= self.x_data[0] {
                         result[i] = self.y_data[0];
-                    } else if x_i >= self.x_data[n-1] {
-                        result[i] = self.y_data[n-1];
+                    } else if x_i >= self.x_data[n - 1] {
+                        result[i] = self.y_data[n - 1];
                     } else {
                         // Linear interpolation between closest points
-                        for j in 0..n-1 {
-                            if x_i >= self.x_data[j] && x_i <= self.x_data[j+1] {
-                                let t = (x_i - self.x_data[j]) / (self.x_data[j+1] - self.x_data[j]);
-                                result[i] = self.y_data[j] * (T::one() - t) + self.y_data[j+1] * t;
+                        for j in 0..n - 1 {
+                            if x_i >= self.x_data[j] && x_i <= self.x_data[j + 1] {
+                                let t =
+                                    (x_i - self.x_data[j]) / (self.x_data[j + 1] - self.x_data[j]);
+                                result[i] =
+                                    self.y_data[j] * (T::one() - t) + self.y_data[j + 1] * t;
                                 break;
                             }
                         }
@@ -732,12 +737,7 @@ mod tests {
         let x = Array1::linspace(0.0, 10.0, 11);
         let y = x.mapv(|x| x.sin());
 
-        let result = make_gpu_rbf_interpolator(
-            &x.view(),
-            &y.view(),
-            GpuRBFKernel::Gaussian,
-            1.0,
-        );
+        let result = make_gpu_rbf_interpolator(&x.view(), &y.view(), GpuRBFKernel::Gaussian, 1.0);
 
         assert!(result.is_ok());
         let interpolator = result.unwrap();
@@ -790,7 +790,11 @@ mod tests {
             if interpolator.is_trained {
                 let x_eval = Array1::from_vec(vec![0.5, 1.5]);
                 let eval_result = interpolator.evaluate(&x_eval.view());
-                assert!(eval_result.is_ok(), "Failed to evaluate with kernel {:?}", kernel);
+                assert!(
+                    eval_result.is_ok(),
+                    "Failed to evaluate with kernel {:?}",
+                    kernel
+                );
             }
         }
     }

@@ -374,8 +374,7 @@ pub mod alpha6_api {
         /// use scirs2_core::{CoreResult, CoreError};
         /// # #[cfg(all(feature = "simd", feature = "parallel", feature = "memory_efficient"))]
         /// use scirs2_core::{
-        ///     memory_efficient::{AdaptiveChunkingParams, WorkloadType},
-        ///     error::{record_error_occurrence, diagnose_error_advanced},
+        ///     memory_efficient::AdaptiveChunkingParams,
         /// };
         ///
         /// /// High-performance pipeline configuration
@@ -412,7 +411,8 @@ pub mod alpha6_api {
         ///         );
         ///         
         ///         if config.error_tracking {
-        ///             record_error_occurrence(&error, "scientific_pipeline".to_string());
+        ///             // Error tracking would be implemented here
+        ///             eprintln!("Error in scientific_pipeline: {:?}", error);
         ///         }
         ///         
         ///         return Err(error);
@@ -575,7 +575,7 @@ pub mod alpha6_api {
         ///     T: RealNumber + ScientificNumber,
         /// {
         ///     // Type-safe operations guaranteed by trait bounds
-        ///     value.abs().sqrt()
+        ///     ScientificNumber::sqrt(ScientificNumber::abs(value))
         /// }
         /// ```
         ///

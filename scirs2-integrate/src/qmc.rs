@@ -721,14 +721,36 @@ where
             let pool = rayon::ThreadPoolBuilder::new()
                 .num_threads(num_workers)
                 .build()
-                .map_err(|_| IntegrateError::ValueError("Failed to create thread pool".to_string()))?;
+                .map_err(|_| {
+                    IntegrateError::ValueError("Failed to create thread pool".to_string())
+                })?;
 
             pool.install(|| {
-                parallel_qmc_integration_impl(func, &a_mod, &b_mod, n_estimates, n_points, &*qrng, log, volume, sign)
+                parallel_qmc_integration_impl(
+                    func,
+                    &a_mod,
+                    &b_mod,
+                    n_estimates,
+                    n_points,
+                    &*qrng,
+                    log,
+                    volume,
+                    sign,
+                )
             })
         } else {
             // Use default parallel execution
-            parallel_qmc_integration_impl(func, &a_mod, &b_mod, n_estimates, n_points, &*qrng, log, volume, sign)
+            parallel_qmc_integration_impl(
+                func,
+                &a_mod,
+                &b_mod,
+                n_estimates,
+                n_points,
+                &*qrng,
+                log,
+                volume,
+                sign,
+            )
         }
     }
 
@@ -736,7 +758,17 @@ where
     {
         // If parallel feature is not enabled, fall back to sequential execution
         let _ = workers; // Silence unused variable warning
-        sequential_qmc_integration(func, &a_mod, &b_mod, n_estimates, n_points, qrng, log, volume, sign)
+        sequential_qmc_integration(
+            func,
+            &a_mod,
+            &b_mod,
+            n_estimates,
+            n_points,
+            qrng,
+            log,
+            volume,
+            sign,
+        )
     }
 }
 
@@ -763,24 +795,24 @@ where
         .map(|_| {
             // Each thread gets its own QRNG instance with different seed
             let mut local_qrng = qrng.new_from_seed(rand::random());
-            
+
             // Sample points
             let points = local_qrng.random(n_points);
-            
+
             // Transform points to integration domain and evaluate function
             let mut sum = 0.0;
-            
+
             for i in 0..n_points {
                 let point = points.row(i);
-                
+
                 // Transform from [0,1]^d to [a,b]^d
                 let mut transformed_point = Array1::zeros(a.len());
                 for j in 0..a.len() {
                     transformed_point[j] = a[j] + point[j] * (b[j] - a[j]);
                 }
-                
+
                 let value = func(transformed_point.view());
-                
+
                 if log {
                     // For log-space integration, we accumulate log values
                     if value > f64::NEG_INFINITY {
@@ -790,7 +822,7 @@ where
                     sum += value / n_points as f64;
                 }
             }
-            
+
             if log {
                 sum.ln() + volume.ln()
             } else {
@@ -818,25 +850,25 @@ where
     F: Fn(ArrayView1<f64>) -> f64,
 {
     let mut estimates = Vec::with_capacity(n_estimates);
-    
+
     for _ in 0..n_estimates {
         // Sample points
         let points = qrng.random(n_points);
-        
+
         // Transform points to integration domain and evaluate function
         let mut sum = 0.0;
-        
+
         for i in 0..n_points {
             let point = points.row(i);
-            
+
             // Transform from [0,1]^d to [a,b]^d
             let mut transformed_point = Array1::zeros(a.len());
             for j in 0..a.len() {
                 transformed_point[j] = a[j] + point[j] * (b[j] - a[j]);
             }
-            
+
             let value = func(transformed_point.view());
-            
+
             if log {
                 // For log-space integration, we accumulate log values
                 if value > f64::NEG_INFINITY {
@@ -846,22 +878,26 @@ where
                 sum += value / n_points as f64;
             }
         }
-        
+
         let estimate = if log {
             sum.ln() + volume.ln()
         } else {
             sum * volume
         };
-        
+
         estimates.push(estimate);
     }
 
     compute_qmc_result(estimates, log, sign)
 }
 
-fn compute_qmc_result(estimates: Vec<f64>, log: bool, sign: f64) -> IntegrateResult<QMCQuadResult<f64>> {
+fn compute_qmc_result(
+    estimates: Vec<f64>,
+    log: bool,
+    sign: f64,
+) -> IntegrateResult<QMCQuadResult<f64>> {
     let n_estimates = estimates.len();
-    
+
     // Compute mean and variance
     let integral = if log {
         // For log-space, use log-sum-exp for numerical stability
@@ -1019,7 +1055,8 @@ mod tests {
         let b = Array1::from_vec(vec![1.0, 1.0]);
 
         // Test with 2 workers
-        let result = qmc_quad_parallel(f, &a, &b, Some(8), Some(1000), None, false, Some(2)).unwrap();
+        let result =
+            qmc_quad_parallel(f, &a, &b, Some(8), Some(1000), None, false, Some(2)).unwrap();
 
         // Expected integral of x^2 + y^2 over [0,1]×[0,1] is 2/3
         assert_abs_diff_eq!(result.integral, 2.0 / 3.0, epsilon = 0.1);

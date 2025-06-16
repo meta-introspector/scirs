@@ -232,41 +232,50 @@ fn estimate_condition_svd<F>(
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
-    use ndarray_linalg::SVD;
+    #[cfg(feature = "linalg")]
+    {
+        use ndarray_linalg::SVD;
 
-    // Convert to f64 for SVD computation
-    let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());
+        // Convert to f64 for SVD computation
+        let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());
 
-    match matrix_f64.svd(false, false) {
-        Ok((_, singular_values, _)) => {
-            if singular_values.is_empty() {
-                return Err(InterpolateError::ComputationError(
-                    "SVD returned empty singular values".to_string(),
-                ));
+        match matrix_f64.svd(false, false) {
+            Ok((_, singular_values, _)) => {
+                if singular_values.is_empty() {
+                    return Err(InterpolateError::ComputationError(
+                        "SVD returned empty singular values".to_string(),
+                    ));
+                }
+
+                let max_sv = singular_values[0];
+                let min_sv = singular_values[singular_values.len() - 1];
+
+                // Update diagnostics
+                diagnostics.max_singular_value = Some(F::from_f64(max_sv).unwrap());
+                diagnostics.min_singular_value = Some(F::from_f64(min_sv).unwrap());
+
+                // Estimate rank
+                let eps = f64::EPSILON * max_sv * (matrix.nrows() as f64).sqrt();
+                let rank = singular_values.iter().filter(|&&sv| sv > eps).count();
+                diagnostics.estimated_rank = Some(rank);
+
+                // Compute condition number
+                if min_sv > f64::EPSILON {
+                    Ok(F::from_f64(max_sv / min_sv).unwrap())
+                } else {
+                    Ok(F::infinity()) // Singular matrix
+                }
             }
-
-            let max_sv = singular_values[0];
-            let min_sv = singular_values[singular_values.len() - 1];
-
-            // Update diagnostics
-            diagnostics.max_singular_value = Some(F::from_f64(max_sv).unwrap());
-            diagnostics.min_singular_value = Some(F::from_f64(min_sv).unwrap());
-
-            // Estimate rank
-            let eps = f64::EPSILON * max_sv * (matrix.nrows() as f64).sqrt();
-            let rank = singular_values.iter().filter(|&&sv| sv > eps).count();
-            diagnostics.estimated_rank = Some(rank);
-
-            // Compute condition number
-            if min_sv > f64::EPSILON {
-                Ok(F::from_f64(max_sv / min_sv).unwrap())
-            } else {
-                Ok(F::infinity()) // Singular matrix
-            }
+            Err(_) => Err(InterpolateError::ComputationError(
+                "SVD computation failed".to_string(),
+            )),
         }
-        Err(_) => Err(InterpolateError::ComputationError(
-            "SVD computation failed".to_string(),
-        )),
+    }
+
+    #[cfg(not(feature = "linalg"))]
+    {
+        // Fallback to norm-based estimation when linalg feature is not available
+        estimate_condition_norm_based(matrix)
     }
 }
 

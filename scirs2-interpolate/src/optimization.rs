@@ -274,7 +274,12 @@ where
     /// # Returns
     ///
     /// Cross-validation results
-    pub fn cross_validate<F>(&self, x: &ArrayView1<T>, y: &ArrayView1<T>, interpolator_fn: F) -> InterpolateResult<CrossValidationResult<T>>
+    pub fn cross_validate<F>(
+        &self,
+        x: &ArrayView1<T>,
+        y: &ArrayView1<T>,
+        interpolator_fn: F,
+    ) -> InterpolateResult<CrossValidationResult<T>>
     where
         F: Fn(&ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Box<dyn InterpolatorTrait<T>>>,
     {
@@ -307,10 +312,13 @@ where
         }
 
         let n_folds = fold_scores.len();
-        let mean_score = fold_scores.iter().fold(T::zero(), |acc, &x| acc + x) / T::from(fold_scores.len()).unwrap();
-        let variance = fold_scores.iter()
+        let mean_score = fold_scores.iter().fold(T::zero(), |acc, &x| acc + x)
+            / T::from(fold_scores.len()).unwrap();
+        let variance = fold_scores
+            .iter()
             .map(|&score| (score - mean_score) * (score - mean_score))
-            .fold(T::zero(), |acc, x| acc + x) / T::from(fold_scores.len()).unwrap();
+            .fold(T::zero(), |acc, x| acc + x)
+            / T::from(fold_scores.len()).unwrap();
         let std_score = variance.sqrt();
 
         Ok(CrossValidationResult {
@@ -347,17 +355,13 @@ where
         for &width in kernel_widths {
             let interpolator_fn = |x_train: &ArrayView1<T>, y_train: &ArrayView1<T>| {
                 // Convert 1D to 2D for RBF interpolator
-                let points_2d = Array2::from_shape_vec(
-                    (x_train.len(), 1),
-                    x_train.to_vec(),
-                ).map_err(|e| InterpolateError::ComputationError(format!("Failed to reshape: {}", e)))?;
+                let points_2d = Array2::from_shape_vec((x_train.len(), 1), x_train.to_vec())
+                    .map_err(|e| {
+                        InterpolateError::ComputationError(format!("Failed to reshape: {}", e))
+                    })?;
 
-                let rbf = RBFInterpolator::new(
-                    &points_2d.view(),
-                    y_train,
-                    RBFKernel::Gaussian,
-                    width,
-                )?;
+                let rbf =
+                    RBFInterpolator::new(&points_2d.view(), y_train, RBFKernel::Gaussian, width)?;
 
                 Ok(Box::new(RBFWrapper::new(rbf)) as Box<dyn InterpolatorTrait<T>>)
             };
@@ -375,7 +379,11 @@ where
             }
 
             if self.config.verbosity > 0 {
-                println!("Width: {:.3}, CV Score: {:.6}", width.to_f64().unwrap_or(0.0), score.to_f64().unwrap_or(0.0));
+                println!(
+                    "Width: {:.3}, CV Score: {:.6}",
+                    width.to_f64().unwrap_or(0.0),
+                    score.to_f64().unwrap_or(0.0)
+                );
             }
         }
 
@@ -438,7 +446,11 @@ where
             }
 
             if self.config.verbosity > 0 {
-                println!("Degree: {}, CV Score: {:.6}", degree, score.to_f64().unwrap_or(0.0));
+                println!(
+                    "Degree: {}, CV Score: {:.6}",
+                    degree,
+                    score.to_f64().unwrap_or(0.0)
+                );
             }
         }
 
@@ -465,7 +477,7 @@ where
                 }
 
                 let mut indices: Vec<usize> = (0..n).collect();
-                
+
                 // Simple shuffle simulation (in practice, use proper random number generator)
                 if self.shuffle {
                     for i in 0..n {
@@ -479,10 +491,15 @@ where
 
                 for fold_idx in 0..k {
                     let start = fold_idx * fold_size;
-                    let end = if fold_idx == k - 1 { n } else { (fold_idx + 1) * fold_size };
-                    
+                    let end = if fold_idx == k - 1 {
+                        n
+                    } else {
+                        (fold_idx + 1) * fold_size
+                    };
+
                     let test_indices = indices[start..end].to_vec();
-                    let train_indices: Vec<usize> = indices.iter()
+                    let train_indices: Vec<usize> = indices
+                        .iter()
                         .enumerate()
                         .filter(|(i, _)| *i < start || *i >= end)
                         .map(|(_, &idx)| idx)
@@ -518,7 +535,11 @@ where
     }
 
     /// Compute validation metric
-    fn compute_metric(&self, y_true: &ArrayView1<T>, y_pred: &ArrayView1<T>) -> InterpolateResult<T> {
+    fn compute_metric(
+        &self,
+        y_true: &ArrayView1<T>,
+        y_pred: &ArrayView1<T>,
+    ) -> InterpolateResult<T> {
         if y_true.len() != y_pred.len() {
             return Err(InterpolateError::DimensionMismatch(
                 "y_true and y_pred must have the same length".to_string(),
@@ -529,36 +550,44 @@ where
 
         match self.metric {
             ValidationMetric::MeanSquaredError => {
-                let mse = y_true.iter()
+                let mse = y_true
+                    .iter()
                     .zip(y_pred.iter())
                     .map(|(&yt, &yp)| (yt - yp) * (yt - yp))
-                    .fold(T::zero(), |acc, x| acc + x) / n;
+                    .fold(T::zero(), |acc, x| acc + x)
+                    / n;
                 Ok(mse)
             }
             ValidationMetric::MeanAbsoluteError => {
-                let mae = y_true.iter()
+                let mae = y_true
+                    .iter()
                     .zip(y_pred.iter())
                     .map(|(&yt, &yp)| (yt - yp).abs())
-                    .fold(T::zero(), |acc, x| acc + x) / n;
+                    .fold(T::zero(), |acc, x| acc + x)
+                    / n;
                 Ok(mae)
             }
             ValidationMetric::RootMeanSquaredError => {
-                let mse = y_true.iter()
+                let mse = y_true
+                    .iter()
                     .zip(y_pred.iter())
                     .map(|(&yt, &yp)| (yt - yp) * (yt - yp))
-                    .fold(T::zero(), |acc, x| acc + x) / n;
+                    .fold(T::zero(), |acc, x| acc + x)
+                    / n;
                 Ok(mse.sqrt())
             }
             ValidationMetric::RSquared => {
                 let y_mean = y_true.sum() / n;
-                let ss_tot = y_true.iter()
+                let ss_tot = y_true
+                    .iter()
                     .map(|&yt| (yt - y_mean) * (yt - y_mean))
                     .fold(T::zero(), |acc, x| acc + x);
-                let ss_res = y_true.iter()
+                let ss_res = y_true
+                    .iter()
                     .zip(y_pred.iter())
                     .map(|(&yt, &yp)| (yt - yp) * (yt - yp))
                     .fold(T::zero(), |acc, x| acc + x);
-                
+
                 if ss_tot == T::zero() {
                     Ok(T::one()) // Perfect fit
                 } else {
@@ -566,7 +595,8 @@ where
                 }
             }
             ValidationMetric::MaxAbsoluteError => {
-                let max_error = y_true.iter()
+                let max_error = y_true
+                    .iter()
                     .zip(y_pred.iter())
                     .map(|(&yt, &yp)| (yt - yp).abs())
                     .fold(T::zero(), |acc, x| acc.max(x));
@@ -668,11 +698,9 @@ where
 {
     fn evaluate(&self, x: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         // Convert 1D to 2D for RBF interpolator
-        let points_2d = Array2::from_shape_vec(
-            (x.len(), 1),
-            x.to_vec(),
-        ).map_err(|e| InterpolateError::ComputationError(format!("Failed to reshape: {}", e)))?;
-        
+        let points_2d = Array2::from_shape_vec((x.len(), 1), x.to_vec())
+            .map_err(|e| InterpolateError::ComputationError(format!("Failed to reshape: {}", e)))?;
+
         self.interpolator.interpolate(&points_2d.view())
     }
 }
@@ -820,7 +848,8 @@ where
         methods: HashMap<String, F>,
     ) -> InterpolateResult<Vec<(String, CrossValidationResult<T>)>>
     where
-        F: Fn(&ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Box<dyn InterpolatorTrait<T>>> + Clone,
+        F: Fn(&ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Box<dyn InterpolatorTrait<T>>>
+            + Clone,
     {
         let mut results = Vec::new();
 
@@ -870,10 +899,7 @@ where
 /// # Returns
 ///
 /// Configured cross-validator
-pub fn make_cross_validator<T>(
-    k_folds: usize,
-    metric: ValidationMetric,
-) -> CrossValidator<T>
+pub fn make_cross_validator<T>(k_folds: usize, metric: ValidationMetric) -> CrossValidator<T>
 where
     T: Float
         + FromPrimitive
@@ -935,7 +961,11 @@ where
         + Send
         + Sync
         + 'static,
-    F: Fn(&HashMap<String, T>, &ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Box<dyn InterpolatorTrait<T>>>,
+    F: Fn(
+        &HashMap<String, T>,
+        &ArrayView1<T>,
+        &ArrayView1<T>,
+    ) -> InterpolateResult<Box<dyn InterpolatorTrait<T>>>,
 {
     let mut best_score = T::infinity();
     let mut best_params = HashMap::new();
@@ -946,7 +976,7 @@ where
         };
 
         let cv_result = cv.cross_validate(x, y, interpolator_factory)?;
-        
+
         if cv_result.mean_score < best_score {
             best_score = cv_result.mean_score;
             best_params = params.clone();
@@ -989,7 +1019,7 @@ mod tests {
         let folds = cv.generate_folds(9).unwrap();
 
         assert_eq!(folds.len(), 3);
-        
+
         // Check that all indices are covered
         let mut all_indices = std::collections::HashSet::new();
         for (train, test) in &folds {
@@ -1018,22 +1048,22 @@ mod tests {
     #[test]
     fn test_metric_computation() {
         let cv = CrossValidator::<f64>::new().with_metric(ValidationMetric::MeanSquaredError);
-        
+
         let y_true = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let y_pred = Array1::from_vec(vec![1.1, 1.9, 3.1, 3.9]);
-        
+
         let mse = cv.compute_metric(&y_true.view(), &y_pred.view()).unwrap();
-        let expected_mse = (0.1*0.1 + 0.1*0.1 + 0.1*0.1 + 0.1*0.1) / 4.0;
+        let expected_mse = (0.1 * 0.1 + 0.1 * 0.1 + 0.1 * 0.1 + 0.1 * 0.1) / 4.0;
         assert!((mse - expected_mse).abs() < 1e-10);
     }
 
     #[test]
     fn test_r_squared_metric() {
         let cv = CrossValidator::<f64>::new().with_metric(ValidationMetric::RSquared);
-        
+
         let y_true = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let y_pred = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]); // Perfect prediction
-        
+
         let r2 = cv.compute_metric(&y_true.view(), &y_pred.view()).unwrap();
         assert!((r2 - 1.0).abs() < 1e-10);
     }
@@ -1081,7 +1111,7 @@ mod tests {
     #[test]
     fn test_make_cross_validator() {
         let cv = make_cross_validator::<f64>(5, ValidationMetric::MeanAbsoluteError);
-        
+
         match cv.strategy {
             CrossValidationStrategy::KFold(k) => assert_eq!(k, 5),
             _ => panic!("Expected KFold strategy"),
@@ -1094,7 +1124,7 @@ mod tests {
         let cv = CrossValidator::<f64>::new();
         let arr = Array1::from_vec(vec![10.0, 20.0, 30.0, 40.0, 50.0]);
         let indices = vec![0, 2, 4];
-        
+
         let extracted = cv.extract_indices(&arr.view(), &indices);
         assert_eq!(extracted, Array1::from_vec(vec![10.0, 30.0, 50.0]));
     }
@@ -1103,15 +1133,22 @@ mod tests {
     fn test_validation_metrics() {
         let cv_mse = CrossValidator::<f64>::new().with_metric(ValidationMetric::MeanSquaredError);
         let cv_mae = CrossValidator::<f64>::new().with_metric(ValidationMetric::MeanAbsoluteError);
-        let cv_rmse = CrossValidator::<f64>::new().with_metric(ValidationMetric::RootMeanSquaredError);
-        
+        let cv_rmse =
+            CrossValidator::<f64>::new().with_metric(ValidationMetric::RootMeanSquaredError);
+
         let y_true = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let y_pred = Array1::from_vec(vec![1.5, 2.5, 2.5]);
-        
-        let mse = cv_mse.compute_metric(&y_true.view(), &y_pred.view()).unwrap();
-        let mae = cv_mae.compute_metric(&y_true.view(), &y_pred.view()).unwrap();
-        let rmse = cv_rmse.compute_metric(&y_true.view(), &y_pred.view()).unwrap();
-        
+
+        let mse = cv_mse
+            .compute_metric(&y_true.view(), &y_pred.view())
+            .unwrap();
+        let mae = cv_mae
+            .compute_metric(&y_true.view(), &y_pred.view())
+            .unwrap();
+        let rmse = cv_rmse
+            .compute_metric(&y_true.view(), &y_pred.view())
+            .unwrap();
+
         assert!(mse > 0.0);
         assert!(mae > 0.0);
         assert!((rmse - mse.sqrt()).abs() < 1e-10);

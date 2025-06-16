@@ -38,15 +38,33 @@ use crate::error::{ClusteringError, Result};
 
 // Module definitions
 pub mod agglomerative;
+pub mod cluster_extraction;
+pub mod condensed_matrix;
 pub mod dendrogram;
 pub mod disjoint_set;
+pub mod leaf_ordering;
 pub mod linkage;
 pub mod parallel_linkage;
+pub mod validation;
 
 // Re-exports
 pub use self::agglomerative::{cut_tree_by_distance, cut_tree_by_inconsistency};
+pub use self::cluster_extraction::{
+    estimate_optimal_clusters, extract_clusters_multi_criteria, prune_clusters,
+};
+pub use self::condensed_matrix::{
+    condensed_size, condensed_to_square, get_distance, points_from_condensed_size,
+    square_to_condensed, validate_condensed_matrix,
+};
 pub use self::dendrogram::{cophenet, dendrogram, inconsistent, optimal_leaf_ordering};
 pub use self::disjoint_set::DisjointSet;
+pub use self::leaf_ordering::{
+    apply_leaf_ordering, optimal_leaf_ordering_exact, optimal_leaf_ordering_heuristic,
+};
+pub use self::validation::{
+    validate_cluster_consistency, validate_cluster_extraction_params, validate_distance_matrix,
+    validate_linkage_matrix, validate_monotonic_distances, validate_square_distance_matrix,
+};
 
 /// Linkage methods for hierarchical clustering
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

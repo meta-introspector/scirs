@@ -33,13 +33,16 @@ pub mod adaptive_selection;
 pub mod benchmarking;
 pub mod curriculum_optimization;
 pub mod distributed;
+pub mod domain_specific;
 pub mod error;
 pub mod gradient_accumulation;
 pub mod gradient_processing;
+pub mod hardware_aware;
 pub mod memory_efficient;
 pub mod meta_learning;
 pub mod metrics;
 pub mod neural_integration;
+pub mod online_learning;
 pub mod optimizer_composition;
 pub mod optimizers;
 pub mod parameter_groups;
@@ -77,9 +80,20 @@ pub use distributed::{
     AveragingStrategy, CommunicationResult, CompressedGradient, CompressionStrategy,
     DistributedCoordinator, GradientCompressor, ParameterAverager, ParameterServer,
 };
+pub use domain_specific::{
+    CrossDomainKnowledge, DomainOptimizationConfig, DomainPerformanceMetrics, DomainRecommendation,
+    DomainSpecificSelector, DomainStrategy, LearningRateScheduleType, OptimizationContext,
+    RecommendationType, RegularizationApproach, ResourceConstraints, TrainingConfiguration,
+};
 pub use gradient_accumulation::{
     AccumulationMode, GradientAccumulator as GradAccumulator, MicroBatchTrainer,
     VariableAccumulator,
+};
+pub use hardware_aware::{
+    AllReduceAlgorithm, CommunicationStrategy, GPUArchitecture, HardwareAwareOptimizer,
+    HardwareOptimizationConfig, HardwarePlatform, HardwarePerformanceStats, MemoryStrategy,
+    ParallelizationStrategy, PartitionStrategy, PerformanceProfiler, PrecisionStrategy,
+    QuantizationSupport, ResourceMonitor, SIMDSupport, TPUVersion, TuningStrategy,
 };
 pub use meta_learning::{
     AcquisitionFunction, HyperparameterOptimizer, HyperparameterPredictor, HyperparameterStrategy,
@@ -93,6 +107,11 @@ pub use neural_integration::forward_backward::{BackwardHook, ForwardHook, Neural
 pub use neural_integration::{
     LayerArchitecture, LayerId, OptimizationConfig, ParamId, ParameterManager, ParameterMetadata,
     ParameterOptimizer, ParameterType,
+};
+pub use online_learning::{
+    ColumnGrowthStrategy, LearningRateAdaptation, LifelongOptimizer, LifelongStats, LifelongStrategy,
+    MemoryExample, MemoryUpdateStrategy, MirrorFunction, OnlineLearningStrategy, OnlineOptimizer,
+    OnlinePerformanceMetrics, SharedKnowledge, TaskGraph,
 };
 pub use second_order::{HessianInfo, Newton, SecondOrderOptimizer, LBFGS as SecondOrderLBFGS};
 pub use training_stabilization::{AveragingMethod, ModelEnsemble, PolyakAverager, WeightAverager};

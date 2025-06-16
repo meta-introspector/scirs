@@ -334,7 +334,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
 
         let mut members = Vec::new();
         let elements_to_check: Vec<T> = self.parent.keys().cloned().collect();
-        
+
         for element in elements_to_check {
             if let Some(root) = self.find(&element) {
                 if root == target_root {

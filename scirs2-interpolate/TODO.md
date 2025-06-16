@@ -153,9 +153,9 @@ This module provides interpolation functionality similar to SciPy's interpolate 
   - [x] Cross-validation based model selection
   - [x] Regularization parameter optimization
   - [x] Objective function definitions for common use cases
-- [ ] Support for specialized domain-specific interpolation
-  - [ ] Geospatial interpolation methods
-  - [ ] Time series specific interpolators
+- [x] Support for specialized domain-specific interpolation
+  - [x] Geospatial interpolation methods
+  - [x] Time series specific interpolators
   - [ ] Signal processing focused methods
   - [ ] Scientific data reconstruction techniques
 - [ ] Integration with differentiation and integration modules

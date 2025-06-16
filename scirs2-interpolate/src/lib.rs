@@ -110,6 +110,20 @@
 //!   * Hyperparameter tuning for RBF kernels and spline smoothing
 //!   * Model comparison and validation metrics (MSE, MAE, R²)
 //!   * Bayesian optimization for efficient parameter search
+//! * Time series specific interpolation (`timeseries` module):
+//!   * Temporal pattern recognition (trends, seasonality, irregularities)
+//!   * Missing data handling with forward/backward fill and interpolation
+//!   * Seasonal decomposition and trend-aware interpolation
+//!   * Outlier detection and robust temporal smoothing
+//!   * Uncertainty estimation for time-dependent predictions
+//!   * Holiday and event-aware interpolation strategies
+//! * Geospatial interpolation methods (`geospatial` module):
+//!   * Geographic coordinate handling (latitude/longitude, projections)
+//!   * Spherical interpolation with great circle distances
+//!   * Spatial autocorrelation and kriging for Earth science data
+//!   * Multi-scale interpolation from local to global coverage
+//!   * Elevation-aware 3D interpolation and topographic considerations
+//!   * Boundary handling for coastal and land/water transitions
 //! * Utility functions (`utils` module):
 //!   * Error estimation with cross-validation
 //!   * Parameter optimization
@@ -133,6 +147,7 @@ pub mod cache_aware;
 pub mod constrained;
 pub mod extrapolation;
 pub mod fast_bspline;
+pub mod geospatial;
 pub mod gpu_accelerated;
 pub mod grid;
 pub mod griddata;
@@ -145,8 +160,8 @@ pub mod local;
 pub mod multiscale;
 pub mod neural_enhanced;
 pub mod numerical_stability;
-pub mod optimization;
 pub mod nurbs;
+pub mod optimization;
 pub mod parallel;
 pub mod penalized;
 pub mod physics_informed;
@@ -163,6 +178,7 @@ pub mod spatial;
 pub mod spline;
 pub mod tension;
 pub mod tensor;
+pub mod timeseries;
 pub mod utils;
 pub mod voronoi;
 
@@ -233,6 +249,10 @@ pub use fast_bspline::{
     make_cached_fast_bspline_evaluator, make_fast_bspline_evaluator, FastBSplineEvaluator,
     TensorProductFastEvaluator,
 };
+pub use geospatial::{
+    make_climate_interpolator, make_elevation_interpolator, CoordinateSystem, GeospatialConfig,
+    GeospatialInterpolator, GeospatialResult, InterpolationModel, SpatialStats,
+};
 pub use gpu_accelerated::{
     get_gpu_device_info, is_gpu_acceleration_available, make_gpu_rbf_interpolator,
     GpuBatchSplineEvaluator, GpuConfig, GpuDeviceInfo, GpuRBFInterpolator, GpuRBFKernel, GpuStats,
@@ -285,11 +305,11 @@ pub use numerical_stability::{
     safe_reciprocal, solve_with_stability_monitoring, ConditionReport, StabilityDiagnostics,
     StabilityLevel,
 };
+pub use nurbs::{make_nurbs_circle, make_nurbs_sphere, NurbsCurve, NurbsSurface};
 pub use optimization::{
     grid_search, make_cross_validator, CrossValidationResult, CrossValidationStrategy,
     CrossValidator, ModelSelector, OptimizationConfig, OptimizationResult, ValidationMetric,
 };
-pub use nurbs::{make_nurbs_circle, make_nurbs_sphere, NurbsCurve, NurbsSurface};
 pub use parallel::{
     make_parallel_loess, make_parallel_mls, make_parallel_robust_loess, ParallelConfig,
     ParallelEvaluate, ParallelLocalPolynomialRegression, ParallelMovingLeastSquares,
@@ -330,6 +350,11 @@ pub use tension::{make_tension_spline, TensionSpline};
 pub use tensor::{
     lagrange_tensor_interpolate, tensor_product_interpolate, LagrangeTensorInterpolator,
     TensorProductInterpolator,
+};
+pub use timeseries::{
+    backward_fill, forward_fill, make_daily_interpolator, make_weekly_interpolator,
+    MissingDataStrategy, SeasonalityType, TemporalPattern, TemporalStats, TimeSeriesConfig,
+    TimeSeriesInterpolator, TimeSeriesResult,
 };
 pub use voronoi::{
     constant_value_extrapolation, inverse_distance_extrapolation, linear_gradient_extrapolation,

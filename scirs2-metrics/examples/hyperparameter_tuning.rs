@@ -78,7 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         println!("Best accuracy: {:.6}", result.best_metric());
 
-        // Get best hyperparameters  
+        // Get best hyperparameters
         let best_params = result.best_params();
         let best_learning_rate = best_params["learning_rate"];
         let best_hidden_size = best_params["hidden_size"] as usize;
@@ -95,65 +95,65 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 /// Simulate training a simple neural network model for the XOR problem
-    #[allow(dead_code)]
-    fn simulate_model_training(
-        _x: &Array2<f64>,
-        _y: &Array1<f64>,
-        learning_rate: f64,
-        hidden_size: usize,
-        num_epochs: usize,
-    ) -> Result<f64, Box<dyn Error>> {
-        // This is a simplified simulation of a model's performance based on hyperparameters
-        // In a real-world scenario, you would train an actual model here
+#[allow(dead_code)]
+fn simulate_model_training(
+    _x: &Array2<f64>,
+    _y: &Array1<f64>,
+    learning_rate: f64,
+    hidden_size: usize,
+    num_epochs: usize,
+) -> Result<f64, Box<dyn Error>> {
+    // This is a simplified simulation of a model's performance based on hyperparameters
+    // In a real-world scenario, you would train an actual model here
 
-        // Simulate how well the model will perform based on hyperparameters
-        let base_accuracy = 0.6;
+    // Simulate how well the model will perform based on hyperparameters
+    let base_accuracy = 0.6;
 
-        // Learning rate factor: too small or too large reduces accuracy
-        let lr_factor = if learning_rate < 0.005 {
-            learning_rate / 0.005 // Too small
-        } else if learning_rate > 0.05 {
-            1.0 - ((learning_rate - 0.05) / 0.05) * 0.5 // Too large
-        } else {
-            1.0 // Good range
-        };
+    // Learning rate factor: too small or too large reduces accuracy
+    let lr_factor = if learning_rate < 0.005 {
+        learning_rate / 0.005 // Too small
+    } else if learning_rate > 0.05 {
+        1.0 - ((learning_rate - 0.05) / 0.05) * 0.5 // Too large
+    } else {
+        1.0 // Good range
+    };
 
-        // Hidden size factor: XOR needs at least 2 neurons, more is fine but less efficient
-        let hidden_factor = if hidden_size < 3 {
-            0.5 // Too small
-        } else if hidden_size < 8 {
-            1.0 // Good range
-        } else {
-            0.9 // Larger than needed
-        };
+    // Hidden size factor: XOR needs at least 2 neurons, more is fine but less efficient
+    let hidden_factor = if hidden_size < 3 {
+        0.5 // Too small
+    } else if hidden_size < 8 {
+        1.0 // Good range
+    } else {
+        0.9 // Larger than needed
+    };
 
-        // Epochs factor: more epochs generally better up to a point
-        let epoch_factor = if num_epochs < 100 {
-            0.7 + (num_epochs as f64 / 100.0) * 0.3 // Too few epochs
-        } else if num_epochs < 300 {
-            1.0 // Good range
-        } else {
-            0.95 // More than needed
-        };
+    // Epochs factor: more epochs generally better up to a point
+    let epoch_factor = if num_epochs < 100 {
+        0.7 + (num_epochs as f64 / 100.0) * 0.3 // Too few epochs
+    } else if num_epochs < 300 {
+        1.0 // Good range
+    } else {
+        0.95 // More than needed
+    };
 
-        // Add some randomness to simulate training stochasticity
-        let mut rng = rand::rng();
-        let random_factor = 0.95 + rand::Rng::random_range(&mut rng, 0.0..0.1);
+    // Add some randomness to simulate training stochasticity
+    let mut rng = rand::rng();
+    let random_factor = 0.95 + rand::Rng::random_range(&mut rng, 0.0..0.1);
 
-        // Calculate simulated accuracy
-        let mut accuracy = base_accuracy * lr_factor * hidden_factor * epoch_factor * random_factor;
+    // Calculate simulated accuracy
+    let mut accuracy = base_accuracy * lr_factor * hidden_factor * epoch_factor * random_factor;
 
-        // Cap at 1.0
-        accuracy = accuracy.min(1.0);
+    // Cap at 1.0
+    accuracy = accuracy.min(1.0);
 
-        // For XOR with the right parameters, we should be able to get perfect accuracy
-        if (0.005..=0.05).contains(&learning_rate)
-            && (3..=8).contains(&hidden_size)
-            && num_epochs >= 100
-            && random_factor > 0.98
-        {
-            accuracy = 1.0;
-        }
-
-        Ok(accuracy)
+    // For XOR with the right parameters, we should be able to get perfect accuracy
+    if (0.005..=0.05).contains(&learning_rate)
+        && (3..=8).contains(&hidden_size)
+        && num_epochs >= 100
+        && random_factor > 0.98
+    {
+        accuracy = 1.0;
     }
+
+    Ok(accuracy)
+}

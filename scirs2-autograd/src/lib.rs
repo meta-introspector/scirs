@@ -137,13 +137,17 @@ pub(crate) mod graph;
 pub mod hooks;
 pub mod ndarray_ext;
 pub mod op;
+pub mod optimization;
 pub mod optimizers;
+pub mod parallel;
 pub mod prelude;
 pub mod schedulers;
 pub mod tensor;
 pub mod tensor_ops;
 pub mod test_helper;
+pub mod tracing;
 pub mod variable;
+pub mod visualization;
 
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::any::TypeId;

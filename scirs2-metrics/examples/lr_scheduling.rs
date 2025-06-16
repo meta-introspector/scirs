@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         for epoch in 0..20 {
             // Simulate training for this epoch
-            let (train_loss, new_val_loss) =
+            let (_train_loss, new_val_loss) =
                 simulate_epoch_training(val_loss, scheduler.get_learning_rate());
 
             // Update validation loss
@@ -79,20 +79,20 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             // Create a metric optimizer for tracking accuracy
             let mut metric_optimizer = MetricOptimizer::new("accuracy", true);
-            
+
             // Add some metric values
             metric_optimizer.add_value(0.85);
             metric_optimizer.add_value(0.87);
             metric_optimizer.add_value(0.89);
-            
+
             // Create scheduler configuration for external use
             let scheduler_config: SchedulerConfig<f64> = metric_optimizer.create_scheduler_config(
-                0.01,   // Initial learning rate
-                0.8,    // Factor to reduce by
-                3,      // Patience
-                1e-6,   // Minimum learning rate
+                0.01, // Initial learning rate
+                0.8,  // Factor to reduce by
+                3,    // Patience
+                1e-6, // Minimum learning rate
             );
-            
+
             println!("Scheduler configuration created:");
             println!("  Initial LR: {}", scheduler_config.initial_lr);
             println!("  Factor: {}", scheduler_config.factor);
@@ -100,12 +100,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!("  Min LR: {}", scheduler_config.min_lr);
             println!("  Mode: {}", scheduler_config.mode);
             println!("  Metric: {}", scheduler_config.metric_name);
-            
+
             // Show how to extract configuration values
             let (initial_lr, factor, patience, min_lr, mode) = scheduler_config.as_tuple();
             println!("\nConfiguration as tuple:");
-            println!("  ({}, {}, {}, {}, {})", initial_lr, factor, patience, min_lr, mode);
-            
+            println!(
+                "  ({}, {}, {}, {}, {})",
+                initial_lr, factor, patience, min_lr, mode
+            );
+
             println!("\nThis configuration can be used to create external schedulers");
             println!("from scirs2-optim or other optimization libraries.");
         }

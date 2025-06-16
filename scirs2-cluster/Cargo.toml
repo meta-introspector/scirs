@@ -24,6 +24,14 @@ rand_distr = { workspace = true }
 approx = { workspace = true }
 rayon = { workspace = true }
 
+[dev-dependencies]
+proptest = "1.4.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+
 [features]
 default = ["rayon"]
 rayon = []
+
+[[bench]]
+name = "clustering_benchmarks"
+harness = false

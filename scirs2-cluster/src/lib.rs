@@ -55,6 +55,7 @@ pub mod density;
 pub mod error;
 pub mod gmm;
 pub mod hierarchy;
+pub mod input_validation;
 /// Mean Shift clustering implementation.
 ///
 /// This module provides the Mean Shift clustering algorithm, which is a centroid-based
@@ -80,6 +81,11 @@ pub use density::optics::{extract_dbscan_clustering, extract_xi_clusters, OPTICS
 pub use density::*;
 pub use gmm::{gaussian_mixture, CovarianceType, GMMInit, GMMOptions, GaussianMixture};
 pub use hierarchy::*;
+pub use input_validation::{
+    check_duplicate_points, suggest_clustering_algorithm, validate_clustering_data,
+    validate_convergence_parameters, validate_distance_parameter, validate_integer_parameter,
+    validate_n_clusters, validate_sample_weights, ValidationConfig,
+};
 pub use meanshift::{estimate_bandwidth, get_bin_seeds, mean_shift, MeanShift, MeanShiftOptions};
 pub use metrics::{
     adjusted_rand_index, calinski_harabasz_score, davies_bouldin_score,
@@ -94,3 +100,6 @@ pub use vq::*;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod property_tests;

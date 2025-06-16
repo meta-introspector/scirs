@@ -12,7 +12,6 @@ use rand::{rng, Rng};
 use scirs2_optim::error::Result;
 use scirs2_optim::meta_learning::*;
 use std::collections::HashMap;
-use num_traits::Float;
 
 /// Simulated machine learning model for demonstration
 struct MockModel {
@@ -642,19 +641,19 @@ fn sensitivity_analysis_example() -> Result<()> {
             match param_name {
                 "learning_rate" => {
                     let val = test_hyperparams.get_mut("learning_rate").unwrap();
-                    *val = Float::max(*val, 1e-6).min(1.0);
+                    *val = val.max(1e-6).min(1.0);
                 }
                 "weight_decay" => {
                     let val = test_hyperparams.get_mut("weight_decay").unwrap();
-                    *val = Float::max(*val, 0.0).min(1.0);
+                    *val = val.max(0.0).min(1.0);
                 }
                 "batch_size" => {
                     let val = test_hyperparams.get_mut("batch_size").unwrap();
-                    *val = Float::max(*val, 1.0).min(512.0);
+                    *val = val.max(1.0).min(512.0);
                 }
                 "momentum" => {
                     let val = test_hyperparams.get_mut("momentum").unwrap();
-                    *val = Float::max(*val, 0.0).min(0.999);
+                    *val = val.max(0.0).min(0.999);
                 }
                 _ => {}
             }

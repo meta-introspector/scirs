@@ -194,7 +194,8 @@ pub use memory::{
     MatrixLayout, MemoryPool, MemoryPrefetch, MemoryUsage, PooledBuffer,
 };
 pub use monte_carlo::{
-    importance_sampling, monte_carlo, monte_carlo_parallel, ErrorEstimationMethod, MonteCarloOptions, MonteCarloResult,
+    importance_sampling, monte_carlo, monte_carlo_parallel, ErrorEstimationMethod,
+    MonteCarloOptions, MonteCarloResult,
 };
 #[cfg(feature = "parallel")]
 pub use monte_carlo_parallel::{

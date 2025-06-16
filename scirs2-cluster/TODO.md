@@ -56,17 +56,17 @@ This module provides clustering algorithms similar to SciPy's cluster module.
   - [ ] Ward's method optimization
   - [ ] Memory-efficient implementations
 - [ ] Dendrogram enhancements
-  - [ ] Optimal leaf ordering algorithm
+  - [x] Optimal leaf ordering algorithm
   - [ ] Enhanced visualization utilities
   - [ ] Color threshold controls
-- [ ] Validation and statistics
+- [x] Validation and statistics
   - [x] Cophenetic correlation
   - [x] Inconsistency calculation
-  - [ ] Linkage validation utilities
-- [ ] Cluster extraction utilities
-  - [ ] Improved flat cluster extraction
-  - [ ] Distance-based cluster pruning
-  - [ ] Automatic cluster count estimation
+  - [x] Linkage validation utilities
+- [x] Cluster extraction utilities
+  - [x] Improved flat cluster extraction
+  - [x] Distance-based cluster pruning
+  - [x] Automatic cluster count estimation
 - [ ] Tree representation
   - [ ] Leader algorithm implementation
   - [ ] Tree format conversion utilities
@@ -75,16 +75,16 @@ This module provides clustering algorithms similar to SciPy's cluster module.
 
 - [ ] Efficient data structures
   - [x] DisjointSet implementation for connectivity queries
-  - [ ] Condensed distance matrix format
+  - [x] Condensed distance matrix format
   - [ ] Sparse distance matrix support
 - [x] Distance computation optimization
   - [x] Vectorized distance computation
   - [x] SIMD-accelerated distance functions
   - [x] Custom distance metrics (Mahalanobis, Manhattan, Chebyshev, Cosine, Correlation)
-- [ ] Input validation utilities
-  - [ ] Ensure robust validation compatible with SciPy
-  - [ ] Consistent error messages
-  - [ ] Type checking and conversion
+- [x] Input validation utilities
+  - [x] Ensure robust validation compatible with SciPy
+  - [x] Consistent error messages
+  - [x] Type checking and conversion
 
 ## Additional Algorithms
 
@@ -168,8 +168,26 @@ This module provides clustering algorithms similar to SciPy's cluster module.
   - [x] Added tests for inconsistency calculation in hierarchical clustering
   - [x] Added DisjointSet data structure with 9 comprehensive unit tests
   - [x] Enhanced dendrogram module with full test coverage for all functions
-- [ ] Implement property-based testing for algorithms
-- [ ] Add benchmark tests for performance tracking
+- [x] Implement property-based testing for algorithms
+  - [x] Added comprehensive property-based tests using proptest framework
+  - [x] Tests for K-means determinism, cluster assignment validity, and convergence
+  - [x] Tests for hierarchical clustering merge count and validity
+  - [x] Tests for spectral clustering and DBSCAN basic properties
+  - [x] Edge case testing for minimal datasets and identical points
+- [x] Add comprehensive linkage validation utilities
+  - [x] Linkage matrix validation with mathematical correctness checks
+  - [x] Distance matrix validation for condensed and square formats  
+  - [x] Monotonic distance validation for single/complete linkage
+  - [x] Cluster extraction parameter validation
+  - [x] Cluster consistency validation with hierarchical structure
+- [x] Implement optimal leaf ordering algorithm for dendrograms
+  - [x] Exact algorithm using dynamic programming for small dendrograms (<= 12 leaves)
+  - [x] Heuristic algorithm using iterative improvement for large dendrograms
+  - [x] Automatic algorithm selection based on dendrogram size
+  - [x] Tree construction from linkage matrices
+  - [x] Cost calculation for leaf orderings
+  - [x] Apply ordering to linkage matrices for visualization
+- [x] Add benchmark tests for performance tracking
 - [x] Fix ndarray_rand dependency issues in tests
   - [x] Update tests to use rand crate directly instead of ndarray_rand
   - [x] Fix ambiguous uses of F type in affinity and spectral modules

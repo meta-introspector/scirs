@@ -640,6 +640,8 @@
 pub mod anomaly;
 pub mod classification;
 pub mod clustering;
+pub mod custom;
+pub mod domains;
 pub mod error;
 pub mod evaluation;
 pub mod fairness;
@@ -651,5 +653,7 @@ pub mod integration;
 pub mod optimization;
 pub mod ranking;
 pub mod regression;
+pub mod selection;
 pub mod serialization;
+pub mod streaming;
 pub mod visualization;

@@ -1,5 +1,5 @@
 //! Comprehensive tests for recently implemented features
-//! 
+//!
 //! This test module provides comprehensive coverage for:
 //! - Advanced tensor indexing operations
 //! - Tensor broadcasting optimizations
@@ -8,9 +8,9 @@
 //! - Property-based testing for mathematical operations
 //! - Numerical stability testing
 
+use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
 use scirs2_autograd::tensor_ops as T;
-use ndarray::{Array, IxDyn};
 
 /// Test advanced tensor indexing operations
 #[cfg(test)]
@@ -23,20 +23,20 @@ mod advanced_indexing_tests {
             // Create test data
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let mask = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Apply boolean mask
             let result = T::boolean_mask(&data, &mask);
-            
+
             // The result should be a 1D tensor with selected elements
             let result_array = result.eval(ctx).unwrap();
-            
+
             // Should contain elements where mask was true: [1.0, 3.0, 5.0]
             assert_eq!(result_array.len(), 3);
         });
@@ -48,22 +48,22 @@ mod advanced_indexing_tests {
             // Create test data: [10, 20, 30, 40, 50]
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[5]), vec![10.0, 20.0, 30.0, 40.0, 50.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
-            // Indices to take: [0, 2, 4, 1]  
+
+            // Indices to take: [0, 2, 4, 1]
             let indices = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[4]), vec![0.0, 2.0, 4.0, 1.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Apply take operation
             let result = T::take(&data, &indices, 0);
-            
+
             // Verify result
             let result_array = result.eval(ctx).unwrap();
             assert_eq!(result_array.len(), 4);
-            
+
             // Should contain [10.0, 30.0, 50.0, 20.0]
             let expected = vec![10.0, 30.0, 50.0, 20.0];
             for (i, &expected_val) in expected.iter().enumerate() {
@@ -78,22 +78,22 @@ mod advanced_indexing_tests {
             // Create test tensors
             let condition = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 0.0, 1.0, 0.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let x = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let y = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[4]), vec![10.0, 20.0, 30.0, 40.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Apply where operation
             let result = T::where_op(&condition, &x, &y);
-            
+
             // Verify result: should be [1.0, 20.0, 3.0, 40.0]
             let result_array = result.eval(ctx).unwrap();
             let expected = vec![1.0, 20.0, 3.0, 40.0];
@@ -109,21 +109,21 @@ mod advanced_indexing_tests {
             // Create indices and updates
             let indices = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 1.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let updates = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![10.0, 30.0, 20.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Apply scatter operation
             let result = T::scatter(&indices, &updates, 5, 0);
-            
+
             // Verify result: should be [10.0, 20.0, 30.0, 0.0, 0.0]
             let result_array = result.eval(ctx).unwrap();
             assert_eq!(result_array.len(), 5);
-            
+
             let expected = vec![10.0, 20.0, 30.0, 0.0, 0.0];
             for (i, &expected_val) in expected.iter().enumerate() {
                 assert!((result_array[i] - expected_val).abs() < 1e-6);
@@ -143,7 +143,7 @@ mod broadcasting_tests {
         let left_shape = vec![3, 4];
         let right_shape = vec![3, 4];
         let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
-        
+
         assert_eq!(info.strategy, T::BroadcastStrategy::NoOp);
         assert!(!info.left_needs_broadcast);
         assert!(!info.right_needs_broadcast);
@@ -156,7 +156,7 @@ mod broadcasting_tests {
         let left_shape = vec![];
         let right_shape = vec![3, 4];
         let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
-        
+
         assert_eq!(info.strategy, T::BroadcastStrategy::ScalarBroadcast);
         assert!(info.left_needs_broadcast);
         assert!(!info.right_needs_broadcast);
@@ -169,7 +169,7 @@ mod broadcasting_tests {
         let left_shape = vec![1, 4];
         let right_shape = vec![3, 1];
         let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
-        
+
         assert_eq!(info.output_shape, vec![3, 4]);
         assert!(info.left_needs_broadcast);
         assert!(info.right_needs_broadcast);
@@ -181,7 +181,7 @@ mod broadcasting_tests {
         let left_shape = vec![3, 4];
         let right_shape = vec![2, 4];
         let result = T::analyze_broadcast(&left_shape, &right_shape);
-        
+
         assert!(result.is_err());
     }
 
@@ -190,21 +190,21 @@ mod broadcasting_tests {
         ag::run(|ctx| {
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 1]), vec![1.0, 2.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let b = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[1, 3]), vec![10.0, 20.0, 30.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Test broadcast addition
             let result = T::broadcast_add(&a, &b);
             let result_array = result.eval(ctx).unwrap();
-            
+
             // Result should be 2x3 matrix
             assert_eq!(result_array.shape(), &[2, 3]);
-            
+
             // Test broadcast multiplication
             let result = T::broadcast_mul(&a, &b);
             let result_array = result.eval(ctx).unwrap();
@@ -218,12 +218,12 @@ mod broadcasting_tests {
         T::clear_broadcast_cache();
         let (size, _) = T::get_broadcast_cache_stats();
         assert_eq!(size, 0);
-        
+
         // After some operations, cache should have entries
         let left_shape = vec![2, 3];
         let right_shape = vec![2, 3];
         let _ = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
-        
+
         let (size, _) = T::get_broadcast_cache_stats();
         assert!(size > 0);
     }
@@ -239,18 +239,18 @@ mod memory_optimization_tests {
         // Configure memory pool
         T::configure_memory_pool(8, 50 * 1024 * 1024);
         T::set_memory_pool_enabled(true);
-        
+
         // Get a buffer from the pool
         let buffer = T::get_pooled_buffer(1024);
         assert_eq!(buffer.len(), 1024);
-        
+
         // Return buffer to pool
         T::return_pooled_buffer(buffer);
-        
+
         // Check pool stats
         let stats = T::get_memory_pool_stats();
         assert!(stats.enabled);
-        
+
         // Clear pool
         T::clear_memory_pool();
     }
@@ -259,24 +259,30 @@ mod memory_optimization_tests {
     fn test_memory_tracking() {
         // Enable memory tracking
         T::enable_memory_tracking();
-        
+
         // Perform some operations that would be tracked
         ag::run(|ctx| {
-            let a = T::ones(&T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
-                ctx
-            ), ctx);
-            let b = T::ones(&T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
-                ctx
-            ), ctx);
+            let a = T::ones(
+                &T::convert_to_tensor(
+                    Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
+                    ctx,
+                ),
+                ctx,
+            );
+            let b = T::ones(
+                &T::convert_to_tensor(
+                    Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
+                    ctx,
+                ),
+                ctx,
+            );
             let _result = T::inplace_add(&a, &b);
         });
-        
+
         // Check tracking stats
         let stats = T::get_memory_tracking_stats();
         assert!(stats.enabled);
-        
+
         // Reset tracking
         T::reset_memory_tracking();
         T::disable_memory_tracking();
@@ -286,16 +292,16 @@ mod memory_optimization_tests {
     fn test_memory_optimizer() {
         // Test memory optimizer sessions
         T::MemoryOptimizer::start_session();
-        
+
         // Perform some operations
         ag::run(|ctx| {
             let a = T::efficient_zeros(&[10, 10], ctx);
             let b = T::efficient_ones(&[10, 10], ctx);
             let _result = T::inplace_mul(&a, &b);
         });
-        
+
         let (tracking_stats, pool_stats) = T::MemoryOptimizer::end_session();
-        
+
         // Should have some statistics
         assert!(tracking_stats.enabled || pool_stats.enabled);
     }
@@ -305,18 +311,18 @@ mod memory_optimization_tests {
         ag::run(|ctx| {
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let b = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Test in-place operations
             let add_result = T::inplace_add(&a, &b);
             let add_array = add_result.eval(ctx).unwrap();
-            
+
             // Should be [5.0, 7.0, 9.0]
             for i in 0..3 {
                 assert!((add_array[i] - (i as f64 + 5.0)).abs() < 1e-6);
@@ -324,7 +330,7 @@ mod memory_optimization_tests {
 
             let mul_result = T::inplace_mul(&a, &b);
             let mul_array = mul_result.eval(ctx).unwrap();
-            
+
             // Should be [4.0, 10.0, 18.0]
             let expected = vec![4.0, 10.0, 18.0];
             for (i, &expected_val) in expected.iter().enumerate() {
@@ -372,13 +378,13 @@ mod efficient_operations_tests {
             // Create a 2x3 matrix
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Reshape to 3x2
             let reshaped = T::efficient_reshape_with_shape(&data, &[3, 2]);
             let reshaped_array = reshaped.eval(ctx).unwrap();
-            
+
             assert_eq!(reshaped_array.shape(), &[3, 2]);
             assert_eq!(reshaped_array.len(), 6);
         });
@@ -389,11 +395,8 @@ mod efficient_operations_tests {
         ag::run(|ctx| {
             // Create a 4x4 matrix
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(
-                    IxDyn(&[4, 4]), 
-                    (0..16).map(|x| x as f64).collect()
-                ).unwrap(),
-                ctx
+                Array::from_shape_vec(IxDyn(&[4, 4]), (0..16).map(|x| x as f64).collect()).unwrap(),
+                ctx,
             );
 
             // Create slice ranges
@@ -404,7 +407,7 @@ mod efficient_operations_tests {
 
             let sliced = T::efficient_slice(&data, &slices);
             let sliced_array = sliced.eval(ctx).unwrap();
-            
+
             // Should be a 2x2 matrix
             assert_eq!(sliced_array.shape(), &[2, 2]);
         });
@@ -416,18 +419,18 @@ mod efficient_operations_tests {
             // Create test tensors
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let b = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Concatenate along axis 0
             let concat_result = T::efficient_concat(&[&a, &b], 0);
             let concat_array = concat_result.eval(ctx).unwrap();
-            
+
             // Should be a 4x2 matrix
             assert_eq!(concat_array.shape(), &[4, 2]);
             assert_eq!(concat_array.len(), 8);
@@ -440,7 +443,7 @@ mod efficient_operations_tests {
         T::EfficientOpsManager::configure_for_performance();
         let stats = T::EfficientOpsManager::get_performance_stats();
         assert!(stats.reshape_cache_max > 0);
-        
+
         T::EfficientOpsManager::configure_for_memory();
         let stats = T::EfficientOpsManager::get_performance_stats();
         assert!(stats.reshape_cache_max > 0);
@@ -458,20 +461,20 @@ mod property_tests {
             // Test that a + b = b + a
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let b = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             let ab = &a + &b;
             let ba = &b + &a;
-            
+
             let ab_array = ab.eval(ctx).unwrap();
             let ba_array = ba.eval(ctx).unwrap();
-            
+
             for i in 0..3 {
                 assert!((ab_array[i] - ba_array[i]).abs() < 1e-10);
             }
@@ -484,25 +487,25 @@ mod property_tests {
             // Test that (a * b) * c = a * (b * c)
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let b = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![4.0, 5.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let c = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![6.0, 7.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             let ab_c = (&a * &b) * &c;
             let a_bc = &a * (&b * &c);
-            
+
             let ab_c_array = ab_c.eval(ctx).unwrap();
             let a_bc_array = a_bc.eval(ctx).unwrap();
-            
+
             for i in 0..2 {
                 assert!((ab_c_array[i] - a_bc_array[i]).abs() < 1e-10);
             }
@@ -515,25 +518,25 @@ mod property_tests {
             // Test that a * (b + c) = a * b + a * c
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let b = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![4.0, 5.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let c = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![6.0, 7.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             let left = &a * (&b + &c);
             let right = (&a * &b) + (&a * &c);
-            
+
             let left_array = left.eval(ctx).unwrap();
             let right_array = right.eval(ctx).unwrap();
-            
+
             for i in 0..2 {
                 assert!((left_array[i] - right_array[i]).abs() < 1e-10);
             }
@@ -546,18 +549,18 @@ mod property_tests {
             // Test that a + 0 = a
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
-                ctx
+                ctx,
             );
-            
-            let zero = T::zeros(&T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).unwrap(),
-                ctx
-            ), ctx);
+
+            let zero = T::zeros(
+                &T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).unwrap(), ctx),
+                ctx,
+            );
 
             let result = &a + &zero;
             let result_array = result.eval(ctx).unwrap();
             let a_array = a.eval(ctx).unwrap();
-            
+
             for i in 0..3 {
                 assert!((result_array[i] - a_array[i]).abs() < 1e-10);
             }
@@ -570,18 +573,18 @@ mod property_tests {
             // Test that a * 1 = a
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
-                ctx
+                ctx,
             );
-            
-            let one = T::ones(&T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).unwrap(),
-                ctx
-            ), ctx);
+
+            let one = T::ones(
+                &T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).unwrap(), ctx),
+                ctx,
+            );
 
             let result = &a * &one;
             let result_array = result.eval(ctx).unwrap();
             let a_array = a.eval(ctx).unwrap();
-            
+
             for i in 0..3 {
                 assert!((result_array[i] - a_array[i]).abs() < 1e-10);
             }
@@ -601,18 +604,18 @@ mod numerical_stability_tests {
             let large_val = 1e10_f64;
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![large_val, large_val]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let b = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Addition should maintain precision
             let result = &a + &b;
             let result_array = result.eval(ctx).unwrap();
-            
+
             // Check that small increments are preserved
             assert!((result_array[0] - (large_val + 1.0)).abs() < 1e-6);
             assert!((result_array[1] - (large_val + 2.0)).abs() < 1e-6);
@@ -626,13 +629,13 @@ mod numerical_stability_tests {
             let small_val = 1e-10_f64;
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![small_val, small_val * 2.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Multiplication should not underflow to zero inappropriately
             let result = &a * &a;
             let result_array = result.eval(ctx).unwrap();
-            
+
             // Should not be exactly zero (unless actually zero)
             assert!(result_array[0] > 0.0);
             assert!(result_array[1] > 0.0);
@@ -644,18 +647,18 @@ mod numerical_stability_tests {
         ag::run(|ctx| {
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let zero = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![0.0, 0.0]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Division by zero should produce infinity or NaN, not crash
             let result = &a / &zero;
             let result_array = result.eval(ctx).unwrap();
-            
+
             // Check that we get infinity or NaN, not a crash
             assert!(result_array[0].is_infinite() || result_array[0].is_nan());
             assert!(result_array[1].is_infinite() || result_array[1].is_nan());
@@ -668,7 +671,7 @@ mod numerical_stability_tests {
             // Test gradient computation with challenging inputs
             let x = T::variable(
                 Array::from_shape_vec(IxDyn(&[2]), vec![1e-8_f64, 1e8_f64]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Compute a function that might have numerical issues
@@ -693,18 +696,18 @@ mod numerical_stability_tests {
             // Test broadcasting with mixed scales
             let large = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[1, 3]), vec![1e6, 2e6, 3e6]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             let small = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 1]), vec![1e-6, 2e-6]).unwrap(),
-                ctx
+                ctx,
             );
 
             // Broadcasting operations should maintain numerical stability
             let result = T::broadcast_add(&large, &small);
             let result_array = result.eval(ctx).unwrap();
-            
+
             // All results should be finite
             for &val in result_array.iter() {
                 assert!(val.is_finite());
@@ -728,30 +731,30 @@ mod integration_tests {
         ag::run(|ctx| {
             // Start memory optimization
             T::MemoryOptimizer::start_session();
-            
+
             // Create a simple neural network layer with memory optimization
             let input = T::efficient_ones(&[32, 128], ctx); // Batch size 32, 128 features
             let weights = T::efficient_ones(&[128, 64], ctx); // 128 -> 64 transformation
             let bias = T::efficient_zeros(&[64], ctx);
-            
+
             // Forward pass with checkpointing
             let linear = T::matmul(&input, &weights);
             let linear_checkpointed = T::checkpoint(&linear);
             let biased = T::broadcast_add(&linear_checkpointed, &bias);
             let activated = T::relu(&biased);
-            
+
             // Use efficient operations
             let reshaped = T::efficient_reshape_with_shape(&activated, &[32 * 64]);
             let result = T::reduce_sum(&reshaped, &[0], false);
-            
+
             // Verify result
             let result_array = result.eval(ctx).unwrap();
             assert!(result_array[0].is_finite());
             assert!(result_array[0] > 0.0); // ReLU should produce positive values
-            
+
             // End memory optimization and check stats
             let (tracking_stats, pool_stats) = T::MemoryOptimizer::end_session();
-            
+
             // Should have tracked some operations
             println!("Memory tracking enabled: {}", tracking_stats.enabled);
             println!("Pool enabled: {}", pool_stats.enabled);
@@ -764,32 +767,30 @@ mod integration_tests {
             // Create test data
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[4, 5]), (0..20).map(|x| x as f64).collect()).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             // Create row indices
             let row_indices = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 3.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             // Select rows using advanced indexing
             let selected_rows = T::select_rows(&data, &row_indices);
-            
+
             // Apply broadcasting operation
-            let scalar = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![10.0]).unwrap(),
-                ctx
-            );
-            
+            let scalar =
+                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![10.0]).unwrap(), ctx);
+
             let result = T::broadcast_mul(&selected_rows, &scalar);
             let result_array = result.eval(ctx).unwrap();
-            
+
             // Should be 3x5 matrix with values multiplied by 10
             assert_eq!(result_array.shape(), &[3, 5]);
-            
+
             // Check some values
-            assert!((result_array[[0, 0]] - 0.0).abs() < 1e-6);  // 0 * 10 = 0
+            assert!((result_array[[0, 0]] - 0.0).abs() < 1e-6); // 0 * 10 = 0
             assert!((result_array[[1, 0]] - 100.0).abs() < 1e-6); // 10 * 10 = 100
         });
     }
@@ -800,30 +801,30 @@ mod integration_tests {
             // Create variable tensors
             let x = T::variable(
                 Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
-                ctx
+                ctx,
             );
-            
+
             // Apply efficient operations
             let reshaped = T::efficient_reshape_with_shape(&x, &[3, 2]);
             let checkpointed = T::checkpoint(&reshaped);
-            
+
             // Slice operation
             let slices = vec![
                 T::SliceRange::new(Some(0), Some(2), Some(1)), // First 2 rows
-                T::SliceRange::full(), // All columns
+                T::SliceRange::full(),                         // All columns
             ];
             let sliced = T::efficient_slice(&checkpointed, &slices);
-            
+
             // Compute loss
             let loss = T::reduce_sum(&sliced, &[0, 1], false);
-            
+
             // Compute gradients
             let grad = T::grad(&[loss], &[&x])[0];
             let grad_array = grad.eval(ctx).unwrap();
-            
+
             // Gradients should have the same shape as input
             assert_eq!(grad_array.shape(), x.eval(ctx).unwrap().shape());
-            
+
             // All gradient values should be finite
             for &g in grad_array.iter() {
                 assert!(g.is_finite());
@@ -843,14 +844,14 @@ mod stress_tests {
             // Create moderately large tensors to test broadcasting performance
             let large_a = T::efficient_ones(&[100, 1], ctx);
             let large_b = T::efficient_ones(&[1, 100], ctx);
-            
+
             // This should create a 100x100 result via broadcasting
             let result = T::broadcast_mul(&large_a, &large_b);
             let result_array = result.eval(ctx).unwrap();
-            
+
             assert_eq!(result_array.shape(), &[100, 100]);
             assert_eq!(result_array.len(), 10000);
-            
+
             // Check that all values are 1.0 (1 * 1 = 1)
             for &val in result_array.iter().take(100) {
                 assert!((val - 1.0).abs() < 1e-6);
@@ -863,7 +864,7 @@ mod stress_tests {
         // Enable memory pool
         T::set_memory_pool_enabled(true);
         T::enable_memory_tracking();
-        
+
         ag::run(|ctx| {
             // Perform many operations that would benefit from memory pooling
             for i in 0..10 {
@@ -873,15 +874,18 @@ mod stress_tests {
                 let _result = T::inplace_add(&a, &b);
             }
         });
-        
+
         // Check that memory pool was used
         let pool_stats = T::get_memory_pool_stats();
         let tracking_stats = T::get_memory_tracking_stats();
-        
+
         // Should have some memory tracking activity
-        println!("Total memory allocations: {:?}", tracking_stats.total_allocations);
+        println!(
+            "Total memory allocations: {:?}",
+            tracking_stats.total_allocations
+        );
         println!("Pool stats: {:?}", pool_stats);
-        
+
         // Cleanup
         T::disable_memory_tracking();
         T::reset_memory_tracking();

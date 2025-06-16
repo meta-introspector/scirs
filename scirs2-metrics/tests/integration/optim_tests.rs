@@ -3,8 +3,8 @@
 use approx::assert_abs_diff_eq;
 use scirs2_metrics::error::Result;
 use scirs2_metrics::integration::optim::{
-    HyperParameter, HyperParameterSearchResult, HyperParameterTuner, MetricOptimizer,
-    MetricLRScheduler, OptimizationMode,
+    HyperParameter, HyperParameterSearchResult, HyperParameterTuner, MetricLRScheduler,
+    MetricOptimizer, OptimizationMode,
 };
 use std::collections::HashMap;
 
@@ -40,9 +40,7 @@ fn test_metric_optimizer() {
     optimizer.reset();
     assert_eq!(optimizer.history().len(), 0);
     assert_eq!(optimizer.best_value(), None);
-    assert!(optimizer
-        .additional_metric_history("loss")
-        .is_none());
+    assert!(optimizer.additional_metric_history("loss").is_none());
 }
 
 /// Test the MetricScheduler
@@ -78,11 +76,11 @@ fn test_metric_scheduler() {
     assert_eq!(lr, 0.05);
 
     // Test multiple decreases and minimum limit
-    let lr = scheduler.step_with_metric(1.0);
+    let _lr = scheduler.step_with_metric(1.0);
     let lr = scheduler.step_with_metric(1.1);
     assert_eq!(lr, 0.025); // 0.05 * 0.5
 
-    let lr = scheduler.step_with_metric(1.2);
+    let _lr = scheduler.step_with_metric(1.2);
     let lr = scheduler.step_with_metric(1.3);
     assert_eq!(lr, 0.0125); // 0.025 * 0.5
 

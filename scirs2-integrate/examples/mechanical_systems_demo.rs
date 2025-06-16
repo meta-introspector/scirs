@@ -1,15 +1,11 @@
 //! Mechanical Systems Integration Demo
 //!
-//! This example demonstrates the specialized numerical integration methods for 
+//! This example demonstrates the specialized numerical integration methods for
 //! mechanical systems including rigid body dynamics, constrained multibody systems,
 //! and various integration schemes optimized for mechanical systems.
 
-use scirs2_integrate::ode::mechanical::{
-    MechanicalConfig, MechanicalIntegrator, MechanicalSystemType,
-    PositionIntegrationMethod, VelocityIntegrationMethod, ConstraintMethod,
-    RigidBodyState, systems,
-};
 use ndarray::{Array1, Array2};
+use scirs2_integrate::ode::mechanical::{systems, MechanicalIntegrator, PositionIntegrationMethod};
 use std::f64::consts::PI;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -41,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     println!("All mechanical systems demonstrations completed successfully!");
-    
+
     Ok(())
 }
 
@@ -69,11 +65,18 @@ fn demonstrate_rigid_body() -> Result<(), Box<dyn std::error::Error>> {
     let dt = 0.01;
     let n_steps = 100;
 
-    println!("   Integrating rigid body motion for {} steps (dt = {})", n_steps, dt);
-    println!("   Initial position: [{:.3}, {:.3}, {:.3}]", 
-             state.position[0], state.position[1], state.position[2]);
-    println!("   Initial velocity: [{:.3}, {:.3}, {:.3}]", 
-             state.velocity[0], state.velocity[1], state.velocity[2]);
+    println!(
+        "   Integrating rigid body motion for {} steps (dt = {})",
+        n_steps, dt
+    );
+    println!(
+        "   Initial position: [{:.3}, {:.3}, {:.3}]",
+        state.position[0], state.position[1], state.position[2]
+    );
+    println!(
+        "   Initial velocity: [{:.3}, {:.3}, {:.3}]",
+        state.velocity[0], state.velocity[1], state.velocity[2]
+    );
 
     // Integrate for several steps
     for i in 0..n_steps {
@@ -83,16 +86,22 @@ fn demonstrate_rigid_body() -> Result<(), Box<dyn std::error::Error>> {
 
         // Print status every 20 steps
         if i % 20 == 0 {
-            println!("   Step {}: position = [{:.3}, {:.3}, {:.3}], energy drift = {:.2e}",
-                     i, state.position[0], state.position[1], state.position[2], result.energy_drift);
+            println!(
+                "   Step {}: position = [{:.3}, {:.3}, {:.3}], energy drift = {:.2e}",
+                i, state.position[0], state.position[1], state.position[2], result.energy_drift
+            );
         }
     }
 
     let (relative_drift, max_drift, current_energy) = integrator.energy_statistics();
-    println!("   Final position: [{:.3}, {:.3}, {:.3}]", 
-             state.position[0], state.position[1], state.position[2]);
-    println!("   Energy statistics: current = {:.6}, relative drift = {:.2e}, max drift = {:.2e}",
-             current_energy, relative_drift, max_drift);
+    println!(
+        "   Final position: [{:.3}, {:.3}, {:.3}]",
+        state.position[0], state.position[1], state.position[2]
+    );
+    println!(
+        "   Energy statistics: current = {:.6}, relative drift = {:.2e}, max drift = {:.2e}",
+        current_energy, relative_drift, max_drift
+    );
 
     Ok(())
 }
@@ -101,25 +110,33 @@ fn demonstrate_rigid_body() -> Result<(), Box<dyn std::error::Error>> {
 fn demonstrate_damped_oscillator() -> Result<(), Box<dyn std::error::Error>> {
     let mass = 1.0;
     let stiffness = 10.0; // k = 10 N/m
-    let damping = 0.2;    // Light damping
+    let damping = 0.2; // Light damping
     let initial_position = 1.0; // Displaced 1 meter
     let initial_velocity = 0.0;
 
-    let (mut config, properties, initial_state) = systems::damped_oscillator(
-        mass, stiffness, damping, initial_position, initial_velocity
-    );
+    let (mut config, properties, initial_state) =
+        systems::damped_oscillator(mass, stiffness, damping, initial_position, initial_velocity);
 
     // Use smaller time step for better accuracy
     config.dt = 0.001;
-    
+    let dt = config.dt;
+
     let mut integrator = MechanicalIntegrator::new(config, properties);
     let mut state = initial_state;
-    let dt = config.dt;
     let n_steps = 1000;
 
-    println!("   Damped oscillator: m = {}, k = {}, c = {}", mass, stiffness, damping);
-    println!("   Natural frequency: {:.3} rad/s", (stiffness / mass).sqrt());
-    println!("   Damping ratio: {:.3}", damping / (2.0 * (stiffness * mass).sqrt()));
+    println!(
+        "   Damped oscillator: m = {}, k = {}, c = {}",
+        mass, stiffness, damping
+    );
+    println!(
+        "   Natural frequency: {:.3} rad/s",
+        (stiffness / mass).sqrt()
+    );
+    println!(
+        "   Damping ratio: {:.3}",
+        damping / (2.0 * (stiffness * mass).sqrt())
+    );
 
     let mut max_position = initial_position;
     let mut positions = Vec::new();
@@ -141,7 +158,11 @@ fn demonstrate_damped_oscillator() -> Result<(), Box<dyn std::error::Error>> {
             if positions.len() > 3 {
                 let prev_prev_pos = positions[positions.len() - 3];
                 if prev_pos > prev_prev_pos && prev_pos > curr_pos && prev_pos.abs() > 0.01 {
-                    println!("   Peak at t = {:.3}s: position = {:.4} m", t - dt, prev_pos);
+                    println!(
+                        "   Peak at t = {:.3}s: position = {:.4} m",
+                        t - dt,
+                        prev_pos
+                    );
                 }
             }
         }
@@ -156,32 +177,37 @@ fn demonstrate_damped_oscillator() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Demonstrate double pendulum system
 fn demonstrate_double_pendulum() -> Result<(), Box<dyn std::error::Error>> {
-    let m1 = 1.0;  // Mass of first pendulum
-    let m2 = 0.5;  // Mass of second pendulum  
-    let l1 = 1.0;  // Length of first pendulum
-    let l2 = 0.8;  // Length of second pendulum
-    let initial_angles = [PI/6.0, PI/4.0]; // Initial angles (30° and 45°)
-    let initial_velocities = [0.0, 0.0];   // Start from rest
+    let m1 = 1.0; // Mass of first pendulum
+    let m2 = 0.5; // Mass of second pendulum
+    let l1 = 1.0; // Length of first pendulum
+    let l2 = 0.8; // Length of second pendulum
+    let initial_angles = [PI / 6.0, PI / 4.0]; // Initial angles (30° and 45°)
+    let initial_velocities = [0.0, 0.0]; // Start from rest
 
-    let (mut config, properties, initial_state) = systems::double_pendulum(
-        m1, m2, l1, l2, initial_angles, initial_velocities
-    );
+    let (mut config, properties, initial_state) =
+        systems::double_pendulum(m1, m2, l1, l2, initial_angles, initial_velocities);
 
     config.dt = 0.001; // Small time step for accuracy
     config.constraint_tolerance = 1e-10;
-    
+    let dt = config.dt;
+
     let mut integrator = MechanicalIntegrator::new(config, properties);
     let mut state = initial_state;
-    let dt = config.dt;
     let n_steps = 5000;
 
-    println!("   Double pendulum: m1 = {}, m2 = {}, l1 = {}, l2 = {}", m1, m2, l1, l2);
-    println!("   Initial angles: {:.1}° and {:.1}°", 
-             initial_angles[0] * 180.0 / PI, initial_angles[1] * 180.0 / PI);
+    println!(
+        "   Double pendulum: m1 = {}, m2 = {}, l1 = {}, l2 = {}",
+        m1, m2, l1, l2
+    );
+    println!(
+        "   Initial angles: {:.1}° and {:.1}°",
+        initial_angles[0] * 180.0 / PI,
+        initial_angles[1] * 180.0 / PI
+    );
 
     let mut energy_history = Vec::new();
     let mut constraint_violations = Vec::new();
-    
+
     for i in 0..n_steps {
         let t = i as f64 * dt;
         let result = integrator.step(t, &state)?;
@@ -196,22 +222,33 @@ fn demonstrate_double_pendulum() -> Result<(), Box<dyn std::error::Error>> {
             let y1 = state.position[1];
             let x2 = state.position[3];
             let y2 = state.position[4];
-            
-            let angle1 = y1.atan2(x1) + PI/2.0;
-            let angle2 = (y2 - y1).atan2(x2 - x1) + PI/2.0;
-            
-            println!("   Step {}: angles = [{:.1}°, {:.1}°], constraint violation = {:.2e}",
-                     i, angle1 * 180.0 / PI, angle2 * 180.0 / PI, result.constraint_violation);
+
+            let angle1 = y1.atan2(x1) + PI / 2.0;
+            let angle2 = (y2 - y1).atan2(x2 - x1) + PI / 2.0;
+
+            println!(
+                "   Step {}: angles = [{:.1}°, {:.1}°], constraint violation = {:.2e}",
+                i,
+                angle1 * 180.0 / PI,
+                angle2 * 180.0 / PI,
+                result.constraint_violation
+            );
         }
     }
 
     // Calculate statistics
     let avg_energy_drift = energy_history.iter().sum::<f64>() / energy_history.len() as f64;
-    let max_constraint_violation = constraint_violations.iter().fold(0.0, |a, &b| a.max(b));
-    
+    let max_constraint_violation = constraint_violations.iter().fold(0.0f64, |a, &b| a.max(b));
+
     println!("   Average energy drift: {:.2e}", avg_energy_drift);
-    println!("   Maximum constraint violation: {:.2e}", max_constraint_violation);
-    println!("   Final constraint violation: {:.2e}", constraint_violations.last().unwrap());
+    println!(
+        "   Maximum constraint violation: {:.2e}",
+        max_constraint_violation
+    );
+    println!(
+        "   Final constraint violation: {:.2e}",
+        constraint_violations.last().unwrap()
+    );
 
     Ok(())
 }
@@ -219,32 +256,45 @@ fn demonstrate_double_pendulum() -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate energy conservation with different integrators
 fn demonstrate_energy_conservation() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Comparing energy conservation for different integration methods");
-    
+
     // Test system: undamped harmonic oscillator
     let mass = 1.0;
     let stiffness = 25.0; // Higher frequency for more challenging test
-    let damping = 0.0;    // No damping for energy conservation
+    let damping = 0.0; // No damping for energy conservation
     let initial_position = 1.0;
     let initial_velocity = 0.0;
 
     let integration_methods = vec![
         ("Verlet", PositionIntegrationMethod::Verlet),
         ("Velocity Verlet", PositionIntegrationMethod::VelocityVerlet),
-        ("Newmark-β", PositionIntegrationMethod::NewmarkBeta { beta: 0.25, gamma: 0.5 }),
-        ("Central Difference", PositionIntegrationMethod::CentralDifference),
+        (
+            "Newmark-β",
+            PositionIntegrationMethod::NewmarkBeta {
+                beta: 0.25,
+                gamma: 0.5,
+            },
+        ),
+        (
+            "Central Difference",
+            PositionIntegrationMethod::CentralDifference,
+        ),
     ];
 
     for (method_name, method) in integration_methods {
         let (mut config, properties, initial_state) = systems::damped_oscillator(
-            mass, stiffness, damping, initial_position, initial_velocity
+            mass,
+            stiffness,
+            damping,
+            initial_position,
+            initial_velocity,
         );
 
         config.dt = 0.005; // Moderate time step
         config.position_method = method;
-        
+        let dt = config.dt;
+
         let mut integrator = MechanicalIntegrator::new(config, properties);
         let mut state = initial_state;
-        let dt = config.dt;
         let n_steps = 2000; // Integrate for 10 seconds
 
         // Integrate
@@ -255,8 +305,10 @@ fn demonstrate_energy_conservation() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         let (relative_drift, max_drift, _) = integrator.energy_statistics();
-        println!("   {}: relative drift = {:.2e}, max drift = {:.2e}", 
-                 method_name, relative_drift, max_drift);
+        println!(
+            "   {}: relative drift = {:.2e}, max drift = {:.2e}",
+            method_name, relative_drift, max_drift
+        );
     }
 
     Ok(())
@@ -265,26 +317,30 @@ fn demonstrate_energy_conservation() -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate comparison of different integration methods
 fn demonstrate_integration_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Comparing accuracy and stability of integration methods");
-    
+
     // Test system: lightly damped oscillator
     let mass = 1.0;
     let stiffness = 100.0; // High frequency system
-    let damping = 0.1;     // Light damping
+    let damping = 0.1; // Light damping
     let initial_position = 1.0;
     let initial_velocity = 0.0;
 
     let time_steps = vec![0.01, 0.005, 0.001];
-    
+
     for &dt in &time_steps {
         println!("   Time step dt = {}", dt);
-        
+
         let (mut config, properties, initial_state) = systems::damped_oscillator(
-            mass, stiffness, damping, initial_position, initial_velocity
+            mass,
+            stiffness,
+            damping,
+            initial_position,
+            initial_velocity,
         );
 
         config.dt = dt;
         config.position_method = PositionIntegrationMethod::VelocityVerlet;
-        
+
         let mut integrator = MechanicalIntegrator::new(config, properties);
         let mut state = initial_state;
         let n_steps = (1.0 / dt) as usize; // Integrate for 1 second
@@ -298,19 +354,29 @@ fn demonstrate_integration_methods() -> Result<(), Box<dyn std::error::Error>> {
             let result = integrator.step(t, &state)?;
             state = result.state;
 
-            max_constraint_iterations = max_constraint_iterations.max(result.stats.constraint_iterations);
+            max_constraint_iterations =
+                max_constraint_iterations.max(result.stats.constraint_iterations);
             total_force_time += result.stats.force_computation_time;
             total_constraint_time += result.stats.constraint_time;
         }
 
         let (relative_drift, _max_drift, final_energy) = integrator.energy_statistics();
-        
+
         println!("     Final position: {:.6} m", state.position[0]);
         println!("     Final energy: {:.6} J", final_energy);
         println!("     Energy drift: {:.2e}", relative_drift);
-        println!("     Max constraint iterations: {}", max_constraint_iterations);
-        println!("     Avg force computation time: {:.2e} s", total_force_time / n_steps as f64);
-        println!("     Avg constraint time: {:.2e} s", total_constraint_time / n_steps as f64);
+        println!(
+            "     Max constraint iterations: {}",
+            max_constraint_iterations
+        );
+        println!(
+            "     Avg force computation time: {:.2e} s",
+            total_force_time / n_steps as f64
+        );
+        println!(
+            "     Avg constraint time: {:.2e} s",
+            total_constraint_time / n_steps as f64
+        );
         println!();
     }
 
@@ -332,8 +398,12 @@ mod tests {
         let initial_angular_velocity = Array1::zeros(3);
 
         let (config, properties, initial_state) = systems::rigid_body(
-            mass, inertia, initial_position, initial_velocity, 
-            initial_orientation, initial_angular_velocity
+            mass,
+            inertia,
+            initial_position,
+            initial_velocity,
+            initial_orientation,
+            initial_angular_velocity,
         );
 
         let mut integrator = MechanicalIntegrator::new(config, properties);
@@ -353,7 +423,11 @@ mod tests {
         let initial_velocity = 0.0;
 
         let (mut config, properties, initial_state) = systems::damped_oscillator(
-            mass, stiffness, damping, initial_position, initial_velocity
+            mass,
+            stiffness,
+            damping,
+            initial_position,
+            initial_velocity,
         );
 
         config.dt = 0.001;
@@ -381,7 +455,11 @@ mod tests {
         let initial_velocity = 0.0;
 
         let (mut config, properties, initial_state) = systems::damped_oscillator(
-            mass, stiffness, damping, initial_position, initial_velocity
+            mass,
+            stiffness,
+            damping,
+            initial_position,
+            initial_velocity,
         );
 
         config.dt = 0.001;
@@ -396,8 +474,12 @@ mod tests {
         }
 
         let (relative_drift, _max_drift, _current_energy) = integrator.energy_statistics();
-        
+
         // Energy should be well conserved for undamped system
-        assert!(relative_drift < 0.01, "Energy drift too large: {}", relative_drift);
+        assert!(
+            relative_drift < 0.01,
+            "Energy drift too large: {}",
+            relative_drift
+        );
     }
 }

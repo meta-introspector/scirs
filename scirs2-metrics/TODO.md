@@ -273,9 +273,62 @@ This module provides machine learning evaluation metrics for model performance a
 - [ ] Full equivalence with scikit-learn metrics module
 - [x] Advanced metrics visualization capabilities
 - [ ] Interactive visualization dashboard
-- [ ] Automated model selection based on multiple metrics
-- [ ] Custom metric definition framework
-- [ ] Online/streaming evaluation capabilities
+- [x] Automated model selection based on multiple metrics
+- [x] Custom metric definition framework
+- [x] Online/streaming evaluation capabilities
 - [ ] Bayesian evaluation metrics
 - [ ] Hardware-accelerated metric computation
-- [ ] Domain-specific metric collections
+- [x] Domain-specific metric collections
+
+## Recently Implemented Features (Alpha 5)
+
+### Custom Metric Definition Framework
+- [x] Trait-based custom metric system
+- [x] Support for classification, regression, and clustering custom metrics
+- [x] Custom metric suites for organizing multiple metrics
+- [x] Integration with existing evaluation pipelines
+- [x] Type-safe metric validation and error handling
+- [x] Comprehensive examples and documentation
+
+### Automated Model Selection
+- [x] Multi-metric model evaluation and ranking
+- [x] Flexible aggregation strategies (weighted sum, geometric mean, harmonic mean, etc.)
+- [x] Pareto optimal model identification
+- [x] Threshold-based model filtering
+- [x] Builder pattern for complex selection scenarios
+- [x] Domain-specific selection workflows
+- [x] Comprehensive model comparison capabilities
+
+### Integration Enhancements
+- [x] Seamless scirs2-optim integration via external trait system
+- [x] Metric-based learning rate scheduling
+- [x] Hyperparameter tuning utilities
+- [x] Configuration bridge pattern for external optimizers
+- [x] 27 comprehensive integration tests
+- [x] Production-ready examples and documentation
+
+### Online/Streaming Evaluation Capabilities
+- [x] Incremental classification metrics computation
+- [x] Incremental regression metrics computation
+- [x] Memory-efficient streaming algorithms (constant memory usage)
+- [x] Windowed metrics for sliding window evaluation
+- [x] Real-time metrics monitoring and updates
+- [x] Batch processing support for large datasets
+- [x] Concept drift detection utilities via windowed metrics
+- [x] Reset capabilities for new evaluation periods
+- [x] Performance optimization for high-throughput scenarios
+- [x] Comprehensive streaming examples and documentation
+
+### Domain-Specific Metric Collections
+- [x] Comprehensive domain-specific metric suites for 5 major ML domains
+- [x] Computer vision metrics (object detection, classification, segmentation)
+- [x] Natural language processing metrics (text generation, classification, NER, sentiment)
+- [x] Time series metrics (forecasting, anomaly detection, trend analysis)
+- [x] Recommendation systems metrics (ranking, rating prediction, diversity, novelty)
+- [x] Anomaly detection metrics (detection accuracy, distribution analysis, time series anomalies)
+- [x] Unified domain evaluation framework with consistent APIs
+- [x] Pre-configured metric suites for rapid evaluation
+- [x] Domain-specific best practices and metric selection guidance
+- [x] Comprehensive examples and documentation for each domain
+- [x] Integration with existing metrics infrastructure
+- [x] Type-safe domain-specific evaluation workflows
