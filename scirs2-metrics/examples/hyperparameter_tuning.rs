@@ -7,7 +7,7 @@
 //! cargo run --example hyperparameter_tuning --features optim_integration
 //! ```
 
-use ndarray::{Array1, Array2};
+use ndarray::{array, Array1, Array2};
 #[cfg(feature = "optim_integration")]
 use scirs2_metrics::integration::optim::{HyperParameter, HyperParameterTuner};
 use std::error::Error;
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut tuner = HyperParameterTuner::new(params, "accuracy", true, 20);
 
         // Define evaluation function
-        let eval_fn = |params: &HashMap<String, f64>| {
+        let eval_fn = |params: &HashMap<String, f64>| -> scirs2_metrics::error::Result<f64> {
             // Extract parameters
             let learning_rate = params["learning_rate"];
             let hidden_size = params["hidden_size"] as usize;
@@ -53,7 +53,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             // Train a simple model with these hyperparameters
             // This is a mock implementation - in a real world scenario, you would train a model here
-            let accuracy = simulate_model_training(&x, &y, learning_rate, hidden_size, num_epochs)?;
+            let accuracy = simulate_model_training(&x, &y, learning_rate, hidden_size, num_epochs)
+                .map_err(|e| scirs2_metrics::error::MetricsError::Other(e.to_string()))?;
 
             println!(
                 "Evaluated: lr={:.4}, hidden={}, epochs={} -> accuracy={:.4}",
@@ -77,8 +78,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         println!("Best accuracy: {:.6}", result.best_metric());
 
-        // Get best hyperparameters
-        let best_params = tuner.best_params().unwrap();
+        // Get best hyperparameters  
+        let best_params = result.best_params();
         let best_learning_rate = best_params["learning_rate"];
         let best_hidden_size = best_params["hidden_size"] as usize;
         let best_epochs = best_params["num_epochs"] as usize;
@@ -91,8 +92,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         Ok(())
     }
+}
 
-    /// Simulate training a simple neural network model for the XOR problem
+/// Simulate training a simple neural network model for the XOR problem
     #[allow(dead_code)]
     fn simulate_model_training(
         _x: &Array2<f64>,
@@ -155,4 +157,3 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         Ok(accuracy)
     }
-}

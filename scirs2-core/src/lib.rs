@@ -1,11 +1,18 @@
 #![recursion_limit = "512"]
 
-//! # SciRS2 Core
+//! # SciRS2 Core (Alpha 6 Enhanced)
 //!
 //! Core utilities and common functionality for the SciRS2 library.
 //!
 //! This crate provides shared utilities, error types, and common traits
 //! used across the SciRS2 ecosystem of crates.
+//!
+//! ## Alpha 6 Enhanced Features
+//!
+//! - **Advanced Error Diagnostics**: ML-inspired error pattern recognition and domain-specific recovery strategies
+//! - **Performance Optimizations**: Enhanced SIMD operations, adaptive chunking, and intelligent load balancing
+//! - **API Consistency**: Standardized function signatures and comprehensive documentation
+//! - **Integration Patterns**: Guidelines for combining multiple advanced features
 //!
 //! ## Overview
 //!
@@ -126,10 +133,15 @@ pub use crate::memory_efficient::{
     create_temp_mmap, diagonal_view, evaluate, load_chunks, open_mmap, register_fusion,
     transpose_view, view_as, view_mut_as, AccessMode, AdaptiveChunking, AdaptiveChunkingBuilder,
     AdaptiveChunkingParams, AdaptiveChunkingResult, ArithmeticOps, ArrayView, BroadcastOps,
-    ChunkIter, ChunkedArray, ChunkingStrategy, CompressedMemMapBuilder, CompressedMemMappedArray,
-    CompressionAlgorithm, DiskBackedArray, FusedOp, LazyArray, LazyOp, LazyOpKind,
+    ChunkIter, ChunkedArray, ChunkingStrategy, DiskBackedArray, FusedOp, LazyArray, LazyOp, LazyOpKind,
     MemoryMappedArray, MemoryMappedChunkIter, MemoryMappedChunks, MemoryMappedSlice,
     MemoryMappedSlicing, OpFusion, OutOfCoreArray, ViewMut, ZeroCopyOps,
+};
+
+// Compression-related types are only available with the memory_compression feature
+#[cfg(feature = "memory_compression")]
+pub use crate::memory_efficient::{
+    CompressedMemMapBuilder, CompressedMemMappedArray, CompressionAlgorithm,
 };
 
 // Re-export the parallel memory-mapped array capabilities
@@ -192,4 +204,407 @@ pub use crate::validation::*;
 /// SciRS2 core version information
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
+}
+
+/// Alpha 6: Enhanced API Consistency and Documentation
+pub mod alpha6_api {
+    //! Alpha 6 API consistency enhancements and comprehensive usage patterns
+    //!
+    //! This module provides standardized patterns, comprehensive examples,
+    //! and integration guidelines for combining SciRS2 Core features.
+
+    /// Standardized function signature patterns for Alpha 6
+    pub mod signatures {
+        //! Standard function signature patterns used throughout SciRS2 Core
+        //!
+        //! All SciRS2 Core functions follow these standardized patterns:
+        //!
+        //! ## Error Handling Pattern
+        //! ```ignore
+        //! pub fn operation<T>(input: T, params: OperationParams) -> CoreResult<OutputType>
+        //! where
+        //!     T: InputTraits
+        //! ```
+        //!
+        //! ## Configuration Pattern
+        //! ```ignore
+        //! pub struct OperationConfig {
+        //!     pub param1: Type1,
+        //!     pub param2: Type2,
+        //!     // ... other parameters
+        //! }
+        //! 
+        //! impl Default for OperationConfig { /* sensible defaults */ }
+        //! 
+        //! impl OperationConfig {
+        //!     pub fn new() -> Self { Self::default() }
+        //!     pub fn with_param1(mut self, value: Type1) -> Self { self.param1 = value; self }
+        //!     // ... other builder methods
+        //! }
+        //! ```
+        //!
+        //! ## Resource Management Pattern
+        //! ```ignore
+        //! pub struct ResourceManager<T> {
+        //!     inner: T,
+        //!     config: ResourceConfig,
+        //! }
+        //! 
+        //! impl<T> ResourceManager<T> {
+        //!     pub fn new(resource: T, config: ResourceConfig) -> Self { /* */ }
+        //!     pub fn with_default_config(resource: T) -> Self { /* */ }
+        //!     pub fn configure(&mut self, config: ResourceConfig) -> &mut Self { /* */ }
+        //! }
+        //! ```
+
+        use crate::error::CoreResult;
+
+        /// Standard parameter validation pattern
+        pub trait ValidatedParams {
+            /// Validate parameters and return detailed error information
+            fn validate(&self) -> CoreResult<()>;
+        }
+
+        /// Standard configuration builder pattern
+        pub trait ConfigBuilder<T> {
+            /// Build the configuration with validation
+            fn build(self) -> CoreResult<T>;
+        }
+    }
+
+    /// Comprehensive usage examples for all major features
+    pub mod examples {
+        //! Comprehensive usage examples demonstrating SciRS2 Core features
+        //!
+        //! These examples show how to use various SciRS2 Core features both
+        //! individually and in combination.
+
+        /// # Basic Error Handling Example
+        ///
+        /// ```
+        /// use scirs2_core::{CoreError, CoreResult, diagnose_error};
+        ///
+        /// fn scientific_computation(data: &[f64]) -> CoreResult<f64> {
+        ///     if data.is_empty() {
+        ///         return Err(CoreError::ValidationError(
+        ///             scirs2_core::error::ErrorContext::new("Input data cannot be empty")
+        ///         ));
+        ///     }
+        ///     
+        ///     // Perform computation...
+        ///     Ok(data.iter().sum::<f64>() / data.len() as f64)
+        /// }
+        /// 
+        /// // Usage with enhanced error diagnostics
+        /// match scientific_computation(&[]) {
+        ///     Ok(result) => println!("Result: {}", result),
+        ///     Err(error) => {
+        ///         let diagnostics = diagnose_error(&error);
+        ///         println!("Error diagnosis:\n{}", diagnostics);
+        ///     }
+        /// }
+        /// ```
+        pub fn basic_error_handling() {}
+
+        /// # SIMD Operations Example
+        ///
+        /// ```
+        /// # #[cfg(feature = "simd")]
+        /// use scirs2_core::{simd_add_auto, simd_capabilities::detect_simd_capabilities};
+        /// use ndarray::arr1;
+        ///
+        /// # #[cfg(feature = "simd")]
+        /// fn optimized_array_addition() {
+        ///     let a = arr1(&[1.0f32, 2.0, 3.0, 4.0]);
+        ///     let b = arr1(&[5.0f32, 6.0, 7.0, 8.0]);
+        ///     
+        ///     // Automatically selects best SIMD implementation
+        ///     let result = simd_add_auto(&a.view(), &b.view());
+        ///     println!("SIMD result: {:?}", result);
+        ///     
+        ///     // Check SIMD capabilities
+        ///     let caps = detect_simd_capabilities();
+        ///     println!("SIMD capabilities: {:?}", caps);
+        /// }
+        /// ```
+        pub fn simd_operations() {}
+
+        /// # Memory-Efficient Processing Example
+        ///
+        /// ```
+        /// # #[cfg(feature = "memory_efficient")]
+        /// use scirs2_core::memory_efficient::{
+        ///     AdaptiveChunkingParams, WorkloadType, MemoryMappedArray
+        /// };
+        /// use tempfile::NamedTempFile;
+        ///
+        /// # #[cfg(feature = "memory_efficient")]
+        /// fn memory_efficient_processing() -> Result<(), Box<dyn std::error::Error>> {
+        ///     // Create optimized chunking parameters
+        ///     let params = AdaptiveChunkingParams::for_workload_type(WorkloadType::ComputeIntensive);
+        ///     
+        ///     // Create a temporary file for demonstration
+        ///     let temp_file = NamedTempFile::new()?;
+        ///     let data: Vec<f64> = (0..1000000).map(|i| i as f64).collect();
+        ///     
+        ///     // Memory-mapped processing for large datasets
+        ///     // let mmap = MemoryMappedArray::<f64>::create_from_data(temp_file.path(), &data, &[1000000])?;
+        ///     // let result = mmap.adaptive_chunking(params)?;
+        ///     
+        ///     println!("Adaptive chunking completed");
+        ///     Ok(())
+        /// }
+        /// ```
+        pub fn memory_efficient_processing() {}
+    }
+
+    /// Integration patterns for combining advanced features
+    pub mod integration_patterns {
+        //! Guidelines and patterns for combining multiple SciRS2 Core features
+        //!
+        //! This module demonstrates how to effectively combine various features
+        //! for optimal performance and functionality.
+
+        /// # High-Performance Scientific Pipeline
+        ///
+        /// Combines SIMD operations, parallel processing, memory-efficient algorithms,
+        /// and comprehensive error handling for optimal performance.
+        ///
+        /// ```
+        /// use scirs2_core::{CoreResult, CoreError};
+        /// # #[cfg(all(feature = "simd", feature = "parallel", feature = "memory_efficient"))]
+        /// use scirs2_core::{
+        ///     memory_efficient::{AdaptiveChunkingParams, WorkloadType},
+        ///     error::{record_error_occurrence, diagnose_error_advanced},
+        /// };
+        ///
+        /// /// High-performance pipeline configuration
+        /// pub struct ScientificPipelineConfig {
+        ///     pub use_simd: bool,
+        ///     pub use_parallel: bool,
+        ///     pub workload_type: Option<String>, // Would be WorkloadType in real usage
+        ///     pub error_tracking: bool,
+        /// }
+        ///
+        /// impl Default for ScientificPipelineConfig {
+        ///     fn default() -> Self {
+        ///         Self {
+        ///             use_simd: true,
+        ///             use_parallel: true,
+        ///             workload_type: Some("ComputeIntensive".to_string()),
+        ///             error_tracking: true,
+        ///         }
+        ///     }
+        /// }
+        ///
+        /// /// High-performance scientific computation pipeline
+        /// pub fn scientific_pipeline<T>(
+        ///     data: &[T],
+        ///     config: ScientificPipelineConfig,
+        /// ) -> CoreResult<Vec<T>>
+        /// where
+        ///     T: Clone + Copy + Send + Sync + 'static,
+        /// {
+        ///     // Input validation
+        ///     if data.is_empty() {
+        ///         let error = CoreError::ValidationError(
+        ///             scirs2_core::error::ErrorContext::new("Input data cannot be empty")
+        ///         );
+        ///         
+        ///         if config.error_tracking {
+        ///             record_error_occurrence(&error, "scientific_pipeline".to_string());
+        ///         }
+        ///         
+        ///         return Err(error);
+        ///     }
+        ///
+        ///     // Configure adaptive chunking based on workload
+        /// #   #[cfg(feature = "memory_efficient")]
+        ///     let chunking_params = if let Some(workload_str) = &config.workload_type {
+        ///         // AdaptiveChunkingParams::for_workload_type(WorkloadType::ComputeIntensive)
+        ///         scirs2_core::memory_efficient::AdaptiveChunkingParams::default()
+        ///     } else {
+        ///         scirs2_core::memory_efficient::AdaptiveChunkingParams::default()
+        ///     };
+        ///
+        ///     // Process data with selected optimizations
+        ///     let mut result = Vec::with_capacity(data.len());
+        ///     
+        ///     // Simulate processing (in real implementation, would use SIMD/parallel features)
+        ///     for item in data {
+        ///         result.push(*item);
+        ///     }
+        ///
+        ///     Ok(result)
+        /// }
+        /// ```
+        pub fn high_performance_pipeline() {}
+
+        /// # Robust Error Handling with Recovery
+        ///
+        /// Demonstrates advanced error handling with automatic recovery strategies
+        /// and comprehensive diagnostics.
+        ///
+        /// ```
+        /// use scirs2_core::{CoreResult, CoreError};
+        /// use scirs2_core::error::{
+        ///     diagnose_error_advanced, get_domain_recovery_strategies, RecoverableError
+        /// };
+        ///
+        /// /// Robust computation with automatic error recovery
+        /// pub fn robust_computation(
+        ///     data: &[f64],
+        ///     domain: &str,
+        /// ) -> CoreResult<f64> {
+        ///     // Attempt computation
+        ///     match perform_computation(data) {
+        ///         Ok(result) => Ok(result),
+        ///         Err(error) => {
+        ///             // Get comprehensive diagnostics
+        ///             let diagnostics = diagnose_error_advanced(
+        ///                 &error,
+        ///                 Some("matrix_computation"),
+        ///                 Some(domain)
+        ///             );
+        ///             
+        ///             // Get domain-specific recovery strategies
+        ///             let strategies = get_domain_recovery_strategies(&error, domain);
+        ///             
+        ///             // Try recovery strategies
+        ///             for strategy in &strategies {
+        ///                 if let Ok(result) = try_recovery_strategy(data, strategy) {
+        ///                     return Ok(result);
+        ///                 }
+        ///             }
+        ///             
+        ///             // If all recovery attempts fail, return enhanced error
+        ///             Err(error)
+        ///         }
+        ///     }
+        /// }
+        ///
+        /// fn perform_computation(data: &[f64]) -> CoreResult<f64> {
+        ///     // Simulate computation that might fail
+        ///     if data.len() < 2 {
+        ///         return Err(CoreError::DomainError(
+        ///             scirs2_core::error::ErrorContext::new("Insufficient data for computation")
+        ///         ));
+        ///     }
+        ///     Ok(data.iter().sum::<f64>() / data.len() as f64)
+        /// }
+        ///
+        /// fn try_recovery_strategy(data: &[f64], strategy: &str) -> CoreResult<f64> {
+        ///     // Implement recovery strategy based on suggestion
+        ///     if strategy.contains("default") {
+        ///         Ok(0.0) // Return safe default
+        ///     } else {
+        ///         Err(CoreError::ComputationError(
+        ///             scirs2_core::error::ErrorContext::new("Recovery failed")
+        ///         ))
+        ///     }
+        /// }
+        /// ```
+        pub fn robust_error_handling() {}
+
+        /// # Performance Monitoring and Optimization
+        ///
+        /// Shows how to combine profiling, memory tracking, and adaptive optimization
+        /// for continuous performance improvement.
+        ///
+        /// ```
+        /// use scirs2_core::CoreResult;
+        /// # #[cfg(feature = "profiling")]
+        /// use scirs2_core::{Profiler, Timer};
+        /// use std::time::Duration;
+        ///
+        /// /// Performance-monitored computation wrapper
+        /// pub struct MonitoredComputation {
+        ///     name: String,
+        ///     # #[cfg(feature = "profiling")]
+        ///     profiler: Option<Profiler>,
+        /// }
+        ///
+        /// impl MonitoredComputation {
+        ///     pub fn new(name: &str) -> Self {
+        ///         Self {
+        ///             name: name.to_string(),
+        ///             # #[cfg(feature = "profiling")]
+        ///             profiler: Some(Profiler::new()),
+        ///         }
+        ///     }
+        ///
+        ///     pub fn execute<F, T>(&mut self, operation: F) -> CoreResult<T>
+        ///     where
+        ///         F: FnOnce() -> CoreResult<T>,
+        ///     {
+        ///         # #[cfg(feature = "profiling")]
+        ///         let _timer = self.profiler.as_ref().map(|p| p.start_timer(&self.name));
+        ///         
+        ///         let result = operation()?;
+        ///         
+        ///         # #[cfg(feature = "profiling")]
+        ///         if let Some(profiler) = &self.profiler {
+        ///             // Log performance metrics
+        ///             println!("Operation '{}' completed", self.name);
+        ///         }
+        ///         
+        ///         Ok(result)
+        ///     }
+        /// }
+        /// ```
+        pub fn performance_monitoring() {}
+    }
+
+    /// Type system documentation and conversion guidelines
+    pub mod type_system {
+        //! Comprehensive type system documentation and conversion patterns
+        //!
+        //! This module documents the SciRS2 Core type system and provides
+        //! guidelines for safe and efficient type conversions.
+
+        /// # Type Safety Patterns
+        ///
+        /// SciRS2 Core uses the Rust type system to ensure safety and correctness:
+        ///
+        /// ## Numeric Type Safety
+        /// ```
+        /// use scirs2_core::numeric::{RealNumber, ScientificNumber};
+        ///
+        /// fn safe_numeric_operation<T>(value: T) -> T
+        /// where
+        ///     T: RealNumber + ScientificNumber,
+        /// {
+        ///     // Type-safe operations guaranteed by trait bounds
+        ///     value.abs().sqrt()
+        /// }
+        /// ```
+        ///
+        /// ## Error Type Safety
+        /// ```
+        /// use scirs2_core::{CoreResult, CoreError};
+        ///
+        /// fn type_safe_error_handling() -> CoreResult<f64> {
+        ///     // All errors are properly typed and provide context
+        ///     Err(CoreError::ValidationError(
+        ///         scirs2_core::error::ErrorContext::new("Type validation failed")
+        ///     ))
+        /// }
+        /// ```
+        ///
+        /// ## Generic Parameter Patterns
+        /// ```
+        /// use scirs2_core::CoreResult;
+        ///
+        /// // Standard generic function pattern
+        /// fn generic_operation<T, U>(input: T) -> CoreResult<U>
+        /// where
+        ///     T: Clone + Send + Sync,
+        ///     U: Default + Send + Sync,
+        /// {
+        ///     // Implementation...
+        ///     Ok(U::default())
+        /// }
+        /// ```
+        pub fn type_safety_patterns() {}
+    }
 }

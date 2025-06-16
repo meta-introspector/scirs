@@ -111,7 +111,7 @@ pub fn load_dataset_by_name(name: &str, force_download: bool) -> Result<crate::u
         "wine" => crate::sample::load_wine(force_download),
         "electrocardiogram" => crate::time_series::electrocardiogram(),
         "stock_market" => crate::time_series::stock_market(false), // Default to raw prices
-        "weather" => crate::time_series::weather(None), // Default to all features
+        "weather" => crate::time_series::weather(None),            // Default to all features
         _ => {
             if registry.contains(name) {
                 Err(DatasetsError::Other(format!(

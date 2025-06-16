@@ -5,6 +5,9 @@
 //! element-wise function evaluation. These optimizations can provide significant
 //! performance improvements for large systems of ODEs.
 
+#![allow(clippy::missing_transmute_annotations)]
+#![allow(clippy::needless_range_loop)]
+
 use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use ndarray::{Array1, ArrayView1, ArrayViewMut1, Zip};
@@ -19,15 +22,47 @@ impl SimdOdeOps {
         {
             match std::any::TypeId::of::<F>() {
                 id if id == std::any::TypeId::of::<f32>() => {
-                    let y_f32 = unsafe { std::mem::transmute(y) };
-                    let dy_f32 = unsafe { std::mem::transmute(dy) };
+                    let y_f32 = unsafe {
+                        std::mem::transmute::<
+                            &mut ndarray::ArrayBase<
+                                ndarray::ViewRepr<&mut F>,
+                                ndarray::Dim<[usize; 1]>,
+                            >,
+                            &mut ndarray::ArrayBase<
+                                ndarray::ViewRepr<&mut f32>,
+                                ndarray::Dim<[usize; 1]>,
+                            >,
+                        >(y)
+                    };
+                    let dy_f32 = unsafe {
+                        std::mem::transmute::<
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&F>, ndarray::Dim<[usize; 1]>>,
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&f32>, ndarray::Dim<[usize; 1]>>,
+                        >(dy)
+                    };
                     let a_f32 = unsafe { std::mem::transmute_copy(&a) };
                     simd_axpy_f32_impl(y_f32, a_f32, dy_f32);
                     return;
                 }
                 id if id == std::any::TypeId::of::<f64>() => {
-                    let y_f64 = unsafe { std::mem::transmute(y) };
-                    let dy_f64 = unsafe { std::mem::transmute(dy) };
+                    let y_f64 = unsafe {
+                        std::mem::transmute::<
+                            &mut ndarray::ArrayBase<
+                                ndarray::ViewRepr<&mut F>,
+                                ndarray::Dim<[usize; 1]>,
+                            >,
+                            &mut ndarray::ArrayBase<
+                                ndarray::ViewRepr<&mut f64>,
+                                ndarray::Dim<[usize; 1]>,
+                            >,
+                        >(y)
+                    };
+                    let dy_f64 = unsafe {
+                        std::mem::transmute::<
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&F>, ndarray::Dim<[usize; 1]>>,
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&f64>, ndarray::Dim<[usize; 1]>>,
+                        >(dy)
+                    };
                     let a_f64 = unsafe { std::mem::transmute_copy(&a) };
                     simd_axpy_f64_impl(y_f64, a_f64, dy_f64);
                     return;
@@ -53,16 +88,36 @@ impl SimdOdeOps {
         {
             match std::any::TypeId::of::<F>() {
                 id if id == std::any::TypeId::of::<f32>() => {
-                    let x_f32 = unsafe { std::mem::transmute(x) };
-                    let y_f32 = unsafe { std::mem::transmute(y) };
+                    let x_f32 = unsafe {
+                        std::mem::transmute::<
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&F>, ndarray::Dim<[usize; 1]>>,
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&f32>, ndarray::Dim<[usize; 1]>>,
+                        >(x)
+                    };
+                    let y_f32 = unsafe {
+                        std::mem::transmute::<
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&F>, ndarray::Dim<[usize; 1]>>,
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&f32>, ndarray::Dim<[usize; 1]>>,
+                        >(y)
+                    };
                     let a_f32 = unsafe { std::mem::transmute_copy(&a) };
                     let b_f32 = unsafe { std::mem::transmute_copy(&b) };
                     let result = simd_linear_combination_f32_impl(x_f32, a_f32, y_f32, b_f32);
                     return unsafe { std::mem::transmute(result) };
                 }
                 id if id == std::any::TypeId::of::<f64>() => {
-                    let x_f64 = unsafe { std::mem::transmute(x) };
-                    let y_f64 = unsafe { std::mem::transmute(y) };
+                    let x_f64 = unsafe {
+                        std::mem::transmute::<
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&F>, ndarray::Dim<[usize; 1]>>,
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&f64>, ndarray::Dim<[usize; 1]>>,
+                        >(x)
+                    };
+                    let y_f64 = unsafe {
+                        std::mem::transmute::<
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&F>, ndarray::Dim<[usize; 1]>>,
+                            &ndarray::ArrayBase<ndarray::ViewRepr<&f64>, ndarray::Dim<[usize; 1]>>,
+                        >(y)
+                    };
                     let a_f64 = unsafe { std::mem::transmute_copy(&a) };
                     let b_f64 = unsafe { std::mem::transmute_copy(&b) };
                     let result = simd_linear_combination_f64_impl(x_f64, a_f64, y_f64, b_f64);

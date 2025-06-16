@@ -5,8 +5,8 @@
 //! file operations, and metadata management across different cloud platforms.
 
 use crate::error::{IoError, Result};
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 use std::time::{Duration, SystemTime};
 
 /// File metadata from cloud storage
@@ -150,20 +150,32 @@ pub enum CloudProvider {
 
 impl CloudProvider {
     /// Upload a file to cloud storage
-    pub async fn upload_file<P: AsRef<Path>>(&self, local_path: P, remote_path: &str) -> Result<()> {
+    pub async fn upload_file<P: AsRef<Path>>(
+        &self,
+        local_path: P,
+        remote_path: &str,
+    ) -> Result<()> {
         match self {
             CloudProvider::S3(config) => self.s3_upload(config, local_path, remote_path).await,
             CloudProvider::GCS(config) => self.gcs_upload(config, local_path, remote_path).await,
-            CloudProvider::Azure(config) => self.azure_upload(config, local_path, remote_path).await,
+            CloudProvider::Azure(config) => {
+                self.azure_upload(config, local_path, remote_path).await
+            }
         }
     }
 
     /// Download a file from cloud storage
-    pub async fn download_file<P: AsRef<Path>>(&self, remote_path: &str, local_path: P) -> Result<()> {
+    pub async fn download_file<P: AsRef<Path>>(
+        &self,
+        remote_path: &str,
+        local_path: P,
+    ) -> Result<()> {
         match self {
             CloudProvider::S3(config) => self.s3_download(config, remote_path, local_path).await,
             CloudProvider::GCS(config) => self.gcs_download(config, remote_path, local_path).await,
-            CloudProvider::Azure(config) => self.azure_download(config, remote_path, local_path).await,
+            CloudProvider::Azure(config) => {
+                self.azure_download(config, remote_path, local_path).await
+            }
         }
     }
 
@@ -204,7 +216,12 @@ impl CloudProvider {
     }
 
     // AWS S3 implementations
-    async fn s3_upload<P: AsRef<Path>>(&self, _config: &S3Config, _local_path: P, _remote_path: &str) -> Result<()> {
+    async fn s3_upload<P: AsRef<Path>>(
+        &self,
+        _config: &S3Config,
+        _local_path: P,
+        _remote_path: &str,
+    ) -> Result<()> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -212,17 +229,26 @@ impl CloudProvider {
             Ok(())
         }
         #[cfg(not(feature = "aws-sdk-s3"))]
-        Err(IoError::ConfigError("AWS S3 support requires 'aws-sdk-s3' feature".to_string()))
+        Err(IoError::ConfigError(
+            "AWS S3 support requires 'aws-sdk-s3' feature".to_string(),
+        ))
     }
 
-    async fn s3_download<P: AsRef<Path>>(&self, _config: &S3Config, _remote_path: &str, _local_path: P) -> Result<()> {
+    async fn s3_download<P: AsRef<Path>>(
+        &self,
+        _config: &S3Config,
+        _remote_path: &str,
+        _local_path: P,
+    ) -> Result<()> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
             Ok(())
         }
         #[cfg(not(feature = "aws-sdk-s3"))]
-        Err(IoError::ConfigError("AWS S3 support requires 'aws-sdk-s3' feature".to_string()))
+        Err(IoError::ConfigError(
+            "AWS S3 support requires 'aws-sdk-s3' feature".to_string(),
+        ))
     }
 
     async fn s3_list(&self, _config: &S3Config, _path: &str) -> Result<Vec<String>> {
@@ -232,7 +258,9 @@ impl CloudProvider {
             Ok(vec![])
         }
         #[cfg(not(feature = "aws-sdk-s3"))]
-        Err(IoError::ConfigError("AWS S3 support requires 'aws-sdk-s3' feature".to_string()))
+        Err(IoError::ConfigError(
+            "AWS S3 support requires 'aws-sdk-s3' feature".to_string(),
+        ))
     }
 
     async fn s3_exists(&self, _config: &S3Config, _path: &str) -> Result<bool> {
@@ -242,7 +270,9 @@ impl CloudProvider {
             Ok(false)
         }
         #[cfg(not(feature = "aws-sdk-s3"))]
-        Err(IoError::ConfigError("AWS S3 support requires 'aws-sdk-s3' feature".to_string()))
+        Err(IoError::ConfigError(
+            "AWS S3 support requires 'aws-sdk-s3' feature".to_string(),
+        ))
     }
 
     async fn s3_metadata(&self, _config: &S3Config, _path: &str) -> Result<FileMetadata> {
@@ -259,7 +289,9 @@ impl CloudProvider {
             })
         }
         #[cfg(not(feature = "aws-sdk-s3"))]
-        Err(IoError::ConfigError("AWS S3 support requires 'aws-sdk-s3' feature".to_string()))
+        Err(IoError::ConfigError(
+            "AWS S3 support requires 'aws-sdk-s3' feature".to_string(),
+        ))
     }
 
     async fn s3_delete(&self, _config: &S3Config, _path: &str) -> Result<()> {
@@ -269,28 +301,44 @@ impl CloudProvider {
             Ok(())
         }
         #[cfg(not(feature = "aws-sdk-s3"))]
-        Err(IoError::ConfigError("AWS S3 support requires 'aws-sdk-s3' feature".to_string()))
+        Err(IoError::ConfigError(
+            "AWS S3 support requires 'aws-sdk-s3' feature".to_string(),
+        ))
     }
 
     // Google Cloud Storage implementations
-    async fn gcs_upload<P: AsRef<Path>>(&self, _config: &GcsConfig, _local_path: P, _remote_path: &str) -> Result<()> {
+    async fn gcs_upload<P: AsRef<Path>>(
+        &self,
+        _config: &GcsConfig,
+        _local_path: P,
+        _remote_path: &str,
+    ) -> Result<()> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
             Ok(())
         }
         #[cfg(not(feature = "google-cloud-storage"))]
-        Err(IoError::ConfigError("Google Cloud Storage support requires 'google-cloud-storage' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Google Cloud Storage support requires 'google-cloud-storage' feature".to_string(),
+        ))
     }
 
-    async fn gcs_download<P: AsRef<Path>>(&self, _config: &GcsConfig, _remote_path: &str, _local_path: P) -> Result<()> {
+    async fn gcs_download<P: AsRef<Path>>(
+        &self,
+        _config: &GcsConfig,
+        _remote_path: &str,
+        _local_path: P,
+    ) -> Result<()> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
             Ok(())
         }
         #[cfg(not(feature = "google-cloud-storage"))]
-        Err(IoError::ConfigError("Google Cloud Storage support requires 'google-cloud-storage' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Google Cloud Storage support requires 'google-cloud-storage' feature".to_string(),
+        ))
     }
 
     async fn gcs_list(&self, _config: &GcsConfig, _path: &str) -> Result<Vec<String>> {
@@ -300,7 +348,9 @@ impl CloudProvider {
             Ok(vec![])
         }
         #[cfg(not(feature = "google-cloud-storage"))]
-        Err(IoError::ConfigError("Google Cloud Storage support requires 'google-cloud-storage' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Google Cloud Storage support requires 'google-cloud-storage' feature".to_string(),
+        ))
     }
 
     async fn gcs_exists(&self, _config: &GcsConfig, _path: &str) -> Result<bool> {
@@ -310,7 +360,9 @@ impl CloudProvider {
             Ok(false)
         }
         #[cfg(not(feature = "google-cloud-storage"))]
-        Err(IoError::ConfigError("Google Cloud Storage support requires 'google-cloud-storage' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Google Cloud Storage support requires 'google-cloud-storage' feature".to_string(),
+        ))
     }
 
     async fn gcs_metadata(&self, _config: &GcsConfig, _path: &str) -> Result<FileMetadata> {
@@ -327,7 +379,9 @@ impl CloudProvider {
             })
         }
         #[cfg(not(feature = "google-cloud-storage"))]
-        Err(IoError::ConfigError("Google Cloud Storage support requires 'google-cloud-storage' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Google Cloud Storage support requires 'google-cloud-storage' feature".to_string(),
+        ))
     }
 
     async fn gcs_delete(&self, _config: &GcsConfig, _path: &str) -> Result<()> {
@@ -337,28 +391,44 @@ impl CloudProvider {
             Ok(())
         }
         #[cfg(not(feature = "google-cloud-storage"))]
-        Err(IoError::ConfigError("Google Cloud Storage support requires 'google-cloud-storage' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Google Cloud Storage support requires 'google-cloud-storage' feature".to_string(),
+        ))
     }
 
     // Azure Blob Storage implementations
-    async fn azure_upload<P: AsRef<Path>>(&self, _config: &AzureConfig, _local_path: P, _remote_path: &str) -> Result<()> {
+    async fn azure_upload<P: AsRef<Path>>(
+        &self,
+        _config: &AzureConfig,
+        _local_path: P,
+        _remote_path: &str,
+    ) -> Result<()> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
             Ok(())
         }
         #[cfg(not(feature = "azure-storage-blobs"))]
-        Err(IoError::ConfigError("Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string(),
+        ))
     }
 
-    async fn azure_download<P: AsRef<Path>>(&self, _config: &AzureConfig, _remote_path: &str, _local_path: P) -> Result<()> {
+    async fn azure_download<P: AsRef<Path>>(
+        &self,
+        _config: &AzureConfig,
+        _remote_path: &str,
+        _local_path: P,
+    ) -> Result<()> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
             Ok(())
         }
         #[cfg(not(feature = "azure-storage-blobs"))]
-        Err(IoError::ConfigError("Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string(),
+        ))
     }
 
     async fn azure_list(&self, _config: &AzureConfig, _path: &str) -> Result<Vec<String>> {
@@ -368,7 +438,9 @@ impl CloudProvider {
             Ok(vec![])
         }
         #[cfg(not(feature = "azure-storage-blobs"))]
-        Err(IoError::ConfigError("Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string(),
+        ))
     }
 
     async fn azure_exists(&self, _config: &AzureConfig, _path: &str) -> Result<bool> {
@@ -378,7 +450,9 @@ impl CloudProvider {
             Ok(false)
         }
         #[cfg(not(feature = "azure-storage-blobs"))]
-        Err(IoError::ConfigError("Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string(),
+        ))
     }
 
     async fn azure_metadata(&self, _config: &AzureConfig, _path: &str) -> Result<FileMetadata> {
@@ -395,7 +469,9 @@ impl CloudProvider {
             })
         }
         #[cfg(not(feature = "azure-storage-blobs"))]
-        Err(IoError::ConfigError("Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string(),
+        ))
     }
 
     async fn azure_delete(&self, _config: &AzureConfig, _path: &str) -> Result<()> {
@@ -405,7 +481,9 @@ impl CloudProvider {
             Ok(())
         }
         #[cfg(not(feature = "azure-storage-blobs"))]
-        Err(IoError::ConfigError("Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string()))
+        Err(IoError::ConfigError(
+            "Azure Blob Storage support requires 'azure-storage-blobs' feature".to_string(),
+        ))
     }
 }
 
@@ -428,35 +506,53 @@ pub fn validate_config(provider: &CloudProvider) -> Result<()> {
     match provider {
         CloudProvider::S3(config) => {
             if config.bucket.is_empty() {
-                return Err(IoError::ConfigError("S3 bucket name cannot be empty".to_string()));
+                return Err(IoError::ConfigError(
+                    "S3 bucket name cannot be empty".to_string(),
+                ));
             }
             if config.region.is_empty() {
-                return Err(IoError::ConfigError("S3 region cannot be empty".to_string()));
+                return Err(IoError::ConfigError(
+                    "S3 region cannot be empty".to_string(),
+                ));
             }
             if config.access_key.is_empty() || config.secret_key.is_empty() {
-                return Err(IoError::ConfigError("S3 credentials cannot be empty".to_string()));
+                return Err(IoError::ConfigError(
+                    "S3 credentials cannot be empty".to_string(),
+                ));
             }
         }
         CloudProvider::GCS(config) => {
             if config.bucket.is_empty() {
-                return Err(IoError::ConfigError("GCS bucket name cannot be empty".to_string()));
+                return Err(IoError::ConfigError(
+                    "GCS bucket name cannot be empty".to_string(),
+                ));
             }
             if config.project_id.is_empty() {
-                return Err(IoError::ConfigError("GCS project ID cannot be empty".to_string()));
+                return Err(IoError::ConfigError(
+                    "GCS project ID cannot be empty".to_string(),
+                ));
             }
             if config.credentials_path.is_none() && config.credentials_json.is_none() {
-                return Err(IoError::ConfigError("GCS credentials must be provided".to_string()));
+                return Err(IoError::ConfigError(
+                    "GCS credentials must be provided".to_string(),
+                ));
             }
         }
         CloudProvider::Azure(config) => {
             if config.account.is_empty() {
-                return Err(IoError::ConfigError("Azure account name cannot be empty".to_string()));
+                return Err(IoError::ConfigError(
+                    "Azure account name cannot be empty".to_string(),
+                ));
             }
             if config.container.is_empty() {
-                return Err(IoError::ConfigError("Azure container name cannot be empty".to_string()));
+                return Err(IoError::ConfigError(
+                    "Azure container name cannot be empty".to_string(),
+                ));
             }
             if config.access_key.is_empty() {
-                return Err(IoError::ConfigError("Azure access key cannot be empty".to_string()));
+                return Err(IoError::ConfigError(
+                    "Azure access key cannot be empty".to_string(),
+                ));
             }
         }
     }
@@ -464,7 +560,11 @@ pub fn validate_config(provider: &CloudProvider) -> Result<()> {
 }
 
 /// Generate signed URL for cloud storage access (placeholder implementation)
-pub fn generate_signed_url(provider: &CloudProvider, path: &str, expiry: Duration) -> Result<String> {
+pub fn generate_signed_url(
+    provider: &CloudProvider,
+    path: &str,
+    expiry: Duration,
+) -> Result<String> {
     let _ = (provider, path, expiry);
     // This would generate actual signed URLs based on the provider
     Ok("https://example.com/signed-url".to_string())
@@ -490,7 +590,7 @@ mod tests {
         let config = S3Config::new("bucket", "region", "key", "secret")
             .with_endpoint("http://localhost:9000")
             .with_path_style(true);
-        
+
         assert_eq!(config.endpoint, Some("http://localhost:9000".to_string()));
         assert!(config.path_style);
     }
@@ -509,9 +609,15 @@ mod tests {
         let config = GcsConfig::new("bucket", "project")
             .with_credentials_file("/path/to/creds.json")
             .with_credentials_json(r#"{"type": "service_account"}"#);
-        
-        assert_eq!(config.credentials_path, Some("/path/to/creds.json".to_string()));
-        assert_eq!(config.credentials_json, Some(r#"{"type": "service_account"}"#.to_string()));
+
+        assert_eq!(
+            config.credentials_path,
+            Some("/path/to/creds.json".to_string())
+        );
+        assert_eq!(
+            config.credentials_json,
+            Some(r#"{"type": "service_account"}"#.to_string())
+        );
     }
 
     #[test]
@@ -525,9 +631,9 @@ mod tests {
 
     #[test]
     fn test_azure_config_with_endpoint() {
-        let config = AzureConfig::new("account", "container", "key")
-            .with_endpoint("http://localhost:10000");
-        
+        let config =
+            AzureConfig::new("account", "container", "key").with_endpoint("http://localhost:10000");
+
         assert_eq!(config.endpoint, Some("http://localhost:10000".to_string()));
     }
 
@@ -543,7 +649,7 @@ mod tests {
 
         // Valid GCS config
         let gcs_config = CloudProvider::GCS(
-            GcsConfig::new("bucket", "project").with_credentials_file("/path/to/creds.json")
+            GcsConfig::new("bucket", "project").with_credentials_file("/path/to/creds.json"),
         );
         assert!(validate_config(&gcs_config).is_ok());
 
@@ -565,7 +671,10 @@ mod tests {
         let metadata = create_mock_metadata("test-file.txt", 1024);
         assert_eq!(metadata.name, "test-file.txt");
         assert_eq!(metadata.size, 1024);
-        assert_eq!(metadata.content_type, Some("application/octet-stream".to_string()));
+        assert_eq!(
+            metadata.content_type,
+            Some("application/octet-stream".to_string())
+        );
         assert_eq!(metadata.etag, Some("etag-test-file.txt".to_string()));
     }
 
@@ -580,23 +689,23 @@ mod tests {
     #[tokio::test]
     async fn test_cloud_provider_operations_without_features() {
         let s3_config = CloudProvider::S3(S3Config::new("bucket", "region", "key", "secret"));
-        
+
         // These should return feature errors when features are not enabled
         let upload_result = s3_config.upload_file("local.txt", "remote.txt").await;
         assert!(upload_result.is_err());
-        
+
         let download_result = s3_config.download_file("remote.txt", "local.txt").await;
         assert!(download_result.is_err());
-        
+
         let list_result = s3_config.list_files("path/").await;
         assert!(list_result.is_err());
-        
+
         let exists_result = s3_config.file_exists("test.txt").await;
         assert!(exists_result.is_err());
-        
+
         let metadata_result = s3_config.get_metadata("test.txt").await;
         assert!(metadata_result.is_err());
-        
+
         let delete_result = s3_config.delete_file("test.txt").await;
         assert!(delete_result.is_err());
     }

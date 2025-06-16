@@ -535,4 +535,96 @@ mod tests {
             result.value, exact_value
         );
     }
+
+    #[test]
+    fn test_monte_carlo_parallel_workers() {
+        // Test Monte Carlo integration with workers parameter
+        let f = |x: ArrayView1<f64>| x[0].powi(2);
+        let ranges = vec![(0.0, 1.0)];
+        let options = MonteCarloOptions {
+            n_samples: 10000,
+            ..Default::default()
+        };
+
+        // Test with 2 workers
+        let result = monte_carlo_parallel(f, &ranges, Some(options), Some(2)).unwrap();
+
+        // Expected integral of x^2 over [0,1] is 1/3
+        assert!(is_close_enough(result.value, 1.0 / 3.0, 0.1));
+        assert!(result.std_error >= 0.0);
+    }
+}
+
+/// Monte Carlo integration with workers parameter
+///
+/// This function provides the same functionality as `monte_carlo` but with
+/// explicit control over the number of worker threads for parallel evaluation.
+///
+/// # Arguments
+///
+/// * `f` - The function to integrate
+/// * `ranges` - Integration ranges (a, b) for each dimension
+/// * `options` - Optional Monte Carlo parameters
+/// * `workers` - Number of worker threads to use. If None, uses all available cores.
+///
+/// # Returns
+///
+/// * `IntegrateResult<MonteCarloResult<F>>` - The result of the integration
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_integrate::monte_carlo::{monte_carlo_parallel, MonteCarloOptions};
+/// use ndarray::ArrayView1;
+/// use std::marker::PhantomData;
+///
+/// // Integrate an expensive function f(x,y) = sin(x*y) * exp(-x²-y²) over [-2,2]×[-2,2]
+/// let options = MonteCarloOptions {
+///     n_samples: 100000,
+///     ..Default::default()
+/// };
+///
+/// let result = monte_carlo_parallel(
+///     |x: ArrayView1<f64>| (x[0] * x[1]).sin() * (-x[0]*x[0] - x[1]*x[1]).exp(),
+///     &[(-2.0, 2.0), (-2.0, 2.0)],
+///     Some(options),
+///     Some(4)
+/// ).unwrap();
+/// ```
+pub fn monte_carlo_parallel<F, Func>(
+    f: Func,
+    ranges: &[(F, F)],
+    options: Option<MonteCarloOptions<F>>,
+    workers: Option<usize>,
+) -> IntegrateResult<MonteCarloResult<F>>
+where
+    F: IntegrateFloat + Send + Sync + SampleUniform,
+    Func: Fn(ArrayView1<F>) -> F + Sync + Send,
+    rand_distr::StandardNormal: Distribution<F>,
+{
+    // If parallel feature is enabled and workers parameter is specified, use parallel processing
+    #[cfg(feature = "parallel")]
+    {
+        if workers.is_some() {
+            use crate::monte_carlo_parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
+            
+            let opts = options.unwrap_or_default();
+            let parallel_opts = ParallelMonteCarloOptions {
+                n_samples: opts.n_samples,
+                seed: opts.seed,
+                error_method: opts.error_method,
+                use_antithetic: opts.use_antithetic,
+                n_threads: workers,
+                batch_size: 1000,
+                use_chunking: true,
+                _phantom: PhantomData,
+            };
+            
+            return parallel_monte_carlo(f, ranges, Some(parallel_opts));
+        }
+    }
+    
+    // Fall back to standard monte carlo implementation
+    let _ = workers; // Silence unused variable warning if parallel feature is not enabled
+    monte_carlo(f, ranges, options)
 }

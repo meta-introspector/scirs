@@ -1,11 +1,10 @@
 //! Tests for the optim integration module
 
 use approx::assert_abs_diff_eq;
-use ndarray::{Array1, ArrayD};
-use num_traits::{Float, FromPrimitive};
+use scirs2_metrics::error::Result;
 use scirs2_metrics::integration::optim::{
     HyperParameter, HyperParameterSearchResult, HyperParameterTuner, MetricOptimizer,
-    MetricScheduler, OptimizationMode,
+    MetricLRScheduler, OptimizationMode,
 };
 use std::collections::HashMap;
 
@@ -43,15 +42,14 @@ fn test_metric_optimizer() {
     assert_eq!(optimizer.best_value(), None);
     assert!(optimizer
         .additional_metric_history("loss")
-        .unwrap()
-        .is_empty());
+        .is_none());
 }
 
 /// Test the MetricScheduler
 #[test]
 fn test_metric_scheduler() {
     // Create a scheduler for minimizing a loss metric
-    let mut scheduler = MetricScheduler::new(
+    let mut scheduler = MetricLRScheduler::new(
         0.1,        // Initial learning rate
         0.5,        // Factor
         2,          // Patience
@@ -156,7 +154,7 @@ fn test_hyperparameter_tuner() {
     assert!(lr >= 0.001 && lr <= 0.1);
 
     // Test random search
-    let eval_fn = |params: &HashMap<f64, f64>| -> Result<f64, Box<dyn std::error::Error>> {
+    let eval_fn = |params: &HashMap<String, f64>| -> Result<f64> {
         // Simple evaluation function that favors higher learning rates
         // and lower weight decay values
         let lr = params["learning_rate"];

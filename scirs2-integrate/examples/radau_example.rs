@@ -54,15 +54,15 @@ fn main() {
         let idx = result
             .t
             .iter()
-            .position(|&rt| (rt - t as f64).abs() < 1e-10_f64)
+            .position(|&rt| ((rt as f64) - t).abs() < 1e-10f64)
             .unwrap_or_else(|| {
                 result
                     .t
                     .iter()
                     .enumerate()
                     .min_by(|(_, a), (_, b)| {
-                        let a_diff = (*a - t as f64).abs();
-                        let b_diff = (*b - t as f64).abs();
+                        let a_diff = ((**a as f64) - t).abs();
+                        let b_diff = ((**b as f64) - t).abs();
                         a_diff.partial_cmp(&b_diff).unwrap()
                     })
                     .map(|(i, _)| i)
@@ -70,8 +70,8 @@ fn main() {
             });
 
         let y_val = result.y[idx][0];
-        let exact = (-t as f64).exp();
-        let error = (y_val - exact).abs();
+        let exact = (-(t as f64)).exp();
+        let error = ((y_val as f64) - exact).abs();
 
         println!(
             "{:^10} {:^15} {:^15} {:^15.2e}",
@@ -225,8 +225,8 @@ fn main() {
     println!("  Exact final: [{}, {}]", exact_final[0], exact_final[1]);
     println!(
         "  Errors: [{:.2e}, {:.2e}]",
-        (final_y[0] - exact_final[0] as f64).abs(),
-        (final_y[1] - exact_final[1] as f64).abs()
+        (final_y[0] - exact_final[0]).abs(),
+        (final_y[1] - exact_final[1]).abs()
     );
 
     println!("\nStatistics:");

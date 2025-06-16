@@ -8,20 +8,22 @@
 //! - Local caching for offline access and performance optimization
 //! - Retry logic and error recovery for network operations
 
-use scirs2_io::network::{
-    NetworkClient, NetworkConfig, download_file, upload_file, batch_download,
-    create_cloud_client, batch_upload_to_cloud
-};
 use scirs2_io::network::cloud::{
-    CloudProvider, S3Config, GcsConfig, AzureConfig, validate_config, create_mock_metadata
+    create_mock_metadata, validate_config, AzureConfig, CloudProvider, GcsConfig, S3Config,
 };
-use scirs2_io::network::http::{HttpClient, HttpMethod, format_file_size, format_speed, calculate_speed};
+use scirs2_io::network::http::{
+    calculate_speed, format_file_size, format_speed, HttpClient, HttpMethod,
+};
 use scirs2_io::network::streaming::{
-    StreamConfig, ProgressReader, ProgressWriter, ChunkedReader, ChunkedWriter,
-    copy_with_progress, StreamProgress
+    copy_with_progress, ChunkedReader, ChunkedWriter, ProgressReader, ProgressWriter, StreamConfig,
+    StreamProgress,
 };
-use std::time::{Duration, Instant};
+use scirs2_io::network::{
+    batch_download, batch_upload_to_cloud, create_cloud_client, download_file, upload_file,
+    NetworkClient, NetworkConfig,
+};
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
 use tempfile::tempdir;
 
 #[tokio::main]
@@ -66,7 +68,10 @@ async fn demonstrate_network_configuration() -> Result<(), Box<dyn std::error::E
     println!("  🔹 Creating custom network configuration:");
     let mut headers = HashMap::new();
     headers.insert("Authorization".to_string(), "Bearer demo-token".to_string());
-    headers.insert("X-Custom-Header".to_string(), "scirs2-io-example".to_string());
+    headers.insert(
+        "X-Custom-Header".to_string(),
+        "scirs2-io-example".to_string(),
+    );
 
     let config = NetworkConfig {
         connect_timeout: Duration::from_secs(10),
@@ -96,11 +101,17 @@ async fn demonstrate_network_configuration() -> Result<(), Box<dyn std::error::E
     // Test cache operations
     println!("  🔹 Testing cache operations:");
     let (cache_size, cache_files) = client.get_cache_info()?;
-    println!("    Initial cache: {} bytes, {} files", cache_size, cache_files);
+    println!(
+        "    Initial cache: {} bytes, {} files",
+        cache_size, cache_files
+    );
 
     client.clear_cache()?;
     let (cache_size_after, cache_files_after) = client.get_cache_info()?;
-    println!("    After clear: {} bytes, {} files", cache_size_after, cache_files_after);
+    println!(
+        "    After clear: {} bytes, {} files",
+        cache_size_after, cache_files_after
+    );
 
     Ok(())
 }
@@ -135,14 +146,20 @@ async fn demonstrate_http_operations() -> Result<(), Box<dyn std::error::Error>>
         }
 
         // Test getting remote file size
-        match http_client.get_remote_file_size("https://httpbin.org/bytes/1024").await {
+        match http_client
+            .get_remote_file_size("https://httpbin.org/bytes/1024")
+            .await
+        {
             Ok(Some(size)) => println!("    Remote file size: {} bytes", size),
             Ok(None) => println!("    Remote file size: unknown"),
             Err(e) => println!("    Failed to get remote file size: {}", e),
         }
 
         // Test custom HTTP request
-        match http_client.request(HttpMethod::GET, "https://httpbin.org/json", None).await {
+        match http_client
+            .request(HttpMethod::GET, "https://httpbin.org/json", None)
+            .await
+        {
             Ok(response) => {
                 println!("    HTTP GET response: status {}", response.status);
                 println!("    Response headers: {} items", response.headers.len());
@@ -155,7 +172,7 @@ async fn demonstrate_http_operations() -> Result<(), Box<dyn std::error::Error>>
     #[cfg(not(feature = "reqwest"))]
     {
         println!("    HTTP functionality requires 'reqwest' feature");
-        
+
         // Test that functions return appropriate errors
         match http_client.check_url("https://example.com").await {
             Ok(_) => println!("    Unexpected success"),
@@ -177,7 +194,10 @@ async fn demonstrate_http_operations() -> Result<(), Box<dyn std::error::Error>>
 
     let duration = Duration::from_secs(2);
     let calculated_speed = calculate_speed(2048, duration);
-    println!("    Speed calculation: 2048 bytes in 2 seconds = {:.1} bytes/sec", calculated_speed);
+    println!(
+        "    Speed calculation: 2048 bytes in 2 seconds = {:.1} bytes/sec",
+        calculated_speed
+    );
 
     Ok(())
 }
@@ -187,9 +207,14 @@ async fn demonstrate_cloud_storage_config() -> Result<(), Box<dyn std::error::Er
 
     // AWS S3 configuration
     println!("  🔹 AWS S3 configuration:");
-    let s3_config = S3Config::new("demo-bucket", "us-east-1", "demo-access-key", "demo-secret-key")
-        .with_endpoint("http://localhost:9000")
-        .with_path_style(true);
+    let s3_config = S3Config::new(
+        "demo-bucket",
+        "us-east-1",
+        "demo-access-key",
+        "demo-secret-key",
+    )
+    .with_endpoint("http://localhost:9000")
+    .with_path_style(true);
 
     println!("    Bucket: {}", s3_config.bucket);
     println!("    Region: {}", s3_config.region);
@@ -211,7 +236,10 @@ async fn demonstrate_cloud_storage_config() -> Result<(), Box<dyn std::error::Er
     println!("    Bucket: {}", gcs_config.bucket);
     println!("    Project ID: {}", gcs_config.project_id);
     println!("    Credentials file: {:?}", gcs_config.credentials_path);
-    println!("    Has credentials JSON: {}", gcs_config.credentials_json.is_some());
+    println!(
+        "    Has credentials JSON: {}",
+        gcs_config.credentials_json.is_some()
+    );
 
     let gcs_provider = CloudProvider::GCS(gcs_config);
     match validate_config(&gcs_provider) {
@@ -281,7 +309,7 @@ async fn demonstrate_streaming_operations() -> Result<(), Box<dyn std::error::Er
     // Test streaming configuration
     println!("  🔹 Streaming configuration:");
     let stream_config = StreamConfig {
-        buffer_size: 32 * 1024, // 32KB chunks
+        buffer_size: 32 * 1024,      // 32KB chunks
         max_memory: 8 * 1024 * 1024, // 8MB max buffer
         compression: false,
         progress_interval: 512 * 1024, // Report every 512KB
@@ -290,7 +318,10 @@ async fn demonstrate_streaming_operations() -> Result<(), Box<dyn std::error::Er
     println!("    Buffer size: {} bytes", stream_config.buffer_size);
     println!("    Max memory: {} bytes", stream_config.max_memory);
     println!("    Compression: {}", stream_config.compression);
-    println!("    Progress interval: {} bytes", stream_config.progress_interval);
+    println!(
+        "    Progress interval: {} bytes",
+        stream_config.progress_interval
+    );
 
     // Create test data file
     println!("  🔹 Creating test data for streaming:");
@@ -303,7 +334,7 @@ async fn demonstrate_streaming_operations() -> Result<(), Box<dyn std::error::Er
     println!("  🔹 Testing chunked reader:");
     let mut chunked_reader = ChunkedReader::new(&test_file, 64 * 1024)?;
     println!("    File size: {} bytes", chunked_reader.size());
-    
+
     let mut chunks_read = 0;
     let mut total_read = 0;
     while let Some(chunk) = chunked_reader.read_chunk()? {
@@ -313,25 +344,24 @@ async fn demonstrate_streaming_operations() -> Result<(), Box<dyn std::error::Er
             println!("    Chunk {}: {} bytes", chunks_read, chunk.len());
         }
     }
-    println!("    Total chunks: {}, Total bytes: {}", chunks_read, total_read);
+    println!(
+        "    Total chunks: {}, Total bytes: {}",
+        chunks_read, total_read
+    );
     println!("    Progress: {:.1}%", chunked_reader.progress_percentage());
 
     // Test chunked writer
     println!("  🔹 Testing chunked writer:");
     let output_file = temp_dir.path().join("chunked_output.dat");
     let mut chunked_writer = ChunkedWriter::new(&output_file, 32 * 1024)?;
-    
-    let chunks = vec![
-        vec![1u8; 10000],
-        vec![2u8; 15000],
-        vec![3u8; 20000],
-    ];
-    
+
+    let chunks = vec![vec![1u8; 10000], vec![2u8; 15000], vec![3u8; 20000]];
+
     for (i, chunk) in chunks.iter().enumerate() {
         chunked_writer.write_chunk(chunk)?;
         println!("    Wrote chunk {}: {} bytes", i + 1, chunk.len());
     }
-    
+
     let total_written = chunked_writer.finish()?;
     println!("    Total written: {} bytes", total_written);
 
@@ -345,15 +375,19 @@ async fn demonstrate_streaming_operations() -> Result<(), Box<dyn std::error::Er
     let progress_callback = Box::new(|progress: StreamProgress| {
         progress_reports += 1;
         if let Some(percentage) = progress.percentage() {
-            println!("    Progress: {:.1}% ({} bytes, {:.1} KB/s, ETA: {:.1}s)",
+            println!(
+                "    Progress: {:.1}% ({} bytes, {:.1} KB/s, ETA: {:.1}s)",
                 percentage,
                 progress.bytes_transferred,
                 progress.rate / 1024.0,
-                progress.eta_seconds.unwrap_or(0.0));
+                progress.eta_seconds.unwrap_or(0.0)
+            );
         } else {
-            println!("    Progress: {} bytes, {:.1} KB/s",
+            println!(
+                "    Progress: {} bytes, {:.1} KB/s",
                 progress.bytes_transferred,
-                progress.rate / 1024.0);
+                progress.rate / 1024.0
+            );
         }
     });
 
@@ -366,13 +400,23 @@ async fn demonstrate_streaming_operations() -> Result<(), Box<dyn std::error::Er
     )?;
     let copy_time = start_time.elapsed();
 
-    println!("    Copied {} bytes in {:.2}ms", copied_bytes, copy_time.as_secs_f64() * 1000.0);
+    println!(
+        "    Copied {} bytes in {:.2}ms",
+        copied_bytes,
+        copy_time.as_secs_f64() * 1000.0
+    );
     println!("    Progress reports: {}", progress_reports);
 
     // Verify copied file
     let copied_data = std::fs::read(&output_file_path)?;
-    println!("    Verification: {} bytes copied correctly", 
-        if copied_data == test_data { "✅" } else { "❌" });
+    println!(
+        "    Verification: {} bytes copied correctly",
+        if copied_data == test_data {
+            "✅"
+        } else {
+            "❌"
+        }
+    );
 
     Ok(())
 }
@@ -397,9 +441,13 @@ async fn demonstrate_batch_operations() -> Result<(), Box<dyn std::error::Error>
     #[cfg(feature = "reqwest")]
     {
         println!("  🔹 Testing batch download:");
-        let download_results = batch_download(download_tasks.into_iter()
-            .map(|(url, file)| (url.to_string(), file.to_string()))
-            .collect()).await?;
+        let download_results = batch_download(
+            download_tasks
+                .into_iter()
+                .map(|(url, file)| (url.to_string(), file.to_string()))
+                .collect(),
+        )
+        .await?;
 
         let mut successful = 0;
         let mut failed = 0;
@@ -415,7 +463,10 @@ async fn demonstrate_batch_operations() -> Result<(), Box<dyn std::error::Error>
                 }
             }
         }
-        println!("    Batch download summary: {} successful, {} failed", successful, failed);
+        println!(
+            "    Batch download summary: {} successful, {} failed",
+            successful, failed
+        );
     }
 
     #[cfg(not(feature = "reqwest"))]
@@ -426,7 +477,7 @@ async fn demonstrate_batch_operations() -> Result<(), Box<dyn std::error::Error>
     // Test batch cloud upload preparation
     println!("  🔹 Preparing batch cloud upload operations:");
     let temp_dir = tempdir()?;
-    
+
     // Create test files
     let upload_files = vec![
         ("test1.txt", "Hello, cloud!"),
@@ -445,10 +496,14 @@ async fn demonstrate_batch_operations() -> Result<(), Box<dyn std::error::Error>
     let s3_config = S3Config::new("demo-bucket", "us-east-1", "demo-key", "demo-secret");
     let cloud_client = create_cloud_client(CloudProvider::S3(s3_config));
 
-    let upload_tasks: Vec<(&str, &str)> = upload_files.iter()
+    let upload_tasks: Vec<(&str, &str)> = upload_files
+        .iter()
         .map(|(filename, _)| {
             let local_path = temp_dir.path().join(filename).to_string_lossy().to_string();
-            (local_path.as_str(), format!("uploads/{}", filename).as_str())
+            (
+                local_path.as_str(),
+                format!("uploads/{}", filename).as_str(),
+            )
         })
         .collect();
 
@@ -469,7 +524,10 @@ async fn demonstrate_batch_operations() -> Result<(), Box<dyn std::error::Error>
             }
         }
     }
-    println!("    Batch upload summary: {} successful, {} failed", upload_successful, upload_failed);
+    println!(
+        "    Batch upload summary: {} successful, {} failed",
+        upload_successful, upload_failed
+    );
 
     Ok(())
 }
@@ -483,11 +541,14 @@ async fn demonstrate_caching_operations() -> Result<(), Box<dyn std::error::Erro
     // Create network client with caching
     println!("  🔹 Setting up caching configuration:");
     let client = NetworkClient::new().with_cache_dir(&cache_dir);
-    
+
     // Test cache operations
     println!("  🔹 Testing cache operations:");
     let (initial_size, initial_count) = client.get_cache_info()?;
-    println!("    Initial cache: {} bytes, {} files", initial_size, initial_count);
+    println!(
+        "    Initial cache: {} bytes, {} files",
+        initial_size, initial_count
+    );
 
     // Simulate adding files to cache
     std::fs::create_dir_all(&cache_dir)?;
@@ -504,7 +565,10 @@ async fn demonstrate_caching_operations() -> Result<(), Box<dyn std::error::Erro
     }
 
     let (cache_size, cache_count) = client.get_cache_info()?;
-    println!("    Cache after adding files: {} bytes, {} files", cache_size, cache_count);
+    println!(
+        "    Cache after adding files: {} bytes, {} files",
+        cache_size, cache_count
+    );
 
     // Test cache download simulation
     println!("  🔹 Simulating cached downloads:");
@@ -512,7 +576,7 @@ async fn demonstrate_caching_operations() -> Result<(), Box<dyn std::error::Erro
     {
         // In a real scenario, this would check cache first, then download if not found
         let cache_file = cache_dir.join("download_cache.dat");
-        
+
         // Simulate cache miss - would normally download
         if !cache_file.exists() {
             println!("    Cache miss for download_cache.dat - would download from network");
@@ -531,26 +595,36 @@ async fn demonstrate_caching_operations() -> Result<(), Box<dyn std::error::Erro
     println!("  🔹 Testing cache cleanup:");
     client.clear_cache()?;
     let (final_size, final_count) = client.get_cache_info()?;
-    println!("    Cache after cleanup: {} bytes, {} files", final_size, final_count);
+    println!(
+        "    Cache after cleanup: {} bytes, {} files",
+        final_size, final_count
+    );
 
     // Simulate cache size management
     println!("  🔹 Cache size management:");
     let max_cache_size = 1024 * 1024; // 1MB
-    let total_cached_size = cached_files.iter().map(|(_, data)| data.len()).sum::<usize>();
-    
+    let total_cached_size = cached_files
+        .iter()
+        .map(|(_, data)| data.len())
+        .sum::<usize>();
+
     if total_cached_size > max_cache_size {
-        println!("    Cache size {} bytes exceeds limit {} bytes - cleanup needed",
-            total_cached_size, max_cache_size);
+        println!(
+            "    Cache size {} bytes exceeds limit {} bytes - cleanup needed",
+            total_cached_size, max_cache_size
+        );
     } else {
-        println!("    Cache size {} bytes within limit {} bytes",
-            total_cached_size, max_cache_size);
+        println!(
+            "    Cache size {} bytes within limit {} bytes",
+            total_cached_size, max_cache_size
+        );
     }
 
     // Test offline access simulation
     println!("  🔹 Simulating offline access:");
     let offline_files = vec![
         "important_data.csv",
-        "analysis_results.json", 
+        "analysis_results.json",
         "model_weights.bin",
     ];
 
@@ -559,7 +633,10 @@ async fn demonstrate_caching_operations() -> Result<(), Box<dyn std::error::Erro
         if cached_path.exists() {
             println!("    Offline access available for: {}", filename);
         } else {
-            println!("    Offline access not available for: {} (not cached)", filename);
+            println!(
+                "    Offline access not available for: {} (not cached)",
+                filename
+            );
         }
     }
 

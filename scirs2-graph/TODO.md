@@ -40,7 +40,7 @@ This module provides graph data structures and algorithms similar to SciPy's gra
   - [x] Graph-level attributes
   - [x] Attribute views and projections
 - [ ] Specialized graph types
-  - [ ] Weighted graphs with dedicated APIs
+  - [x] Weighted graphs with dedicated APIs
   - [ ] Spatial graphs with geometric properties
   - [ ] Probabilistic graphs
   - [ ] Dynamic graphs with snapshot capabilities
@@ -116,11 +116,11 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 
 ## Advanced Techniques
 
-- [ ] Graph embeddings
-  - [ ] Node2Vec implementation
-  - [ ] DeepWalk algorithm
+- [x] Graph embeddings
+  - [x] Node2Vec implementation (foundation)
+  - [x] DeepWalk algorithm (foundation)
   - [ ] Spectral embeddings
-  - [ ] Graph embedding interfaces
+  - [x] Graph embedding interfaces
 - [ ] Graph neural networks
   - [ ] Message-passing frameworks
   - [ ] Graph convolution operations
@@ -151,33 +151,34 @@ This module provides graph data structures and algorithms similar to SciPy's gra
 
 ## Performance Optimizations
 
-- [ ] Efficient data structures
-  - [ ] Cache-friendly graph representations
-  - [ ] Optimized adjacency structures
+- [x] Efficient data structures
+  - [x] Cache-friendly graph representations
+  - [x] Optimized adjacency structures
   - [ ] Compressed graph storage
-  - [ ] Memory-mapped graph structures
-- [ ] Parallel processing
-  - [ ] Multi-threaded graph algorithms
-  - [ ] Parallel traversals with Rayon
-  - [ ] Thread-safe graph operations
-  - [ ] Work-stealing algorithm implementations
+  - [x] Memory-mapped graph structures (foundation)
+- [x] Parallel processing
+  - [x] Multi-threaded graph algorithms
+  - [x] Parallel traversals with Rayon
+  - [x] Thread-safe graph operations
+  - [x] Work-stealing algorithm implementations (foundation)
 - [ ] GPU acceleration
   - [ ] CUDA graph primitives
   - [ ] Parallel graph analytics
   - [ ] Hybrid CPU/GPU processing
-- [ ] Large graph support
-  - [ ] Out-of-core processing
+- [x] Large graph support
+  - [x] Out-of-core processing (foundation)
   - [ ] Distributed graph computations
-  - [ ] Streaming graph algorithms
+  - [x] Streaming graph algorithms
 
 ## Interoperability
 
 - [x] I/O formats
-  - [ ] GraphML support
-  - [ ] GML format
+  - [x] GraphML support
+  - [x] GML format
   - [x] DOT format (Graphviz)
   - [x] Edge list and adjacency list formats
   - [x] JSON graph format
+  - [x] Matrix Market format
 - [ ] Integration with other libraries
   - [ ] NetworkX conversion utilities
   - [ ] SNAP format support

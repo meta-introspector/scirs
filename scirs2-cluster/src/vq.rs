@@ -53,9 +53,10 @@ pub use distance_simd::{
     distance_to_centroids_simd, pairwise_euclidean_parallel, pairwise_euclidean_simd,
 };
 pub use kmeans::{
-    kmeans, kmeans_init, kmeans_plus_plus, kmeans_with_metric, KMeansInit, KMeansOptions,
+    kmeans, kmeans_init, kmeans_plus_plus, kmeans_with_metric, kmeans_with_options, KMeansInit,
+    KMeansOptions,
 };
-pub use kmeans2::{kmeans2, MinitMethod, MissingMethod};
+pub use kmeans2::{kmeans2, kmeans2_str, MinitMethod, MissingMethod};
 pub use minibatch_kmeans::*;
 pub use parallel_kmeans::{parallel_kmeans, ParallelKMeansOptions};
 pub use weighted_kmeans::{weighted_kmeans, weighted_kmeans_plus_plus, WeightedKMeansOptions};

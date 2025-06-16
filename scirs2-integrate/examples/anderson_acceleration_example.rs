@@ -94,9 +94,11 @@ fn nonlinear_system_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("x₂ = 0.1*x₁ + 0.4*x₂ + 0.5");
     println!("Exact solution: x₁ = 1.875, x₂ = 1.25");
 
-    let mut options = AcceleratorOptions::default();
-    options.memory_depth = 5;
-    options.damping = 0.8f64;
+    let options = AcceleratorOptions {
+        memory_depth: 5,
+        damping: 0.8f64,
+        ..Default::default()
+    };
 
     let mut accelerator = AndersonAccelerator::new(2, options);
     let mut x = Array1::from_vec(vec![0.0f64, 0.0f64]);
@@ -240,11 +242,9 @@ fn stiff_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
     ])
 }
 
-fn solve_standard(
-    problem: &Box<dyn Fn(ArrayView1<f64>) -> Array1<f64>>,
-    max_iters: usize,
-    tolerance: f64,
-) -> usize {
+type IterationFunction = Box<dyn Fn(ArrayView1<f64>) -> Array1<f64>>;
+
+fn solve_standard(problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
     let mut x = Array1::from_vec(vec![0.0, 0.0]);
 
     for iter in 1..=max_iters {
@@ -261,11 +261,7 @@ fn solve_standard(
     max_iters
 }
 
-fn solve_anderson(
-    problem: &Box<dyn Fn(ArrayView1<f64>) -> Array1<f64>>,
-    max_iters: usize,
-    tolerance: f64,
-) -> usize {
+fn solve_anderson(problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
     let mut accelerator = AndersonAccelerator::new(2, AcceleratorOptions::default());
     let mut x = Array1::from_vec(vec![0.0, 0.0]);
     let mut x_prev = x.clone();

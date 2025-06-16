@@ -39,7 +39,7 @@ impl<T: fmt::Display> fmt::Display for QMCQuadResult<T> {
 }
 
 /// Trait for quasi-random number generators
-pub trait QRNGEngine {
+pub trait QRNGEngine: Send + Sync {
     /// Generate n points in d dimensions in the unit hypercube [0,1]^d
     fn random(&mut self, n: usize) -> Array2<f64>;
 
@@ -611,6 +611,316 @@ where
     })
 }
 
+/// Parallel Quasi-Monte Carlo integration with workers parameter
+///
+/// This function provides the same functionality as `qmc_quad` but with
+/// explicit control over the number of worker threads for parallel evaluation.
+///
+/// # Arguments
+///
+/// * `func` - The function to integrate
+/// * `a` - Lower bounds of integration for each dimension
+/// * `b` - Upper bounds of integration for each dimension
+/// * `n_estimates` - Number of independent estimates to compute (default: 8)
+/// * `n_points` - Number of sample points per estimate (default: 1024)
+/// * `qrng` - QRNGEngine to use for sampling points. If None, a Halton sequence is used.
+/// * `log` - If true, treat func as returning the log of the integrand and return log
+///   of the result.
+/// * `workers` - Number of worker threads to use. If None, uses all available cores.
+///
+/// # Returns
+///
+/// * `QMCQuadResult` containing the integral estimate and standard error.
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_integrate::qmc::{qmc_quad_parallel, Halton};
+/// use ndarray::{Array1, ArrayView1};
+///
+/// let f = |x: ArrayView1<f64>| x[0].powi(2) * x[1].exp();
+/// let a = Array1::from_vec(vec![0.0, 0.0]);
+/// let b = Array1::from_vec(vec![1.0, 1.0]);
+///
+/// let qrng = Halton::new(2, Some(42));
+/// let result = qmc_quad_parallel(
+///     f, &a, &b, None, None, Some(Box::new(qrng)), false, Some(4)
+/// ).unwrap();
+/// println!("Integral: {}, Error: {}", result.integral, result.standard_error);
+/// ```
+pub fn qmc_quad_parallel<F>(
+    func: F,
+    a: &Array1<f64>,
+    b: &Array1<f64>,
+    n_estimates: Option<usize>,
+    n_points: Option<usize>,
+    qrng: Option<Box<dyn QRNGEngine>>,
+    log: bool,
+    workers: Option<usize>,
+) -> IntegrateResult<QMCQuadResult<f64>>
+where
+    F: Fn(ArrayView1<f64>) -> f64 + Send + Sync,
+{
+    let n_estimates = n_estimates.unwrap_or(8);
+    let n_points = n_points.unwrap_or(1024);
+
+    // Input validation
+    if a.len() != b.len() {
+        return Err(IntegrateError::ValueError(
+            "Dimension mismatch: 'a' and 'b' must have the same length".to_string(),
+        ));
+    }
+
+    let dim = a.len();
+
+    // Initialize QRNG if not provided
+    let qrng = qrng.unwrap_or_else(|| Box::new(Halton::new(dim, None)));
+
+    if qrng.dim() != dim {
+        return Err(IntegrateError::ValueError(format!(
+            "QRNG dimension ({}) does not match integration dimension ({})",
+            qrng.dim(),
+            dim
+        )));
+    }
+
+    // Check if a = b for any dimension, return 0 if so
+    for i in 0..dim {
+        if (a[i] - b[i]).abs() < f64::EPSILON {
+            return Ok(QMCQuadResult {
+                integral: if log { f64::NEG_INFINITY } else { 0.0 },
+                standard_error: 0.0,
+            });
+        }
+    }
+
+    // Swap limits if a > b and record the sign change
+    let mut a_mod = a.clone();
+    let mut b_mod = b.clone();
+    let mut sign = 1.0;
+
+    for i in 0..dim {
+        if a[i] > b[i] {
+            a_mod[i] = b[i];
+            b_mod[i] = a[i];
+            sign *= -1.0;
+        }
+    }
+
+    // Calculate domain volume
+    let mut volume = 1.0;
+    for i in 0..dim {
+        volume *= b_mod[i] - a_mod[i];
+    }
+
+    // Configure parallel execution based on workers parameter
+    #[cfg(feature = "parallel")]
+    {
+        if let Some(num_workers) = workers {
+            // Set thread pool size
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(num_workers)
+                .build()
+                .map_err(|_| IntegrateError::ValueError("Failed to create thread pool".to_string()))?;
+
+            pool.install(|| {
+                parallel_qmc_integration_impl(func, &a_mod, &b_mod, n_estimates, n_points, &*qrng, log, volume, sign)
+            })
+        } else {
+            // Use default parallel execution
+            parallel_qmc_integration_impl(func, &a_mod, &b_mod, n_estimates, n_points, &*qrng, log, volume, sign)
+        }
+    }
+
+    #[cfg(not(feature = "parallel"))]
+    {
+        // If parallel feature is not enabled, fall back to sequential execution
+        let _ = workers; // Silence unused variable warning
+        sequential_qmc_integration(func, &a_mod, &b_mod, n_estimates, n_points, qrng, log, volume, sign)
+    }
+}
+
+#[cfg(feature = "parallel")]
+fn parallel_qmc_integration_impl<F>(
+    func: F,
+    a: &Array1<f64>,
+    b: &Array1<f64>,
+    n_estimates: usize,
+    n_points: usize,
+    qrng: &dyn QRNGEngine,
+    log: bool,
+    volume: f64,
+    sign: f64,
+) -> IntegrateResult<QMCQuadResult<f64>>
+where
+    F: Fn(ArrayView1<f64>) -> f64 + Send + Sync,
+{
+    use rayon::prelude::*;
+
+    // Generate estimates in parallel
+    let estimates: Vec<f64> = (0..n_estimates)
+        .into_par_iter()
+        .map(|_| {
+            // Each thread gets its own QRNG instance with different seed
+            let mut local_qrng = qrng.new_from_seed(rand::random());
+            
+            // Sample points
+            let points = local_qrng.random(n_points);
+            
+            // Transform points to integration domain and evaluate function
+            let mut sum = 0.0;
+            
+            for i in 0..n_points {
+                let point = points.row(i);
+                
+                // Transform from [0,1]^d to [a,b]^d
+                let mut transformed_point = Array1::zeros(a.len());
+                for j in 0..a.len() {
+                    transformed_point[j] = a[j] + point[j] * (b[j] - a[j]);
+                }
+                
+                let value = func(transformed_point.view());
+                
+                if log {
+                    // For log-space integration, we accumulate log values
+                    if value > f64::NEG_INFINITY {
+                        sum += value.exp() / n_points as f64;
+                    }
+                } else {
+                    sum += value / n_points as f64;
+                }
+            }
+            
+            if log {
+                sum.ln() + volume.ln()
+            } else {
+                sum * volume
+            }
+        })
+        .collect();
+
+    compute_qmc_result(estimates, log, sign)
+}
+
+#[cfg(not(feature = "parallel"))]
+fn sequential_qmc_integration<F>(
+    func: F,
+    a: &Array1<f64>,
+    b: &Array1<f64>,
+    n_estimates: usize,
+    n_points: usize,
+    mut qrng: Box<dyn QRNGEngine>,
+    log: bool,
+    volume: f64,
+    sign: f64,
+) -> IntegrateResult<QMCQuadResult<f64>>
+where
+    F: Fn(ArrayView1<f64>) -> f64,
+{
+    let mut estimates = Vec::with_capacity(n_estimates);
+    
+    for _ in 0..n_estimates {
+        // Sample points
+        let points = qrng.random(n_points);
+        
+        // Transform points to integration domain and evaluate function
+        let mut sum = 0.0;
+        
+        for i in 0..n_points {
+            let point = points.row(i);
+            
+            // Transform from [0,1]^d to [a,b]^d
+            let mut transformed_point = Array1::zeros(a.len());
+            for j in 0..a.len() {
+                transformed_point[j] = a[j] + point[j] * (b[j] - a[j]);
+            }
+            
+            let value = func(transformed_point.view());
+            
+            if log {
+                // For log-space integration, we accumulate log values
+                if value > f64::NEG_INFINITY {
+                    sum += value.exp() / n_points as f64;
+                }
+            } else {
+                sum += value / n_points as f64;
+            }
+        }
+        
+        let estimate = if log {
+            sum.ln() + volume.ln()
+        } else {
+            sum * volume
+        };
+        
+        estimates.push(estimate);
+    }
+
+    compute_qmc_result(estimates, log, sign)
+}
+
+fn compute_qmc_result(estimates: Vec<f64>, log: bool, sign: f64) -> IntegrateResult<QMCQuadResult<f64>> {
+    let n_estimates = estimates.len();
+    
+    // Compute mean and variance
+    let integral = if log {
+        // For log-space, use log-sum-exp for numerical stability
+        let max_val = estimates.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        if max_val == f64::NEG_INFINITY {
+            f64::NEG_INFINITY
+        } else {
+            let sum_exp: f64 = estimates.iter().map(|&x| (x - max_val).exp()).sum();
+            max_val + (sum_exp / n_estimates as f64).ln()
+        }
+    } else {
+        estimates.iter().sum::<f64>() / n_estimates as f64
+    };
+
+    let standard_error = if estimates.len() > 1 {
+        if log {
+            // For log-space, compute variance in log domain
+            let mean = integral;
+            let mut variance = 0.0;
+
+            for i in 0..n_estimates {
+                let diff = estimates[i] - mean;
+                variance += diff * diff;
+            }
+
+            variance /= (n_estimates - 1) as f64;
+            (variance / (n_estimates as f64)).sqrt().ln()
+        } else {
+            let mean = integral;
+            let mut variance = 0.0;
+
+            for i in 0..n_estimates {
+                variance += (estimates[i] - mean).powi(2);
+            }
+
+            variance /= (n_estimates - 1) as f64;
+            (variance / (n_estimates as f64)).sqrt()
+        }
+    } else if log {
+        f64::NEG_INFINITY
+    } else {
+        0.0
+    };
+
+    // Apply sign correction for reversed limits
+    let final_integral = if log && sign < 0.0 {
+        // For negative results in log space, we'd need complex numbers
+        // Since we don't support complex results, we'll just negate the result
+        -integral
+    } else {
+        integral * sign
+    };
+
+    Ok(QMCQuadResult {
+        integral: final_integral,
+        standard_error,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -699,5 +1009,20 @@ mod tests {
         // Note: This simplified Faure implementation may not achieve optimal convergence
         // Production implementations would use proper Pascal triangle modulo p matrices
         assert_abs_diff_eq!(result.integral, 0.25, epsilon = 0.2);
+    }
+
+    #[test]
+    fn test_qmc_quad_parallel_workers() {
+        // Test QMC integration with workers parameter
+        let f = |x: ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
+        let a = Array1::from_vec(vec![0.0, 0.0]);
+        let b = Array1::from_vec(vec![1.0, 1.0]);
+
+        // Test with 2 workers
+        let result = qmc_quad_parallel(f, &a, &b, Some(8), Some(1000), None, false, Some(2)).unwrap();
+
+        // Expected integral of x^2 + y^2 over [0,1]×[0,1] is 2/3
+        assert_abs_diff_eq!(result.integral, 2.0 / 3.0, epsilon = 0.1);
+        assert!(result.standard_error >= 0.0);
     }
 }

@@ -121,6 +121,14 @@ pub mod matrix_market;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 pub mod mmap;
+/// NetCDF file format module
+///
+/// Provides functionality for reading and writing NetCDF files:
+/// - Reading and writing NetCDF3 files
+/// - Support for dimensions, variables, and attributes
+/// - Conversion between NetCDF and ndarray data structures
+/// - Memory-efficient access to large datasets
+pub mod netcdf;
 /// Network I/O and cloud storage integration
 ///
 /// Provides functionality for reading and writing files over network protocols
@@ -149,14 +157,6 @@ pub mod mmap;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub mod network;
-/// NetCDF file format module
-///
-/// Provides functionality for reading and writing NetCDF files:
-/// - Reading and writing NetCDF3 files
-/// - Support for dimensions, variables, and attributes
-/// - Conversion between NetCDF and ndarray data structures
-/// - Memory-efficient access to large datasets
-pub mod netcdf;
 /// Data serialization utilities
 ///
 /// Provides functionality for serializing and deserializing scientific data:

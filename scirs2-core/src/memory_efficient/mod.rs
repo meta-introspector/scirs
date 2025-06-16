@@ -18,6 +18,7 @@ mod cross_file_prefetch;
 mod fusion;
 mod lazy_array;
 mod memmap;
+mod memory_layout;
 mod memmap_chunks;
 mod memmap_slice;
 mod out_of_core;
@@ -29,7 +30,10 @@ mod streaming;
 mod validation;
 mod views;
 #[cfg(feature = "parallel")]
+mod work_stealing;
+#[cfg(feature = "parallel")]
 mod zero_copy_streaming;
+mod zero_copy_interface;
 mod zero_serialization;
 mod zerocopy;
 
@@ -62,6 +66,9 @@ pub use cross_file_prefetch::{
 pub use fusion::{register_fusion, FusedOp, OpFusion};
 pub use lazy_array::{evaluate, LazyArray, LazyOp, LazyOpKind};
 pub use memmap::{create_mmap, create_temp_mmap, open_mmap, AccessMode, MemoryMappedArray};
+pub use memory_layout::{
+    AccessPattern as MemoryAccessPattern, ArrayCreation, ArrayLayout, LayoutConverter, LayoutOrder, MemoryLayout,
+};
 #[cfg(feature = "parallel")]
 pub use memmap_chunks::MemoryMappedChunksParallel;
 pub use memmap_chunks::{ChunkIter, MemoryMappedChunkIter, MemoryMappedChunks};
@@ -87,10 +94,22 @@ pub use streaming::{
 };
 pub use views::{diagonal_view, transpose_view, view_as, view_mut_as, ArrayView, ViewMut};
 #[cfg(feature = "parallel")]
+pub use work_stealing::{
+    create_cpu_intensive_scheduler, create_io_intensive_scheduler, create_work_stealing_scheduler,
+    NumaNode, SchedulerStats, TaskPriority, WorkStealingConfig, WorkStealingConfigBuilder,
+    WorkStealingScheduler, WorkStealingTask,
+};
+#[cfg(feature = "parallel")]
 pub use zero_copy_streaming::{
     create_zero_copy_processor, BufferPool, BufferPoolStats, LockFreeQueue, NumaTopology,
-    ProcessingMode, WorkStealingScheduler, WorkStealingTask, ZeroCopyBuffer, ZeroCopyConfig,
+    ProcessingMode, WorkStealingScheduler as ZeroCopyWorkStealingScheduler, 
+    WorkStealingTask as ZeroCopyWorkStealingTask, ZeroCopyBuffer, ZeroCopyConfig,
     ZeroCopyStats, ZeroCopyStreamProcessor,
+};
+pub use zero_copy_interface::{
+    create_global_data_registry, create_zero_copy_data, get_global_data, global_interface,
+    register_global_data, DataExchange, DataId, DataMetadata, FromZeroCopy, InterfaceStats,
+    IntoZeroCopy, ZeroCopyData, ZeroCopyInterface, ZeroCopyView, ZeroCopyWeakRef,
 };
 pub use zero_serialization::{ZeroCopySerializable, ZeroCopySerialization};
 pub use zerocopy::{ArithmeticOps, BroadcastOps, ZeroCopyOps};
@@ -102,12 +121,12 @@ pub mod prelude {
         chunk_wise_binary_op, chunk_wise_op, chunk_wise_reduce, create_mmap, create_temp_mmap,
         evaluate, open_mmap, view_as, view_mut_as, AccessMode, AdaptiveChunking,
         AdaptiveChunkingBuilder, AdaptivePatternTracker, AdaptivePrefetchConfig, ArithmeticOps,
-        ArrayView, BroadcastOps, ChunkIter, ChunkedArray, ComplexPattern, CrossFilePrefetchManager,
-        DatasetId, DatasetPrefetcher, LazyArray, MemoryMappedArray, MemoryMappedChunkIter,
+        ArrayCreation, ArrayLayout, ArrayView, BroadcastOps, ChunkIter, ChunkedArray, ComplexPattern, CrossFilePrefetchManager,
+        DatasetId, DatasetPrefetcher, LazyArray, LayoutOrder, MemoryLayout, MemoryMappedArray, MemoryMappedChunkIter,
         MemoryMappedChunks, MemoryMappedSlice, MemoryMappedSlicing, OutOfCoreArray,
         PatternRecognizer, PrefetchConfig, PrefetchConfigBuilder, PrefetchStrategy, Prefetching,
-        ResourceAwareConfig, ResourceAwarePrefetcher, ViewMut, ZeroCopyOps, ZeroCopySerializable,
-        ZeroCopySerialization,
+        ResourceAwareConfig, ResourceAwarePrefetcher, ViewMut, ZeroCopyData, ZeroCopyInterface,
+        ZeroCopyOps, ZeroCopySerializable, ZeroCopySerialization, ZeroCopyView,
     };
 
     // GPU-specific exports

@@ -116,7 +116,11 @@ impl Dataset<f32> for SyntheticImageDataset {
 
     fn get(&self, index: usize) -> scirs2_neural::error::Result<(ArrayD<f32>, ArrayD<f32>)> {
         if index >= self.len() {
-            return Err(scirs2_neural::error::NeuralError::InvalidArgument(format!("Index {} out of bounds for dataset of size {}", index, self.len())));
+            return Err(scirs2_neural::error::NeuralError::InvalidArgument(format!(
+                "Index {} out of bounds for dataset of size {}",
+                index,
+                self.len()
+            )));
         }
 
         let (_, channels, height, width) = self.images.dim();
@@ -311,20 +315,26 @@ fn train_image_classifier() -> Result<()> {
     // Test predictions on a few samples
     println!("\n🔍 Sample Predictions:");
     let sample_indices = vec![0, 1, 2, 3, 4];
-    
+
     // Manually collect batch since get_batch is not part of Dataset trait
     let mut batch_images = Vec::new();
     let mut batch_targets = Vec::new();
-    
+
     for &idx in &sample_indices {
         let (img, target) = val_dataset.get(idx)?;
         batch_images.push(img);
         batch_targets.push(target);
     }
-    
+
     // Concatenate into batch arrays
-    let sample_images = ndarray::concatenate(Axis(0), &batch_images.iter().map(|a| a.view()).collect::<Vec<_>>())?;
-    let sample_targets = ndarray::concatenate(Axis(0), &batch_targets.iter().map(|a| a.view()).collect::<Vec<_>>())?;
+    let sample_images = ndarray::concatenate(
+        Axis(0),
+        &batch_images.iter().map(|a| a.view()).collect::<Vec<_>>(),
+    )?;
+    let sample_targets = ndarray::concatenate(
+        Axis(0),
+        &batch_targets.iter().map(|a| a.view()).collect::<Vec<_>>(),
+    )?;
 
     let model = trainer.get_model();
     let predictions = model.forward(&sample_images)?;
@@ -402,11 +412,11 @@ fn demonstrate_augmentation() -> Result<()> {
     // For now, demonstrate basic concept
     println!("   - Augmentation manager created with seed 42");
     println!("   - Basic augmentations (rotation, flipping, etc.) would be applied here");
-    
+
     // Create sample image
     let sample_image = Array4::<f32>::ones((1, 3, 32, 32));
     println!("   - Sample image shape: {:?}", sample_image.shape());
-    
+
     // Note: Apply augmentation when API is stabilized
     // let augmented = aug_manager.apply(&sample_image)?;
 

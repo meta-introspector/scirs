@@ -20,13 +20,16 @@
 pub mod algorithms;
 pub mod attributes;
 pub mod base;
+pub mod embeddings;
 pub mod error;
 pub mod generators;
 pub mod io;
 pub mod layout;
 pub mod measures;
+pub mod performance;
 pub mod spectral;
 pub mod temporal;
+pub mod weighted;
 
 // Re-export important types and functions
 pub use algorithms::{
@@ -57,6 +60,10 @@ pub use base::{
     BipartiteGraph, DiGraph, Edge, EdgeWeight, Graph, Hyperedge, Hypergraph, IndexType,
     MultiDiGraph, MultiGraph, Node,
 };
+pub use embeddings::{
+    DeepWalk, DeepWalkConfig, Embedding, EmbeddingModel, Node2Vec, Node2VecConfig, RandomWalk,
+    RandomWalkGenerator,
+};
 pub use error::{GraphError, Result};
 pub use generators::{
     barabasi_albert_graph, complete_graph, cycle_graph, erdos_renyi_graph, grid_2d_graph,
@@ -69,8 +76,14 @@ pub use measures::{
     katz_centrality_digraph, pagerank_centrality, pagerank_centrality_digraph, CentralityType,
     HitsScores,
 };
+pub use performance::{
+    LargeGraphIterator, LargeGraphOps, ParallelConfig, PerformanceMonitor, StreamingGraphProcessor,
+};
 pub use spectral::{laplacian, normalized_cut, spectral_radius};
 pub use temporal::{
     temporal_betweenness_centrality, temporal_reachability, TemporalGraph, TemporalPath,
     TimeInstant, TimeInterval,
+};
+pub use weighted::{
+    MultiWeight, NormalizationMethod, WeightStatistics, WeightTransform, WeightedOps,
 };

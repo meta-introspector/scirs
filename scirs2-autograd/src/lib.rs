@@ -1,4 +1,5 @@
 //! Differentiable operations and tensors backed by [ndarray](https://github.com/rust-ndarray/ndarray).
+#![recursion_limit = "1024"]
 //!
 //! ## Enabling blas
 //! If you use basic linalg operations, especially matrix multiplications, `blas` feature would be important to speed them up.
@@ -104,7 +105,6 @@
 //! - [Model persistence](variable#model-persistence)
 //! - [Variable namespace](variable#variable-and-namespace)
 
-#![recursion_limit = "512"]
 
 #[allow(unused_imports)]
 // Expose to prevent version conflict
@@ -133,12 +133,14 @@ extern crate uuid;
 pub mod error;
 pub mod evaluation;
 mod gradient;
+pub mod gradient_clipping;
 pub(crate) mod graph;
 pub mod hooks;
 pub mod ndarray_ext;
 pub mod op;
 pub mod optimizers;
 pub mod prelude;
+pub mod schedulers;
 pub mod tensor;
 pub mod tensor_ops;
 pub mod test_helper;

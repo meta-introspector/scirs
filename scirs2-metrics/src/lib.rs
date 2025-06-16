@@ -645,7 +645,7 @@ pub mod evaluation;
 pub mod fairness;
 
 // Integration modules with conditional compilation
-#[cfg(feature = "neural_common")]
+#[cfg(any(feature = "neural_common", feature = "optim_integration"))]
 pub mod integration;
 
 pub mod optimization;

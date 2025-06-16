@@ -67,7 +67,7 @@ impl std::str::FromStr for AccessMode {
 #[derive(Debug)]
 pub struct MemoryMappedArray<A>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync,
 {
     /// The shape of the array
     pub shape: Vec<usize>,
@@ -102,7 +102,7 @@ struct MemoryMappedHeader {
 
 impl<A> MemoryMappedArray<A>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync,
 {
     /// Create a new memory-mapped array from an existing array
     ///
@@ -601,7 +601,7 @@ where
 
 impl<A> Drop for MemoryMappedArray<A>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync,
 {
     fn drop(&mut self) {
         // Flush any pending changes

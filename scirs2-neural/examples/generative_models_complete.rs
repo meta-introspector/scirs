@@ -12,8 +12,7 @@
 
 use ndarray::{s, Array, Array2, Array3, Array4, ArrayD, IxDyn};
 use scirs2_neural::layers::{
-    AdaptiveMaxPool2D, BatchNorm, Conv2D, Dense, Dropout, PaddingMode,
-    Sequential,
+    AdaptiveMaxPool2D, BatchNorm, Conv2D, Dense, Dropout, PaddingMode, Sequential,
 };
 use scirs2_neural::losses::{CrossEntropyLoss, MeanSquaredError};
 use scirs2_neural::prelude::*;
@@ -160,10 +159,7 @@ pub struct VAEEncoder {
 }
 
 impl VAEEncoder {
-    pub fn new(
-        config: GenerativeConfig,
-        rng: &mut SmallRng,
-    ) -> StdResult<Self> {
+    pub fn new(config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
         let (_height, _width) = config.input_size;
 
         // Feature extraction layers
@@ -229,10 +225,7 @@ impl VAEEncoder {
         })
     }
 
-    pub fn forward(
-        &self,
-        input: &ArrayD<f32>,
-    ) -> StdResult<(ArrayD<f32>, ArrayD<f32>)> {
+    pub fn forward(&self, input: &ArrayD<f32>) -> StdResult<(ArrayD<f32>, ArrayD<f32>)> {
         // Extract features
         let features = self.feature_extractor.forward(input)?;
 
@@ -258,10 +251,7 @@ pub struct VAEDecoder {
 }
 
 impl VAEDecoder {
-    pub fn new(
-        config: GenerativeConfig,
-        rng: &mut SmallRng,
-    ) -> StdResult<Self> {
+    pub fn new(config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
         // Project latent to feature space
         let mut latent_projection = Sequential::new();
         latent_projection.add(Dense::new(
@@ -368,10 +358,7 @@ pub struct VAEModel {
 }
 
 impl VAEModel {
-    pub fn new(
-        config: GenerativeConfig,
-        rng: &mut SmallRng,
-    ) -> StdResult<Self> {
+    pub fn new(config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
         let encoder = VAEEncoder::new(config.clone(), rng)?;
         let decoder = VAEDecoder::new(config.clone(), rng)?;
 
@@ -398,11 +385,7 @@ impl VAEModel {
         Ok((reconstruction, mean, logvar))
     }
 
-    fn reparameterize(
-        &self,
-        mean: &ArrayD<f32>,
-        logvar: &ArrayD<f32>,
-    ) -> StdResult<ArrayD<f32>> {
+    fn reparameterize(&self, mean: &ArrayD<f32>, logvar: &ArrayD<f32>) -> StdResult<ArrayD<f32>> {
         // Sample epsilon from standard normal
         let mut epsilon = Array::zeros(mean.raw_dim());
         let mut rng = SmallRng::seed_from_u64(42); // Fixed seed for reproducibility
@@ -516,10 +499,7 @@ pub struct GANGenerator {
 }
 
 impl GANGenerator {
-    pub fn new(
-        config: GenerativeConfig,
-        rng: &mut SmallRng,
-    ) -> StdResult<Self> {
+    pub fn new(config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
         let mut layers = Sequential::new();
 
         // Project noise to feature space
@@ -570,10 +550,7 @@ pub struct GANDiscriminator {
 }
 
 impl GANDiscriminator {
-    pub fn new(
-        config: GenerativeConfig,
-        rng: &mut SmallRng,
-    ) -> StdResult<Self> {
+    pub fn new(config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
         let mut layers = Sequential::new();
 
         let input_size = config.input_size.0 * config.input_size.1;

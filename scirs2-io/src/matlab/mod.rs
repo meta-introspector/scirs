@@ -584,6 +584,8 @@ pub fn write_mat<P: AsRef<Path>>(path: P, vars: &HashMap<String, MatType>) -> Re
         write_impl::write_variable(&mut writer, name, mat_type)?;
     }
 
-    writer.flush().map_err(|e| IoError::FileError(format!("Failed to flush writer: {}", e)))?;
+    writer
+        .flush()
+        .map_err(|e| IoError::FileError(format!("Failed to flush writer: {}", e)))?;
     Ok(())
 }

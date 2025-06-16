@@ -356,7 +356,7 @@ impl ErrorDiagnostics {
         suggestions
     }
 
-    /// Diagnose environment-specific issues
+    /// Diagnose environment-specific issues with enhanced Alpha 6 analysis
     fn diagnose_environment_issues(&self, error: &CoreError) -> Vec<String> {
         let mut diagnostics = Vec::new();
 
@@ -367,31 +367,245 @@ impl ErrorDiagnostics {
                         "Available memory: {:.2} GB",
                         mem as f64 / 1_000_000_000.0
                     ));
+                    
+                    // Enhanced memory analysis
+                    if mem < 4_000_000_000 {
+                        diagnostics.push("Low memory detected - consider using memory-efficient algorithms".to_string());
+                    }
+                    if mem > 64_000_000_000 {
+                        diagnostics.push("High memory system - can use in-memory algorithms for large datasets".to_string());
+                    }
                 }
 
                 // Check for memory-related environment variables
                 if let Some(threads) = self.environment.env_vars.get("OMP_NUM_THREADS") {
                     diagnostics.push(format!("OpenMP threads: {}", threads));
                 }
+                
+                // Check for memory management features
+                if !self.environment.features.contains(&"memory_efficient".to_string()) {
+                    diagnostics.push("Memory-efficient algorithms not enabled - consider enabling this feature".to_string());
+                }
             }
 
             CoreError::ComputationError(_) => {
                 if let Some(cores) = self.environment.cpu_cores {
                     diagnostics.push(format!("CPU cores available: {}", cores));
+                    
+                    // Enhanced CPU analysis
+                    if cores == 1 {
+                        diagnostics.push("Single-core system - parallel algorithms won't help".to_string());
+                    } else if cores > 32 {
+                        diagnostics.push("High-core count system - consider NUMA-aware algorithms".to_string());
+                    }
                 }
 
                 // Check compiler optimizations
                 #[cfg(debug_assertions)]
                 diagnostics.push("Running in debug mode - performance may be reduced".to_string());
+                
+                // Check for performance features
+                if !self.environment.features.contains(&"parallel".to_string()) {
+                    diagnostics.push("Parallel processing not enabled - could improve performance".to_string());
+                }
+                if !self.environment.features.contains(&"simd".to_string()) {
+                    diagnostics.push("SIMD optimizations not enabled - could improve numerical performance".to_string());
+                }
+            }
+
+            CoreError::TimeoutError(_) => {
+                diagnostics.push("Timeout detected - operation took longer than expected".to_string());
+                if let Some(cores) = self.environment.cpu_cores {
+                    if cores > 1 && !self.environment.features.contains(&"parallel".to_string()) {
+                        diagnostics.push("Multi-core system but parallel processing not enabled".to_string());
+                    }
+                }
             }
 
             _ => {}
         }
 
+        // General environment diagnostics
+        self.add_general_environment_diagnostics(&mut diagnostics);
+
         diagnostics
     }
 
-    /// Initialize known error patterns
+    /// Add general environment diagnostics for Alpha 6
+    fn add_general_environment_diagnostics(&self, diagnostics: &mut Vec<String>) {
+        // Check for optimal thread configuration
+        if let (Some(cores), Some(omp_threads)) = (
+            self.environment.cpu_cores,
+            self.environment.env_vars.get("OMP_NUM_THREADS")
+        ) {
+            if let Ok(omp_count) = omp_threads.parse::<usize>() {
+                if omp_count > cores {
+                    diagnostics.push("OMP_NUM_THREADS exceeds available cores - may cause oversubscription".to_string());
+                }
+            }
+        }
+
+        // Check for BLAS backend optimization
+        if self.environment.features.contains(&"openblas".to_string()) {
+            diagnostics.push("Using OpenBLAS backend - good for general computations".to_string());
+        } else if self.environment.features.contains(&"intel-mkl".to_string()) {
+            diagnostics.push("Using Intel MKL backend - optimized for Intel CPUs".to_string());
+        } else if self.environment.features.contains(&"linalg".to_string()) {
+            diagnostics.push("Linear algebra backend available but no optimized BLAS detected".to_string());
+        }
+
+        // Check for GPU capabilities
+        if self.environment.features.contains(&"gpu".to_string()) {
+            diagnostics.push("GPU acceleration available".to_string());
+            if self.environment.features.contains(&"cuda".to_string()) {
+                diagnostics.push("CUDA backend enabled for NVIDIA GPUs".to_string());
+            }
+        }
+    }
+
+    /// Perform predictive error analysis based on historical patterns (Alpha 6 feature)
+    pub fn predict_potential_errors(&self, context: &str) -> Vec<String> {
+        let mut predictions = Vec::new();
+        let history = self.error_history.lock().unwrap();
+        
+        // Analyze error frequency patterns
+        let mut error_counts: HashMap<String, usize> = HashMap::new();
+        let recent_cutoff = SystemTime::now() - Duration::from_secs(3600); // Last hour
+        
+        for occurrence in history.iter() {
+            if occurrence.timestamp >= recent_cutoff {
+                *error_counts.entry(occurrence.error_type.clone()).or_insert(0) += 1;
+            }
+        }
+        
+        // Predict based on high-frequency patterns
+        for (error_type, count) in error_counts {
+            if count >= 3 {
+                predictions.push(format!(
+                    "High risk of {} based on recent frequency ({}x in last hour)",
+                    error_type, count
+                ));
+            }
+        }
+        
+        // Context-based predictions
+        if (context.contains("matrix") || context.contains("linear_algebra")) && self.environment.available_memory.is_some_and(|mem| mem < 8_000_000_000) {
+            predictions.push("Potential memory issues with large matrix operations".to_string());
+        }
+        
+        if context.contains("optimization") || context.contains("solver") {
+            predictions.push("Potential convergence issues - consider robust initial conditions".to_string());
+        }
+        
+        if context.contains("parallel") && self.environment.cpu_cores == Some(1) {
+            predictions.push("Parallel algorithms may not be effective on single-core system".to_string());
+        }
+        
+        predictions
+    }
+
+    /// Generate domain-specific recovery strategies (Alpha 6 feature)
+    pub fn suggest_domain_recovery(&self, error: &CoreError, domain: &str) -> Vec<String> {
+        let mut strategies = Vec::new();
+        
+        match domain {
+            "linear_algebra" => {
+                match error {
+                    CoreError::MemoryError(_) => {
+                        strategies.extend(vec![
+                            "Use iterative solvers instead of direct factorization".to_string(),
+                            "Implement block algorithms for large matrices".to_string(),
+                            "Consider sparse matrix representations".to_string(),
+                            "Use out-of-core matrix algorithms".to_string(),
+                        ]);
+                    }
+                    CoreError::ConvergenceError(_) => {
+                        strategies.extend(vec![
+                            "Apply preconditioning (ILU, SSOR, or Jacobi)".to_string(),
+                            "Use more robust factorization (SVD instead of LU)".to_string(),
+                            "Check matrix conditioning and apply regularization".to_string(),
+                            "Try different solver algorithms (GMRES, BiCGSTAB)".to_string(),
+                        ]);
+                    }
+                    _ => {}
+                }
+            }
+            
+            "optimization" => {
+                match error {
+                    CoreError::ConvergenceError(_) => {
+                        strategies.extend(vec![
+                            "Use trust region methods for better global convergence".to_string(),
+                            "Apply line search algorithms with backtracking".to_string(),
+                            "Try multiple random starting points".to_string(),
+                            "Use gradient-free methods for noisy objectives".to_string(),
+                            "Implement adaptive step size control".to_string(),
+                        ]);
+                    }
+                    CoreError::DomainError(_) => {
+                        strategies.extend(vec![
+                            "Add constraint handling and projection operators".to_string(),
+                            "Use barrier methods for constrained optimization".to_string(),
+                            "Implement bounds checking and clipping".to_string(),
+                        ]);
+                    }
+                    _ => {}
+                }
+            }
+            
+            "statistics" => {
+                match error {
+                    CoreError::DomainError(_) => {
+                        strategies.extend(vec![
+                            "Use robust statistical methods for outliers".to_string(),
+                            "Apply data transformation (log, Box-Cox)".to_string(),
+                            "Implement missing data handling strategies".to_string(),
+                            "Use non-parametric methods for non-normal data".to_string(),
+                        ]);
+                    }
+                    CoreError::ComputationError(_) => {
+                        strategies.extend(vec![
+                            "Use numerically stable algorithms (Welford for variance)".to_string(),
+                            "Apply importance sampling for rare events".to_string(),
+                            "Use bootstrap methods for robust estimates".to_string(),
+                        ]);
+                    }
+                    _ => {}
+                }
+            }
+            
+            "signal_processing" => {
+                match error {
+                    CoreError::MemoryError(_) => {
+                        strategies.extend(vec![
+                            "Use streaming FFT algorithms".to_string(),
+                            "Implement overlap-add/overlap-save methods".to_string(),
+                            "Use decimation for reduced sample rates".to_string(),
+                        ]);
+                    }
+                    CoreError::ComputationError(_) => {
+                        strategies.extend(vec![
+                            "Use windowing to reduce spectral leakage".to_string(),
+                            "Apply zero-padding for better frequency resolution".to_string(),
+                            "Use advanced spectral estimation methods".to_string(),
+                        ]);
+                    }
+                    _ => {}
+                }
+            }
+            
+            _ => {
+                // Generic domain-agnostic strategies
+                strategies.push("Consider using more robust numerical algorithms".to_string());
+                strategies.push("Implement error checking and data validation".to_string());
+                strategies.push("Use iterative refinement for better accuracy".to_string());
+            }
+        }
+        
+        strategies
+    }
+
+    /// Initialize known error patterns with enhanced Alpha 6 patterns
     fn initialize_patterns() -> Vec<ErrorPattern> {
         vec![
             ErrorPattern {
@@ -406,6 +620,8 @@ impl ErrorDiagnostics {
                     "Use chunked processing for large matrices".to_string(),
                     "Consider using f32 instead of f64 to reduce memory usage".to_string(),
                     "Enable out-of-core algorithms if available".to_string(),
+                    "Use memory-mapped arrays for very large datasets".to_string(),
+                    "Consider distributed computing for extremely large problems".to_string(),
                 ],
             },
             ErrorPattern {
@@ -418,6 +634,8 @@ impl ErrorDiagnostics {
                     "Adjust convergence tolerance".to_string(),
                     "Try different initial conditions".to_string(),
                     "Use preconditioning to improve convergence".to_string(),
+                    "Consider adaptive step sizes or trust region methods".to_string(),
+                    "Check problem conditioning and scaling".to_string(),
                 ],
             },
             ErrorPattern {
@@ -430,6 +648,8 @@ impl ErrorDiagnostics {
                     "Use reshaping or broadcasting to make arrays compatible".to_string(),
                     "Verify matrix multiplication dimension compatibility (A: m×k, B: k×n)"
                         .to_string(),
+                    "Consider using automatic broadcasting utilities".to_string(),
+                    "Use array protocol for mixed array type compatibility".to_string(),
                 ],
             },
             ErrorPattern {
@@ -441,6 +661,77 @@ impl ErrorDiagnostics {
                     "Check input ranges for mathematical functions".to_string(),
                     "Handle edge cases (zero, negative values, infinities)".to_string(),
                     "Use input validation before calling functions".to_string(),
+                    "Consider using robust numerical methods for ill-conditioned problems".to_string(),
+                    "Use IEEE 754 special value handling where appropriate".to_string(),
+                ],
+            },
+            // New Alpha 6 patterns
+            ErrorPattern {
+                description: "GPU memory exhaustion in accelerated computations".to_string(),
+                error_types: vec!["MemoryError".to_string(), "ComputationError".to_string()],
+                frequency: 0,
+                common_contexts: vec!["gpu_acceleration".to_string(), "neural_networks".to_string()],
+                suggestions: vec![
+                    "Reduce batch size to fit GPU memory".to_string(),
+                    "Use gradient accumulation for large batches".to_string(),
+                    "Enable mixed precision training (fp16/fp32)".to_string(),
+                    "Consider model parallelism for very large models".to_string(),
+                    "Use CPU fallback for computations that don't fit on GPU".to_string(),
+                ],
+            },
+            ErrorPattern {
+                description: "Numerical instability in scientific computations".to_string(),
+                error_types: vec!["ComputationError".to_string(), "ConvergenceError".to_string()],
+                frequency: 0,
+                common_contexts: vec!["linear_algebra".to_string(), "ode_solving".to_string(), "pde_solving".to_string()],
+                suggestions: vec![
+                    "Use higher precision (f64 instead of f32)".to_string(),
+                    "Apply numerical stabilization techniques".to_string(),
+                    "Check condition numbers and matrix rank".to_string(),
+                    "Use pivoting strategies in decompositions".to_string(),
+                    "Consider regularization for ill-posed problems".to_string(),
+                    "Use iterative refinement for better accuracy".to_string(),
+                ],
+            },
+            ErrorPattern {
+                description: "Parallel processing overhead and contention".to_string(),
+                error_types: vec!["TimeoutError".to_string(), "ComputationError".to_string()],
+                frequency: 0,
+                common_contexts: vec!["parallel_computing".to_string(), "rayon".to_string()],
+                suggestions: vec![
+                    "Adjust thread pool size based on workload".to_string(),
+                    "Use work-stealing for better load balancing".to_string(),
+                    "Minimize false sharing in parallel algorithms".to_string(),
+                    "Consider chunking strategies for better cache locality".to_string(),
+                    "Profile thread utilization and adjust accordingly".to_string(),
+                    "Use NUMA-aware allocation for large systems".to_string(),
+                ],
+            },
+            ErrorPattern {
+                description: "Data type overflow and underflow in scientific calculations".to_string(),
+                error_types: vec!["ValueError".to_string(), "ComputationError".to_string()],
+                frequency: 0,
+                common_contexts: vec!["numerical_integration".to_string(), "statistics".to_string()],
+                suggestions: vec![
+                    "Use logarithmic computations for very large/small values".to_string(),
+                    "Implement numerical scaling and normalization".to_string(),
+                    "Use arbitrary precision arithmetic for extreme ranges".to_string(),
+                    "Apply Kahan summation for better numerical stability".to_string(),
+                    "Check for intermediate overflow in complex calculations".to_string(),
+                ],
+            },
+            ErrorPattern {
+                description: "I/O and serialization failures in scientific data".to_string(),
+                error_types: vec!["IoError".to_string(), "SerializationError".to_string()],
+                frequency: 0,
+                common_contexts: vec!["data_loading".to_string(), "checkpointing".to_string()],
+                suggestions: vec![
+                    "Use streaming I/O for large datasets".to_string(),
+                    "Implement progressive loading with error recovery".to_string(),
+                    "Use compression to reduce I/O overhead".to_string(),
+                    "Implement chunked serialization for large arrays".to_string(),
+                    "Use memory-mapped files for random access patterns".to_string(),
+                    "Consider distributed storage for very large datasets".to_string(),
                 ],
             },
         ]
@@ -475,7 +766,7 @@ impl fmt::Display for PerformanceImpact {
     }
 }
 
-/// Comprehensive error diagnostic report
+/// Comprehensive error diagnostic report with Alpha 6 enhancements
 #[derive(Debug)]
 pub struct ErrorDiagnosticReport {
     /// The original error
@@ -492,6 +783,10 @@ pub struct ErrorDiagnosticReport {
     pub contextual_suggestions: Vec<String>,
     /// Environment-specific diagnostics
     pub environment_diagnostics: Vec<String>,
+    /// Alpha 6: Predictive error analysis
+    pub predictions: Vec<String>,
+    /// Alpha 6: Domain-specific recovery strategies
+    pub domain_strategies: Vec<String>,
     /// Timestamp when report was generated
     pub generated_at: SystemTime,
 }
@@ -507,6 +802,8 @@ impl ErrorDiagnosticReport {
             performance_impact: PerformanceImpact::Unknown,
             contextual_suggestions: Vec::new(),
             environment_diagnostics: Vec::new(),
+            predictions: Vec::new(),
+            domain_strategies: Vec::new(),
             generated_at: SystemTime::now(),
         }
     }
@@ -591,6 +888,24 @@ impl ErrorDiagnosticReport {
                 report.push_str(
                     "   ⚠️  High frequency detected - this may indicate a systematic issue\n",
                 );
+            }
+            report.push('\n');
+        }
+
+        // Alpha 6: Predictive analysis
+        if !self.predictions.is_empty() {
+            report.push_str("🔮 Predictive Analysis:\n");
+            for prediction in &self.predictions {
+                report.push_str(&format!("   • {}\n", prediction));
+            }
+            report.push('\n');
+        }
+
+        // Alpha 6: Domain-specific recovery strategies
+        if !self.domain_strategies.is_empty() {
+            report.push_str("🎯 Domain-Specific Recovery Strategies:\n");
+            for (i, strategy) in self.domain_strategies.iter().enumerate() {
+                report.push_str(&format!("   {}. {}\n", i + 1, strategy));
             }
             report.push('\n');
         }

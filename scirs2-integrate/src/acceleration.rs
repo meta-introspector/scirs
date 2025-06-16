@@ -457,9 +457,11 @@ mod tests {
 
     #[test]
     fn test_anderson_with_regularization() {
-        let mut options = AcceleratorOptions::default();
-        options.regularization = 1e-8;
-        options.memory_depth = 3;
+        let options = AcceleratorOptions {
+            regularization: 1e-8,
+            memory_depth: 3,
+            ..Default::default()
+        };
 
         let mut accelerator = AndersonAccelerator::new(2, options);
 

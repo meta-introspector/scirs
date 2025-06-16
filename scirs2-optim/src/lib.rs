@@ -29,15 +29,24 @@
 
 #![warn(missing_docs)]
 
+pub mod adaptive_selection;
+pub mod benchmarking;
+pub mod curriculum_optimization;
+pub mod distributed;
 pub mod error;
+pub mod gradient_accumulation;
 pub mod gradient_processing;
 pub mod memory_efficient;
+pub mod meta_learning;
 pub mod metrics;
+pub mod neural_integration;
 pub mod optimizer_composition;
 pub mod optimizers;
 pub mod parameter_groups;
 pub mod regularizers;
 pub mod schedulers;
+pub mod second_order;
+pub mod training_stabilization;
 pub mod utils;
 
 // Re-exports for convenience
@@ -48,3 +57,42 @@ pub use optimizer_composition::*;
 pub use optimizers::*;
 pub use regularizers::*;
 pub use schedulers::*;
+
+// Selective re-exports to avoid conflicts
+pub use adaptive_selection::{
+    AdaptiveOptimizerSelector, OptimizerStatistics, OptimizerType, PerformanceMetrics,
+    ProblemCharacteristics, ProblemType, SelectionNetwork, SelectionStrategy,
+};
+pub use benchmarking::visualization::{
+    OptimizerDashboard, OptimizerStateSnapshot, OptimizerStateVisualizer, VisualizationExport,
+};
+pub use benchmarking::{
+    BenchmarkResult, GradientFlowAnalyzer, GradientFlowStats, OptimizerBenchmark, VisualizationData,
+};
+pub use curriculum_optimization::{
+    AdaptiveCurriculum, AdversarialAttack, AdversarialConfig, CurriculumManager, CurriculumState,
+    CurriculumStrategy, ImportanceWeightingStrategy,
+};
+pub use distributed::{
+    AveragingStrategy, CommunicationResult, CompressedGradient, CompressionStrategy,
+    DistributedCoordinator, GradientCompressor, ParameterAverager, ParameterServer,
+};
+pub use gradient_accumulation::{
+    AccumulationMode, GradientAccumulator as GradAccumulator, MicroBatchTrainer,
+    VariableAccumulator,
+};
+pub use meta_learning::{
+    AcquisitionFunction, HyperparameterOptimizer, HyperparameterPredictor, HyperparameterStrategy,
+    MetaOptimizer, MetaOptimizerTrait, NeuralOptimizer, OptimizationTrajectory, SGDMetaOptimizer,
+    UpdateNetwork,
+};
+pub use neural_integration::architecture_aware::{
+    ArchitectureAwareOptimizer, ArchitectureStrategy,
+};
+pub use neural_integration::forward_backward::{BackwardHook, ForwardHook, NeuralIntegration};
+pub use neural_integration::{
+    LayerArchitecture, LayerId, OptimizationConfig, ParamId, ParameterManager, ParameterMetadata,
+    ParameterOptimizer, ParameterType,
+};
+pub use second_order::{HessianInfo, Newton, SecondOrderOptimizer, LBFGS as SecondOrderLBFGS};
+pub use training_stabilization::{AveragingMethod, ModelEnsemble, PolyakAverager, WeightAverager};

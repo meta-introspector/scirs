@@ -5,11 +5,11 @@
 //! access patterns and performance metrics.
 
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use super::prefetch::{AccessPattern, AccessPatternTracker, PrefetchConfig, PrefetchStats};
-use crate::error::{CoreError, CoreResult, ErrorContext};
+use crate::error::CoreResult;
 
 /// Maximum number of strategies to try during exploration phase
 const MAX_EXPLORATION_STRATEGIES: usize = 5;
@@ -121,6 +121,9 @@ impl AdaptivePatternTracker {
     pub fn new(config: PrefetchConfig) -> Self {
         let mut strategies = HashMap::new();
 
+        // Store history_size before moving config
+        let history_size = config.history_size;
+
         // Initialize default strategies with neutral Q-values
         for strategy in [
             PrefetchStrategy::Sequential(2),
@@ -148,7 +151,7 @@ impl AdaptivePatternTracker {
 
         Self {
             config,
-            history: VecDeque::with_capacity(config.history_size),
+            history: VecDeque::with_capacity(history_size),
             current_pattern: AccessPattern::Random,
             stride: None,
             strategy_performance: strategies,
@@ -352,9 +355,9 @@ impl AdaptivePatternTracker {
             }
             AccessPattern::Custom => {
                 // If we have dimensional information, try to detect specific patterns
-                if let Some(dims) = &self.dimensions {
+                if let Some(dims) = self.dimensions.clone() {
                     // Create pattern-specific strategies
-                    let detected_patterns = self.detect_dimensional_patterns(dims);
+                    let detected_patterns = self.detect_dimensional_patterns(&dims);
 
                     for pattern_name in detected_patterns {
                         // For matrix traversal, use hybrid strategy
@@ -662,7 +665,7 @@ impl AdaptivePatternTracker {
                 (1..=prefetch_count).map(|i| latest + stride * i).collect()
             }
             PrefetchStrategy::Pattern {
-                window_size,
+                window_size: _,
                 lookahead,
             } => {
                 // Use pattern matching to predict future blocks

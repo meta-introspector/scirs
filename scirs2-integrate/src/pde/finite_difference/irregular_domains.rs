@@ -469,7 +469,7 @@ mod tests {
     #[test]
     fn test_boundary_conditions() {
         let domain_func = Box::new(|x: f64, y: f64| -> bool {
-            x >= 0.0 && x <= 1.0 && y >= 0.0 && y <= 1.0 // Unit square
+            (0.0..=1.0).contains(&x) && (0.0..=1.0).contains(&y) // Unit square
         });
 
         let mut grid = IrregularGrid::new((-0.1, 1.1), (-0.1, 1.1), 13, 13, domain_func).unwrap();
@@ -492,8 +492,9 @@ mod tests {
 
     #[test]
     fn test_laplacian_matrix_creation() {
-        let domain_func =
-            Box::new(|x: f64, y: f64| -> bool { x >= 0.0 && x <= 1.0 && y >= 0.0 && y <= 1.0 });
+        let domain_func = Box::new(|x: f64, y: f64| -> bool {
+            (0.0..=1.0).contains(&x) && (0.0..=1.0).contains(&y)
+        });
 
         let grid = IrregularGrid::new((0.0, 1.0), (0.0, 1.0), 5, 5, domain_func).unwrap();
 

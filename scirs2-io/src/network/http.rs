@@ -5,8 +5,8 @@
 
 use crate::error::{IoError, Result};
 use crate::network::NetworkConfig;
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 use std::time::{Duration, Instant};
 
 /// HTTP request method
@@ -81,16 +81,18 @@ impl HttpClient {
         for (key, value) in &self.config.headers {
             if let (Ok(header_name), Ok(header_value)) = (
                 reqwest::header::HeaderName::from_bytes(key.as_bytes()),
-                reqwest::header::HeaderValue::from_str(value)
+                reqwest::header::HeaderValue::from_str(value),
             ) {
                 headers.insert(header_name, header_value);
             }
         }
         client_builder = client_builder.default_headers(headers);
 
-        self.client = Some(client_builder.build()
-            .map_err(|e| IoError::NetworkError(format!("Failed to create HTTP client: {}", e)))?);
-        
+        self.client =
+            Some(client_builder.build().map_err(|e| {
+                IoError::NetworkError(format!("Failed to create HTTP client: {}", e))
+            })?);
+
         Ok(())
     }
 
@@ -109,7 +111,7 @@ impl HttpClient {
         let mut retries = 0;
         loop {
             let start_time = Instant::now();
-            
+
             match self.download_with_retry(client, url, local_path).await {
                 Ok(_) => {
                     let duration = start_time.elapsed();
@@ -121,9 +123,13 @@ impl HttpClient {
                     if retries > self.config.max_retries {
                         return Err(e);
                     }
-                    
+
                     let delay = Duration::from_millis(100 * 2_u64.pow(retries - 1));
-                    log::warn!("Download failed, retrying in {}ms: {}", delay.as_millis(), e);
+                    log::warn!(
+                        "Download failed, retrying in {}ms: {}",
+                        delay.as_millis(),
+                        e
+                    );
                     tokio::time::sleep(delay).await;
                 }
             }
@@ -131,17 +137,26 @@ impl HttpClient {
     }
 
     #[cfg(feature = "reqwest")]
-    async fn download_with_retry(&self, client: &reqwest::Client, url: &str, local_path: &Path) -> Result<()> {
-        let response = client.get(url)
+    async fn download_with_retry(
+        &self,
+        client: &reqwest::Client,
+        url: &str,
+        local_path: &Path,
+    ) -> Result<()> {
+        let response = client
+            .get(url)
             .send()
             .await
             .map_err(|e| IoError::NetworkError(format!("HTTP request failed: {}", e)))?;
 
         if !response.status().is_success() {
             return Err(IoError::NetworkError(format!(
-                "HTTP error {}: {}", 
+                "HTTP error {}: {}",
                 response.status().as_u16(),
-                response.status().canonical_reason().unwrap_or("Unknown error")
+                response
+                    .status()
+                    .canonical_reason()
+                    .unwrap_or("Unknown error")
             )));
         }
 
@@ -156,18 +171,19 @@ impl HttpClient {
         use std::io::Write;
 
         while let Some(chunk) = stream.next().await {
-            let chunk = chunk
-                .map_err(|e| IoError::NetworkError(format!("Failed to read chunk: {}", e)))?;
-            
+            let chunk =
+                chunk.map_err(|e| IoError::NetworkError(format!("Failed to read chunk: {}", e)))?;
+
             file.write_all(&chunk)
                 .map_err(|e| IoError::FileError(format!("Failed to write chunk: {}", e)))?;
-            
+
             downloaded += chunk.len() as u64;
-            
+
             // Progress reporting could be added here
             if let Some(total) = content_length {
                 let progress = (downloaded as f64 / total as f64 * 100.0) as u8;
-                if downloaded % (total / 20).max(1) == 0 { // Report every 5%
+                if downloaded % (total / 20).max(1) == 0 {
+                    // Report every 5%
                     log::debug!("Download progress: {}%", progress);
                 }
             }
@@ -183,7 +199,10 @@ impl HttpClient {
         let local_path = local_path.as_ref();
 
         if !local_path.exists() {
-            return Err(IoError::FileError(format!("File does not exist: {}", local_path.display())));
+            return Err(IoError::FileError(format!(
+                "File does not exist: {}",
+                local_path.display()
+            )));
         }
 
         let file_content = std::fs::read(local_path)
@@ -192,11 +211,15 @@ impl HttpClient {
         let mut retries = 0;
         loop {
             let start_time = Instant::now();
-            
+
             match self.upload_with_retry(client, &file_content, url).await {
                 Ok(_) => {
                     let duration = start_time.elapsed();
-                    log::info!("Uploaded {} in {:.2}s", local_path.display(), duration.as_secs_f64());
+                    log::info!(
+                        "Uploaded {} in {:.2}s",
+                        local_path.display(),
+                        duration.as_secs_f64()
+                    );
                     return Ok(());
                 }
                 Err(e) => {
@@ -204,7 +227,7 @@ impl HttpClient {
                     if retries > self.config.max_retries {
                         return Err(e);
                     }
-                    
+
                     let delay = Duration::from_millis(100 * 2_u64.pow(retries - 1));
                     log::warn!("Upload failed, retrying in {}ms: {}", delay.as_millis(), e);
                     tokio::time::sleep(delay).await;
@@ -214,8 +237,14 @@ impl HttpClient {
     }
 
     #[cfg(feature = "reqwest")]
-    async fn upload_with_retry(&self, client: &reqwest::Client, content: &[u8], url: &str) -> Result<()> {
-        let response = client.put(url)
+    async fn upload_with_retry(
+        &self,
+        client: &reqwest::Client,
+        content: &[u8],
+        url: &str,
+    ) -> Result<()> {
+        let response = client
+            .put(url)
             .body(content.to_vec())
             .send()
             .await
@@ -223,9 +252,12 @@ impl HttpClient {
 
         if !response.status().is_success() {
             return Err(IoError::NetworkError(format!(
-                "HTTP upload error {}: {}", 
+                "HTTP upload error {}: {}",
                 response.status().as_u16(),
-                response.status().canonical_reason().unwrap_or("Unknown error")
+                response
+                    .status()
+                    .canonical_reason()
+                    .unwrap_or("Unknown error")
             )));
         }
 
@@ -234,9 +266,14 @@ impl HttpClient {
 
     /// Make a custom HTTP request
     #[cfg(feature = "reqwest")]
-    pub async fn request(&self, method: HttpMethod, url: &str, body: Option<&[u8]>) -> Result<HttpResponse> {
+    pub async fn request(
+        &self,
+        method: HttpMethod,
+        url: &str,
+        body: Option<&[u8]>,
+    ) -> Result<HttpResponse> {
         let client = self.get_client()?;
-        
+
         let mut request_builder = match method {
             HttpMethod::GET => client.get(url),
             HttpMethod::POST => client.post(url),
@@ -249,20 +286,28 @@ impl HttpClient {
             request_builder = request_builder.body(body_data.to_vec());
         }
 
-        let response = request_builder.send().await
+        let response = request_builder
+            .send()
+            .await
             .map_err(|e| IoError::NetworkError(format!("HTTP request failed: {}", e)))?;
 
         let status = response.status().as_u16();
-        let headers = response.headers().iter()
+        let headers = response
+            .headers()
+            .iter()
             .map(|(k, v)| (k.as_str().to_string(), v.to_str().unwrap_or("").to_string()))
             .collect();
-        
+
         let content_length = response.content_length();
-        let content_type = response.headers().get(reqwest::header::CONTENT_TYPE)
+        let content_type = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
             .and_then(|v| v.to_str().ok())
             .map(|s| s.to_string());
 
-        let body = response.bytes().await
+        let body = response
+            .bytes()
+            .await
             .map_err(|e| IoError::NetworkError(format!("Failed to read response body: {}", e)))?
             .to_vec();
 
@@ -293,34 +338,50 @@ impl HttpClient {
 
     #[cfg(feature = "reqwest")]
     fn get_client(&self) -> Result<&reqwest::Client> {
-        self.client.as_ref()
+        self.client
+            .as_ref()
             .ok_or_else(|| IoError::ConfigError("HTTP client not initialized".to_string()))
     }
 
     // Fallback implementations when reqwest feature is not enabled
     #[cfg(not(feature = "reqwest"))]
     pub async fn download<P: AsRef<Path>>(&self, _url: &str, _local_path: P) -> Result<()> {
-        Err(IoError::ConfigError("HTTP support requires 'reqwest' feature".to_string()))
+        Err(IoError::ConfigError(
+            "HTTP support requires 'reqwest' feature".to_string(),
+        ))
     }
 
     #[cfg(not(feature = "reqwest"))]
     pub async fn upload<P: AsRef<Path>>(&self, _local_path: P, _url: &str) -> Result<()> {
-        Err(IoError::ConfigError("HTTP support requires 'reqwest' feature".to_string()))
+        Err(IoError::ConfigError(
+            "HTTP support requires 'reqwest' feature".to_string(),
+        ))
     }
 
     #[cfg(not(feature = "reqwest"))]
-    pub async fn request(&self, _method: HttpMethod, _url: &str, _body: Option<&[u8]>) -> Result<HttpResponse> {
-        Err(IoError::ConfigError("HTTP support requires 'reqwest' feature".to_string()))
+    pub async fn request(
+        &self,
+        _method: HttpMethod,
+        _url: &str,
+        _body: Option<&[u8]>,
+    ) -> Result<HttpResponse> {
+        Err(IoError::ConfigError(
+            "HTTP support requires 'reqwest' feature".to_string(),
+        ))
     }
 
     #[cfg(not(feature = "reqwest"))]
     pub async fn check_url(&self, _url: &str) -> Result<bool> {
-        Err(IoError::ConfigError("HTTP support requires 'reqwest' feature".to_string()))
+        Err(IoError::ConfigError(
+            "HTTP support requires 'reqwest' feature".to_string(),
+        ))
     }
 
     #[cfg(not(feature = "reqwest"))]
     pub async fn get_remote_file_size(&self, _url: &str) -> Result<Option<u64>> {
-        Err(IoError::ConfigError("HTTP support requires 'reqwest' feature".to_string()))
+        Err(IoError::ConfigError(
+            "HTTP support requires 'reqwest' feature".to_string(),
+        ))
     }
 }
 
@@ -328,18 +389,21 @@ impl HttpClient {
 
 /// Download multiple files concurrently
 #[cfg(feature = "reqwest")]
-pub async fn download_concurrent(downloads: Vec<(String, String)>, max_concurrent: usize) -> Result<Vec<Result<()>>> {
+pub async fn download_concurrent(
+    downloads: Vec<(String, String)>,
+    max_concurrent: usize,
+) -> Result<Vec<Result<()>>> {
     use futures_util::stream::{FuturesUnordered, StreamExt};
-    
+
     let client = HttpClient::new(NetworkConfig::default());
-    
+
     let semaphore = std::sync::Arc::new(tokio::sync::Semaphore::new(max_concurrent));
     let mut futures = FuturesUnordered::new();
 
     for (url, local_path) in downloads {
         let client_clone = &client;
         let semaphore_clone = semaphore.clone();
-        
+
         futures.push(async move {
             let _permit = semaphore_clone.acquire().await.unwrap();
             client_clone.download(&url, &local_path).await
@@ -399,7 +463,7 @@ mod tests {
     fn test_http_response_creation() {
         let mut headers = HashMap::new();
         headers.insert("content-type".to_string(), "application/json".to_string());
-        
+
         let response = HttpResponse {
             status: 200,
             headers,
@@ -418,7 +482,7 @@ mod tests {
     fn test_http_client_creation() {
         let config = NetworkConfig::default();
         let client = HttpClient::new(config);
-        
+
         // Client should be created successfully
         assert!(true); // Basic creation test
     }
@@ -436,10 +500,10 @@ mod tests {
     fn test_calculate_speed() {
         let duration = Duration::from_secs(1);
         assert_eq!(calculate_speed(1024, duration), 1024.0);
-        
+
         let duration = Duration::from_secs(2);
         assert_eq!(calculate_speed(2048, duration), 1024.0);
-        
+
         let duration = Duration::from_secs(0);
         assert_eq!(calculate_speed(1024, duration), 0.0);
     }
@@ -454,22 +518,24 @@ mod tests {
     async fn test_http_client_without_reqwest_feature() {
         let config = NetworkConfig::default();
         let client = HttpClient::new(config);
-        
+
         // These should return feature errors when reqwest is not enabled
         #[cfg(not(feature = "reqwest"))]
         {
             let download_result = client.download("http://example.com", "test.txt").await;
             assert!(download_result.is_err());
-            
+
             let upload_result = client.upload("test.txt", "http://example.com").await;
             assert!(upload_result.is_err());
-            
-            let request_result = client.request(HttpMethod::GET, "http://example.com", None).await;
+
+            let request_result = client
+                .request(HttpMethod::GET, "http://example.com", None)
+                .await;
             assert!(request_result.is_err());
-            
+
             let check_result = client.check_url("http://example.com").await;
             assert!(check_result.is_err());
-            
+
             let size_result = client.get_remote_file_size("http://example.com").await;
             assert!(size_result.is_err());
         }

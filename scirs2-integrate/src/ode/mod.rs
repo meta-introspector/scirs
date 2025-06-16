@@ -14,12 +14,20 @@
 pub mod types;
 
 // Public modules
+pub mod mechanical;
 pub mod methods;
+pub mod multirate;
 pub mod solver;
 pub mod utils;
 
 // Re-export core types
 pub use self::types::{MassMatrix, MassMatrixType, ODEMethod, ODEOptions, ODEResult};
+
+// Re-export mechanical systems types
+pub use self::mechanical::{
+    MechanicalConfig, MechanicalIntegrator, MechanicalProperties, MechanicalSystemType,
+    RigidBodyState, systems,
+};
 
 // Re-export solver functions
 pub use self::solver::{solve_ivp, solve_ivp_with_events};
@@ -28,4 +36,9 @@ pub use self::solver::{solve_ivp, solve_ivp_with_events};
 pub use self::utils::events::{
     terminal_event, EventAction, EventDirection, EventSpec, ODEOptionsWithEvents,
     ODEResultWithEvents,
+};
+
+// Re-export multirate types
+pub use self::multirate::{
+    MultirateMethod, MultirateOptions, MultirateSolver, MultirateSystem,
 };

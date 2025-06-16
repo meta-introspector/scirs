@@ -9,7 +9,7 @@ use super::chunked::ChunkingStrategy;
 use super::memmap::{AccessMode, MemoryMappedArray};
 use super::memmap_slice::MemoryMappedSlice;
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use ndarray::{self, Array, Dimension, Zip};
+use ndarray::{self, Array, Zip};
 use std::ops::{Add, Div, Mul, Sub};
 
 /// Trait for zero-copy operations on memory-mapped arrays.
@@ -207,7 +207,7 @@ pub trait ZeroCopyOps<A: Clone + Copy + 'static> {
         A: Add<Output = A> + Div<Output = A> + From<u8> + From<usize>;
 }
 
-impl<A: Clone + Copy + 'static> ZeroCopyOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync> ZeroCopyOps<A> for MemoryMappedArray<A> {
     fn map_zero_copy<F>(&self, f: F) -> CoreResult<MemoryMappedArray<A>>
     where
         F: Fn(A) -> A + Send + Sync,
@@ -217,7 +217,7 @@ impl<A: Clone + Copy + 'static> ZeroCopyOps<A> for MemoryMappedArray<A> {
         let temp_path = temp_file.path().to_path_buf();
 
         // Create an output memory-mapped array with the same shape
-        let shape = &self.shape;
+        let _shape = &self.shape;
         let element_size = std::mem::size_of::<A>();
         let file_size = self.size * element_size;
 
@@ -245,29 +245,27 @@ impl<A: Clone + Copy + 'static> ZeroCopyOps<A> for MemoryMappedArray<A> {
             // Calculate the number of chunks
             let num_chunks = (self.size + chunk_size - 1) / chunk_size;
 
-            // Process each chunk in parallel
-            (0..num_chunks).into_par_iter().try_for_each(|chunk_idx| {
+            // Process each chunk sequentially to avoid mutable borrow issues
+            let array = self.as_array::<ndarray::IxDyn>()?;
+            let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
+            
+            for chunk_idx in 0..num_chunks {
                 // Calculate chunk bounds
                 let start = chunk_idx * chunk_size;
                 let end = (start + chunk_size).min(self.size);
 
                 // Get the data for this chunk
-                let array = self.as_array::<ndarray::IxDyn>()?;
                 let chunk = &array.as_slice().unwrap()[start..end];
 
                 // Apply the mapping function to each element in the chunk
                 let mapped_chunk: Vec<A> = chunk.iter().map(|&x| f(x)).collect();
 
                 // Copy the mapped chunk to the output at the same position
-                // Get a mutable view of the output array
-                let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
                 let out_slice = &mut out_array.as_slice_mut().unwrap()[start..end];
 
                 // Copy the mapped chunk to the output
                 out_slice.copy_from_slice(&mapped_chunk);
-
-                Ok(()) as CoreResult<()>
-            })?;
+            }
         }
 
         #[cfg(not(feature = "parallel"))]
@@ -276,7 +274,7 @@ impl<A: Clone + Copy + 'static> ZeroCopyOps<A> for MemoryMappedArray<A> {
             use super::memmap_chunks::MemoryMappedChunks;
 
             let chunk_size = 1024 * 1024; // 1M elements
-            let strategy = ChunkingStrategy::Fixed(chunk_size);
+            let _strategy = ChunkingStrategy::Fixed(chunk_size);
 
             // Manually process chunks instead of using process_chunks_mut
             for chunk_idx in 0..(self.size + chunk_size - 1) / chunk_size {
@@ -312,7 +310,7 @@ impl<A: Clone + Copy + 'static> ZeroCopyOps<A> for MemoryMappedArray<A> {
 
         // Process the input array in chunks
         let chunk_size = 1024 * 1024; // 1M elements
-        let strategy = ChunkingStrategy::Fixed(chunk_size);
+        let _strategy = ChunkingStrategy::Fixed(chunk_size);
 
         // Since we can't use process_chunks directly, we'll implement manually
         let num_chunks = (self.size + chunk_size - 1) / chunk_size;
@@ -356,7 +354,7 @@ impl<A: Clone + Copy + 'static> ZeroCopyOps<A> for MemoryMappedArray<A> {
         let temp_path = temp_file.path().to_path_buf();
 
         // Create an output memory-mapped array with the same shape
-        let shape = &self.shape;
+        let _shape = &self.shape;
         let element_size = std::mem::size_of::<A>();
         let file_size = self.size * element_size;
 
@@ -374,7 +372,7 @@ impl<A: Clone + Copy + 'static> ZeroCopyOps<A> for MemoryMappedArray<A> {
 
         // Process the arrays in chunks
         let chunk_size = 1024 * 1024; // 1M elements
-        let strategy = ChunkingStrategy::Fixed(chunk_size);
+        let _strategy = ChunkingStrategy::Fixed(chunk_size);
 
         // Calculate the number of chunks
         let num_chunks = (self.size + chunk_size - 1) / chunk_size;
@@ -569,7 +567,7 @@ pub trait BroadcastOps<A: Clone + Copy + 'static> {
         F: Fn(A, A) -> A + Send + Sync;
 }
 
-impl<A: Clone + Copy + 'static> BroadcastOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync> BroadcastOps<A> for MemoryMappedArray<A> {
     fn broadcast_op<F>(&self, other: &Self, f: F) -> CoreResult<MemoryMappedArray<A>>
     where
         F: Fn(A, A) -> A + Send + Sync,
@@ -722,7 +720,7 @@ pub trait ArithmeticOps<A: Clone + Copy + 'static> {
         A: Div<Output = A>;
 }
 
-impl<A: Clone + Copy + 'static> ArithmeticOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync> ArithmeticOps<A> for MemoryMappedArray<A> {
     fn add(&self, other: &Self) -> CoreResult<MemoryMappedArray<A>>
     where
         A: Add<Output = A>,

@@ -8,10 +8,10 @@
 //! - Quality-preserving image operations
 
 use crate::error::{IoError, Result};
-use crate::image::{ImageData, ImageFormat, ColorMode};
+use crate::image::{ColorMode, ImageData, ImageFormat};
 use ndarray::Array3;
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 
 /// Compression quality settings
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -159,15 +159,22 @@ impl EnhancedImageProcessor {
 
         for level in 1..=config.levels {
             let scale = config.scale_factor.powi(level as i32);
-            let new_width = ((image.metadata.width as f64) * scale).max(config.min_size as f64) as u32;
-            let new_height = ((image.metadata.height as f64) * scale).max(config.min_size as f64) as u32;
+            let new_width =
+                ((image.metadata.width as f64) * scale).max(config.min_size as f64) as u32;
+            let new_height =
+                ((image.metadata.height as f64) * scale).max(config.min_size as f64) as u32;
 
             // Stop if we've reached minimum size
             if new_width < config.min_size || new_height < config.min_size {
                 break;
             }
 
-            current_image = self.resize_with_interpolation(&current_image, new_width, new_height, config.interpolation)?;
+            current_image = self.resize_with_interpolation(
+                &current_image,
+                new_width,
+                new_height,
+                config.interpolation,
+            )?;
             levels.push(current_image.clone());
         }
 
@@ -193,11 +200,13 @@ impl EnhancedImageProcessor {
             image::RgbImage::from_raw(width as u32, height as u32, raw_data)
                 .ok_or_else(|| IoError::FormatError("Invalid RGB image dimensions".to_string()))?
         } else {
-            return Err(IoError::FormatError("Unsupported number of channels".to_string()));
+            return Err(IoError::FormatError(
+                "Unsupported number of channels".to_string(),
+            ));
         };
 
         let dynamic_img = image::DynamicImage::ImageRgb8(img_buffer);
-        
+
         let filter = match method {
             InterpolationMethod::Nearest => image::imageops::FilterType::Nearest,
             InterpolationMethod::Linear => image::imageops::FilterType::Triangle,
@@ -210,9 +219,10 @@ impl EnhancedImageProcessor {
         let resized_raw = rgb_img.into_raw();
 
         let resized_data = Array3::from_shape_vec(
-            (new_height as usize, new_width as usize, channels), 
-            resized_raw
-        ).map_err(|e| IoError::FormatError(e.to_string()))?;
+            (new_height as usize, new_width as usize, channels),
+            resized_raw,
+        )
+        .map_err(|e| IoError::FormatError(e.to_string()))?;
 
         let mut new_metadata = image.metadata.clone();
         new_metadata.width = new_width;
@@ -234,7 +244,7 @@ impl EnhancedImageProcessor {
     ) -> Result<()> {
         let path = path.as_ref();
         let compression = compression.unwrap_or(self.compression.clone());
-        
+
         let (height, width, _) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
@@ -246,43 +256,49 @@ impl EnhancedImageProcessor {
         match format {
             ImageFormat::PNG => {
                 // PNG is always lossless - use the standard save method
-                dynamic_img.save_with_format(path, image::ImageFormat::Png)
+                dynamic_img
+                    .save_with_format(path, image::ImageFormat::Png)
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-            },
+            }
             ImageFormat::JPEG => {
                 // For JPEG, we need to use a more manual approach to control quality
-                let file = std::fs::File::create(path)
-                    .map_err(|e| IoError::FileError(e.to_string()))?;
+                let file =
+                    std::fs::File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
                 let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(
-                    file, 
-                    compression.quality.value()
+                    file,
+                    compression.quality.value(),
                 );
                 if compression.progressive {
                     // Note: Progressive JPEG not directly supported by image crate
                     // This would require additional dependencies
                 }
-                encoder.encode(
-                    dynamic_img.as_bytes(),
-                    width as u32,
-                    height as u32,
-                    image::ColorType::Rgb8,
-                ).map_err(|e| IoError::FileError(e.to_string()))?;
-            },
+                encoder
+                    .encode(
+                        dynamic_img.as_bytes(),
+                        width as u32,
+                        height as u32,
+                        image::ColorType::Rgb8,
+                    )
+                    .map_err(|e| IoError::FileError(e.to_string()))?;
+            }
             ImageFormat::WEBP => {
                 // WebP supports both lossy and lossless
                 if compression.quality == CompressionQuality::Lossless {
                     // Use lossless WebP encoding
-                    dynamic_img.save_with_format(path, image::ImageFormat::WebP)
+                    dynamic_img
+                        .save_with_format(path, image::ImageFormat::WebP)
                         .map_err(|e| IoError::FileError(e.to_string()))?;
                 } else {
                     // Use lossy WebP encoding
-                    dynamic_img.save_with_format(path, image::ImageFormat::WebP)
+                    dynamic_img
+                        .save_with_format(path, image::ImageFormat::WebP)
                         .map_err(|e| IoError::FileError(e.to_string()))?;
                 }
-            },
+            }
             _ => {
                 // Use default encoding for other formats
-                dynamic_img.save_with_format(path, format.into())
+                dynamic_img
+                    .save_with_format(path, format.into())
                     .map_err(|e| IoError::FileError(e.to_string()))?;
             }
         }
@@ -293,7 +309,7 @@ impl EnhancedImageProcessor {
     /// Convert image to grayscale while preserving luminance
     pub fn to_grayscale(&self, image: &ImageData) -> Result<ImageData> {
         let (height, width, channels) = image.data.dim();
-        
+
         if channels != 3 {
             return Err(IoError::FormatError("Expected RGB image".to_string()));
         }
@@ -305,10 +321,10 @@ impl EnhancedImageProcessor {
                 let r = image.data[[y, x, 0]] as f32;
                 let g = image.data[[y, x, 1]] as f32;
                 let b = image.data[[y, x, 2]] as f32;
-                
+
                 // Use luminance formula: 0.299*R + 0.587*G + 0.114*B
                 let gray = (0.299 * r + 0.587 * g + 0.114 * b) as u8;
-                
+
                 gray_data[[y, x, 0]] = gray;
                 gray_data[[y, x, 1]] = gray;
                 gray_data[[y, x, 2]] = gray;
@@ -394,7 +410,7 @@ impl EnhancedImageProcessor {
     pub fn sharpen(&self, image: &ImageData, amount: f32, radius: f32) -> Result<ImageData> {
         // Create blurred version
         let blurred = self.gaussian_blur(image, radius)?;
-        
+
         let (height, width, channels) = image.data.dim();
         let mut sharpened_data = Array3::zeros((height, width, channels));
 
@@ -465,8 +481,10 @@ impl ImagePyramid {
 
         for level in 0..self.num_levels() {
             if let Some(level_image) = self.get_level(level) {
-                let width_diff = (level_image.metadata.width as i32 - target_width as i32).abs() as u32;
-                let height_diff = (level_image.metadata.height as i32 - target_height as i32).abs() as u32;
+                let width_diff =
+                    (level_image.metadata.width as i32 - target_width as i32).abs() as u32;
+                let height_diff =
+                    (level_image.metadata.height as i32 - target_height as i32).abs() as u32;
                 let total_diff = width_diff + height_diff;
 
                 if total_diff < best_diff {
@@ -495,7 +513,11 @@ pub fn create_image_pyramid(image: &ImageData) -> Result<ImagePyramid> {
 }
 
 /// Save image with lossless compression
-pub fn save_lossless<P: AsRef<Path>>(image: &ImageData, path: P, format: ImageFormat) -> Result<()> {
+pub fn save_lossless<P: AsRef<Path>>(
+    image: &ImageData,
+    path: P,
+    format: ImageFormat,
+) -> Result<()> {
     let processor = EnhancedImageProcessor::new();
     let compression = CompressionOptions {
         quality: CompressionQuality::Lossless,
@@ -507,7 +529,11 @@ pub fn save_lossless<P: AsRef<Path>>(image: &ImageData, path: P, format: ImageFo
 }
 
 /// Save image with high quality compression
-pub fn save_high_quality<P: AsRef<Path>>(image: &ImageData, path: P, format: ImageFormat) -> Result<()> {
+pub fn save_high_quality<P: AsRef<Path>>(
+    image: &ImageData,
+    path: P,
+    format: ImageFormat,
+) -> Result<()> {
     let processor = EnhancedImageProcessor::new();
     let compression = CompressionOptions {
         quality: CompressionQuality::High,
@@ -541,7 +567,11 @@ pub fn batch_convert_with_compression<P1: AsRef<Path>, P2: AsRef<Path>>(
         let file_stem = input_path
             .file_stem()
             .ok_or_else(|| IoError::FileError("Invalid file name".to_string()))?;
-        let output_filename = format!("{}.{}", file_stem.to_string_lossy(), target_format.extension());
+        let output_filename = format!(
+            "{}.{}",
+            file_stem.to_string_lossy(),
+            target_format.extension()
+        );
         let output_path = output_dir.join(output_filename);
 
         let image_data = load_image(&input_path)?;
@@ -611,7 +641,7 @@ mod tests {
             optimize: false,
             compression_level: Some(5),
         };
-        
+
         let processor = EnhancedImageProcessor::new().with_compression(compression.clone());
         assert_eq!(processor.compression.quality.value(), 100);
         assert!(processor.compression.progressive);
@@ -634,10 +664,10 @@ mod tests {
             min_size: 10,
             interpolation: InterpolationMethod::Linear,
         };
-        
+
         let processor = EnhancedImageProcessor::new();
         let pyramid = processor.create_pyramid(&image, config).unwrap();
-        
+
         assert_eq!(pyramid.original.metadata.width, 100);
         assert_eq!(pyramid.original.metadata.height, 100);
         assert!(pyramid.levels.len() <= 2);
@@ -647,12 +677,14 @@ mod tests {
     fn test_pyramid_level_access() {
         let image = create_test_image();
         let processor = EnhancedImageProcessor::new();
-        let pyramid = processor.create_pyramid(&image, PyramidConfig::default()).unwrap();
-        
+        let pyramid = processor
+            .create_pyramid(&image, PyramidConfig::default())
+            .unwrap();
+
         // Level 0 should be the original
         assert!(pyramid.get_level(0).is_some());
         assert_eq!(pyramid.get_level(0).unwrap().metadata.width, 100);
-        
+
         // Check number of levels
         assert!(pyramid.num_levels() >= 1);
     }
@@ -661,12 +693,14 @@ mod tests {
     fn test_find_best_pyramid_level() {
         let image = create_test_image();
         let processor = EnhancedImageProcessor::new();
-        let pyramid = processor.create_pyramid(&image, PyramidConfig::default()).unwrap();
-        
+        let pyramid = processor
+            .create_pyramid(&image, PyramidConfig::default())
+            .unwrap();
+
         // Target size close to original should return level 0
         let best_level = pyramid.find_best_level(100, 100);
         assert_eq!(best_level, 0);
-        
+
         // Very small target should return higher level
         let best_level = pyramid.find_best_level(10, 10);
         assert!(best_level > 0 || pyramid.num_levels() == 1);
@@ -678,7 +712,7 @@ mod tests {
         let (count, max_size) = processor.cache_stats();
         assert_eq!(count, 0);
         assert_eq!(max_size, 128);
-        
+
         processor.clear_cache();
         let (count, _) = processor.cache_stats();
         assert_eq!(count, 0);

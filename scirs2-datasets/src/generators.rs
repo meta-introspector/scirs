@@ -1913,8 +1913,7 @@ mod tests {
 
     #[test]
     fn test_missing_patterns() {
-        let data =
-            Array2::from_shape_vec((20, 4), (0..80).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 4), (0..80).map(|x| x as f64).collect()).unwrap();
 
         // Test different missing patterns
         for pattern in [

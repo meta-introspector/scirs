@@ -41,7 +41,7 @@ use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use crate::memory_efficient::streaming::{StreamConfig, StreamMode, StreamState};
 #[cfg(feature = "parallel")]
 use crate::parallel;
-use ndarray::{Array, ArrayBase, ArrayView, Dimension, RawData};
+use ndarray::{Array, ArrayBase, ArrayView, RawData};
 use std::alloc::{alloc_zeroed, dealloc, Layout};
 use std::collections::{HashMap, VecDeque};
 use std::marker::PhantomData;
@@ -797,7 +797,7 @@ where
 
     /// Worker loop for processing data
     fn worker_loop(
-        worker_id: usize,
+        _worker_id: usize,
         input_queue: Arc<LockFreeQueue<T>>,
         output_queue: Arc<LockFreeQueue<U>>,
         process_fn: Arc<dyn Fn(T) -> CoreResult<U> + Send + Sync>,

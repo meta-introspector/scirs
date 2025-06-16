@@ -419,13 +419,93 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
     /// Apply boundary conditions to system
     fn apply_boundary_conditions(
         &self,
-        _boundary_conditions: &[BoundaryCondition<F>],
-        _stiffness: &mut Array2<F>,
-        _rhs: &mut Array1<F>,
+        boundary_conditions: &[BoundaryCondition<F>],
+        stiffness: &mut Array2<F>,
+        rhs: &mut Array1<F>,
     ) -> IntegrateResult<()> {
-        // TODO: Implement boundary condition application
-        // This depends on the specific boundary condition types
+        use crate::pde::BoundaryConditionType;
+        
+        for bc in boundary_conditions {
+            match &bc.condition_type {
+                BoundaryConditionType::Dirichlet => {
+                    // For Dirichlet boundary conditions: u = g on boundary
+                    // Modify system: set A[i,i] = 1, A[i,j] = 0 for j≠i, b[i] = g
+                    for &node_idx in &bc.nodes {
+                        if node_idx < stiffness.nrows() {
+                            // Clear row
+                            for j in 0..stiffness.ncols() {
+                                stiffness[[node_idx, j]] = F::zero();
+                            }
+                            // Clear column
+                            for i in 0..stiffness.nrows() {
+                                stiffness[[i, node_idx]] = F::zero();
+                            }
+                            // Set diagonal entry
+                            stiffness[[node_idx, node_idx]] = F::one();
+                            // Set RHS value
+                            rhs[node_idx] = bc.value;
+                        }
+                    }
+                },
+                BoundaryConditionType::Neumann => {
+                    // For Neumann boundary conditions: ∂u/∂n = g on boundary
+                    // Add flux terms to RHS: ∫ g ψᵢ ds
+                    for &node_idx in &bc.nodes {
+                        if node_idx < rhs.len() {
+                            // Simple approximation: add flux contribution to RHS
+                            // In a complete implementation, this would integrate over boundary edges
+                            let boundary_length = self.estimate_boundary_length_at_node(node_idx);
+                            rhs[node_idx] = rhs[node_idx] + bc.value * boundary_length;
+                        }
+                    }
+                },
+                BoundaryConditionType::Robin => {
+                    // For Robin boundary conditions: α u + β ∂u/∂n = g on boundary
+                    // This modifies both stiffness matrix and RHS
+                    for &node_idx in &bc.nodes {
+                        if node_idx < stiffness.nrows() {
+                            let boundary_length = self.estimate_boundary_length_at_node(node_idx);
+                            // Add Robin term to diagonal: α * boundary_length
+                            let alpha = bc.robin_alpha.unwrap_or(F::one());
+                            stiffness[[node_idx, node_idx]] = stiffness[[node_idx, node_idx]] + 
+                                alpha * boundary_length;
+                            // Add to RHS: g * boundary_length
+                            rhs[node_idx] = rhs[node_idx] + bc.value * boundary_length;
+                        }
+                    }
+                },
+                BoundaryConditionType::Periodic => {
+                    // For periodic boundary conditions, couple corresponding nodes
+                    // This requires identifying paired nodes on opposite boundaries
+                    if bc.nodes.len() >= 2 {
+                        for i in 0..(bc.nodes.len() / 2) {
+                            let node1 = bc.nodes[i];
+                            let node2 = bc.nodes[bc.nodes.len() / 2 + i];
+                            
+                            if node1 < stiffness.nrows() && node2 < stiffness.nrows() {
+                                // Constraint: u[node1] - u[node2] = 0
+                                // Add penalty method: λ(u₁ - u₂) = 0
+                                let penalty = F::from(1e6).unwrap(); // Large penalty parameter
+                                
+                                stiffness[[node1, node1]] = stiffness[[node1, node1]] + penalty;
+                                stiffness[[node2, node2]] = stiffness[[node2, node2]] + penalty;
+                                stiffness[[node1, node2]] = stiffness[[node1, node2]] - penalty;
+                                stiffness[[node2, node1]] = stiffness[[node2, node1]] - penalty;
+                            }
+                        }
+                    }
+                },
+            }
+        }
+        
         Ok(())
+    }
+    
+    /// Estimate boundary length contribution at a node (simplified)
+    fn estimate_boundary_length_at_node(&self, _node_idx: usize) -> F {
+        // Simplified estimate - in a complete implementation this would
+        // compute the actual boundary segment length associated with the node
+        F::from(0.1).unwrap() // Default boundary segment length
     }
     
     /// Solve linear system Ax = b

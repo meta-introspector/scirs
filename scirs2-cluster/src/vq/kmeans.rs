@@ -7,6 +7,7 @@ use std::fmt::Debug;
 
 use super::{euclidean_distance, vq};
 use crate::error::{ClusteringError, Result};
+use scirs2_core::validation::{clustering::*, parameters::*};
 
 // Re-export kmeans2 related types and functions
 
@@ -37,7 +38,89 @@ impl<F: Float + FromPrimitive> Default for KMeansOptions<F> {
     }
 }
 
-/// K-means clustering algorithm
+/// K-means clustering algorithm (SciPy-compatible version)
+///
+/// # Arguments
+///
+/// * `obs` - Input data (n_samples × n_features)
+/// * `k_or_guess` - Number of clusters or initial guess for centroids
+/// * `iter` - Maximum number of iterations (default: 20)
+/// * `thresh` - Convergence threshold (default: 1e-5)
+/// * `check_finite` - Whether to check for finite values (default: true)
+/// * `seed` - Random seed for initialization (optional)
+///
+/// # Returns
+///
+/// * Tuple of (centroids, distortion) where:
+///   - centroids: Array of shape (k × n_features)
+///   - distortion: Sum of squared distances to centroids
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::{Array2, ArrayView2};
+/// use scirs2_cluster::vq::kmeans;
+///
+/// let data = Array2::from_shape_vec((6, 2), vec![
+///     1.0, 2.0,
+///     1.2, 1.8,
+///     0.8, 1.9,
+///     3.7, 4.2,
+///     3.9, 3.9,
+///     4.2, 4.1,
+/// ]).unwrap();
+///
+/// let (centroids, distortion) = kmeans(data.view(), 2, Some(20), Some(1e-5), Some(true), Some(42)).unwrap();
+/// ```
+#[allow(clippy::too_many_arguments)]
+pub fn kmeans<F>(
+    obs: ArrayView2<F>,
+    k_or_guess: usize,
+    iter: Option<usize>,
+    thresh: Option<F>,
+    check_finite: Option<bool>,
+    seed: Option<u64>,
+) -> Result<(Array2<F>, F)>
+where
+    F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display,
+{
+    let k = k_or_guess; // For now, just treat as number of clusters
+    let max_iter = iter.unwrap_or(20);
+    let tol = thresh.unwrap_or(F::from(1e-5).unwrap());
+    let check_finite_flag = check_finite.unwrap_or(true);
+
+    // Use unified validation
+    validate_clustering_data(&obs, "K-means", check_finite_flag, Some(k))
+        .map_err(|e| ClusteringError::InvalidInput(format!("K-means: {}", e)))?;
+
+    check_n_clusters_bounds(&obs, k, "K-means")
+        .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
+
+    check_iteration_params(max_iter, tol, "K-means")
+        .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
+
+    // Create options struct for internal use
+    let options = KMeansOptions {
+        max_iter,
+        tol,
+        random_seed: seed,
+        n_init: 1, // SciPy's kmeans does single initialization
+        init_method: KMeansInit::KMeansPlusPlus,
+    };
+
+    // Use the options-based version internally
+    let (centroids, labels) = kmeans_with_options(obs, k, Some(options))?;
+
+    // Calculate distortion (sum of squared distances to centroids)
+    let distortion = calculate_distortion(obs, centroids.view(), &labels);
+
+    Ok((centroids, distortion))
+}
+
+/// K-means clustering algorithm (options-based version)
+///
+/// This is the original implementation that uses the options struct.
+/// The SciPy-compatible version above is a wrapper around this function.
 ///
 /// # Arguments
 ///
@@ -55,7 +138,7 @@ impl<F: Float + FromPrimitive> Default for KMeansOptions<F> {
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::vq::kmeans;
+/// use scirs2_cluster::vq::kmeans_with_options;
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
@@ -66,9 +149,9 @@ impl<F: Float + FromPrimitive> Default for KMeansOptions<F> {
 ///     4.2, 4.1,
 /// ]).unwrap();
 ///
-/// let (centroids, labels) = kmeans(ArrayView2::from(&data), 2, None).unwrap();
+/// let (centroids, labels) = kmeans_with_options(data.view(), 2, None).unwrap();
 /// ```
-pub fn kmeans<F>(
+pub fn kmeans_with_options<F>(
     data: ArrayView2<F>,
     k: usize,
     options: Option<KMeansOptions<F>>,
@@ -132,6 +215,30 @@ where
     }
 
     Ok((best_centroids.unwrap(), best_labels.unwrap()))
+}
+
+/// Calculate distortion (sum of squared distances to centroids)
+fn calculate_distortion<F>(
+    data: ArrayView2<F>,
+    centroids: ArrayView2<F>,
+    labels: &Array1<usize>,
+) -> F
+where
+    F: Float + FromPrimitive + Debug + std::iter::Sum,
+{
+    let n_samples = data.shape()[0];
+    let mut total_distortion = F::zero();
+
+    for i in 0..n_samples {
+        let cluster = labels[i];
+        let point = data.slice(s![i, ..]);
+        let centroid = centroids.slice(s![cluster, ..]);
+
+        let squared_distance = euclidean_distance(point, centroid).powi(2);
+        total_distortion = total_distortion + squared_distance;
+    }
+
+    total_distortion
 }
 
 /// Run a single k-means clustering iteration
@@ -786,7 +893,7 @@ where
 
         // Run k-means with custom distance metric
         let (centroids, labels, inertia) =
-            _kmeans_single_with_metric(data, centroids.view(), &metric, &opts)?;
+            _kmeans_single_with_metric(data, centroids.view(), metric.as_ref(), &opts)?;
 
         if inertia < best_inertia {
             best_centroids = Some(centroids);
@@ -802,7 +909,7 @@ where
 fn _kmeans_single_with_metric<F>(
     data: ArrayView2<F>,
     init_centroids: ArrayView2<F>,
-    metric: &Box<dyn crate::vq::VQDistanceMetric<F>>,
+    metric: &dyn crate::vq::VQDistanceMetric<F>,
     opts: &KMeansOptions<F>,
 ) -> Result<(Array2<F>, Array1<usize>, F)>
 where
@@ -896,7 +1003,7 @@ where
 fn _vq_with_metric<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
-    metric: &Box<dyn crate::vq::VQDistanceMetric<F>>,
+    metric: &dyn crate::vq::VQDistanceMetric<F>,
 ) -> Result<(Array1<usize>, Array1<F>)>
 where
     F: Float + FromPrimitive + Debug + Send + Sync,
@@ -949,7 +1056,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = kmeans(data.view(), 2, Some(options));
+        let result = kmeans_with_options(data.view(), 2, Some(options));
         assert!(result.is_ok());
 
         let (centroids, labels) = result.unwrap();
@@ -978,7 +1085,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = kmeans(data.view(), 2, Some(options));
+        let result = kmeans_with_options(data.view(), 2, Some(options));
         assert!(result.is_ok());
 
         let (centroids, labels) = result.unwrap();
@@ -1011,7 +1118,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = kmeans(data.view(), 2, Some(options));
+        let result = kmeans_with_options(data.view(), 2, Some(options));
         assert!(result.is_ok());
 
         let (centroids, labels) = result.unwrap();
@@ -1035,5 +1142,77 @@ mod tests {
         for i in 10..20 {
             assert_eq!(labels[i], second_cluster);
         }
+    }
+
+    #[test]
+    fn test_scipy_compatible_kmeans() {
+        // Test the new SciPy-compatible kmeans function
+        let data = Array2::from_shape_vec(
+            (6, 2),
+            vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
+        )
+        .unwrap();
+
+        // Test with all parameters
+        let result = kmeans(
+            data.view(),
+            2,          // k_or_guess
+            Some(20),   // iter
+            Some(1e-5), // thresh
+            Some(true), // check_finite
+            Some(42),   // seed
+        );
+        assert!(result.is_ok());
+
+        let (centroids, distortion) = result.unwrap();
+
+        // Check dimensions
+        assert_eq!(centroids.shape(), &[2, 2]);
+
+        // Distortion should be positive
+        assert!(distortion > 0.0);
+
+        // Test with default parameters (None values)
+        let result = kmeans(
+            data.view(),
+            2,    // k_or_guess
+            None, // iter (default: 20)
+            None, // thresh (default: 1e-5)
+            None, // check_finite (default: true)
+            None, // seed (random)
+        );
+        assert!(result.is_ok());
+
+        let (centroids2, distortion2) = result.unwrap();
+        assert_eq!(centroids2.shape(), &[2, 2]);
+        assert!(distortion2 > 0.0);
+    }
+
+    #[test]
+    fn test_scipy_kmeans_check_finite() {
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.5, 8.0, 8.0, 8.5, 8.5]).unwrap();
+
+        // Test with check_finite = true (should work with finite data)
+        let result = kmeans(
+            data.view(),
+            2,
+            Some(10),
+            Some(1e-5),
+            Some(true), // check_finite = true
+            Some(42),
+        );
+        assert!(result.is_ok());
+
+        // Test with check_finite = false (should also work with finite data)
+        let result = kmeans(
+            data.view(),
+            2,
+            Some(10),
+            Some(1e-5),
+            Some(false), // check_finite = false
+            Some(42),
+        );
+        assert!(result.is_ok());
     }
 }

@@ -379,16 +379,101 @@ impl<F: IntegrateFloat> AMRGrid<F> {
         Ok(())
     }
 
-    /// Coarsen cells (placeholder implementation)
+    /// Coarsen cells by grouping child cells back to parent cells
     fn coarsen_cells(
         &mut self,
-        _level: usize,
-        _cells: Vec<(usize, usize)>,
+        level: usize,
+        cells: Vec<(usize, usize)>,
     ) -> IntegrateResult<usize> {
-        // TODO: Implement proper coarsening logic
-        // This involves grouping child cells back to parent cells
-        // and averaging/restricting solution values
-        Ok(0)
+        if level == 0 {
+            return Ok(0); // Can't coarsen the coarsest level
+        }
+        
+        let mut coarsened_count = 0;
+        let parent_level = level - 1;
+        
+        // Group cells into parent cell candidates
+        let mut parent_candidates = HashMap::new();
+        
+        for (i, j) in cells {
+            // Find parent cell coordinates
+            let parent_i = i / 2;
+            let parent_j = j / 2;
+            let child_offset = (i % 2, j % 2);
+            
+            parent_candidates
+                .entry((parent_i, parent_j))
+                .or_insert_with(Vec::new)
+                .push((i, j, child_offset));
+        }
+        
+        // Process each parent cell candidate
+        for ((parent_i, parent_j), children) in parent_candidates {
+            // Check if all 4 children are ready for coarsening
+            if children.len() == 4 {
+                // Verify the parent cell is actually refined
+                if parent_level < self.levels.len() && 
+                   parent_i < self.levels[parent_level].nx && 
+                   parent_j < self.levels[parent_level].ny &&
+                   self.levels[parent_level].refined[[parent_i, parent_j]] {
+                    
+                    // Average/restrict solution values from children to parent
+                    let mut averaged_value = F::zero();
+                    let mut valid_children = 0;
+                    
+                    for (child_i, child_j, _) in &children {
+                        if let Some(&child_value) = self.solution.get(&(level, *child_i, *child_j)) {
+                            averaged_value += child_value;
+                            valid_children += 1;
+                        }
+                    }
+                    
+                    if valid_children > 0 {
+                        averaged_value /= F::from(valid_children).unwrap();
+                        
+                        // Store averaged value in parent cell
+                        self.solution.insert((parent_level, parent_i, parent_j), averaged_value);
+                        
+                        // Remove child values
+                        for (child_i, child_j, _) in &children {
+                            self.solution.remove(&(level, *child_i, *child_j));
+                        }
+                        
+                        // Mark parent as not refined
+                        self.levels[parent_level].refined[[parent_i, parent_j]] = false;
+                        
+                        // Remove child information
+                        self.levels[parent_level].children.remove(&(parent_i, parent_j));
+                        
+                        coarsened_count += 1;
+                    }
+                }
+            }
+        }
+        
+        // Clean up empty levels if they exist
+        self.cleanup_empty_levels();
+        
+        Ok(coarsened_count)
+    }
+    
+    /// Remove empty refinement levels from the hierarchy
+    fn cleanup_empty_levels(&mut self) {
+        // Find the highest level with any refined cells or solution data
+        let mut max_active_level = 0;
+        
+        for level in 0..self.levels.len() {
+            let has_refined_cells = self.levels[level].refined.iter().any(|&x| x);
+            let has_solution_data = self.solution.keys().any(|(l, _, _)| *l == level);
+            
+            if has_refined_cells || has_solution_data {
+                max_active_level = level;
+            }
+        }
+        
+        // Keep only active levels plus one extra for potential future refinement
+        let keep_levels = (max_active_level + 2).min(self.levels.len());
+        self.levels.truncate(keep_levels);
     }
 
     /// Interpolate solution from parent cell to child cells
@@ -644,5 +729,42 @@ mod tests {
         let stats = solver.grid_statistics();
         assert!(stats.num_levels >= 1);
         assert!(stats.total_cells >= 64); // At least the initial 8×8 grid
+    }
+
+    #[test]
+    fn test_amr_coarsening() {
+        let mut grid: AMRGrid<f64> = AMRGrid::new(4, 4, [0.0, 1.0], [0.0, 1.0]);
+
+        // Set up solution values
+        grid.solution.insert((0, 1, 1), 1.0);
+
+        // Refine a cell to create level 1
+        assert!(grid.refine_cell(0, 1, 1).is_ok());
+        assert_eq!(grid.levels.len(), 2); // Should have 2 levels now
+
+        // Add solution values to all 4 child cells
+        grid.solution.insert((1, 2, 2), 0.8);
+        grid.solution.insert((1, 2, 3), 0.9);
+        grid.solution.insert((1, 3, 2), 1.1);
+        grid.solution.insert((1, 3, 3), 1.2);
+
+        // Test coarsening - create cells to coarsen (all 4 children)
+        let cells_to_coarsen = vec![(2, 2), (2, 3), (3, 2), (3, 3)];
+        let coarsened = grid.coarsen_cells(1, cells_to_coarsen).unwrap();
+
+        // Should have coarsened 1 parent cell (containing 4 children)
+        assert_eq!(coarsened, 1);
+
+        // Parent cell should no longer be marked as refined
+        assert!(!grid.levels[0].refined[[1, 1]]);
+
+        // Parent cell should have averaged value: (0.8 + 0.9 + 1.1 + 1.2) / 4 = 1.0
+        assert_eq!(grid.solution.get(&(0, 1, 1)), Some(&1.0));
+
+        // Child values should be removed
+        assert_eq!(grid.solution.get(&(1, 2, 2)), None);
+        assert_eq!(grid.solution.get(&(1, 2, 3)), None);
+        assert_eq!(grid.solution.get(&(1, 3, 2)), None);
+        assert_eq!(grid.solution.get(&(1, 3, 3)), None);
     }
 }

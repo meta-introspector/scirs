@@ -30,6 +30,7 @@ memmap2 = { workspace = true, optional = true }  # For memory-mapped arrays
 # Feature-gated dependencies
 wide = { workspace = true, optional = true }  # SIMD acceleration
 rayon = { workspace = true, optional = true }  # Parallel processing
+crossbeam = { workspace = true, optional = true }  # Used in parallel scheduler for channels
 crossbeam-utils = { workspace = true, optional = true }  # Used in parallel scheduler
 crossbeam-deque = { workspace = true, optional = true }  # Used in parallel scheduler
 num_cpus = { workspace = true, optional = true }  # CPU count detection
@@ -61,7 +62,7 @@ tempfile = { workspace = true }
 [features]
 default = ["array", "serialization"]  # Enable array module by default
 simd = ["wide"]  # SIMD operations
-parallel = ["rayon", "ndarray/rayon", "crossbeam-utils", "crossbeam-deque", "num_cpus"]  # Parallel processing with rayon
+parallel = ["rayon", "ndarray/rayon", "crossbeam", "crossbeam-utils", "crossbeam-deque", "num_cpus"]  # Parallel processing with rayon
 cache = ["cached"]  # Caching and memoization functionality
 validation = []  # Validation utilities
 logging = []  # Structured logging and diagnostics
@@ -337,6 +338,11 @@ required-features = ["types"]
 name = "enhanced_memory_metrics_example"
 path = "examples/enhanced_memory_metrics_example.rs"
 required-features = ["memory_management"]
+
+[[example]]
+name = "core_memory_efficient_example"
+path = "examples/core_memory_efficient_example.rs"
+required-features = ["memory_efficient"]
 
 [[example]]
 name = "advanced_error_handling"

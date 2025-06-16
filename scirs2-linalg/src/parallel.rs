@@ -503,7 +503,7 @@ pub mod algorithms {
     {
         let (m, k) = a.dim();
         let (k2, n) = b.dim();
-        
+
         if k != k2 {
             return Err(LinalgError::ShapeError(format!(
                 "Matrix dimensions incompatible for multiplication: {}x{} * {}x{}",
@@ -520,9 +520,9 @@ pub mod algorithms {
 
         // Block size for cache-friendly computation
         let block_size = config.chunk_size;
-        
+
         let mut result = ndarray::Array2::zeros((m, n));
-        
+
         // Parallel computation using blocks
         result
             .outer_iter_mut()
@@ -557,7 +557,7 @@ pub mod algorithms {
     {
         let (m, n) = matrix.dim();
         let data_size = m * n;
-        
+
         if !adaptive::should_use_parallel(data_size, config) {
             return crate::decomposition::qr(&matrix.view(), None);
         }
@@ -584,7 +584,7 @@ pub mod algorithms {
             let mut v = x.clone();
             v[0] -= alpha;
             let v_norm_sq = v.iter().map(|&vi| vi * vi).sum::<F>();
-            
+
             if v_norm_sq < F::epsilon() {
                 continue;
             }
@@ -594,9 +594,13 @@ pub mod algorithms {
             if remaining_cols > 1 {
                 for j in k..n {
                     let col = a.slice(ndarray::s![k.., j]).to_owned();
-                    let dot_product = v.iter().zip(col.iter()).map(|(&vi, &ci)| vi * ci).sum::<F>();
+                    let dot_product = v
+                        .iter()
+                        .zip(col.iter())
+                        .map(|(&vi, &ci)| vi * ci)
+                        .sum::<F>();
                     let factor = F::from(2.0).unwrap() * dot_product / v_norm_sq;
-                    
+
                     for (i, &vi) in v.iter().enumerate() {
                         a[[k + i, j]] -= factor * vi;
                     }
@@ -606,9 +610,13 @@ pub mod algorithms {
             // Update Q matrix (serial for simplicity)
             for i in 0..m {
                 let row = q.slice(ndarray::s![i, k..]).to_owned();
-                let dot_product = v.iter().zip(row.iter()).map(|(&vi, &ri)| vi * ri).sum::<F>();
+                let dot_product = v
+                    .iter()
+                    .zip(row.iter())
+                    .map(|(&vi, &ri)| vi * ri)
+                    .sum::<F>();
                 let factor = F::from(2.0).unwrap() * dot_product / v_norm_sq;
-                
+
                 for (j, &vj) in v.iter().enumerate() {
                     q[[i, k + j]] -= factor * vj;
                 }
@@ -649,7 +657,7 @@ pub mod algorithms {
 
         for k in (0..n).step_by(block_size) {
             let k_end = std::cmp::min(k + block_size, n);
-            
+
             // Diagonal block factorization (serial for numerical stability)
             for i in k..k_end {
                 // Compute L[i,i]
@@ -704,7 +712,7 @@ pub mod algorithms {
     {
         let (m, n) = matrix.dim();
         let data_size = m * n;
-        
+
         if !adaptive::should_use_parallel(data_size, config) {
             return crate::decomposition::lu(&matrix.view(), None);
         }
@@ -745,11 +753,11 @@ pub mod algorithms {
 
             // Update submatrix (serial for now to avoid borrowing issues)
             let pivot = a[[k, k]];
-            
+
             for i in (k + 1)..m {
                 let multiplier = a[[i, k]] / pivot;
                 a[[i, k]] = multiplier;
-                
+
                 for j in (k + 1)..n {
                     a[[i, j]] = a[[i, j]] - multiplier * a[[k, j]];
                 }
@@ -830,16 +838,16 @@ pub mod algorithms {
         for _iter in 0..max_iter {
             let ap = parallel_matvec(matrix, &p.view(), config)?;
             let alpha = rsold / vector_ops::parallel_dot(&p.view(), &ap.view(), config)?;
-            
+
             x = vector_ops::parallel_axpy(alpha, &p.view(), &x.view(), config)?;
             r = vector_ops::parallel_axpy(-alpha, &ap.view(), &r.view(), config)?;
-            
+
             let rsnew = vector_ops::parallel_dot(&r.view(), &r.view(), config)?;
-            
+
             if rsnew.sqrt() < tolerance {
                 return Ok(x);
             }
-            
+
             let beta = rsnew / rsold;
             p = vector_ops::parallel_axpy(beta, &p.view(), &r.view(), config)?;
             rsold = rsnew;

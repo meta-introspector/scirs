@@ -682,7 +682,7 @@ impl ResourceAwarePrefetcher {
             self.current_config = config;
 
             // Take a resource snapshot and record it with stats
-            if let Some(snapshot) = self.monitor.get_latest_snapshot() {
+            if let Some(_snapshot) = self.monitor.get_latest_snapshot() {
                 let summary = self.monitor.get_resource_summary();
                 if let Ok(mut stats) = self.performance_stats.lock() {
                     stats.resource_snapshots.push((Instant::now(), summary));

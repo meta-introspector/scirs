@@ -31,8 +31,8 @@
 //! ```
 
 use crate::error::{IoError, Result};
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 use std::time::Duration;
 
 /// Cloud storage integration
@@ -67,7 +67,7 @@ impl Default for NetworkConfig {
     fn default() -> Self {
         let mut headers = HashMap::new();
         headers.insert("Accept".to_string(), "*/*".to_string());
-        
+
         Self {
             connect_timeout: Duration::from_secs(30),
             read_timeout: Duration::from_secs(300),
@@ -142,20 +142,32 @@ impl NetworkClient {
     }
 
     /// Download a file to cloud storage
-    pub async fn upload_to_cloud<P: AsRef<Path>>(&self, local_path: P, remote_path: &str) -> Result<()> {
+    pub async fn upload_to_cloud<P: AsRef<Path>>(
+        &self,
+        local_path: P,
+        remote_path: &str,
+    ) -> Result<()> {
         if let Some(ref provider) = self.cloud_provider {
             provider.upload_file(local_path, remote_path).await
         } else {
-            Err(IoError::ConfigError("No cloud provider configured".to_string()))
+            Err(IoError::ConfigError(
+                "No cloud provider configured".to_string(),
+            ))
         }
     }
 
     /// Download a file from cloud storage
-    pub async fn download_from_cloud<P: AsRef<Path>>(&self, remote_path: &str, local_path: P) -> Result<()> {
+    pub async fn download_from_cloud<P: AsRef<Path>>(
+        &self,
+        remote_path: &str,
+        local_path: P,
+    ) -> Result<()> {
         if let Some(ref provider) = self.cloud_provider {
             provider.download_file(remote_path, local_path).await
         } else {
-            Err(IoError::ConfigError("No cloud provider configured".to_string()))
+            Err(IoError::ConfigError(
+                "No cloud provider configured".to_string(),
+            ))
         }
     }
 
@@ -164,7 +176,9 @@ impl NetworkClient {
         if let Some(ref provider) = self.cloud_provider {
             provider.list_files(path).await
         } else {
-            Err(IoError::ConfigError("No cloud provider configured".to_string()))
+            Err(IoError::ConfigError(
+                "No cloud provider configured".to_string(),
+            ))
         }
     }
 
@@ -173,7 +187,9 @@ impl NetworkClient {
         if let Some(ref provider) = self.cloud_provider {
             provider.file_exists(path).await
         } else {
-            Err(IoError::ConfigError("No cloud provider configured".to_string()))
+            Err(IoError::ConfigError(
+                "No cloud provider configured".to_string(),
+            ))
         }
     }
 
@@ -182,7 +198,9 @@ impl NetworkClient {
         if let Some(ref provider) = self.cloud_provider {
             provider.get_metadata(path).await
         } else {
-            Err(IoError::ConfigError("No cloud provider configured".to_string()))
+            Err(IoError::ConfigError(
+                "No cloud provider configured".to_string(),
+            ))
         }
     }
 
@@ -193,8 +211,9 @@ impl NetworkClient {
             if cache_path.exists() {
                 std::fs::remove_dir_all(cache_path)
                     .map_err(|e| IoError::FileError(format!("Failed to clear cache: {}", e)))?;
-                std::fs::create_dir_all(cache_path)
-                    .map_err(|e| IoError::FileError(format!("Failed to recreate cache dir: {}", e)))?;
+                std::fs::create_dir_all(cache_path).map_err(|e| {
+                    IoError::FileError(format!("Failed to recreate cache dir: {}", e))
+                })?;
             }
         }
         Ok(())
@@ -207,9 +226,9 @@ impl NetworkClient {
             if cache_path.exists() {
                 let mut total_size = 0u64;
                 let mut file_count = 0u64;
-                
+
                 for entry in std::fs::read_dir(cache_path)
-                    .map_err(|e| IoError::FileError(format!("Failed to read cache dir: {}", e)))? 
+                    .map_err(|e| IoError::FileError(format!("Failed to read cache dir: {}", e)))?
                 {
                     if let Ok(entry) = entry {
                         if let Ok(metadata) = entry.metadata() {
@@ -246,9 +265,9 @@ pub async fn upload_file<P: AsRef<Path>>(local_path: P, url: &str) -> Result<()>
 /// Download a file with caching support
 #[cfg(feature = "reqwest")]
 pub async fn download_with_cache<P: AsRef<Path>>(
-    url: &str, 
-    local_path: P, 
-    cache_dir: Option<&str>
+    url: &str,
+    local_path: P,
+    cache_dir: Option<&str>,
 ) -> Result<()> {
     let mut client = NetworkClient::new();
     if let Some(cache) = cache_dir {
@@ -267,27 +286,27 @@ pub fn create_cloud_client(provider: cloud::CloudProvider) -> NetworkClient {
 pub async fn batch_download(downloads: Vec<(&str, &str)>) -> Result<Vec<Result<()>>> {
     let client = NetworkClient::new();
     let mut results = Vec::new();
-    
+
     for (url, local_path) in downloads {
         let result = client.download(url, local_path).await;
         results.push(result);
     }
-    
+
     Ok(results)
 }
 
 /// Batch upload multiple files to cloud storage
 pub async fn batch_upload_to_cloud(
     client: &NetworkClient,
-    uploads: Vec<(&str, &str)>
+    uploads: Vec<(&str, &str)>,
 ) -> Result<Vec<Result<()>>> {
     let mut results = Vec::new();
-    
+
     for (local_path, remote_path) in uploads {
         let result = client.upload_to_cloud(local_path, remote_path).await;
         results.push(result);
     }
-    
+
     Ok(results)
 }
 
@@ -309,16 +328,19 @@ mod tests {
     fn test_network_client_creation() {
         let client = NetworkClient::new();
         assert!(client.cloud_provider.is_none());
-        
+
         let client_with_cache = NetworkClient::new().with_cache_dir("/tmp/cache");
-        assert_eq!(client_with_cache.config.cache_dir, Some("/tmp/cache".to_string()));
+        assert_eq!(
+            client_with_cache.config.cache_dir,
+            Some("/tmp/cache".to_string())
+        );
     }
 
     #[test]
     fn test_network_config_custom() {
         let mut headers = HashMap::new();
         headers.insert("Authorization".to_string(), "Bearer token".to_string());
-        
+
         let config = NetworkConfig {
             connect_timeout: Duration::from_secs(10),
             read_timeout: Duration::from_secs(60),
@@ -340,14 +362,14 @@ mod tests {
     async fn test_cache_operations() {
         let temp_dir = tempfile::tempdir().unwrap();
         let cache_path = temp_dir.path().to_str().unwrap();
-        
+
         let client = NetworkClient::new().with_cache_dir(cache_path);
-        
+
         // Test cache info on empty cache
         let (size, count) = client.get_cache_info().unwrap();
         assert_eq!(size, 0);
         assert_eq!(count, 0);
-        
+
         // Test cache clearing
         client.clear_cache().unwrap();
     }

@@ -1,10 +1,9 @@
-use ndarray::{Array, Array2, Axis};
+use ndarray::Array2;
 use scirs2_core::error::CoreError;
 use scirs2_core::memory_efficient::{
     chunk_wise_op, create_disk_array, diagonal_view, evaluate, transpose_view, ChunkedArray,
     ChunkingStrategy, LazyArray,
 };
-use std::path::Path;
 use std::time::Instant;
 
 fn main() -> Result<(), CoreError> {

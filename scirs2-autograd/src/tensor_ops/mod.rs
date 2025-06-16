@@ -42,6 +42,27 @@ mod checkpoint_ops;
 // Debugging modules
 mod debug_ops;
 
+// Advanced indexing operations
+mod advanced_indexing;
+
+// Broadcasting optimizations
+mod broadcast_ops;
+
+// Memory optimization tools
+mod memory_optimization;
+
+// Efficient tensor operations
+mod efficient_ops;
+
+// Custom activation function framework
+mod custom_activations;
+
+// Performance optimization operations
+mod performance_ops;
+
+// Enhanced dynamic computation graph features
+mod graph_enhancements;
+
 // ---------------------------------------
 // -- Ops to manipulate `Tensor` object --
 // ---------------------------------------
@@ -1733,6 +1754,54 @@ where
         .build(activation_ops::Softplus)
 }
 
+/// Elementwise Swish activation function: x * sigmoid(x).
+///
+/// Also known as SiLU (Sigmoid Linear Unit).
+/// See <https://arxiv.org/abs/1710.05941>
+pub fn swish<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
+where
+    A: AsRef<Tensor<'graph, F>> + Copy,
+{
+    let x = x.as_ref();
+    let g = x.graph();
+    Tensor::builder(g)
+        .set_shape(&shape(x))
+        .append_input(x.as_ref(), false)
+        .build(activation_ops::Swish)
+}
+
+/// Elementwise GELU (Gaussian Error Linear Unit) activation function.
+///
+/// GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x³)))
+/// See <https://arxiv.org/abs/1606.08415>
+pub fn gelu<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
+where
+    A: AsRef<Tensor<'graph, F>> + Copy,
+{
+    let x = x.as_ref();
+    let g = x.graph();
+    Tensor::builder(g)
+        .set_shape(&shape(x))
+        .append_input(x.as_ref(), false)
+        .build(activation_ops::Gelu)
+}
+
+/// Elementwise Mish activation function: x * tanh(softplus(x)).
+///
+/// Mish(x) = x * tanh(ln(1 + exp(x)))
+/// See <https://arxiv.org/abs/1908.08681>
+pub fn mish<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
+where
+    A: AsRef<Tensor<'graph, F>> + Copy,
+{
+    let x = x.as_ref();
+    let g = x.graph();
+    Tensor::builder(g)
+        .set_shape(&shape(x))
+        .append_input(x.as_ref(), false)
+        .build(activation_ops::Mish)
+}
+
 /// Computes `log(sum(exp(x)))` along specified axis.
 ///
 /// `axis` can be negative.
@@ -3155,6 +3224,57 @@ pub use special_matrices::{band_matrix, cholesky, symmetrize, tril, triu};
 pub use checkpoint_ops::{
     adaptive_checkpoint, checkpoint, checkpoint_segment, checkpoint_segment_flex, detach,
     CheckpointGroup, CheckpointProfiler,
+};
+
+// Advanced indexing operations
+pub use advanced_indexing::{
+    advanced_gather, boolean_mask, get_at_coords, scatter, select_columns, select_rows, take,
+    where_op,
+};
+
+// Broadcasting optimizations
+pub use broadcast_ops::{
+    analyze_broadcast, broadcast_add, broadcast_div, broadcast_maximum, broadcast_minimum,
+    broadcast_mul, broadcast_pow, broadcast_sub, clear_broadcast_cache, get_broadcast_cache_stats,
+    BroadcastInfo, BroadcastStrategy,
+};
+
+// Memory optimization tools
+pub use memory_optimization::{
+    clear_memory_pool, configure_memory_pool, disable_memory_tracking, efficient_ones,
+    efficient_view, efficient_zeros, enable_memory_tracking, get_memory_pool_stats,
+    get_memory_tracking_stats, get_pooled_buffer, inplace_abs, inplace_add, inplace_div,
+    inplace_mul, inplace_neg, inplace_scalar_mul, inplace_sub, reset_memory_tracking,
+    return_pooled_buffer, set_memory_pool_enabled, MemoryOptimizer, MemoryPoolStats,
+    MemoryTrackerStats,
+};
+
+// Efficient tensor operations
+pub use efficient_ops::{
+    clear_reshape_cache, efficient_concat, efficient_reshape, efficient_reshape_with_shape,
+    efficient_slice, efficient_transpose, get_reshape_cache_stats, EfficientOpsManager,
+    EfficientOpsStats, SliceRange,
+};
+
+// Custom activation function framework
+pub use custom_activations::{
+    create_custom_activation, custom_activation, is_activation_registered,
+    list_activation_functions, parameterized_activation, register_activation,
+    ActivationProperties, CustomActivation, CustomActivationBuilder,
+};
+
+// Performance optimization operations
+pub use performance_ops::{
+    cache_friendly_matmul, is_parallel_enabled, is_simd_enabled, parallel_sum,
+    set_parallel_enabled, set_simd_enabled, simd_add, simd_mul, simd_relu, simd_sigmoid,
+    PerformanceConfig, ReductionOperation, SimdBinaryOperation, SimdUnaryOperation,
+};
+
+// Enhanced dynamic computation graph features
+pub use graph_enhancements::{
+    cached_op, clear_computation_cache, conditional, configure_cache, get_cache_stats,
+    get_gc_stats, run_garbage_collection, smart_checkpoint, CacheStats,
+    GcStats, GraphEnhancer, GraphStats, PredicateType,
 };
 
 /// Creates a variable tensor from an array

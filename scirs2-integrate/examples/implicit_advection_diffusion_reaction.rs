@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Use smaller tolerances for more accurate comparison
             atol: 1e-6,
             rtol: 1e-5,
-            max_steps: Some((time_range[1] as f64 / dt_exp).ceil() as usize * 2),
+            max_steps: Some((time_range[1] / dt_exp as f64).ceil() as usize * 2),
             verbose: true,
             ..Default::default()
         };

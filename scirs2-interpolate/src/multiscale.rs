@@ -515,6 +515,16 @@ impl<
             false
         }
     }
+
+    /// Get a reference to the original x-coordinates used to create this spline.
+    pub fn x_data(&self) -> &Array1<T> {
+        &self.x
+    }
+
+    /// Get a reference to the original y-coordinates used to create this spline.
+    pub fn y_data(&self) -> &Array1<T> {
+        &self.y
+    }
 }
 
 /// Creates a new multiscale B-spline with automatic adaptive refinement.

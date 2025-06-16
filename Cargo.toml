@@ -140,6 +140,7 @@ cblas-sys = { version = "0.1.4", default-features = false }
 
 # Additional dependencies for modules
 half = { version = "2.4.0", features = ["num-traits", "serde", "alloc"] }
+crossbeam = { version = "0.8.4" }
 crossbeam-utils = { version = "0.8.19" }
 crossbeam-deque = { version = "0.8.3" }
 num_cpus = { version = "1.16.0" }

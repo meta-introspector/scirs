@@ -1067,16 +1067,18 @@ impl BatchOperations {
 
     #[cfg(feature = "download")]
     fn batch_download_parallel(&self, urls_and_names: &[(&str, &str)], result: &mut BatchResult) {
-        use std::sync::{Arc, Mutex};
-        use std::thread;
         use std::fs::File;
         use std::io::Write;
+        use std::sync::{Arc, Mutex};
+        use std::thread;
 
         // Ensure cache directory exists before spawning threads
         if let Err(e) = self.cache.cache.ensure_cache_dir() {
             result.failure_count += urls_and_names.len();
             for &(_, name) in urls_and_names {
-                result.failures.push((name.to_string(), format!("Cache setup failed: {}", e)));
+                result
+                    .failures
+                    .push((name.to_string(), format!("Cache setup failed: {}", e)));
             }
             return;
         }
@@ -1115,7 +1117,8 @@ impl BatchOperations {
                                             break;
                                         }
                                         Err(e) => {
-                                            last_error = format!("Failed to write cache file: {}", e);
+                                            last_error =
+                                                format!("Failed to write cache file: {}", e);
                                         }
                                     },
                                     Err(e) => {

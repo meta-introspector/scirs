@@ -28,6 +28,10 @@ rand = { workspace = true }
 itertools = "0.13"
 ordered-float = "3.9"
 
+# Performance dependencies
+rayon = "1.8"
+parking_lot = "0.12"
+
 # Serialization for attributes
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -10,6 +10,7 @@ use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::path::Path;
 
 /// Parameter constraints that can be applied to parameter groups
 #[derive(Debug, Clone)]
@@ -494,6 +495,263 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GroupManager<A, D> {
     /// Get total number of parameters across all groups
     pub fn total_params(&self) -> usize {
         self.groups.iter().map(|g| g.num_params()).sum()
+    }
+}
+
+/// State checkpointing for parameter management
+pub mod checkpointing {
+    use super::*;
+
+    /// Checkpoint data for optimizer state
+    #[derive(Debug, Clone)]
+    pub struct OptimizerCheckpoint<A: Float, D: Dimension> {
+        /// Step number
+        pub step: usize,
+        /// Parameter groups
+        pub groups: Vec<ParameterGroupCheckpoint<A, D>>,
+        /// Global optimizer state
+        pub global_state: HashMap<String, String>,
+        /// Metadata
+        pub metadata: CheckpointMetadata,
+    }
+
+    /// Checkpoint data for a parameter group
+    #[derive(Debug, Clone)]
+    pub struct ParameterGroupCheckpoint<A: Float, D: Dimension> {
+        /// Group ID
+        pub id: usize,
+        /// Parameters
+        pub params: Vec<Array<A, D>>,
+        /// Group configuration
+        pub config: ParameterGroupConfig<A>,
+        /// Optimizer-specific state for this group
+        pub state: HashMap<String, Vec<Array<A, D>>>,
+    }
+
+    /// Metadata for checkpoints
+    #[derive(Debug, Clone)]
+    pub struct CheckpointMetadata {
+        /// Timestamp when checkpoint was created
+        pub timestamp: String,
+        /// Version of the optimizer
+        pub optimizer_version: String,
+        /// Custom metadata
+        pub custom: HashMap<String, String>,
+    }
+
+    impl CheckpointMetadata {
+        /// Create new metadata with current timestamp
+        pub fn new(optimizer_version: String) -> Self {
+            use std::time::{SystemTime, UNIX_EPOCH};
+
+            let timestamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs()
+                .to_string();
+
+            Self {
+                timestamp,
+                optimizer_version,
+                custom: HashMap::new(),
+            }
+        }
+
+        /// Add custom metadata
+        pub fn with_custom(mut self, key: String, value: String) -> Self {
+            self.custom.insert(key, value);
+            self
+        }
+    }
+
+    /// Trait for optimizers that support checkpointing
+    pub trait Checkpointable<A: Float, D: Dimension> {
+        /// Create a checkpoint of the current optimizer state
+        fn create_checkpoint(&self) -> Result<OptimizerCheckpoint<A, D>>;
+
+        /// Restore optimizer state from a checkpoint
+        fn restore_checkpoint(&mut self, checkpoint: &OptimizerCheckpoint<A, D>) -> Result<()>;
+
+        /// Save checkpoint to file (simple text format)
+        fn save_checkpoint<P: AsRef<Path>>(&self, _path: P) -> Result<()> {
+            // TODO: Implement simple text-based serialization format
+            // For now, return error indicating feature not implemented
+            Err(OptimError::InvalidConfig(
+                "File-based checkpointing not yet implemented".to_string(),
+            ))
+        }
+
+        /// Load checkpoint from file (simple text format)
+        fn load_checkpoint<P: AsRef<Path>>(&mut self, _path: P) -> Result<()> {
+            // TODO: Implement simple text-based deserialization format
+            // For now, return error indicating feature not implemented
+            Err(OptimError::InvalidConfig(
+                "File-based checkpointing not yet implemented".to_string(),
+            ))
+        }
+    }
+
+    /// In-memory checkpoint manager
+    #[derive(Debug)]
+    pub struct CheckpointManager<A: Float, D: Dimension> {
+        checkpoints: HashMap<String, OptimizerCheckpoint<A, D>>,
+        max_checkpoints: usize,
+        checkpoint_keys: Vec<String>, // To maintain order for LRU eviction
+    }
+
+    impl<A: Float + ScalarOperand + Debug, D: Dimension> CheckpointManager<A, D> {
+        /// Create a new checkpoint manager
+        pub fn new() -> Self {
+            Self {
+                checkpoints: HashMap::new(),
+                max_checkpoints: 10,
+                checkpoint_keys: Vec::new(),
+            }
+        }
+
+        /// Create a new checkpoint manager with maximum number of checkpoints
+        pub fn with_max_checkpoints(max_checkpoints: usize) -> Self {
+            Self {
+                checkpoints: HashMap::new(),
+                max_checkpoints,
+                checkpoint_keys: Vec::new(),
+            }
+        }
+
+        /// Store a checkpoint with a given key
+        pub fn store_checkpoint(&mut self, key: String, checkpoint: OptimizerCheckpoint<A, D>) {
+            // If key already exists, update it
+            if self.checkpoints.contains_key(&key) {
+                self.checkpoints.insert(key.clone(), checkpoint);
+                return;
+            }
+
+            // If we're at capacity, remove oldest checkpoint
+            if self.checkpoints.len() >= self.max_checkpoints {
+                if let Some(oldest_key) = self.checkpoint_keys.first().cloned() {
+                    self.checkpoints.remove(&oldest_key);
+                    self.checkpoint_keys.retain(|k| k != &oldest_key);
+                }
+            }
+
+            // Add new checkpoint
+            self.checkpoints.insert(key.clone(), checkpoint);
+            self.checkpoint_keys.push(key);
+        }
+
+        /// Retrieve a checkpoint by key
+        pub fn get_checkpoint(&self, key: &str) -> Option<&OptimizerCheckpoint<A, D>> {
+            self.checkpoints.get(key)
+        }
+
+        /// Remove a checkpoint by key
+        pub fn remove_checkpoint(&mut self, key: &str) -> Option<OptimizerCheckpoint<A, D>> {
+            self.checkpoint_keys.retain(|k| k != key);
+            self.checkpoints.remove(key)
+        }
+
+        /// List all checkpoint keys
+        pub fn list_checkpoints(&self) -> &[String] {
+            &self.checkpoint_keys
+        }
+
+        /// Clear all checkpoints
+        pub fn clear(&mut self) {
+            self.checkpoints.clear();
+            self.checkpoint_keys.clear();
+        }
+
+        /// Get number of stored checkpoints
+        pub fn len(&self) -> usize {
+            self.checkpoints.len()
+        }
+
+        /// Check if manager is empty
+        pub fn is_empty(&self) -> bool {
+            self.checkpoints.is_empty()
+        }
+    }
+
+    impl<A: Float + ScalarOperand + Debug, D: Dimension> Default for CheckpointManager<A, D> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    /// Utility functions for checkpointing
+    pub mod utils {
+        use super::*;
+
+        /// Create a checkpoint from parameter groups
+        pub fn create_checkpoint_from_groups<A: Float + ScalarOperand + Debug, D: Dimension>(
+            step: usize,
+            groups: &[ParameterGroup<A, D>],
+            global_state: HashMap<String, String>,
+            optimizer_version: String,
+        ) -> OptimizerCheckpoint<A, D> {
+            let group_checkpoints = groups
+                .iter()
+                .map(|group| ParameterGroupCheckpoint {
+                    id: group.id,
+                    params: group.params.clone(),
+                    config: group.config.clone(),
+                    state: group.state.clone(),
+                })
+                .collect();
+
+            OptimizerCheckpoint {
+                step,
+                groups: group_checkpoints,
+                global_state,
+                metadata: CheckpointMetadata::new(optimizer_version),
+            }
+        }
+
+        /// Validate checkpoint compatibility
+        pub fn validate_checkpoint<A: Float, D: Dimension>(
+            checkpoint: &OptimizerCheckpoint<A, D>,
+            expected_groups: usize,
+        ) -> Result<()> {
+            if checkpoint.groups.len() != expected_groups {
+                return Err(OptimError::InvalidConfig(format!(
+                    "Checkpoint has {} groups, expected {}",
+                    checkpoint.groups.len(),
+                    expected_groups
+                )));
+            }
+
+            // Validate that all group IDs are unique
+            let mut ids = std::collections::HashSet::new();
+            for group in &checkpoint.groups {
+                if !ids.insert(group.id) {
+                    return Err(OptimError::InvalidConfig(format!(
+                        "Duplicate group ID {} in checkpoint",
+                        group.id
+                    )));
+                }
+            }
+
+            Ok(())
+        }
+
+        /// Get checkpoint summary information
+        pub fn checkpoint_summary<A: Float, D: Dimension>(
+            checkpoint: &OptimizerCheckpoint<A, D>,
+        ) -> String {
+            let total_params: usize = checkpoint
+                .groups
+                .iter()
+                .map(|g| g.params.iter().map(|p| p.len()).sum::<usize>())
+                .sum();
+
+            format!(
+                "Checkpoint at step {}: {} groups, {} total parameters, created at {}",
+                checkpoint.step,
+                checkpoint.groups.len(),
+                total_params,
+                checkpoint.metadata.timestamp
+            )
+        }
     }
 }
 

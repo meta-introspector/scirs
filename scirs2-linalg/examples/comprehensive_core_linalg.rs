@@ -5,14 +5,11 @@
 
 use ndarray::{array, Array1, Array2};
 use scirs2_linalg::{
-    cholesky, lu, qr, svd,
-    det, inv,
-    eig, eigh,
+    cholesky, det, eig, eigh,
     error::LinalgResult,
-    matrix_norm,
+    inv, lu, matrix_norm,
     parallel::{algorithms, WorkerConfig},
-    solve,
-    vector_norm,
+    qr, solve, svd, vector_norm,
 };
 
 fn main() -> LinalgResult<()> {
@@ -48,7 +45,7 @@ fn basic_matrix_operations() -> LinalgResult<()> {
     // Create test matrices
     let a = array![[1.0, 2.0], [3.0, 4.0]];
     let b = array![[5.0, 6.0], [7.0, 8.0]];
-    
+
     println!("Matrix A:");
     println!("{:?}", a);
     println!("\nMatrix B:");
@@ -57,7 +54,7 @@ fn basic_matrix_operations() -> LinalgResult<()> {
     // Matrix addition and multiplication
     let sum = &a + &b;
     let product = a.dot(&b);
-    
+
     println!("\nA + B:");
     println!("{:?}", sum);
     println!("\nA * B:");
@@ -71,7 +68,7 @@ fn basic_matrix_operations() -> LinalgResult<()> {
     if let Ok(inv_a) = inv(&a.view(), None) {
         println!("\nInverse of A:");
         println!("{:?}", inv_a);
-        
+
         // Verify: A * A^-1 = I
         let identity_check = a.dot(&inv_a);
         println!("\nA * A^(-1) (should be identity):");
@@ -82,7 +79,7 @@ fn basic_matrix_operations() -> LinalgResult<()> {
     let frobenius_norm = matrix_norm(&a.view(), "fro", None)?;
     let one_norm = matrix_norm(&a.view(), "1", None)?;
     let inf_norm = matrix_norm(&a.view(), "inf", None)?;
-    
+
     println!("\nMatrix norms of A:");
     println!("  Frobenius: {:.6}", frobenius_norm);
     println!("  1-norm:    {:.6}", one_norm);
@@ -93,7 +90,7 @@ fn basic_matrix_operations() -> LinalgResult<()> {
     let l1_norm = vector_norm(&x.view(), 1)?;
     let l2_norm = vector_norm(&x.view(), 2)?;
     let linf_norm = vector_norm(&x.view(), usize::MAX)?;
-    
+
     println!("\nVector x = {:?}", x);
     println!("Vector norms:");
     println!("  L1:  {:.6}", l1_norm);
@@ -110,12 +107,8 @@ fn matrix_decompositions() -> LinalgResult<()> {
     println!("{}", "=".repeat(50));
 
     // Test matrix
-    let a = array![
-        [4.0, 2.0, 1.0],
-        [2.0, 5.0, 3.0],
-        [1.0, 3.0, 6.0]
-    ];
-    
+    let a = array![[4.0, 2.0, 1.0], [2.0, 5.0, 3.0], [1.0, 3.0, 6.0]];
+
     println!("Matrix A (3x3):");
     println!("{:?}", a);
 
@@ -135,7 +128,7 @@ fn matrix_decompositions() -> LinalgResult<()> {
     println!("{:.4?}", q);
     println!("R matrix:");
     println!("{:.4?}", r);
-    
+
     // Verify: Q * R = A
     let qr_product = q.dot(&r);
     println!("Q * R (should equal A):");
@@ -155,7 +148,7 @@ fn matrix_decompositions() -> LinalgResult<()> {
     if let Ok(l_chol) = cholesky(&a.view(), None) {
         println!("L matrix:");
         println!("{:.4?}", l_chol);
-        
+
         // Verify: L * L^T = A
         let lt = l_chol.t();
         let chol_product = l_chol.dot(&lt.view());
@@ -175,13 +168,9 @@ fn linear_system_solving() -> LinalgResult<()> {
     println!("{}", "=".repeat(50));
 
     // System: A * x = b
-    let a = array![
-        [3.0, 2.0, -1.0],
-        [2.0, -2.0, 4.0],
-        [-1.0, 0.5, -1.0]
-    ];
+    let a = array![[3.0, 2.0, -1.0], [2.0, -2.0, 4.0], [-1.0, 0.5, -1.0]];
     let b = array![1.0, -2.0, 0.0];
-    
+
     println!("Solving system A * x = b");
     println!("Matrix A:");
     println!("{:?}", a);
@@ -190,27 +179,23 @@ fn linear_system_solving() -> LinalgResult<()> {
     // Direct solve
     let x = solve(&a.view(), &b.view(), None)?;
     println!("\nSolution x: {:?}", x);
-    
+
     // Verify solution
     let ax = a.dot(&x);
     println!("A * x = {:?}", ax);
     println!("b     = {:?}", b);
-    
+
     let residual = &ax - &b;
     let residual_norm = vector_norm(&residual.view(), 2)?;
     println!("Residual norm: {:.2e}", residual_norm);
 
     // Demonstrate solving multiple right-hand sides
-    let b_multi = array![
-        [1.0, 2.0],
-        [-2.0, 1.0], 
-        [0.0, -1.0]
-    ];
-    
+    let b_multi = array![[1.0, 2.0], [-2.0, 1.0], [0.0, -1.0]];
+
     println!("\n🔹 Multiple Right-Hand Sides");
     println!("B matrix:");
     println!("{:?}", b_multi);
-    
+
     // Solve for each column
     for i in 0..b_multi.ncols() {
         let bi = b_multi.column(i);
@@ -228,12 +213,8 @@ fn eigenvalue_computations() -> LinalgResult<()> {
     println!("{}", "=".repeat(50));
 
     // Symmetric matrix for real eigenvalues
-    let a_sym = array![
-        [4.0, -2.0, 1.0],
-        [-2.0, 2.0, -1.0],
-        [1.0, -1.0, 3.0]
-    ];
-    
+    let a_sym = array![[4.0, -2.0, 1.0], [-2.0, 2.0, -1.0], [1.0, -1.0, 3.0]];
+
     println!("Symmetric matrix A:");
     println!("{:?}", a_sym);
 
@@ -250,32 +231,31 @@ fn eigenvalue_computations() -> LinalgResult<()> {
         let v0 = eigenvecs.column(0);
         let av0 = a_sym.dot(&v0);
         let lambda_v0 = &v0 * lambda0;
-        
+
         println!("\nVerification for first eigenpair:");
         println!("A * v₀ = {:?}", av0);
         println!("λ₀ * v₀ = {:?}", lambda_v0);
-        
+
         let diff = &av0 - &lambda_v0;
         let error = vector_norm(&diff.view(), 2)?;
         println!("||A*v₀ - λ₀*v₀|| = {:.2e}", error);
     }
 
     // General eigenvalue decomposition
-    let a_gen = array![
-        [1.0, 2.0],
-        [3.0, 4.0]
-    ];
-    
+    let a_gen = array![[1.0, 2.0], [3.0, 4.0]];
+
     println!("\n🔹 General Eigenvalue Decomposition");
     println!("Matrix A:");
     println!("{:?}", a_gen);
-    
+
     if let Ok((eigenvals_gen, eigenvecs_gen)) = eig(&a_gen.view(), None) {
         println!("Eigenvalues: {:?}", eigenvals_gen);
         println!("Eigenvectors:");
         println!("{:.4?}", eigenvecs_gen);
     } else {
-        println!("General eigenvalue decomposition failed (complex eigenvalues or numerical issues)");
+        println!(
+            "General eigenvalue decomposition failed (complex eigenvalues or numerical issues)"
+        );
     }
 
     println!("\n");
@@ -315,7 +295,7 @@ fn parallel_processing_examples() -> LinalgResult<()> {
     println!("\n🔹 Parallel Matrix-Vector Multiplication");
     let result_matvec = algorithms::parallel_matvec(&a.view(), &x.view(), &config)?;
     let reference_matvec = a.dot(&x);
-    
+
     let diff_matvec = &result_matvec - &reference_matvec;
     let error_matvec = vector_norm(&diff_matvec.view(), 2)?;
     println!("Matrix-vector multiplication error: {:.2e}", error_matvec);
@@ -324,7 +304,7 @@ fn parallel_processing_examples() -> LinalgResult<()> {
     println!("\n🔹 Parallel Matrix Multiplication");
     let result_gemm = algorithms::parallel_gemm(&a.view(), &b.view(), &config)?;
     let reference_gemm = a.dot(&b);
-    
+
     let diff_gemm = &result_gemm - &reference_gemm;
     let error_gemm = matrix_norm(&diff_gemm.view(), "fro", None)?;
     println!("Matrix multiplication Frobenius error: {:.2e}", error_gemm);
@@ -332,12 +312,19 @@ fn parallel_processing_examples() -> LinalgResult<()> {
     // Parallel vector operations
     println!("\n🔹 Parallel Vector Operations");
     let y = Array1::from_shape_fn(size, |i| (i as f64 + 1.0).sqrt());
-    
+
     let dot_result = algorithms::vector_ops::parallel_dot(&x.view(), &y.view(), &config)?;
-    let dot_reference = x.iter().zip(y.iter()).map(|(&xi, &yi)| xi * yi).sum::<f64>();
+    let dot_reference = x
+        .iter()
+        .zip(y.iter())
+        .map(|(&xi, &yi)| xi * yi)
+        .sum::<f64>();
     println!("Parallel dot product: {:.6}", dot_result);
     println!("Reference dot product: {:.6}", dot_reference);
-    println!("Dot product error: {:.2e}", (dot_result - dot_reference).abs());
+    println!(
+        "Dot product error: {:.2e}",
+        (dot_result - dot_reference).abs()
+    );
 
     let norm_result = algorithms::vector_ops::parallel_norm(&x.view(), &config)?;
     let norm_reference = vector_norm(&x.view(), 2)?;
@@ -357,8 +344,8 @@ fn error_handling_demonstration() {
     // Dimension mismatch errors
     println!("🔹 Dimension Mismatch Errors");
     let a = array![[1.0, 2.0], [3.0, 4.0]]; // 2x2
-    let b = array![1.0, 2.0, 3.0];           // 3x1 (wrong size)
-    
+    let b = array![1.0, 2.0, 3.0]; // 3x1 (wrong size)
+
     match solve(&a.view(), &b.view(), None) {
         Ok(_) => println!("Unexpected success!"),
         Err(e) => println!("Expected error: {}", e),
@@ -367,7 +354,7 @@ fn error_handling_demonstration() {
     // Singular matrix errors
     println!("\n🔹 Singular Matrix Errors");
     let singular = array![[1.0, 2.0], [2.0, 4.0]]; // Rank deficient
-    
+
     match inv(&singular.view(), None) {
         Ok(_) => println!("Unexpected success!"),
         Err(e) => println!("Expected error: {}", e),
@@ -383,7 +370,7 @@ fn error_handling_demonstration() {
     // Non-finite values
     println!("\n🔹 Non-finite Value Errors");
     let invalid_matrix = array![[1.0, f64::NAN], [f64::INFINITY, 4.0]];
-    
+
     match det(&invalid_matrix.view(), None) {
         Ok(_) => println!("Unexpected success!"),
         Err(e) => println!("Expected error: {}", e),

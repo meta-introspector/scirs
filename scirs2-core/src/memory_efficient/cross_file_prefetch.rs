@@ -703,6 +703,7 @@ impl CrossFilePrefetchRegistry {
     }
 }
 
+#[cfg(feature = "memory_compression")]
 /// Implementation of DatasetPrefetcher for CompressedMemMappedArray.
 pub struct CompressedArrayPrefetcher<A: Clone + Copy + 'static> {
     /// Dataset ID
@@ -712,6 +713,7 @@ pub struct CompressedArrayPrefetcher<A: Clone + Copy + 'static> {
     array: Arc<super::compressed_memmap::CompressedMemMappedArray<A>>,
 }
 
+#[cfg(feature = "memory_compression")]
 impl<A: Clone + Copy + 'static> CompressedArrayPrefetcher<A> {
     /// Create a new prefetcher for a compressed array.
     pub fn new(
@@ -722,6 +724,7 @@ impl<A: Clone + Copy + 'static> CompressedArrayPrefetcher<A> {
     }
 }
 
+#[cfg(feature = "memory_compression")]
 impl<A: Clone + Copy + 'static> DatasetPrefetcher for CompressedArrayPrefetcher<A> {
     fn prefetch_indices(&self, indices: &[usize]) -> CoreResult<()> {
         if indices.is_empty() {
@@ -816,6 +819,7 @@ impl<A: Clone + Copy + 'static> DatasetPrefetcher for MemoryMappedArrayPrefetche
     }
 }
 
+#[cfg(feature = "memory_compression")]
 /// Extension traits for compressed arrays to enable cross-file prefetching.
 pub trait CompressedArrayPrefetchExt<A: Clone + Copy + 'static> {
     /// Register with the cross-file prefetching system.
@@ -825,6 +829,7 @@ pub trait CompressedArrayPrefetchExt<A: Clone + Copy + 'static> {
     ) -> CoreResult<Arc<CompressedArrayPrefetcher<A>>>;
 }
 
+#[cfg(feature = "memory_compression")]
 impl<A: Clone + Copy + 'static> CompressedArrayPrefetchExt<A>
     for super::compressed_memmap::CompressedMemMappedArray<A>
 {
@@ -928,6 +933,7 @@ impl<A: Clone + Copy + 'static, T> TrackedArray<A, T> {
     }
 }
 
+#[cfg(feature = "memory_compression")]
 /// Implementation of TrackedArray for CompressedMemMappedArray.
 impl<A: Clone + Copy + 'static>
     TrackedArray<A, super::compressed_memmap::CompressedMemMappedArray<A>>

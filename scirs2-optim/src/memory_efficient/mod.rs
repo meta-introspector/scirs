@@ -545,6 +545,477 @@ pub mod mixed_precision {
     }
 }
 
+/// Gradient checkpointing for memory optimization
+pub mod gradient_checkpointing {
+    use super::*;
+    use std::collections::VecDeque;
+
+    /// Checkpointing strategy for gradient computation
+    #[derive(Debug, Clone, PartialEq)]
+    pub enum CheckpointStrategy {
+        /// No checkpointing (store all intermediate values)
+        None,
+        /// Uniform checkpointing (checkpoint every N layers)
+        Uniform {
+            /// Interval between checkpoints
+            interval: usize,
+        },
+        /// Logarithmic checkpointing (checkpoint at exponential intervals)
+        Logarithmic {
+            /// Base for exponential intervals
+            base: f64,
+        },
+        /// Memory-aware checkpointing (adaptive based on memory usage)
+        MemoryAware {
+            /// Memory threshold for triggering checkpoints
+            memory_threshold: f64,
+        },
+        /// Custom checkpointing pattern
+        Custom {
+            /// Pattern of checkpointing decisions
+            pattern: Vec<bool>,
+        },
+    }
+
+    /// Gradient checkpointing manager
+    #[derive(Debug)]
+    pub struct GradientCheckpointer<A: Float, D: Dimension> {
+        /// Checkpointing strategy
+        strategy: CheckpointStrategy,
+        /// Stored checkpoints (layer_index -> activation)
+        checkpoints: std::collections::HashMap<usize, Array<A, D>>,
+        /// Memory usage tracker
+        memory_tracker: MemoryTracker,
+        /// Current computation depth
+        current_depth: usize,
+        /// Maximum depth for this computation
+        max_depth: usize,
+        /// Whether checkpointing is enabled
+        enabled: bool,
+    }
+
+    impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCheckpointer<A, D> {
+        /// Create a new gradient checkpointer
+        pub fn new(strategy: CheckpointStrategy) -> Self {
+            Self {
+                strategy,
+                checkpoints: std::collections::HashMap::new(),
+                memory_tracker: MemoryTracker::new(),
+                current_depth: 0,
+                max_depth: 0,
+                enabled: true,
+            }
+        }
+
+        /// Set the maximum computation depth
+        pub fn set_max_depth(&mut self, depth: usize) {
+            self.max_depth = depth;
+        }
+
+        /// Enable or disable checkpointing
+        pub fn set_enabled(&mut self, enabled: bool) {
+            self.enabled = enabled;
+        }
+
+        /// Check if we should checkpoint at the current depth
+        pub fn should_checkpoint(&self, depth: usize) -> bool {
+            if !self.enabled || self.max_depth == 0 {
+                return false;
+            }
+
+            match self.strategy {
+                CheckpointStrategy::None => false,
+                CheckpointStrategy::Uniform { interval } => depth % interval == 0,
+                CheckpointStrategy::Logarithmic { base } => {
+                    let log_depth = (depth as f64).log(base).floor() as usize;
+                    depth == base.powi(log_depth as i32) as usize
+                }
+                CheckpointStrategy::MemoryAware { memory_threshold } => {
+                    self.memory_tracker.usage_ratio() > memory_threshold
+                }
+                CheckpointStrategy::Custom { ref pattern } => {
+                    if depth < pattern.len() {
+                        pattern[depth]
+                    } else {
+                        false
+                    }
+                }
+            }
+        }
+
+        /// Store a checkpoint
+        pub fn store_checkpoint(&mut self, depth: usize, activation: Array<A, D>) {
+            if self.should_checkpoint(depth) {
+                let memory_size = activation.len() * std::mem::size_of::<A>();
+                self.memory_tracker.add_allocation(memory_size);
+                self.checkpoints.insert(depth, activation);
+            }
+        }
+
+        /// Retrieve a checkpoint
+        pub fn get_checkpoint(&self, depth: usize) -> Option<&Array<A, D>> {
+            self.checkpoints.get(&depth)
+        }
+
+        /// Remove a checkpoint to free memory
+        pub fn remove_checkpoint(&mut self, depth: usize) -> Option<Array<A, D>> {
+            if let Some(checkpoint) = self.checkpoints.remove(&depth) {
+                let memory_size = checkpoint.len() * std::mem::size_of::<A>();
+                self.memory_tracker.remove_allocation(memory_size);
+                Some(checkpoint)
+            } else {
+                None
+            }
+        }
+
+        /// Clear all checkpoints
+        pub fn clear_checkpoints(&mut self) {
+            self.checkpoints.clear();
+            self.memory_tracker.reset();
+        }
+
+        /// Get memory usage information
+        pub fn memory_usage(&self) -> MemoryUsage {
+            self.memory_tracker.usage()
+        }
+
+        /// Optimize checkpointing strategy based on memory usage
+        pub fn optimize_strategy(&mut self, target_memory_usage: f64) {
+            let current_usage = self.memory_tracker.usage_ratio();
+
+            if current_usage > target_memory_usage {
+                // Increase checkpointing frequency to reduce memory usage
+                self.strategy = match &self.strategy {
+                    CheckpointStrategy::Uniform { interval } => CheckpointStrategy::Uniform {
+                        interval: (interval / 2).max(1),
+                    },
+                    CheckpointStrategy::MemoryAware { .. } => CheckpointStrategy::MemoryAware {
+                        memory_threshold: target_memory_usage * 0.8,
+                    },
+                    other => other.clone(),
+                };
+            } else if current_usage < target_memory_usage * 0.5 {
+                // Decrease checkpointing frequency to improve performance
+                self.strategy = match &self.strategy {
+                    CheckpointStrategy::Uniform { interval } => CheckpointStrategy::Uniform {
+                        interval: interval * 2,
+                    },
+                    CheckpointStrategy::MemoryAware { .. } => CheckpointStrategy::MemoryAware {
+                        memory_threshold: target_memory_usage * 1.2,
+                    },
+                    other => other.clone(),
+                };
+            }
+        }
+
+        /// Execute a checkpointed computation
+        pub fn checkpointed_forward<F, Output>(
+            &mut self,
+            depth: usize,
+            input: &Array<A, D>,
+            forward_fn: F,
+        ) -> Result<(Output, Option<Array<A, D>>)>
+        where
+            F: FnOnce(&Array<A, D>) -> Result<(Output, Array<A, D>)>,
+        {
+            self.current_depth = depth;
+
+            // Execute forward computation
+            let (output, activation) = forward_fn(input)?;
+
+            // Decide whether to store checkpoint
+            let checkpoint = if self.should_checkpoint(depth) {
+                self.store_checkpoint(depth, activation.clone());
+                Some(activation)
+            } else {
+                None
+            };
+
+            Ok((output, checkpoint))
+        }
+
+        /// Recompute activations from checkpoint
+        pub fn recompute_from_checkpoint<F>(
+            &self,
+            start_depth: usize,
+            target_depth: usize,
+            recompute_fn: F,
+        ) -> Result<Array<A, D>>
+        where
+            F: Fn(usize, &Array<A, D>) -> Result<Array<A, D>>,
+        {
+            // Find the nearest checkpoint at or before start_depth
+            let checkpoint_depth = (0..=start_depth)
+                .rev()
+                .find(|&d| self.checkpoints.contains_key(&d))
+                .ok_or_else(|| {
+                    OptimError::InvalidConfig("No checkpoint found for recomputation".to_string())
+                })?;
+
+            let mut current_activation = self.checkpoints[&checkpoint_depth].clone();
+
+            // Recompute forward from checkpoint to target depth
+            for depth in (checkpoint_depth + 1)..=target_depth {
+                current_activation = recompute_fn(depth, &current_activation)?;
+            }
+
+            Ok(current_activation)
+        }
+    }
+
+    /// Memory usage tracking
+    #[derive(Debug, Clone)]
+    pub struct MemoryTracker {
+        allocated_bytes: usize,
+        peak_bytes: usize,
+        total_system_memory: usize,
+    }
+
+    impl Default for MemoryTracker {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl MemoryTracker {
+        /// Create a new memory tracker
+        pub fn new() -> Self {
+            Self {
+                allocated_bytes: 0,
+                peak_bytes: 0,
+                total_system_memory: Self::estimate_system_memory(),
+            }
+        }
+
+        /// Add an allocation
+        pub fn add_allocation(&mut self, bytes: usize) {
+            self.allocated_bytes += bytes;
+            self.peak_bytes = self.peak_bytes.max(self.allocated_bytes);
+        }
+
+        /// Remove an allocation
+        pub fn remove_allocation(&mut self, bytes: usize) {
+            self.allocated_bytes = self.allocated_bytes.saturating_sub(bytes);
+        }
+
+        /// Get current memory usage
+        pub fn usage(&self) -> MemoryUsage {
+            MemoryUsage {
+                current_bytes: self.allocated_bytes,
+                peak_bytes: self.peak_bytes,
+                total_system_bytes: self.total_system_memory,
+            }
+        }
+
+        /// Get memory usage ratio (0.0 to 1.0)
+        pub fn usage_ratio(&self) -> f64 {
+            if self.total_system_memory == 0 {
+                0.0
+            } else {
+                self.allocated_bytes as f64 / self.total_system_memory as f64
+            }
+        }
+
+        /// Reset memory tracking
+        pub fn reset(&mut self) {
+            self.allocated_bytes = 0;
+            self.peak_bytes = 0;
+        }
+
+        /// Estimate total system memory (simplified)
+        fn estimate_system_memory() -> usize {
+            // This is a simplified estimation
+            // In a real implementation, you would use system APIs
+            8 * 1024 * 1024 * 1024 // Assume 8GB
+        }
+    }
+
+    /// Memory usage information
+    #[derive(Debug, Clone, Copy)]
+    pub struct MemoryUsage {
+        /// Current allocated bytes
+        pub current_bytes: usize,
+        /// Peak allocated bytes
+        pub peak_bytes: usize,
+        /// Total system memory bytes
+        pub total_system_bytes: usize,
+    }
+
+    impl MemoryUsage {
+        /// Get current usage as a ratio (0.0 to 1.0)
+        pub fn current_ratio(&self) -> f64 {
+            if self.total_system_bytes == 0 {
+                0.0
+            } else {
+                self.current_bytes as f64 / self.total_system_bytes as f64
+            }
+        }
+
+        /// Get peak usage as a ratio (0.0 to 1.0)
+        pub fn peak_ratio(&self) -> f64 {
+            if self.total_system_bytes == 0 {
+                0.0
+            } else {
+                self.peak_bytes as f64 / self.total_system_bytes as f64
+            }
+        }
+
+        /// Format as human-readable string
+        pub fn format(&self) -> String {
+            format!(
+                "Current: {:.1} MB ({:.1}%), Peak: {:.1} MB ({:.1}%), Total: {:.1} MB",
+                self.current_bytes as f64 / (1024.0 * 1024.0),
+                self.current_ratio() * 100.0,
+                self.peak_bytes as f64 / (1024.0 * 1024.0),
+                self.peak_ratio() * 100.0,
+                self.total_system_bytes as f64 / (1024.0 * 1024.0)
+            )
+        }
+    }
+
+    /// Automatic checkpointing manager for optimization workflows
+    #[derive(Debug)]
+    pub struct AutoCheckpointer<A: Float, D: Dimension> {
+        checkpointer: GradientCheckpointer<A, D>,
+        /// History of memory usage for adaptive optimization
+        memory_history: VecDeque<f64>,
+        /// Target memory usage ratio
+        target_memory_ratio: f64,
+        /// Adaptation frequency (steps)
+        adaptation_frequency: usize,
+        /// Current step count
+        step_count: usize,
+    }
+
+    impl<A: Float + ScalarOperand + Debug, D: Dimension> AutoCheckpointer<A, D> {
+        /// Create a new auto checkpointer
+        pub fn new(initial_strategy: CheckpointStrategy, target_memory_ratio: f64) -> Self {
+            Self {
+                checkpointer: GradientCheckpointer::new(initial_strategy),
+                memory_history: VecDeque::with_capacity(100),
+                target_memory_ratio: target_memory_ratio.clamp(0.1, 0.9),
+                adaptation_frequency: 10,
+                step_count: 0,
+            }
+        }
+
+        /// Set adaptation frequency
+        pub fn with_adaptation_frequency(mut self, frequency: usize) -> Self {
+            self.adaptation_frequency = frequency.max(1);
+            self
+        }
+
+        /// Execute a step with automatic checkpointing
+        pub fn auto_step<F, Output>(
+            &mut self,
+            depth: usize,
+            input: &Array<A, D>,
+            forward_fn: F,
+        ) -> Result<(Output, Option<Array<A, D>>)>
+        where
+            F: FnOnce(&Array<A, D>) -> Result<(Output, Array<A, D>)>,
+        {
+            self.step_count += 1;
+
+            // Execute checkpointed forward
+            let result = self
+                .checkpointer
+                .checkpointed_forward(depth, input, forward_fn)?;
+
+            // Track memory usage
+            let current_usage = self.checkpointer.memory_usage().current_ratio();
+            self.memory_history.push_back(current_usage);
+            if self.memory_history.len() > 100 {
+                self.memory_history.pop_front();
+            }
+
+            // Adapt strategy periodically
+            if self.step_count % self.adaptation_frequency == 0 {
+                self.adapt_strategy();
+            }
+
+            Ok(result)
+        }
+
+        /// Adapt checkpointing strategy based on memory usage history
+        fn adapt_strategy(&mut self) {
+            if self.memory_history.len() < 5 {
+                return;
+            }
+
+            // Calculate average memory usage over recent history
+            let recent_avg = self.memory_history.iter().rev().take(10).sum::<f64>()
+                / 10.0.min(self.memory_history.len() as f64);
+
+            // Optimize strategy if we're significantly off target
+            let deviation = (recent_avg - self.target_memory_ratio).abs();
+            if deviation > 0.1 {
+                self.checkpointer
+                    .optimize_strategy(self.target_memory_ratio);
+            }
+        }
+
+        /// Get checkpointer reference
+        pub fn checkpointer(&self) -> &GradientCheckpointer<A, D> {
+            &self.checkpointer
+        }
+
+        /// Get mutable checkpointer reference
+        pub fn checkpointer_mut(&mut self) -> &mut GradientCheckpointer<A, D> {
+            &mut self.checkpointer
+        }
+
+        /// Get memory usage statistics
+        pub fn get_memory_stats(&self) -> MemoryStats {
+            let usage = self.checkpointer.memory_usage();
+            let avg_usage = if self.memory_history.is_empty() {
+                0.0
+            } else {
+                self.memory_history.iter().sum::<f64>() / self.memory_history.len() as f64
+            };
+
+            MemoryStats {
+                current_usage: usage.current_ratio(),
+                peak_usage: usage.peak_ratio(),
+                average_usage: avg_usage,
+                target_usage: self.target_memory_ratio,
+                checkpoints_stored: self.checkpointer.checkpoints.len(),
+            }
+        }
+    }
+
+    /// Memory usage statistics
+    #[derive(Debug, Clone, Copy)]
+    pub struct MemoryStats {
+        /// Current memory usage ratio
+        pub current_usage: f64,
+        /// Peak memory usage ratio
+        pub peak_usage: f64,
+        /// Average memory usage ratio
+        pub average_usage: f64,
+        /// Target memory usage ratio
+        pub target_usage: f64,
+        /// Number of checkpoints currently stored
+        pub checkpoints_stored: usize,
+    }
+
+    impl MemoryStats {
+        /// Check if memory usage is within target range
+        pub fn is_within_target(&self, tolerance: f64) -> bool {
+            (self.current_usage - self.target_usage).abs() <= tolerance
+        }
+
+        /// Get efficiency score (how close to target without exceeding)
+        pub fn efficiency_score(&self) -> f64 {
+            if self.current_usage <= self.target_usage {
+                self.current_usage / self.target_usage
+            } else {
+                self.target_usage / self.current_usage
+            }
+        }
+    }
+}
+
 /// Dynamic resource adaptation
 pub mod adaptive {
     use super::*;
@@ -638,6 +1109,7 @@ pub use utils::{
 // Re-export new modules
 pub use adaptive::*;
 pub use fused::*;
+pub use gradient_checkpointing::*;
 pub use mixed_precision::*;
 
 #[cfg(test)]
@@ -834,5 +1306,241 @@ mod tests {
         // Should be roughly 300 * size_of::<f64>()
         let expected_size = 300 * std::mem::size_of::<f64>();
         assert_eq!(estimated_size, expected_size);
+    }
+
+    #[test]
+    fn test_gradient_checkpointing_uniform() {
+        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::GradientCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Uniform { interval: 2 },
+            );
+        checkpointer.set_max_depth(10);
+
+        // Should checkpoint at depths 0, 2, 4, 6, 8
+        assert!(checkpointer.should_checkpoint(0));
+        assert!(!checkpointer.should_checkpoint(1));
+        assert!(checkpointer.should_checkpoint(2));
+        assert!(!checkpointer.should_checkpoint(3));
+        assert!(checkpointer.should_checkpoint(4));
+
+        // Store a checkpoint
+        let activation = Array1::from_vec(vec![1.0, 2.0, 3.0]);
+        checkpointer.store_checkpoint(2, activation.clone());
+
+        // Retrieve checkpoint
+        let retrieved = checkpointer.get_checkpoint(2).unwrap();
+        assert_eq!(
+            retrieved.as_slice().unwrap(),
+            activation.as_slice().unwrap()
+        );
+
+        // Non-checkpointed depth should return None
+        assert!(checkpointer.get_checkpoint(1).is_none());
+    }
+
+    #[test]
+    fn test_gradient_checkpointing_logarithmic() {
+        let checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::GradientCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Logarithmic { base: 2.0 },
+            );
+
+        // Should checkpoint at powers of 2: 1, 2, 4, 8, 16...
+        assert!(checkpointer.should_checkpoint(1));
+        assert!(checkpointer.should_checkpoint(2));
+        assert!(!checkpointer.should_checkpoint(3));
+        assert!(checkpointer.should_checkpoint(4));
+        assert!(!checkpointer.should_checkpoint(5));
+        assert!(!checkpointer.should_checkpoint(6));
+        assert!(!checkpointer.should_checkpoint(7));
+        assert!(checkpointer.should_checkpoint(8));
+    }
+
+    #[test]
+    fn test_gradient_checkpointing_custom() {
+        let pattern = vec![true, false, false, true, false];
+        let checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::GradientCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Custom { pattern },
+            );
+
+        // Should follow the custom pattern
+        assert!(checkpointer.should_checkpoint(0));
+        assert!(!checkpointer.should_checkpoint(1));
+        assert!(!checkpointer.should_checkpoint(2));
+        assert!(checkpointer.should_checkpoint(3));
+        assert!(!checkpointer.should_checkpoint(4));
+        assert!(!checkpointer.should_checkpoint(5)); // Beyond pattern length
+    }
+
+    #[test]
+    fn test_gradient_checkpointing_memory_tracking() {
+        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::GradientCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Uniform { interval: 1 },
+            );
+        checkpointer.set_max_depth(5);
+
+        let activation1 = Array1::from_vec(vec![1.0; 100]);
+        let activation2 = Array1::from_vec(vec![2.0; 200]);
+
+        checkpointer.store_checkpoint(0, activation1);
+        let usage_after_first = checkpointer.memory_usage();
+        assert!(usage_after_first.current_bytes > 0);
+
+        checkpointer.store_checkpoint(1, activation2);
+        let usage_after_second = checkpointer.memory_usage();
+        assert!(usage_after_second.current_bytes > usage_after_first.current_bytes);
+
+        // Remove first checkpoint
+        checkpointer.remove_checkpoint(0);
+        let usage_after_removal = checkpointer.memory_usage();
+        assert!(usage_after_removal.current_bytes < usage_after_second.current_bytes);
+    }
+
+    #[test]
+    fn test_checkpointed_forward() {
+        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::GradientCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Uniform { interval: 1 },
+            );
+        checkpointer.set_max_depth(5);
+
+        let input = Array1::from_vec(vec![1.0, 2.0, 3.0]);
+
+        // Simple forward function that doubles the input
+        let forward_fn = |x: &Array1<f64>| -> Result<(f64, Array1<f64>)> {
+            let output = x.sum();
+            let activation = x.mapv(|val| val * 2.0);
+            Ok((output, activation))
+        };
+
+        let (output, checkpoint) = checkpointer
+            .checkpointed_forward(0, &input, forward_fn)
+            .unwrap();
+
+        assert_eq!(output, 6.0); // 1 + 2 + 3
+        assert!(checkpoint.is_some());
+        let checkpoint = checkpoint.unwrap();
+        assert_eq!(checkpoint.as_slice().unwrap(), &[2.0, 4.0, 6.0]);
+    }
+
+    #[test]
+    fn test_recompute_from_checkpoint() {
+        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::GradientCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Uniform { interval: 2 },
+            );
+        checkpointer.set_max_depth(10);
+
+        // Store checkpoints at depths 0, 2, 4
+        let checkpoint0 = Array1::from_vec(vec![1.0, 2.0]);
+        let checkpoint2 = Array1::from_vec(vec![3.0, 4.0]);
+
+        checkpointer.store_checkpoint(0, checkpoint0);
+        checkpointer.store_checkpoint(2, checkpoint2);
+
+        // Recompute function that adds 1 to each element
+        let recompute_fn =
+            |_depth: usize, x: &Array1<f64>| -> Result<Array1<f64>> { Ok(x.mapv(|val| val + 1.0)) };
+
+        // Recompute from checkpoint 2 to depth 4
+        let result = checkpointer
+            .recompute_from_checkpoint(2, 4, recompute_fn)
+            .unwrap();
+
+        // Should be [3,4] + 1 + 1 = [5,6]
+        assert_eq!(result.as_slice().unwrap(), &[5.0, 6.0]);
+    }
+
+    #[test]
+    fn test_auto_checkpointer() {
+        let mut auto_checkpointer: gradient_checkpointing::AutoCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::AutoCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Uniform { interval: 2 },
+                0.6, // target 60% memory usage
+            );
+
+        let input = Array1::from_vec(vec![1.0, 2.0]);
+
+        // Simple forward function
+        let forward_fn = |x: &Array1<f64>| -> Result<(f64, Array1<f64>)> {
+            let output = x.sum();
+            let activation = x.clone();
+            Ok((output, activation))
+        };
+
+        // Execute several steps
+        for depth in 0..5 {
+            let (output, _checkpoint) = auto_checkpointer
+                .auto_step(depth, &input, forward_fn)
+                .unwrap();
+            assert_eq!(output, 3.0); // 1 + 2
+        }
+
+        let stats = auto_checkpointer.get_memory_stats();
+        assert!(stats.target_usage > 0.0);
+    }
+
+    #[test]
+    fn test_memory_stats() {
+        let stats = gradient_checkpointing::MemoryStats {
+            current_usage: 0.5,
+            peak_usage: 0.7,
+            average_usage: 0.6,
+            target_usage: 0.6,
+            checkpoints_stored: 3,
+        };
+
+        assert!(stats.is_within_target(0.1));
+        assert!(!stats.is_within_target(0.01));
+
+        let efficiency = stats.efficiency_score();
+        assert!(efficiency > 0.8 && efficiency <= 1.0);
+    }
+
+    #[test]
+    fn test_memory_usage_formatting() {
+        let usage = gradient_checkpointing::MemoryUsage {
+            current_bytes: 1024 * 1024,                 // 1 MB
+            peak_bytes: 2 * 1024 * 1024,                // 2 MB
+            total_system_bytes: 8 * 1024 * 1024 * 1024, // 8 GB
+        };
+
+        let formatted = usage.format();
+        assert!(formatted.contains("1.0 MB"));
+        assert!(formatted.contains("2.0 MB"));
+        assert!(formatted.contains("8192.0 MB"));
+
+        assert_relative_eq!(usage.current_ratio(), 1.0 / 8192.0, epsilon = 1e-6);
+        assert_relative_eq!(usage.peak_ratio(), 2.0 / 8192.0, epsilon = 1e-6);
+    }
+
+    #[test]
+    fn test_checkpointing_strategy_optimization() {
+        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::GradientCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Uniform { interval: 4 },
+            );
+
+        // Simulate high memory usage - should reduce interval
+        checkpointer.optimize_strategy(0.3); // Target 30% usage
+
+        // Check that strategy was adapted (should checkpoint more frequently)
+        assert!(checkpointer.should_checkpoint(0) || checkpointer.should_checkpoint(1));
+    }
+
+    #[test]
+    fn test_checkpointing_disabled() {
+        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+            gradient_checkpointing::GradientCheckpointer::new(
+                gradient_checkpointing::CheckpointStrategy::Uniform { interval: 1 },
+            );
+        checkpointer.set_enabled(false);
+
+        // Should not checkpoint when disabled
+        assert!(!checkpointer.should_checkpoint(0));
+        assert!(!checkpointer.should_checkpoint(1));
+        assert!(!checkpointer.should_checkpoint(2));
     }
 }

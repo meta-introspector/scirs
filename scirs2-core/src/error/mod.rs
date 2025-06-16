@@ -72,15 +72,16 @@
 //!
 //! ### Async Error Handling
 //!
-//! ```rust
+//! ```rust,ignore
+//! // This example requires the "async" feature
 //! use scirs2_core::error::async_handling::{AsyncRetryExecutor, with_timeout};
+//! use scirs2_core::error::recovery::RecoveryStrategy;
 //! use std::time::Duration;
 //!
-//! #[tokio::main]
-//! async fn main() {
+//! async fn example() {
 //!     // With timeout
 //!     let result = with_timeout(
-//!         async { Ok(42) },
+//!         async { Ok::<i32, scirs2_core::error::CoreError>(42) },
 //!         Duration::from_secs(10)
 //!     ).await;
 //!     
@@ -92,16 +93,20 @@
 //!         }
 //!     );
 //!     
-//!     let result = executor.execute(|| async { Ok(42) }).await;
+//!     let result = executor.execute(|| async { Ok::<i32, scirs2_core::error::CoreError>(42) }).await;
 //! }
 //! ```
 //!
 //! ### Error Diagnostics
 //!
 //! ```rust
-//! use scirs2_core::error::diagnostics::{diagnose_error, ErrorDiagnostics};
+//! use scirs2_core::error::diagnostics::diagnose_error;
+//! use scirs2_core::error::{CoreError, ErrorContext, ErrorLocation};
 //!
-//! let error = CoreError::ConvergenceError(error_context!("Failed to converge"));
+//! let error = CoreError::ConvergenceError(
+//!     ErrorContext::new("Failed to converge")
+//!         .with_location(ErrorLocation::new(file!(), line!()))
+//! );
 //! let diagnostics = diagnose_error(&error);
 //!
 //! println!("{}", diagnostics); // Comprehensive diagnostic report
@@ -140,6 +145,44 @@ pub use error::{
     chain_error, check_dimensions, check_domain, check_value, convert_error, validate, CoreError,
     CoreResult, ErrorContext, ErrorLocation,
 };
+
+/// Alpha 6 Enhanced Diagnostic Functions
+///
+/// Analyze an error with comprehensive diagnostics including Alpha 6 features
+pub fn diagnose_error_advanced(error: &CoreError, context: Option<&str>, domain: Option<&str>) -> ErrorDiagnosticReport {
+    let diagnostics = ErrorDiagnostics::global();
+    let mut report = diagnostics.analyze_error(error);
+    
+    // Add predictive analysis if context is provided
+    if let Some(ctx) = context {
+        report.predictions = diagnostics.predict_potential_errors(ctx);
+    }
+    
+    // Add domain-specific recovery strategies if domain is provided
+    if let Some(dom) = domain {
+        report.domain_strategies = diagnostics.suggest_domain_recovery(error, dom);
+    }
+    
+    report
+}
+
+/// Record an error for pattern analysis
+pub fn record_error_occurrence(error: &CoreError, context: String) {
+    let diagnostics = ErrorDiagnostics::global();
+    diagnostics.record_error(error, context);
+}
+
+/// Get predictive error analysis for a given context
+pub fn predict_errors_for_context(context: &str) -> Vec<String> {
+    let diagnostics = ErrorDiagnostics::global();
+    diagnostics.predict_potential_errors(context)
+}
+
+/// Get domain-specific recovery strategies for an error
+pub fn get_domain_recovery_strategies(error: &CoreError, domain: &str) -> Vec<String> {
+    let diagnostics = ErrorDiagnostics::global();
+    diagnostics.suggest_domain_recovery(error, domain)
+}
 
 pub mod prelude {
     //! Prelude module for convenient imports

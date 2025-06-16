@@ -165,10 +165,10 @@ mod tests {
         assert_relative_eq!(det_j, 1.0, epsilon = 1e-12); // Unit triangle has determinant 1
 
         // Test that reference triangle maps correctly
-        let xi_ref = vec![0.0, 1.0, 0.0, 1.0 / 3.0];
-        let eta_ref = vec![0.0, 0.0, 1.0, 1.0 / 3.0];
-        let expected_x = vec![0.0, 1.0, 0.0, 1.0 / 3.0];
-        let expected_y = vec![0.0, 0.0, 1.0, 1.0 / 3.0];
+        let xi_ref = [0.0, 1.0, 0.0, 1.0 / 3.0];
+        let eta_ref = [0.0, 0.0, 1.0, 1.0 / 3.0];
+        let expected_x = [0.0, 1.0, 0.0, 1.0 / 3.0];
+        let expected_y = [0.0, 0.0, 1.0, 1.0 / 3.0];
 
         for i in 0..xi_ref.len() {
             let xi = xi_ref[i];

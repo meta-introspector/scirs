@@ -5,7 +5,7 @@
 //! progress monitoring, and efficient buffering strategies.
 
 use crate::error::{IoError, Result};
-use std::io::{Read, Write, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
 /// Streaming configuration
@@ -24,7 +24,7 @@ pub struct StreamConfig {
 impl Default for StreamConfig {
     fn default() -> Self {
         Self {
-            buffer_size: 64 * 1024, // 64KB chunks
+            buffer_size: 64 * 1024,       // 64KB chunks
             max_memory: 16 * 1024 * 1024, // 16MB max buffer
             compression: false,
             progress_interval: 1024 * 1024, // Report every 1MB
@@ -273,8 +273,9 @@ impl ChunkedReader {
     pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
         let file = std::fs::File::open(path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
-        
-        let file_size = file.metadata()
+
+        let file_size = file
+            .metadata()
             .map_err(|e| IoError::FileError(format!("Failed to get file metadata: {}", e)))?
             .len();
 
@@ -293,7 +294,9 @@ impl ChunkedReader {
         }
 
         let mut buffer = vec![0u8; self.chunk_size];
-        let bytes_read = self.file.read(&mut buffer)
+        let bytes_read = self
+            .file
+            .read(&mut buffer)
             .map_err(|e| IoError::FileError(format!("Failed to read chunk: {}", e)))?;
 
         if bytes_read == 0 {
@@ -308,7 +311,8 @@ impl ChunkedReader {
 
     /// Seek to a specific position
     pub fn seek(&mut self, position: u64) -> Result<()> {
-        self.file.seek(SeekFrom::Start(position))
+        self.file
+            .seek(SeekFrom::Start(position))
             .map_err(|e| IoError::FileError(format!("Failed to seek: {}", e)))?;
         self.current_position = position;
         Ok(())
@@ -364,7 +368,7 @@ impl ChunkedWriter {
     /// Write a chunk of data
     pub fn write_chunk(&mut self, data: &[u8]) -> Result<()> {
         self.buffer.extend_from_slice(data);
-        
+
         // Flush buffer if it's full
         if self.buffer.len() >= self.buffer_size {
             self.flush_buffer()?;
@@ -376,9 +380,10 @@ impl ChunkedWriter {
     /// Flush the internal buffer
     pub fn flush_buffer(&mut self) -> Result<()> {
         if !self.buffer.is_empty() {
-            self.file.write_all(&self.buffer)
+            self.file
+                .write_all(&self.buffer)
                 .map_err(|e| IoError::FileError(format!("Failed to write buffer: {}", e)))?;
-            
+
             self.bytes_written += self.buffer.len() as u64;
             self.buffer.clear();
         }
@@ -388,7 +393,8 @@ impl ChunkedWriter {
     /// Finish writing and close the file
     pub fn finish(mut self) -> Result<u64> {
         self.flush_buffer()?;
-        self.file.flush()
+        self.file
+            .flush()
             .map_err(|e| IoError::FileError(format!("Failed to flush file: {}", e)))?;
         Ok(self.bytes_written)
     }
@@ -413,16 +419,18 @@ pub fn copy_with_progress<R: Read, W: Write>(
     let progress_interval = 1024 * 1024; // Report every 1MB
 
     loop {
-        let bytes_read = reader.read(&mut buffer)
+        let bytes_read = reader
+            .read(&mut buffer)
             .map_err(|e| IoError::FileError(format!("Read error: {}", e)))?;
-        
+
         if bytes_read == 0 {
             break;
         }
 
-        writer.write_all(&buffer[..bytes_read])
+        writer
+            .write_all(&buffer[..bytes_read])
             .map_err(|e| IoError::FileError(format!("Write error: {}", e)))?;
-        
+
         total_copied += bytes_read as u64;
 
         // Report progress if needed
@@ -493,7 +501,7 @@ where
     W: tokio::io::AsyncWrite + Unpin,
 {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
-    
+
     let mut buffer = vec![0u8; 64 * 1024]; // 64KB buffer
     let mut total_copied = 0u64;
     let start_time = std::time::Instant::now();
@@ -501,16 +509,20 @@ where
     let progress_interval = 1024 * 1024; // Report every 1MB
 
     loop {
-        let bytes_read = reader.read(&mut buffer).await
+        let bytes_read = reader
+            .read(&mut buffer)
+            .await
             .map_err(|e| IoError::FileError(format!("Async read error: {}", e)))?;
-        
+
         if bytes_read == 0 {
             break;
         }
 
-        writer.write_all(&buffer[..bytes_read]).await
+        writer
+            .write_all(&buffer[..bytes_read])
+            .await
             .map_err(|e| IoError::FileError(format!("Async write error: {}", e)))?;
-        
+
         total_copied += bytes_read as u64;
 
         // Report progress if needed
@@ -546,7 +558,9 @@ where
         }
     }
 
-    writer.flush().await
+    writer
+        .flush()
+        .await
         .map_err(|e| IoError::FileError(format!("Async flush error: {}", e)))?;
 
     Ok(total_copied)
@@ -594,17 +608,17 @@ mod tests {
     fn test_progress_reader() {
         let data = b"Hello, world! This is test data for streaming.";
         let cursor = Cursor::new(data);
-        
+
         let mut reader = ProgressReader::new(cursor)
             .with_total_bytes(data.len() as u64)
             .with_progress_interval(10);
 
         let mut buffer = [0u8; 20];
         let bytes_read = reader.read(&mut buffer).unwrap();
-        
+
         assert_eq!(bytes_read, 20);
         assert_eq!(reader.progress().bytes_transferred, 20);
-        
+
         let progress = reader.progress();
         assert_eq!(progress.bytes_transferred, 20);
         assert_eq!(progress.total_bytes, Some(data.len() as u64));
@@ -620,10 +634,10 @@ mod tests {
 
         let data = b"Test data for progress writer functionality.";
         let bytes_written = writer.write(data).unwrap();
-        
+
         assert_eq!(bytes_written, data.len());
         assert_eq!(writer.progress().bytes_transferred, data.len() as u64);
-        
+
         writer.flush().unwrap();
         assert_eq!(output, data);
     }
@@ -632,20 +646,20 @@ mod tests {
     fn test_chunked_reader() {
         let temp_dir = tempdir().unwrap();
         let file_path = temp_dir.path().join("test_chunked.txt");
-        
+
         // Create test file
         let test_data = b"This is test data for chunked reading. It should be read in chunks.";
         std::fs::write(&file_path, test_data).unwrap();
-        
+
         let mut reader = ChunkedReader::new(&file_path, 10).unwrap();
         assert_eq!(reader.size(), test_data.len() as u64);
         assert!(!reader.is_eof());
-        
+
         let mut all_data = Vec::new();
         while let Some(chunk) = reader.read_chunk().unwrap() {
             all_data.extend_from_slice(&chunk);
         }
-        
+
         assert_eq!(all_data, test_data);
         assert!(reader.is_eof());
         assert_eq!(reader.progress_percentage(), 100.0);
@@ -655,18 +669,18 @@ mod tests {
     fn test_chunked_writer() {
         let temp_dir = tempdir().unwrap();
         let file_path = temp_dir.path().join("test_chunked_write.txt");
-        
+
         let mut writer = ChunkedWriter::new(&file_path, 20).unwrap();
-        
+
         let data1 = b"First chunk of data.";
         let data2 = b"Second chunk of data.";
-        
+
         writer.write_chunk(data1).unwrap();
         writer.write_chunk(data2).unwrap();
-        
+
         let total_bytes = writer.finish().unwrap();
         assert_eq!(total_bytes, (data1.len() + data2.len()) as u64);
-        
+
         // Verify file contents
         let file_contents = std::fs::read(&file_path).unwrap();
         let expected = [data1, data2].concat();
@@ -678,22 +692,23 @@ mod tests {
         let input_data = b"This is test data for copy with progress functionality. It demonstrates streaming copy operations.";
         let input = Cursor::new(input_data);
         let mut output = Vec::new();
-        
+
         let mut progress_reports = 0;
         let callback = Box::new(|progress: StreamProgress| {
             progress_reports += 1;
             assert!(progress.bytes_transferred <= input_data.len() as u64);
             assert!(progress.rate >= 0.0);
         }) as ProgressCallback;
-        
+
         // Use a small progress interval to ensure we get reports
         let copied = copy_with_progress(
             input,
             &mut output,
             Some(input_data.len() as u64),
             Some(callback),
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         assert_eq!(copied, input_data.len() as u64);
         assert_eq!(output, input_data);
     }
@@ -704,14 +719,12 @@ mod tests {
         let input_data = b"Async test data for copy with progress functionality.";
         let input = Cursor::new(input_data);
         let mut output = Vec::new();
-        
-        let copied = async_copy_with_progress(
-            input,
-            &mut output,
-            Some(input_data.len() as u64),
-            None,
-        ).await.unwrap();
-        
+
+        let copied =
+            async_copy_with_progress(input, &mut output, Some(input_data.len() as u64), None)
+                .await
+                .unwrap();
+
         assert_eq!(copied, input_data.len() as u64);
         assert_eq!(output, input_data);
     }

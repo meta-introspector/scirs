@@ -9,13 +9,13 @@
 //! - Compression support
 
 use crate::error::{IoError, Result};
-use crate::matlab::{MatType, write_mat, read_mat};
+use crate::matlab::{read_mat, write_mat, MatType};
 use ndarray::ArrayD;
 use std::collections::HashMap;
 use std::path::Path;
 
 #[cfg(feature = "hdf5")]
-use crate::hdf5::{HDF5File, FileMode, DatasetOptions, CompressionOptions};
+use crate::hdf5::{CompressionOptions, DatasetOptions, FileMode, HDF5File};
 
 #[cfg(not(feature = "hdf5"))]
 type CompressionOptions = ();
@@ -99,12 +99,14 @@ impl EnhancedMatFile {
             MatType::UInt64(array) => array.len() * 8,
             MatType::Logical(array) => array.len() * 1,
             MatType::Char(string) => string.len() * 2, // UTF-16
-            MatType::Cell(cells) => {
-                cells.iter().map(|cell| self.estimate_mat_type_size(cell)).sum()
-            },
-            MatType::Struct(structure) => {
-                structure.values().map(|value| self.estimate_mat_type_size(value)).sum()
-            },
+            MatType::Cell(cells) => cells
+                .iter()
+                .map(|cell| self.estimate_mat_type_size(cell))
+                .sum(),
+            MatType::Struct(structure) => structure
+                .values()
+                .map(|value| self.estimate_mat_type_size(value))
+                .sum(),
         }
     }
 
@@ -144,7 +146,9 @@ impl EnhancedMatFile {
     /// Write variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
     fn write_v73<P: AsRef<Path>>(&self, _path: P, _vars: &HashMap<String, MatType>) -> Result<()> {
-        Err(IoError::Other("MAT v7.3 format requires HDF5 feature".to_string()))
+        Err(IoError::Other(
+            "MAT v7.3 format requires HDF5 feature".to_string(),
+        ))
     }
 
     /// Read variables using MAT v7.3 format (HDF5)
@@ -166,12 +170,19 @@ impl EnhancedMatFile {
     /// Read variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
     fn read_v73<P: AsRef<Path>>(&self, _path: P) -> Result<HashMap<String, MatType>> {
-        Err(IoError::Other("MAT v7.3 format requires HDF5 feature".to_string()))
+        Err(IoError::Other(
+            "MAT v7.3 format requires HDF5 feature".to_string(),
+        ))
     }
 
     /// Write a MatType to HDF5 file
     #[cfg(feature = "hdf5")]
-    fn write_mat_type_to_hdf5(&self, file: &mut HDF5File, name: &str, mat_type: &MatType) -> Result<()> {
+    fn write_mat_type_to_hdf5(
+        &self,
+        file: &mut HDF5File,
+        name: &str,
+        mat_type: &MatType,
+    ) -> Result<()> {
         let options = if let Some(ref compression) = self.config.compression {
             DatasetOptions::default().with_compression(compression.clone())
         } else {
@@ -181,25 +192,27 @@ impl EnhancedMatFile {
         match mat_type {
             MatType::Double(array) => {
                 file.create_dataset_from_array(name, array, Some(options))?;
-            },
+            }
             MatType::Single(array) => {
                 // Convert to f64 for HDF5 compatibility
                 let f64_array = array.mapv(|x| x as f64);
                 file.create_dataset_from_array(name, &f64_array, Some(options))?;
-            },
+            }
             MatType::Int32(array) => {
                 // Convert to f64 for HDF5 compatibility
                 let f64_array = array.mapv(|x| x as f64);
                 file.create_dataset_from_array(name, &f64_array, Some(options))?;
-            },
+            }
             // Add other numeric types as needed
             MatType::Char(string) => {
                 // Store string as attribute for simplicity
                 file.set_attribute(name, "string_data", string)?;
-            },
+            }
             _ => {
-                return Err(IoError::Other(format!("MatType {:?} not yet supported in v7.3 format", 
-                    std::any::type_name::<MatType>())));
+                return Err(IoError::Other(format!(
+                    "MatType {:?} not yet supported in v7.3 format",
+                    std::any::type_name::<MatType>()
+                )));
             }
         }
         Ok(())
@@ -226,9 +239,9 @@ impl EnhancedMatFile {
 
 /// Write variables to a MAT file with automatic format selection
 pub fn write_mat_enhanced<P: AsRef<Path>>(
-    path: P, 
+    path: P,
     vars: &HashMap<String, MatType>,
-    config: Option<MatFileConfig>
+    config: Option<MatFileConfig>,
 ) -> Result<()> {
     let config = config.unwrap_or_default();
     let enhanced_file = EnhancedMatFile::new(config);
@@ -238,7 +251,7 @@ pub fn write_mat_enhanced<P: AsRef<Path>>(
 /// Read variables from a MAT file with enhanced format support
 pub fn read_mat_enhanced<P: AsRef<Path>>(
     path: P,
-    config: Option<MatFileConfig>
+    config: Option<MatFileConfig>,
 ) -> Result<HashMap<String, MatType>> {
     let config = config.unwrap_or_default();
     let enhanced_file = EnhancedMatFile::new(config);
@@ -248,7 +261,9 @@ pub fn read_mat_enhanced<P: AsRef<Path>>(
 /// Create a complex number MatType (placeholder for future implementation)
 pub fn create_complex_array(_real: ArrayD<f64>, _imag: ArrayD<f64>) -> Result<MatType> {
     // TODO: Implement complex number support
-    Err(IoError::Other("Complex array support not yet implemented".to_string()))
+    Err(IoError::Other(
+        "Complex array support not yet implemented".to_string(),
+    ))
 }
 
 /// Create a cell array MatType
@@ -276,10 +291,10 @@ mod tests {
     #[test]
     fn test_size_estimation() {
         let enhanced = EnhancedMatFile::new(MatFileConfig::default());
-        
+
         let array = Array1::from(vec![1.0, 2.0, 3.0, 4.0]).into_dyn();
         let mat_type = MatType::Double(array);
-        
+
         let size = enhanced.estimate_mat_type_size(&mat_type);
         assert_eq!(size, 4 * 8); // 4 elements * 8 bytes each
     }
@@ -288,12 +303,9 @@ mod tests {
     fn test_cell_array_creation() {
         let array1 = Array1::from(vec![1.0, 2.0]).into_dyn();
         let array2 = Array1::from(vec![3.0, 4.0]).into_dyn();
-        
-        let cells = vec![
-            MatType::Double(array1),
-            MatType::Double(array2),
-        ];
-        
+
+        let cells = vec![MatType::Double(array1), MatType::Double(array2)];
+
         let cell_array = create_cell_array(cells);
         match cell_array {
             MatType::Cell(ref cells) => assert_eq!(cells.len(), 2),
@@ -307,14 +319,14 @@ mod tests {
         let array = Array1::from(vec![1.0, 2.0, 3.0]).into_dyn();
         fields.insert("data".to_string(), MatType::Double(array));
         fields.insert("name".to_string(), MatType::Char("test".to_string()));
-        
+
         let structure = create_struct(fields);
         match structure {
             MatType::Struct(ref fields) => {
                 assert_eq!(fields.len(), 2);
                 assert!(fields.contains_key("data"));
                 assert!(fields.contains_key("name"));
-            },
+            }
             _ => panic!("Expected Struct type"),
         }
     }

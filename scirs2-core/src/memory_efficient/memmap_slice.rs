@@ -85,7 +85,7 @@ where
 /// Extension trait for adding slicing functionality to MemoryMappedArray.
 pub trait MemoryMappedSlicing<A: Clone + Copy + 'static> {
     /// Creates a slice of the memory-mapped array using standard slice syntax.
-    fn slice<I, E>(&self, info: I) -> CoreResult<MemoryMappedSlice<A, E>>
+    fn slice<I, E>(&self, _info: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
         I: ndarray::SliceArg<E>,
         E: Dimension;
@@ -105,13 +105,13 @@ pub trait MemoryMappedSlicing<A: Clone + Copy + 'static> {
 }
 
 impl<A: Clone + Copy + 'static> MemoryMappedSlicing<A> for MemoryMappedArray<A> {
-    fn slice<I, E>(&self, info: I) -> CoreResult<MemoryMappedSlice<A, E>>
+    fn slice<I, E>(&self, _info: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
         I: ndarray::SliceArg<E>,
         E: Dimension,
     {
         // Get the slice info
-        let shape = self.shape.clone();
+        let _shape = self.shape.clone();
         // Use unsafe to convert the SliceArg to SliceInfo
         // This is because the API for this has changed
         // We need to get the SliceInfo from the SliceArg in a more direct way

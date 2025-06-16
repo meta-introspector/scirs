@@ -211,8 +211,10 @@ This module provides machine learning evaluation metrics for model performance a
 
 - [x] Integration with other modules
   - [x] Tie-in with scirs2-neural training loops
-  - [x] Integration with scirs2-optim for metric optimization
+  - [x] Integration with scirs2-optim for metric optimization (via external trait system)
   - [x] Callback systems for monitoring
+  - [x] Scheduler configuration bridge for external optimizers
+  - [x] Metric-based learning rate scheduling adapters
 - [x] Visualization utilities
   - [x] Confusion matrix visualization
   - [x] ROC and PR curve plotting
@@ -235,27 +237,36 @@ This module provides machine learning evaluation metrics for model performance a
 
 ## Documentation and Examples
 
-- [ ] Comprehensive API documentation
-  - [ ] Mathematical formulations for all metrics
-  - [ ] Best practices for evaluation
-  - [ ] Limitations and considerations
-- [ ] Usage examples
-  - [ ] Metric selection guides by task
-  - [ ] Interpretation examples
-  - [ ] Common pitfalls to avoid
-- [ ] Interactive tutorials
-  - [ ] Evaluation workflow examples
-  - [ ] Multi-metric assessment
-  - [ ] Model comparison techniques
+- [x] Comprehensive API documentation
+  - [x] Mathematical formulations for all metrics (core metrics completed)
+  - [x] Best practices for evaluation
+  - [x] Limitations and considerations
+- [x] Usage examples
+  - [x] Metric selection guides by task
+  - [x] Interpretation examples
+  - [x] Common pitfalls to avoid
+- [x] Interactive tutorials
+  - [x] Evaluation workflow examples
+  - [x] Multi-metric assessment
+  - [x] Model comparison techniques
+
+### Completed Documentation Files:
+- [x] `docs/best_practices.md` - Comprehensive evaluation best practices
+- [x] `docs/limitations_and_considerations.md` - Metric limitations and edge cases
+- [x] `docs/metric_selection_guide.md` - Task-specific metric selection guide
+- [x] `docs/interpretation_and_pitfalls.md` - Interpretation examples and common pitfalls
+- [x] `docs/tutorials_and_workflows.md` - Interactive tutorials and workflows
 
 ## Testing and Quality Assurance
 
 - [x] Unit tests for basic metrics
-- [ ] Comprehensive test coverage
-- [ ] Benchmarks against scikit-learn reference implementations
-- [ ] Edge case handling (empty arrays, NaN values, etc.)
-- [ ] Numerical precision tests
-- [ ] Performance regression testing
+- [x] Comprehensive test coverage
+- [x] Benchmarks against reference implementations
+- [x] Edge case handling (empty arrays, NaN values, etc.)
+- [x] Numerical precision tests
+- [x] Performance regression testing
+- [x] Integration testing for external optimizer compatibility
+- [x] Cross-platform compatibility testing
 
 ## Long-term Goals
 

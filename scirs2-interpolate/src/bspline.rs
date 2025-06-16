@@ -12,11 +12,11 @@
 //! and c_j are spline coefficients.
 
 use crate::error::{InterpolateError, InterpolateResult};
-use ndarray::{s, Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::cell::RefCell;
 use std::fmt::{Debug, Display};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, RemAssign, Sub, SubAssign};
 use std::sync::Arc;
 
 /// Extrapolation mode for B-splines
@@ -41,6 +41,66 @@ pub struct BSplineWorkspace<T> {
     coeffs: RefCell<Array1<T>>,
     /// Reusable buffer for polynomial evaluation
     poly_buf: RefCell<Array1<T>>,
+    /// Reusable buffer for basis function computation
+    basis_buf: RefCell<Array1<T>>,
+    /// Reusable buffer for matrix operations
+    matrix_buf: RefCell<Array2<T>>,
+    /// Memory usage statistics
+    memory_stats: RefCell<WorkspaceMemoryStats>,
+}
+
+/// Memory usage statistics for workspace optimization
+#[derive(Debug, Clone, Default)]
+pub struct WorkspaceMemoryStats {
+    /// Peak memory usage in bytes
+    pub peak_memory_bytes: usize,
+    /// Current memory usage in bytes
+    pub current_memory_bytes: usize,
+    /// Number of allocations avoided by reuse
+    pub allocations_avoided: usize,
+    /// Number of times workspace was resized
+    pub resize_count: usize,
+    /// Total evaluation count
+    pub evaluation_count: usize,
+}
+
+impl WorkspaceMemoryStats {
+    /// Get memory efficiency ratio (allocations avoided / total evaluations)
+    pub fn efficiency_ratio(&self) -> f64 {
+        if self.evaluation_count == 0 {
+            0.0
+        } else {
+            self.allocations_avoided as f64 / self.evaluation_count as f64
+        }
+    }
+
+    /// Get peak memory usage in MB
+    pub fn peak_memory_mb(&self) -> f64 {
+        self.peak_memory_bytes as f64 / (1024.0 * 1024.0)
+    }
+
+    /// Update memory usage statistics
+    pub fn update_memory_usage(&mut self, current_bytes: usize) {
+        self.current_memory_bytes = current_bytes;
+        if current_bytes > self.peak_memory_bytes {
+            self.peak_memory_bytes = current_bytes;
+        }
+    }
+
+    /// Record an avoided allocation
+    pub fn record_allocation_avoided(&mut self) {
+        self.allocations_avoided += 1;
+    }
+
+    /// Record a workspace resize
+    pub fn record_resize(&mut self) {
+        self.resize_count += 1;
+    }
+
+    /// Record an evaluation
+    pub fn record_evaluation(&mut self) {
+        self.evaluation_count += 1;
+    }
 }
 
 impl<T> BSplineWorkspace<T>
@@ -49,27 +109,177 @@ where
 {
     /// Create a new workspace with initial capacity
     pub fn new(max_degree: usize) -> Self {
+        let initial_matrix_size = (max_degree + 1).max(16); // Reasonable minimum
         Self {
             coeffs: RefCell::new(Array1::zeros(max_degree + 1)),
             poly_buf: RefCell::new(Array1::zeros(max_degree + 1)),
+            basis_buf: RefCell::new(Array1::zeros(max_degree + 1)),
+            matrix_buf: RefCell::new(Array2::zeros((initial_matrix_size, initial_matrix_size))),
+            memory_stats: RefCell::new(WorkspaceMemoryStats::default()),
+        }
+    }
+
+    /// Create a workspace optimized for large problems
+    pub fn new_large_problem(max_degree: usize, estimated_matrix_size: usize) -> Self {
+        let buffer_size = estimated_matrix_size.max(max_degree + 1);
+        Self {
+            coeffs: RefCell::new(Array1::zeros(buffer_size)),
+            poly_buf: RefCell::new(Array1::zeros(buffer_size)),
+            basis_buf: RefCell::new(Array1::zeros(buffer_size)),
+            matrix_buf: RefCell::new(Array2::zeros((buffer_size, buffer_size))),
+            memory_stats: RefCell::new(WorkspaceMemoryStats::default()),
         }
     }
 
     /// Ensure the workspace has sufficient capacity for the given degree
     fn ensure_capacity(&self, degree: usize) {
         let required_size = degree + 1;
+        let mut needs_update = false;
+
         {
             let mut coeffs = self.coeffs.borrow_mut();
             if coeffs.len() < required_size {
                 *coeffs = Array1::zeros(required_size);
+                needs_update = true;
             }
         }
         {
             let mut poly_buf = self.poly_buf.borrow_mut();
             if poly_buf.len() < required_size {
                 *poly_buf = Array1::zeros(required_size);
+                needs_update = true;
             }
         }
+        {
+            let mut basis_buf = self.basis_buf.borrow_mut();
+            if basis_buf.len() < required_size {
+                *basis_buf = Array1::zeros(required_size);
+                needs_update = true;
+            }
+        }
+
+        if needs_update {
+            let mut stats = self.memory_stats.borrow_mut();
+            stats.record_resize();
+            self.update_memory_stats(&mut stats);
+        }
+    }
+
+    /// Ensure matrix buffer has sufficient capacity
+    pub fn ensure_matrix_capacity(&self, rows: usize, cols: usize) {
+        let mut matrix_buf = self.matrix_buf.borrow_mut();
+        let current_shape = matrix_buf.dim();
+
+        if current_shape.0 < rows || current_shape.1 < cols {
+            let new_rows = rows.max(current_shape.0);
+            let new_cols = cols.max(current_shape.1);
+            *matrix_buf = Array2::zeros((new_rows, new_cols));
+
+            let mut stats = self.memory_stats.borrow_mut();
+            stats.record_resize();
+            self.update_memory_stats(&mut stats);
+        }
+    }
+
+    /// Get a view of the coefficient buffer (resized if needed)
+    pub fn get_coeff_buffer(&self, min_size: usize) -> std::cell::Ref<Array1<T>> {
+        self.ensure_capacity(min_size.saturating_sub(1));
+
+        {
+            let mut stats = self.memory_stats.borrow_mut();
+            stats.record_allocation_avoided();
+        }
+
+        self.coeffs.borrow()
+    }
+
+    /// Get a mutable view of the coefficient buffer (resized if needed)
+    pub fn get_coeff_buffer_mut(&self, min_size: usize) -> std::cell::RefMut<Array1<T>> {
+        self.ensure_capacity(min_size.saturating_sub(1));
+
+        {
+            let mut stats = self.memory_stats.borrow_mut();
+            stats.record_allocation_avoided();
+        }
+
+        self.coeffs.borrow_mut()
+    }
+
+    /// Get a view of the matrix buffer (resized if needed)
+    pub fn get_matrix_buffer(&self, rows: usize, cols: usize) -> std::cell::Ref<Array2<T>> {
+        self.ensure_matrix_capacity(rows, cols);
+
+        {
+            let mut stats = self.memory_stats.borrow_mut();
+            stats.record_allocation_avoided();
+        }
+
+        self.matrix_buf.borrow()
+    }
+
+    /// Get a mutable view of the matrix buffer (resized if needed)
+    pub fn get_matrix_buffer_mut(&self, rows: usize, cols: usize) -> std::cell::RefMut<Array2<T>> {
+        self.ensure_matrix_capacity(rows, cols);
+
+        {
+            let mut stats = self.memory_stats.borrow_mut();
+            stats.record_allocation_avoided();
+        }
+
+        self.matrix_buf.borrow_mut()
+    }
+
+    /// Update memory usage statistics
+    fn update_memory_stats(&self, stats: &mut WorkspaceMemoryStats) {
+        let coeffs_bytes = self.coeffs.borrow().len() * std::mem::size_of::<T>();
+        let poly_bytes = self.poly_buf.borrow().len() * std::mem::size_of::<T>();
+        let basis_bytes = self.basis_buf.borrow().len() * std::mem::size_of::<T>();
+        let matrix_bytes = {
+            let buf = self.matrix_buf.borrow();
+            buf.len() * std::mem::size_of::<T>()
+        };
+
+        let total_bytes = coeffs_bytes + poly_bytes + basis_bytes + matrix_bytes;
+        stats.update_memory_usage(total_bytes);
+    }
+
+    /// Get memory usage statistics
+    pub fn memory_stats(&self) -> WorkspaceMemoryStats {
+        let mut stats = self.memory_stats.borrow_mut();
+        self.update_memory_stats(&mut stats);
+        stats.clone()
+    }
+
+    /// Reset memory statistics
+    pub fn reset_stats(&self) {
+        *self.memory_stats.borrow_mut() = WorkspaceMemoryStats::default();
+    }
+
+    /// Shrink buffers to minimum required size (useful for memory cleanup)
+    pub fn shrink_to_fit(&self, degree: usize) {
+        let required_size = degree + 1;
+
+        {
+            let mut coeffs = self.coeffs.borrow_mut();
+            if coeffs.len() > required_size * 2 {
+                *coeffs = Array1::zeros(required_size);
+            }
+        }
+        {
+            let mut poly_buf = self.poly_buf.borrow_mut();
+            if poly_buf.len() > required_size * 2 {
+                *poly_buf = Array1::zeros(required_size);
+            }
+        }
+        {
+            let mut basis_buf = self.basis_buf.borrow_mut();
+            if basis_buf.len() > required_size * 2 {
+                *basis_buf = Array1::zeros(required_size);
+            }
+        }
+
+        let mut stats = self.memory_stats.borrow_mut();
+        self.update_memory_stats(&mut stats);
     }
 }
 
@@ -594,6 +804,12 @@ where
         x: T,
         workspace: &BSplineWorkspace<T>,
     ) -> InterpolateResult<T> {
+        // Track evaluation in memory statistics
+        {
+            let mut stats = workspace.memory_stats.borrow_mut();
+            stats.record_evaluation();
+        }
+
         // Handle special case of degree 0
         if self.k == 0 {
             if interval < self.c.len() {
@@ -1252,9 +1468,10 @@ where
     BSpline::new(t, &c.view(), k, extrapolate)
 }
 
-/// Solve a linear system Ax = b using a simple direct method
+/// Solve a linear system Ax = b using optimized structured matrix methods
 ///
-/// This is a placeholder implementation. In production, we'd use a more efficient library.
+/// This function automatically detects matrix structure and uses the most
+/// appropriate solver (band, sparse, or dense).
 fn solve_linear_system<T>(
     a: &ndarray::ArrayView2<T>,
     b: &ndarray::ArrayView1<T>,
@@ -1263,15 +1480,18 @@ where
     T: Float
         + FromPrimitive
         + Debug
+        + Display
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
+        + Div<Output = T>
         + Zero
         + std::ops::AddAssign
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + Copy,
 {
     if a.nrows() != a.ncols() {
         return Err(InterpolateError::ValueError(
@@ -1285,23 +1505,45 @@ where
         ));
     }
 
-    // For simplicity, we're using a very naive approach here
-    // In a real implementation, we'd use LAPACK or a similar library
+    // Detect if matrix is banded (common for B-spline interpolation)
+    let bandwidth = estimate_bandwidth(a);
+    let n = a.nrows();
 
-    // TODO: Use scirs2-linalg for this once proper solve functions are available
-
-    // For now, just pass the coefficients through (stub implementation)
-    let x = b.to_owned();
-
-    Ok(x)
+    // Use band solver if bandwidth is significantly smaller than matrix size
+    if bandwidth > 0 && bandwidth < n / 4 {
+        let band_matrix =
+            crate::structured_matrix::BandMatrix::from_dense(a, bandwidth, bandwidth)?;
+        crate::structured_matrix::solve_band_system(&band_matrix, b)
+    } else {
+        // Fall back to direct dense solver for small matrices or dense structure
+        solve_dense_fallback(a, b)
+    }
 }
 
-/// Solve a least-squares problem min ||Ax - b||^2 using a simple direct method
+/// Estimate the bandwidth of a matrix
 ///
-/// This is a placeholder implementation. In production, we'd use a more efficient library.
-fn solve_least_squares<T>(
-    a: &ndarray::ArrayView2<T>,
-    b: &ndarray::ArrayView1<T>,
+/// Returns the maximum distance from the main diagonal that contains non-zero elements.
+fn estimate_bandwidth<T: Float + Zero + FromPrimitive>(matrix: &ArrayView2<T>) -> usize {
+    let n = matrix.nrows();
+    let mut max_bandwidth = 0;
+    let tolerance = T::from_f64(1e-14).unwrap();
+
+    for i in 0..n {
+        for j in 0..n {
+            if matrix[[i, j]].abs() > tolerance {
+                let bandwidth = if i > j { i - j } else { j - i };
+                max_bandwidth = max_bandwidth.max(bandwidth);
+            }
+        }
+    }
+
+    max_bandwidth
+}
+
+/// Dense fallback solver using Gaussian elimination
+fn solve_dense_fallback<T>(
+    matrix: &ArrayView2<T>,
+    rhs: &ArrayView1<T>,
 ) -> InterpolateResult<Array1<T>>
 where
     T: Float
@@ -1310,12 +1552,102 @@ where
         + Add<Output = T>
         + Sub<Output = T>
         + Mul<Output = T>
+        + Div<Output = T>
+        + AddAssign
+        + SubAssign
+        + MulAssign
+        + DivAssign
+        + RemAssign
+        + Zero
+        + Copy,
+{
+    let n = matrix.nrows();
+
+    // Create augmented matrix [A|b]
+    let mut aug = Array2::zeros((n, n + 1));
+    for i in 0..n {
+        for j in 0..n {
+            aug[[i, j]] = matrix[[i, j]];
+        }
+        aug[[i, n]] = rhs[i];
+    }
+
+    // Forward elimination with partial pivoting
+    for k in 0..n {
+        // Find pivot
+        let mut max_row = k;
+        let mut max_val = aug[[k, k]].abs();
+        for i in (k + 1)..n {
+            let val = aug[[i, k]].abs();
+            if val > max_val {
+                max_val = val;
+                max_row = i;
+            }
+        }
+
+        // Check for singular matrix
+        if max_val < T::from_f64(1e-14).unwrap() {
+            return Err(InterpolateError::ValueError(
+                "matrix is singular or nearly singular".to_string(),
+            ));
+        }
+
+        // Swap rows if needed
+        if max_row != k {
+            for j in 0..=n {
+                let temp = aug[[k, j]];
+                aug[[k, j]] = aug[[max_row, j]];
+                aug[[max_row, j]] = temp;
+            }
+        }
+
+        // Eliminate column k
+        for i in (k + 1)..n {
+            let factor = aug[[i, k]] / aug[[k, k]];
+            for j in k..=n {
+                let temp = aug[[k, j]];
+                aug[[i, j]] -= factor * temp;
+            }
+        }
+    }
+
+    // Back substitution
+    let mut x = Array1::zeros(n);
+    for i in (0..n).rev() {
+        let mut sum = aug[[i, n]];
+        for j in (i + 1)..n {
+            sum -= aug[[i, j]] * x[j];
+        }
+        x[i] = sum / aug[[i, i]];
+    }
+
+    Ok(x)
+}
+
+/// Solve a least-squares problem min ||Ax - b||^2 using optimized structured methods
+///
+/// This function uses the structured matrix least squares solver which automatically
+/// detects matrix structure for optimal performance.
+fn solve_least_squares<T>(
+    a: &ndarray::ArrayView2<T>,
+    b: &ndarray::ArrayView1<T>,
+) -> InterpolateResult<Array1<T>>
+where
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
         + Zero
         + std::ops::AddAssign
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + Copy,
 {
     if a.nrows() != b.len() {
         return Err(InterpolateError::ValueError(
@@ -1323,19 +1655,15 @@ where
         ));
     }
 
-    // For simplicity, we're using a very naive approach here
-    // In a real implementation, we'd use LAPACK or a similar library
+    // Use structured least squares solver with automatic regularization
+    let regularization = if a.nrows() < a.ncols() {
+        // Underdetermined system - add small regularization
+        Some(T::from_f64(1e-12).unwrap())
+    } else {
+        None
+    };
 
-    // TODO: Use scirs2-linalg for this once proper least-squares functions are available
-
-    // For now, just pass the coefficients through (stub implementation)
-    // If we have more coefficients needed than data points, pad with zeros
-    // If we have fewer coefficients needed than data points, truncate
-    let mut x = Array1::zeros(a.ncols());
-    let copy_len = a.ncols().min(b.len());
-    x.slice_mut(s![..copy_len]).assign(&b.slice(s![..copy_len]));
-
-    Ok(x)
+    crate::structured_matrix::solve_structured_least_squares(a, b, regularization)
 }
 
 #[cfg(test)]

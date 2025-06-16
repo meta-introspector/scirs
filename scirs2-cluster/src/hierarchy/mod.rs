@@ -39,11 +39,14 @@ use crate::error::{ClusteringError, Result};
 // Module definitions
 pub mod agglomerative;
 pub mod dendrogram;
+pub mod disjoint_set;
 pub mod linkage;
+pub mod parallel_linkage;
 
 // Re-exports
 pub use self::agglomerative::{cut_tree_by_distance, cut_tree_by_inconsistency};
 pub use self::dendrogram::{cophenet, dendrogram, inconsistent, optimal_leaf_ordering};
+pub use self::disjoint_set::DisjointSet;
 
 /// Linkage methods for hierarchical clustering
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -260,6 +263,70 @@ pub fn linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     // Run the clustering
     linkage::hierarchical_clustering(&distances, n_samples, method)
+}
+
+/// Performs parallel hierarchical clustering using the specified linkage method
+///
+/// This function uses parallelization to speed up the clustering process,
+/// particularly beneficial for large datasets and computationally intensive linkage methods.
+///
+/// # Arguments
+///
+/// * `data` - The input data as a 2D array (n_samples x n_features)
+/// * `method` - The linkage method to use
+/// * `metric` - The distance metric to use
+///
+/// # Returns
+///
+/// * `Result<Array2<F>>` - The linkage matrix, which describes the dendrogram
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::{Array2, ArrayView2};
+/// use scirs2_cluster::hierarchy::{parallel_linkage, LinkageMethod, Metric};
+///
+/// // Example data
+/// let data = Array2::from_shape_vec((6, 2), vec![
+///     1.0, 2.0,
+///     1.2, 1.8,
+///     0.8, 1.9,
+///     3.7, 4.2,
+///     3.9, 3.9,
+///     4.2, 4.1,
+/// ]).unwrap();
+///
+/// // Calculate linkage matrix using parallel Ward's method
+/// let linkage_matrix = parallel_linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+///
+/// println!("Linkage matrix shape: {:?}", linkage_matrix.shape());
+/// ```
+pub fn parallel_linkage<
+    F: Float + FromPrimitive + Debug + PartialOrd + Send + Sync + std::iter::Sum,
+>(
+    data: ArrayView2<F>,
+    method: LinkageMethod,
+    metric: Metric,
+) -> Result<Array2<F>> {
+    let n_samples = data.shape()[0];
+
+    if n_samples < 2 {
+        return Err(ClusteringError::InvalidInput(
+            "Need at least 2 samples for hierarchical clustering".into(),
+        ));
+    }
+
+    if n_samples > 10000 {
+        // Hierarchical clustering on large datasets can be very memory-intensive
+        // and slow. We'll add a warning here.
+        eprintln!("Warning: Performing parallel hierarchical clustering on {} samples. This may still be slow for very large datasets.", n_samples);
+    }
+
+    // Calculate distances between observations
+    let distances = compute_distances(data, metric);
+
+    // Run the parallel clustering
+    parallel_linkage::parallel_hierarchical_clustering(&distances, n_samples, method)
 }
 
 /// Forms flat clusters from a hierarchical clustering result

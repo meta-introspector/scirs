@@ -194,7 +194,7 @@ pub use memory::{
     MatrixLayout, MemoryPool, MemoryPrefetch, MemoryUsage, PooledBuffer,
 };
 pub use monte_carlo::{
-    importance_sampling, monte_carlo, ErrorEstimationMethod, MonteCarloOptions, MonteCarloResult,
+    importance_sampling, monte_carlo, monte_carlo_parallel, ErrorEstimationMethod, MonteCarloOptions, MonteCarloResult,
 };
 #[cfg(feature = "parallel")]
 pub use monte_carlo_parallel::{
@@ -240,7 +240,7 @@ pub use pde::{
 //     ImplicitMethod, ImplicitOptions, ImplicitResult,
 //     CrankNicolson1D, BackwardEuler1D, ADI2D, ADIResult
 // };
-pub use qmc::{qmc_quad, Faure, Halton, QMCQuadResult, RandomGenerator, Sobol};
+pub use qmc::{qmc_quad, qmc_quad_parallel, Faure, Halton, QMCQuadResult, RandomGenerator, Sobol};
 pub use quad::{quad, simpson, trapezoid};
 pub use quad_vec::{quad_vec, NormType, QuadRule, QuadVecOptions, QuadVecResult};
 pub use symplectic::{

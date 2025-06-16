@@ -4,12 +4,13 @@
 //! that works with the existing MATLAB module structure.
 
 use crate::error::{IoError, Result};
-use crate::matlab::{MatType, MX_DOUBLE_CLASS, MX_SINGLE_CLASS, MX_UINT8_CLASS,
-                   MX_INT32_CLASS, MX_CHAR_CLASS,
-                   MI_MATRIX, MI_UINT32, MI_INT32, MI_INT8};
+use crate::matlab::{
+    MatType, MI_INT32, MI_INT8, MI_MATRIX, MI_UINT32, MX_CHAR_CLASS, MX_DOUBLE_CLASS,
+    MX_INT32_CLASS, MX_SINGLE_CLASS, MX_UINT8_CLASS,
+};
 use byteorder::{LittleEndian, WriteBytesExt};
 use ndarray::ArrayD;
-use std::io::{Write, Seek};
+use std::io::{Seek, Write};
 
 // Missing constants redefined locally
 const MI_UINT8: i32 = 2;
@@ -33,17 +34,17 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
     // Write descriptive text to make exactly 116 bytes total for header text
     let description = b" 5.0 MAT-file, Created by: scirs2-io library";
     let description_len = description.len();
-    
+
     // Write the description
     writer
         .write_all(description)
         .map_err(|e| IoError::FileError(format!("Failed to write description: {}", e)))?;
-    
+
     // Calculate padding needed to reach exactly 116 bytes (MATLAB + description + padding = 116)
     let header_text_target = 116;
     let already_written = 6 + description_len; // "MATLAB" (6 bytes) + description
     let padding_needed = header_text_target - already_written;
-    
+
     // Write padding (spaces or nulls)
     if padding_needed > 0 {
         let padding = vec![0u8; padding_needed];
@@ -64,20 +65,26 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
 }
 
 /// Write a variable (simplified version that only handles basic types)
-pub fn write_variable<W: Write + Seek>(writer: &mut W, name: &str, mat_type: &MatType) -> Result<()> {
+pub fn write_variable<W: Write + Seek>(
+    writer: &mut W,
+    name: &str,
+    mat_type: &MatType,
+) -> Result<()> {
     // Write matrix element header (MI_MATRIX)
     writer
         .write_i32::<LittleEndian>(MI_MATRIX)
         .map_err(|e| IoError::FileError(format!("Failed to write matrix type: {}", e)))?;
-    
+
     // Placeholder for size - we'll calculate and update this at the end
-    let size_pos = writer.stream_position()
+    let size_pos = writer
+        .stream_position()
         .map_err(|e| IoError::FileError(format!("Failed to get size position: {}", e)))?;
     writer
         .write_i32::<LittleEndian>(0)
         .map_err(|e| IoError::FileError(format!("Failed to write size placeholder: {}", e)))?;
 
-    let data_start = writer.stream_position()
+    let data_start = writer
+        .stream_position()
         .map_err(|e| IoError::FileError(format!("Failed to get data start: {}", e)))?;
 
     match mat_type {
@@ -102,27 +109,30 @@ pub fn write_variable<W: Write + Seek>(writer: &mut W, name: &str, mat_type: &Ma
         }
         _ => {
             return Err(IoError::Other(format!(
-                "Data type not yet supported in simplified writer: {:?}", 
+                "Data type not yet supported in simplified writer: {:?}",
                 std::any::type_name::<MatType>()
             )));
         }
     }
 
     // Calculate and write the actual matrix size
-    let data_end = writer.stream_position()
+    let data_end = writer
+        .stream_position()
         .map_err(|e| IoError::FileError(format!("Failed to get data end: {}", e)))?;
     let total_size = (data_end - data_start) as i32;
-    
+
     // Go back and write the actual size
     let current_pos = data_end;
-    writer.seek(std::io::SeekFrom::Start(size_pos))
+    writer
+        .seek(std::io::SeekFrom::Start(size_pos))
         .map_err(|e| IoError::FileError(format!("Failed to seek to size: {}", e)))?;
     writer
         .write_i32::<LittleEndian>(total_size)
         .map_err(|e| IoError::FileError(format!("Failed to write actual size: {}", e)))?;
-    
+
     // Return to end of data
-    writer.seek(std::io::SeekFrom::Start(current_pos))
+    writer
+        .seek(std::io::SeekFrom::Start(current_pos))
         .map_err(|e| IoError::FileError(format!("Failed to seek back: {}", e)))?;
 
     Ok(())
@@ -136,7 +146,6 @@ fn write_matrix_header_content<W: Write + Seek>(
     class_type: i32,
     is_logical: bool,
 ) -> Result<()> {
-
     // Write array flags
     writer
         .write_i32::<LittleEndian>(MI_UINT32)
@@ -313,8 +322,12 @@ fn write_logical_data<W: Write>(writer: &mut W, array: &ArrayD<bool>) -> Result<
 }
 
 /// Write character data content (without outer matrix header)
-fn write_char_data_content<W: Write + Seek>(writer: &mut W, name: &str, string: &str) -> Result<()> {
-    // Convert to UTF-16 
+fn write_char_data_content<W: Write + Seek>(
+    writer: &mut W,
+    name: &str,
+    string: &str,
+) -> Result<()> {
+    // Convert to UTF-16
     let utf16_chars: Vec<u16> = string.encode_utf16().collect();
     let shape = [1, utf16_chars.len()];
 
