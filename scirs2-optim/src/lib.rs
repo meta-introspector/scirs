@@ -11,6 +11,7 @@
 //!
 //! # Examples
 //!
+//! ## Traditional API
 //! ```
 //! use ndarray::{Array1, Array2};
 //! use scirs2_optim::optimizers::{SGD, Optimizer};
@@ -25,6 +26,30 @@
 //! // Update parameters using the optimizer
 //! let updated_params = optimizer.step(&params, &gradients);
 //! // Parameters should be updated in the negative gradient direction
+//! ```
+//!
+//! ## Unified API (PyTorch-style)
+//! ```
+//! use ndarray::Array1;
+//! use scirs2_optim::{OptimizerConfig, OptimizerFactory, Parameter, UnifiedOptimizer};
+//!
+//! // Create parameters (similar to PyTorch)
+//! let mut param1 = Parameter::new(Array1::from_vec(vec![1.0, 2.0, 3.0]), "layer1.weight");
+//! let mut param2 = Parameter::new(Array1::from_vec(vec![0.1, 0.2]), "layer1.bias");
+//!
+//! // Set gradients
+//! param1.set_grad(Array1::from_vec(vec![0.1, 0.2, 0.3]));
+//! param2.set_grad(Array1::from_vec(vec![0.05, 0.1]));
+//!
+//! // Create optimizer with configuration
+//! let config = OptimizerConfig::new(0.001f64)
+//!     .weight_decay(0.0001)
+//!     .grad_clip(1.0);
+//! let mut optimizer = OptimizerFactory::adam(config);
+//!
+//! // Update parameters
+//! optimizer.step_param(&mut param1).unwrap();
+//! optimizer.step_param(&mut param2).unwrap();
 //! ```
 
 #![warn(missing_docs)]
@@ -50,6 +75,7 @@ pub mod regularizers;
 pub mod schedulers;
 pub mod second_order;
 pub mod training_stabilization;
+pub mod unified_api;
 pub mod utils;
 
 // Re-exports for convenience
@@ -91,7 +117,7 @@ pub use gradient_accumulation::{
 };
 pub use hardware_aware::{
     AllReduceAlgorithm, CommunicationStrategy, GPUArchitecture, HardwareAwareOptimizer,
-    HardwareOptimizationConfig, HardwarePlatform, HardwarePerformanceStats, MemoryStrategy,
+    HardwareOptimizationConfig, HardwarePerformanceStats, HardwarePlatform, MemoryStrategy,
     ParallelizationStrategy, PartitionStrategy, PerformanceProfiler, PrecisionStrategy,
     QuantizationSupport, ResourceMonitor, SIMDSupport, TPUVersion, TuningStrategy,
 };
@@ -109,9 +135,13 @@ pub use neural_integration::{
     ParameterOptimizer, ParameterType,
 };
 pub use online_learning::{
-    ColumnGrowthStrategy, LearningRateAdaptation, LifelongOptimizer, LifelongStats, LifelongStrategy,
-    MemoryExample, MemoryUpdateStrategy, MirrorFunction, OnlineLearningStrategy, OnlineOptimizer,
-    OnlinePerformanceMetrics, SharedKnowledge, TaskGraph,
+    ColumnGrowthStrategy, LearningRateAdaptation, LifelongOptimizer, LifelongStats,
+    LifelongStrategy, MemoryExample, MemoryUpdateStrategy, MirrorFunction, OnlineLearningStrategy,
+    OnlineOptimizer, OnlinePerformanceMetrics, SharedKnowledge, TaskGraph,
 };
 pub use second_order::{HessianInfo, Newton, SecondOrderOptimizer, LBFGS as SecondOrderLBFGS};
 pub use training_stabilization::{AveragingMethod, ModelEnsemble, PolyakAverager, WeightAverager};
+pub use unified_api::{
+    OptimizerConfig, OptimizerFactory, Parameter, TrainingLoop, UnifiedAdam, UnifiedOptimizer,
+    UnifiedSGD,
+};

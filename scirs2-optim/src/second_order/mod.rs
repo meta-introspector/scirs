@@ -56,7 +56,7 @@ pub mod hessian_approximation {
         F: Fn(&Array1<A>) -> Result<Array1<A>>,
     {
         let mut hessian_diag = Array1::zeros(params.len());
-        let original_grad = gradient_fn(params)?;
+        let _original_grad = gradient_fn(params)?;
 
         for i in 0..params.len() {
             let mut param_plus = params.clone();
@@ -70,10 +70,9 @@ pub mod hessian_approximation {
             param_minus[i] = params[i] - epsilon;
             let grad_minus = gradient_fn(&param_minus)?;
 
-            // Second derivative approximation: (f(x+h) - 2f(x) + f(x-h)) / h^2
-            let second_deriv = (grad_plus[i] - A::from(2.0).unwrap() * original_grad[i]
-                + grad_minus[i])
-                / (epsilon * epsilon);
+            // Hessian diagonal: derivative of gradient using central difference
+            let second_deriv = (grad_plus[i] - grad_minus[i])
+                / (A::from(2.0).unwrap() * epsilon);
             hessian_diag[i] = second_deriv;
         }
 

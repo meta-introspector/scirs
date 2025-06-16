@@ -638,9 +638,11 @@
 //#![warn(missing_docs)]
 
 pub mod anomaly;
+pub mod bayesian;
 pub mod classification;
 pub mod clustering;
 pub mod custom;
+pub mod dashboard;
 pub mod domains;
 pub mod error;
 pub mod evaluation;
@@ -655,5 +657,6 @@ pub mod ranking;
 pub mod regression;
 pub mod selection;
 pub mod serialization;
+pub mod sklearn_compat;
 pub mod streaming;
 pub mod visualization;

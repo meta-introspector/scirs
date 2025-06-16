@@ -4,7 +4,7 @@
 //! hierarchical clustering data structures to ensure they meet mathematical
 //! requirements and are suitable for downstream analysis.
 
-use ndarray::{Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -32,7 +32,9 @@ use crate::error::{ClusteringError, Result};
 /// 4. Cluster sizes are consistent and >= 2
 /// 5. No self-merges (cluster merging with itself)
 /// 6. All values are finite
-pub fn validate_linkage_matrix<F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display>(
+pub fn validate_linkage_matrix<
+    F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
+>(
     linkage_matrix: ArrayView2<F>,
     n_observations: usize,
 ) -> Result<()> {
@@ -128,7 +130,9 @@ pub fn validate_linkage_matrix<F: Float + FromPrimitive + Debug + PartialOrd + s
 /// # Returns
 ///
 /// * `Result<()>` - Ok if monotonic, error otherwise
-pub fn validate_monotonic_distances<F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display>(
+pub fn validate_monotonic_distances<
+    F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
+>(
     linkage_matrix: ArrayView2<F>,
     strict: bool,
 ) -> Result<()> {
@@ -145,13 +149,11 @@ pub fn validate_monotonic_distances<F: Float + FromPrimitive + Debug + PartialOr
                     curr_distance, prev_distance, i
                 )));
             }
-        } else {
-            if curr_distance < prev_distance - F::from(1e-10).unwrap() {
-                return Err(ClusteringError::InvalidInput(format!(
-                    "Merge distances should be non-decreasing: {} < {} at merge {}",
-                    curr_distance, prev_distance, i
-                )));
-            }
+        } else if curr_distance < prev_distance - F::from(1e-10).unwrap() {
+            return Err(ClusteringError::InvalidInput(format!(
+                "Merge distances should be non-decreasing: {} < {} at merge {}",
+                curr_distance, prev_distance, i
+            )));
         }
     }
 
@@ -171,7 +173,9 @@ pub fn validate_monotonic_distances<F: Float + FromPrimitive + Debug + PartialOr
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
-pub fn validate_cluster_extraction_params<F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display>(
+pub fn validate_cluster_extraction_params<
+    F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
+>(
     linkage_matrix: ArrayView2<F>,
     criterion: &str,
     threshold: F,
@@ -228,7 +232,9 @@ pub fn validate_cluster_extraction_params<F: Float + FromPrimitive + Debug + Par
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
-pub fn validate_distance_matrix<F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display>(
+pub fn validate_distance_matrix<
+    F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
+>(
     distance_matrix: ArrayView1<F>,
     condensed: bool,
 ) -> Result<()> {
@@ -287,7 +293,9 @@ pub fn validate_distance_matrix<F: Float + FromPrimitive + Debug + PartialOrd + 
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
-pub fn validate_square_distance_matrix<F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display>(
+pub fn validate_square_distance_matrix<
+    F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
+>(
     distance_matrix: ArrayView2<F>,
     check_symmetry: bool,
     check_triangle_inequality: bool,
@@ -396,7 +404,9 @@ pub fn validate_square_distance_matrix<F: Float + FromPrimitive + Debug + Partia
 /// # Returns
 ///
 /// * `Result<()>` - Ok if consistent, error otherwise
-pub fn validate_cluster_consistency<F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display>(
+pub fn validate_cluster_consistency<
+    F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
+>(
     linkage_matrix: ArrayView2<F>,
     cluster_assignments: ArrayView1<usize>,
 ) -> Result<()> {
@@ -442,7 +452,7 @@ pub fn validate_cluster_consistency<F: Float + FromPrimitive + Debug + PartialOr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ndarray::{Array1, Array2};
 
     #[test]
     fn test_validate_linkage_matrix_valid() {

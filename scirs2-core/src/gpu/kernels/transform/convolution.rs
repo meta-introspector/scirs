@@ -25,12 +25,13 @@ impl Conv1dKernel {
             backend_metadata: HashMap::new(),
         };
 
-        let (cuda_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
+        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
 
         Self {
             base: BaseKernel::new(
                 "conv1d",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -40,7 +41,7 @@ impl Conv1dKernel {
     }
 
     /// Get kernel sources for different backends
-    fn get_kernel_sources() -> (String, String, String, String) {
+    fn get_kernel_sources() -> (String, String, String, String, String) {
         // CUDA kernel for 1D convolution
         let cuda_source = r#"
 extern "C" __global__ void conv1d(
@@ -180,7 +181,10 @@ __kernel void conv1d(
 "#
         .to_string();
 
-        (cuda_source, wgpu_source, metal_source, opencl_source)
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
+        (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
     }
 }
 
@@ -229,12 +233,13 @@ impl Conv2dKernel {
             backend_metadata: HashMap::new(),
         };
 
-        let (cuda_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
+        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
 
         Self {
             base: BaseKernel::new(
                 "conv2d",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -244,7 +249,7 @@ impl Conv2dKernel {
     }
 
     /// Get kernel sources for different backends
-    fn get_kernel_sources() -> (String, String, String, String) {
+    fn get_kernel_sources() -> (String, String, String, String, String) {
         // CUDA kernel for 2D convolution
         let cuda_source = r#"
 extern "C" __global__ void conv2d(
@@ -438,7 +443,10 @@ __kernel void conv2d(
 "#
         .to_string();
 
-        (cuda_source, wgpu_source, metal_source, opencl_source)
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
+        (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
     }
 }
 

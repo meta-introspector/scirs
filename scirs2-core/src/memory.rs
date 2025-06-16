@@ -401,6 +401,13 @@ pub fn global_memory_tracker() -> &'static MemoryTracker {
 /// Advanced memory metrics system
 pub mod metrics;
 
+/// Cross-device memory management for CPU/GPU/TPU
+#[cfg(feature = "gpu")]
+pub mod cross_device;
+
+/// Out-of-core processing for datasets larger than memory
+pub mod out_of_core;
+
 // Re-export key metric functions for convenient usage
 pub use metrics::{
     format_memory_report, generate_memory_report, track_allocation, track_deallocation,

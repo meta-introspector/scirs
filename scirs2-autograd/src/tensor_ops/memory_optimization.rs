@@ -722,7 +722,10 @@ mod tests {
         let view_op = ViewOp {
             new_shape: vec![2, 3],
         };
-        assert_eq!(<ViewOp as crate::op::Op<f32>>::name(&view_op), "MemoryEfficientView");
+        assert_eq!(
+            <ViewOp as crate::op::Op<f32>>::name(&view_op),
+            "MemoryEfficientView"
+        );
         assert_eq!(view_op.new_shape, vec![2, 3]);
     }
 

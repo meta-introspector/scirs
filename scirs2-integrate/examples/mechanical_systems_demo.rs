@@ -223,8 +223,16 @@ fn demonstrate_double_pendulum() -> Result<(), Box<dyn std::error::Error>> {
             let x2 = state.position[3];
             let y2 = state.position[4];
 
-            let angle1 = y1.atan2(x1) + PI / 2.0;
-            let angle2 = (y2 - y1).atan2(x2 - x1) + PI / 2.0;
+            let angle1 = if x1.abs() < 1e-10 && y1.abs() < 1e-10 {
+                0.0 // Default angle when position is at origin
+            } else {
+                y1.atan2(x1) + PI / 2.0
+            };
+            let angle2 = if (x2 - x1).abs() < 1e-10 && (y2 - y1).abs() < 1e-10 {
+                0.0 // Default angle when positions are coincident
+            } else {
+                (y2 - y1).atan2(x2 - x1) + PI / 2.0
+            };
 
             println!(
                 "   Step {}: angles = [{:.1}°, {:.1}°], constraint violation = {:.2e}",
@@ -289,13 +297,13 @@ fn demonstrate_energy_conservation() -> Result<(), Box<dyn std::error::Error>> {
             initial_velocity,
         );
 
-        config.dt = 0.005; // Moderate time step
+        config.dt = 0.0005; // Even smaller time step for better energy conservation
         config.position_method = method;
         let dt = config.dt;
 
         let mut integrator = MechanicalIntegrator::new(config, properties);
         let mut state = initial_state;
-        let n_steps = 2000; // Integrate for 10 seconds
+        let n_steps = 20000; // Integrate for 10 seconds with even smaller dt
 
         // Integrate
         for i in 0..n_steps {

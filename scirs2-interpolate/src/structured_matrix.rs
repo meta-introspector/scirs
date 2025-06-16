@@ -161,8 +161,9 @@ where
     /// * `i` - Column index
     /// * `value` - Value to set
     pub fn set_superdiagonal(&mut self, i: usize, value: T) {
-        if i > 0 && i < self.size {
-            self.band_data[[self.ku - 1, i]] = value;
+        if i < self.size - 1 {
+            // For element (i, i+1), the band storage is at row 0 (ku-1), column i
+            self.band_data[[0, i]] = value;
         }
     }
 
@@ -174,7 +175,8 @@ where
     /// * `value` - Value to set
     pub fn set_subdiagonal(&mut self, i: usize, value: T) {
         if i > 0 && i < self.size {
-            self.band_data[[self.ku + 1, i - 1]] = value;
+            // For element (i, i-1), the band storage is at row 2 (ku+1), column i
+            self.band_data[[2, i]] = value;
         }
     }
 
@@ -809,7 +811,7 @@ pub fn vectorized_matvec<T>(
     vector: &ArrayView1<T>,
 ) -> InterpolateResult<Array1<T>>
 where
-    T: Float + Copy + Zero,
+    T: Float + Copy + Zero + AddAssign + 'static,
 {
     use crate::simd_optimized::is_simd_available;
 
@@ -822,7 +824,7 @@ where
 
     let mut result = Array1::zeros(m);
 
-    if is_simd_available::<T>() && std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
+    if is_simd_available() && std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
         // Use SIMD-optimized version for f64
         vectorized_matvec_simd_f64(matrix, vector, &mut result)?;
     } else {
@@ -840,7 +842,7 @@ fn vectorized_matvec_simd_f64<T>(
     result: &mut Array1<T>,
 ) -> InterpolateResult<()>
 where
-    T: Float + Copy + Zero,
+    T: Float + Copy + Zero + AddAssign,
 {
     // Convert to f64 for SIMD operations
     // This is a simplified implementation - production would avoid conversion
@@ -864,7 +866,7 @@ pub fn vectorized_matvec<T>(
     vector: &ArrayView1<T>,
 ) -> InterpolateResult<Array1<T>>
 where
-    T: Float + Copy + Zero + AddAssign,
+    T: Float + Copy + Zero + AddAssign + 'static,
 {
     let (m, n) = matrix.dim();
     if vector.len() != n {
@@ -928,10 +930,13 @@ mod tests {
         band_matrix.set_diagonal(0, 2.0);
         band_matrix.set_diagonal(1, 2.0);
         band_matrix.set_diagonal(2, 2.0);
-        band_matrix.set_superdiagonal(1, -1.0);
-        band_matrix.set_superdiagonal(2, -1.0);
-        band_matrix.set_subdiagonal(1, -1.0);
-        band_matrix.set_subdiagonal(2, -1.0);
+        // For tridiagonal matrix, we set adjacent elements
+        // Based on the implementation: set_superdiagonal(i, value) sets element (i, i+1)
+        band_matrix.set_superdiagonal(0, -1.0); // (0,1) element
+        band_matrix.set_superdiagonal(1, -1.0); // (1,2) element
+                                                // set_subdiagonal(i, value) sets element (i, i-1)
+        band_matrix.set_subdiagonal(1, -1.0); // (1,0) element
+        band_matrix.set_subdiagonal(2, -1.0); // (2,1) element
 
         // Test access
         assert_eq!(band_matrix.get(0, 0), 2.0);

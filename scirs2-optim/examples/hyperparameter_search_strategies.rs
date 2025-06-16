@@ -8,6 +8,7 @@
 //! - Neural predictors for learning-based optimization
 
 use ndarray::Array1;
+use num_traits::Float;
 use rand::{rng, Rng};
 use scirs2_optim::error::Result;
 use scirs2_optim::meta_learning::*;
@@ -343,10 +344,7 @@ fn population_based_training_example() -> Result<()> {
                 "batch_size".to_string(),
                 32.0 + rng().random::<f64>() * 96.0,
             ),
-            (
-                "momentum".to_string(),
-                0.9 + rng().random::<f64>() * 0.09,
-            ),
+            ("momentum".to_string(), 0.9 + rng().random::<f64>() * 0.09),
         ]);
 
         let mut model = MockModel::new(&hyperparams);
@@ -502,19 +500,13 @@ fn neural_predictor_example() -> Result<()> {
 
         // Compare with random hyperparameters
         let random_hyperparams = HashMap::from([
-            (
-                "learning_rate".to_string(),
-                rng().random::<f64>() * 0.01,
-            ),
+            ("learning_rate".to_string(), rng().random::<f64>() * 0.01),
             ("weight_decay".to_string(), rng().random::<f64>() * 0.01),
             (
                 "batch_size".to_string(),
                 16.0 + rng().random::<f64>() * 112.0,
             ),
-            (
-                "momentum".to_string(),
-                0.9 + rng().random::<f64>() * 0.09,
-            ),
+            ("momentum".to_string(), 0.9 + rng().random::<f64>() * 0.09),
         ]);
 
         let mut random_model = MockModel::new(&random_hyperparams);

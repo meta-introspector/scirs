@@ -3,9 +3,9 @@
 //! This module implements automatic fusion of consecutive element-wise operations
 //! to reduce memory bandwidth requirements and improve cache efficiency.
 
-use crate::Float;
 use crate::graph::{Graph, TensorID};
 use crate::op::{Op, OpError};
+use crate::Float;
 use ndarray::{Array, IxDyn, Zip};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex};
@@ -15,7 +15,7 @@ use std::sync::{Arc, Mutex};
 pub enum FusableOperation<F: Float> {
     /// Element-wise addition
     Add,
-    /// Element-wise subtraction 
+    /// Element-wise subtraction
     Sub,
     /// Element-wise multiplication
     Mul,
@@ -89,10 +89,10 @@ impl<F: Float> FusionChain<F> {
     pub fn add_operation(&mut self, op: FusableOperation<F>, input_shape: Vec<usize>) {
         self.operations.push(op);
         self.input_shapes.push(input_shape.clone());
-        
+
         // For element-wise operations, output shape matches input shape
         self.output_shape = input_shape;
-        
+
         // Estimate performance benefit (simple heuristic)
         self.performance_benefit += self.estimate_benefit(&op);
     }
@@ -101,10 +101,12 @@ impl<F: Float> FusionChain<F> {
     fn estimate_benefit(&self, op: &FusableOperation<F>) -> f64 {
         // Each fused operation saves one memory round-trip
         let elements = self.output_shape.iter().product::<usize>() as f64;
-        
+
         match op {
-            FusableOperation::Add | FusableOperation::Sub | 
-            FusableOperation::Mul | FusableOperation::Div => {
+            FusableOperation::Add
+            | FusableOperation::Sub
+            | FusableOperation::Mul
+            | FusableOperation::Div => {
                 // Binary operations: save memory bandwidth
                 elements * 0.5
             }
@@ -162,10 +164,10 @@ impl<F: Float> LoopFusionOptimizer<F> {
 
         // Find all element-wise operations
         let element_wise_ops = self.find_element_wise_operations(graph);
-        
+
         // Group operations into fusion chains
         let chains = self.identify_fusion_chains(&element_wise_ops, graph);
-        
+
         // Filter chains that are worth fusing
         for chain in chains {
             if chain.is_worthwhile() {
@@ -174,25 +176,24 @@ impl<F: Float> LoopFusionOptimizer<F> {
         }
 
         self.stats.chains_identified = self.fusion_chains.len();
-        self.stats.total_operations_fused = self.fusion_chains.iter()
-            .map(|chain| chain.len())
-            .sum();
+        self.stats.total_operations_fused =
+            self.fusion_chains.iter().map(|chain| chain.len()).sum();
 
         Ok(())
     }
 
     /// Find all element-wise operations in the graph
     fn find_element_wise_operations(&self, graph: &Graph<F>) -> Vec<TensorID> {
-        // This is a simplified implementation - in practice, would need to 
+        // This is a simplified implementation - in practice, would need to
         // inspect the actual graph structure and operation types
         Vec::new()
     }
 
     /// Identify sequences of operations that can be fused
     fn identify_fusion_chains(
-        &self, 
-        operations: &[TensorID], 
-        graph: &Graph<F>
+        &self,
+        operations: &[TensorID],
+        graph: &Graph<F>,
     ) -> Vec<FusionChain<F>> {
         let mut chains = Vec::new();
         let mut visited = HashSet::new();
@@ -220,7 +221,7 @@ impl<F: Float> LoopFusionOptimizer<F> {
     ) -> FusionChain<F> {
         let mut chain = FusionChain::new();
         let mut current_op = start_op;
-        
+
         loop {
             if visited.contains(&current_op) {
                 break;
@@ -229,7 +230,7 @@ impl<F: Float> LoopFusionOptimizer<F> {
             // Check if current operation is fusable
             if let Some(fusable_op) = self.classify_operation(current_op, graph) {
                 visited.insert(current_op);
-                
+
                 // For this example, assume shape is [100] - in practice would extract from graph
                 chain.add_operation(fusable_op, vec![100]);
 
@@ -248,14 +249,22 @@ impl<F: Float> LoopFusionOptimizer<F> {
     }
 
     /// Classify an operation as fusable or not
-    fn classify_operation(&self, _op_idx: TensorID, _graph: &Graph<F>) -> Option<FusableOperation<F>> {
+    fn classify_operation(
+        &self,
+        _op_idx: TensorID,
+        _graph: &Graph<F>,
+    ) -> Option<FusableOperation<F>> {
         // In practice, would inspect the actual operation type
         // For this example, return a sample operation
         Some(FusableOperation::Add)
     }
 
     /// Find the next operation that can be fused with the current one
-    fn find_next_fusable_operation(&self, _current_op: TensorID, _graph: &Graph<F>) -> Option<TensorID> {
+    fn find_next_fusable_operation(
+        &self,
+        _current_op: TensorID,
+        _graph: &Graph<F>,
+    ) -> Option<TensorID> {
         // In practice, would traverse graph dependencies
         None
     }
@@ -295,64 +304,74 @@ impl<F: Float> FusedKernel<F> {
     /// Create a fused kernel from a fusion chain
     pub fn from_chain(chain: FusionChain<F>) -> Result<Self, OpError> {
         let kernel_func = Self::compile_kernel(&chain)?;
-        
-        Ok(Self {
-            chain,
-            kernel_func,
-        })
+
+        Ok(Self { chain, kernel_func })
     }
 
     /// Compile the fusion chain into an executable kernel
     fn compile_kernel(
-        chain: &FusionChain<F>
-    ) -> Result<Box<dyn Fn(&[&Array<F, IxDyn>]) -> Result<Array<F, IxDyn>, OpError> + Send + Sync>, OpError> {
+        chain: &FusionChain<F>,
+    ) -> Result<
+        Box<dyn Fn(&[&Array<F, IxDyn>]) -> Result<Array<F, IxDyn>, OpError> + Send + Sync>,
+        OpError,
+    > {
         let operations = chain.operations.clone();
         let output_shape = chain.output_shape.clone();
-        
-        Ok(Box::new(move |inputs: &[&Array<F, IxDyn>]| -> Result<Array<F, IxDyn>, OpError> {
-            if inputs.is_empty() {
-                return Err(OpError::InvalidInput("No input arrays provided".to_string()));
-            }
 
-            let input = inputs[0];
-            let mut result = Array::zeros(input.raw_dim());
+        Ok(Box::new(
+            move |inputs: &[&Array<F, IxDyn>]| -> Result<Array<F, IxDyn>, OpError> {
+                if inputs.is_empty() {
+                    return Err(OpError::InvalidInput(
+                        "No input arrays provided".to_string(),
+                    ));
+                }
 
-            // Execute fused operations in a single loop
-            Zip::from(&mut result)
-                .and(input)
-                .par_for_each(|output, &input_val| {
-                    let mut value = input_val;
-                    
-                    // Apply all operations in sequence
-                    for op in &operations {
-                        value = match op {
-                            FusableOperation::Add => {
-                                // For binary ops, would need second input
-                                // For now, just pass through
-                                value
-                            }
-                            FusableOperation::Mul => value,
-                            FusableOperation::UnaryFunc(func) => {
-                                Self::apply_unary_function(value, func)
-                            }
-                            FusableOperation::ScalarOp(scalar, func) => {
-                                Self::apply_scalar_operation(value, *scalar, func)
-                            }
-                            _ => value,
-                        };
-                    }
-                    
-                    *output = value;
-                });
+                let input = inputs[0];
+                let mut result = Array::zeros(input.raw_dim());
 
-            Ok(result)
-        }))
+                // Execute fused operations in a single loop
+                Zip::from(&mut result)
+                    .and(input)
+                    .par_for_each(|output, &input_val| {
+                        let mut value = input_val;
+
+                        // Apply all operations in sequence
+                        for op in &operations {
+                            value = match op {
+                                FusableOperation::Add => {
+                                    // For binary ops, would need second input
+                                    // For now, just pass through
+                                    value
+                                }
+                                FusableOperation::Mul => value,
+                                FusableOperation::UnaryFunc(func) => {
+                                    Self::apply_unary_function(value, func)
+                                }
+                                FusableOperation::ScalarOp(scalar, func) => {
+                                    Self::apply_scalar_operation(value, *scalar, func)
+                                }
+                                _ => value,
+                            };
+                        }
+
+                        *output = value;
+                    });
+
+                Ok(result)
+            },
+        ))
     }
 
     /// Apply a unary function
     fn apply_unary_function(value: F, func: &UnaryFunction<F>) -> F {
         match func {
-            UnaryFunction::ReLU => if value > F::zero() { value } else { F::zero() },
+            UnaryFunction::ReLU => {
+                if value > F::zero() {
+                    value
+                } else {
+                    F::zero()
+                }
+            }
             UnaryFunction::Sigmoid => {
                 let one = F::one();
                 one / (one + (-value).exp())
@@ -391,7 +410,7 @@ impl<F: Float> FusedKernel<F> {
         // Estimate based on reduced memory traffic
         let num_ops = self.chain.len() as f64;
         let memory_reduction = (num_ops - 1.0) / num_ops;
-        
+
         // Conservative estimate: 1.2x to 3x speedup depending on chain length
         1.0 + memory_reduction * 2.0
     }
@@ -414,17 +433,19 @@ impl<F: Float> FusionStats {
     /// Calculate memory bandwidth reduction
     pub fn calculate_memory_reduction(&mut self, original_ops: usize) {
         if original_ops > 0 {
-            self.memory_bandwidth_reduction = 
+            self.memory_bandwidth_reduction =
                 (original_ops - self.chains_identified) as f64 / original_ops as f64 * 100.0;
         }
     }
 
     /// Calculate estimated speedup
-    pub fn calculate_speedup<F: Float>(&mut self, kernels: &[FusedKernel<F>]) {
+    pub fn calculate_speedup(&mut self, kernels: &[FusedKernel<F>]) {
         if !kernels.is_empty() {
-            self.estimated_speedup = kernels.iter()
+            self.estimated_speedup = kernels
+                .iter()
                 .map(|kernel| kernel.estimate_speedup())
-                .sum::<f64>() / kernels.len() as f64;
+                .sum::<f64>()
+                / kernels.len() as f64;
         }
     }
 }
@@ -530,19 +551,22 @@ impl Default for FusionConfig {
 }
 
 /// Global fusion manager instance
-static FUSION_MANAGER: std::sync::OnceLock<Arc<Mutex<LoopFusionManager<f32>>>> = std::sync::OnceLock::new();
+static FUSION_MANAGER: std::sync::OnceLock<Arc<Mutex<LoopFusionManager<f32>>>> =
+    std::sync::OnceLock::new();
 
 /// Initialize the global fusion manager
 pub fn init_fusion_manager() -> Arc<Mutex<LoopFusionManager<f32>>> {
-    FUSION_MANAGER.get_or_init(|| {
-        Arc::new(Mutex::new(LoopFusionManager::new()))
-    }).clone()
+    FUSION_MANAGER
+        .get_or_init(|| Arc::new(Mutex::new(LoopFusionManager::new())))
+        .clone()
 }
 
 /// Configure global fusion settings
 pub fn configure_fusion(config: FusionConfig) -> Result<(), OpError> {
     let manager = init_fusion_manager();
-    let mut manager_guard = manager.lock().map_err(|_| OpError::InvalidInput("Lock error".to_string()))?;
+    let mut manager_guard = manager
+        .lock()
+        .map_err(|_| OpError::InvalidInput("Lock error".to_string()))?;
     *manager_guard = LoopFusionManager::with_config(config);
     Ok(())
 }
@@ -578,7 +602,7 @@ mod tests {
 
         chain.add_operation(FusableOperation::Add, vec![100]);
         chain.add_operation(FusableOperation::UnaryFunc(UnaryFunction::ReLU), vec![100]);
-        
+
         assert_eq!(chain.len(), 2);
         assert!(chain.is_worthwhile());
     }
@@ -586,35 +610,70 @@ mod tests {
     #[test]
     fn test_unary_functions() {
         let value = 2.0f32;
-        
-        assert_eq!(LoopFusionOptimizer::<f32>::apply_unary_function(value, &UnaryFunction::Square), 4.0);
-        assert_eq!(LoopFusionOptimizer::<f32>::apply_unary_function(-1.0, &UnaryFunction::ReLU), 0.0);
-        assert_eq!(LoopFusionOptimizer::<f32>::apply_unary_function(1.0, &UnaryFunction::ReLU), 1.0);
-        assert_eq!(LoopFusionOptimizer::<f32>::apply_unary_function(4.0, &UnaryFunction::Sqrt), 2.0);
-        assert_eq!(LoopFusionOptimizer::<f32>::apply_unary_function(-2.0, &UnaryFunction::Abs), 2.0);
+
+        assert_eq!(
+            LoopFusionOptimizer::<f32>::apply_unary_function(value, &UnaryFunction::Square),
+            4.0
+        );
+        assert_eq!(
+            LoopFusionOptimizer::<f32>::apply_unary_function(-1.0, &UnaryFunction::ReLU),
+            0.0
+        );
+        assert_eq!(
+            LoopFusionOptimizer::<f32>::apply_unary_function(1.0, &UnaryFunction::ReLU),
+            1.0
+        );
+        assert_eq!(
+            LoopFusionOptimizer::<f32>::apply_unary_function(4.0, &UnaryFunction::Sqrt),
+            2.0
+        );
+        assert_eq!(
+            LoopFusionOptimizer::<f32>::apply_unary_function(-2.0, &UnaryFunction::Abs),
+            2.0
+        );
     }
 
     #[test]
     fn test_scalar_operations() {
         let value = 3.0f32;
         let scalar = 2.0f32;
-        
-        assert_eq!(LoopFusionOptimizer::<f32>::apply_scalar_operation(value, scalar, &BinaryFunction::AddScalar), 5.0);
-        assert_eq!(LoopFusionOptimizer::<f32>::apply_scalar_operation(value, scalar, &BinaryFunction::MulScalar), 6.0);
-        assert_eq!(LoopFusionOptimizer::<f32>::apply_scalar_operation(value, scalar, &BinaryFunction::Pow), 9.0);
+
+        assert_eq!(
+            LoopFusionOptimizer::<f32>::apply_scalar_operation(
+                value,
+                scalar,
+                &BinaryFunction::AddScalar
+            ),
+            5.0
+        );
+        assert_eq!(
+            LoopFusionOptimizer::<f32>::apply_scalar_operation(
+                value,
+                scalar,
+                &BinaryFunction::MulScalar
+            ),
+            6.0
+        );
+        assert_eq!(
+            LoopFusionOptimizer::<f32>::apply_scalar_operation(value, scalar, &BinaryFunction::Pow),
+            9.0
+        );
     }
 
     #[test]
     fn test_fused_kernel_creation() {
         let mut chain = FusionChain::new();
         chain.add_operation(FusableOperation::UnaryFunc(UnaryFunction::Square), vec![5]);
-        chain.add_operation(FusableOperation::ScalarOp(2.0, BinaryFunction::MulScalar), vec![5]);
-        
+        chain.add_operation(
+            FusableOperation::ScalarOp(2.0, BinaryFunction::MulScalar),
+            vec![5],
+        );
+
         let kernel = FusedKernel::from_chain(chain).unwrap();
-        
+
         let input = Array::from_shape_vec((5,).into_dyn(), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
         let result = kernel.execute(&[&input]).unwrap();
-        
+
         // Should be (x^2) * 2 = [2, 8, 18, 32, 50]
         let expected = vec![2.0, 8.0, 18.0, 32.0, 50.0];
         assert_eq!(result.as_slice().unwrap(), &expected);
@@ -629,7 +688,7 @@ mod tests {
             min_tensor_size: 5000,
             enable_parallel_fusion: false,
         };
-        
+
         let manager = LoopFusionManager::with_config(config.clone());
         assert!(!manager.is_enabled());
     }
@@ -639,7 +698,7 @@ mod tests {
         let mut stats = FusionStats::default();
         stats.chains_identified = 5;
         stats.total_operations_fused = 20;
-        
+
         stats.calculate_memory_reduction(25);
         assert_eq!(stats.memory_bandwidth_reduction, 80.0);
     }
@@ -648,7 +707,7 @@ mod tests {
     fn test_global_fusion_manager() {
         set_fusion_enabled(true).unwrap();
         assert!(is_fusion_enabled());
-        
+
         set_fusion_enabled(false).unwrap();
         assert!(!is_fusion_enabled());
     }
@@ -656,23 +715,29 @@ mod tests {
     #[test]
     fn test_complex_fused_chain() {
         let mut chain = FusionChain::new();
-        
+
         // Create a complex chain: x -> x^2 -> ReLU -> *3 -> +1
         chain.add_operation(FusableOperation::UnaryFunc(UnaryFunction::Square), vec![4]);
         chain.add_operation(FusableOperation::UnaryFunc(UnaryFunction::ReLU), vec![4]);
-        chain.add_operation(FusableOperation::ScalarOp(3.0, BinaryFunction::MulScalar), vec![4]);
-        chain.add_operation(FusableOperation::ScalarOp(1.0, BinaryFunction::AddScalar), vec![4]);
-        
+        chain.add_operation(
+            FusableOperation::ScalarOp(3.0, BinaryFunction::MulScalar),
+            vec![4],
+        );
+        chain.add_operation(
+            FusableOperation::ScalarOp(1.0, BinaryFunction::AddScalar),
+            vec![4],
+        );
+
         let kernel = FusedKernel::from_chain(chain).unwrap();
-        
+
         let input = Array::from_shape_vec((4,).into_dyn(), vec![-2.0, -1.0, 1.0, 2.0]).unwrap();
         let result = kernel.execute(&[&input]).unwrap();
-        
+
         // Expected: x^2 -> ReLU -> *3 -> +1
         // [-2, -1, 1, 2] -> [4, 1, 1, 4] -> [4, 1, 1, 4] -> [12, 3, 3, 12] -> [13, 4, 4, 13]
         let expected = vec![13.0, 4.0, 4.0, 13.0];
         assert_eq!(result.as_slice().unwrap(), &expected);
-        
+
         let speedup = kernel.estimate_speedup();
         assert!(speedup > 1.0 && speedup <= 4.0);
     }

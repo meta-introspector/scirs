@@ -286,10 +286,19 @@ where
             let left_diff = y[i] - y[i - 1];
             let right_diff = y[i + 1] - y[i];
 
-            // If the differences have opposite signs and are both large, it might be a discontinuity
-            if left_diff * right_diff < T::zero() {
-                let jump_size = (left_diff.abs() + right_diff.abs()) / T::from(2.0).unwrap();
+            // Check for discontinuities in two ways:
+            // 1. Opposite signs with large magnitudes (traditional discontinuity)
+            // 2. Large magnitude difference even with same sign (step function)
+            let opposite_signs = left_diff * right_diff < T::zero();
+            let jump_size = (left_diff.abs() + right_diff.abs()) / T::from(2.0).unwrap();
 
+            // Also check for large difference in magnitude even if same sign
+            let magnitude_diff = (left_diff.abs() - right_diff.abs()).abs();
+            let is_potential_discontinuity = opposite_signs
+                || (jump_size > T::from(0.1).unwrap()
+                    && magnitude_diff > jump_size * T::from(0.5).unwrap());
+
+            if is_potential_discontinuity {
                 // Calculate local variation for normalization
                 let start_idx = if i >= window_size / 2 {
                     i - window_size / 2
@@ -302,7 +311,7 @@ where
 
                 // Check if jump is significant compared to local variation
                 if local_var > T::zero()
-                    && jump_size / local_var > self.config.discontinuity_threshold
+                    && jump_size / local_var >= self.config.discontinuity_threshold
                 {
                     discontinuities.push(SingularityInfo {
                         singularity_type: SingularityType::Discontinuity,
@@ -574,9 +583,20 @@ where
             let last = consolidated.last().unwrap();
             if (singularity.location - last.location).abs() > min_separation {
                 consolidated.push(singularity);
-            } else if singularity.severity > last.severity {
-                // Replace with higher severity singularity
-                *consolidated.last_mut().unwrap() = singularity;
+            } else {
+                // When consolidating, prioritize discontinuities over other types
+                let should_replace = match (last.singularity_type, singularity.singularity_type) {
+                    // Keep discontinuity over any other type
+                    (SingularityType::Discontinuity, _) => false,
+                    // Replace any type with discontinuity
+                    (_, SingularityType::Discontinuity) => true,
+                    // Otherwise, use severity
+                    _ => singularity.severity > last.severity,
+                };
+
+                if should_replace {
+                    *consolidated.last_mut().unwrap() = singularity;
+                }
             }
         }
 
@@ -679,7 +699,7 @@ mod tests {
         let x = Array1::linspace(0.0, 2.0, 21);
         let y = x.mapv(|x| if x < 1.0 { x } else { x + 5.0 });
 
-        let detector = SingularityDetector::new().with_discontinuity_threshold(2.0);
+        let detector = SingularityDetector::new().with_discontinuity_threshold(1.0);
 
         let singularities = detector.detect(&x.view(), &y.view()).unwrap();
 

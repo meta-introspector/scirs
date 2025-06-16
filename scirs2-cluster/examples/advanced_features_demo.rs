@@ -10,9 +10,9 @@ use ndarray::{Array1, Array2};
 use scirs2_cluster::metrics::silhouette_score;
 use scirs2_cluster::preprocess::standardize;
 use scirs2_cluster::vq::{
-    distance_to_centroids_simd, kmeans, minibatch_kmeans, pairwise_euclidean_simd, parallel_kmeans,
-    weighted_kmeans, KMeansInit, KMeansOptions, MiniBatchKMeansOptions, ParallelKMeansOptions,
-    WeightedKMeansOptions,
+    distance_to_centroids_simd, kmeans_with_options, minibatch_kmeans, pairwise_euclidean_simd,
+    parallel_kmeans, weighted_kmeans, KMeansInit, KMeansOptions, MiniBatchKMeansOptions,
+    ParallelKMeansOptions, WeightedKMeansOptions,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -100,7 +100,7 @@ fn demo_initialization_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::er
         };
 
         let start = std::time::Instant::now();
-        let (_centroids, labels) = kmeans(data.view(), 3, Some(options))?;
+        let (_centroids, labels) = kmeans_with_options(data.view(), 3, Some(options))?;
         let duration = start.elapsed();
 
         // Convert labels from usize to i32 for silhouette_score

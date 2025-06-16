@@ -5,14 +5,14 @@
 //! improvements for large-scale computations.
 
 use crate::Float;
-use std::sync::{Arc, Mutex, Condvar};
-use std::thread::{self, JoinHandle};
-use std::sync::mpsc::{channel, Sender, Receiver};
 use std::collections::VecDeque;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::{Arc, Condvar, Mutex};
+use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
-pub mod thread_pool;
 pub mod parallel_ops;
+pub mod thread_pool;
 pub mod work_stealing;
 
 /// Global thread pool manager
@@ -119,7 +119,9 @@ impl ThreadPool {
         F: FnOnce() + Send + 'static,
     {
         let job = Box::new(f);
-        self.sender.send(job).map_err(|_| ThreadPoolError::QueueFull)
+        self.sender
+            .send(job)
+            .map_err(|_| ThreadPoolError::QueueFull)
     }
 
     /// Execute a closure and wait for completion
@@ -129,7 +131,7 @@ impl ThreadPool {
         R: Send + 'static,
     {
         let (tx, rx) = std::sync::mpsc::channel();
-        
+
         self.execute(move || {
             let result = f();
             let _ = tx.send(result);
@@ -149,7 +151,7 @@ impl ThreadPool {
 
         for task in tasks {
             let (tx, rx) = std::sync::mpsc::channel();
-            
+
             self.execute(move || {
                 task();
                 let _ = tx.send(());
@@ -179,7 +181,9 @@ impl ThreadPool {
     /// Resize the thread pool
     pub fn resize(&mut self, new_size: usize) -> Result<(), ThreadPoolError> {
         if new_size == 0 {
-            return Err(ThreadPoolError::InvalidConfiguration("Thread pool size cannot be zero".into()));
+            return Err(ThreadPoolError::InvalidConfiguration(
+                "Thread pool size cannot be zero".into(),
+            ));
         }
 
         // Implementation would recreate the thread pool with new size
@@ -226,7 +230,7 @@ impl Worker {
         let thread = thread::spawn(move || {
             // Set thread priority if supported
             Self::set_thread_priority(config.priority);
-            
+
             // Set CPU affinity if specified
             Self::set_cpu_affinity(id, &config.cpu_affinity);
 
@@ -335,11 +339,11 @@ impl ThreadPoolStats {
             return 0.0;
         }
 
-        let total_time: Duration = self.worker_stats.iter()
-            .map(|stats| stats.total_time)
-            .sum();
+        let total_time: Duration = self.worker_stats.iter().map(|stats| stats.total_time).sum();
 
-        let max_time = self.worker_stats.iter()
+        let max_time = self
+            .worker_stats
+            .iter()
             .map(|stats| stats.total_time)
             .max()
             .unwrap_or(Duration::ZERO);
@@ -444,7 +448,7 @@ impl ParallelScheduler {
         // - Data size
         // - Current thread pool load
         // - Overhead considerations
-        
+
         true // Simplified decision
     }
 
@@ -539,7 +543,9 @@ where
     if let Some(ref pool) = *pool {
         pool.execute(f)
     } else {
-        Err(ThreadPoolError::InvalidConfiguration("Thread pool not initialized".into()))
+        Err(ThreadPoolError::InvalidConfiguration(
+            "Thread pool not initialized".into(),
+        ))
     }
 }
 
@@ -553,7 +559,9 @@ where
     if let Some(ref pool) = *pool {
         pool.execute_and_wait(f)
     } else {
-        Err(ThreadPoolError::InvalidConfiguration("Thread pool not initialized".into()))
+        Err(ThreadPoolError::InvalidConfiguration(
+            "Thread pool not initialized".into(),
+        ))
     }
 }
 
@@ -605,7 +613,7 @@ mod tests {
     fn test_thread_pool_creation() {
         let pool = ThreadPool::new();
         assert!(pool.get_config().num_threads > 0);
-        
+
         let config = ThreadPoolConfig {
             num_threads: 2,
             work_stealing: false,
@@ -624,7 +632,8 @@ mod tests {
 
         pool.execute(move || {
             counter_clone.fetch_add(1, Ordering::SeqCst);
-        }).unwrap();
+        })
+        .unwrap();
 
         // Give the task time to execute
         std::thread::sleep(Duration::from_millis(100));
@@ -634,10 +643,8 @@ mod tests {
     #[test]
     fn test_thread_pool_execute_and_wait() {
         let pool = ThreadPool::new();
-        
-        let result = pool.execute_and_wait(|| {
-            42
-        }).unwrap();
+
+        let result = pool.execute_and_wait(|| 42).unwrap();
 
         assert_eq!(result, 42);
     }
@@ -646,13 +653,15 @@ mod tests {
     fn test_thread_pool_parallel_execution() {
         let pool = ThreadPool::new();
         let counter = Arc::new(AtomicUsize::new(0));
-        
-        let tasks: Vec<_> = (0..5).map(|_| {
-            let counter_clone = Arc::clone(&counter);
-            move || {
-                counter_clone.fetch_add(1, Ordering::SeqCst);
-            }
-        }).collect();
+
+        let tasks: Vec<_> = (0..5)
+            .map(|_| {
+                let counter_clone = Arc::clone(&counter);
+                move || {
+                    counter_clone.fetch_add(1, Ordering::SeqCst);
+                }
+            })
+            .collect();
 
         pool.execute_parallel(tasks).unwrap();
         assert_eq!(counter.load(Ordering::SeqCst), 5);
@@ -662,7 +671,7 @@ mod tests {
     fn test_thread_pool_stats() {
         let pool = ThreadPool::new();
         let stats = pool.get_stats();
-        
+
         // Initially no tasks completed
         assert_eq!(stats.tasks_completed, 0);
         assert_eq!(stats.average_execution_time(), Duration::ZERO);
@@ -671,11 +680,9 @@ mod tests {
     #[test]
     fn test_parallel_scheduler() {
         let scheduler = ParallelScheduler::new();
-        
-        let result = scheduler.schedule_operation(|| {
-            100
-        }).unwrap();
-        
+
+        let result = scheduler.schedule_operation(|| 100).unwrap();
+
         assert_eq!(result, 100);
     }
 
@@ -684,31 +691,32 @@ mod tests {
         // Initialize
         init_thread_pool().unwrap();
         assert!(is_thread_pool_initialized());
-        
+
         // Execute task
         let counter = Arc::new(AtomicUsize::new(0));
         let counter_clone = Arc::clone(&counter);
-        
+
         execute_global(move || {
             counter_clone.fetch_add(1, Ordering::SeqCst);
-        }).unwrap();
-        
+        })
+        .unwrap();
+
         // Wait and check
         std::thread::sleep(Duration::from_millis(100));
         assert_eq!(counter.load(Ordering::SeqCst), 1);
-        
+
         // Test execute and wait
         let result = execute_and_wait_global(|| 42).unwrap();
         assert_eq!(result, 42);
-        
+
         // Get stats
         let stats = get_global_thread_pool_stats();
         assert!(stats.is_some());
-        
+
         // Get thread count
         let thread_count = get_global_thread_count();
         assert!(thread_count > 0);
-        
+
         // Shutdown
         shutdown_global_thread_pool().unwrap();
     }
@@ -719,7 +727,7 @@ mod tests {
         assert!(config.num_threads > 0);
         assert!(config.work_stealing);
         assert_eq!(config.priority, ThreadPriority::Normal);
-        
+
         let custom_config = ThreadPoolConfig {
             num_threads: 8,
             max_queue_size: 500,
@@ -729,7 +737,7 @@ mod tests {
             idle_timeout: Duration::from_secs(30),
             adaptive_scheduling: false,
         };
-        
+
         assert_eq!(custom_config.num_threads, 8);
         assert_eq!(custom_config.max_queue_size, 500);
         assert!(!custom_config.work_stealing);
@@ -742,7 +750,10 @@ mod tests {
         assert!(config.enable_batching);
         assert_eq!(config.min_parallel_size, 1000);
         assert_eq!(config.max_batch_size, 100);
-        assert!(matches!(config.load_balancing, LoadBalancingStrategy::RoundRobin));
+        assert!(matches!(
+            config.load_balancing,
+            LoadBalancingStrategy::RoundRobin
+        ));
     }
 
     #[test]
@@ -760,7 +771,7 @@ mod tests {
         let mut stats = ThreadPoolStats::new();
         stats.tasks_completed = 10;
         stats.total_execution_time = Duration::from_secs(5);
-        
+
         assert_eq!(stats.average_execution_time(), Duration::from_millis(500));
         assert_eq!(stats.tasks_per_second(), 2.0);
     }

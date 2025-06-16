@@ -1,4 +1,4 @@
-use ndarray::{array, Array2};
+// No imports needed for this documentation example
 
 fn main() {
     println!("Testing eigh function limitations for spectral clustering");

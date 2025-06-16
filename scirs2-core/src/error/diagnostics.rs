@@ -367,13 +367,19 @@ impl ErrorDiagnostics {
                         "Available memory: {:.2} GB",
                         mem as f64 / 1_000_000_000.0
                     ));
-                    
+
                     // Enhanced memory analysis
                     if mem < 4_000_000_000 {
-                        diagnostics.push("Low memory detected - consider using memory-efficient algorithms".to_string());
+                        diagnostics.push(
+                            "Low memory detected - consider using memory-efficient algorithms"
+                                .to_string(),
+                        );
                     }
                     if mem > 64_000_000_000 {
-                        diagnostics.push("High memory system - can use in-memory algorithms for large datasets".to_string());
+                        diagnostics.push(
+                            "High memory system - can use in-memory algorithms for large datasets"
+                                .to_string(),
+                        );
                     }
                 }
 
@@ -381,43 +387,62 @@ impl ErrorDiagnostics {
                 if let Some(threads) = self.environment.env_vars.get("OMP_NUM_THREADS") {
                     diagnostics.push(format!("OpenMP threads: {}", threads));
                 }
-                
+
                 // Check for memory management features
-                if !self.environment.features.contains(&"memory_efficient".to_string()) {
-                    diagnostics.push("Memory-efficient algorithms not enabled - consider enabling this feature".to_string());
+                if !self
+                    .environment
+                    .features
+                    .contains(&"memory_efficient".to_string())
+                {
+                    diagnostics.push(
+                        "Memory-efficient algorithms not enabled - consider enabling this feature"
+                            .to_string(),
+                    );
                 }
             }
 
             CoreError::ComputationError(_) => {
                 if let Some(cores) = self.environment.cpu_cores {
                     diagnostics.push(format!("CPU cores available: {}", cores));
-                    
+
                     // Enhanced CPU analysis
                     if cores == 1 {
-                        diagnostics.push("Single-core system - parallel algorithms won't help".to_string());
+                        diagnostics.push(
+                            "Single-core system - parallel algorithms won't help".to_string(),
+                        );
                     } else if cores > 32 {
-                        diagnostics.push("High-core count system - consider NUMA-aware algorithms".to_string());
+                        diagnostics.push(
+                            "High-core count system - consider NUMA-aware algorithms".to_string(),
+                        );
                     }
                 }
 
                 // Check compiler optimizations
                 #[cfg(debug_assertions)]
                 diagnostics.push("Running in debug mode - performance may be reduced".to_string());
-                
+
                 // Check for performance features
                 if !self.environment.features.contains(&"parallel".to_string()) {
-                    diagnostics.push("Parallel processing not enabled - could improve performance".to_string());
+                    diagnostics.push(
+                        "Parallel processing not enabled - could improve performance".to_string(),
+                    );
                 }
                 if !self.environment.features.contains(&"simd".to_string()) {
-                    diagnostics.push("SIMD optimizations not enabled - could improve numerical performance".to_string());
+                    diagnostics.push(
+                        "SIMD optimizations not enabled - could improve numerical performance"
+                            .to_string(),
+                    );
                 }
             }
 
             CoreError::TimeoutError(_) => {
-                diagnostics.push("Timeout detected - operation took longer than expected".to_string());
+                diagnostics
+                    .push("Timeout detected - operation took longer than expected".to_string());
                 if let Some(cores) = self.environment.cpu_cores {
                     if cores > 1 && !self.environment.features.contains(&"parallel".to_string()) {
-                        diagnostics.push("Multi-core system but parallel processing not enabled".to_string());
+                        diagnostics.push(
+                            "Multi-core system but parallel processing not enabled".to_string(),
+                        );
                     }
                 }
             }
@@ -436,11 +461,14 @@ impl ErrorDiagnostics {
         // Check for optimal thread configuration
         if let (Some(cores), Some(omp_threads)) = (
             self.environment.cpu_cores,
-            self.environment.env_vars.get("OMP_NUM_THREADS")
+            self.environment.env_vars.get("OMP_NUM_THREADS"),
         ) {
             if let Ok(omp_count) = omp_threads.parse::<usize>() {
                 if omp_count > cores {
-                    diagnostics.push("OMP_NUM_THREADS exceeds available cores - may cause oversubscription".to_string());
+                    diagnostics.push(
+                        "OMP_NUM_THREADS exceeds available cores - may cause oversubscription"
+                            .to_string(),
+                    );
                 }
             }
         }
@@ -451,7 +479,9 @@ impl ErrorDiagnostics {
         } else if self.environment.features.contains(&"intel-mkl".to_string()) {
             diagnostics.push("Using Intel MKL backend - optimized for Intel CPUs".to_string());
         } else if self.environment.features.contains(&"linalg".to_string()) {
-            diagnostics.push("Linear algebra backend available but no optimized BLAS detected".to_string());
+            diagnostics.push(
+                "Linear algebra backend available but no optimized BLAS detected".to_string(),
+            );
         }
 
         // Check for GPU capabilities
@@ -467,17 +497,19 @@ impl ErrorDiagnostics {
     pub fn predict_potential_errors(&self, context: &str) -> Vec<String> {
         let mut predictions = Vec::new();
         let history = self.error_history.lock().unwrap();
-        
+
         // Analyze error frequency patterns
         let mut error_counts: HashMap<String, usize> = HashMap::new();
         let recent_cutoff = SystemTime::now() - Duration::from_secs(3600); // Last hour
-        
+
         for occurrence in history.iter() {
             if occurrence.timestamp >= recent_cutoff {
-                *error_counts.entry(occurrence.error_type.clone()).or_insert(0) += 1;
+                *error_counts
+                    .entry(occurrence.error_type.clone())
+                    .or_insert(0) += 1;
             }
         }
-        
+
         // Predict based on high-frequency patterns
         for (error_type, count) in error_counts {
             if count >= 3 {
@@ -487,113 +519,113 @@ impl ErrorDiagnostics {
                 ));
             }
         }
-        
+
         // Context-based predictions
-        if (context.contains("matrix") || context.contains("linear_algebra")) && self.environment.available_memory.is_some_and(|mem| mem < 8_000_000_000) {
+        if (context.contains("matrix") || context.contains("linear_algebra"))
+            && self
+                .environment
+                .available_memory
+                .is_some_and(|mem| mem < 8_000_000_000)
+        {
             predictions.push("Potential memory issues with large matrix operations".to_string());
         }
-        
+
         if context.contains("optimization") || context.contains("solver") {
-            predictions.push("Potential convergence issues - consider robust initial conditions".to_string());
+            predictions.push(
+                "Potential convergence issues - consider robust initial conditions".to_string(),
+            );
         }
-        
+
         if context.contains("parallel") && self.environment.cpu_cores == Some(1) {
-            predictions.push("Parallel algorithms may not be effective on single-core system".to_string());
+            predictions
+                .push("Parallel algorithms may not be effective on single-core system".to_string());
         }
-        
+
         predictions
     }
 
     /// Generate domain-specific recovery strategies (Alpha 6 feature)
     pub fn suggest_domain_recovery(&self, error: &CoreError, domain: &str) -> Vec<String> {
         let mut strategies = Vec::new();
-        
+
         match domain {
-            "linear_algebra" => {
-                match error {
-                    CoreError::MemoryError(_) => {
-                        strategies.extend(vec![
-                            "Use iterative solvers instead of direct factorization".to_string(),
-                            "Implement block algorithms for large matrices".to_string(),
-                            "Consider sparse matrix representations".to_string(),
-                            "Use out-of-core matrix algorithms".to_string(),
-                        ]);
-                    }
-                    CoreError::ConvergenceError(_) => {
-                        strategies.extend(vec![
-                            "Apply preconditioning (ILU, SSOR, or Jacobi)".to_string(),
-                            "Use more robust factorization (SVD instead of LU)".to_string(),
-                            "Check matrix conditioning and apply regularization".to_string(),
-                            "Try different solver algorithms (GMRES, BiCGSTAB)".to_string(),
-                        ]);
-                    }
-                    _ => {}
+            "linear_algebra" => match error {
+                CoreError::MemoryError(_) => {
+                    strategies.extend(vec![
+                        "Use iterative solvers instead of direct factorization".to_string(),
+                        "Implement block algorithms for large matrices".to_string(),
+                        "Consider sparse matrix representations".to_string(),
+                        "Use out-of-core matrix algorithms".to_string(),
+                    ]);
                 }
-            }
-            
-            "optimization" => {
-                match error {
-                    CoreError::ConvergenceError(_) => {
-                        strategies.extend(vec![
-                            "Use trust region methods for better global convergence".to_string(),
-                            "Apply line search algorithms with backtracking".to_string(),
-                            "Try multiple random starting points".to_string(),
-                            "Use gradient-free methods for noisy objectives".to_string(),
-                            "Implement adaptive step size control".to_string(),
-                        ]);
-                    }
-                    CoreError::DomainError(_) => {
-                        strategies.extend(vec![
-                            "Add constraint handling and projection operators".to_string(),
-                            "Use barrier methods for constrained optimization".to_string(),
-                            "Implement bounds checking and clipping".to_string(),
-                        ]);
-                    }
-                    _ => {}
+                CoreError::ConvergenceError(_) => {
+                    strategies.extend(vec![
+                        "Apply preconditioning (ILU, SSOR, or Jacobi)".to_string(),
+                        "Use more robust factorization (SVD instead of LU)".to_string(),
+                        "Check matrix conditioning and apply regularization".to_string(),
+                        "Try different solver algorithms (GMRES, BiCGSTAB)".to_string(),
+                    ]);
                 }
-            }
-            
-            "statistics" => {
-                match error {
-                    CoreError::DomainError(_) => {
-                        strategies.extend(vec![
-                            "Use robust statistical methods for outliers".to_string(),
-                            "Apply data transformation (log, Box-Cox)".to_string(),
-                            "Implement missing data handling strategies".to_string(),
-                            "Use non-parametric methods for non-normal data".to_string(),
-                        ]);
-                    }
-                    CoreError::ComputationError(_) => {
-                        strategies.extend(vec![
-                            "Use numerically stable algorithms (Welford for variance)".to_string(),
-                            "Apply importance sampling for rare events".to_string(),
-                            "Use bootstrap methods for robust estimates".to_string(),
-                        ]);
-                    }
-                    _ => {}
+                _ => {}
+            },
+
+            "optimization" => match error {
+                CoreError::ConvergenceError(_) => {
+                    strategies.extend(vec![
+                        "Use trust region methods for better global convergence".to_string(),
+                        "Apply line search algorithms with backtracking".to_string(),
+                        "Try multiple random starting points".to_string(),
+                        "Use gradient-free methods for noisy objectives".to_string(),
+                        "Implement adaptive step size control".to_string(),
+                    ]);
                 }
-            }
-            
-            "signal_processing" => {
-                match error {
-                    CoreError::MemoryError(_) => {
-                        strategies.extend(vec![
-                            "Use streaming FFT algorithms".to_string(),
-                            "Implement overlap-add/overlap-save methods".to_string(),
-                            "Use decimation for reduced sample rates".to_string(),
-                        ]);
-                    }
-                    CoreError::ComputationError(_) => {
-                        strategies.extend(vec![
-                            "Use windowing to reduce spectral leakage".to_string(),
-                            "Apply zero-padding for better frequency resolution".to_string(),
-                            "Use advanced spectral estimation methods".to_string(),
-                        ]);
-                    }
-                    _ => {}
+                CoreError::DomainError(_) => {
+                    strategies.extend(vec![
+                        "Add constraint handling and projection operators".to_string(),
+                        "Use barrier methods for constrained optimization".to_string(),
+                        "Implement bounds checking and clipping".to_string(),
+                    ]);
                 }
-            }
-            
+                _ => {}
+            },
+
+            "statistics" => match error {
+                CoreError::DomainError(_) => {
+                    strategies.extend(vec![
+                        "Use robust statistical methods for outliers".to_string(),
+                        "Apply data transformation (log, Box-Cox)".to_string(),
+                        "Implement missing data handling strategies".to_string(),
+                        "Use non-parametric methods for non-normal data".to_string(),
+                    ]);
+                }
+                CoreError::ComputationError(_) => {
+                    strategies.extend(vec![
+                        "Use numerically stable algorithms (Welford for variance)".to_string(),
+                        "Apply importance sampling for rare events".to_string(),
+                        "Use bootstrap methods for robust estimates".to_string(),
+                    ]);
+                }
+                _ => {}
+            },
+
+            "signal_processing" => match error {
+                CoreError::MemoryError(_) => {
+                    strategies.extend(vec![
+                        "Use streaming FFT algorithms".to_string(),
+                        "Implement overlap-add/overlap-save methods".to_string(),
+                        "Use decimation for reduced sample rates".to_string(),
+                    ]);
+                }
+                CoreError::ComputationError(_) => {
+                    strategies.extend(vec![
+                        "Use windowing to reduce spectral leakage".to_string(),
+                        "Apply zero-padding for better frequency resolution".to_string(),
+                        "Use advanced spectral estimation methods".to_string(),
+                    ]);
+                }
+                _ => {}
+            },
+
             _ => {
                 // Generic domain-agnostic strategies
                 strategies.push("Consider using more robust numerical algorithms".to_string());
@@ -601,7 +633,7 @@ impl ErrorDiagnostics {
                 strategies.push("Use iterative refinement for better accuracy".to_string());
             }
         }
-        
+
         strategies
     }
 
@@ -661,7 +693,8 @@ impl ErrorDiagnostics {
                     "Check input ranges for mathematical functions".to_string(),
                     "Handle edge cases (zero, negative values, infinities)".to_string(),
                     "Use input validation before calling functions".to_string(),
-                    "Consider using robust numerical methods for ill-conditioned problems".to_string(),
+                    "Consider using robust numerical methods for ill-conditioned problems"
+                        .to_string(),
                     "Use IEEE 754 special value handling where appropriate".to_string(),
                 ],
             },
@@ -670,7 +703,10 @@ impl ErrorDiagnostics {
                 description: "GPU memory exhaustion in accelerated computations".to_string(),
                 error_types: vec!["MemoryError".to_string(), "ComputationError".to_string()],
                 frequency: 0,
-                common_contexts: vec!["gpu_acceleration".to_string(), "neural_networks".to_string()],
+                common_contexts: vec![
+                    "gpu_acceleration".to_string(),
+                    "neural_networks".to_string(),
+                ],
                 suggestions: vec![
                     "Reduce batch size to fit GPU memory".to_string(),
                     "Use gradient accumulation for large batches".to_string(),
@@ -681,9 +717,16 @@ impl ErrorDiagnostics {
             },
             ErrorPattern {
                 description: "Numerical instability in scientific computations".to_string(),
-                error_types: vec!["ComputationError".to_string(), "ConvergenceError".to_string()],
+                error_types: vec![
+                    "ComputationError".to_string(),
+                    "ConvergenceError".to_string(),
+                ],
                 frequency: 0,
-                common_contexts: vec!["linear_algebra".to_string(), "ode_solving".to_string(), "pde_solving".to_string()],
+                common_contexts: vec![
+                    "linear_algebra".to_string(),
+                    "ode_solving".to_string(),
+                    "pde_solving".to_string(),
+                ],
                 suggestions: vec![
                     "Use higher precision (f64 instead of f32)".to_string(),
                     "Apply numerical stabilization techniques".to_string(),
@@ -708,10 +751,14 @@ impl ErrorDiagnostics {
                 ],
             },
             ErrorPattern {
-                description: "Data type overflow and underflow in scientific calculations".to_string(),
+                description: "Data type overflow and underflow in scientific calculations"
+                    .to_string(),
                 error_types: vec!["ValueError".to_string(), "ComputationError".to_string()],
                 frequency: 0,
-                common_contexts: vec!["numerical_integration".to_string(), "statistics".to_string()],
+                common_contexts: vec![
+                    "numerical_integration".to_string(),
+                    "statistics".to_string(),
+                ],
                 suggestions: vec![
                     "Use logarithmic computations for very large/small values".to_string(),
                     "Implement numerical scaling and normalization".to_string(),

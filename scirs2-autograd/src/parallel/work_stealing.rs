@@ -3,10 +3,13 @@
 //! This module provides a work-stealing deque that allows threads to steal
 //! work from each other, improving load balancing and overall throughput.
 
-use std::sync::{Arc, atomic::{AtomicUsize, AtomicPtr, Ordering}};
-use std::ptr;
 use std::collections::VecDeque;
+use std::ptr;
 use std::sync::Mutex;
+use std::sync::{
+    atomic::{AtomicPtr, AtomicUsize, Ordering},
+    Arc,
+};
 
 /// Work-stealing deque for load balancing between threads
 pub struct WorkStealingDeque<T> {
@@ -22,7 +25,7 @@ impl<T> WorkStealingDeque<T> {
     /// Create a new work-stealing deque
     pub fn new() -> Self {
         let initial_array = Box::into_raw(Box::new(WorkStealingArray::new(1024)));
-        
+
         Self {
             bottom: AtomicUsize::new(0),
             top: AtomicUsize::new(0),
@@ -34,18 +37,18 @@ impl<T> WorkStealingDeque<T> {
     pub fn push(&self, task: T) {
         let bottom = self.bottom.load(Ordering::Relaxed);
         let top = self.top.load(Ordering::Acquire);
-        
+
         let array_ptr = self.array.load(Ordering::Relaxed);
         let array = unsafe { &*array_ptr };
-        
+
         // Check if we need to resize
         if bottom - top >= array.capacity - 1 {
             self.resize();
         }
-        
+
         // Store the task
         array.put(bottom, task);
-        
+
         // Update bottom pointer
         self.bottom.store(bottom + 1, Ordering::Release);
     }
@@ -53,39 +56,38 @@ impl<T> WorkStealingDeque<T> {
     /// Pop a task from the bottom (owner thread only)
     pub fn pop(&self) -> Option<T> {
         let bottom = self.bottom.load(Ordering::Relaxed);
-        
+
         if bottom == 0 {
             return None;
         }
-        
+
         let new_bottom = bottom - 1;
         self.bottom.store(new_bottom, Ordering::Relaxed);
-        
+
         let array_ptr = self.array.load(Ordering::Relaxed);
         let array = unsafe { &*array_ptr };
-        
+
         let task = array.get(new_bottom);
-        
+
         let top = self.top.load(Ordering::Relaxed);
-        
+
         if new_bottom > top {
             // Common case: we own the task
             return Some(task);
         }
-        
+
         if new_bottom == top {
             // Race with stealer: try to win the task
-            if self.top.compare_exchange_weak(
-                top,
-                top + 1,
-                Ordering::SeqCst,
-                Ordering::Relaxed,
-            ).is_ok() {
+            if self
+                .top
+                .compare_exchange_weak(top, top + 1, Ordering::SeqCst, Ordering::Relaxed)
+                .is_ok()
+            {
                 self.bottom.store(bottom, Ordering::Relaxed);
                 return Some(task);
             }
         }
-        
+
         // Lost the race or queue is empty
         self.bottom.store(bottom, Ordering::Relaxed);
         None
@@ -95,23 +97,22 @@ impl<T> WorkStealingDeque<T> {
     pub fn steal(&self) -> StealResult<T> {
         let top = self.top.load(Ordering::Acquire);
         let bottom = self.bottom.load(Ordering::Acquire);
-        
+
         if top >= bottom {
             return StealResult::Empty;
         }
-        
+
         let array_ptr = self.array.load(Ordering::Consume);
         let array = unsafe { &*array_ptr };
-        
+
         let task = array.get(top);
-        
+
         // Try to increment top
-        if self.top.compare_exchange_weak(
-            top,
-            top + 1,
-            Ordering::SeqCst,
-            Ordering::Relaxed,
-        ).is_ok() {
+        if self
+            .top
+            .compare_exchange_weak(top, top + 1, Ordering::SeqCst, Ordering::Relaxed)
+            .is_ok()
+        {
             StealResult::Success(task)
         } else {
             StealResult::Retry
@@ -136,22 +137,22 @@ impl<T> WorkStealingDeque<T> {
     fn resize(&self) {
         let old_array_ptr = self.array.load(Ordering::Relaxed);
         let old_array = unsafe { &*old_array_ptr };
-        
+
         let new_capacity = old_array.capacity * 2;
         let new_array = Box::into_raw(Box::new(WorkStealingArray::new(new_capacity)));
-        
+
         let bottom = self.bottom.load(Ordering::Relaxed);
         let top = self.top.load(Ordering::Relaxed);
-        
+
         // Copy tasks to new array
         for i in top..bottom {
             let task = old_array.get(i);
             unsafe { &*new_array }.put(i, task);
         }
-        
+
         // Update array pointer
         self.array.store(new_array, Ordering::Release);
-        
+
         // Note: In a real implementation, we'd need to handle memory reclamation
         // safely (e.g., using hazard pointers or epoch-based reclamation)
     }
@@ -196,10 +197,10 @@ impl<T> WorkStealingArray<T> {
     /// Create a new array with the given capacity
     fn new(capacity: usize) -> Self {
         assert!(capacity.is_power_of_two());
-        
+
         let mut data = Vec::with_capacity(capacity);
         data.resize_with(capacity, || std::mem::MaybeUninit::uninit());
-        
+
         Self {
             capacity,
             mask: capacity - 1,
@@ -283,7 +284,7 @@ where
         // Try to steal from other threads
         for steal_attempts in 0..self.num_threads * 2 {
             let target = (thread_id + steal_attempts + 1) % self.num_threads;
-            
+
             match self.deques[target].steal() {
                 StealResult::Success(task) => return Some(task),
                 StealResult::Empty => continue,
@@ -497,39 +498,39 @@ impl<T> Default for LockFreeWorkStealingDeque<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::{Arc, Mutex};
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::{Arc, Mutex};
 
     #[test]
     fn test_work_stealing_deque_basic() {
         let deque = WorkStealingDeque::new();
-        
+
         // Push some tasks
         deque.push(1);
         deque.push(2);
         deque.push(3);
-        
+
         assert_eq!(deque.size(), 3);
         assert!(!deque.is_empty());
-        
+
         // Pop tasks
         assert_eq!(deque.pop(), Some(3));
         assert_eq!(deque.pop(), Some(2));
         assert_eq!(deque.pop(), Some(1));
         assert_eq!(deque.pop(), None);
-        
+
         assert!(deque.is_empty());
     }
 
     #[test]
     fn test_work_stealing_deque_steal() {
         let deque = WorkStealingDeque::new();
-        
+
         // Push tasks
         deque.push(1);
         deque.push(2);
         deque.push(3);
-        
+
         // Steal from top
         assert_eq!(deque.steal(), StealResult::Success(1));
         assert_eq!(deque.steal(), StealResult::Success(2));
@@ -540,12 +541,12 @@ mod tests {
     #[test]
     fn test_work_stealing_scheduler() {
         let scheduler = WorkStealingScheduler::new(4);
-        
+
         // Submit tasks
         for i in 0..10 {
             scheduler.submit(i);
         }
-        
+
         // Get tasks from different threads
         let mut collected = Vec::new();
         for thread_id in 0..4 {
@@ -553,7 +554,7 @@ mod tests {
                 collected.push(task);
             }
         }
-        
+
         assert_eq!(collected.len(), 10);
         collected.sort();
         assert_eq!(collected, (0..10).collect::<Vec<_>>());
@@ -562,7 +563,7 @@ mod tests {
     #[test]
     fn test_work_stealing_stats() {
         let scheduler = WorkStealingScheduler::new(3);
-        
+
         // Submit uneven tasks
         for i in 0..5 {
             scheduler.submit_to_thread(i, 0);
@@ -571,7 +572,7 @@ mod tests {
             scheduler.submit_to_thread(i, 1);
         }
         // Thread 2 gets no tasks
-        
+
         let stats = scheduler.get_stats();
         assert_eq!(stats.num_threads, 3);
         assert_eq!(stats.total_tasks, 7);
@@ -583,55 +584,55 @@ mod tests {
     fn test_simple_work_stealing_pool() {
         let counter = Arc::new(AtomicUsize::new(0));
         let counter_clone = Arc::clone(&counter);
-        
+
         let pool = SimpleWorkStealingPool::new(2, move |_task: i32| {
             counter_clone.fetch_add(1, Ordering::SeqCst);
         });
-        
+
         // Submit tasks
         for i in 0..10 {
             pool.submit(i);
         }
-        
+
         // Wait a bit for processing
         std::thread::sleep(std::time::Duration::from_millis(100));
-        
+
         // Check that tasks were processed
         let processed = counter.load(Ordering::SeqCst);
         assert!(processed > 0);
-        
+
         pool.shutdown().unwrap();
     }
 
     #[test]
     fn test_lock_free_deque() {
         let deque = LockFreeWorkStealingDeque::new();
-        
+
         assert!(deque.is_empty());
         assert_eq!(deque.len(), 0);
-        
+
         deque.push(1);
         deque.push(2);
         deque.push(3);
-        
+
         assert_eq!(deque.len(), 3);
         assert!(!deque.is_empty());
-        
+
         assert_eq!(deque.steal(), Some(1)); // Steal from front
-        assert_eq!(deque.pop(), Some(3));   // Pop from back
-        assert_eq!(deque.pop(), Some(2));   // Pop from back
+        assert_eq!(deque.pop(), Some(3)); // Pop from back
+        assert_eq!(deque.pop(), Some(2)); // Pop from back
         assert_eq!(deque.pop(), None);
-        
+
         assert!(deque.is_empty());
     }
 
     #[test]
     fn test_concurrent_work_stealing() {
         use std::thread;
-        
+
         let deque = Arc::new(WorkStealingDeque::new());
         let processed = Arc::new(AtomicUsize::new(0));
-        
+
         // Producer thread
         let deque_producer = Arc::clone(&deque);
         let producer = thread::spawn(move || {
@@ -639,37 +640,35 @@ mod tests {
                 deque_producer.push(i);
             }
         });
-        
+
         // Consumer threads
         let mut consumers = Vec::new();
         for _ in 0..4 {
             let deque_consumer = Arc::clone(&deque);
             let processed_consumer = Arc::clone(&processed);
-            
-            let consumer = thread::spawn(move || {
-                loop {
-                    match deque_consumer.steal() {
-                        StealResult::Success(_) => {
-                            processed_consumer.fetch_add(1, Ordering::SeqCst);
-                        }
-                        StealResult::Empty => break,
-                        StealResult::Retry => continue,
+
+            let consumer = thread::spawn(move || loop {
+                match deque_consumer.steal() {
+                    StealResult::Success(_) => {
+                        processed_consumer.fetch_add(1, Ordering::SeqCst);
                     }
+                    StealResult::Empty => break,
+                    StealResult::Retry => continue,
                 }
             });
-            
+
             consumers.push(consumer);
         }
-        
+
         producer.join().unwrap();
-        
+
         // Give consumers time to finish
         std::thread::sleep(std::time::Duration::from_millis(100));
-        
+
         for consumer in consumers {
             consumer.join().unwrap();
         }
-        
+
         // All tasks should be processed
         let total_processed = processed.load(Ordering::SeqCst);
         assert!(total_processed > 0);

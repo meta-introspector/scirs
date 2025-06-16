@@ -92,7 +92,7 @@ impl NumaNode {
             memory_used: AtomicUsize::new(0),
         }
     }
-    
+
     /// Get memory utilization ratio (0.0 to 1.0)
     pub fn memory_utilization(&self) -> f64 {
         if self.memory_size == 0 {
@@ -101,7 +101,7 @@ impl NumaNode {
             self.memory_used.load(Ordering::Relaxed) as f64 / self.memory_size as f64
         }
     }
-    
+
     /// Check if node has available memory
     pub fn has_available_memory(&self, required: usize) -> bool {
         self.memory_used.load(Ordering::Relaxed) + required <= self.memory_size
@@ -113,37 +113,37 @@ impl NumaNode {
 pub struct WorkStealingConfig {
     /// Number of worker threads (None = auto-detect)
     pub num_workers: Option<usize>,
-    
+
     /// Maximum number of tasks per worker queue
     pub max_queue_size: usize,
-    
+
     /// Steal attempt timeout in milliseconds
     pub steal_timeout_ms: u64,
-    
+
     /// Maximum steal attempts per idle cycle
     pub max_steal_attempts: usize,
-    
+
     /// Enable NUMA-aware scheduling
     pub numa_aware: bool,
-    
+
     /// Enable priority-based scheduling
     pub priority_scheduling: bool,
-    
+
     /// Worker thread affinity (CPU cores to bind threads to)
     pub thread_affinity: Option<Vec<usize>>,
-    
+
     /// Maximum memory usage per worker (bytes)
     pub max_memory_per_worker: Option<usize>,
-    
+
     /// Enable performance monitoring
     pub enable_monitoring: bool,
-    
+
     /// Statistics collection interval
     pub stats_interval: Duration,
-    
+
     /// Adaptive load balancing
     pub adaptive_balancing: bool,
-    
+
     /// Load balancing threshold (0.0 to 1.0)
     pub load_balance_threshold: f64,
 }
@@ -171,25 +171,25 @@ impl Default for WorkStealingConfig {
 pub trait WorkStealingTask: Send + 'static {
     /// The result type produced by this task
     type Output: Send + 'static;
-    
+
     /// Execute the task and return the result
     fn execute(self) -> Self::Output;
-    
+
     /// Get the estimated execution time (for load balancing)
     fn estimated_duration(&self) -> Option<Duration> {
         None
     }
-    
+
     /// Get the estimated memory usage (for NUMA scheduling)
     fn estimated_memory(&self) -> Option<usize> {
         None
     }
-    
+
     /// Check if this task can be split into smaller tasks
     fn can_split(&self) -> bool {
         false
     }
-    
+
     /// Split this task into smaller tasks (if supported)
     fn split(self) -> Vec<Box<dyn WorkStealingTask<Output = Self::Output>>>
     where
@@ -222,7 +222,7 @@ where
             estimated_memory: None,
         }
     }
-    
+
     fn with_estimates(func: F, duration: Option<Duration>, memory: Option<usize>) -> Self {
         Self {
             func: Some(func),
@@ -238,16 +238,16 @@ where
     R: Send + 'static,
 {
     type Output = R;
-    
+
     fn execute(mut self) -> Self::Output {
         let func = self.func.take().expect("Function already executed");
         func()
     }
-    
+
     fn estimated_duration(&self) -> Option<Duration> {
         self.estimated_duration
     }
-    
+
     fn estimated_memory(&self) -> Option<usize> {
         self.estimated_memory
     }
@@ -262,11 +262,7 @@ struct PrioritizedTask {
 }
 
 impl PrioritizedTask {
-    fn new<T: WorkStealingTask>(
-        task: T,
-        priority: TaskPriority,
-        numa_hint: Option<usize>,
-    ) -> Self
+    fn new<T: WorkStealingTask>(task: T, priority: TaskPriority, numa_hint: Option<usize>) -> Self
     where
         T::Output: 'static,
     {
@@ -277,7 +273,7 @@ impl PrioritizedTask {
             numa_hint,
         }
     }
-    
+
     fn execute(self) -> Box<dyn std::any::Any + Send> {
         self.task.execute()
     }
@@ -299,16 +295,16 @@ where
     T::Output: 'static,
 {
     type Output = Box<dyn std::any::Any + Send>;
-    
+
     fn execute(mut self) -> Self::Output {
         let task = self.task.take().expect("Task already executed");
         Box::new(task.execute())
     }
-    
+
     fn estimated_duration(&self) -> Option<Duration> {
         self.task.as_ref()?.estimated_duration()
     }
-    
+
     fn estimated_memory(&self) -> Option<usize> {
         self.task.as_ref()?.estimated_memory()
     }
@@ -335,18 +331,18 @@ impl PriorityTaskQueue {
             max_size,
         }
     }
-    
+
     fn push(&mut self, task: PrioritizedTask) -> Result<(), PrioritizedTask> {
         if self.total_size >= self.max_size {
             return Err(task);
         }
-        
+
         let priority_idx = task.priority as usize;
         self.queues[priority_idx].push_back(task);
         self.total_size += 1;
         Ok(())
     }
-    
+
     fn pop(&mut self) -> Option<PrioritizedTask> {
         // Pop from highest priority first
         for queue in self.queues.iter_mut().rev() {
@@ -357,7 +353,7 @@ impl PriorityTaskQueue {
         }
         None
     }
-    
+
     fn steal(&mut self) -> Option<PrioritizedTask> {
         // Steal from lowest priority first
         for queue in &mut self.queues {
@@ -368,15 +364,15 @@ impl PriorityTaskQueue {
         }
         None
     }
-    
+
     fn len(&self) -> usize {
         self.total_size
     }
-    
+
     fn is_empty(&self) -> bool {
         self.total_size == 0
     }
-    
+
     fn is_full(&self) -> bool {
         self.total_size >= self.max_size
     }
@@ -429,7 +425,7 @@ impl Worker {
         let local_queue = Arc::new(Mutex::new(PriorityTaskQueue::new(
             config.max_queue_size / 4, // Local queues are smaller
         )));
-        
+
         Self {
             id,
             local_queue,
@@ -441,72 +437,71 @@ impl Worker {
             config,
         }
     }
-    
+
     fn add_other_worker(&mut self, worker_queue: Arc<Mutex<PriorityTaskQueue>>) {
         self.other_workers.push(worker_queue);
     }
-    
+
     fn run(&self, result_sender: crossbeam::channel::Sender<Box<dyn std::any::Any + Send>>) {
         let mut consecutive_steals = 0;
         let mut last_steal_attempt = Instant::now();
-        
+
         while !self.shutdown.load(Ordering::Relaxed) {
             let task_start = Instant::now();
-            
+
             // Try to get a task
             if let Some(task) = self.get_task() {
                 // Execute the task
                 let result = task.execute();
-                
+
                 // Send result
                 if result_sender.send(result).is_err() {
                     // Receiver dropped, probably shutting down
                     break;
                 }
-                
+
                 // Update statistics
                 self.stats.tasks_executed.fetch_add(1, Ordering::Relaxed);
-                self.stats.active_time.fetch_add(
-                    task_start.elapsed().as_micros() as u64,
-                    Ordering::Relaxed,
-                );
-                self.stats.last_activity.store(
-                    task_start.elapsed().as_secs(),
-                    Ordering::Relaxed,
-                );
-                
+                self.stats
+                    .active_time
+                    .fetch_add(task_start.elapsed().as_micros() as u64, Ordering::Relaxed);
+                self.stats
+                    .last_activity
+                    .store(task_start.elapsed().as_secs(), Ordering::Relaxed);
+
                 consecutive_steals = 0;
             } else {
                 // No task found, record idle time
                 let idle_start = Instant::now();
-                
+
                 // Try to steal work
-                if last_steal_attempt.elapsed() >= Duration::from_millis(self.config.steal_timeout_ms) {
+                if last_steal_attempt.elapsed()
+                    >= Duration::from_millis(self.config.steal_timeout_ms)
+                {
                     if self.try_steal_work() {
                         consecutive_steals += 1;
                         self.stats.tasks_stolen.fetch_add(1, Ordering::Relaxed);
                     }
                     last_steal_attempt = Instant::now();
                 }
-                
+
                 // Update idle time
-                self.stats.idle_time.fetch_add(
-                    idle_start.elapsed().as_micros() as u64,
-                    Ordering::Relaxed,
-                );
-                
+                self.stats
+                    .idle_time
+                    .fetch_add(idle_start.elapsed().as_micros() as u64, Ordering::Relaxed);
+
                 // Adaptive back-off
                 let backoff_duration = if consecutive_steals > 5 {
                     Duration::from_millis(10) // Longer backoff if many failed steals
                 } else {
                     Duration::from_micros(100) // Short backoff normally
                 };
-                
+
                 thread::sleep(backoff_duration);
             }
         }
     }
-    
+
     fn get_task(&self) -> Option<PrioritizedTask> {
         // Try local queue first
         if let Ok(mut local) = self.local_queue.try_lock() {
@@ -514,20 +509,20 @@ impl Worker {
                 return Some(task);
             }
         }
-        
+
         // Try global queue
         if let Ok(mut global) = self.global_queue.try_lock() {
             if let Some(task) = global.pop() {
                 return Some(task);
             }
         }
-        
+
         None
     }
-    
+
     fn try_steal_work(&self) -> bool {
         let mut attempts = 0;
-        
+
         // Shuffle the worker list to avoid always stealing from the same worker
         let mut workers = self.other_workers.clone();
         use std::collections::hash_map::DefaultHasher;
@@ -535,18 +530,18 @@ impl Worker {
         let mut hasher = DefaultHasher::new();
         self.id.hash(&mut hasher);
         let seed = hasher.finish() as usize;
-        
+
         // Simple shuffle based on worker ID
         for i in 0..workers.len() {
             let j = (seed + i) % workers.len();
             workers.swap(i, j);
         }
-        
+
         for worker_queue in workers {
             if attempts >= self.config.max_steal_attempts {
                 break;
             }
-            
+
             if let Ok(mut queue) = worker_queue.try_lock() {
                 if let Some(task) = queue.steal() {
                     // Successfully stole a task, add it to our local queue
@@ -557,10 +552,10 @@ impl Worker {
                     }
                 }
             }
-            
+
             attempts += 1;
         }
-        
+
         false
     }
 }
@@ -570,28 +565,28 @@ impl Worker {
 pub struct SchedulerStats {
     /// Number of tasks submitted
     pub tasks_submitted: u64,
-    
+
     /// Number of tasks completed
     pub tasks_completed: u64,
-    
+
     /// Number of tasks currently pending
     pub tasks_pending: u64,
-    
+
     /// Total number of steal operations
     pub total_steals: u64,
-    
+
     /// Average task execution time (microseconds)
     pub avg_execution_time_us: f64,
-    
+
     /// Worker utilization (0.0 to 1.0)
     pub worker_utilization: f64,
-    
+
     /// Memory usage per worker (bytes)
     pub memory_usage_per_worker: Vec<usize>,
-    
+
     /// Number of load balance operations
     pub load_balance_operations: u64,
-    
+
     /// Throughput (tasks per second)
     pub throughput: f64,
 }
@@ -634,18 +629,18 @@ impl WorkStealingScheduler {
                 .map(|n| n.get())
                 .unwrap_or(4)
         });
-        
+
         let global_queue = Arc::new(Mutex::new(PriorityTaskQueue::new(config.max_queue_size)));
         let (result_sender, result_receiver) = crossbeam::channel::unbounded();
         let shutdown = Arc::new(AtomicBool::new(false));
-        
+
         // Detect NUMA topology if enabled
         let numa_nodes = if config.numa_aware {
             Self::detect_numa_topology(num_workers)
         } else {
             vec![NumaNode::new(0, (0..num_workers).collect(), 0)]
         };
-        
+
         // Create workers
         let mut workers = Vec::with_capacity(num_workers);
         for i in 0..num_workers {
@@ -654,7 +649,7 @@ impl WorkStealingScheduler {
             } else {
                 None
             };
-            
+
             let worker = Worker::new(
                 i,
                 global_queue.clone(),
@@ -664,7 +659,7 @@ impl WorkStealingScheduler {
             );
             workers.push(worker);
         }
-        
+
         // Set up worker cross-references for stealing
         for i in 0..workers.len() {
             for j in 0..workers.len() {
@@ -673,7 +668,7 @@ impl WorkStealingScheduler {
                 }
             }
         }
-        
+
         Ok(Self {
             config,
             workers,
@@ -687,7 +682,7 @@ impl WorkStealingScheduler {
             start_time: None,
         })
     }
-    
+
     /// Start the scheduler
     pub fn start(&mut self) -> CoreResult<()> {
         if !self.worker_handles.is_empty() {
@@ -696,15 +691,15 @@ impl WorkStealingScheduler {
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         self.start_time = Some(Instant::now());
-        
+
         // Start worker threads
         for worker in &self.workers {
             let worker_id = worker.id;
             let worker_ref = unsafe { std::ptr::read(worker as *const Worker) };
             let result_sender = self.result_sender.clone();
-            
+
             let handle = thread::Builder::new()
                 .name(format!("worker-{}", worker_id))
                 .spawn(move || {
@@ -716,18 +711,18 @@ impl WorkStealingScheduler {
                             .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 })?;
-            
+
             self.worker_handles.push(handle);
         }
-        
+
         // Start statistics monitoring if enabled
         if self.config.enable_monitoring {
             self.start_monitoring();
         }
-        
+
         Ok(())
     }
-    
+
     /// Submit a task to the scheduler
     pub fn submit<F, R>(&self, priority: TaskPriority, func: F) -> CoreResult<()>
     where
@@ -737,7 +732,7 @@ impl WorkStealingScheduler {
         let task = FunctionTask::new(func);
         self.submit_task(priority, task, None)
     }
-    
+
     /// Submit a task with execution estimates
     pub fn submit_with_estimates<F, R>(
         &self,
@@ -753,7 +748,7 @@ impl WorkStealingScheduler {
         let task = FunctionTask::with_estimates(func, duration_estimate, memory_estimate);
         self.submit_task(priority, task, None)
     }
-    
+
     /// Submit a task to a specific NUMA node
     pub fn submit_to_numa<F, R>(
         &self,
@@ -768,14 +763,19 @@ impl WorkStealingScheduler {
         let task = FunctionTask::new(func);
         self.submit_task(priority, task, Some(numa_node))
     }
-    
-    fn submit_task<T>(&self, priority: TaskPriority, task: T, numa_hint: Option<usize>) -> CoreResult<()>
+
+    fn submit_task<T>(
+        &self,
+        priority: TaskPriority,
+        task: T,
+        numa_hint: Option<usize>,
+    ) -> CoreResult<()>
     where
         T: WorkStealingTask,
         T::Output: 'static,
     {
         let prioritized_task = PrioritizedTask::new(task, priority, numa_hint);
-        
+
         // Try to submit to a specific worker's local queue if NUMA hint is provided
         if let Some(numa_node) = numa_hint {
             if numa_node < self.workers.len() {
@@ -787,7 +787,7 @@ impl WorkStealingScheduler {
                 }
             }
         }
-        
+
         // Fall back to global queue
         let mut global_queue = self.global_queue.lock().unwrap();
         global_queue.push(prioritized_task).map_err(|_| {
@@ -796,16 +796,16 @@ impl WorkStealingScheduler {
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
-        
+
         self.update_submit_stats();
         Ok(())
     }
-    
+
     /// Try to receive a completed task result
     pub fn try_recv<T: 'static>(&self) -> Option<T> {
         if let Ok(result) = self.result_receiver.try_recv() {
             self.update_completion_stats();
-            
+
             // Try to downcast to the expected type
             if let Ok(typed_result) = result.downcast::<T>() {
                 Some(*typed_result)
@@ -816,7 +816,7 @@ impl WorkStealingScheduler {
             None
         }
     }
-    
+
     /// Receive a completed task result with timeout
     pub fn recv_timeout<T: 'static>(&self, timeout: Duration) -> CoreResult<T> {
         let result = self.result_receiver.recv_timeout(timeout).map_err(|_| {
@@ -825,9 +825,9 @@ impl WorkStealingScheduler {
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
-        
+
         self.update_completion_stats();
-        
+
         result.downcast::<T>().map(|r| *r).map_err(|_| {
             CoreError::ValidationError(
                 ErrorContext::new("Task result type mismatch".to_string())
@@ -835,16 +835,16 @@ impl WorkStealingScheduler {
             )
         })
     }
-    
+
     /// Get current scheduler statistics
     pub fn stats(&self) -> SchedulerStats {
         self.stats.read().unwrap().clone()
     }
-    
+
     /// Stop the scheduler
     pub fn stop(&mut self) -> CoreResult<()> {
         self.shutdown.store(true, Ordering::Relaxed);
-        
+
         // Wait for all worker threads to finish
         for handle in self.worker_handles.drain(..) {
             handle.join().map_err(|_| {
@@ -854,35 +854,36 @@ impl WorkStealingScheduler {
                 )
             })?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Get the number of pending tasks
     pub fn pending_tasks(&self) -> usize {
         let global_pending = self.global_queue.lock().unwrap().len();
-        let local_pending: usize = self.workers
+        let local_pending: usize = self
+            .workers
             .iter()
             .map(|w| w.local_queue.lock().unwrap().len())
             .sum();
-        
+
         global_pending + local_pending
     }
-    
+
     /// Detect NUMA topology (simplified implementation)
     fn detect_numa_topology(num_workers: usize) -> Vec<NumaNode> {
         // This is a simplified implementation
         // In practice, you'd use a library like hwloc or libnuma
         vec![NumaNode::new(0, (0..num_workers).collect(), 0)]
     }
-    
+
     fn update_submit_stats(&self) {
         if let Ok(mut stats) = self.stats.write() {
             stats.tasks_submitted += 1;
             stats.tasks_pending += 1;
         }
     }
-    
+
     fn update_completion_stats(&self) {
         if let Ok(mut stats) = self.stats.write() {
             stats.tasks_completed += 1;
@@ -891,18 +892,18 @@ impl WorkStealingScheduler {
             }
         }
     }
-    
+
     fn start_monitoring(&self) {
         // Start a monitoring thread for statistics collection
         let stats = self.stats.clone();
         let shutdown = self.shutdown.clone();
         let interval = self.config.stats_interval;
         let start_time = self.start_time;
-        
+
         thread::spawn(move || {
             while !shutdown.load(Ordering::Relaxed) {
                 thread::sleep(interval);
-                
+
                 if let Ok(mut stats_guard) = stats.write() {
                     // Calculate throughput
                     if let Some(start) = start_time {
@@ -936,55 +937,55 @@ impl WorkStealingConfigBuilder {
             config: WorkStealingConfig::default(),
         }
     }
-    
+
     /// Set the number of worker threads
     pub fn num_workers(mut self, workers: usize) -> Self {
         self.config.num_workers = Some(workers);
         self
     }
-    
+
     /// Set the maximum queue size
     pub fn max_queue_size(mut self, size: usize) -> Self {
         self.config.max_queue_size = size;
         self
     }
-    
+
     /// Enable NUMA-aware scheduling
     pub fn numa_aware(mut self, enable: bool) -> Self {
         self.config.numa_aware = enable;
         self
     }
-    
+
     /// Enable priority-based scheduling
     pub fn priority_scheduling(mut self, enable: bool) -> Self {
         self.config.priority_scheduling = enable;
         self
     }
-    
+
     /// Set thread affinity
     pub fn thread_affinity(mut self, affinity: Vec<usize>) -> Self {
         self.config.thread_affinity = Some(affinity);
         self
     }
-    
+
     /// Set maximum memory per worker
     pub fn max_memory_per_worker(mut self, memory: usize) -> Self {
         self.config.max_memory_per_worker = Some(memory);
         self
     }
-    
+
     /// Enable performance monitoring
     pub fn enable_monitoring(mut self, enable: bool) -> Self {
         self.config.enable_monitoring = enable;
         self
     }
-    
+
     /// Enable adaptive load balancing
     pub fn adaptive_balancing(mut self, enable: bool) -> Self {
         self.config.adaptive_balancing = enable;
         self
     }
-    
+
     /// Build the configuration
     pub fn build(self) -> WorkStealingConfig {
         self.config
@@ -1005,12 +1006,16 @@ pub fn create_work_stealing_scheduler() -> CoreResult<WorkStealingScheduler> {
 /// Create a work-stealing scheduler optimized for CPU-intensive tasks
 pub fn create_cpu_intensive_scheduler() -> CoreResult<WorkStealingScheduler> {
     let config = WorkStealingConfigBuilder::new()
-        .num_workers(std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4))
+        .num_workers(
+            std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(4),
+        )
         .priority_scheduling(true)
         .adaptive_balancing(true)
         .enable_monitoring(true)
         .build();
-    
+
     WorkStealingScheduler::new(config)
 }
 
@@ -1019,7 +1024,7 @@ pub fn create_io_intensive_scheduler() -> CoreResult<WorkStealingScheduler> {
     let num_workers = std::thread::available_parallelism()
         .map(|n| n.get() * 2) // More threads for I/O
         .unwrap_or(8);
-    
+
     let config = WorkStealingConfigBuilder::new()
         .num_workers(num_workers)
         .max_queue_size(50000) // Larger queue for I/O tasks
@@ -1027,7 +1032,7 @@ pub fn create_io_intensive_scheduler() -> CoreResult<WorkStealingScheduler> {
         .adaptive_balancing(false) // Less useful for I/O
         .enable_monitoring(true)
         .build();
-    
+
     WorkStealingScheduler::new(config)
 }
 
@@ -1035,80 +1040,86 @@ pub fn create_io_intensive_scheduler() -> CoreResult<WorkStealingScheduler> {
 mod tests {
     use super::*;
     use std::sync::atomic::AtomicU32;
-    
+
     #[test]
     fn test_work_stealing_scheduler_creation() {
         let scheduler = create_work_stealing_scheduler();
         assert!(scheduler.is_ok());
     }
-    
+
     #[test]
     fn test_task_submission_and_execution() {
         let mut scheduler = create_work_stealing_scheduler().unwrap();
         scheduler.start().unwrap();
-        
+
         // Submit a simple task
         scheduler.submit(TaskPriority::Normal, || 42).unwrap();
-        
+
         // Wait a bit and try to receive the result
         std::thread::sleep(Duration::from_millis(100));
-        
+
         if let Some(result) = scheduler.try_recv::<i32>() {
             assert_eq!(result, 42);
         }
-        
+
         scheduler.stop().unwrap();
     }
-    
+
     #[test]
     fn test_priority_scheduling() {
         let mut scheduler = create_work_stealing_scheduler().unwrap();
         scheduler.start().unwrap();
-        
+
         let counter = Arc::new(AtomicU32::new(0));
         let counter_clone = counter.clone();
-        
+
         // Submit low priority task
-        scheduler.submit(TaskPriority::Low, move || {
-            std::thread::sleep(Duration::from_millis(50));
-            counter_clone.store(1, Ordering::Relaxed);
-        }).unwrap();
-        
+        scheduler
+            .submit(TaskPriority::Low, move || {
+                std::thread::sleep(Duration::from_millis(50));
+                counter_clone.store(1, Ordering::Relaxed);
+            })
+            .unwrap();
+
         let counter_clone = counter.clone();
-        
+
         // Submit high priority task
-        scheduler.submit(TaskPriority::High, move || {
-            counter_clone.store(2, Ordering::Relaxed);
-        }).unwrap();
-        
+        scheduler
+            .submit(TaskPriority::High, move || {
+                counter_clone.store(2, Ordering::Relaxed);
+            })
+            .unwrap();
+
         // Wait for tasks to complete
         std::thread::sleep(Duration::from_millis(200));
-        
+
         // High priority task should have run (and set counter to 2)
         // Note: This test is probabilistic and may not always pass due to timing
-        
+
         scheduler.stop().unwrap();
     }
-    
+
     #[test]
     fn test_scheduler_stats() {
         let mut scheduler = create_work_stealing_scheduler().unwrap();
         scheduler.start().unwrap();
-        
+
         // Submit multiple tasks
         for i in 0..10 {
-            scheduler.submit(TaskPriority::Normal, move || i * 2).unwrap();
+            scheduler
+                .submit(TaskPriority::Normal, move || i * 2)
+                .unwrap();
         }
-        
+
         // Wait for tasks to complete
         std::thread::sleep(Duration::from_millis(100));
-        
+
         let stats = scheduler.stats();
         assert!(stats.tasks_submitted >= 10);
-        
+
         scheduler.stop().unwrap();
     }
-    
+
     #[test]
     fn test_config_builder() {
         let config = WorkStealingConfigBuilder::new()
@@ -1118,7 +1129,7 @@ mod tests {
             .priority_scheduling(false)
             .adaptive_balancing(true)
             .build();
-        
+
         assert_eq!(config.num_workers, Some(8));
         assert_eq!(config.max_queue_size, 5000);
         assert!(config.numa_aware);

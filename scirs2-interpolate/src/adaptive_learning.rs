@@ -319,7 +319,7 @@ where
         combined_y.extend_from_slice(new_y.as_slice().unwrap());
 
         // Create combined arrays and sort by x values
-        let mut data_pairs: Vec<_> = combined_x.into_iter().zip(combined_y.into_iter()).collect();
+        let mut data_pairs: Vec<_> = combined_x.into_iter().zip(combined_y).collect();
         data_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
         let (sorted_x, sorted_y): (Vec<_>, Vec<_>) = data_pairs.into_iter().unzip();
@@ -327,12 +327,14 @@ where
         let y_array = Array1::from_vec(sorted_y);
 
         // Create a new interpolation model
+        let degree = 3;
+        let min_knots = 2 * (degree + 1); // Minimum knots required for the spline degree
         let new_interpolator = MultiscaleBSpline::new(
             &x_array.view(),
             &y_array.view(),
-            std::cmp::min(x_array.len() / 2, 20), // Adaptive initial knots
-            3,                                    // Cubic degree
-            10,                                   // Max levels
+            std::cmp::max(std::cmp::min(x_array.len() / 2, 20), min_knots), // Ensure enough knots
+            degree,                                                         // Cubic degree
+            10,                                                             // Max levels
             T::from(0.01).unwrap(),
             crate::ExtrapolateMode::Extrapolate,
         )?;
@@ -835,13 +837,15 @@ where
         + Copy,
 {
     // Create initial interpolation model
+    let degree = 3;
+    let min_knots = 2 * (degree + 1); // Minimum knots required for the spline degree
     let spline = MultiscaleBSpline::new(
         x,
         y,
-        std::cmp::min(x.len() / 2, 10), // Initial knots
-        3,                              // Cubic degree
-        10,                             // Max levels
-        T::from(0.01).unwrap(),         // Error threshold
+        std::cmp::max(std::cmp::min(x.len() / 2, 10), min_knots), // Ensure enough knots
+        degree,                                                   // Cubic degree
+        10,                                                       // Max levels
+        T::from(0.01).unwrap(),                                   // Error threshold
         crate::ExtrapolateMode::Extrapolate,
     )?;
 

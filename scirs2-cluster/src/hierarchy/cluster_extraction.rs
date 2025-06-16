@@ -4,8 +4,8 @@
 //! hierarchical clustering results, including automatic cluster count estimation
 //! and distance-based cluster pruning.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::{Float, FromPrimitive, Zero};
+use ndarray::{Array1, ArrayView1, ArrayView2};
+use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 
@@ -36,7 +36,6 @@ pub fn extract_clusters_multi_criteria<F: Float + FromPrimitive + Debug + Partia
     let n_observations = linkage_matrix.shape()[0] + 1;
 
     // Start with all observations in separate clusters
-    let mut cluster_assignments = (0..n_observations).collect::<Vec<_>>();
     let mut disjoint_set = DisjointSet::new();
 
     // Initialize disjoint set with all observations
@@ -183,7 +182,11 @@ pub fn estimate_optimal_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     // Method 3: Silhouette analysis (if data is provided)
     let silhouette_k = if let Some(data_view) = data {
-        Some(estimate_clusters_silhouette(linkage_matrix, data_view, max_k)?)
+        Some(estimate_clusters_silhouette(
+            linkage_matrix,
+            data_view,
+            max_k,
+        )?)
     } else {
         None
     };
@@ -439,7 +442,9 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
         let a = if intra_cluster_distances.is_empty() {
             F::zero()
         } else {
-            intra_cluster_distances.iter().fold(F::zero(), |acc, &x| acc + x)
+            intra_cluster_distances
+                .iter()
+                .fold(F::zero(), |acc, &x| acc + x)
                 / F::from_usize(intra_cluster_distances.len()).unwrap()
         };
 
@@ -457,7 +462,9 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
                 }
 
                 if !inter_cluster_distances.is_empty() {
-                    let avg_distance = inter_cluster_distances.iter().fold(F::zero(), |acc, &x| acc + x)
+                    let avg_distance = inter_cluster_distances
+                        .iter()
+                        .fold(F::zero(), |acc, &x| acc + x)
                         / F::from_usize(inter_cluster_distances.len()).unwrap();
 
                     if avg_distance < min_inter_cluster_distance {
@@ -567,7 +574,8 @@ pub fn prune_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
                 // Calculate minimum distance between clusters
                 for &small_point in &small_cluster_points {
                     for &large_point in &large_cluster_points {
-                        let distance = euclidean_distance(data.row(small_point), data.row(large_point));
+                        let distance =
+                            euclidean_distance(data.row(small_point), data.row(large_point));
                         if distance < min_distance {
                             min_distance = distance;
                             nearest_large_cluster = Some(large_cluster_id);
@@ -653,7 +661,8 @@ mod tests {
         )
         .unwrap();
 
-        let optimal_k = estimate_optimal_clusters(linkage.view(), Some(data.view()), Some(4)).unwrap();
+        let optimal_k =
+            estimate_optimal_clusters(linkage.view(), Some(data.view()), Some(4)).unwrap();
 
         // Should suggest 2 clusters for this clearly separated data
         assert!(optimal_k >= 1);
@@ -665,7 +674,9 @@ mod tests {
         let clusters = Array1::from_vec(vec![0, 0, 0, 1, 2, 2]); // Cluster 1 has only 1 point
         let data = Array2::from_shape_vec(
             (6, 2),
-            vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 10.0, 10.0, 10.1, 10.1],
+            vec![
+                0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 10.0, 10.0, 10.1, 10.1,
+            ],
         )
         .unwrap();
 
@@ -686,6 +697,6 @@ mod tests {
 
         let score = calculate_silhouette_score(data.view(), &clusters);
         // Should be positive for well-separated clusters
-        assert!(score > F::zero());
+        assert!(score > 0.0);
     }
 }

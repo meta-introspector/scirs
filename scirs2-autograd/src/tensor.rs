@@ -56,6 +56,22 @@ pub struct Tensor<'graph, F: Float> {
     pub(crate) graph: &'graph Graph<F>,
 }
 
+impl<'graph, F: Float> std::fmt::Debug for Tensor<'graph, F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Tensor")
+            .field("id", &self.id)
+            .field("is_source", &self.is_source())
+            .field("is_differentiable", &self.is_differentiable())
+            .finish()
+    }
+}
+
+impl<'graph, F: Float> PartialEq for Tensor<'graph, F> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id && std::ptr::eq(self.graph, other.graph)
+    }
+}
+
 impl<'graph, F: Float> Tensor<'graph, F> {
     #[inline]
     #[allow(dead_code)]
@@ -396,6 +412,64 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     #[allow(unused)]
     pub(crate) fn is_variable(&self) -> bool {
         self.inner().is_variable()
+    }
+
+    /// Returns the shape of this tensor as a vector.
+    /// This method evaluates the shape tensor if needed.
+    pub fn shape(&self) -> Vec<usize> {
+        // Create a minimal context for evaluation
+        use crate::Context;
+        let ctx = Context::new();
+        let shape_tensor = crate::tensor_ops::shape(self);
+        match shape_tensor.eval(&ctx) {
+            Ok(shape_array) => {
+                shape_array.iter().map(|&x| x.to_usize().unwrap()).collect()
+            }
+            Err(_) => {
+                // Fallback: try to get shape from known_shape or estimate
+                if let Some(ref known_shape) = self.inner().known_shape {
+                    known_shape.get().iter().map(|&x| x.max(0) as usize).collect()
+                } else {
+                    // Last resort: return empty shape
+                    vec![]
+                }
+            }
+        }
+    }
+
+    /// Returns access to the underlying data by evaluating this tensor.
+    /// Note: This creates a temporary context for evaluation.
+    pub fn data(&self) -> Vec<F> {
+        use crate::Context;
+        let ctx = Context::new();
+        match self.eval(&ctx) {
+            Ok(array) => {
+                array.iter().cloned().collect()
+            }
+            Err(_) => {
+                // Return empty vec if evaluation fails
+                vec![]
+            }
+        }
+    }
+
+    /// Creates a tensor from a vector of data and shape.
+    pub fn from_vec(data: Vec<F>, shape: Vec<usize>, graph: &'graph Graph<F>) -> Tensor<'graph, F> {
+        let array = match NdArray::from_shape_vec(ndarray::IxDyn(&shape), data) {
+            Ok(arr) => arr,
+            Err(_) => NdArray::zeros(ndarray::IxDyn(&shape)),
+        };
+        crate::tensor_ops::convert_to_tensor(array, graph)
+    }
+
+    /// Returns true if this tensor requires gradients.
+    pub fn requires_grad(&self) -> bool {
+        self.is_differentiable()
+    }
+
+    /// Convert shape to vector (for compatibility).
+    pub fn to_vec(&self) -> Vec<usize> {
+        self.shape()
     }
 }
 

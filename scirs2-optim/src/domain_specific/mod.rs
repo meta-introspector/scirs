@@ -1,11 +1,11 @@
 //! Domain-specific optimization strategies
 //!
-//! This module provides specialized optimization strategies tailored for different 
+//! This module provides specialized optimization strategies tailored for different
 //! machine learning domains, building on the adaptive selection framework to provide
 //! domain-aware optimization approaches.
 
-use crate::error::{OptimError, Result};
 use crate::adaptive_selection::{OptimizerType, ProblemCharacteristics};
+use crate::error::{OptimError, Result};
 use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::collections::HashMap;
@@ -183,30 +183,61 @@ pub enum LearningRateScheduleType {
     /// Constant learning rate
     Constant,
     /// Exponential decay
-    ExponentialDecay { decay_rate: f64 },
+    ExponentialDecay {
+        /// Decay rate
+        decay_rate: f64,
+    },
     /// Cosine annealing
-    CosineAnnealing { t_max: usize },
+    CosineAnnealing {
+        /// Maximum number of iterations
+        t_max: usize,
+    },
     /// Reduce on plateau
-    ReduceOnPlateau { patience: usize, factor: f64 },
+    ReduceOnPlateau {
+        /// Number of epochs with no improvement
+        patience: usize,
+        /// Factor by which learning rate will be reduced
+        factor: f64,
+    },
     /// One cycle policy
-    OneCycle { max_lr: f64 },
+    OneCycle {
+        /// Maximum learning rate
+        max_lr: f64,
+    },
 }
 
 /// Regularization approach
 #[derive(Debug, Clone)]
 pub enum RegularizationApproach<A: Float> {
     /// L2 regularization only
-    L2Only { weight: A },
+    L2Only {
+        /// Regularization weight
+        weight: A,
+    },
     /// L1 regularization only
-    L1Only { weight: A },
+    L1Only {
+        /// Regularization weight
+        weight: A,
+    },
     /// Elastic net (L1 + L2)
-    ElasticNet { l1_weight: A, l2_weight: A },
+    ElasticNet {
+        /// L1 regularization weight
+        l1_weight: A,
+        /// L2 regularization weight
+        l2_weight: A,
+    },
     /// Dropout regularization
-    Dropout { dropout_rate: A },
+    Dropout {
+        /// Dropout rate
+        dropout_rate: A,
+    },
     /// Combined approach
     Combined {
+        /// L2 regularization weight
         l2_weight: A,
+        /// Dropout rate
         dropout_rate: A,
+        /// Additional regularization techniques
         additional_techniques: Vec<String>,
     },
 }
@@ -215,7 +246,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
     /// Create a new domain-specific selector
     pub fn new(strategy: DomainStrategy) -> Self {
         let config = Self::default_config_for_strategy(&strategy);
-        
+
         Self {
             strategy,
             config,
@@ -232,29 +263,72 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Select optimal configuration for the current domain and context
     pub fn select_optimal_config(&mut self) -> Result<DomainOptimizationConfig<A>> {
-        let context = self.current_context.as_ref().ok_or_else(|| {
-            OptimError::InvalidConfig("No optimization context set".to_string())
-        })?;
+        let context = self
+            .current_context
+            .as_ref()
+            .ok_or_else(|| OptimError::InvalidConfig("No optimization context set".to_string()))?;
 
         match &self.strategy {
-            DomainStrategy::ComputerVision { resolution_adaptive, batch_norm_tuning, augmentation_aware } => {
-                self.optimize_computer_vision(context, *resolution_adaptive, *batch_norm_tuning, *augmentation_aware)
-            }
-            DomainStrategy::NaturalLanguage { sequence_adaptive, attention_optimized, vocab_aware } => {
-                self.optimize_natural_language(context, *sequence_adaptive, *attention_optimized, *vocab_aware)
-            }
-            DomainStrategy::RecommendationSystems { collaborative_filtering, matrix_factorization, cold_start_aware } => {
-                self.optimize_recommendation_systems(context, *collaborative_filtering, *matrix_factorization, *cold_start_aware)
-            }
-            DomainStrategy::TimeSeries { temporal_aware, seasonality_adaptive, multi_step } => {
-                self.optimize_time_series(context, *temporal_aware, *seasonality_adaptive, *multi_step)
-            }
-            DomainStrategy::ReinforcementLearning { policy_gradient, value_function, exploration_aware } => {
-                self.optimize_reinforcement_learning(context, *policy_gradient, *value_function, *exploration_aware)
-            }
-            DomainStrategy::ScientificComputing { stability_focused, precision_critical, sparse_optimized } => {
-                self.optimize_scientific_computing(context, *stability_focused, *precision_critical, *sparse_optimized)
-            }
+            DomainStrategy::ComputerVision {
+                resolution_adaptive,
+                batch_norm_tuning,
+                augmentation_aware,
+            } => self.optimize_computer_vision(
+                context,
+                *resolution_adaptive,
+                *batch_norm_tuning,
+                *augmentation_aware,
+            ),
+            DomainStrategy::NaturalLanguage {
+                sequence_adaptive,
+                attention_optimized,
+                vocab_aware,
+            } => self.optimize_natural_language(
+                context,
+                *sequence_adaptive,
+                *attention_optimized,
+                *vocab_aware,
+            ),
+            DomainStrategy::RecommendationSystems {
+                collaborative_filtering,
+                matrix_factorization,
+                cold_start_aware,
+            } => self.optimize_recommendation_systems(
+                context,
+                *collaborative_filtering,
+                *matrix_factorization,
+                *cold_start_aware,
+            ),
+            DomainStrategy::TimeSeries {
+                temporal_aware,
+                seasonality_adaptive,
+                multi_step,
+            } => self.optimize_time_series(
+                context,
+                *temporal_aware,
+                *seasonality_adaptive,
+                *multi_step,
+            ),
+            DomainStrategy::ReinforcementLearning {
+                policy_gradient,
+                value_function,
+                exploration_aware,
+            } => self.optimize_reinforcement_learning(
+                context,
+                *policy_gradient,
+                *value_function,
+                *exploration_aware,
+            ),
+            DomainStrategy::ScientificComputing {
+                stability_focused,
+                precision_critical,
+                sparse_optimized,
+            } => self.optimize_scientific_computing(
+                context,
+                *stability_focused,
+                *precision_critical,
+                *sparse_optimized,
+            ),
         }
     }
 
@@ -271,8 +345,9 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         // Resolution-adaptive optimization
         if resolution_adaptive {
             let resolution_factor = self.estimate_resolution_factor(&_context.problem_chars);
-            config.learning_rate = self.config.base_learning_rate * A::from(resolution_factor).unwrap();
-            
+            config.learning_rate =
+                self.config.base_learning_rate * A::from(resolution_factor).unwrap();
+
             // Larger images need smaller learning rates
             if _context.problem_chars.input_dim > 512 * 512 {
                 config.learning_rate = config.learning_rate * A::from(0.5).unwrap();
@@ -282,24 +357,34 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         // Batch normalization tuning
         if batch_norm_tuning {
             config.optimizer_type = OptimizerType::AdamW; // Better for batch norm
-            config.specialized_params.insert("batch_norm_momentum".to_string(), A::from(0.99).unwrap());
-            config.specialized_params.insert("batch_norm_eps".to_string(), A::from(1e-5).unwrap());
+            config
+                .specialized_params
+                .insert("batch_norm_momentum".to_string(), A::from(0.99).unwrap());
+            config
+                .specialized_params
+                .insert("batch_norm_eps".to_string(), A::from(1e-5).unwrap());
         }
 
         // Data augmentation awareness
         if augmentation_aware {
             // More aggressive regularization with augmentation
             config.regularization_strength = config.regularization_strength * A::from(1.5).unwrap();
-            config.specialized_params.insert("mixup_alpha".to_string(), A::from(0.2).unwrap());
-            config.specialized_params.insert("cutmix_alpha".to_string(), A::from(1.0).unwrap());
+            config
+                .specialized_params
+                .insert("mixup_alpha".to_string(), A::from(0.2).unwrap());
+            config
+                .specialized_params
+                .insert("cutmix_alpha".to_string(), A::from(1.0).unwrap());
         }
 
         // CV-specific optimizations
         config.batch_size = self.select_cv_batch_size(&_context.resource_constraints);
         config.gradient_clip_norm = Some(A::from(1.0).unwrap());
-        
+
         // Use cosine annealing for CV tasks
-        config.lr_schedule = LearningRateScheduleType::CosineAnnealing { t_max: _context.training_config.max_epochs };
+        config.lr_schedule = LearningRateScheduleType::CosineAnnealing {
+            t_max: _context.training_config.max_epochs,
+        };
 
         Ok(config)
     }
@@ -317,7 +402,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         // Sequence-adaptive optimization
         if sequence_adaptive {
             let seq_length = _context.problem_chars.input_dim; // Assuming input_dim represents sequence length
-            
+
             // Longer sequences need more careful optimization
             if seq_length > 512 {
                 config.learning_rate = self.config.base_learning_rate * A::from(0.7).unwrap();
@@ -331,30 +416,44 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         // Attention mechanism optimization
         if attention_optimized {
             config.optimizer_type = OptimizerType::AdamW; // Best for transformers
-            config.specialized_params.insert("attention_dropout".to_string(), A::from(0.1).unwrap());
-            config.specialized_params.insert("attention_head_dim".to_string(), A::from(64.0).unwrap());
-            
+            config
+                .specialized_params
+                .insert("attention_dropout".to_string(), A::from(0.1).unwrap());
+            config
+                .specialized_params
+                .insert("attention_head_dim".to_string(), A::from(64.0).unwrap());
+
             // Layer-wise learning rate decay for transformers
-            config.specialized_params.insert("layer_decay_rate".to_string(), A::from(0.95).unwrap());
+            config
+                .specialized_params
+                .insert("layer_decay_rate".to_string(), A::from(0.95).unwrap());
         }
 
         // Vocabulary-aware optimization
         if vocab_aware {
             let vocab_size = _context.problem_chars.output_dim; // Assuming output_dim represents vocab size
-            
+
             // Large vocabularies need special handling
             if vocab_size > 30000 {
-                config.specialized_params.insert("tie_embeddings".to_string(), A::from(1.0).unwrap());
-                config.specialized_params.insert("embedding_dropout".to_string(), A::from(0.1).unwrap());
+                config
+                    .specialized_params
+                    .insert("tie_embeddings".to_string(), A::from(1.0).unwrap());
+                config
+                    .specialized_params
+                    .insert("embedding_dropout".to_string(), A::from(0.1).unwrap());
             }
         }
 
         // NLP-specific optimizations
         config.batch_size = self.select_nlp_batch_size(&_context.resource_constraints);
-        config.lr_schedule = LearningRateScheduleType::OneCycle { max_lr: config.learning_rate.to_f64().unwrap() };
-        
+        config.lr_schedule = LearningRateScheduleType::OneCycle {
+            max_lr: config.learning_rate.to_f64().unwrap(),
+        };
+
         // Warmup for transformers
-        config.specialized_params.insert("warmup_steps".to_string(), A::from(1000.0).unwrap());
+        config
+            .specialized_params
+            .insert("warmup_steps".to_string(), A::from(1000.0).unwrap());
 
         Ok(config)
     }
@@ -373,20 +472,30 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         if collaborative_filtering {
             config.optimizer_type = OptimizerType::Adam; // Good for sparse data
             config.regularization_strength = A::from(0.01).unwrap(); // Prevent overfitting
-            config.specialized_params.insert("negative_sampling_rate".to_string(), A::from(5.0).unwrap());
+            config
+                .specialized_params
+                .insert("negative_sampling_rate".to_string(), A::from(5.0).unwrap());
         }
 
         // Matrix factorization tuning
         if matrix_factorization {
             config.learning_rate = A::from(0.01).unwrap(); // Lower LR for stability
-            config.specialized_params.insert("embedding_dim".to_string(), A::from(128.0).unwrap());
-            config.specialized_params.insert("factorization_rank".to_string(), A::from(50.0).unwrap());
+            config
+                .specialized_params
+                .insert("embedding_dim".to_string(), A::from(128.0).unwrap());
+            config
+                .specialized_params
+                .insert("factorization_rank".to_string(), A::from(50.0).unwrap());
         }
 
         // Cold start handling
         if cold_start_aware {
-            config.specialized_params.insert("content_weight".to_string(), A::from(0.3).unwrap());
-            config.specialized_params.insert("popularity_bias".to_string(), A::from(0.1).unwrap());
+            config
+                .specialized_params
+                .insert("content_weight".to_string(), A::from(0.3).unwrap());
+            config
+                .specialized_params
+                .insert("popularity_bias".to_string(), A::from(0.1).unwrap());
         }
 
         // RecSys-specific optimizations
@@ -410,25 +519,39 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         if temporal_aware {
             config.optimizer_type = OptimizerType::RMSprop; // Good for RNNs
             config.learning_rate = A::from(0.001).unwrap(); // Conservative for temporal stability
-            config.specialized_params.insert("sequence_length".to_string(), A::from(_context.problem_chars.input_dim as f64).unwrap());
+            config.specialized_params.insert(
+                "sequence_length".to_string(),
+                A::from(_context.problem_chars.input_dim as f64).unwrap(),
+            );
         }
 
         // Seasonality consideration
         if seasonality_adaptive {
-            config.specialized_params.insert("seasonal_periods".to_string(), A::from(24.0).unwrap()); // Daily pattern
-            config.specialized_params.insert("trend_strength".to_string(), A::from(0.1).unwrap());
+            config
+                .specialized_params
+                .insert("seasonal_periods".to_string(), A::from(24.0).unwrap()); // Daily pattern
+            config
+                .specialized_params
+                .insert("trend_strength".to_string(), A::from(0.1).unwrap());
         }
 
         // Multi-step ahead optimization
         if multi_step {
-            config.specialized_params.insert("prediction_horizon".to_string(), A::from(12.0).unwrap());
-            config.specialized_params.insert("multi_step_loss_weight".to_string(), A::from(0.8).unwrap());
+            config
+                .specialized_params
+                .insert("prediction_horizon".to_string(), A::from(12.0).unwrap());
+            config
+                .specialized_params
+                .insert("multi_step_loss_weight".to_string(), A::from(0.8).unwrap());
         }
 
         // Time series-specific optimizations
         config.batch_size = 32; // Smaller batches for temporal consistency
         config.gradient_clip_norm = Some(A::from(1.0).unwrap());
-        config.lr_schedule = LearningRateScheduleType::ReduceOnPlateau { patience: 10, factor: 0.5 };
+        config.lr_schedule = LearningRateScheduleType::ReduceOnPlateau {
+            patience: 10,
+            factor: 0.5,
+        };
 
         Ok(config)
     }
@@ -447,20 +570,32 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         if policy_gradient {
             config.optimizer_type = OptimizerType::Adam;
             config.learning_rate = A::from(3e-4).unwrap(); // Standard RL learning rate
-            config.specialized_params.insert("entropy_coeff".to_string(), A::from(0.01).unwrap());
+            config
+                .specialized_params
+                .insert("entropy_coeff".to_string(), A::from(0.01).unwrap());
         }
 
         // Value function optimization
         if value_function {
-            config.specialized_params.insert("value_loss_coeff".to_string(), A::from(0.5).unwrap());
-            config.specialized_params.insert("huber_loss_delta".to_string(), A::from(1.0).unwrap());
+            config
+                .specialized_params
+                .insert("value_loss_coeff".to_string(), A::from(0.5).unwrap());
+            config
+                .specialized_params
+                .insert("huber_loss_delta".to_string(), A::from(1.0).unwrap());
         }
 
         // Exploration-exploitation balance
         if exploration_aware {
-            config.specialized_params.insert("epsilon_start".to_string(), A::from(1.0).unwrap());
-            config.specialized_params.insert("epsilon_end".to_string(), A::from(0.1).unwrap());
-            config.specialized_params.insert("epsilon_decay".to_string(), A::from(0.995).unwrap());
+            config
+                .specialized_params
+                .insert("epsilon_start".to_string(), A::from(1.0).unwrap());
+            config
+                .specialized_params
+                .insert("epsilon_end".to_string(), A::from(0.1).unwrap());
+            config
+                .specialized_params
+                .insert("epsilon_decay".to_string(), A::from(0.995).unwrap());
         }
 
         // RL-specific optimizations
@@ -485,19 +620,27 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         if stability_focused {
             config.optimizer_type = OptimizerType::LBFGS; // More stable for scientific problems
             config.learning_rate = A::from(0.1).unwrap(); // Higher LR for LBFGS
-            config.specialized_params.insert("line_search_tolerance".to_string(), A::from(1e-6).unwrap());
+            config
+                .specialized_params
+                .insert("line_search_tolerance".to_string(), A::from(1e-6).unwrap());
         }
 
         // High precision requirements
         if precision_critical {
-            config.specialized_params.insert("convergence_tolerance".to_string(), A::from(1e-8).unwrap());
-            config.specialized_params.insert("max_iterations".to_string(), A::from(1000.0).unwrap());
+            config
+                .specialized_params
+                .insert("convergence_tolerance".to_string(), A::from(1e-8).unwrap());
+            config
+                .specialized_params
+                .insert("max_iterations".to_string(), A::from(1000.0).unwrap());
         }
 
         // Sparse matrix optimization
         if sparse_optimized {
             config.optimizer_type = OptimizerType::Adam;
-            config.specialized_params.insert("sparsity_threshold".to_string(), A::from(1e-6).unwrap());
+            config
+                .specialized_params
+                .insert("sparsity_threshold".to_string(), A::from(1e-6).unwrap());
         }
 
         // Scientific computing-specific optimizations
@@ -532,14 +675,15 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         // Analyze historical performance for this domain
         if let Some(history) = self.domain_performance.get(domain) {
             if !history.is_empty() {
-                let avg_performance = history.iter()
-                    .map(|m| m.validation_accuracy)
-                    .copied()
-                    .sum::<A>() / A::from(history.len()).unwrap();
+                let avg_performance = history.iter().map(|m| m.validation_accuracy).sum::<A>()
+                    / A::from(history.len()).unwrap();
 
                 recommendations.push(DomainRecommendation {
                     recommendation_type: RecommendationType::PerformanceBaseline,
-                    description: format!("Historical average performance: {:.4}", avg_performance.to_f64().unwrap()),
+                    description: format!(
+                        "Historical average performance: {:.4}",
+                        avg_performance.to_f64().unwrap()
+                    ),
                     confidence: A::from(0.8).unwrap(),
                     action: "Consider this as baseline for improvements".to_string(),
                 });
@@ -557,7 +701,10 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
                         knowledge.transfer_score.to_f64().unwrap()
                     ),
                     confidence: knowledge.transfer_score,
-                    action: format!("Use {} optimizer", format!("{:?}", knowledge.successful_strategy)),
+                    action: format!(
+                        "Use {} optimizer",
+                        format!("{:?}", knowledge.successful_strategy)
+                    ),
                 });
             }
         }
@@ -568,22 +715,28 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
     /// Helper methods for domain-specific optimizations
     fn estimate_resolution_factor(&self, problem_chars: &ProblemCharacteristics) -> f64 {
         let resolution = problem_chars.input_dim as f64;
-        
-        if resolution > 1_000_000.0 { // Very high resolution
+
+        if resolution > 1_000_000.0 {
+            // Very high resolution
             0.5
-        } else if resolution > 250_000.0 { // High resolution
+        } else if resolution > 250_000.0 {
+            // High resolution
             0.7
-        } else if resolution > 50_000.0 { // Medium resolution
+        } else if resolution > 50_000.0 {
+            // Medium resolution
             0.9
-        } else { // Low resolution
+        } else {
+            // Low resolution
             1.0
         }
     }
 
     fn select_cv_batch_size(&self, constraints: &ResourceConstraints<A>) -> usize {
-        if constraints.max_memory > 16_000_000_000 { // 16GB+
+        if constraints.max_memory > 16_000_000_000 {
+            // 16GB+
             128
-        } else if constraints.max_memory > 8_000_000_000 { // 8GB+
+        } else if constraints.max_memory > 8_000_000_000 {
+            // 8GB+
             64
         } else {
             32
@@ -591,9 +744,11 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
     }
 
     fn select_nlp_batch_size(&self, constraints: &ResourceConstraints<A>) -> usize {
-        if constraints.max_memory > 32_000_000_000 { // 32GB+
+        if constraints.max_memory > 32_000_000_000 {
+            // 32GB+
             64
-        } else if constraints.max_memory > 16_000_000_000 { // 16GB+
+        } else if constraints.max_memory > 16_000_000_000 {
+            // 16GB+
             32
         } else {
             16
@@ -617,7 +772,11 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
                 recommended_batch_sizes: vec![32, 64, 128],
                 gradient_clip_values: vec![A::from(1.0).unwrap(), A::from(2.0).unwrap()],
                 regularization_range: (A::from(1e-5).unwrap(), A::from(1e-2).unwrap()),
-                optimizer_ranking: vec![OptimizerType::AdamW, OptimizerType::SGDMomentum, OptimizerType::Adam],
+                optimizer_ranking: vec![
+                    OptimizerType::AdamW,
+                    OptimizerType::SGDMomentum,
+                    OptimizerType::Adam,
+                ],
                 domain_params: HashMap::new(),
             },
             DomainStrategy::NaturalLanguage { .. } => DomainConfig {
@@ -737,7 +896,7 @@ mod tests {
             batch_norm_tuning: true,
             augmentation_aware: true,
         };
-        
+
         let selector = DomainSpecificSelector::<f64>::new(strategy);
         assert_eq!(selector.config.optimizer_ranking[0], OptimizerType::AdamW);
     }
@@ -749,9 +908,9 @@ mod tests {
             batch_norm_tuning: true,
             augmentation_aware: true,
         };
-        
+
         let mut selector = DomainSpecificSelector::<f64>::new(strategy);
-        
+
         let context = OptimizationContext {
             problem_chars: ProblemCharacteristics {
                 dataset_size: 50000,
@@ -768,7 +927,7 @@ mod tests {
                 architecture_type: Some("ResNet".to_string()),
             },
             resource_constraints: ResourceConstraints {
-                max_memory: 16_000_000_000,
+                max_memory: 17_000_000_000, // Slightly above 16GB to trigger 128 batch size
                 max_time: 7200.0,
                 gpu_available: true,
                 distributed_capable: false,
@@ -783,10 +942,10 @@ mod tests {
             },
             domain_metadata: HashMap::new(),
         };
-        
+
         selector.set_context(context);
         let config = selector.select_optimal_config().unwrap();
-        
+
         assert_eq!(config.optimizer_type, OptimizerType::AdamW);
         assert_eq!(config.batch_size, 128); // Should select larger batch size for high memory
         assert!(config.gradient_clip_norm.is_some());
@@ -799,13 +958,13 @@ mod tests {
             attention_optimized: true,
             vocab_aware: true,
         };
-        
+
         let mut selector = DomainSpecificSelector::<f64>::new(strategy);
-        
+
         let context = OptimizationContext {
             problem_chars: ProblemCharacteristics {
                 dataset_size: 100000,
-                input_dim: 512, // Sequence length
+                input_dim: 512,    // Sequence length
                 output_dim: 50000, // Large vocabulary
                 problem_type: ProblemType::NaturalLanguage,
                 gradient_sparsity: 0.2,
@@ -833,10 +992,10 @@ mod tests {
             },
             domain_metadata: HashMap::new(),
         };
-        
+
         selector.set_context(context);
         let config = selector.select_optimal_config().unwrap();
-        
+
         assert_eq!(config.optimizer_type, OptimizerType::AdamW);
         assert!(config.specialized_params.contains_key("warmup_steps"));
         assert!(config.specialized_params.contains_key("tie_embeddings")); // Large vocab
@@ -849,9 +1008,9 @@ mod tests {
             seasonality_adaptive: true,
             multi_step: true,
         };
-        
+
         let mut selector = DomainSpecificSelector::<f64>::new(strategy);
-        
+
         let context = OptimizationContext {
             problem_chars: ProblemCharacteristics {
                 dataset_size: 10000,
@@ -878,15 +1037,18 @@ mod tests {
                 max_epochs: 200,
                 early_stopping_patience: 20,
                 validation_frequency: 5,
-                lr_schedule_type: LearningRateScheduleType::ReduceOnPlateau { patience: 10, factor: 0.5 },
+                lr_schedule_type: LearningRateScheduleType::ReduceOnPlateau {
+                    patience: 10,
+                    factor: 0.5,
+                },
                 regularization_approach: RegularizationApproach::L2Only { weight: 1e-4 },
             },
             domain_metadata: HashMap::new(),
         };
-        
+
         selector.set_context(context);
         let config = selector.select_optimal_config().unwrap();
-        
+
         assert_eq!(config.optimizer_type, OptimizerType::RMSprop);
         assert_eq!(config.batch_size, 32);
         assert!(config.specialized_params.contains_key("seasonal_periods"));
@@ -900,9 +1062,9 @@ mod tests {
             batch_norm_tuning: false,
             augmentation_aware: false,
         };
-        
+
         let mut selector = DomainSpecificSelector::<f64>::new(strategy);
-        
+
         let metrics = DomainPerformanceMetrics {
             validation_accuracy: 0.95,
             domain_specific_score: 0.92,
@@ -911,9 +1073,9 @@ mod tests {
             resource_efficiency: 0.85,
             transfer_score: 0.7,
         };
-        
+
         selector.update_domain_performance("computer_vision".to_string(), metrics);
-        
+
         let recommendations = selector.get_domain_recommendations("computer_vision");
         assert!(!recommendations.is_empty());
         assert!(recommendations[0].description.contains("0.95"));
@@ -926,9 +1088,9 @@ mod tests {
             batch_norm_tuning: true,
             augmentation_aware: true,
         };
-        
+
         let mut selector = DomainSpecificSelector::<f64>::new(strategy);
-        
+
         let transfer_knowledge = CrossDomainKnowledge {
             source_domain: "natural_language".to_string(),
             target_domain: "computer_vision".to_string(),
@@ -939,11 +1101,13 @@ mod tests {
             transfer_score: 0.8,
             successful_strategy: OptimizerType::AdamW,
         };
-        
+
         selector.record_transfer_knowledge(transfer_knowledge);
-        
+
         let recommendations = selector.get_domain_recommendations("computer_vision");
-        assert!(recommendations.iter().any(|r| matches!(r.recommendation_type, RecommendationType::TransferLearning)));
+        assert!(recommendations
+            .iter()
+            .any(|r| matches!(r.recommendation_type, RecommendationType::TransferLearning)));
     }
 
     #[test]
@@ -953,9 +1117,9 @@ mod tests {
             precision_critical: true,
             sparse_optimized: false,
         };
-        
+
         let mut selector = DomainSpecificSelector::<f64>::new(strategy);
-        
+
         let context = OptimizationContext {
             problem_chars: ProblemCharacteristics {
                 dataset_size: 1000,
@@ -987,12 +1151,14 @@ mod tests {
             },
             domain_metadata: HashMap::new(),
         };
-        
+
         selector.set_context(context);
         let config = selector.select_optimal_config().unwrap();
-        
+
         assert_eq!(config.optimizer_type, OptimizerType::LBFGS);
         assert!(config.gradient_clip_norm.is_none()); // No clipping for precision
-        assert!(config.specialized_params.contains_key("convergence_tolerance"));
+        assert!(config
+            .specialized_params
+            .contains_key("convergence_tolerance"));
     }
 }

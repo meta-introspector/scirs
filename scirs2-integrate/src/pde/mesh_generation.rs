@@ -82,21 +82,12 @@ pub enum Domain {
 }
 
 /// Boundary condition specification for domain boundaries
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct BoundarySpecification {
     /// Boundary markers for different boundary segments
     pub boundary_markers: HashMap<String, i32>,
     /// Point markers for specific points
     pub point_markers: HashMap<String, i32>,
-}
-
-impl Default for BoundarySpecification {
-    fn default() -> Self {
-        Self {
-            boundary_markers: HashMap::new(),
-            point_markers: HashMap::new(),
-        }
-    }
 }
 
 /// Quality metrics for mesh assessment
@@ -121,6 +112,12 @@ pub struct AutoMeshGenerator {
     params: MeshGenerationParams,
 }
 
+impl Default for AutoMeshGenerator {
+    fn default() -> Self {
+        Self::new(MeshGenerationParams::default())
+    }
+}
+
 impl AutoMeshGenerator {
     /// Create a new mesh generator with specified parameters
     pub fn new(params: MeshGenerationParams) -> Self {
@@ -128,8 +125,8 @@ impl AutoMeshGenerator {
     }
 
     /// Create a mesh generator with default parameters
-    pub fn default() -> Self {
-        Self::new(MeshGenerationParams::default())
+    pub fn with_default_params() -> Self {
+        Self::default()
     }
 
     /// Generate mesh for a specified domain

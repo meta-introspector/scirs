@@ -582,8 +582,8 @@ where
             let mean = integral;
             let mut variance = 0.0;
 
-            for i in 0..n_estimates {
-                variance += (estimates[i] - mean).powi(2);
+            for estimate in estimates.iter().take(n_estimates) {
+                variance += (estimate - mean).powi(2);
             }
 
             variance /= (n_estimates - 1) as f64;
@@ -918,8 +918,8 @@ fn compute_qmc_result(
             let mean = integral;
             let mut variance = 0.0;
 
-            for i in 0..n_estimates {
-                let diff = estimates[i] - mean;
+            for estimate in estimates.iter().take(n_estimates) {
+                let diff = estimate - mean;
                 variance += diff * diff;
             }
 
@@ -929,8 +929,8 @@ fn compute_qmc_result(
             let mean = integral;
             let mut variance = 0.0;
 
-            for i in 0..n_estimates {
-                variance += (estimates[i] - mean).powi(2);
+            for estimate in estimates.iter().take(n_estimates) {
+                variance += (estimate - mean).powi(2);
             }
 
             variance /= (n_estimates - 1) as f64;

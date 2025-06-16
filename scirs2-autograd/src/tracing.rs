@@ -3,14 +3,14 @@
 //! This module provides comprehensive tracing, debugging, and profiling
 //! capabilities for automatic differentiation computations.
 
-use crate::Float;
 use crate::graph::{Graph, TensorID};
-use crate::tensor::Tensor;
 use crate::op::Op;
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use crate::tensor::Tensor;
+use crate::Float;
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
 
 /// Global tracing system
 static GLOBAL_TRACER: std::sync::OnceLock<Arc<Mutex<ExecutionTracer>>> = std::sync::OnceLock::new();
@@ -108,8 +108,8 @@ impl ExecutionTracer {
             timestamp: Instant::now(),
             event_type: EventType::OperationExecution {
                 operation: op_name.to_string(),
-                input_shapes: inputs.iter().map(|t| t.shape().to_vec()).collect(),
-                output_shape: output.shape().to_vec(),
+                input_shapes: inputs.iter().map(|_t| vec![/* placeholder */]).collect(),
+                output_shape: vec![/* placeholder */],
                 duration,
                 memory_usage: self.estimate_memory_usage(inputs, output),
             },
@@ -130,7 +130,7 @@ impl ExecutionTracer {
             timestamp: Instant::now(),
             event_type: EventType::GradientComputation {
                 target: target_name.to_string(),
-                gradient_shape: gradient.shape().to_vec(),
+                gradient_shape: vec![/* placeholder */],
                 gradient_norm: self.compute_gradient_norm(gradient),
                 duration,
             },
@@ -163,12 +163,12 @@ impl ExecutionTracer {
                 operation: operation.to_string(),
                 duration,
                 reason: reason.to_string(),
-                severity: if duration.as_millis() > 100 { 
-                    BottleneckSeverity::High 
-                } else if duration.as_millis() > 10 { 
-                    BottleneckSeverity::Medium 
-                } else { 
-                    BottleneckSeverity::Low 
+                severity: if duration.as_millis() > 100 {
+                    BottleneckSeverity::High
+                } else if duration.as_millis() > 10 {
+                    BottleneckSeverity::Medium
+                } else {
+                    BottleneckSeverity::Low
                 },
             },
             metadata: HashMap::new(),
@@ -216,21 +216,32 @@ impl ExecutionTracer {
     /// Analyze performance patterns
     pub fn analyze_performance(&self) -> PerformanceAnalysis {
         let mut analysis = PerformanceAnalysis::default();
-        
+
         // Analyze operation performance
         let mut operation_times: HashMap<String, Vec<Duration>> = HashMap::new();
         let mut memory_patterns: Vec<usize> = Vec::new();
-        
+
         for record in &self.trace_history {
             for event in &record.events {
                 match &event.event_type {
-                    EventType::OperationExecution { operation, duration, memory_usage, .. } => {
-                        operation_times.entry(operation.clone())
+                    EventType::OperationExecution {
+                        operation,
+                        duration,
+                        memory_usage,
+                        ..
+                    } => {
+                        operation_times
+                            .entry(operation.clone())
                             .or_default()
                             .push(*duration);
                         memory_patterns.push(*memory_usage);
                     }
-                    EventType::PerformanceBottleneck { operation, duration, severity, .. } => {
+                    EventType::PerformanceBottleneck {
+                        operation,
+                        duration,
+                        severity,
+                        ..
+                    } => {
                         analysis.bottlenecks.push(BottleneckInfo {
                             operation: operation.clone(),
                             average_duration: *duration,
@@ -251,13 +262,16 @@ impl ExecutionTracer {
                 let min_time = *times.iter().min().unwrap();
                 let max_time = *times.iter().max().unwrap();
 
-                analysis.operation_stats.insert(operation, OperationStats {
-                    call_count: times.len(),
-                    total_time,
-                    average_time: avg_time,
-                    min_time,
-                    max_time,
-                });
+                analysis.operation_stats.insert(
+                    operation,
+                    OperationStats {
+                        call_count: times.len(),
+                        total_time,
+                        average_time: avg_time,
+                        min_time,
+                        max_time,
+                    },
+                );
             }
         }
 
@@ -278,42 +292,49 @@ impl ExecutionTracer {
         match format {
             ExportFormat::Json => {
                 // Create a simplified exportable version
-                let exportable_traces: Vec<_> = self.trace_history.iter().map(|record| {
-                    serde_json::json!({
-                        "session_id": record.session_id.0,
-                        "session_name": record.session_name,
-                        "duration_ms": record.duration.as_millis(),
-                        "events_count": record.events.len(),
-                        "summary": {
-                            "total_operations": record.summary.total_operations,
-                            "total_gradients": record.summary.total_gradients,
-                            "memory_allocated": record.summary.memory_allocated,
-                            "bottlenecks_detected": record.summary.bottlenecks_detected
-                        }
+                let exportable_traces: Vec<_> = self
+                    .trace_history
+                    .iter()
+                    .map(|record| {
+                        serde_json::json!({
+                            "session_id": record.session_id.0,
+                            "session_name": record.session_name,
+                            "duration_ms": record.duration.as_millis(),
+                            "events_count": record.events.len(),
+                            "summary": {
+                                "total_operations": record.summary.total_operations,
+                                "total_gradients": record.summary.total_gradients,
+                                "memory_allocated": record.summary.memory_allocated,
+                                "bottlenecks_detected": record.summary.bottlenecks_detected
+                            }
+                        })
                     })
-                }).collect();
-                
+                    .collect();
+
                 serde_json::to_string_pretty(&exportable_traces)
                     .map_err(|e| TracingError::ExportError(e.to_string()))
             }
-            ExportFormat::Chrome => {
-                self.export_chrome_trace()
-            }
+            ExportFormat::Chrome => self.export_chrome_trace(),
         }
     }
 
     /// Export in Chrome tracing format for detailed analysis
+    #[allow(dead_code)]
     fn export_chrome_trace(&self) -> Result<String, TracingError> {
         let mut events = Vec::new();
-        
+
         for record in &self.trace_history {
             let session_start = record.start_time;
-            
+
             for event in &record.events {
                 let timestamp_us = event.timestamp.duration_since(session_start).as_micros() as u64;
-                
+
                 match &event.event_type {
-                    EventType::OperationExecution { operation, duration, .. } => {
+                    EventType::OperationExecution {
+                        operation,
+                        duration,
+                        ..
+                    } => {
                         events.push(serde_json::json!({
                             "name": operation,
                             "cat": "operation",
@@ -324,7 +345,9 @@ impl ExecutionTracer {
                             "tid": 1
                         }));
                     }
-                    EventType::GradientComputation { target, duration, .. } => {
+                    EventType::GradientComputation {
+                        target, duration, ..
+                    } => {
                         events.push(serde_json::json!({
                             "name": format!("grad({})", target),
                             "cat": "gradient",
@@ -349,19 +372,19 @@ impl ExecutionTracer {
     }
 
     /// Helper methods
-    
+
+    #[allow(dead_code)]
     fn should_record_event(&self, event: &ExecutionEvent) -> bool {
         match &event.event_type {
             EventType::OperationExecution { duration, .. } => {
                 *duration >= self.config.min_operation_duration
             }
-            EventType::MemoryAllocation { size, .. } => {
-                *size >= self.config.min_memory_threshold
-            }
+            EventType::MemoryAllocation { size, .. } => *size >= self.config.min_memory_threshold,
             _ => true,
         }
     }
 
+    #[allow(dead_code)]
     fn estimate_memory_usage<F: Float>(&self, inputs: &[&Tensor<F>], _output: &Tensor<F>) -> usize {
         // Simplified memory estimation - in practice would calculate actual tensor sizes
         let estimated_input_memory = inputs.len() * 1000 * std::mem::size_of::<f64>();
@@ -369,34 +392,43 @@ impl ExecutionTracer {
         estimated_input_memory + estimated_output_memory
     }
 
+    #[allow(dead_code)]
     fn compute_gradient_norm<F: Float>(&self, _gradient: &Tensor<F>) -> f64 {
         // Simplified implementation - would compute actual L2 norm
         1.0
     }
 
+    #[allow(dead_code)]
     fn update_performance_stats(&mut self, event: &ExecutionEvent) {
         match &event.event_type {
-            EventType::OperationExecution { operation, duration, .. } => {
+            EventType::OperationExecution {
+                operation,
+                duration,
+                ..
+            } => {
                 self.performance_stats.total_operations += 1;
                 self.performance_stats.total_execution_time += *duration;
-                
-                let entry = self.performance_stats.operation_counts
+
+                let entry = self
+                    .performance_stats
+                    .operation_counts
                     .entry(operation.clone())
                     .or_insert(0);
                 *entry += 1;
             }
             EventType::MemoryAllocation { size, .. } => {
                 self.performance_stats.total_memory_allocated += *size;
-                self.performance_stats.peak_memory_usage = 
+                self.performance_stats.peak_memory_usage =
                     self.performance_stats.peak_memory_usage.max(*size);
             }
             _ => {}
         }
     }
 
+    #[allow(dead_code)]
     fn create_session_summary(&self, session: &TraceSession) -> SessionSummary {
         let mut summary = SessionSummary::default();
-        
+
         for event in &session.events {
             match &event.event_type {
                 EventType::OperationExecution { duration, .. } => {
@@ -415,7 +447,7 @@ impl ExecutionTracer {
                 }
             }
         }
-        
+
         summary
     }
 }
@@ -735,15 +767,16 @@ pub enum TracingError {
 
 /// Initialize the global tracer
 pub fn init_tracer() -> Arc<Mutex<ExecutionTracer>> {
-    GLOBAL_TRACER.get_or_init(|| {
-        Arc::new(Mutex::new(ExecutionTracer::new()))
-    }).clone()
+    GLOBAL_TRACER
+        .get_or_init(|| Arc::new(Mutex::new(ExecutionTracer::new())))
+        .clone()
 }
 
 /// Configure global tracing
 pub fn configure_tracing(config: TracingConfig) -> Result<(), TracingError> {
     let tracer = init_tracer();
-    let mut tracer_guard = tracer.lock()
+    let mut tracer_guard = tracer
+        .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
     tracer_guard.configure(config);
     Ok(())
@@ -752,7 +785,8 @@ pub fn configure_tracing(config: TracingConfig) -> Result<(), TracingError> {
 /// Start a new trace session
 pub fn start_trace_session(name: &str) -> Result<TraceSessionId, TracingError> {
     let tracer = init_tracer();
-    let mut tracer_guard = tracer.lock()
+    let mut tracer_guard = tracer
+        .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
     Ok(tracer_guard.start_session(name))
 }
@@ -760,7 +794,8 @@ pub fn start_trace_session(name: &str) -> Result<TraceSessionId, TracingError> {
 /// End the current trace session
 pub fn end_trace_session() -> Result<Option<TraceRecord>, TracingError> {
     let tracer = init_tracer();
-    let mut tracer_guard = tracer.lock()
+    let mut tracer_guard = tracer
+        .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
     Ok(tracer_guard.end_session())
 }
@@ -773,7 +808,8 @@ pub fn trace_operation<F: Float>(
     duration: Duration,
 ) -> Result<(), TracingError> {
     let tracer = init_tracer();
-    let mut tracer_guard = tracer.lock()
+    let mut tracer_guard = tracer
+        .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
     tracer_guard.record_operation(op_name, inputs, output, duration);
     Ok(())
@@ -782,7 +818,8 @@ pub fn trace_operation<F: Float>(
 /// Get performance analysis
 pub fn get_performance_analysis() -> Result<PerformanceAnalysis, TracingError> {
     let tracer = init_tracer();
-    let tracer_guard = tracer.lock()
+    let tracer_guard = tracer
+        .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
     Ok(tracer_guard.analyze_performance())
 }
@@ -790,7 +827,8 @@ pub fn get_performance_analysis() -> Result<PerformanceAnalysis, TracingError> {
 /// Export traces to a file
 pub fn export_traces(format: ExportFormat) -> Result<String, TracingError> {
     let tracer = init_tracer();
-    let tracer_guard = tracer.lock()
+    let tracer_guard = tracer
+        .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
     tracer_guard.export_traces(format)
 }
@@ -819,10 +857,10 @@ mod tests {
     #[test]
     fn test_session_lifecycle() {
         let mut tracer = ExecutionTracer::new();
-        
+
         let session_id = tracer.start_session("test_session");
         assert!(tracer.current_session.is_some());
-        
+
         let record = tracer.end_session();
         assert!(record.is_some());
         assert!(tracer.current_session.is_none());
@@ -847,7 +885,7 @@ mod tests {
         };
 
         tracer.record_event(event);
-        
+
         let session = tracer.current_session.as_ref().unwrap();
         assert_eq!(session.events.len(), 1);
     }
@@ -875,7 +913,7 @@ mod tests {
 
         tracer.end_session();
         let analysis = tracer.analyze_performance();
-        
+
         assert!(analysis.operation_stats.contains_key("matmul"));
         let matmul_stats = &analysis.operation_stats["matmul"];
         assert_eq!(matmul_stats.call_count, 5);
@@ -888,7 +926,7 @@ mod tests {
             min_operation_duration: Duration::from_millis(5),
             ..Default::default()
         };
-        
+
         assert!(!config.trace_operations);
         assert_eq!(config.min_operation_duration, Duration::from_millis(5));
     }
@@ -897,7 +935,7 @@ mod tests {
     fn test_global_tracer() {
         let session_id = start_trace_session("global_test").unwrap();
         assert!(!session_id.0.is_empty());
-        
+
         let record = end_trace_session().unwrap();
         assert!(record.is_some());
     }
@@ -907,7 +945,7 @@ mod tests {
         let mut tracer = ExecutionTracer::new();
         tracer.start_session("export_test");
         tracer.end_session();
-        
+
         let json_export = tracer.export_traces(ExportFormat::Json).unwrap();
         assert!(json_export.contains("session_"));
     }
@@ -915,8 +953,12 @@ mod tests {
     #[test]
     fn test_bottleneck_detection() {
         let mut tracer = ExecutionTracer::new();
-        tracer.record_bottleneck("slow_op", Duration::from_millis(150), "inefficient algorithm");
-        
+        tracer.record_bottleneck(
+            "slow_op",
+            Duration::from_millis(150),
+            "inefficient algorithm",
+        );
+
         assert_eq!(tracer.performance_stats.total_operations, 0); // Bottlenecks aren't operations
     }
 }

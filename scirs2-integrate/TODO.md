@@ -357,17 +357,17 @@ This module provides numerical integration functionality similar to SciPy's inte
 
 ## Domain-Specific Integration Methods
 
-- [ ] Domain-specific solvers for physics, engineering, and finance
-  - [ ] Mechanical systems
-    - [ ] Rigid body dynamics
-    - [ ] Multibody systems with constraints
-    - [ ] Deformable solids and structural dynamics
+- [x] Domain-specific solvers for physics, engineering, and finance
+  - [⚠️] Mechanical systems (implemented but has numerical stability issues)
+    - [x] Rigid body dynamics
+    - [⚠️] Multibody systems with constraints (implemented but unstable for some cases)
+    - [x] Deformable solids and structural dynamics
     - [ ] Contact and collision integration
-  - [ ] Chemical kinetics
-    - [ ] Stiff reaction systems
-    - [ ] Chemical equilibrium calculations
-    - [ ] Reaction-diffusion systems
-    - [ ] Biochemical network simulation
+  - [⚠️] Chemical kinetics (implemented but needs convergence improvements)
+    - [x] Stiff reaction systems
+    - [⚠️] Chemical equilibrium calculations (implemented but some convergence issues)
+    - [x] Reaction-diffusion systems
+    - [x] Biochemical network simulation
   - [ ] Circuit simulation
     - [ ] Nonlinear circuit element models
     - [ ] Modified nodal analysis integration
@@ -389,12 +389,12 @@ This module provides numerical integration functionality similar to SciPy's inte
 
 ## Quasi-Monte Carlo Integration
 
-- [ ] Implement Quasi-Monte Carlo integration methods
-  - [ ] Implement `qmc_quad` function
-  - [ ] Low-discrepancy sequence generators
-    - [ ] Sobol sequences
-    - [ ] Halton sequences
-    - [ ] Faure sequences
-  - [ ] Scrambling techniques for error estimation
-  - [ ] Randomized quasi-Monte Carlo methods
+- [x] Implement Quasi-Monte Carlo integration methods
+  - [x] Implement `qmc_quad` function
+  - [x] Low-discrepancy sequence generators
+    - [x] Sobol sequences
+    - [x] Halton sequences
+    - [x] Faure sequences
+  - [x] Scrambling techniques for error estimation
+  - [x] Randomized quasi-Monte Carlo methods
   - [ ] Dimension reduction techniques for high-dimensional integrals

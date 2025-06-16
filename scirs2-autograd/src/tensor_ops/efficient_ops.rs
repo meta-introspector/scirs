@@ -556,7 +556,10 @@ mod tests {
             new_shape: vec![2, 3, 4],
             allow_zero_copy: true,
         };
-        assert_eq!(<EfficientReshapeOp as crate::op::Op<f32>>::name(&op), "EfficientReshape");
+        assert_eq!(
+            <EfficientReshapeOp as crate::op::Op<f32>>::name(&op),
+            "EfficientReshape"
+        );
         assert_eq!(op.new_shape, vec![2, 3, 4]);
         assert!(op.allow_zero_copy);
     }
@@ -570,7 +573,10 @@ mod tests {
         let op = EfficientSliceOp {
             slices: slices.clone(),
         };
-        assert_eq!(<EfficientSliceOp as crate::op::Op<f32>>::name(&op), "EfficientSlice");
+        assert_eq!(
+            <EfficientSliceOp as crate::op::Op<f32>>::name(&op),
+            "EfficientSlice"
+        );
         assert_eq!(op.slices.len(), 2);
     }
 
@@ -580,7 +586,10 @@ mod tests {
             axis: 1,
             num_inputs: 3,
         };
-        assert_eq!(<EfficientConcatOp as crate::op::Op<f32>>::name(&op), "EfficientConcat");
+        assert_eq!(
+            <EfficientConcatOp as crate::op::Op<f32>>::name(&op),
+            "EfficientConcat"
+        );
         assert_eq!(op.axis, 1);
         assert_eq!(op.num_inputs, 3);
     }

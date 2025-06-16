@@ -160,10 +160,14 @@ __kernel void fft_1d_forward(
 "#
         .to_string();
 
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
         Self {
             base: BaseKernel::new(
                 name,
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,

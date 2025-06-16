@@ -12,40 +12,40 @@ use std::collections::HashMap;
 pub enum EnzymeMechanism {
     /// Michaelis-Menten single substrate mechanism
     MichaelisMenten {
-        km: f64,     // Michaelis constant
-        vmax: f64,   // Maximum velocity
+        km: f64,   // Michaelis constant
+        vmax: f64, // Maximum velocity
     },
     /// Bi-substrate ordered sequential mechanism (A binds first, then B)
     OrderedSequential {
-        ka: f64,     // Binding constant for substrate A
-        kb: f64,     // Binding constant for substrate B
-        kp: f64,     // Product release constant for P
-        kq: f64,     // Product release constant for Q
-        kcat: f64,   // Catalytic rate constant
+        ka: f64,   // Binding constant for substrate A
+        kb: f64,   // Binding constant for substrate B
+        kp: f64,   // Product release constant for P
+        kq: f64,   // Product release constant for Q
+        kcat: f64, // Catalytic rate constant
     },
     /// Bi-substrate random sequential mechanism (A and B can bind in any order)
     RandomSequential {
-        ka: f64,     // Binding constant for substrate A
-        kb: f64,     // Binding constant for substrate B
-        kp: f64,     // Product release constant for P
-        kq: f64,     // Product release constant for Q
-        kcat: f64,   // Catalytic rate constant
-        alpha: f64,  // Interaction parameter
+        ka: f64,    // Binding constant for substrate A
+        kb: f64,    // Binding constant for substrate B
+        kp: f64,    // Product release constant for P
+        kq: f64,    // Product release constant for Q
+        kcat: f64,  // Catalytic rate constant
+        alpha: f64, // Interaction parameter
     },
     /// Ping-pong mechanism (substrate A binds, product P released, then B binds)
     PingPong {
-        ka: f64,     // Binding constant for substrate A
-        kb: f64,     // Binding constant for substrate B
-        kp: f64,     // Product release constant for P
-        kq: f64,     // Product release constant for Q
-        kcat1: f64,  // First catalytic step
-        kcat2: f64,  // Second catalytic step
+        ka: f64,    // Binding constant for substrate A
+        kb: f64,    // Binding constant for substrate B
+        kp: f64,    // Product release constant for P
+        kq: f64,    // Product release constant for Q
+        kcat1: f64, // First catalytic step
+        kcat2: f64, // Second catalytic step
     },
     /// Hill equation for cooperative binding
     Hill {
-        kd: f64,     // Dissociation constant
-        vmax: f64,   // Maximum velocity
-        n: f64,      // Hill coefficient (cooperativity)
+        kd: f64,   // Dissociation constant
+        vmax: f64, // Maximum velocity
+        n: f64,    // Hill coefficient (cooperativity)
     },
     /// Allosteric enzyme with activators and inhibitors
     Allosteric {
@@ -264,7 +264,8 @@ impl EnzymeParameters {
 
                 // Ordered sequential rate equation
                 let numerator = kcat * a * b;
-                let denominator = ka * kb + kb * a + ka * b + a * b + (kp * a * q) / kq + (kq * b * p) / kp;
+                let denominator =
+                    ka * kb + kb * a + ka * b + a * b + (kp * a * q) / kq + (kq * b * p) / kp;
                 if denominator > 1e-12 {
                     numerator / denominator
                 } else {
@@ -297,8 +298,12 @@ impl EnzymeParameters {
 
                 // Random sequential rate equation with interaction parameter
                 let numerator = kcat * a * b;
-                let denominator = ka * kb * (1.0 + alpha) + kb * a + ka * b + a * b
-                    + (kp * a * q) / (kq * alpha) + (kq * b * p) / (kp * alpha);
+                let denominator = ka * kb * (1.0 + alpha)
+                    + kb * a
+                    + ka * b
+                    + a * b
+                    + (kp * a * q) / (kq * alpha)
+                    + (kq * b * p) / (kp * alpha);
                 if denominator > 1e-12 {
                     numerator / denominator
                 } else {
@@ -377,7 +382,8 @@ impl EnzymeParameters {
 
                 // Allosteric modulation
                 let activation_factor = if activator > 0.0 {
-                    (1.0 + (activator / ka_act).powf(*n_act)) / (1.0 + (activator / ka_act).powf(*n_act))
+                    (1.0 + (activator / ka_act).powf(*n_act))
+                        / (1.0 + (activator / ka_act).powf(*n_act))
                 } else {
                     1.0
                 };
@@ -450,9 +456,7 @@ impl MetabolicPathway {
         Self {
             name,
             enzymes: Vec::new(),
-            metabolites: (0..num_metabolites)
-                .map(|i| format!("M{}", i))
-                .collect(),
+            metabolites: (0..num_metabolites).map(|i| format!("M{}", i)).collect(),
             stoichiometry_matrix: Array2::zeros((num_enzymes, num_metabolites)),
             regulations: Vec::new(),
             external_metabolites: HashMap::new(),
@@ -471,7 +475,8 @@ impl MetabolicPathway {
 
     /// Set external metabolite concentration
     pub fn set_external_metabolite(&mut self, metabolite_idx: usize, concentration: f64) {
-        self.external_metabolites.insert(metabolite_idx, concentration);
+        self.external_metabolites
+            .insert(metabolite_idx, concentration);
     }
 
     /// Calculate reaction rates for all enzymes
@@ -536,8 +541,7 @@ impl MetabolicPathway {
                         1.0 / (1.0 + effector_conc / regulation.strength)
                     }
                     RegulationType::AllostericActivation => {
-                        (1.0 + effector_conc / regulation.strength)
-                            / (1.0 + effector_conc / regulation.strength)
+                        1.0 + effector_conc / regulation.strength
                     }
                     RegulationType::AllostericInhibition => {
                         1.0 / (1.0 + (effector_conc / regulation.strength).powf(2.0))
@@ -562,7 +566,10 @@ impl MetabolicPathway {
         // Apply stoichiometry matrix
         for (reaction_idx, &rate) in reaction_rates.iter().enumerate() {
             for metabolite_idx in 0..derivatives.len() {
-                if let Some(&stoich) = self.stoichiometry_matrix.get((reaction_idx, metabolite_idx)) {
+                if let Some(&stoich) = self
+                    .stoichiometry_matrix
+                    .get((reaction_idx, metabolite_idx))
+                {
                     derivatives[metabolite_idx] += stoich * rate;
                 }
             }
@@ -584,13 +591,15 @@ impl MetabolicPathway {
         let num_metabolites = steady_state_concentrations.len();
 
         // Calculate flux control coefficients
-        let flux_control_coefficients = self.calculate_flux_control_coefficients(steady_state_concentrations);
+        let flux_control_coefficients =
+            self.calculate_flux_control_coefficients(steady_state_concentrations);
 
         // Calculate concentration control coefficients
         let concentration_control_coefficients = Array2::zeros((num_enzymes, num_metabolites));
 
         // Calculate elasticity coefficients
-        let elasticity_coefficients = self.calculate_elasticity_coefficients(steady_state_concentrations);
+        let elasticity_coefficients =
+            self.calculate_elasticity_coefficients(steady_state_concentrations);
 
         // Calculate steady-state fluxes
         let steady_state_fluxes = self.calculate_reaction_rates(steady_state_concentrations);
@@ -617,11 +626,13 @@ impl MetabolicPathway {
             let mut perturbed_pathway = self.clone();
             perturbed_pathway.enzymes[i].enzyme_concentration *= 1.0 + perturbation;
 
-            let perturbed_flux = perturbed_pathway.calculate_reaction_rates(concentrations).sum();
+            let perturbed_flux = perturbed_pathway
+                .calculate_reaction_rates(concentrations)
+                .sum();
 
             // Calculate control coefficient
             if base_flux > 1e-12 {
-                flux_control_coefficients[i] = 
+                flux_control_coefficients[i] =
                     ((perturbed_flux - base_flux) / base_flux) / perturbation;
             }
         }
@@ -648,9 +659,10 @@ impl MetabolicPathway {
 
                     // Calculate elasticity coefficient
                     if base_rates[enzyme_idx] > 1e-12 {
-                        elasticity_coefficients[(enzyme_idx, metabolite_idx)] = 
-                            ((perturbed_rates[enzyme_idx] - base_rates[enzyme_idx]) / base_rates[enzyme_idx])
-                            / perturbation;
+                        elasticity_coefficients[(enzyme_idx, metabolite_idx)] =
+                            ((perturbed_rates[enzyme_idx] - base_rates[enzyme_idx])
+                                / base_rates[enzyme_idx])
+                                / perturbation;
                     }
                 }
             }
@@ -683,8 +695,8 @@ pub mod pathways {
         pathway.add_enzyme(EnzymeDefinition {
             name: "Hexokinase".to_string(),
             parameters: EnzymeParameters::michaelis_menten(0.1, 100.0), // Km = 0.1 mM, Vmax = 100 μM/s
-            substrates: vec![0], // Glucose
-            products: vec![1],   // G6P
+            substrates: vec![0],                                        // Glucose
+            products: vec![1],                                          // G6P
             effectors: vec![],
             enzyme_concentration: 50.0, // 50 nM
         });
@@ -710,17 +722,17 @@ pub mod pathways {
         pathway.add_enzyme(EnzymeDefinition {
             name: "Pyruvate Kinase".to_string(),
             parameters: EnzymeParameters::hill(0.5, 300.0, 2.0), // Kd = 0.5 mM, Vmax = 300 μM/s, n = 2
-            substrates: vec![4], // PEP
-            products: vec![5],   // Pyruvate
+            substrates: vec![4],                                 // PEP
+            products: vec![5],                                   // Pyruvate
             effectors: vec![],
             enzyme_concentration: 100.0,
         });
 
         // Set stoichiometry matrix (enzymes × metabolites)
         pathway.stoichiometry_matrix = arr2(&[
-            [-1.0, 1.0, 0.0, 0.0, 0.0, 0.0],  // Hexokinase: Glucose -> G6P
-            [0.0, 0.0, -1.0, 1.0, 0.0, 0.0],  // PFK: F6P -> FBP
-            [0.0, 0.0, 0.0, 0.0, -1.0, 1.0],  // Pyruvate kinase: PEP -> Pyruvate
+            [-1.0, 1.0, 0.0, 0.0, 0.0, 0.0], // Hexokinase: Glucose -> G6P
+            [0.0, 0.0, -1.0, 1.0, 0.0, 0.0], // PFK: F6P -> FBP
+            [0.0, 0.0, 0.0, 0.0, -1.0, 1.0], // Pyruvate kinase: PEP -> Pyruvate
         ]);
 
         // Add feedback inhibition: G6P inhibits Hexokinase
@@ -742,7 +754,7 @@ pub mod pathways {
     pub fn tca_cycle() -> MetabolicPathway {
         let mut pathway = MetabolicPathway::new("TCA Cycle".to_string(), 8, 8);
 
-        // Metabolites: Acetyl-CoA, Citrate, Isocitrate, α-Ketoglutarate, 
+        // Metabolites: Acetyl-CoA, Citrate, Isocitrate, α-Ketoglutarate,
         // Succinyl-CoA, Succinate, Fumarate, Malate, Oxaloacetate
         pathway.metabolites = vec![
             "Acetyl-CoA".to_string(),
@@ -781,7 +793,7 @@ pub mod pathways {
         // Set stoichiometry matrix for cyclic pathway
         let mut stoich = Array2::zeros((8, 8));
         for i in 0..8 {
-            stoich[[i, i]] = -1.0;           // Consume substrate
+            stoich[[i, i]] = -1.0; // Consume substrate
             stoich[[i, (i + 1) % 8]] = 1.0; // Produce product
         }
         pathway.stoichiometry_matrix = stoich;
@@ -795,29 +807,56 @@ pub mod pathways {
 
         // Simplified purine biosynthesis pathway
         pathway.metabolites = vec![
-            "PRPP".to_string(),                    // 0
-            "5-Phosphoribosylamine".to_string(),   // 1
-            "GAR".to_string(),                     // 2
-            "FGAR".to_string(),                    // 3
-            "FGAM".to_string(),                    // 4
-            "AIR".to_string(),                     // 5
-            "CAIR".to_string(),                    // 6
-            "SAICAR".to_string(),                  // 7
-            "AICAR".to_string(),                   // 8
-            "IMP".to_string(),                     // 9
+            "PRPP".to_string(),                  // 0
+            "5-Phosphoribosylamine".to_string(), // 1
+            "GAR".to_string(),                   // 2
+            "FGAR".to_string(),                  // 3
+            "FGAM".to_string(),                  // 4
+            "AIR".to_string(),                   // 5
+            "CAIR".to_string(),                  // 6
+            "SAICAR".to_string(),                // 7
+            "AICAR".to_string(),                 // 8
+            "IMP".to_string(),                   // 9
         ];
 
         // Add enzymes with different kinetic models
         let enzymes = [
-            ("PRPP Amidotransferase", EnzymeParameters::michaelis_menten(0.1, 50.0)),
-            ("GAR Synthetase", EnzymeParameters::michaelis_menten(0.2, 60.0)),
-            ("GAR Transformylase", EnzymeParameters::michaelis_menten(0.15, 40.0)),
-            ("FGAM Synthetase", EnzymeParameters::michaelis_menten(0.3, 30.0)),
-            ("AIR Synthetase", EnzymeParameters::michaelis_menten(0.25, 45.0)),
-            ("AIR Carboxylase", EnzymeParameters::michaelis_menten(0.1, 35.0)),
-            ("SAICAR Synthetase", EnzymeParameters::michaelis_menten(0.2, 55.0)),
-            ("SAICAR Lyase", EnzymeParameters::michaelis_menten(0.4, 70.0)),
-            ("AICAR Transformylase", EnzymeParameters::michaelis_menten(0.3, 50.0)),
+            (
+                "PRPP Amidotransferase",
+                EnzymeParameters::michaelis_menten(0.1, 50.0),
+            ),
+            (
+                "GAR Synthetase",
+                EnzymeParameters::michaelis_menten(0.2, 60.0),
+            ),
+            (
+                "GAR Transformylase",
+                EnzymeParameters::michaelis_menten(0.15, 40.0),
+            ),
+            (
+                "FGAM Synthetase",
+                EnzymeParameters::michaelis_menten(0.3, 30.0),
+            ),
+            (
+                "AIR Synthetase",
+                EnzymeParameters::michaelis_menten(0.25, 45.0),
+            ),
+            (
+                "AIR Carboxylase",
+                EnzymeParameters::michaelis_menten(0.1, 35.0),
+            ),
+            (
+                "SAICAR Synthetase",
+                EnzymeParameters::michaelis_menten(0.2, 55.0),
+            ),
+            (
+                "SAICAR Lyase",
+                EnzymeParameters::michaelis_menten(0.4, 70.0),
+            ),
+            (
+                "AICAR Transformylase",
+                EnzymeParameters::michaelis_menten(0.3, 50.0),
+            ),
             ("IMP Synthase", EnzymeParameters::hill(0.2, 40.0, 2.0)),
         ];
 
@@ -835,7 +874,7 @@ pub mod pathways {
         // Linear pathway stoichiometry
         let mut stoich = Array2::zeros((10, 10));
         for i in 0..9 {
-            stoich[[i, i]] = -1.0;     // Consume substrate
+            stoich[[i, i]] = -1.0; // Consume substrate
             stoich[[i, i + 1]] = 1.0; // Produce product
         }
         pathway.stoichiometry_matrix = stoich;
@@ -859,8 +898,9 @@ mod tests {
 
     #[test]
     fn test_michaelis_menten_kinetics() {
-        let params = EnzymeParameters::michaelis_menten(1.0, 100.0);
-        
+        let mut params = EnzymeParameters::michaelis_menten(1.0, 100.0);
+        params.temperature = 298.15; // Set to reference temperature to avoid correction
+
         // Test at Km concentration (should give Vmax/2)
         let rate_at_km = params.calculate_rate(&[1.0]);
         assert_abs_diff_eq!(rate_at_km, 50.0, epsilon = 1e-10);
@@ -872,8 +912,9 @@ mod tests {
 
     #[test]
     fn test_hill_kinetics() {
-        let params = EnzymeParameters::hill(1.0, 100.0, 2.0);
-        
+        let mut params = EnzymeParameters::hill(1.0, 100.0, 2.0);
+        params.temperature = 298.15; // Set to reference temperature to avoid correction
+
         // Test Hill equation behavior
         let rate_at_kd = params.calculate_rate(&[1.0]);
         assert_abs_diff_eq!(rate_at_kd, 50.0, epsilon = 1e-10);
@@ -887,7 +928,7 @@ mod tests {
     #[test]
     fn test_simple_glycolysis_pathway() {
         let pathway = pathways::simple_glycolysis();
-        
+
         assert_eq!(pathway.enzymes.len(), 3);
         assert_eq!(pathway.metabolites.len(), 6);
         assert_eq!(pathway.regulations.len(), 1);
@@ -895,7 +936,7 @@ mod tests {
         // Test rate calculation with initial concentrations
         let concentrations = Array1::from_vec(vec![5.0, 0.1, 0.1, 0.1, 0.1, 0.1]);
         let rates = pathway.calculate_reaction_rates(&concentrations);
-        
+
         // All rates should be positive
         for &rate in rates.iter() {
             assert!(rate >= 0.0);
@@ -905,14 +946,14 @@ mod tests {
     #[test]
     fn test_tca_cycle_pathway() {
         let pathway = pathways::tca_cycle();
-        
+
         assert_eq!(pathway.enzymes.len(), 8);
         assert_eq!(pathway.metabolites.len(), 8);
 
         // Test with uniform concentrations
         let concentrations = Array1::from_vec(vec![1.0; 8]);
         let rates = pathway.calculate_reaction_rates(&concentrations);
-        
+
         // All rates should be positive
         for &rate in rates.iter() {
             assert!(rate >= 0.0);
@@ -932,10 +973,10 @@ mod tests {
 
         // Test with substrate only
         let rate_base = params.calculate_rate(&[1.0]);
-        
+
         // Test with activator
         let rate_activated = params.calculate_rate(&[1.0, 0.5]);
-        
+
         // Test with inhibitor
         let rate_inhibited = params.calculate_rate(&[1.0, 0.0, 2.0]);
 
@@ -946,14 +987,14 @@ mod tests {
     #[test]
     fn test_temperature_effects() {
         let mut params = EnzymeParameters::michaelis_menten(1.0, 100.0);
-        
+
         // Test at different temperatures
         params.temperature = 298.15; // 25°C
         let rate_25c = params.calculate_rate(&[1.0]);
-        
+
         params.temperature = 310.15; // 37°C
         let rate_37c = params.calculate_rate(&[1.0]);
-        
+
         // Rate should increase with temperature
         assert!(rate_37c > rate_25c);
     }
@@ -962,9 +1003,9 @@ mod tests {
     fn test_pathway_derivatives() {
         let pathway = pathways::simple_glycolysis();
         let concentrations = Array1::from_vec(vec![5.0, 0.1, 0.1, 0.1, 0.1, 0.1]);
-        
+
         let derivatives = pathway.calculate_derivatives(&concentrations);
-        
+
         // Check that external metabolites have zero derivatives
         assert_abs_diff_eq!(derivatives[0], 0.0, epsilon = 1e-10); // Glucose (external)
         assert_abs_diff_eq!(derivatives[5], 0.0, epsilon = 1e-10); // Pyruvate (external)
@@ -974,9 +1015,9 @@ mod tests {
     fn test_control_analysis() {
         let pathway = pathways::simple_glycolysis();
         let concentrations = Array1::from_vec(vec![5.0, 1.0, 0.5, 0.3, 0.2, 0.1]);
-        
+
         let analysis = pathway.control_analysis(&concentrations);
-        
+
         // Flux control coefficients should sum to 1 (summation theorem)
         let sum_fcc = analysis.flux_control_coefficients.sum();
         assert_abs_diff_eq!(sum_fcc, 1.0, epsilon = 0.1);

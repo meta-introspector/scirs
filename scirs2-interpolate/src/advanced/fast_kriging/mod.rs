@@ -584,3 +584,337 @@ where
         FastKriging::from_builder(self)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::{Array1, Array2};
+    use crate::advanced::kriging::CovarianceFunction;
+
+    fn create_test_data(n_points: usize, n_dims: usize) -> (Array2<f64>, Array1<f64>) {
+        let mut points = Array2::zeros((n_points, n_dims));
+        let mut values = Array1::zeros(n_points);
+
+        // Generate a simple test dataset with a known function
+        for i in 0..n_points {
+            for d in 0..n_dims {
+                points[[i, d]] = (i as f64) / (n_points as f64) + (d as f64) * 0.1;
+            }
+            // Simple quadratic function
+            let x = points[[i, 0]];
+            let y = if n_dims > 1 { points[[i, 1]] } else { 0.0 };
+            values[i] = x * x + y * y + 0.1 * x * y;
+        }
+
+        (points, values)
+    }
+
+    #[test]
+    fn test_fast_prediction_result_methods() {
+        let value = Array1::from_vec(vec![1.0, 2.0, 3.0]);
+        let variance = Array1::from_vec(vec![0.1, 0.2, 0.3]);
+        let result = FastPredictionResult {
+            value,
+            variance,
+            method: FastKrigingMethod::Local,
+            computation_time_ms: Some(100.0),
+        };
+
+        assert_eq!(result.len(), 3);
+        assert!(!result.is_empty());
+        assert_eq!(result.values().len(), 3);
+        assert_eq!(result.variances().len(), 3);
+
+        let std_devs = result.standard_deviations();
+        assert!((std_devs[0] - 0.1_f64.sqrt()).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_confidence_intervals() {
+        let value = Array1::from_vec(vec![1.0, 2.0, 3.0]);
+        let variance = Array1::from_vec(vec![0.01, 0.04, 0.09]);
+        let result = FastPredictionResult {
+            value,
+            variance,
+            method: FastKrigingMethod::Local,
+            computation_time_ms: None,
+        };
+
+        let intervals = result.confidence_intervals(0.95).unwrap();
+        assert_eq!(intervals.nrows(), 3);
+        assert_eq!(intervals.ncols(), 2);
+
+        // Check that intervals are valid (lower < upper)
+        for i in 0..3 {
+            assert!(intervals[[i, 0]] < intervals[[i, 1]]);
+        }
+
+        // Test invalid confidence level
+        assert!(result.confidence_intervals(1.1).is_err());
+        assert!(result.confidence_intervals(-0.1).is_err());
+    }
+
+    #[test]
+    fn test_fast_kriging_method_variants() {
+        assert_eq!(FastKrigingMethod::Local, FastKrigingMethod::Local);
+        assert_ne!(FastKrigingMethod::Local, FastKrigingMethod::FixedRank(10));
+        
+        let method1 = FastKrigingMethod::FixedRank(10);
+        let method2 = FastKrigingMethod::FixedRank(10);
+        let method3 = FastKrigingMethod::FixedRank(20);
+        
+        assert_eq!(method1, method2);
+        assert_ne!(method1, method3);
+    }
+
+    #[test]
+    fn test_fast_kriging_builder_default() {
+        let builder = FastKrigingBuilder::<f64>::new();
+        
+        // Test that defaults are reasonable
+        assert!(builder.points.is_none());
+        assert!(builder.values.is_none());
+        assert_eq!(builder.cov_fn, CovarianceFunction::Matern52);
+        assert_eq!(builder.approx_method, FastKrigingMethod::Local);
+        assert_eq!(builder.max_neighbors, DEFAULT_MAX_NEIGHBORS);
+    }
+
+    #[test]
+    fn test_fast_kriging_builder_methods() {
+        let (points, values) = create_test_data(10, 2);
+        let length_scales = Array1::from_vec(vec![1.0, 1.5]);
+
+        let builder = FastKrigingBuilder::<f64>::new()
+            .points(points.clone())
+            .values(values.clone())
+            .covariance_function(CovarianceFunction::Exponential)
+            .length_scales(length_scales.clone())
+            .sigma_sq(2.0)
+            .nugget(0.01)
+            .approximation_method(FastKrigingMethod::FixedRank(5))
+            .max_neighbors(15)
+            .radius_multiplier(2.0);
+
+        // Verify the builder values
+        assert!(builder.points.is_some());
+        assert!(builder.values.is_some());
+        assert_eq!(builder.cov_fn, CovarianceFunction::Exponential);
+        assert_eq!(builder.sigma_sq, 2.0);
+        assert_eq!(builder.nugget, 0.01);
+        assert_eq!(builder.max_neighbors, 15);
+        assert_eq!(builder.radius_multiplier, 2.0);
+    }
+
+    #[test] 
+    fn test_fast_kriging_build_missing_data() {
+        let builder = FastKrigingBuilder::<f64>::new();
+        
+        // Should fail without points
+        let result = builder.build();
+        assert!(result.is_err());
+        
+        let (points, _) = create_test_data(5, 2);
+        let builder = FastKrigingBuilder::<f64>::new().points(points);
+        
+        // Should fail without values
+        let result = builder.build();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_fast_kriging_dimension_mismatch() {
+        let points = Array2::zeros((5, 2));
+        let values = Array1::zeros(3); // Wrong size
+        
+        let result = FastKrigingBuilder::<f64>::new()
+            .points(points)
+            .values(values)
+            .build();
+            
+        assert!(result.is_err());
+    }
+
+    #[cfg(feature = "linalg")]
+    #[test]
+    fn test_local_kriging() {
+        let (points, values) = create_test_data(20, 2);
+        
+        let kriging = FastKrigingBuilder::<f64>::new()
+            .points(points.clone())
+            .values(values.clone())
+            .covariance_function(CovarianceFunction::Matern52)
+            .approximation_method(FastKrigingMethod::Local)
+            .max_neighbors(10)
+            .build()
+            .unwrap();
+
+        // Test basic properties
+        assert_eq!(kriging.n_points(), 20);
+        assert_eq!(kriging.n_dims(), 2);
+        assert_eq!(kriging.approximation_method(), FastKrigingMethod::Local);
+
+        // Test prediction
+        let query_points = Array2::from_shape_vec(
+            (2, 2),
+            vec![0.25, 0.25, 0.75, 0.75],
+        ).unwrap();
+
+        let result = kriging.predict(&query_points.view()).unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result.method, FastKrigingMethod::Local);
+        
+        // Predictions should be reasonable
+        for &val in result.values().iter() {
+            assert!(val.is_finite());
+        }
+        
+        // Variances should be non-negative
+        for &var in result.variances().iter() {
+            assert!(var >= 0.0);
+        }
+    }
+
+    #[cfg(feature = "linalg")]
+    #[test]
+    fn test_fixed_rank_kriging() {
+        let (points, values) = create_test_data(30, 2);
+        
+        let kriging = FastKrigingBuilder::<f64>::new()
+            .points(points)
+            .values(values)
+            .covariance_function(CovarianceFunction::Exponential)
+            .approximation_method(FastKrigingMethod::FixedRank(5))
+            .build()
+            .unwrap();
+
+        let query_points = Array2::from_shape_vec(
+            (3, 2),
+            vec![0.1, 0.1, 0.5, 0.5, 0.9, 0.9],
+        ).unwrap();
+
+        let result = kriging.predict(&query_points.view()).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result.method, FastKrigingMethod::FixedRank(5));
+        
+        // Check that prediction completed without errors
+        for &val in result.values().iter() {
+            assert!(val.is_finite());
+        }
+    }
+
+    #[cfg(feature = "linalg")]
+    #[test]
+    fn test_tapered_kriging() {
+        let (points, values) = create_test_data(25, 2);
+        
+        let kriging = FastKrigingBuilder::<f64>::new()
+            .points(points)
+            .values(values)
+            .covariance_function(CovarianceFunction::SquaredExponential)
+            .approximation_method(FastKrigingMethod::Tapering(1.5))
+            .build()
+            .unwrap();
+
+        let query_points = Array2::from_shape_vec(
+            (2, 2),
+            vec![0.3, 0.3, 0.7, 0.7],
+        ).unwrap();
+
+        let result = kriging.predict(&query_points.view()).unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result.method, FastKrigingMethod::Tapering(1.5));
+        
+        // Check basic validity
+        for &val in result.values().iter() {
+            assert!(val.is_finite());
+        }
+        for &var in result.variances().iter() {
+            assert!(var >= 0.0);
+        }
+    }
+
+    #[cfg(feature = "linalg")]
+    #[test]
+    fn test_hodlr_kriging() {
+        let (points, values) = create_test_data(40, 2);
+        
+        let kriging = FastKrigingBuilder::<f64>::new()
+            .points(points)
+            .values(values)
+            .covariance_function(CovarianceFunction::Matern32)
+            .approximation_method(FastKrigingMethod::HODLR(8))
+            .build()
+            .unwrap();
+
+        let query_points = Array2::from_shape_vec(
+            (2, 2),
+            vec![0.4, 0.4, 0.6, 0.6],
+        ).unwrap();
+
+        let result = kriging.predict(&query_points.view()).unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result.method, FastKrigingMethod::HODLR(8));
+        
+        // Basic sanity checks
+        for &val in result.values().iter() {
+            assert!(val.is_finite());
+        }
+    }
+
+    #[test]
+    fn test_predict_dimension_mismatch() {
+        let (points, values) = create_test_data(10, 2);
+        
+        let kriging = FastKrigingBuilder::<f64>::new()
+            .points(points)
+            .values(values)
+            .approximation_method(FastKrigingMethod::Local)
+            .build()
+            .unwrap();
+
+        // Query points with wrong dimensionality
+        let wrong_query = Array2::zeros((2, 3)); // 3D instead of 2D
+        
+        let result = kriging.predict(&wrong_query.view());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_empty_query_prediction() {
+        let (points, values) = create_test_data(10, 2);
+        
+        let kriging = FastKrigingBuilder::<f64>::new()
+            .points(points)
+            .values(values)
+            .approximation_method(FastKrigingMethod::Local)
+            .build()
+            .unwrap();
+
+        // Empty query points
+        let empty_query = Array2::zeros((0, 2));
+        
+        let result = kriging.predict(&empty_query.view()).unwrap();
+        assert_eq!(result.len(), 0);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_single_point_dataset() {
+        let points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+        let values = Array1::from_vec(vec![1.0]);
+        
+        let kriging = FastKrigingBuilder::<f64>::new()
+            .points(points)
+            .values(values)
+            .approximation_method(FastKrigingMethod::Local)
+            .max_neighbors(1)
+            .build()
+            .unwrap();
+
+        let query_points = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();
+        
+        // Should not crash on single point
+        let result = kriging.predict(&query_points.view());
+        assert!(result.is_ok());
+    }
+}

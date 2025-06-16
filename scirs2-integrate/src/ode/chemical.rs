@@ -714,8 +714,10 @@ pub mod systems {
         initial_substrate: f64,
         initial_product: f64,
     ) -> (ChemicalConfig, ChemicalProperties, ChemicalState) {
-        let mut config = ChemicalConfig::default();
-        config.system_type = ChemicalSystemType::EnzymeKinetics;
+        let config = ChemicalConfig {
+            system_type: ChemicalSystemType::EnzymeKinetics,
+            ..Default::default()
+        };
 
         let reactions = vec![
             Reaction {
@@ -847,9 +849,11 @@ pub mod systems {
         slow_rate: f64,
         initial_concentrations: Vec<f64>,
     ) -> (ChemicalConfig, ChemicalProperties, ChemicalState) {
-        let mut config = ChemicalConfig::default();
-        config.stiff_method = StiffIntegrationMethod::BDF2;
-        config.dt = 0.001; // Small time step for stiff system
+        let config = ChemicalConfig {
+            stiff_method: StiffIntegrationMethod::BDF2,
+            dt: 0.001, // Small time step for stiff system
+            ..Default::default()
+        };
 
         let reactions = vec![
             Reaction {

@@ -133,8 +133,8 @@ pub use crate::memory_efficient::{
     create_temp_mmap, diagonal_view, evaluate, load_chunks, open_mmap, register_fusion,
     transpose_view, view_as, view_mut_as, AccessMode, AdaptiveChunking, AdaptiveChunkingBuilder,
     AdaptiveChunkingParams, AdaptiveChunkingResult, ArithmeticOps, ArrayView, BroadcastOps,
-    ChunkIter, ChunkedArray, ChunkingStrategy, DiskBackedArray, FusedOp, LazyArray, LazyOp, LazyOpKind,
-    MemoryMappedArray, MemoryMappedChunkIter, MemoryMappedChunks, MemoryMappedSlice,
+    ChunkIter, ChunkedArray, ChunkingStrategy, DiskBackedArray, FusedOp, LazyArray, LazyOp,
+    LazyOpKind, MemoryMappedArray, MemoryMappedChunkIter, MemoryMappedChunks, MemoryMappedSlice,
     MemoryMappedSlicing, OpFusion, OutOfCoreArray, ViewMut, ZeroCopyOps,
 };
 
@@ -206,14 +206,12 @@ pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-/// Alpha 6: Enhanced API Consistency and Documentation
 pub mod alpha6_api {
     //! Alpha 6 API consistency enhancements and comprehensive usage patterns
     //!
     //! This module provides standardized patterns, comprehensive examples,
     //! and integration guidelines for combining SciRS2 Core features.
 
-    /// Standardized function signature patterns for Alpha 6
     pub mod signatures {
         //! Standard function signature patterns used throughout SciRS2 Core
         //!
@@ -233,9 +231,9 @@ pub mod alpha6_api {
         //!     pub param2: Type2,
         //!     // ... other parameters
         //! }
-        //! 
+        //!
         //! impl Default for OperationConfig { /* sensible defaults */ }
-        //! 
+        //!
         //! impl OperationConfig {
         //!     pub fn new() -> Self { Self::default() }
         //!     pub fn with_param1(mut self, value: Type1) -> Self { self.param1 = value; self }
@@ -249,7 +247,7 @@ pub mod alpha6_api {
         //!     inner: T,
         //!     config: ResourceConfig,
         //! }
-        //! 
+        //!
         //! impl<T> ResourceManager<T> {
         //!     pub fn new(resource: T, config: ResourceConfig) -> Self { /* */ }
         //!     pub fn with_default_config(resource: T) -> Self { /* */ }
@@ -272,7 +270,6 @@ pub mod alpha6_api {
         }
     }
 
-    /// Comprehensive usage examples for all major features
     pub mod examples {
         //! Comprehensive usage examples demonstrating SciRS2 Core features
         //!
@@ -294,7 +291,7 @@ pub mod alpha6_api {
         ///     // Perform computation...
         ///     Ok(data.iter().sum::<f64>() / data.len() as f64)
         /// }
-        /// 
+        ///
         /// // Usage with enhanced error diagnostics
         /// match scientific_computation(&[]) {
         ///     Ok(result) => println!("Result: {}", result),
@@ -358,7 +355,6 @@ pub mod alpha6_api {
         pub fn memory_efficient_processing() {}
     }
 
-    /// Integration patterns for combining advanced features
     pub mod integration_patterns {
         //! Guidelines and patterns for combining multiple SciRS2 Core features
         //!
@@ -555,7 +551,6 @@ pub mod alpha6_api {
         pub fn performance_monitoring() {}
     }
 
-    /// Type system documentation and conversion guidelines
     pub mod type_system {
         //! Comprehensive type system documentation and conversion patterns
         //!

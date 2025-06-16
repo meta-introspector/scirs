@@ -4,11 +4,14 @@
 //! scientific computing workloads with features like work stealing,
 //! NUMA awareness, and adaptive scheduling.
 
+use super::{LoadBalancingStrategy, ThreadPoolConfig, ThreadPoolError, WorkerStats};
 use crate::Float;
-use super::{ThreadPoolConfig, ThreadPoolError, WorkerStats, LoadBalancingStrategy};
-use std::sync::{Arc, Mutex, Condvar, atomic::{AtomicUsize, AtomicBool, Ordering}};
-use std::thread::{self, JoinHandle};
 use std::collections::VecDeque;
+use std::sync::{
+    atomic::{AtomicBool, AtomicUsize, Ordering},
+    Arc, Condvar, Mutex,
+};
+use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 /// Advanced thread pool with work stealing
@@ -28,7 +31,7 @@ impl AdvancedThreadPool {
         let stats = Arc::new(Mutex::new(AdvancedThreadPoolStats::new(config.num_threads)));
 
         let mut workers = Vec::with_capacity(config.num_threads);
-        
+
         for id in 0..config.num_threads {
             let worker = WorkStealingWorker::new(
                 id,
@@ -59,7 +62,7 @@ impl AdvancedThreadPool {
         }
 
         let (task, handle) = Task::new(task);
-        
+
         // Try to submit to least loaded worker first
         if let Some(worker_id) = self.find_least_loaded_worker() {
             if self.workers[worker_id].try_submit_local(task) {
@@ -98,13 +101,12 @@ impl AdvancedThreadPool {
     /// Find the least loaded worker
     fn find_least_loaded_worker(&self) -> Option<usize> {
         match self.config.load_balancing {
-            LoadBalancingStrategy::LeastLoaded => {
-                self.workers
-                    .iter()
-                    .enumerate()
-                    .min_by_key(|(_, worker)| worker.get_queue_size())
-                    .map(|(id, _)| id)
-            }
+            LoadBalancingStrategy::LeastLoaded => self
+                .workers
+                .iter()
+                .enumerate()
+                .min_by_key(|(_, worker)| worker.get_queue_size())
+                .map(|(id, _)| id),
             LoadBalancingStrategy::RoundRobin => {
                 // Simple round-robin based on current time
                 let now = Instant::now();
@@ -139,11 +141,13 @@ impl AdvancedThreadPool {
     /// Resize the thread pool (dynamic scaling)
     pub fn resize(&mut self, new_size: usize) -> Result<(), ThreadPoolError> {
         if new_size == 0 {
-            return Err(ThreadPoolError::InvalidConfiguration("Thread pool size cannot be zero".into()));
+            return Err(ThreadPoolError::InvalidConfiguration(
+                "Thread pool size cannot be zero".into(),
+            ));
         }
 
         let current_size = self.workers.len();
-        
+
         if new_size > current_size {
             // Add new workers
             for id in current_size..new_size {
@@ -228,10 +232,10 @@ impl WorkStealingWorker {
                 Some(task) => {
                     idle_start = None;
                     let start_time = Instant::now();
-                    
+
                     // Execute the task
                     task.execute();
-                    
+
                     let execution_time = start_time.elapsed();
 
                     // Update statistics
@@ -256,7 +260,9 @@ impl WorkStealingWorker {
                             let (lock, cvar) = &*shutdown_signal;
                             let mut shutdown = lock.lock().unwrap();
                             while !*shutdown && running.load(Ordering::Relaxed) {
-                                let result = cvar.wait_timeout(shutdown, Duration::from_millis(100)).unwrap();
+                                let result = cvar
+                                    .wait_timeout(shutdown, Duration::from_millis(100))
+                                    .unwrap();
                                 shutdown = result.0;
                                 if result.1.timed_out() {
                                     break;
@@ -350,7 +356,7 @@ impl Task {
         F: FnOnce() + Send + 'static,
     {
         let (sender, receiver) = std::sync::mpsc::channel();
-        
+
         let task = Task {
             func: Box::new(move || {
                 func();
@@ -398,7 +404,9 @@ pub struct TaskHandle<T> {
 impl<T> TaskHandle<T> {
     /// Wait for task completion
     pub fn wait(self) -> Result<T, ThreadPoolError> {
-        self.receiver.recv().map_err(|_| ThreadPoolError::ExecutionFailed)
+        self.receiver
+            .recv()
+            .map_err(|_| ThreadPoolError::ExecutionFailed)
     }
 
     /// Wait for task completion with timeout
@@ -488,7 +496,8 @@ impl AdvancedThreadPoolStats {
             return 1.0;
         }
 
-        let task_counts: Vec<u64> = self.worker_stats
+        let task_counts: Vec<u64> = self
+            .worker_stats
             .iter()
             .map(|stats| stats.tasks_completed)
             .collect();
@@ -505,7 +514,8 @@ impl AdvancedThreadPoolStats {
                 let diff = count as f64 - average_tasks;
                 diff * diff
             })
-            .sum::<f64>() / task_counts.len() as f64;
+            .sum::<f64>()
+            / task_counts.len() as f64;
 
         let std_dev = variance.sqrt();
         let coefficient_of_variation = if average_tasks > 0.0 {
@@ -530,9 +540,9 @@ impl NumaAwareThreadPool {
     pub fn new(config: ThreadPoolConfig) -> Self {
         let topology = NumaTopology::detect();
         let pools_per_node = config.num_threads / topology.num_nodes.max(1);
-        
+
         let mut pools = Vec::with_capacity(topology.num_nodes);
-        
+
         for _ in 0..topology.num_nodes {
             let node_config = ThreadPoolConfig {
                 num_threads: pools_per_node,
@@ -548,7 +558,11 @@ impl NumaAwareThreadPool {
     }
 
     /// Submit a task to the appropriate NUMA node
-    pub fn submit_numa<F>(&self, task: F, preferred_node: Option<usize>) -> Result<TaskHandle<()>, ThreadPoolError>
+    pub fn submit_numa<F>(
+        &self,
+        task: F,
+        preferred_node: Option<usize>,
+    ) -> Result<TaskHandle<()>, ThreadPoolError>
     where
         F: FnOnce() + Send + 'static,
     {
@@ -611,14 +625,16 @@ mod tests {
             work_stealing: true,
             ..Default::default()
         };
-        
+
         let pool = AdvancedThreadPool::new(config);
         let counter = Arc::new(AtomicUsize::new(0));
         let counter_clone = Arc::clone(&counter);
 
-        let handle = pool.submit(move || {
-            counter_clone.fetch_add(1, Ordering::SeqCst);
-        }).unwrap();
+        let handle = pool
+            .submit(move || {
+                counter_clone.fetch_add(1, Ordering::SeqCst);
+            })
+            .unwrap();
 
         handle.wait().unwrap();
         assert_eq!(counter.load(Ordering::SeqCst), 1);
@@ -630,12 +646,14 @@ mod tests {
             num_threads: 1,
             ..Default::default()
         };
-        
+
         let pool = AdvancedThreadPool::new(config);
 
-        let handle = pool.submit(|| {
-            std::thread::sleep(Duration::from_millis(200));
-        }).unwrap();
+        let handle = pool
+            .submit(|| {
+                std::thread::sleep(Duration::from_millis(200));
+            })
+            .unwrap();
 
         // Should timeout
         let result = handle.wait_timeout(Duration::from_millis(50));
@@ -648,19 +666,21 @@ mod tests {
             num_threads: 2,
             ..Default::default()
         };
-        
+
         let pool = AdvancedThreadPool::new(config);
         let counter = Arc::new(AtomicUsize::new(0));
 
-        let tasks: Vec<_> = (0..5).map(|_| {
-            let counter_clone = Arc::clone(&counter);
-            move || {
-                counter_clone.fetch_add(1, Ordering::SeqCst);
-            }
-        }).collect();
+        let tasks: Vec<_> = (0..5)
+            .map(|_| {
+                let counter_clone = Arc::clone(&counter);
+                move || {
+                    counter_clone.fetch_add(1, Ordering::SeqCst);
+                }
+            })
+            .collect();
 
         let handles = pool.submit_batch(tasks).unwrap();
-        
+
         for handle in handles {
             handle.wait().unwrap();
         }
@@ -674,10 +694,10 @@ mod tests {
             num_threads: 2,
             ..Default::default()
         };
-        
+
         let pool = AdvancedThreadPool::new(config);
         let stats = pool.get_stats();
-        
+
         assert_eq!(stats.total_tasks_executed, 0);
         assert_eq!(stats.worker_stats.len(), 2);
     }
@@ -688,14 +708,19 @@ mod tests {
             num_threads: 4,
             ..Default::default()
         };
-        
+
         let numa_pool = NumaAwareThreadPool::new(config);
         let counter = Arc::new(AtomicUsize::new(0));
         let counter_clone = Arc::clone(&counter);
 
-        let handle = numa_pool.submit_numa(move || {
-            counter_clone.fetch_add(1, Ordering::SeqCst);
-        }, Some(0)).unwrap();
+        let handle = numa_pool
+            .submit_numa(
+                move || {
+                    counter_clone.fetch_add(1, Ordering::SeqCst);
+                },
+                Some(0),
+            )
+            .unwrap();
 
         handle.wait().unwrap();
         assert_eq!(counter.load(Ordering::SeqCst), 1);

@@ -149,20 +149,24 @@ pub use error::{
 /// Alpha 6 Enhanced Diagnostic Functions
 ///
 /// Analyze an error with comprehensive diagnostics including Alpha 6 features
-pub fn diagnose_error_advanced(error: &CoreError, context: Option<&str>, domain: Option<&str>) -> ErrorDiagnosticReport {
+pub fn diagnose_error_advanced(
+    error: &CoreError,
+    context: Option<&str>,
+    domain: Option<&str>,
+) -> ErrorDiagnosticReport {
     let diagnostics = ErrorDiagnostics::global();
     let mut report = diagnostics.analyze_error(error);
-    
+
     // Add predictive analysis if context is provided
     if let Some(ctx) = context {
         report.predictions = diagnostics.predict_potential_errors(ctx);
     }
-    
+
     // Add domain-specific recovery strategies if domain is provided
     if let Some(dom) = domain {
         report.domain_strategies = diagnostics.suggest_domain_recovery(error, dom);
     }
-    
+
     report
 }
 

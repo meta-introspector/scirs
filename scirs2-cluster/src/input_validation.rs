@@ -4,8 +4,8 @@
 //! compatible with SciPy's validation patterns and provide consistent
 //! error messages across all clustering algorithms.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, FromPrimitive, Zero};
+use ndarray::{ArrayView1, ArrayView2, Axis};
+use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
@@ -112,7 +112,7 @@ impl ValidationConfig {
 ///
 /// let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
 /// let config = ValidationConfig::for_kmeans();
-/// 
+///
 /// assert!(validate_clustering_data(data.view(), &config).is_ok());
 /// ```
 pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
@@ -171,10 +171,7 @@ pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Validate that all values in the data are finite
-fn validate_finite_values<F: Float + Debug>(
-    data: ArrayView2<F>,
-    prefix: &str,
-) -> Result<()> {
+fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -> Result<()> {
     for (i, row) in data.axis_iter(Axis(0)).enumerate() {
         for (j, &value) in row.iter().enumerate() {
             if !value.is_finite() {
@@ -201,11 +198,7 @@ fn validate_finite_values<F: Float + Debug>(
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
-pub fn validate_n_clusters(
-    n_clusters: usize,
-    n_samples: usize,
-    algorithm: &str,
-) -> Result<()> {
+pub fn validate_n_clusters(n_clusters: usize, n_samples: usize, algorithm: &str) -> Result<()> {
     if n_clusters == 0 {
         return Err(ClusteringError::InvalidInput(format!(
             "{}: Number of clusters must be positive, got 0",
@@ -441,23 +434,11 @@ pub fn validate_convergence_parameters<F: Float + FromPrimitive + Debug + Partia
     algorithm: &str,
 ) -> Result<()> {
     if let Some(tol) = tolerance {
-        validate_distance_parameter(
-            tol,
-            "tolerance",
-            Some(F::zero()),
-            None,
-            algorithm,
-        )?;
+        validate_distance_parameter(tol, "tolerance", Some(F::zero()), None, algorithm)?;
     }
 
     if let Some(max_iter) = max_iterations {
-        validate_integer_parameter(
-            max_iter,
-            "max_iterations",
-            Some(1),
-            None,
-            algorithm,
-        )?;
+        validate_integer_parameter(max_iter, "max_iterations", Some(1), None, algorithm)?;
     }
 
     Ok(())
@@ -527,13 +508,16 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
 
     // Analyze dataset characteristics
     if n_samples < 100 {
-        suggestions.push("Small dataset: Consider hierarchical clustering for interpretable results");
+        suggestions
+            .push("Small dataset: Consider hierarchical clustering for interpretable results");
     } else if n_samples > 10000 {
         suggestions.push("Large dataset: K-means or DBSCAN recommended for efficiency");
     }
 
     if n_features > 50 {
-        suggestions.push("High-dimensional data: Consider spectral clustering or dimensionality reduction");
+        suggestions.push(
+            "High-dimensional data: Consider spectral clustering or dimensionality reduction",
+        );
     }
 
     // Check for duplicates
@@ -545,12 +529,16 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
     // Algorithm-specific recommendations
     if let Some(k) = n_clusters {
         if k <= 10 {
-            suggestions.push("Small number of clusters: K-means with k-means++ initialization recommended");
+            suggestions.push(
+                "Small number of clusters: K-means with k-means++ initialization recommended",
+            );
         } else {
             suggestions.push("Many clusters: Consider hierarchical clustering or DBSCAN");
         }
     } else {
-        suggestions.push("Unknown cluster count: DBSCAN or hierarchical clustering with automatic cut-off");
+        suggestions.push(
+            "Unknown cluster count: DBSCAN or hierarchical clustering with automatic cut-off",
+        );
     }
 
     // Performance considerations
@@ -570,7 +558,7 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ndarray::{Array1, Array2};
 
     #[test]
     fn test_validate_clustering_data() {
@@ -584,7 +572,8 @@ mod tests {
         assert!(validate_clustering_data(small_data.view(), &config).is_err());
 
         // Non-finite values
-        let invalid_data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0]).unwrap();
+        let invalid_data =
+            Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0]).unwrap();
         assert!(validate_clustering_data(invalid_data.view(), &config).is_err());
     }
 
@@ -616,7 +605,8 @@ mod tests {
 
     #[test]
     fn test_check_duplicate_points() {
-        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let duplicates = check_duplicate_points(data.view(), 1e-10).unwrap();
         assert_eq!(duplicates.len(), 1); // Points 0 and 1 are identical
         assert_eq!(duplicates[0], (0, 1));

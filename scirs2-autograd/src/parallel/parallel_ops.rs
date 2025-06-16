@@ -3,12 +3,12 @@
 //! This module provides parallel implementations of common tensor operations
 //! that can leverage multiple CPU cores for improved performance.
 
-use crate::Float;
+use super::{execute_global, init_thread_pool, ThreadPoolError};
 use crate::tensor::Tensor;
-use super::{execute_global, ThreadPoolError, init_thread_pool};
-use ndarray::{Array, IxDyn, Axis, Zip};
-use std::sync::{Arc, Mutex};
+use crate::Float;
+use ndarray::{Array, Axis, IxDyn, Zip};
 use rayon::prelude::*;
+use std::sync::{Arc, Mutex};
 
 /// Configuration for parallel operations
 #[derive(Debug, Clone)]
@@ -50,7 +50,7 @@ impl ParallelElementWise {
         }
 
         let mut result = Array::zeros(left.raw_dim());
-        
+
         if config.adaptive_chunking {
             // Use rayon for adaptive parallel processing
             Zip::from(&mut result)
@@ -63,30 +63,33 @@ impl ParallelElementWise {
             // Manual chunking
             let chunk_size = Self::calculate_chunk_size(left.len(), config);
             let chunks: Vec<_> = (0..left.len()).step_by(chunk_size).collect();
-            
+
             let result_mutex = Arc::new(Mutex::new(&mut result));
-            let tasks: Vec<_> = chunks.into_iter().map(|start| {
-                let end = (start + chunk_size).min(left.len());
-                let left_slice = left.as_slice().unwrap();
-                let right_slice = right.as_slice().unwrap();
-                let result_arc = Arc::clone(&result_mutex);
-                
-                move || {
-                    let mut result_guard = result_arc.lock().unwrap();
-                    let result_slice = result_guard.as_slice_mut().unwrap();
-                    
-                    for i in start..end {
-                        result_slice[i] = left_slice[i] + right_slice[i];
+            let tasks: Vec<_> = chunks
+                .into_iter()
+                .map(|start| {
+                    let end = (start + chunk_size).min(left.len());
+                    let left_slice = left.as_slice().unwrap();
+                    let right_slice = right.as_slice().unwrap();
+                    let result_arc = Arc::clone(&result_mutex);
+
+                    move || {
+                        let mut result_guard = result_arc.lock().unwrap();
+                        let result_slice = result_guard.as_slice_mut().unwrap();
+
+                        for i in start..end {
+                            result_slice[i] = left_slice[i] + right_slice[i];
+                        }
                     }
-                }
-            }).collect();
+                })
+                .collect();
 
             // Execute in parallel
             for task in tasks {
                 execute_global(task)?;
             }
         }
-        
+
         Ok(result)
     }
 
@@ -101,14 +104,14 @@ impl ParallelElementWise {
         }
 
         let mut result = Array::zeros(left.raw_dim());
-        
+
         Zip::from(&mut result)
             .and(left)
             .and(right)
             .par_for_each(|r, &l, &r_val| {
                 *r = l * r_val;
             });
-        
+
         Ok(result)
     }
 
@@ -126,13 +129,11 @@ impl ParallelElementWise {
         }
 
         let mut result = Array::zeros(array.raw_dim());
-        
-        Zip::from(&mut result)
-            .and(array)
-            .par_for_each(|r, &val| {
-                *r = func(val);
-            });
-        
+
+        Zip::from(&mut result).and(array).par_for_each(|r, &val| {
+            *r = func(val);
+        });
+
         Ok(result)
     }
 
@@ -145,7 +146,7 @@ impl ParallelElementWise {
             let num_threads = std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(4);
-            
+
             let chunk_size = (total_size + num_threads - 1) / num_threads;
             chunk_size.max(config.preferred_chunk_size / num_threads)
         }
@@ -191,18 +192,28 @@ impl ParallelReduction {
         config: &ParallelConfig,
     ) -> Result<F, ThreadPoolError> {
         if array.len() < config.min_parallel_size || array.is_empty() {
-            return array.iter().cloned().fold(None, |acc, x| {
-                Some(match acc {
-                    None => x,
-                    Some(y) => if x > y { x } else { y },
+            return array
+                .iter()
+                .cloned()
+                .fold(None, |acc, x| {
+                    Some(match acc {
+                        None => x,
+                        Some(y) => {
+                            if x > y {
+                                x
+                            } else {
+                                y
+                            }
+                        }
+                    })
                 })
-            }).ok_or(ThreadPoolError::ExecutionFailed);
+                .ok_or(ThreadPoolError::ExecutionFailed);
         }
 
-        let result = array.par_iter().cloned().reduce(
-            || F::neg_infinity(),
-            |a, b| if a > b { a } else { b }
-        );
+        let result = array
+            .par_iter()
+            .cloned()
+            .reduce(|| F::neg_infinity(), |a, b| if a > b { a } else { b });
         Ok(result)
     }
 
@@ -212,18 +223,28 @@ impl ParallelReduction {
         config: &ParallelConfig,
     ) -> Result<F, ThreadPoolError> {
         if array.len() < config.min_parallel_size || array.is_empty() {
-            return array.iter().cloned().fold(None, |acc, x| {
-                Some(match acc {
-                    None => x,
-                    Some(y) => if x < y { x } else { y },
+            return array
+                .iter()
+                .cloned()
+                .fold(None, |acc, x| {
+                    Some(match acc {
+                        None => x,
+                        Some(y) => {
+                            if x < y {
+                                x
+                            } else {
+                                y
+                            }
+                        }
+                    })
                 })
-            }).ok_or(ThreadPoolError::ExecutionFailed);
+                .ok_or(ThreadPoolError::ExecutionFailed);
         }
 
-        let result = array.par_iter().cloned().reduce(
-            || F::infinity(),
-            |a, b| if a < b { a } else { b }
-        );
+        let result = array
+            .par_iter()
+            .cloned()
+            .reduce(|| F::infinity(), |a, b| if a < b { a } else { b });
         Ok(result)
     }
 
@@ -252,15 +273,21 @@ impl ParallelReduction {
 
         let mean = Self::mean(array, config)?;
         let variance = if array.len() < config.min_parallel_size {
-            array.iter().map(|&x| {
-                let diff = x - mean;
-                diff * diff
-            }).sum::<F>()
+            array
+                .iter()
+                .map(|&x| {
+                    let diff = x - mean;
+                    diff * diff
+                })
+                .sum::<F>()
         } else {
-            array.par_iter().map(|&x| {
-                let diff = x - mean;
-                diff * diff
-            }).sum::<F>()
+            array
+                .par_iter()
+                .map(|&x| {
+                    let diff = x - mean;
+                    diff * diff
+                })
+                .sum::<F>()
         };
 
         let count = F::from(array.len()).unwrap();
@@ -301,27 +328,33 @@ impl ParallelMatrix {
         let block_size = Self::calculate_block_size(m, n, k, config);
 
         // Parallel iteration over blocks
-        (0..m).into_par_iter().step_by(block_size).for_each(|i_start| {
-            let i_end = (i_start + block_size).min(m);
-            
-            for j_start in (0..n).step_by(block_size) {
-                let j_end = (j_start + block_size).min(n);
-                
-                for k_start in (0..k).step_by(block_size) {
-                    let k_end = (k_start + block_size).min(k);
-                    
-                    // Compute block multiplication
-                    Self::multiply_block(
-                        &left,
-                        &right,
-                        &mut result,
-                        i_start, i_end,
-                        j_start, j_end,
-                        k_start, k_end,
-                    );
+        (0..m)
+            .into_par_iter()
+            .step_by(block_size)
+            .for_each(|i_start| {
+                let i_end = (i_start + block_size).min(m);
+
+                for j_start in (0..n).step_by(block_size) {
+                    let j_end = (j_start + block_size).min(n);
+
+                    for k_start in (0..k).step_by(block_size) {
+                        let k_end = (k_start + block_size).min(k);
+
+                        // Compute block multiplication
+                        Self::multiply_block(
+                            &left,
+                            &right,
+                            &mut result,
+                            i_start,
+                            i_end,
+                            j_start,
+                            j_end,
+                            k_start,
+                            k_end,
+                        );
+                    }
                 }
-            }
-        });
+            });
 
         Ok(result)
     }
@@ -331,10 +364,10 @@ impl ParallelMatrix {
         // Simple heuristic for cache-friendly block size
         let cache_size = 32 * 1024; // Assume 32KB L1 cache
         let element_size = std::mem::size_of::<f64>(); // Assume f64 for estimation
-        
+
         let max_block_elements = cache_size / (3 * element_size); // 3 blocks (A, B, C)
         let suggested_block_size = (max_block_elements as f64).sqrt() as usize;
-        
+
         // Clamp to reasonable range
         suggested_block_size.clamp(32, 512).min(m).min(n).min(k)
     }
@@ -344,9 +377,12 @@ impl ParallelMatrix {
         left: &Array<F, IxDyn>,
         right: &Array<F, IxDyn>,
         result: &mut Array<F, IxDyn>,
-        i_start: usize, i_end: usize,
-        j_start: usize, j_end: usize,
-        k_start: usize, k_end: usize,
+        i_start: usize,
+        i_end: usize,
+        j_start: usize,
+        j_end: usize,
+        k_start: usize,
+        k_end: usize,
     ) {
         for i in i_start..i_end {
             for j in j_start..j_end {
@@ -369,29 +405,32 @@ impl ParallelMatrix {
         }
 
         let (rows, cols) = (array.shape()[0], array.shape()[1]);
-        
+
         if rows * cols < config.min_parallel_size {
             return Ok(array.t().to_owned());
         }
 
         let mut result = Array::zeros((cols, rows).into_dyn());
-        
+
         // Parallel transpose with cache-friendly blocking
         let block_size = 64; // Cache-friendly block size
-        
-        (0..rows).into_par_iter().step_by(block_size).for_each(|i_start| {
-            let i_end = (i_start + block_size).min(rows);
-            
-            for j_start in (0..cols).step_by(block_size) {
-                let j_end = (j_start + block_size).min(cols);
-                
-                for i in i_start..i_end {
-                    for j in j_start..j_end {
-                        result[[j, i]] = array[[i, j]];
+
+        (0..rows)
+            .into_par_iter()
+            .step_by(block_size)
+            .for_each(|i_start| {
+                let i_end = (i_start + block_size).min(rows);
+
+                for j_start in (0..cols).step_by(block_size) {
+                    let j_end = (j_start + block_size).min(cols);
+
+                    for i in i_start..i_end {
+                        for j in j_start..j_end {
+                            result[[j, i]] = array[[i, j]];
+                        }
                     }
                 }
-            }
-        });
+            });
 
         Ok(result)
     }
@@ -421,17 +460,17 @@ impl ParallelConvolution {
         }
 
         let mut output = Array::zeros(output_len.into_dyn());
-        
+
         // Parallel convolution
         (0..output_len).into_par_iter().for_each(|i| {
             let mut sum = F::zero();
-            
+
             for j in 0..kernel_len {
                 if i >= j && (i - j) < input_len {
                     sum = sum + input[i - j] * kernel[j];
                 }
             }
-            
+
             // This is unsafe in parallel context - need proper synchronization
             // For demonstration, this would need Arc<Mutex<_>> or similar
         });
@@ -451,13 +490,13 @@ impl ParallelConvolution {
 
         for i in 0..output_len {
             let mut sum = F::zero();
-            
+
             for j in 0..kernel_len {
                 if i >= j && (i - j) < input_len {
                     sum = sum + input[i - j] * kernel[j];
                 }
             }
-            
+
             output[i] = sum;
         }
 
@@ -475,15 +514,14 @@ impl ParallelSort {
         config: &ParallelConfig,
     ) -> Result<Array<F, IxDyn>, ThreadPoolError> {
         let mut data: Vec<F> = array.iter().cloned().collect();
-        
+
         if data.len() < config.min_parallel_size {
             data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         } else {
             data.par_sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         }
 
-        Array::from_shape_vec(array.raw_dim(), data)
-            .map_err(|_| ThreadPoolError::ExecutionFailed)
+        Array::from_shape_vec(array.raw_dim(), data).map_err(|_| ThreadPoolError::ExecutionFailed)
     }
 
     /// Parallel argsort (returns indices that would sort the array)
@@ -491,19 +529,18 @@ impl ParallelSort {
         array: &Array<F, IxDyn>,
         config: &ParallelConfig,
     ) -> Result<Array<usize, IxDyn>, ThreadPoolError> {
-        let mut indices: Vec<(usize, F)> = array.iter()
-            .cloned()
-            .enumerate()
-            .collect();
-        
+        let mut indices: Vec<(usize, F)> = array.iter().cloned().enumerate().collect();
+
         if indices.len() < config.min_parallel_size {
             indices.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         } else {
-            indices.par_sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            indices.par_sort_by(|(_, a), (_, b)| {
+                a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
+            });
         }
 
         let sorted_indices: Vec<usize> = indices.into_iter().map(|(idx, _)| idx).collect();
-        
+
         Array::from_shape_vec(array.raw_dim(), sorted_indices)
             .map_err(|_| ThreadPoolError::ExecutionFailed)
     }
@@ -519,7 +556,7 @@ impl ParallelDispatcher {
     pub fn new() -> Self {
         // Ensure thread pool is initialized
         let _ = init_thread_pool();
-        
+
         Self {
             config: ParallelConfig::default(),
         }
@@ -528,7 +565,7 @@ impl ParallelDispatcher {
     /// Create with custom configuration
     pub fn with_config(config: ParallelConfig) -> Self {
         let _ = init_thread_pool();
-        
+
         Self { config }
     }
 
@@ -548,7 +585,7 @@ impl ParallelDispatcher {
 
         let shape = arrays[0].raw_dim();
         let size = arrays[0].len();
-        
+
         // Check all arrays have same shape
         for array in arrays.iter().skip(1) {
             if array.raw_dim() != shape {
@@ -557,19 +594,28 @@ impl ParallelDispatcher {
         }
 
         let mut result = Array::zeros(shape);
-        
+
         if size < self.config.min_parallel_size {
             // Sequential processing
             for (i, mut result_elem) in result.iter_mut().enumerate() {
-                let values: Vec<F> = arrays.iter().map(|arr| arr.as_slice().unwrap()[i]).collect();
+                let values: Vec<F> = arrays
+                    .iter()
+                    .map(|arr| arr.as_slice().unwrap()[i])
+                    .collect();
                 *result_elem = operation(&values);
             }
         } else {
             // Parallel processing
-            result.par_iter_mut().enumerate().for_each(|(i, result_elem)| {
-                let values: Vec<F> = arrays.iter().map(|arr| arr.as_slice().unwrap()[i]).collect();
-                *result_elem = operation(&values);
-            });
+            result
+                .par_iter_mut()
+                .enumerate()
+                .for_each(|(i, result_elem)| {
+                    let values: Vec<F> = arrays
+                        .iter()
+                        .map(|arr| arr.as_slice().unwrap()[i])
+                        .collect();
+                    *result_elem = operation(&values);
+                });
         }
 
         Ok(result)
@@ -600,35 +646,35 @@ mod tests {
     #[test]
     fn test_parallel_element_wise_add() {
         let config = ParallelConfig::default();
-        
+
         let a = Array::from_shape_vec((4,).into_dyn(), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let b = Array::from_shape_vec((4,).into_dyn(), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
-        
+
         let result = ParallelElementWise::add(&a, &b, &config).unwrap();
         let expected = vec![6.0, 8.0, 10.0, 12.0];
-        
+
         assert_eq!(result.as_slice().unwrap(), &expected);
     }
 
     #[test]
     fn test_parallel_reduction_sum() {
         let config = ParallelConfig::default();
-        
+
         let a = Array::from_shape_vec((4,).into_dyn(), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let result = ParallelReduction::sum(&a, &config).unwrap();
-        
+
         assert_eq!(result, 10.0);
     }
 
     #[test]
     fn test_parallel_matrix_multiplication() {
         let config = ParallelConfig::default();
-        
+
         let a = Array::from_shape_vec((2, 2).into_dyn(), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let b = Array::from_shape_vec((2, 2).into_dyn(), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
-        
+
         let result = ParallelMatrix::matmul(&a, &b, &config).unwrap();
-        
+
         // Expected: [[1*5+2*7, 1*6+2*8], [3*5+4*7, 3*6+4*8]] = [[19, 22], [43, 50]]
         assert_eq!(result[[0, 0]], 19.0);
         assert_eq!(result[[0, 1]], 22.0);
@@ -639,10 +685,11 @@ mod tests {
     #[test]
     fn test_parallel_transpose() {
         let config = ParallelConfig::default();
-        
-        let a = Array::from_shape_vec((2, 3).into_dyn(), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+
+        let a =
+            Array::from_shape_vec((2, 3).into_dyn(), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let result = ParallelMatrix::transpose(&a, &config).unwrap();
-        
+
         assert_eq!(result.shape(), &[3, 2]);
         assert_eq!(result[[0, 0]], 1.0);
         assert_eq!(result[[1, 0]], 2.0);
@@ -655,35 +702,34 @@ mod tests {
     #[test]
     fn test_parallel_sort() {
         let config = ParallelConfig::default();
-        
+
         let a = Array::from_shape_vec((4,).into_dyn(), vec![4.0, 1.0, 3.0, 2.0]).unwrap();
         let result = ParallelSort::sort(&a, &config).unwrap();
-        
+
         assert_eq!(result.as_slice().unwrap(), &[1.0, 2.0, 3.0, 4.0]);
     }
 
     #[test]
     fn test_parallel_argsort() {
         let config = ParallelConfig::default();
-        
+
         let a = Array::from_shape_vec((4,).into_dyn(), vec![4.0, 1.0, 3.0, 2.0]).unwrap();
         let result = ParallelSort::argsort(&a, &config).unwrap();
-        
+
         assert_eq!(result.as_slice().unwrap(), &[1, 3, 2, 0]);
     }
 
     #[test]
     fn test_parallel_dispatcher() {
         let dispatcher = ParallelDispatcher::new();
-        
+
         let a = Array::from_shape_vec((3,).into_dyn(), vec![1.0, 2.0, 3.0]).unwrap();
         let b = Array::from_shape_vec((3,).into_dyn(), vec![4.0, 5.0, 6.0]).unwrap();
-        
-        let result = dispatcher.dispatch_elementwise(
-            &[&a, &b],
-            |values| values[0] + values[1],
-        ).unwrap();
-        
+
+        let result = dispatcher
+            .dispatch_elementwise(&[&a, &b], |values| values[0] + values[1])
+            .unwrap();
+
         assert_eq!(result.as_slice().unwrap(), &[5.0, 7.0, 9.0]);
     }
 
@@ -695,7 +741,7 @@ mod tests {
             adaptive_chunking: false,
             preferred_chunk_size: 1000,
         };
-        
+
         assert_eq!(config.min_parallel_size, 500);
         assert_eq!(config.num_chunks, Some(8));
         assert!(!config.adaptive_chunking);

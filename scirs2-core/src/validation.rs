@@ -488,7 +488,7 @@ where
 /// Clustering-specific validation utilities
 pub mod clustering {
     use super::*;
-    
+
     /// Validate number of clusters relative to data size
     ///
     /// # Arguments
@@ -502,37 +502,39 @@ pub mod clustering {
     /// * `Ok(())` if n_clusters is valid
     /// * `Err(CoreError::ValueError)` if n_clusters is invalid
     pub fn check_n_clusters_bounds<S, D>(
-        data: &ArrayBase<S, D>, 
-        n_clusters: usize, 
-        operation: &str
-    ) -> CoreResult<()> 
-    where 
+        data: &ArrayBase<S, D>,
+        n_clusters: usize,
+        operation: &str,
+    ) -> CoreResult<()>
+    where
         S: ndarray::Data,
-        D: Dimension 
+        D: Dimension,
     {
         let n_samples = data.shape()[0];
-        
+
         if n_clusters == 0 {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
                     "{}: number of clusters must be > 0, got {}",
                     operation, n_clusters
-                )).with_location(ErrorLocation::new(file!(), line!()))
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         if n_clusters > n_samples {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
                     "{}: number of clusters ({}) cannot exceed number of samples ({})",
                     operation, n_clusters, n_samples
-                )).with_location(ErrorLocation::new(file!(), line!()))
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         Ok(())
     }
-    
+
     /// Comprehensive data validation for clustering algorithms
     ///
     /// # Arguments
@@ -550,29 +552,29 @@ pub mod clustering {
         data: &ArrayBase<S, D>,
         _operation: &str,
         check_finite: bool,
-        min_samples: Option<usize>
+        min_samples: Option<usize>,
     ) -> CoreResult<()>
     where
         S: ndarray::Data,
         D: Dimension,
-        S::Elem: Float + std::fmt::Display
+        S::Elem: Float + std::fmt::Display,
     {
         // Check not empty
         check_not_empty(data, "data")?;
-        
+
         // Check 2D for most clustering algorithms
         check_2d(data, "data")?;
-        
+
         // Check minimum samples if specified
         if let Some(min) = min_samples {
             check_min_samples(data, min, "data")?;
         }
-        
+
         // Check finite if requested
         if check_finite {
             check_array_finite(data, "data")?;
         }
-        
+
         Ok(())
     }
 }
@@ -580,7 +582,7 @@ pub mod clustering {
 /// Parameter validation utilities
 pub mod parameters {
     use super::*;
-    
+
     /// Validate algorithm iteration parameters
     ///
     /// # Arguments
@@ -596,25 +598,26 @@ pub mod parameters {
     pub fn check_iteration_params<T>(
         max_iter: usize,
         tolerance: T,
-        operation: &str
+        operation: &str,
     ) -> CoreResult<()>
     where
-        T: Float + std::fmt::Display + Copy
+        T: Float + std::fmt::Display + Copy,
     {
         if max_iter == 0 {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
                     "{}: max_iter must be > 0, got {}",
                     operation, max_iter
-                )).with_location(ErrorLocation::new(file!(), line!()))
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         check_positive(tolerance, format!("{} tolerance", operation))?;
-        
+
         Ok(())
     }
-    
+
     /// Validate probability-like parameters (0 <= p <= 1)
     ///
     /// # Arguments
@@ -627,25 +630,22 @@ pub mod parameters {
     ///
     /// * `Ok(value)` if value is in [0, 1]
     /// * `Err(CoreError::ValueError)` if value is out of range
-    pub fn check_unit_interval<T>(
-        value: T,
-        name: &str,
-        operation: &str
-    ) -> CoreResult<T>
+    pub fn check_unit_interval<T>(value: T, name: &str, operation: &str) -> CoreResult<T>
     where
-        T: Float + std::fmt::Display + Copy
+        T: Float + std::fmt::Display + Copy,
     {
         if value < T::zero() || value > T::one() {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
                     "{}: {} must be in [0, 1], got {}",
                     operation, name, value
-                )).with_location(ErrorLocation::new(file!(), line!()))
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
         Ok(value)
     }
-    
+
     /// Validate bandwidth parameter for density-based clustering
     ///
     /// # Arguments
@@ -657,12 +657,9 @@ pub mod parameters {
     ///
     /// * `Ok(bandwidth)` if bandwidth is valid
     /// * `Err(CoreError::ValueError)` if bandwidth is invalid
-    pub fn check_bandwidth<T>(
-        bandwidth: T,
-        operation: &str
-    ) -> CoreResult<T>
+    pub fn check_bandwidth<T>(bandwidth: T, operation: &str) -> CoreResult<T>
     where
-        T: Float + std::fmt::Display + Copy
+        T: Float + std::fmt::Display + Copy,
     {
         check_positive(bandwidth, format!("{} bandwidth", operation))
     }
@@ -826,7 +823,7 @@ mod tests {
         #[test]
         fn test_check_n_clusters_bounds() {
             let data = arr2(&[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]);
-            
+
             assert!(check_n_clusters_bounds(&data, 1, "test").is_ok());
             assert!(check_n_clusters_bounds(&data, 2, "test").is_ok());
             assert!(check_n_clusters_bounds(&data, 3, "test").is_ok());

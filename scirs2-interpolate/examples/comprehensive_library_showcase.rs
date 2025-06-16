@@ -15,6 +15,7 @@ use scirs2_interpolate::{
 
     // Error handling
     error::InterpolateResult,
+
     // Grid data interpolation
     griddata::{griddata, GriddataMethod},
 
@@ -34,6 +35,11 @@ use scirs2_interpolate::{
     voronoi::{
         make_natural_neighbor_interpolator, InterpolationMethod as VoronoiInterpolationMethod,
     },
+    CovarianceFunction,
+
+    // Fast Kriging
+    FastKrigingBuilder,
+    FastKrigingMethod,
 };
 use std::time::Instant;
 
@@ -207,8 +213,8 @@ fn demonstrate_advanced_methods() -> InterpolateResult<()> {
         let fast_result = fast_kriging.predict(&fast_query.view())?;
         println!(
             "   Fast Kriging result: {:.4} ± {:.4}",
-            fast_result.values()[0],
-            fast_result.variances()[0].sqrt()
+            fast_result.value[0],
+            fast_result.variance[0].sqrt()
         );
     }
 

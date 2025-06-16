@@ -2,17 +2,15 @@
 //!
 //! This example demonstrates the Fast Kriging implementation for large-scale datasets.
 
-// Currently unused imports - Fast Kriging implementation is feature-gated
-// use ndarray::{Array1, Array2};
-// use scirs2_interpolate::advanced::fast_kriging::{
-//     make_fixed_rank_kriging, make_local_kriging, make_tapered_kriging, FastKrigingBuilder,
-//     FastKrigingMethod,
-// };
-// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "linalg")]
     {
+        use ndarray::{Array1, Array2};
+        use scirs2_interpolate::advanced::fast_kriging::{
+            make_fixed_rank_kriging, make_local_kriging, make_tapered_kriging, FastKrigingBuilder,
+            FastKrigingMethod,
+        };
+        use scirs2_interpolate::advanced::kriging::CovarianceFunction;
         println!("Testing Fast Kriging with linalg feature...");
 
         // Create sample data
@@ -57,8 +55,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
         let local_result = local_kriging.predict(&query_points.view())?;
-        println!("Local Kriging predictions: {:?}", local_result.values());
-        println!("Local Kriging variances: {:?}", local_result.variances());
+        println!("Local Kriging predictions: {:?}", local_result.value);
+        println!("Local Kriging variances: {:?}", local_result.variance);
 
         // Test 2: Fixed Rank Kriging
         println!("\n2. Testing Fixed Rank Kriging...");
@@ -71,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
 
         let fixed_rank_result = fixed_rank_kriging.predict(&query_points.view())?;
-        println!("Fixed Rank predictions: {:?}", fixed_rank_result.values());
+        println!("Fixed Rank predictions: {:?}", fixed_rank_result.value);
 
         // Test 3: Tapered Kriging
         println!("\n3. Testing Tapered Kriging...");
@@ -84,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
 
         let tapered_result = tapered_kriging.predict(&query_points.view())?;
-        println!("Tapered predictions: {:?}", tapered_result.values());
+        println!("Tapered predictions: {:?}", tapered_result.value);
 
         // Test 4: Builder Pattern
         println!("\n4. Testing Builder Pattern...");
@@ -97,7 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build()?;
 
         let builder_result = builder_kriging.predict(&query_points.view())?;
-        println!("Builder pattern predictions: {:?}", builder_result.values());
+        println!("Builder pattern predictions: {:?}", builder_result.value);
 
         // Test 5: Different approximation methods comparison
         println!("\n5. Comparing approximation methods...");
@@ -119,24 +117,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let result = kriging.predict(&query_points.view())?;
             println!(
                 "{}: [{:.4}, {:.4}, {:.4}]",
-                name,
-                result.values()[0],
-                result.values()[1],
-                result.values()[2]
+                name, result.value[0], result.value[1], result.value[2]
             );
         }
 
-        // Test 6: Confidence intervals
-        println!("\n6. Testing confidence intervals...");
-        let intervals = local_result.confidence_intervals(0.95)?;
-        println!("95% confidence intervals:");
-        for i in 0..intervals.nrows() {
-            println!(
-                "  Point {}: [{:.4}, {:.4}]",
-                i + 1,
-                intervals[[i, 0]],
-                intervals[[i, 1]]
-            );
+        // Test 6: Simple confidence intervals (manual calculation)
+        println!("\n6. Simple confidence intervals (95%):");
+        let z_score = 1.96; // 95% confidence
+        for i in 0..local_result.value.len() {
+            let std_dev = local_result.variance[i].sqrt();
+            let lower = local_result.value[i] - std_dev * z_score;
+            let upper = local_result.value[i] + std_dev * z_score;
+            println!("  Point {}: [{:.4}, {:.4}]", i + 1, lower, upper);
         }
 
         println!("\n✅ Fast Kriging tests completed successfully!");

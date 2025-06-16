@@ -56,15 +56,36 @@ pub enum OnlineLearningStrategy {
 #[derive(Debug, Clone)]
 pub enum LearningRateAdaptation {
     /// AdaGrad-style adaptation
-    AdaGrad { epsilon: f64 },
+    AdaGrad {
+        /// Small constant for numerical stability
+        epsilon: f64,
+    },
     /// RMSprop-style adaptation
-    RMSprop { decay: f64, epsilon: f64 },
+    RMSprop {
+        /// Decay rate
+        decay: f64,
+        /// Small constant for numerical stability
+        epsilon: f64,
+    },
     /// Adam-style adaptation
-    Adam { beta1: f64, beta2: f64, epsilon: f64 },
+    Adam {
+        /// Exponential decay rate for first moment
+        beta1: f64,
+        /// Exponential decay rate for second moment
+        beta2: f64,
+        /// Small constant for numerical stability
+        epsilon: f64,
+    },
     /// Exponential decay
-    ExponentialDecay { decay_rate: f64 },
+    ExponentialDecay {
+        /// Decay rate
+        decay_rate: f64,
+    },
     /// Inverse scaling
-    InverseScaling { power: f64 },
+    InverseScaling {
+        /// Scaling power
+        power: f64,
+    },
 }
 
 /// Mirror functions for mirror descent
@@ -128,9 +149,15 @@ pub enum ColumnGrowthStrategy {
     /// Add new column for each task
     PerTask,
     /// Add new column when performance drops
-    PerformanceBased { threshold: f64 },
+    PerformanceBased {
+        /// Performance threshold
+        threshold: f64,
+    },
     /// Add new column after fixed intervals
-    FixedInterval { interval: usize },
+    FixedInterval {
+        /// Fixed interval
+        interval: usize,
+    },
 }
 
 /// Memory update strategies
@@ -175,6 +202,7 @@ pub struct LifelongOptimizer<A: Float, D: Dimension> {
     /// Task-specific optimizers
     task_optimizers: HashMap<String, OnlineOptimizer<A, D>>,
     /// Shared knowledge across tasks
+    #[allow(dead_code)]
     shared_knowledge: SharedKnowledge<A, D>,
     /// Task sequence and relationships
     task_graph: TaskGraph,
@@ -190,14 +218,19 @@ pub struct LifelongOptimizer<A: Float, D: Dimension> {
 #[derive(Debug)]
 pub struct SharedKnowledge<A: Float, D: Dimension> {
     /// Fisher Information Matrix (for EWC)
+    #[allow(dead_code)]
     fisher_information: Option<Array<A, D>>,
     /// Important parameters (for EWC)
+    #[allow(dead_code)]
     important_parameters: Option<Array<A, D>>,
     /// Task embeddings
+    #[allow(dead_code)]
     task_embeddings: HashMap<String, Array1<A>>,
     /// Cross-task transfer weights
+    #[allow(dead_code)]
     transfer_weights: HashMap<(String, String), A>,
     /// Meta-parameters learned across tasks
+    #[allow(dead_code)]
     meta_parameters: Option<Array1<A>>,
 }
 
@@ -207,8 +240,10 @@ pub struct TaskGraph {
     /// Task relationships (similarity scores)
     task_similarities: HashMap<(String, String), f64>,
     /// Task dependencies
+    #[allow(dead_code)]
     task_dependencies: HashMap<String, Vec<String>>,
     /// Task categories/clusters
+    #[allow(dead_code)]
     task_clusters: HashMap<String, String>,
 }
 
@@ -261,8 +296,9 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
         let param_shape = initial_parameters.raw_dim();
         let gradient_accumulator = Array::zeros(param_shape.clone());
         let second_moment_accumulator = match &strategy {
-            OnlineLearningStrategy::AdaptiveSGD { 
-                adaptation_method: LearningRateAdaptation::Adam { .. }, .. 
+            OnlineLearningStrategy::AdaptiveSGD {
+                adaptation_method: LearningRateAdaptation::Adam { .. },
+                ..
             } => Some(Array::zeros(param_shape)),
             _ => None,
         };
@@ -291,23 +327,37 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
     pub fn online_update(&mut self, gradient: &Array<A, D>, loss: A) -> Result<()> {
         self.step_count += 1;
         self.performance_history.push_back(loss);
-        
+
         // Keep performance history bounded
         if self.performance_history.len() > 1000 {
             self.performance_history.pop_front();
         }
 
         match self.strategy.clone() {
-            OnlineLearningStrategy::AdaptiveSGD { adaptation_method, .. } => {
+            OnlineLearningStrategy::AdaptiveSGD {
+                adaptation_method, ..
+            } => {
                 self.adaptive_sgd_update(gradient, &adaptation_method)?;
             }
             OnlineLearningStrategy::OnlineNewton { damping, .. } => {
                 self.online_newton_update(gradient, damping)?;
             }
-            OnlineLearningStrategy::FTRL { l1_regularization, l2_regularization, learning_rate_power } => {
-                self.ftrl_update(gradient, l1_regularization, l2_regularization, learning_rate_power)?;
+            OnlineLearningStrategy::FTRL {
+                l1_regularization,
+                l2_regularization,
+                learning_rate_power,
+            } => {
+                self.ftrl_update(
+                    gradient,
+                    l1_regularization,
+                    l2_regularization,
+                    learning_rate_power,
+                )?;
             }
-            OnlineLearningStrategy::MirrorDescent { mirror_function, regularization } => {
+            OnlineLearningStrategy::MirrorDescent {
+                mirror_function,
+                regularization,
+            } => {
                 self.mirror_descent_update(gradient, &mirror_function, regularization)?;
             }
             OnlineLearningStrategy::AdaptiveMultiTask { .. } => {
@@ -322,60 +372,72 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
     }
 
     /// Adaptive SGD update
-    fn adaptive_sgd_update(&mut self, gradient: &Array<A, D>, adaptation: &LearningRateAdaptation) -> Result<()> {
+    fn adaptive_sgd_update(
+        &mut self,
+        gradient: &Array<A, D>,
+        adaptation: &LearningRateAdaptation,
+    ) -> Result<()> {
         match adaptation {
             LearningRateAdaptation::AdaGrad { epsilon } => {
                 // Accumulate squared gradients
                 self.gradient_accumulator = &self.gradient_accumulator + &gradient.mapv(|g| g * g);
-                
+
                 // Compute adaptive learning rate
-                let adaptive_lr = self.gradient_accumulator.mapv(|acc| {
-                    A::from(*epsilon).unwrap() + A::sqrt(acc)
-                });
-                
+                let adaptive_lr = self
+                    .gradient_accumulator
+                    .mapv(|acc| A::from(*epsilon).unwrap() + A::sqrt(acc));
+
                 // Update parameters
                 self.parameters = &self.parameters - &(gradient / &adaptive_lr * self.current_lr);
             }
             LearningRateAdaptation::RMSprop { decay, epsilon } => {
                 let decay_factor = A::from(*decay).unwrap();
                 let one_minus_decay = A::one() - decay_factor;
-                
+
                 // Update moving average of squared gradients
-                self.gradient_accumulator = &self.gradient_accumulator * decay_factor + 
-                    &gradient.mapv(|g| g * g * one_minus_decay);
-                
+                self.gradient_accumulator = &self.gradient_accumulator * decay_factor
+                    + &gradient.mapv(|g| g * g * one_minus_decay);
+
                 // Compute adaptive learning rate
-                let adaptive_lr = self.gradient_accumulator.mapv(|acc| {
-                    A::sqrt(acc + A::from(*epsilon).unwrap())
-                });
-                
+                let adaptive_lr = self
+                    .gradient_accumulator
+                    .mapv(|acc| A::sqrt(acc + A::from(*epsilon).unwrap()));
+
                 // Update parameters
                 self.parameters = &self.parameters - &(gradient / &adaptive_lr * self.current_lr);
             }
-            LearningRateAdaptation::Adam { beta1, beta2, epsilon } => {
+            LearningRateAdaptation::Adam {
+                beta1,
+                beta2,
+                epsilon,
+            } => {
                 let beta1_val = A::from(*beta1).unwrap();
                 let beta2_val = A::from(*beta2).unwrap();
                 let one_minus_beta1 = A::one() - beta1_val;
                 let one_minus_beta2 = A::one() - beta2_val;
-                
+
                 // Update first moment (gradient accumulator)
-                self.gradient_accumulator = &self.gradient_accumulator * beta1_val + gradient * one_minus_beta1;
-                
+                self.gradient_accumulator =
+                    &self.gradient_accumulator * beta1_val + gradient * one_minus_beta1;
+
                 // Update second moment
                 if let Some(ref mut second_moment) = self.second_moment_accumulator {
-                    *second_moment = second_moment * beta2_val + &gradient.mapv(|g| g * g * one_minus_beta2);
-                    
+                    *second_moment =
+                        &*second_moment * beta2_val + &gradient.mapv(|g| g * g * one_minus_beta2);
+
                     // Bias correction
                     let step_count_float = A::from(self.step_count).unwrap();
                     let bias_correction1 = A::one() - A::powf(beta1_val, step_count_float);
                     let bias_correction2 = A::one() - A::powf(beta2_val, step_count_float);
-                    
+
                     let corrected_first = &self.gradient_accumulator / bias_correction1;
-                    let corrected_second = second_moment / bias_correction2;
-                    
+                    let corrected_second = &*second_moment / bias_correction2;
+
                     // Update parameters
-                    let adaptive_lr = corrected_second.mapv(|v| A::sqrt(v) + A::from(*epsilon).unwrap());
-                    self.parameters = &self.parameters - &(corrected_first / adaptive_lr * self.current_lr);
+                    let adaptive_lr =
+                        corrected_second.mapv(|v| A::sqrt(v) + A::from(*epsilon).unwrap());
+                    self.parameters =
+                        &self.parameters - &(corrected_first / adaptive_lr * self.current_lr);
                 }
             }
             LearningRateAdaptation::ExponentialDecay { decay_rate } => {
@@ -385,12 +447,13 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
             }
             LearningRateAdaptation::InverseScaling { power } => {
                 // Inverse scaling: lr = initial_lr / (step^power)
-                let step_power = A::powf(A::from(self.step_count).unwrap(), A::from(*power).unwrap());
+                let step_power =
+                    A::powf(A::from(self.step_count).unwrap(), A::from(*power).unwrap());
                 let decayed_lr = self.current_lr / step_power;
                 self.parameters = &self.parameters - gradient * decayed_lr;
             }
         }
-        
+
         Ok(())
     }
 
@@ -398,30 +461,39 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
     fn online_newton_update(&mut self, gradient: &Array<A, D>, damping: f64) -> Result<()> {
         // Simplified online Newton update with damping
         let damping_val = A::from(damping).unwrap();
-        
+
         // Approximate Hessian diagonal with gradient squares (simplified)
         let hessian_approx = gradient.mapv(|g| g * g + damping_val);
-        
+
         // Newton step
         let newton_step = gradient / hessian_approx;
         self.parameters = &self.parameters - &newton_step * self.current_lr;
-        
+
         Ok(())
     }
 
     /// FTRL update
-    fn ftrl_update(&mut self, gradient: &Array<A, D>, l1_reg: f64, l2_reg: f64, lr_power: f64) -> Result<()> {
+    fn ftrl_update(
+        &mut self,
+        gradient: &Array<A, D>,
+        l1_reg: f64,
+        l2_reg: f64,
+        lr_power: f64,
+    ) -> Result<()> {
         // Accumulate gradients
         self.gradient_accumulator = &self.gradient_accumulator + gradient;
-        
+
         // FTRL update rule (simplified)
-        let step_factor = A::powf(A::from(self.step_count).unwrap(), A::from(lr_power).unwrap());
+        let step_factor = A::powf(
+            A::from(self.step_count).unwrap(),
+            A::from(lr_power).unwrap(),
+        );
         let learning_rate = self.current_lr / step_factor;
-        
+
         // Apply L1 and L2 regularization
         let l1_weight = A::from(l1_reg).unwrap();
         let l2_weight = A::from(l2_reg).unwrap();
-        
+
         self.parameters = self.gradient_accumulator.mapv(|g| {
             let abs_g = A::abs(g);
             if abs_g <= l1_weight {
@@ -431,12 +503,17 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
                 -sign * (abs_g - l1_weight) / (l2_weight + A::sqrt(abs_g))
             }
         }) * learning_rate;
-        
+
         Ok(())
     }
 
     /// Mirror descent update
-    fn mirror_descent_update(&mut self, gradient: &Array<A, D>, mirror_fn: &MirrorFunction, regularization: f64) -> Result<()> {
+    fn mirror_descent_update(
+        &mut self,
+        gradient: &Array<A, D>,
+        mirror_fn: &MirrorFunction,
+        regularization: f64,
+    ) -> Result<()> {
         match mirror_fn {
             MirrorFunction::Euclidean => {
                 // Standard gradient descent
@@ -445,7 +522,9 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
             MirrorFunction::Entropy => {
                 // Entropy regularized update (for probability simplex)
                 let reg_val = A::from(regularization).unwrap();
-                let updated = self.parameters.mapv(|p| A::exp(A::ln(p) - self.current_lr * reg_val));
+                let updated = self
+                    .parameters
+                    .mapv(|p| A::exp(A::ln(p) - self.current_lr * reg_val));
                 let sum = updated.sum();
                 self.parameters = updated / sum; // Normalize to probability simplex
             }
@@ -465,7 +544,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
                 self.parameters = &self.parameters - gradient * self.current_lr;
             }
         }
-        
+
         Ok(())
     }
 
@@ -478,7 +557,11 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
 
     /// Update regret bound estimation
     fn update_regret_bound(&mut self, loss: A) {
-        if let Some(&best_loss) = self.performance_history.iter().min_by(|a, b| a.partial_cmp(b).unwrap()) {
+        if let Some(&best_loss) = self
+            .performance_history
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+        {
             let regret = loss - best_loss;
             self.regret_bound = self.regret_bound + regret.max(A::zero());
         }
@@ -494,7 +577,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
         let average_loss = if self.performance_history.is_empty() {
             A::zero()
         } else {
-            self.performance_history.iter().copied().sum::<A>() / A::from(self.performance_history.len()).unwrap()
+            self.performance_history.iter().copied().sum::<A>()
+                / A::from(self.performance_history.len()).unwrap()
         };
 
         let lr_stability = A::from(1.0).unwrap(); // Simplified
@@ -543,7 +627,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     /// Start learning a new task
     pub fn start_task(&mut self, task_id: String, initial_parameters: Array<A, D>) -> Result<()> {
         self.current_task = Some(task_id.clone());
-        
+
         // Create task-specific optimizer
         let online_strategy = OnlineLearningStrategy::AdaptiveSGD {
             initial_lr: 0.001,
@@ -553,21 +637,23 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
                 epsilon: 1e-8,
             },
         };
-        
+
         let task_optimizer = OnlineOptimizer::new(online_strategy, initial_parameters);
         self.task_optimizers.insert(task_id.clone(), task_optimizer);
-        
+
         // Initialize task performance tracking
         self.task_performance.insert(task_id, Vec::new());
-        
+
         Ok(())
     }
 
     /// Update current task with new data
     pub fn update_current_task(&mut self, gradient: &Array<A, D>, loss: A) -> Result<()> {
-        let task_id = self.current_task.as_ref().ok_or_else(|| {
-            OptimError::InvalidConfig("No current task set".to_string())
-        })?.clone();
+        let task_id = self
+            .current_task
+            .as_ref()
+            .ok_or_else(|| OptimError::InvalidConfig("No current task set".to_string()))?
+            .clone();
 
         // Update task-specific optimizer
         if let Some(optimizer) = self.task_optimizers.get_mut(&task_id) {
@@ -581,7 +667,9 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
 
         // Apply lifelong learning strategy
         match &self.strategy {
-            LifelongStrategy::ElasticWeightConsolidation { importance_weight, .. } => {
+            LifelongStrategy::ElasticWeightConsolidation {
+                importance_weight, ..
+            } => {
                 self.apply_ewc_regularization(gradient, *importance_weight)?;
             }
             LifelongStrategy::ProgressiveNetworks { .. } => {
@@ -602,7 +690,11 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     }
 
     /// Apply Elastic Weight Consolidation regularization
-    fn apply_ewc_regularization(&mut self, _gradient: &Array<A, D>, _importance_weight: f64) -> Result<()> {
+    fn apply_ewc_regularization(
+        &mut self,
+        _gradient: &Array<A, D>,
+        _importance_weight: f64,
+    ) -> Result<()> {
         // Simplified EWC implementation
         // In practice, this would compute Fisher Information Matrix and apply regularization
         Ok(())
@@ -619,7 +711,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     fn update_memory_buffer(&mut self, gradient: &Array<A, D>, loss: A) -> Result<()> {
         if let Some(task_id) = &self.current_task {
             let example = MemoryExample {
-                input: Array::zeros(gradient.raw_dim()), // Placeholder
+                input: Array::zeros(gradient.raw_dim()),  // Placeholder
                 target: Array::zeros(gradient.raw_dim()), // Placeholder
                 task_id: task_id.clone(),
                 importance: loss,
@@ -640,10 +732,14 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
                     }
                     MemoryUpdateStrategy::ImportanceBased => {
                         // Remove least important example
-                        if let Some(min_idx) = self.memory_buffer.importance_scores.iter()
+                        if let Some(min_idx) = self
+                            .memory_buffer
+                            .importance_scores
+                            .iter()
                             .enumerate()
                             .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                            .map(|(idx, _)| idx) {
+                            .map(|(idx, _)| idx)
+                        {
                             self.memory_buffer.examples.remove(min_idx);
                             self.memory_buffer.importance_scores.remove(min_idx);
                         }
@@ -679,9 +775,14 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
 
     /// Compute task similarity
     pub fn compute_task_similarity(&self, task1: &str, task2: &str) -> f64 {
-        self.task_graph.task_similarities
+        self.task_graph
+            .task_similarities
             .get(&(task1.to_string(), task2.to_string()))
-            .or_else(|| self.task_graph.task_similarities.get(&(task2.to_string(), task1.to_string())))
+            .or_else(|| {
+                self.task_graph
+                    .task_similarities
+                    .get(&(task2.to_string(), task1.to_string()))
+            })
             .copied()
             .unwrap_or(0.0)
     }
@@ -692,11 +793,10 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
         let avg_performance = if self.task_performance.is_empty() {
             A::zero()
         } else {
-            let total_performance: A = self.task_performance.values()
-                .flatten()
-                .copied()
-                .sum();
-            let total_samples = self.task_performance.values()
+            let total_performance: A = self.task_performance.values().flatten().copied().sum();
+            let total_samples = self
+                .task_performance
+                .values()
                 .map(|v| v.len())
                 .sum::<usize>();
             if total_samples > 0 {
@@ -742,10 +842,10 @@ mod tests {
             initial_lr: 0.01,
             adaptation_method: LearningRateAdaptation::AdaGrad { epsilon: 1e-8 },
         };
-        
+
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let optimizer = OnlineOptimizer::new(strategy, initial_params);
-        
+
         assert_eq!(optimizer.step_count, 0);
         assert_relative_eq!(optimizer.current_lr, 0.01, epsilon = 1e-6);
     }
@@ -756,15 +856,15 @@ mod tests {
             initial_lr: 0.1,
             adaptation_method: LearningRateAdaptation::ExponentialDecay { decay_rate: 0.99 },
         };
-        
+
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let mut optimizer = OnlineOptimizer::new(strategy, initial_params);
-        
+
         let gradient = Array1::from_vec(vec![0.1, 0.2, 0.3]);
         let loss = 0.5;
-        
+
         optimizer.online_update(&gradient, loss).unwrap();
-        
+
         assert_eq!(optimizer.step_count, 1);
         assert_eq!(optimizer.performance_history.len(), 1);
         assert_relative_eq!(optimizer.performance_history[0], 0.5, epsilon = 1e-6);
@@ -776,9 +876,9 @@ mod tests {
             importance_weight: 1000.0,
             fisher_samples: 100,
         };
-        
+
         let optimizer = LifelongOptimizer::<f64, ndarray::Ix1>::new(strategy);
-        
+
         assert_eq!(optimizer.task_optimizers.len(), 0);
         assert!(optimizer.current_task.is_none());
     }
@@ -789,12 +889,14 @@ mod tests {
             memory_size: 100,
             update_strategy: MemoryUpdateStrategy::FIFO,
         };
-        
+
         let mut optimizer = LifelongOptimizer::<f64, ndarray::Ix1>::new(strategy);
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        
-        optimizer.start_task("task1".to_string(), initial_params).unwrap();
-        
+
+        optimizer
+            .start_task("task1".to_string(), initial_params)
+            .unwrap();
+
         assert_eq!(optimizer.current_task, Some("task1".to_string()));
         assert!(optimizer.task_optimizers.contains_key("task1"));
         assert!(optimizer.task_performance.contains_key("task1"));
@@ -806,23 +908,25 @@ mod tests {
             memory_size: 2,
             update_strategy: MemoryUpdateStrategy::FIFO,
         };
-        
+
         let mut optimizer = LifelongOptimizer::<f64, ndarray::Ix1>::new(strategy);
         optimizer.memory_buffer.max_size = 2;
-        
+
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        optimizer.start_task("task1".to_string(), initial_params).unwrap();
-        
+        optimizer
+            .start_task("task1".to_string(), initial_params)
+            .unwrap();
+
         let gradient = Array1::from_vec(vec![0.1, 0.2, 0.3]);
-        
+
         // Add first example
         optimizer.update_current_task(&gradient, 0.5).unwrap();
         assert_eq!(optimizer.memory_buffer.examples.len(), 1);
-        
+
         // Add second example
         optimizer.update_current_task(&gradient, 0.6).unwrap();
         assert_eq!(optimizer.memory_buffer.examples.len(), 2);
-        
+
         // Add third example (should remove first due to FIFO)
         optimizer.update_current_task(&gradient, 0.7).unwrap();
         assert_eq!(optimizer.memory_buffer.examples.len(), 2);
@@ -838,18 +942,18 @@ mod tests {
                 epsilon: 1e-8,
             },
         };
-        
+
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let mut optimizer = OnlineOptimizer::new(strategy, initial_params);
-        
+
         // Add some performance data
         optimizer.performance_history.push_back(0.8);
         optimizer.performance_history.push_back(0.6);
         optimizer.performance_history.push_back(0.4);
         optimizer.regret_bound = 0.5;
-        
+
         let metrics = optimizer.get_performance_metrics();
-        
+
         assert_relative_eq!(metrics.cumulative_regret, 0.5, epsilon = 1e-6);
         assert_relative_eq!(metrics.average_loss, 0.6, epsilon = 1e-6);
     }
@@ -861,20 +965,32 @@ mod tests {
             inner_steps: 5,
             task_embedding_size: 64,
         };
-        
+
         let mut optimizer = LifelongOptimizer::<f64, ndarray::Ix1>::new(strategy);
-        
+
         // Add some tasks
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        optimizer.start_task("task1".to_string(), initial_params.clone()).unwrap();
-        optimizer.start_task("task2".to_string(), initial_params).unwrap();
-        
+        optimizer
+            .start_task("task1".to_string(), initial_params.clone())
+            .unwrap();
+        optimizer
+            .start_task("task2".to_string(), initial_params)
+            .unwrap();
+
         // Add some performance data
-        optimizer.task_performance.get_mut("task1").unwrap().extend(vec![0.8, 0.7]);
-        optimizer.task_performance.get_mut("task2").unwrap().extend(vec![0.9, 0.8]);
-        
+        optimizer
+            .task_performance
+            .get_mut("task1")
+            .unwrap()
+            .extend(vec![0.8, 0.7]);
+        optimizer
+            .task_performance
+            .get_mut("task2")
+            .unwrap()
+            .extend(vec![0.9, 0.8]);
+
         let stats = optimizer.get_lifelong_stats();
-        
+
         assert_eq!(stats.num_tasks, 2);
         assert_relative_eq!(stats.average_performance, 0.8, epsilon = 1e-6);
     }
@@ -883,24 +999,31 @@ mod tests {
     fn test_learning_rate_adaptations() {
         let strategies = vec![
             LearningRateAdaptation::AdaGrad { epsilon: 1e-8 },
-            LearningRateAdaptation::RMSprop { decay: 0.9, epsilon: 1e-8 },
-            LearningRateAdaptation::Adam { beta1: 0.9, beta2: 0.999, epsilon: 1e-8 },
+            LearningRateAdaptation::RMSprop {
+                decay: 0.9,
+                epsilon: 1e-8,
+            },
+            LearningRateAdaptation::Adam {
+                beta1: 0.9,
+                beta2: 0.999,
+                epsilon: 1e-8,
+            },
             LearningRateAdaptation::ExponentialDecay { decay_rate: 0.99 },
             LearningRateAdaptation::InverseScaling { power: 0.5 },
         ];
-        
+
         for adaptation in strategies {
             let strategy = OnlineLearningStrategy::AdaptiveSGD {
                 initial_lr: 0.01,
                 adaptation_method: adaptation,
             };
-            
+
             let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
             let mut optimizer = OnlineOptimizer::new(strategy, initial_params);
-            
+
             let gradient = Array1::from_vec(vec![0.1, 0.2, 0.3]);
             let result = optimizer.online_update(&gradient, 0.5);
-            
+
             assert!(result.is_ok());
             assert_eq!(optimizer.step_count, 1);
         }

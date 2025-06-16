@@ -10,7 +10,7 @@ use crate::Float;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 // pub mod constant_folding;
-// pub mod expression_simplification; 
+// pub mod expression_simplification;
 // pub mod graph_rewriting;
 pub mod loop_fusion;
 // pub mod memory_optimization;
@@ -137,14 +137,14 @@ impl<F: Float> GraphOptimizer<F> {
     /// Optimize a computation graph
     pub fn optimize(&self, graph: &mut Graph<F>) -> Result<OptimizationReport, OptimizationError> {
         let mut report = OptimizationReport::new();
-        
+
         if self.config.level == OptimizationLevel::None {
             return Ok(report);
         }
 
         for pass in 0..self.config.max_passes {
             let mut changed = false;
-            
+
             // Constant folding
             if self.config.constant_folding {
                 let folded = self.apply_constant_folding(graph)?;
@@ -217,19 +217,22 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Apply dead code elimination
-    fn apply_dead_code_elimination(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_dead_code_elimination(
+        &self,
+        _graph: &mut Graph<F>,
+    ) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Mark all reachable nodes from outputs
         // 2. Remove unreachable nodes
         // 3. Update the graph structure
-        
+
         let eliminated_count = 0;
-        
+
         // Example algorithm:
         // 1. Start from all output nodes
         // 2. Traverse backwards to mark reachable nodes
         // 3. Remove unmarked nodes
-        
+
         Ok(eliminated_count)
     }
 
@@ -239,18 +242,21 @@ impl<F: Float> GraphOptimizer<F> {
         // 1. Build a hash table of equivalent expressions
         // 2. Replace duplicate expressions with references to the first occurrence
         // 3. Remove redundant nodes
-        
+
         let cse_count = 0;
-        
+
         // Example:
         // If we have: x*y + z and later x*y + w
         // We can compute x*y once and reuse it
-        
+
         Ok(cse_count)
     }
 
     /// Apply expression simplification
-    fn apply_expression_simplification(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_expression_simplification(
+        &self,
+        _graph: &mut Graph<F>,
+    ) -> Result<usize, OptimizationError> {
         // Temporarily disabled - would be implemented with expression_simplification module
         Ok(0)
     }
@@ -261,14 +267,14 @@ impl<F: Float> GraphOptimizer<F> {
         // 1. Identify fusable operation patterns
         // 2. Replace patterns with fused operations
         // 3. Update the graph structure
-        
+
         let fused_count = 0;
-        
+
         // Examples of fusion:
         // - Element-wise operations: Add + Mul → FusedAddMul
         // - Activation sequences: Linear + ReLU → FusedLinearReLU
         // - Reduction patterns: Sum + Div → Mean
-        
+
         Ok(fused_count)
     }
 
@@ -279,14 +285,14 @@ impl<F: Float> GraphOptimizer<F> {
         // 2. Insert memory reuse opportunities
         // 3. Optimize tensor layouts
         // 4. Add gradient checkpointing where beneficial
-        
+
         let optimized_count = 0;
-        
+
         // Examples:
         // - In-place operations where safe
         // - Memory pooling for temporary tensors
         // - Gradient checkpointing for memory-intensive paths
-        
+
         Ok(optimized_count)
     }
 }
@@ -343,7 +349,7 @@ impl OptimizationReport {
         println!("==================");
         println!("Passes completed: {}", self.passes_completed);
         println!("Total optimizations: {}", self.total_optimizations());
-        
+
         if self.constant_folding_applied > 0 {
             println!("  Constant folding: {}", self.constant_folding_applied);
         }
@@ -354,7 +360,10 @@ impl OptimizationReport {
             println!("  Common subexpression elimination: {}", self.cse_applied);
         }
         if self.expressions_simplified > 0 {
-            println!("  Expression simplification: {}", self.expressions_simplified);
+            println!(
+                "  Expression simplification: {}",
+                self.expressions_simplified
+            );
         }
         if self.operations_fused > 0 {
             println!("  Operation fusion: {}", self.operations_fused);
@@ -379,7 +388,10 @@ impl<F: Float> PatternMatcher<F> {
     }
 
     /// Check if a tensor matches a pattern for simplification
-    pub fn matches_simplification_pattern(&self, _tensor_internal: &TensorInternal<F>) -> Option<SimplificationPattern> {
+    pub fn matches_simplification_pattern(
+        &self,
+        _tensor_internal: &TensorInternal<F>,
+    ) -> Option<SimplificationPattern> {
         // Temporarily disabled - would be implemented with expression_simplification module
         None
     }
@@ -397,7 +409,11 @@ impl<F: Float> PatternMatcher<F> {
     }
 
     /// Check if a tensor is dead (unreachable from outputs)
-    pub fn is_dead(&self, _tensor_internal: &TensorInternal<F>, _reachable: &HashSet<TensorID>) -> bool {
+    pub fn is_dead(
+        &self,
+        _tensor_internal: &TensorInternal<F>,
+        _reachable: &HashSet<TensorID>,
+    ) -> bool {
         // Temporarily disabled - would be implemented with reachability analysis
         false
     }
@@ -481,7 +497,9 @@ pub enum OptimizationError {
 /// Public API functions for graph optimization
 
 /// Optimize a computation graph with default settings
-pub fn optimize_graph<F: Float>(graph: &mut Graph<F>) -> Result<OptimizationReport, OptimizationError> {
+pub fn optimize_graph<F: Float>(
+    graph: &mut Graph<F>,
+) -> Result<OptimizationReport, OptimizationError> {
     let optimizer = GraphOptimizer::new();
     optimizer.optimize(graph)
 }
@@ -522,7 +540,9 @@ pub fn apply_constant_folding<F: Float>(graph: &mut Graph<F>) -> Result<usize, O
 }
 
 /// Apply only dead code elimination
-pub fn apply_dead_code_elimination<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+pub fn apply_dead_code_elimination<F: Float>(
+    graph: &mut Graph<F>,
+) -> Result<usize, OptimizationError> {
     let config = OptimizationConfig {
         constant_folding: false,
         cse: false,
@@ -584,8 +604,10 @@ mod tests {
     #[test]
     fn test_graph_optimizer_creation() {
         let _optimizer = GraphOptimizer::<f32>::new();
-        let _optimizer_with_config = GraphOptimizer::<f32>::with_config(OptimizationConfig::default());
-        let _optimizer_with_level = GraphOptimizer::<f32>::with_level(OptimizationLevel::Aggressive);
+        let _optimizer_with_config =
+            GraphOptimizer::<f32>::with_config(OptimizationConfig::default());
+        let _optimizer_with_level =
+            GraphOptimizer::<f32>::with_level(OptimizationLevel::Aggressive);
     }
 
     #[test]
@@ -609,7 +631,7 @@ mod tests {
     fn test_simplification_patterns() {
         let pattern = SimplificationPattern::AddZero;
         assert_eq!(pattern, SimplificationPattern::AddZero);
-        
+
         let patterns = [
             SimplificationPattern::AddZero,
             SimplificationPattern::MulOne,

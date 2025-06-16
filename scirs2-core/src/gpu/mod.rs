@@ -6,14 +6,21 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
+pub mod async_execution;
+pub mod auto_tuning;
 pub mod backends;
+pub mod benchmarks;
+pub mod heterogeneous;
 pub mod kernels;
+pub mod tensor_cores;
 
 /// GPU backend type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GpuBackend {
     /// NVIDIA CUDA backend
     Cuda,
+    /// AMD ROCm backend
+    Rocm,
     /// WebGPU backend
     Wgpu,
     /// Apple Metal backend
@@ -67,6 +74,7 @@ impl GpuBackend {
             // In a real implementation, we would check if the backend is available
             // For now, just return a default value based on feature flags
             GpuBackend::Cuda => cfg!(feature = "cuda"),
+            GpuBackend::Rocm => cfg!(feature = "rocm"),
             GpuBackend::Wgpu => cfg!(feature = "wgpu"),
             GpuBackend::Metal => cfg!(all(feature = "metal", target_os = "macos")),
             GpuBackend::OpenCL => cfg!(feature = "opencl"),
@@ -79,6 +87,7 @@ impl fmt::Display for GpuBackend {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             GpuBackend::Cuda => write!(f, "CUDA"),
+            GpuBackend::Rocm => write!(f, "ROCm"),
             GpuBackend::Wgpu => write!(f, "WebGPU"),
             GpuBackend::Metal => write!(f, "Metal"),
             GpuBackend::OpenCL => write!(f, "OpenCL"),
@@ -306,6 +315,26 @@ impl GpuContext {
                     return Err(GpuError::UnsupportedBackend(backend));
                 }
             }
+            GpuBackend::Rocm => {
+                #[cfg(feature = "rocm")]
+                {
+                    // This is just a stub - in a real implementation, we would use the hip-sys crate
+                    // to create a ROCm context and return it
+                    #[cfg(test)]
+                    {
+                        // For testing, we can use a mock implementation
+                        Arc::new(CpuContext::new()) as Arc<dyn GpuContextImpl>
+                    }
+                    #[cfg(not(test))]
+                    {
+                        return Err(GpuError::BackendNotImplemented(backend));
+                    }
+                }
+                #[cfg(not(feature = "rocm"))]
+                {
+                    return Err(GpuError::UnsupportedBackend(backend));
+                }
+            }
             GpuBackend::Wgpu => {
                 #[cfg(feature = "wgpu")]
                 {
@@ -361,6 +390,7 @@ impl GpuContext {
     pub fn backend_name(&self) -> &str {
         match self.backend {
             GpuBackend::Cuda => "CUDA",
+            GpuBackend::Rocm => "ROCm",
             GpuBackend::Wgpu => "WebGPU",
             GpuBackend::Metal => "Metal",
             GpuBackend::OpenCL => "OpenCL",

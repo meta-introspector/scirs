@@ -248,7 +248,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> ZeroCopyOps<A> for MemoryMappedArr
             // Process each chunk sequentially to avoid mutable borrow issues
             let array = self.as_array::<ndarray::IxDyn>()?;
             let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
-            
+
             for chunk_idx in 0..num_chunks {
                 // Calculate chunk bounds
                 let start = chunk_idx * chunk_size;

@@ -571,18 +571,20 @@ where
         let _constraint_x_max = constraint.x_max.unwrap_or(x_max);
 
         // Count evaluation points in the constraint region
+        // Note: we generate n_eval = 10 points, and add n_eval - 1 = 9 constraints
+        let n_eval = 10;
         match constraint.constraint_type {
             ConstraintType::MonotoneIncreasing | ConstraintType::MonotoneDecreasing => {
-                // For monotonicity, we need to check at multiple intermediate points
-                total_constraints += 10; // Approximately
+                // For monotonicity, we add n_eval - 1 constraints
+                total_constraints += n_eval - 1;
             }
             ConstraintType::Convex | ConstraintType::Concave => {
-                // For convexity, check at multiple intermediate points
-                total_constraints += 10; // Approximately
+                // For convexity, we add n_eval constraints (one per evaluation point)
+                total_constraints += n_eval;
             }
             _ => {
                 // For other constraints, check at multiple points
-                total_constraints += 5; // Approximately
+                total_constraints += n_eval;
             }
         }
     }

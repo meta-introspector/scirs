@@ -447,7 +447,7 @@ where
         let n = self.train_values.len();
 
         // Calculate rolling statistics for outlier detection
-        let window_size = (n / 10).max(3).min(20);
+        let window_size = (n / 10).clamp(3, 20);
         let mut outliers = Vec::new();
 
         for i in 0..n {

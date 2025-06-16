@@ -54,8 +54,10 @@ impl Default for AdaptiveChunkingParams {
     fn default() -> Self {
         // Alpha 6: Enhanced defaults based on system detection
         let available_memory = Self::detect_available_memory();
-        let cpu_cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
-        
+        let cpu_cores = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
+
         // Target 1/8 of available memory per chunk, with reasonable bounds
         let target_memory = if let Some(mem) = available_memory {
             (mem / 8).clamp(16 * 1024 * 1024, 256 * 1024 * 1024) // 16MB to 256MB
@@ -68,8 +70,8 @@ impl Default for AdaptiveChunkingParams {
             max_chunk_size: usize::MAX,
             min_chunk_size: 1024,
             target_chunk_duration: Some(Duration::from_millis(100)), // Alpha 6: Default target 100ms per chunk
-            consider_distribution: true, // Alpha 6: Enable by default
-            optimize_for_parallel: cpu_cores > 1, // Alpha 6: Auto-detect
+            consider_distribution: true,                             // Alpha 6: Enable by default
+            optimize_for_parallel: cpu_cores > 1,                    // Alpha 6: Auto-detect
             num_workers: Some(cpu_cores),
         }
     }
@@ -82,7 +84,10 @@ impl AdaptiveChunkingParams {
         #[cfg(unix)]
         {
             if let Ok(output) = std::process::Command::new("sh")
-                .args(["-c", "cat /proc/meminfo | grep MemAvailable | awk '{print $2}'"])
+                .args([
+                    "-c",
+                    "cat /proc/meminfo | grep MemAvailable | awk '{print $2}'",
+                ])
                 .output()
             {
                 if let Ok(mem_str) = String::from_utf8(output.stdout) {
@@ -94,11 +99,11 @@ impl AdaptiveChunkingParams {
         }
         None
     }
-    
+
     /// Alpha 6: Create optimized parameters for specific workload types
     pub fn for_workload_type(workload: WorkloadType) -> Self {
         let mut params = Self::default();
-        
+
         match workload {
             WorkloadType::MemoryIntensive => {
                 params.target_memory_usage = params.target_memory_usage / 2; // Use smaller chunks
@@ -116,7 +121,7 @@ impl AdaptiveChunkingParams {
                 // Use defaults
             }
         }
-        
+
         params
     }
 }
@@ -519,9 +524,9 @@ pub mod alpha6_enhancements {
 
     /// Alpha 6: Dynamic load balancer for heterogeneous computing environments
     pub struct DynamicLoadBalancer {
-        worker_performance: Vec<f64>, // Relative performance scores
+        worker_performance: Vec<f64>,         // Relative performance scores
         current_loads: Arc<Vec<AtomicUsize>>, // Current load per worker
-        target_efficiency: f64, // Target CPU utilization (0.0-1.0)
+        target_efficiency: f64,               // Target CPU utilization (0.0-1.0)
     }
 
     impl DynamicLoadBalancer {
@@ -556,14 +561,19 @@ pub mod alpha6_enhancements {
         }
 
         /// Update worker performance metrics based on observed execution times
-        pub fn update_performance_metrics(&mut self, worker_id: usize, execution_time: Duration, work_amount: usize) {
+        pub fn update_performance_metrics(
+            &mut self,
+            worker_id: usize,
+            execution_time: Duration,
+            work_amount: usize,
+        ) {
             if worker_id < self.worker_performance.len() {
                 // Calculate performance as work/time (higher is better)
                 let performance = work_amount as f64 / execution_time.as_secs_f64();
-                
+
                 // Exponential moving average to adapt to changing conditions
                 let alpha = 0.1; // Learning rate
-                self.worker_performance[worker_id] = 
+                self.worker_performance[worker_id] =
                     (1.0 - alpha) * self.worker_performance[worker_id] + alpha * performance;
             }
         }
@@ -592,23 +602,24 @@ pub mod alpha6_enhancements {
         ) -> usize {
             // Start with base predictions from historical data
             let historical_prediction = self.get_historical_prediction(workload);
-            
+
             // Apply memory constraints
             let memory_constrained = (available_memory / 4).max(1024); // Use 1/4 of available memory
-            
+
             // Apply data size constraints
             let data_constrained = (data_size / 8).max(1024); // At least 8 chunks
-            
+
             // Combine predictions with weighting
             let base_prediction = historical_prediction.unwrap_or(64 * 1024); // 64KB default
             let memory_weight = 0.4;
             let data_weight = 0.4;
             let historical_weight = 0.2;
-            
+
             let predicted_size = (memory_weight * memory_constrained as f64
                 + data_weight * data_constrained as f64
-                + historical_weight * base_prediction as f64) as usize;
-            
+                + historical_weight * base_prediction as f64)
+                as usize;
+
             // Ensure reasonable bounds
             predicted_size.clamp(1024, 256 * 1024 * 1024) // 1KB to 256MB
         }
@@ -623,10 +634,15 @@ pub mod alpha6_enhancements {
         }
 
         /// Record performance metrics for future predictions
-        pub fn record_performance(&mut self, workload: WorkloadType, chunk_size: usize, metrics: ChunkingPerformanceMetrics) {
+        pub fn record_performance(
+            &mut self,
+            workload: WorkloadType,
+            chunk_size: usize,
+            metrics: ChunkingPerformanceMetrics,
+        ) {
             self.historical_metrics.push(metrics);
             self.workload_characteristics.push((workload, chunk_size));
-            
+
             // Keep only the last 100 entries to prevent unbounded growth
             if self.historical_metrics.len() > 100 {
                 self.historical_metrics.remove(0);
@@ -636,7 +652,10 @@ pub mod alpha6_enhancements {
     }
 
     /// Alpha 6: NUMA-aware chunking for large multi-socket systems
-    pub fn calculate_numa_aware_chunking(data_size: usize, num_numa_nodes: usize) -> ChunkingStrategy {
+    pub fn calculate_numa_aware_chunking(
+        data_size: usize,
+        num_numa_nodes: usize,
+    ) -> ChunkingStrategy {
         if num_numa_nodes <= 1 {
             return ChunkingStrategy::Auto;
         }
@@ -644,7 +663,7 @@ pub mod alpha6_enhancements {
         // Try to align chunks with NUMA boundaries
         let base_chunk_size = data_size / (num_numa_nodes * 2); // 2 chunks per NUMA node
         let aligned_chunk_size = align_to_cache_line(base_chunk_size);
-        
+
         ChunkingStrategy::Fixed(aligned_chunk_size)
     }
 

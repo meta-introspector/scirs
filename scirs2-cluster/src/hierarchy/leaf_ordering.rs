@@ -15,12 +15,14 @@ use crate::error::{ClusteringError, Result};
 #[derive(Debug, Clone)]
 struct TreeNode {
     /// Index of this node
+    #[allow(dead_code)]
     id: usize,
     /// Left child (None for leaf nodes)
     left: Option<Box<TreeNode>>,
     /// Right child (None for leaf nodes)
     right: Option<Box<TreeNode>>,
     /// Merge height/distance
+    #[allow(dead_code)]
     height: f64,
     /// List of original observation indices contained in this subtree
     leaves: Vec<usize>,

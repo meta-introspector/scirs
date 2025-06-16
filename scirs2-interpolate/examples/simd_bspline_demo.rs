@@ -9,7 +9,7 @@ use ndarray::Array1;
 #[cfg(feature = "simd")]
 use scirs2_interpolate::{
     bspline::{BSpline, ExtrapolateMode},
-    simd_bspline::{make_simd_bspline_evaluator, SimdBSplineEvaluator},
+    simd_bspline::SimdBSplineEvaluator,
     simd_optimized::{get_simd_config, is_simd_available},
 };
 #[cfg(feature = "simd")]
@@ -148,7 +148,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Test smooth spline
         let simd_smooth = simd_evaluator_smooth.evaluate_batch(&test_points.view())?;
         println!("   Smooth spline results:");
-        for (i, (&point, &result)) in test_points.iter().zip(simd_smooth.iter()).enumerate() {
+        for (_i, (&point, &result)) in test_points.iter().zip(simd_smooth.iter()).enumerate() {
             println!("     f({:.3}) = {:8.5}", point, result);
 
             // Verify against scalar evaluation
@@ -167,7 +167,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let simd_osc = simd_evaluator_osc.evaluate_batch(&osc_test_points.view())?;
 
         println!("\n   Oscillatory spline results:");
-        for (i, (&point, &result)) in osc_test_points.iter().zip(simd_osc.iter()).enumerate() {
+        for (_i, (&point, &result)) in osc_test_points.iter().zip(simd_osc.iter()).enumerate() {
             println!("     f({:.3}) = {:8.5}", point, result);
         }
 
@@ -178,7 +178,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Batch evaluation
         let start = Instant::now();
-        let batch_results = simd_evaluator_smooth.evaluate_batch(&large_batch.view())?;
+        let _batch_results = simd_evaluator_smooth.evaluate_batch(&large_batch.view())?;
         let batch_time = start.elapsed();
 
         // Individual evaluations

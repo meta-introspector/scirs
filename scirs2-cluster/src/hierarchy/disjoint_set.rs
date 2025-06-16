@@ -199,14 +199,18 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
         let rank_x = self.rank[&root_x];
         let rank_y = self.rank[&root_y];
 
-        if rank_x < rank_y {
-            self.parent.insert(root_x, root_y);
-        } else if rank_x > rank_y {
-            self.parent.insert(root_y, root_x);
-        } else {
-            // Same rank, make one root and increase its rank
-            self.parent.insert(root_y, root_x.clone());
-            self.rank.insert(root_x, rank_x + 1);
+        match rank_x.cmp(&rank_y) {
+            std::cmp::Ordering::Less => {
+                self.parent.insert(root_x, root_y);
+            }
+            std::cmp::Ordering::Greater => {
+                self.parent.insert(root_y, root_x);
+            }
+            std::cmp::Ordering::Equal => {
+                // Same rank, make one root and increase its rank
+                self.parent.insert(root_y, root_x.clone());
+                self.rank.insert(root_x, rank_x + 1);
+            }
         }
 
         self.num_sets -= 1;
@@ -371,7 +375,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
         // Group elements by their root
         for element in self.parent.keys().cloned().collect::<Vec<_>>() {
             if let Some(root) = self.find(&element) {
-                sets_map.entry(root).or_insert_with(Vec::new).push(element);
+                sets_map.entry(root).or_default().push(element);
             }
         }
 

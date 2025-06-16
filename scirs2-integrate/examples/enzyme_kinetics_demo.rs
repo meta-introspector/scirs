@@ -6,9 +6,7 @@
 
 use ndarray::{Array1, ArrayView1};
 use scirs2_integrate::ode::{
-    enzyme_kinetics::{
-        pathways, EnzymeMechanism, EnzymeParameters, RegulationType,
-    },
+    enzyme_kinetics::{pathways, EnzymeMechanism, EnzymeParameters, RegulationType},
     solve_ivp, ODEMethod, ODEOptions,
 };
 
@@ -149,7 +147,10 @@ fn demonstrate_allosteric_regulation() -> Result<(), Box<dyn std::error::Error>>
     let substrate_conc = 1.0; // Fixed at Km value
     let effector_range = vec![0.0, 0.1, 0.5, 1.0, 2.0, 5.0];
 
-    println!("   Substrate concentration: {:.1} mM (= Km)", substrate_conc);
+    println!(
+        "   Substrate concentration: {:.1} mM (= Km)",
+        substrate_conc
+    );
     println!();
     println!("   Effector | With Activator | With Inhibitor | Both        |");
     println!("   (mM)     | Only          | Only          | A=0.5, I=var |");
@@ -157,10 +158,12 @@ fn demonstrate_allosteric_regulation() -> Result<(), Box<dyn std::error::Error>>
 
     for &effector_conc in &effector_range {
         // With activator only
-        let rate_activator = allosteric_params.calculate_rate(&[substrate_conc, effector_conc, 0.0]);
+        let rate_activator =
+            allosteric_params.calculate_rate(&[substrate_conc, effector_conc, 0.0]);
 
         // With inhibitor only
-        let rate_inhibitor = allosteric_params.calculate_rate(&[substrate_conc, 0.0, effector_conc]);
+        let rate_inhibitor =
+            allosteric_params.calculate_rate(&[substrate_conc, 0.0, effector_conc]);
 
         // With both (fixed activator, variable inhibitor)
         let rate_both = allosteric_params.calculate_rate(&[substrate_conc, 0.5, effector_conc]);
@@ -210,20 +213,33 @@ fn demonstrate_glycolysis_pathway() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Metabolites: {}", pathway.metabolites.len());
 
     // Initial concentrations (mM)
-    let mut initial_concentrations = Array1::from_vec(vec![
-        5.0, // Glucose (external, maintained)
-        0.1, // G6P
-        0.1, // F6P
+    let initial_concentrations = Array1::from_vec(vec![
+        5.0,  // Glucose (external, maintained)
+        0.1,  // G6P
+        0.1,  // F6P
         0.05, // FBP
         0.05, // PEP
-        0.1, // Pyruvate (external, maintained)
+        0.1,  // Pyruvate (external, maintained)
     ]);
 
     println!();
     println!("   Initial concentrations:");
-    for (i, (name, &conc)) in pathway.metabolites.iter().zip(initial_concentrations.iter()).enumerate() {
-        println!("   {}: {:.3} mM{}", name, conc, 
-                if pathway.external_metabolites.contains_key(&i) { " (external)" } else { "" });
+    for (i, (name, &conc)) in pathway
+        .metabolites
+        .iter()
+        .zip(initial_concentrations.iter())
+        .enumerate()
+    {
+        println!(
+            "   {}: {:.3} mM{}",
+            name,
+            conc,
+            if pathway.external_metabolites.contains_key(&i) {
+                " (external)"
+            } else {
+                ""
+            }
+        );
     }
 
     // Set up ODE system for pathway simulation
@@ -242,7 +258,7 @@ fn demonstrate_glycolysis_pathway() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let t_span = [0.0, 10.0]; // Simulate for 10 seconds
-    let result = solve_ivp(ode_fn, t_span, initial_concentrations, Some(options))?;
+    let result = solve_ivp(ode_fn, t_span, initial_concentrations.clone(), Some(options))?;
 
     // Display results at key time points
     let time_points = vec![0.0, 1.0, 2.0, 5.0, 10.0];
@@ -254,7 +270,9 @@ fn demonstrate_glycolysis_pathway() -> Result<(), Box<dyn std::error::Error>> {
 
     for &t in &time_points {
         // Find closest time point in solution
-        let idx = result.t.iter()
+        let idx = result
+            .t
+            .iter()
             .position(|&x| x >= t)
             .unwrap_or(result.t.len() - 1);
 
@@ -279,18 +297,22 @@ fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initial concentrations for TCA cycle metabolites (mM)
     let initial_concentrations = Array1::from_vec(vec![
-        0.5, // Acetyl-CoA
-        0.3, // Citrate
-        0.2, // Isocitrate
-        0.1, // α-Ketoglutarate
+        0.5,  // Acetyl-CoA
+        0.3,  // Citrate
+        0.2,  // Isocitrate
+        0.1,  // α-Ketoglutarate
         0.05, // Succinyl-CoA
-        0.1, // Succinate
+        0.1,  // Succinate
         0.08, // Fumarate
         0.15, // Malate
     ]);
 
     println!("   Metabolites in TCA cycle:");
-    for (name, &conc) in pathway.metabolites.iter().zip(initial_concentrations.iter()) {
+    for (name, &conc) in pathway
+        .metabolites
+        .iter()
+        .zip(initial_concentrations.iter())
+    {
         println!("   {}: {:.3} mM", name, conc);
     }
 
@@ -298,7 +320,7 @@ fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
     let initial_rates = pathway.calculate_reaction_rates(&initial_concentrations);
     println!();
     println!("   Initial enzyme fluxes:");
-    for (i, (enzyme, &rate)) in pathway.enzymes.iter().zip(initial_rates.iter()).enumerate() {
+    for (_i, (enzyme, &rate)) in pathway.enzymes.iter().zip(initial_rates.iter()).enumerate() {
         println!("   {}: {:.2} μM/s", enzyme.name, rate * 1000.0);
     }
 
@@ -318,7 +340,7 @@ fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let t_span = [0.0, 1.0]; // Simulate for 1 second
-    let result = solve_ivp(ode_fn, t_span, initial_concentrations, Some(options))?;
+    let result = solve_ivp(ode_fn, t_span, initial_concentrations.clone(), Some(options))?;
 
     // Check for steady-state approach
     let final_y = &result.y[result.y.len() - 1];
@@ -349,12 +371,12 @@ fn demonstrate_control_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
     // Steady-state concentrations (estimated)
     let steady_state = Array1::from_vec(vec![
-        5.0,  // Glucose (external)
-        1.0,  // G6P
-        0.5,  // F6P
-        0.3,  // FBP
-        0.2,  // PEP
-        0.1,  // Pyruvate (external)
+        5.0, // Glucose (external)
+        1.0, // G6P
+        0.5, // F6P
+        0.3, // FBP
+        0.2, // PEP
+        0.1, // Pyruvate (external)
     ]);
 
     println!("   Assumed steady-state concentrations:");
@@ -373,8 +395,10 @@ fn demonstrate_control_analysis() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!();
-    println!("   Sum of FCCs: {:.3} (should be 1.0)", 
-             analysis.flux_control_coefficients.sum());
+    println!(
+        "   Sum of FCCs: {:.3} (should be 1.0)",
+        analysis.flux_control_coefficients.sum()
+    );
 
     println!();
     println!("   Elasticity Coefficients (enzyme response to metabolite changes):");
@@ -383,7 +407,8 @@ fn demonstrate_control_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
     for (i, enzyme) in pathway.enzymes.iter().enumerate() {
         print!("   {:17} |", enzyme.name);
-        for j in 1..5 { // Skip external metabolites (0 and 5)
+        for j in 1..5 {
+            // Skip external metabolites (0 and 5)
             let elasticity = analysis.elasticity_coefficients[(i, j)];
             print!(" {:5.2} |", elasticity);
         }
@@ -443,10 +468,7 @@ fn demonstrate_environmental_effects() -> Result<(), Box<dyn std::error::Error>>
         let rate = base_params.calculate_rate(&[substrate_conc]);
         let relative = rate / base_rate;
 
-        println!(
-            "   {:4.1}  | {:9.1}   | {:15.2}   |",
-            ph, rate, relative
-        );
+        println!("   {:4.1}  | {:9.1}   | {:15.2}   |", ph, rate, relative);
     }
 
     // Combined effects
@@ -478,7 +500,10 @@ fn demonstrate_environmental_effects() -> Result<(), Box<dyn std::error::Error>>
     println!("   Optimal temperature: {:.0}°C", optimal_temp);
     println!("   Optimal pH: {:.1}", optimal_ph);
     println!("   Maximum rate: {:.1} μM/s", max_rate);
-    println!("   Improvement over standard conditions: {:.1}×", max_rate / base_rate);
+    println!(
+        "   Improvement over standard conditions: {:.1}×",
+        max_rate / base_rate
+    );
 
     Ok(())
 }
@@ -495,7 +520,7 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initial concentrations
     let mut concentrations = Array1::from_vec(vec![
-        1.0, 0.1, 0.05, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01
+        1.0, 0.1, 0.05, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
     ]);
 
     println!();
@@ -548,8 +573,10 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
         let inhibition_factor = match reg_type {
             RegulationType::CompetitiveInhibition => 1.0 / (1.0 + effector_conc / ki),
             RegulationType::NonCompetitiveInhibition => 1.0 / (1.0 + effector_conc / ki),
-            RegulationType::AllostericInhibition => 1.0 / (1.0 + (effector_conc / ki).powf(2.0)),
-            RegulationType::FeedbackInhibition => 1.0 / (1.0 + (effector_conc / ki).powf(4.0)),
+            RegulationType::AllostericInhibition => {
+                1.0 / (1.0 + (effector_conc as f64 / ki).powf(2.0))
+            }
+            RegulationType::FeedbackInhibition => 1.0 / (1.0 + (effector_conc as f64 / ki).powf(4.0)),
             _ => 1.0,
         };
 
@@ -603,16 +630,16 @@ mod tests {
     fn test_pathway_calculations() {
         let pathway = pathways::simple_glycolysis();
         let concentrations = Array1::from_vec(vec![5.0, 1.0, 0.5, 0.3, 0.2, 0.1]);
-        
+
         let rates = pathway.calculate_reaction_rates(&concentrations);
-        
+
         // All rates should be non-negative
         for &rate in rates.iter() {
             assert!(rate >= 0.0);
         }
-        
+
         let derivatives = pathway.calculate_derivatives(&concentrations);
-        
+
         // External metabolites should have zero derivatives
         assert_abs_diff_eq!(derivatives[0], 0.0, epsilon = 1e-10);
         assert_abs_diff_eq!(derivatives[5], 0.0, epsilon = 1e-10);

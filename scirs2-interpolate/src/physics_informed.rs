@@ -241,8 +241,10 @@ where
             crate::bspline::ExtrapolateMode::Extrapolate,
         )?;
 
-        let mut config = PhysicsInformedConfig::default();
-        config.constraints = constraints;
+        let config = PhysicsInformedConfig {
+            constraints,
+            ..Default::default()
+        };
 
         Ok(Self {
             x_data: x.to_owned(),
@@ -365,7 +367,7 @@ where
                 let perturbation_scale = T::from(0.001).unwrap();
                 for i in 0..current_values.len() {
                     let perturbation = perturbation_scale * T::from((i % 3) as f64 - 1.0).unwrap();
-                    current_values[i] = current_values[i] + perturbation;
+                    current_values[i] += perturbation;
                 }
             }
         }
@@ -967,6 +969,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "linalg")]
     fn test_boundary_conditions() {
         let x = Array1::linspace(0.0, 10.0, 11);
         let y = Array1::linspace(1.0, 11.0, 11);

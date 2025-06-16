@@ -39,6 +39,11 @@ pub fn detect_gpu_backends() -> GpuDetectionResult {
         devices.extend(cuda_devices);
     }
 
+    // Detect ROCm devices
+    if let Ok(rocm_devices) = detect_rocm_devices() {
+        devices.extend(rocm_devices);
+    }
+
     // Detect Metal devices (macOS)
     #[cfg(target_os = "macos")]
     if let Ok(metal_devices) = detect_metal_devices() {
@@ -53,6 +58,8 @@ pub fn detect_gpu_backends() -> GpuDetectionResult {
     // Determine recommended backend
     let recommended_backend = if devices.iter().any(|d| d.backend == GpuBackend::Cuda) {
         GpuBackend::Cuda
+    } else if devices.iter().any(|d| d.backend == GpuBackend::Rocm) {
+        GpuBackend::Rocm
     } else if devices.iter().any(|d| d.backend == GpuBackend::Metal) {
         GpuBackend::Metal
     } else if devices.iter().any(|d| d.backend == GpuBackend::OpenCL) {
@@ -73,6 +80,67 @@ pub fn detect_gpu_backends() -> GpuDetectionResult {
     GpuDetectionResult {
         devices,
         recommended_backend,
+    }
+}
+
+/// Detect ROCm devices using rocm-smi
+fn detect_rocm_devices() -> Result<Vec<GpuInfo>, GpuError> {
+    let mut devices = Vec::new();
+
+    // Try to run rocm-smi to detect ROCm devices
+    match Command::new("rocm-smi")
+        .arg("--showproductname")
+        .arg("--showmeminfo")
+        .arg("vram")
+        .arg("--csv")
+        .output()
+    {
+        Ok(output) if output.status.success() => {
+            let output_str = String::from_utf8_lossy(&output.stdout);
+
+            for line in output_str.lines().skip(1) {
+                // Skip header line
+                if line.trim().is_empty() {
+                    continue;
+                }
+
+                let parts: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
+                if parts.len() >= 3 {
+                    let device_name = parts[1].trim_matches('"').to_string();
+                    let memory_str = parts[2].trim_matches('"');
+
+                    // Parse memory (format might be like "16368 MB")
+                    let memory_mb = memory_str
+                        .split_whitespace()
+                        .next()
+                        .and_then(|s| s.parse::<u64>().ok())
+                        .unwrap_or(0)
+                        * 1024
+                        * 1024; // Convert MB to bytes
+
+                    devices.push(GpuInfo {
+                        backend: GpuBackend::Rocm,
+                        device_name,
+                        memory_bytes: Some(memory_mb),
+                        compute_capability: Some("RDNA/CDNA".to_string()),
+                        supports_tensors: true, // Modern AMD GPUs support matrix operations
+                    });
+                }
+            }
+        }
+        _ => {
+            // rocm-smi not available or failed
+            // In a real implementation, we could try other methods like:
+            // - Direct HIP runtime API calls
+            // - /sys/class/drm/cardX/ on Linux
+            // - rocminfo command
+        }
+    }
+
+    if devices.is_empty() {
+        Err(GpuError::BackendNotAvailable("ROCm".to_string()))
+    } else {
+        Ok(devices)
     }
 }
 
@@ -212,6 +280,19 @@ pub fn check_backend_installation(backend: GpuBackend) -> Result<bool, GpuError>
                 _ => Ok(false),
             }
         }
+        GpuBackend::Rocm => {
+            // Check for ROCm installation
+            match Command::new("hipcc").arg("--version").output() {
+                Ok(output) if output.status.success() => Ok(true),
+                _ => {
+                    // Also try rocm-smi as an alternative check
+                    match Command::new("rocm-smi").arg("--version").output() {
+                        Ok(output) if output.status.success() => Ok(true),
+                        _ => Ok(false),
+                    }
+                }
+            }
+        }
         GpuBackend::Metal => {
             #[cfg(target_os = "macos")]
             {
@@ -262,6 +343,7 @@ pub fn initialize_optimal_backend() -> Result<GpuBackend, GpuError> {
     // Try backends in order of preference for scientific computing
     let preference_order = [
         GpuBackend::Cuda,   // Best for scientific computing
+        GpuBackend::Rocm,   // Second best for scientific computing (AMD)
         GpuBackend::Metal,  // Good on Apple hardware
         GpuBackend::OpenCL, // Widely compatible
         GpuBackend::Wgpu,   // Modern cross-platform

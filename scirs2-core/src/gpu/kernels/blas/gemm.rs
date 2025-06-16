@@ -85,13 +85,14 @@ impl GemmKernel {
             },
         };
 
-        let (name, cuda_source, wgpu_source, metal_source, opencl_source) =
+        let (name, cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) =
             Self::get_sources_for_implementation(implementation);
 
         Self {
             base: BaseKernel::new(
                 &name,
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -442,7 +443,10 @@ __kernel void gemm_standard(
 "#
         .to_string();
 
-        (name, cuda_source, wgpu_source, metal_source, opencl_source)
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
+        (name, cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
     }
 
     /// Generate a specialized kernel for the given dimensions

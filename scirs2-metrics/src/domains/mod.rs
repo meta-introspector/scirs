@@ -65,23 +65,23 @@
 use crate::error::{MetricsError, Result};
 use std::collections::HashMap;
 
+pub mod anomaly_detection;
 pub mod computer_vision;
 pub mod nlp;
-pub mod time_series;
 pub mod recommender;
-pub mod anomaly_detection;
+pub mod time_series;
 
 /// Common trait for domain-specific metric collections
 pub trait DomainMetrics {
     /// Type of the evaluation result
     type Result;
-    
+
     /// Name of the domain
     fn domain_name(&self) -> &'static str;
-    
+
     /// List of available metrics in this domain
     fn available_metrics(&self) -> Vec<&'static str>;
-    
+
     /// Get a description of what each metric measures
     fn metric_descriptions(&self) -> HashMap<&'static str, &'static str>;
 }
@@ -109,44 +109,47 @@ impl DomainEvaluationResult {
             summary: String::new(),
         }
     }
-    
+
     /// Add a primary metric
     pub fn add_primary_metric(&mut self, name: String, value: f64) {
         self.primary_metrics.insert(name, value);
     }
-    
+
     /// Add a secondary metric
     pub fn add_secondary_metric(&mut self, name: String, value: f64) {
         self.secondary_metrics.insert(name, value);
     }
-    
+
     /// Add detailed metrics (e.g., per-class results)
     pub fn add_detailed_metrics(&mut self, category: String, metrics: HashMap<String, f64>) {
         if self.detailed_metrics.is_none() {
             self.detailed_metrics = Some(HashMap::new());
         }
-        self.detailed_metrics.as_mut().unwrap().insert(category, metrics);
+        self.detailed_metrics
+            .as_mut()
+            .unwrap()
+            .insert(category, metrics);
     }
-    
+
     /// Set the summary text
     pub fn set_summary(&mut self, summary: String) {
         self.summary = summary;
     }
-    
+
     /// Get all metrics as a flat HashMap
     pub fn all_metrics(&self) -> HashMap<String, f64> {
         let mut all = HashMap::new();
-        
+
         // Add primary metrics
         for (name, value) in &self.primary_metrics {
             all.insert(format!("primary_{}", name), *value);
         }
-        
+
         // Add secondary metrics
         for (name, value) in &self.secondary_metrics {
             all.insert(format!("secondary_{}", name), *value);
         }
-        
+
         // Add detailed metrics
         if let Some(detailed) = &self.detailed_metrics {
             for (category, metrics) in detailed {
@@ -155,10 +158,10 @@ impl DomainEvaluationResult {
                 }
             }
         }
-        
+
         all
     }
-    
+
     /// Get the most important metric value for this domain
     pub fn primary_score(&self) -> Option<f64> {
         // Return the first primary metric as the main score
@@ -197,32 +200,32 @@ impl DomainSuite {
             ad_metrics: anomaly_detection::AnomalyDetectionSuite::new(),
         }
     }
-    
+
     /// Get computer vision metrics
     pub fn computer_vision(&self) -> &computer_vision::ComputerVisionSuite {
         &self.cv_metrics
     }
-    
+
     /// Get NLP metrics
     pub fn nlp(&self) -> &nlp::NLPSuite {
         &self.nlp_metrics
     }
-    
+
     /// Get time series metrics
     pub fn time_series(&self) -> &time_series::TimeSeriesSuite {
         &self.ts_metrics
     }
-    
+
     /// Get recommender system metrics
     pub fn recommender(&self) -> &recommender::RecommenderSuite {
         &self.rec_metrics
     }
-    
+
     /// Get anomaly detection metrics
     pub fn anomaly_detection(&self) -> &anomaly_detection::AnomalyDetectionSuite {
         &self.ad_metrics
     }
-    
+
     /// List all available domains
     pub fn available_domains(&self) -> Vec<&'static str> {
         vec![
@@ -248,19 +251,19 @@ mod tests {
     #[test]
     fn test_domain_evaluation_result() {
         let mut result = DomainEvaluationResult::new();
-        
+
         result.add_primary_metric("accuracy".to_string(), 0.85);
         result.add_secondary_metric("precision".to_string(), 0.82);
-        
+
         let mut class_metrics = HashMap::new();
         class_metrics.insert("f1_score".to_string(), 0.83);
         result.add_detailed_metrics("class_1".to_string(), class_metrics);
-        
+
         result.set_summary("Good performance overall".to_string());
-        
+
         assert_eq!(result.primary_score(), Some(0.85));
         assert_eq!(result.summary, "Good performance overall");
-        
+
         let all_metrics = result.all_metrics();
         assert_eq!(all_metrics.get("primary_accuracy"), Some(&0.85));
         assert_eq!(all_metrics.get("secondary_precision"), Some(&0.82));
@@ -271,7 +274,7 @@ mod tests {
     fn test_domain_suite_creation() {
         let suite = create_domain_suite();
         let domains = suite.available_domains();
-        
+
         assert_eq!(domains.len(), 5);
         assert!(domains.contains(&"Computer Vision"));
         assert!(domains.contains(&"Natural Language Processing"));

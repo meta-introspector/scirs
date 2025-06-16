@@ -153,22 +153,10 @@ impl<F: Float + FromPrimitive + 'static> SIMDDistanceCalculator<F> {
 
                         // Add to the appropriate slot in sum_sq
                         match point_offset {
-                            0 => {
-                                sum_sq = sum_sq
-                                    + f64x4::new([point_distance_contribution, 0.0, 0.0, 0.0])
-                            }
-                            1 => {
-                                sum_sq = sum_sq
-                                    + f64x4::new([0.0, point_distance_contribution, 0.0, 0.0])
-                            }
-                            2 => {
-                                sum_sq = sum_sq
-                                    + f64x4::new([0.0, 0.0, point_distance_contribution, 0.0])
-                            }
-                            3 => {
-                                sum_sq = sum_sq
-                                    + f64x4::new([0.0, 0.0, 0.0, point_distance_contribution])
-                            }
+                            0 => sum_sq += f64x4::new([point_distance_contribution, 0.0, 0.0, 0.0]),
+                            1 => sum_sq += f64x4::new([0.0, point_distance_contribution, 0.0, 0.0]),
+                            2 => sum_sq += f64x4::new([0.0, 0.0, point_distance_contribution, 0.0]),
+                            3 => sum_sq += f64x4::new([0.0, 0.0, 0.0, point_distance_contribution]),
                             _ => unreachable!(),
                         }
                     }
@@ -184,10 +172,10 @@ impl<F: Float + FromPrimitive + 'static> SIMDDistanceCalculator<F> {
                         let sq_diff = diff * diff;
 
                         match point_offset {
-                            0 => sum_sq = sum_sq + f64x4::new([sq_diff, 0.0, 0.0, 0.0]),
-                            1 => sum_sq = sum_sq + f64x4::new([0.0, sq_diff, 0.0, 0.0]),
-                            2 => sum_sq = sum_sq + f64x4::new([0.0, 0.0, sq_diff, 0.0]),
-                            3 => sum_sq = sum_sq + f64x4::new([0.0, 0.0, 0.0, sq_diff]),
+                            0 => sum_sq += f64x4::new([sq_diff, 0.0, 0.0, 0.0]),
+                            1 => sum_sq += f64x4::new([0.0, sq_diff, 0.0, 0.0]),
+                            2 => sum_sq += f64x4::new([0.0, 0.0, sq_diff, 0.0]),
+                            3 => sum_sq += f64x4::new([0.0, 0.0, 0.0, sq_diff]),
                             _ => unreachable!(),
                         }
                     }
