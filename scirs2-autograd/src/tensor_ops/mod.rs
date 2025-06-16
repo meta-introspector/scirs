@@ -3259,8 +3259,8 @@ pub use efficient_ops::{
 // Custom activation function framework
 pub use custom_activations::{
     create_custom_activation, custom_activation, is_activation_registered,
-    list_activation_functions, parameterized_activation, register_activation,
-    ActivationProperties, CustomActivation, CustomActivationBuilder,
+    list_activation_functions, parameterized_activation, register_activation, ActivationProperties,
+    CustomActivation, CustomActivationBuilder,
 };
 
 // Performance optimization operations
@@ -3273,8 +3273,8 @@ pub use performance_ops::{
 // Enhanced dynamic computation graph features
 pub use graph_enhancements::{
     cached_op, clear_computation_cache, conditional, configure_cache, get_cache_stats,
-    get_gc_stats, run_garbage_collection, smart_checkpoint, CacheStats,
-    GcStats, GraphEnhancer, GraphStats, PredicateType,
+    get_gc_stats, run_garbage_collection, smart_checkpoint, CacheStats, GcStats, GraphEnhancer,
+    GraphStats, PredicateType,
 };
 
 /// Creates a variable tensor from an array

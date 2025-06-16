@@ -3,11 +3,10 @@
 //! This module provides simplified versions of SIMD-accelerated operations
 //! and performance optimizations for tensor operations.
 
-use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
 use crate::Float;
-use ndarray::{Array, Axis, Zip};
+use ndarray::Axis;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Global flag to enable/disable SIMD optimizations
@@ -40,8 +39,8 @@ impl<F: Float> Op<F> for SimdBinaryOp {
         let right = ctx.input(1);
 
         let result = match self.operation {
-            SimdBinaryOperation::Add => (&left.to_owned() + &right.to_owned()),
-            SimdBinaryOperation::Mul => (&left.to_owned() * &right.to_owned()),
+            SimdBinaryOperation::Add => &left.to_owned() + &right.to_owned(),
+            SimdBinaryOperation::Mul => &left.to_owned() * &right.to_owned(),
         };
 
         ctx.append_output(result);
@@ -89,12 +88,8 @@ impl<F: Float> Op<F> for SimdUnaryOp {
         let input = ctx.input(0);
 
         let result = match self.operation {
-            SimdUnaryOperation::ReLU => {
-                input.mapv(|x| if x > F::zero() { x } else { F::zero() })
-            }
-            SimdUnaryOperation::Sigmoid => {
-                input.mapv(|x| F::one() / (F::one() + (-x).exp()))
-            }
+            SimdUnaryOperation::ReLU => input.mapv(|x| if x > F::zero() { x } else { F::zero() }),
+            SimdUnaryOperation::Sigmoid => input.mapv(|x| F::one() / (F::one() + (-x).exp())),
         };
 
         ctx.append_output(result);
@@ -108,13 +103,13 @@ impl<F: Float> Op<F> for SimdUnaryOp {
         let grad = match self.operation {
             SimdUnaryOperation::ReLU => {
                 let zero_tensor = crate::tensor_ops::scalar(F::zero(), ctx.graph());
-                let mask = crate::tensor_ops::greater(input, &zero_tensor);
+                let mask = crate::tensor_ops::greater(input, zero_tensor);
                 (*gy) * mask
             }
             SimdUnaryOperation::Sigmoid => {
                 let sigmoid_x = crate::tensor_ops::sigmoid(input);
                 let one = crate::tensor_ops::scalar(F::one(), ctx.graph());
-                let one_minus_sigmoid = &one - &sigmoid_x;
+                let one_minus_sigmoid = one - sigmoid_x;
                 (*gy) * sigmoid_x * one_minus_sigmoid
             }
         };
@@ -125,6 +120,7 @@ impl<F: Float> Op<F> for SimdUnaryOp {
 
 /// Parallel reduction operation (simplified)
 pub struct ParallelReductionOp {
+    #[allow(dead_code)]
     pub operation: ReductionOperation,
     pub axis: usize,
 }
@@ -175,10 +171,7 @@ pub fn is_parallel_enabled() -> bool {
 }
 
 /// SIMD-optimized element-wise addition
-pub fn simd_add<'g, F: Float>(
-    left: &Tensor<'g, F>,
-    right: &Tensor<'g, F>
-) -> Tensor<'g, F> {
+pub fn simd_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = left.graph();
     Tensor::builder(g)
         .append_input(left, false)
@@ -189,10 +182,7 @@ pub fn simd_add<'g, F: Float>(
 }
 
 /// SIMD-optimized element-wise multiplication
-pub fn simd_mul<'g, F: Float>(
-    left: &Tensor<'g, F>,
-    right: &Tensor<'g, F>
-) -> Tensor<'g, F> {
+pub fn simd_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = left.graph();
     Tensor::builder(g)
         .append_input(left, false)
@@ -226,7 +216,7 @@ pub fn simd_sigmoid<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 pub fn cache_friendly_matmul<'g, F: Float>(
     left: &Tensor<'g, F>,
     right: &Tensor<'g, F>,
-    _block_size: Option<usize>
+    _block_size: Option<usize>,
 ) -> Tensor<'g, F> {
     crate::tensor_ops::matmul(left, right)
 }
@@ -235,9 +225,9 @@ pub fn cache_friendly_matmul<'g, F: Float>(
 pub fn parallel_sum<'g, F: Float>(
     tensor: &Tensor<'g, F>,
     axes: &[usize],
-    _keep_dims: bool
+    _keep_dims: bool,
 ) -> Tensor<'g, F> {
-    let axis = axes.get(0).copied().unwrap_or(0);
+    let axis = axes.first().copied().unwrap_or(0);
     let g = tensor.graph();
     Tensor::builder(g)
         .append_input(tensor, false)
@@ -277,7 +267,7 @@ mod tests {
     fn test_simd_settings() {
         set_simd_enabled(false);
         assert!(!is_simd_enabled());
-        
+
         set_simd_enabled(true);
         assert!(is_simd_enabled());
     }
@@ -286,7 +276,7 @@ mod tests {
     fn test_parallel_settings() {
         set_parallel_enabled(false);
         assert!(!is_parallel_enabled());
-        
+
         set_parallel_enabled(true);
         assert!(is_parallel_enabled());
     }

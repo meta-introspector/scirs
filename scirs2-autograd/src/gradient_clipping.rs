@@ -201,11 +201,9 @@ impl<F: Float> GradientClipper<F> for ClipByNorm<F> {
                 let ratio = max_norm_tensor / grad_norm;
                 let clipping_factor = tensor_ops::minimum(one_tensor, ratio);
 
-                let clipped_grad = (*grad) * clipping_factor;
-
                 // Note: In a full implementation, we'd track whether clipping actually occurred
                 // For simplicity, we assume clipping may have occurred
-                clipped_grad
+                (*grad) * clipping_factor
             })
             .collect();
 

@@ -15,10 +15,11 @@ use std::sync::{LazyLock, Mutex};
 static MEMORY_POOL: LazyLock<Mutex<MemoryPool>> = LazyLock::new(|| Mutex::new(MemoryPool::new()));
 
 /// Global memory usage tracker
-static MEMORY_TRACKER: LazyLock<Mutex<MemoryTracker>> = LazyLock::new(|| Mutex::new(MemoryTracker::new()));
+static MEMORY_TRACKER: LazyLock<Mutex<MemoryTracker>> =
+    LazyLock::new(|| Mutex::new(MemoryTracker::new()));
 
 /// Memory pool for reusing tensor allocations
-/// 
+///
 /// The memory pool maintains buffers of different sizes to reduce
 /// the frequency of memory allocations during tensor operations.
 /// This is particularly useful for operations that create many
@@ -76,10 +77,11 @@ impl MemoryPool {
         buffer.fill(0);
 
         // Check if we should add this buffer to the pool
-        let buffers = self.buffers.entry(size).or_insert_with(Vec::new);
-        
-        if buffers.len() < self.max_buffers_per_size && 
-           self.total_pooled_memory + size <= self.max_pool_memory {
+        let buffers = self.buffers.entry(size).or_default();
+
+        if buffers.len() < self.max_buffers_per_size
+            && self.total_pooled_memory + size <= self.max_pool_memory
+        {
             buffers.push(buffer);
             self.total_pooled_memory += size;
         }
@@ -169,7 +171,10 @@ impl MemoryTracker {
         }
 
         // Update total allocations
-        let total = self.total_allocations.entry(op_name.to_string()).or_insert(0);
+        let total = self
+            .total_allocations
+            .entry(op_name.to_string())
+            .or_insert(0);
         *total += size;
     }
 
@@ -228,6 +233,7 @@ pub struct InPlaceOp<F: Float> {
 
 #[derive(Debug, Clone, Copy)]
 #[allow(dead_code)]
+#[allow(clippy::enum_variant_names)]
 pub enum InPlaceOperation {
     /// In-place addition: x += y
     AddAssign,
@@ -260,7 +266,7 @@ impl<F: Float> Op<F> for InPlaceOp<F> {
     fn name(&self) -> &'static str {
         match self.operation {
             InPlaceOperation::AddAssign => "InPlaceAdd",
-            InPlaceOperation::SubAssign => "InPlaceSub", 
+            InPlaceOperation::SubAssign => "InPlaceSub",
             InPlaceOperation::MulAssign => "InPlaceMul",
             InPlaceOperation::DivAssign => "InPlaceDiv",
             InPlaceOperation::NegAssign => "InPlaceNeg",
@@ -272,11 +278,14 @@ impl<F: Float> Op<F> for InPlaceOp<F> {
 
     fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         let mut target = ctx.input(0).to_owned();
-        
+
         // Record memory allocation for tracking
         let op_name = self.name();
         let size = target.len() * std::mem::size_of::<F>();
-        MEMORY_TRACKER.lock().unwrap().record_allocation(op_name, size);
+        MEMORY_TRACKER
+            .lock()
+            .unwrap()
+            .record_allocation(op_name, size);
 
         match self.operation {
             InPlaceOperation::AddAssign => {
@@ -360,8 +369,9 @@ impl<F: Float> Op<F> for InPlaceOp<F> {
                     let left_input = ctx.input(0);
                     ctx.append_input_grad(0, Some((*gy) / right_input));
                     let neg_two = F::from(-2.0).unwrap();
-                    let right_grad = crate::tensor_ops::neg(left_input) * 
-                        crate::tensor_ops::pow(right_input, neg_two) * (*gy);
+                    let right_grad = crate::tensor_ops::neg(left_input)
+                        * crate::tensor_ops::pow(right_input, neg_two)
+                        * (*gy);
                     ctx.append_input_grad(1, Some(right_grad));
                 } else {
                     ctx.append_input_grad(0, Some(*gy));
@@ -401,12 +411,12 @@ impl<F: Float> Op<F> for ViewOp {
 
     fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         let input = ctx.input(0);
-        
+
         // Try to create a view with the new shape
         let input_shape = input.shape();
         let input_size: usize = input_shape.iter().product();
         let new_size: usize = self.new_shape.iter().product();
-        
+
         if input_size != new_size {
             return Err(OpError::IncompatibleShape(format!(
                 "Cannot reshape array of size {} into shape {:?} (size {})",
@@ -415,9 +425,11 @@ impl<F: Float> Op<F> for ViewOp {
         }
 
         // Create a reshaped view - this is zero-copy when possible
-        let reshaped = input.view().into_shape_with_order(IxDyn(&self.new_shape))
+        let reshaped = input
+            .view()
+            .into_shape_with_order(IxDyn(&self.new_shape))
             .map_err(|_| OpError::IncompatibleShape("Cannot create view with new shape".into()))?;
-        
+
         ctx.append_output(reshaped.to_owned());
         Ok(())
     }
@@ -425,7 +437,7 @@ impl<F: Float> Op<F> for ViewOp {
     fn grad(&self, ctx: &mut GradientContext<F>) {
         let gy = ctx.output_grad();
         let input = ctx.input(0);
-        
+
         // Gradient needs to be reshaped back to input shape
         let input_shape = crate::tensor_ops::shape(input);
         let reshaped_grad = crate::tensor_ops::reshape(gy, &input_shape);
@@ -434,7 +446,7 @@ impl<F: Float> Op<F> for ViewOp {
 }
 
 /// Public API functions for memory optimization
-
+///
 /// Get a buffer from the memory pool
 pub fn get_pooled_buffer(size: usize) -> Vec<u8> {
     MEMORY_POOL.lock().unwrap().get_buffer(size)
@@ -447,7 +459,10 @@ pub fn return_pooled_buffer(buffer: Vec<u8>) {
 
 /// Configure the memory pool
 pub fn configure_memory_pool(max_buffers_per_size: usize, max_pool_memory: usize) {
-    MEMORY_POOL.lock().unwrap().configure(max_buffers_per_size, max_pool_memory);
+    MEMORY_POOL
+        .lock()
+        .unwrap()
+        .configure(max_buffers_per_size, max_pool_memory);
 }
 
 /// Enable or disable the memory pool
@@ -486,10 +501,7 @@ pub fn get_memory_tracking_stats() -> MemoryTrackerStats {
 }
 
 /// Create a memory-efficient view of a tensor with a new shape
-pub fn efficient_view<'g, F: Float>(
-    tensor: &Tensor<'g, F>,
-    new_shape: &[usize]
-) -> Tensor<'g, F> {
+pub fn efficient_view<'g, F: Float>(tensor: &Tensor<'g, F>, new_shape: &[usize]) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
         .append_input(tensor, false)
@@ -499,10 +511,7 @@ pub fn efficient_view<'g, F: Float>(
 }
 
 /// Perform in-place addition to reduce memory allocations
-pub fn inplace_add<'g, F: Float>(
-    lhs: &Tensor<'g, F>,
-    rhs: &Tensor<'g, F>
-) -> Tensor<'g, F> {
+pub fn inplace_add<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = lhs.graph();
     Tensor::builder(g)
         .append_input(lhs, false)
@@ -511,10 +520,7 @@ pub fn inplace_add<'g, F: Float>(
 }
 
 /// Perform in-place subtraction to reduce memory allocations
-pub fn inplace_sub<'g, F: Float>(
-    lhs: &Tensor<'g, F>,
-    rhs: &Tensor<'g, F>
-) -> Tensor<'g, F> {
+pub fn inplace_sub<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = lhs.graph();
     Tensor::builder(g)
         .append_input(lhs, false)
@@ -523,10 +529,7 @@ pub fn inplace_sub<'g, F: Float>(
 }
 
 /// Perform in-place multiplication to reduce memory allocations
-pub fn inplace_mul<'g, F: Float>(
-    lhs: &Tensor<'g, F>,
-    rhs: &Tensor<'g, F>
-) -> Tensor<'g, F> {
+pub fn inplace_mul<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = lhs.graph();
     Tensor::builder(g)
         .append_input(lhs, false)
@@ -535,10 +538,7 @@ pub fn inplace_mul<'g, F: Float>(
 }
 
 /// Perform in-place division to reduce memory allocations
-pub fn inplace_div<'g, F: Float>(
-    lhs: &Tensor<'g, F>,
-    rhs: &Tensor<'g, F>
-) -> Tensor<'g, F> {
+pub fn inplace_div<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = lhs.graph();
     Tensor::builder(g)
         .append_input(lhs, false)
@@ -565,7 +565,7 @@ pub fn inplace_abs<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 /// Perform in-place scalar multiplication to reduce memory allocations
 pub fn inplace_scalar_mul<'g, F: Float>(
     tensor: &Tensor<'g, F>,
-    scalar: &Tensor<'g, F>
+    scalar: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
@@ -578,26 +578,40 @@ pub fn inplace_scalar_mul<'g, F: Float>(
 pub fn efficient_zeros<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
     // For now, use the standard zeros implementation
     // In a full implementation, this would use the memory pool
-    crate::tensor_ops::zeros(&crate::tensor_ops::convert_to_tensor(
-        ndarray::Array::from_shape_vec(
-            ndarray::IxDyn(&[shape.len()]),
-            shape.iter().map(|&x| F::from(x).unwrap()).collect::<Vec<_>>()
-        ).unwrap(),
-        graph
-    ), graph)
+    crate::tensor_ops::zeros(
+        &crate::tensor_ops::convert_to_tensor(
+            ndarray::Array::from_shape_vec(
+                ndarray::IxDyn(&[shape.len()]),
+                shape
+                    .iter()
+                    .map(|&x| F::from(x).unwrap())
+                    .collect::<Vec<_>>(),
+            )
+            .unwrap(),
+            graph,
+        ),
+        graph,
+    )
 }
 
 /// Memory-efficient tensor creation using the memory pool
 pub fn efficient_ones<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
     // For now, use the standard ones implementation
     // In a full implementation, this would use the memory pool
-    crate::tensor_ops::ones(&crate::tensor_ops::convert_to_tensor(
-        ndarray::Array::from_shape_vec(
-            ndarray::IxDyn(&[shape.len()]),
-            shape.iter().map(|&x| F::from(x).unwrap()).collect::<Vec<_>>()
-        ).unwrap(),
-        graph
-    ), graph)
+    crate::tensor_ops::ones(
+        &crate::tensor_ops::convert_to_tensor(
+            ndarray::Array::from_shape_vec(
+                ndarray::IxDyn(&[shape.len()]),
+                shape
+                    .iter()
+                    .map(|&x| F::from(x).unwrap())
+                    .collect::<Vec<_>>(),
+            )
+            .unwrap(),
+            graph,
+        ),
+        graph,
+    )
 }
 
 /// A utility struct for memory optimization context
@@ -625,9 +639,11 @@ impl MemoryOptimizer {
         let pool_stats = get_memory_pool_stats();
 
         println!("=== Memory Optimization Report ===");
-        println!("Memory Pool: {} buffers, {} bytes pooled", 
-                 pool_stats.total_buffers, pool_stats.total_pooled_memory);
-        
+        println!(
+            "Memory Pool: {} buffers, {} bytes pooled",
+            pool_stats.total_buffers, pool_stats.total_pooled_memory
+        );
+
         if !tracking_stats.current_usage.is_empty() {
             println!("Current Memory Usage by Operation:");
             for (op, usage) in &tracking_stats.current_usage {
@@ -658,14 +674,14 @@ mod tests {
     #[test]
     fn test_memory_pool_basic() {
         let mut pool = MemoryPool::new();
-        
+
         // Get a buffer
         let buffer = pool.get_buffer(1024);
         assert_eq!(buffer.len(), 1024);
-        
+
         // Return it to the pool
         pool.return_buffer(buffer);
-        
+
         // Get another buffer of the same size - should come from the pool
         let buffer2 = pool.get_buffer(1024);
         assert_eq!(buffer2.len(), 1024);
@@ -675,15 +691,15 @@ mod tests {
     fn test_memory_tracker() {
         let mut tracker = MemoryTracker::new();
         tracker.enable();
-        
+
         tracker.record_allocation("test_op", 1024);
         tracker.record_allocation("test_op", 512);
-        
+
         let stats = tracker.get_stats();
         assert_eq!(stats.current_usage.get("test_op"), Some(&1536));
         assert_eq!(stats.peak_usage.get("test_op"), Some(&1536));
         assert_eq!(stats.total_allocations.get("test_op"), Some(&1536));
-        
+
         tracker.record_deallocation("test_op", 512);
         let stats = tracker.get_stats();
         assert_eq!(stats.current_usage.get("test_op"), Some(&1024));
@@ -693,10 +709,10 @@ mod tests {
     fn test_inplace_operations() {
         let add_op = InPlaceOp::<f32>::new(InPlaceOperation::AddAssign);
         assert_eq!(add_op.name(), "InPlaceAdd");
-        
+
         let mul_op = InPlaceOp::<f32>::new(InPlaceOperation::MulAssign);
         assert_eq!(mul_op.name(), "InPlaceMul");
-        
+
         let neg_op = InPlaceOp::<f32>::new(InPlaceOperation::NegAssign);
         assert_eq!(neg_op.name(), "InPlaceNeg");
     }
@@ -706,7 +722,7 @@ mod tests {
         let view_op = ViewOp {
             new_shape: vec![2, 3],
         };
-        assert_eq!(view_op.name(), "MemoryEfficientView");
+        assert_eq!(<ViewOp as crate::op::Op<f32>>::name(&view_op), "MemoryEfficientView");
         assert_eq!(view_op.new_shape, vec![2, 3]);
     }
 
@@ -715,14 +731,14 @@ mod tests {
         // Test that we can call the public API functions
         configure_memory_pool(8, 50 * 1024 * 1024);
         set_memory_pool_enabled(true);
-        
+
         let buffer = get_pooled_buffer(1024);
         assert_eq!(buffer.len(), 1024);
         return_pooled_buffer(buffer);
-        
+
         let stats = get_memory_pool_stats();
         assert!(stats.enabled);
-        
+
         clear_memory_pool();
     }
 }

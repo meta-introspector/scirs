@@ -105,7 +105,6 @@
 //! - [Model persistence](variable#model-persistence)
 //! - [Variable namespace](variable#variable-and-namespace)
 
-
 #[allow(unused_imports)]
 // Expose to prevent version conflict
 #[macro_use(s)]

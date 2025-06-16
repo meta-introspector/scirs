@@ -107,7 +107,7 @@ impl<F: Float> crate::op::Op<F> for AdamWOp<F> {
         // param_new = param - lr * (grad_update + weight_decay * param)
         new_param.zip_mut_with(&grad_update, move |param_val, grad_update_val| {
             // Weight decay term: decay the parameter directly
-            *param_val = *param_val * (F::one() - self.alpha * self.weight_decay);
+            *param_val *= F::one() - self.alpha * self.weight_decay;
             // Gradient-based update
             *param_val -= self.alpha * *grad_update_val;
         });

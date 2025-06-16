@@ -474,7 +474,7 @@ pub fn advanced_gather<'g, F: Float>(
 }
 
 /// Convenience functions for common indexing patterns
-
+///
 /// Get elements at specific 2D coordinates
 pub fn get_at_coords<'g, F: Float>(
     data: &Tensor<'g, F>,

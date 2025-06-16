@@ -3,7 +3,6 @@
 //! This module provides basic computation graph management features
 //! including simple caching and conditional operations.
 
-use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
 use crate::Float;
@@ -11,7 +10,7 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 /// Simple computation cache
-static COMPUTATION_CACHE: LazyLock<Mutex<HashMap<String, u64>>> = 
+static COMPUTATION_CACHE: LazyLock<Mutex<HashMap<String, u64>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Cache statistics
@@ -58,20 +57,26 @@ impl<F: Float> Op<F> for ConditionalOp {
 
         // Simple condition evaluation - check if first element meets condition
         let condition_met = match self.predicate_type {
-            PredicateType::GreaterThanZero => {
-                condition.iter().next().map(|&x| x > F::zero()).unwrap_or(false)
-            }
-            PredicateType::EqualToZero => {
-                condition.iter().next().map(|&x| x == F::zero()).unwrap_or(false)
-            }
-            PredicateType::NotEqualToZero => {
-                condition.iter().next().map(|&x| x != F::zero()).unwrap_or(false)
-            }
-            PredicateType::Threshold(threshold) => {
-                condition.iter().next()
-                    .map(|&x| x.to_f64().unwrap() > threshold)
-                    .unwrap_or(false)
-            }
+            PredicateType::GreaterThanZero => condition
+                .iter()
+                .next()
+                .map(|&x| x > F::zero())
+                .unwrap_or(false),
+            PredicateType::EqualToZero => condition
+                .iter()
+                .next()
+                .map(|&x| x == F::zero())
+                .unwrap_or(false),
+            PredicateType::NotEqualToZero => condition
+                .iter()
+                .next()
+                .map(|&x| x != F::zero())
+                .unwrap_or(false),
+            PredicateType::Threshold(threshold) => condition
+                .iter()
+                .next()
+                .map(|&x| x.to_f64().unwrap() > threshold)
+                .unwrap_or(false),
         };
 
         let result = if condition_met {
@@ -86,10 +91,10 @@ impl<F: Float> Op<F> for ConditionalOp {
 
     fn grad(&self, ctx: &mut GradientContext<F>) {
         let gy = ctx.output_grad();
-        
+
         // Simplified gradient - condition doesn't get gradient
         ctx.append_input_grad(0, None);
-        
+
         // For simplicity, pass gradient to both branches
         ctx.append_input_grad(1, Some(*gy));
         ctx.append_input_grad(2, Some(*gy));
@@ -98,7 +103,9 @@ impl<F: Float> Op<F> for ConditionalOp {
 
 /// Smart checkpoint operation (simplified)
 pub struct SmartCheckpointOp {
+    #[allow(dead_code)]
     pub memory_threshold: usize,
+    #[allow(dead_code)]
     pub recompute_on_demand: bool,
 }
 
@@ -123,6 +130,7 @@ impl<F: Float> Op<F> for SmartCheckpointOp {
 /// Cached operation (simplified)
 pub struct CachedOp {
     pub operation_name: String,
+    #[allow(dead_code)]
     pub cache_key: String,
 }
 
@@ -133,12 +141,12 @@ impl<F: Float> Op<F> for CachedOp {
 
     fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         let input = ctx.input(0);
-        
+
         // Simple caching - just record that we performed the operation
         let mut cache = COMPUTATION_CACHE.lock().unwrap();
         let counter = cache.entry(self.operation_name.clone()).or_insert(0);
         *counter += 1;
-        
+
         // Perform simple operations based on name
         let result = match self.operation_name.as_str() {
             "identity" => input.to_owned(),
@@ -146,14 +154,14 @@ impl<F: Float> Op<F> for CachedOp {
             "sqrt" => input.mapv(|x| x.sqrt()),
             _ => input.to_owned(),
         };
-        
+
         ctx.append_output(result);
         Ok(())
     }
 
     fn grad(&self, ctx: &mut GradientContext<F>) {
         let gy = ctx.output_grad();
-        
+
         // Simple gradient computation
         let grad = match self.operation_name.as_str() {
             "identity" => *gy,
@@ -170,7 +178,7 @@ impl<F: Float> Op<F> for CachedOp {
             }
             _ => *gy,
         };
-        
+
         ctx.append_input_grad(0, Some(grad));
     }
 }
@@ -245,16 +253,20 @@ pub fn smart_checkpoint<'g, F: Float>(
 }
 
 /// Create a cached operation
-pub fn cached_op<'g, F: Float>(
-    tensor: &Tensor<'g, F>,
-    operation_name: &str,
-) -> Tensor<'g, F> {
+pub fn cached_op<'g, F: Float>(tensor: &Tensor<'g, F>, operation_name: &str) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
         .append_input(tensor, false)
         .build(CachedOp {
             operation_name: operation_name.to_string(),
-            cache_key: format!("{}_{}", operation_name, std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()),
+            cache_key: format!(
+                "{}_{}",
+                operation_name,
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ),
         })
 }
 
@@ -309,7 +321,7 @@ mod tests {
     fn test_gc_operations() {
         let collected = run_garbage_collection();
         assert_eq!(collected, 0);
-        
+
         let stats = get_gc_stats();
         assert_eq!(stats.active_references, 0);
     }

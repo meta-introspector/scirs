@@ -46,8 +46,11 @@ pub struct BroadcastInfo {
     pub memory_cost: usize,
 }
 
+/// Type alias for broadcast cache key
+type BroadcastCacheKey = (Vec<usize>, Vec<usize>);
+
 /// Cache for broadcast analysis results
-static BROADCAST_CACHE: LazyLock<Mutex<HashMap<(Vec<usize>, Vec<usize>), BroadcastInfo>>> =
+static BROADCAST_CACHE: LazyLock<Mutex<HashMap<BroadcastCacheKey, BroadcastInfo>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Analyze broadcasting requirements between two shapes
@@ -373,7 +376,7 @@ fn apply_scalar_broadcast<'a, F: Float>(
     info: &BroadcastInfo,
 ) -> Result<NdArray<F>, OpError> {
     let (scalar_val, array, is_left_scalar) = if info.left_needs_broadcast {
-        let scalar = if left.is_empty() || left.len() == 0 {
+        let scalar = if left.is_empty() {
             F::zero()
         } else {
             let zeros = vec![0; left.ndim()];
@@ -381,7 +384,7 @@ fn apply_scalar_broadcast<'a, F: Float>(
         };
         (scalar, right, true)
     } else {
-        let scalar = if right.is_empty() || right.len() == 0 {
+        let scalar = if right.is_empty() {
             F::zero()
         } else {
             let zeros = vec![0; right.ndim()];
@@ -432,9 +435,9 @@ fn apply_chunked_broadcast<'a, F: Float>(
 
     // Process in chunks to manage memory usage
     let total_elements = info.output_shape.iter().product::<usize>();
-    let num_chunks = (total_elements + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    let num_chunks = total_elements.div_ceil(CHUNK_SIZE);
 
-    for chunk_idx in 0..num_chunks {
+    if let Some(chunk_idx) = (0..num_chunks).next() {
         let _start_idx = chunk_idx * CHUNK_SIZE;
         let _end_idx = ((chunk_idx + 1) * CHUNK_SIZE).min(total_elements);
 
@@ -525,18 +528,18 @@ fn reduce_for_broadcast_grad<'g, F: Float>(
 
     // Sum over broadcasted dimensions
     for &axis in reduce_axes {
-        result = tensor_ops::reduce_sum(&result, &[axis as isize], true);
+        result = tensor_ops::reduce_sum(result, &[axis as isize], true);
     }
 
     // Reshape to match original input shape if needed
     let original_shape = tensor_ops::shape(original_input);
-    result = tensor_ops::reshape(&result, &original_shape);
+    result = tensor_ops::reshape(result, &original_shape);
 
     result
 }
 
 /// Public API functions for optimized broadcasting
-
+///
 /// Add tensors with optimized broadcasting
 pub fn broadcast_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     broadcast_binary_op(left, right, BinaryOperation::Add)

@@ -10,15 +10,14 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 /// Simple registry for activation function names
-static ACTIVATION_REGISTRY: LazyLock<Mutex<HashMap<String, u8>>> = 
-    LazyLock::new(|| {
-        let mut registry = HashMap::new();
-        registry.insert("swish".to_string(), 1);
-        registry.insert("mish".to_string(), 2);
-        registry.insert("gelu".to_string(), 3);
-        registry.insert("parametric_relu".to_string(), 4);
-        Mutex::new(registry)
-    });
+static ACTIVATION_REGISTRY: LazyLock<Mutex<HashMap<String, u8>>> = LazyLock::new(|| {
+    let mut registry = HashMap::new();
+    registry.insert("swish".to_string(), 1);
+    registry.insert("mish".to_string(), 2);
+    registry.insert("gelu".to_string(), 3);
+    registry.insert("parametric_relu".to_string(), 4);
+    Mutex::new(registry)
+});
 
 /// Properties of activation functions for optimization hints
 #[derive(Debug, Clone, Default)]
@@ -44,6 +43,7 @@ pub trait CustomActivation<F: Float>: Send + Sync {
 /// Operation for applying custom activation functions
 pub struct CustomActivationOp {
     pub function_name: String,
+    #[allow(dead_code)]
     pub learnable_params: Vec<f64>,
 }
 
@@ -51,54 +51,53 @@ impl<F: Float> Op<F> for CustomActivationOp {
     fn name(&self) -> &'static str {
         "CustomActivation"
     }
-    
+
     fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         let input = ctx.input(0);
-        
+
         // Simple element-wise activation function
         let output = match self.function_name.as_str() {
-            "swish" => {
-                input.mapv(|x| {
-                    let sigmoid_x = F::one() / (F::one() + (-x).exp());
-                    x * sigmoid_x
-                })
-            },
-            "mish" => {
-                input.mapv(|x| {
-                    let softplus_x = (F::one() + x.exp()).ln();
-                    x * softplus_x.tanh()
-                })
-            },
-            "gelu" => {
-                input.mapv(|x| {
-                    let half = F::from(0.5).unwrap();
-                    let one = F::one();
-                    half * x * (one + x.tanh())
-                })
-            },
-            "parametric_relu" => {
-                input.mapv(|x| {
-                    let negative_slope = F::from(0.01).unwrap();
-                    if x > F::zero() { x } else { negative_slope * x }
-                })
-            },
+            "swish" => input.mapv(|x| {
+                let sigmoid_x = F::one() / (F::one() + (-x).exp());
+                x * sigmoid_x
+            }),
+            "mish" => input.mapv(|x| {
+                let softplus_x = (F::one() + x.exp()).ln();
+                x * softplus_x.tanh()
+            }),
+            "gelu" => input.mapv(|x| {
+                let half = F::from(0.5).unwrap();
+                let one = F::one();
+                half * x * (one + x.tanh())
+            }),
+            "parametric_relu" => input.mapv(|x| {
+                let negative_slope = F::from(0.01).unwrap();
+                if x > F::zero() {
+                    x
+                } else {
+                    negative_slope * x
+                }
+            }),
             _ => {
-                return Err(OpError::Other(format!("Unknown activation function: {}", self.function_name)));
+                return Err(OpError::Other(format!(
+                    "Unknown activation function: {}",
+                    self.function_name
+                )));
             }
         };
-        
+
         ctx.append_output(output);
         Ok(())
     }
-    
+
     fn grad(&self, ctx: &mut GradientContext<F>) {
         let gy = ctx.output_grad();
-        let input = ctx.input(0);
-        
+        let _input = ctx.input(0);
+
         // Simplified gradient computation - use identity for now
         let grad_multiplier = crate::tensor_ops::ones(&[1], ctx.graph());
-        
-        let grad_input = gy * &grad_multiplier;
+
+        let grad_input = gy * grad_multiplier;
         ctx.append_input_grad(0, Some(grad_input));
     }
 }
@@ -120,7 +119,7 @@ impl<F: Float> CustomActivationBuilder<F> {
             properties: ActivationProperties::default(),
         }
     }
-    
+
     pub fn forward<FFunc>(mut self, f: FFunc) -> Self
     where
         FFunc: Fn(F) -> F + Send + Sync + 'static,
@@ -128,7 +127,7 @@ impl<F: Float> CustomActivationBuilder<F> {
         self.forward_fn = Box::new(f);
         self
     }
-    
+
     pub fn derivative<DFunc>(mut self, f: DFunc) -> Self
     where
         DFunc: Fn(F) -> F + Send + Sync + 'static,
@@ -136,12 +135,12 @@ impl<F: Float> CustomActivationBuilder<F> {
         self.derivative_fn = Some(Box::new(f));
         self
     }
-    
+
     pub fn properties(mut self, props: ActivationProperties) -> Self {
         self.properties = props;
         self
     }
-    
+
     pub fn build(self) -> impl CustomActivation<F> {
         BuiltCustomActivation {
             name: self.name,
@@ -154,6 +153,7 @@ impl<F: Float> CustomActivationBuilder<F> {
 
 /// A custom activation function built using the builder pattern
 struct BuiltCustomActivation<F: Float> {
+    #[allow(dead_code)]
     name: String,
     forward_fn: Box<dyn Fn(F) -> F + Send + Sync>,
     derivative_fn: Option<Box<dyn Fn(F) -> F + Send + Sync>>,
@@ -164,11 +164,11 @@ impl<F: Float> CustomActivation<F> for BuiltCustomActivation<F> {
     fn name(&self) -> &'static str {
         "custom_built"
     }
-    
+
     fn forward(&self, x: F) -> F {
         (self.forward_fn)(x)
     }
-    
+
     fn derivative(&self, x: F) -> F {
         if let Some(ref derivative_fn) = self.derivative_fn {
             (derivative_fn)(x)
@@ -176,10 +176,11 @@ impl<F: Float> CustomActivation<F> for BuiltCustomActivation<F> {
             let h = F::from(1e-8).unwrap();
             let x_plus_h = x + h;
             let x_minus_h = x - h;
-            ((self.forward_fn)(x_plus_h) - (self.forward_fn)(x_minus_h)) / (F::from(2.0).unwrap() * h)
+            ((self.forward_fn)(x_plus_h) - (self.forward_fn)(x_minus_h))
+                / (F::from(2.0).unwrap() * h)
         }
     }
-    
+
     fn properties(&self) -> ActivationProperties {
         self.properties.clone()
     }
@@ -190,7 +191,7 @@ impl<F: Float> CustomActivation<F> for BuiltCustomActivation<F> {
 /// Register a custom activation function (simplified implementation)
 pub fn register_activation<F: Float + 'static>(
     _name: &str,
-    _activation: impl CustomActivation<F> + 'static
+    _activation: impl CustomActivation<F> + 'static,
 ) {
     // Simplified registration
 }
@@ -198,7 +199,7 @@ pub fn register_activation<F: Float + 'static>(
 /// Apply a custom activation function to a tensor
 pub fn custom_activation<'g, F: Float>(
     tensor: &Tensor<'g, F>,
-    function_name: &str
+    function_name: &str,
 ) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
@@ -213,7 +214,7 @@ pub fn custom_activation<'g, F: Float>(
 pub fn parameterized_activation<'g, F: Float>(
     tensor: &Tensor<'g, F>,
     function_name: &str,
-    params: &[f64]
+    params: &[f64],
 ) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)
@@ -253,18 +254,18 @@ mod tests {
         assert!(is_activation_registered("mish"));
         assert!(is_activation_registered("gelu"));
         assert!(!is_activation_registered("nonexistent"));
-        
+
         let functions = list_activation_functions();
         assert!(functions.contains(&"swish".to_string()));
     }
-    
+
     #[test]
     fn test_custom_activation_builder() {
         let custom = CustomActivationBuilder::<f32>::new("test")
             .forward(|x| x * x)
             .derivative(|x| 2.0 * x)
             .build();
-        
+
         let x = 3.0f32;
         assert!((custom.forward(x) - 9.0).abs() < 1e-6);
         assert!((custom.derivative(x) - 6.0).abs() < 1e-6);
