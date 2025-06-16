@@ -44,8 +44,10 @@ pub mod dendrogram;
 pub mod disjoint_set;
 pub mod leaf_ordering;
 pub mod linkage;
+pub mod optimized_ward;
 pub mod parallel_linkage;
 pub mod validation;
+pub mod visualization;
 
 // Re-exports
 pub use self::agglomerative::{cut_tree_by_distance, cut_tree_by_inconsistency};
@@ -61,9 +63,16 @@ pub use self::disjoint_set::DisjointSet;
 pub use self::leaf_ordering::{
     apply_leaf_ordering, optimal_leaf_ordering_exact, optimal_leaf_ordering_heuristic,
 };
+pub use self::optimized_ward::{
+    lance_williams_ward_update, memory_efficient_ward_linkage, optimized_ward_linkage,
+};
 pub use self::validation::{
     validate_cluster_consistency, validate_cluster_extraction_params, validate_distance_matrix,
     validate_linkage_matrix, validate_monotonic_distances, validate_square_distance_matrix,
+};
+pub use self::visualization::{
+    create_dendrogram_plot, get_color_palette, Branch, ColorScheme, ColorThreshold,
+    DendrogramConfig, DendrogramOrientation, DendrogramPlot, Leaf, LegendEntry, TruncateMode,
 };
 
 /// Linkage methods for hierarchical clustering
@@ -257,7 +266,9 @@ pub fn coords_to_condensed_index(n: usize, i: usize, j: usize) -> usize {
 /// # Returns
 ///
 /// * `Result<Array2<F>>` - The linkage matrix, which describes the dendrogram
-pub fn linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
+pub fn linkage<
+    F: Float + FromPrimitive + Debug + PartialOrd + Send + Sync + ndarray::ScalarOperand + 'static,
+>(
     data: ArrayView2<F>,
     method: LinkageMethod,
     metric: Metric,
@@ -274,6 +285,11 @@ pub fn linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
         // Hierarchical clustering on large datasets can be very memory-intensive
         // and slow. We'll add a warning here.
         eprintln!("Warning: Performing hierarchical clustering on {} samples. This may be slow and memory-intensive.", n_samples);
+    }
+
+    // Use optimized Ward's method if requested
+    if method == LinkageMethod::Ward {
+        return optimized_ward::optimized_ward_linkage(data, metric);
     }
 
     // Calculate distances between observations
@@ -320,7 +336,15 @@ pub fn linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// println!("Linkage matrix shape: {:?}", linkage_matrix.shape());
 /// ```
 pub fn parallel_linkage<
-    F: Float + FromPrimitive + Debug + PartialOrd + Send + Sync + std::iter::Sum,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Send
+        + Sync
+        + std::iter::Sum
+        + ndarray::ScalarOperand
+        + 'static,
 >(
     data: ArrayView2<F>,
     method: LinkageMethod,
@@ -338,6 +362,11 @@ pub fn parallel_linkage<
         // Hierarchical clustering on large datasets can be very memory-intensive
         // and slow. We'll add a warning here.
         eprintln!("Warning: Performing parallel hierarchical clustering on {} samples. This may still be slow for very large datasets.", n_samples);
+    }
+
+    // Use optimized Ward's method if requested (already parallel-optimized)
+    if method == LinkageMethod::Ward {
+        return optimized_ward::optimized_ward_linkage(data, metric);
     }
 
     // Calculate distances between observations

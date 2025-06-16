@@ -5,6 +5,7 @@ use num_traits::{Float, FromPrimitive};
 use rand::{rng, rngs::StdRng, Rng, RngCore, SeedableRng};
 use rand_distr::{Distribution, Normal};
 use std::fmt::Debug;
+use std::str::FromStr;
 
 use super::{euclidean_distance, vq};
 use crate::error::{ClusteringError, Result};
@@ -35,7 +36,7 @@ impl MinitMethod {
     /// # Errors
     ///
     /// * Returns an error if the string is not recognized
-    pub fn from_str(s: &str) -> Result<Self> {
+    pub fn parse_method(s: &str) -> Result<Self> {
         match s.to_lowercase().as_str() {
             "random" => Ok(MinitMethod::Random),
             "points" => Ok(MinitMethod::Points),
@@ -45,6 +46,14 @@ impl MinitMethod {
                 s
             ))),
         }
+    }
+}
+
+impl FromStr for MinitMethod {
+    type Err = ClusteringError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::parse_method(s)
     }
 }
 
@@ -107,18 +116,11 @@ where
         .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
 
     // Initialize centroids
-    let mut centroids = if let Some(init_method) = minit {
-        match init_method {
-            MinitMethod::Random => krandinit(data, k, random_seed)?,
-            MinitMethod::Points => kpoints(data, k, random_seed)?,
-            MinitMethod::PlusPlus => kmeans_plus_plus(data, k, random_seed)?,
-        }
-    } else {
-        // Handle case where k is provided as initial centroids array
-        // This is handled by the caller and should not reach here for now
-        return Err(ClusteringError::InvalidInput(
-            "Direct centroid initialization not yet supported".to_string(),
-        ));
+    let init_method = minit.unwrap_or(MinitMethod::PlusPlus); // Default to k-means++
+    let mut centroids = match init_method {
+        MinitMethod::Random => krandinit(data, k, random_seed)?,
+        MinitMethod::Points => kpoints(data, k, random_seed)?,
+        MinitMethod::PlusPlus => kmeans_plus_plus(data, k, random_seed)?,
     };
 
     let mut labels;
