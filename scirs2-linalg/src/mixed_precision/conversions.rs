@@ -90,8 +90,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_convert_f64_to_f32() {

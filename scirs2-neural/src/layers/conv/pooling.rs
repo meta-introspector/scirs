@@ -4,9 +4,12 @@
 //! standard pooling (MaxPool2D, GlobalAvgPool2D) and adaptive pooling layers
 //! for 1D, 2D, and 3D data with both average and max pooling variants.
 
+use super::common::{
+    calculate_adaptive_pooling_params, calculate_pool_output_shape, validate_pool_params,
+    MaxIndicesCache, MaxIndicesCache3D,
+};
 use crate::error::{NeuralError, Result};
 use crate::layers::Layer;
-use super::common::{MaxIndicesCache, MaxIndicesCache3D, validate_pool_params, calculate_pool_output_shape, calculate_adaptive_pooling_params};
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;

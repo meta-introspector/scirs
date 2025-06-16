@@ -515,10 +515,24 @@ impl SIMDOperations {
 
         while i + chunk_size <= len {
             let a_vals = [
-                a[i], a[i + 1], a[i + 2], a[i + 3], a[i + 4], a[i + 5], a[i + 6], a[i + 7],
+                a[i],
+                a[i + 1],
+                a[i + 2],
+                a[i + 3],
+                a[i + 4],
+                a[i + 5],
+                a[i + 6],
+                a[i + 7],
             ];
             let b_vals = [
-                b[i], b[i + 1], b[i + 2], b[i + 3], b[i + 4], b[i + 5], b[i + 6], b[i + 7],
+                b[i],
+                b[i + 1],
+                b[i + 2],
+                b[i + 3],
+                b[i + 4],
+                b[i + 5],
+                b[i + 6],
+                b[i + 7],
             ];
 
             let a_vec = f32x8::new(a_vals);
@@ -554,11 +568,9 @@ impl SIMDOperations {
 
         let mut result = Array::zeros(a.raw_dim());
 
-        if let (Some(a_slice), Some(b_slice), Some(result_slice)) = (
-            a.as_slice(),
-            b.as_slice(),
-            result.as_slice_mut(),
-        ) {
+        if let (Some(a_slice), Some(b_slice), Some(result_slice)) =
+            (a.as_slice(), b.as_slice(), result.as_slice_mut())
+        {
             Self::simd_add_f32_slices(a_slice, b_slice, result_slice);
         } else {
             // Fallback for non-contiguous arrays
@@ -578,10 +590,24 @@ impl SIMDOperations {
 
         while i + chunk_size <= len {
             let a_vals = [
-                a[i], a[i + 1], a[i + 2], a[i + 3], a[i + 4], a[i + 5], a[i + 6], a[i + 7],
+                a[i],
+                a[i + 1],
+                a[i + 2],
+                a[i + 3],
+                a[i + 4],
+                a[i + 5],
+                a[i + 6],
+                a[i + 7],
             ];
             let b_vals = [
-                b[i], b[i + 1], b[i + 2], b[i + 3], b[i + 4], b[i + 5], b[i + 6], b[i + 7],
+                b[i],
+                b[i + 1],
+                b[i + 2],
+                b[i + 3],
+                b[i + 4],
+                b[i + 5],
+                b[i + 6],
+                b[i + 7],
             ];
 
             let a_vec = f32x8::new(a_vals);
@@ -649,12 +675,8 @@ impl SIMDOperations {
                                         && in_h - padding.0 < in_height
                                         && in_w - padding.1 < in_width
                                     {
-                                        let input_val = input[[
-                                            batch,
-                                            in_ch,
-                                            in_h - padding.0,
-                                            in_w - padding.1,
-                                        ]];
+                                        let input_val = input
+                                            [[batch, in_ch, in_h - padding.0, in_w - padding.1]];
                                         let kernel_val = kernel[[out_ch, in_ch, kh, kw]];
                                         sum += input_val * kernel_val;
                                     }

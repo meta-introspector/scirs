@@ -719,6 +719,7 @@ impl<F: Float + FromPrimitive + Debug> BallTree<F> {
         (center, radius)
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn search_ball_knn(
         &self,
         node: &BallNode,
@@ -780,6 +781,7 @@ impl<F: Float + FromPrimitive + Debug> BallTree<F> {
         }
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn search_ball_radius(
         &self,
         node: &BallNode,
@@ -859,7 +861,7 @@ fn euclidean_distance_vec(a: &[f64], b: &[f64]) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use ndarray::{Array1, Array2};
 
     fn create_test_data() -> Array2<f64> {
         Array2::from_shape_vec(

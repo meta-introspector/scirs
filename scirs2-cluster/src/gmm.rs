@@ -761,7 +761,7 @@ mod tests {
         // Should find up to 3 clusters
         let unique_labels: std::collections::HashSet<_> = labels.iter().cloned().collect();
         assert!(unique_labels.len() <= 3);
-        assert!(unique_labels.len() >= 1);
+        assert!(!unique_labels.is_empty());
     }
 
     #[test]

@@ -7,8 +7,8 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumAssign, NumCast, ToPrimitive, Zero};
 use std::fmt::Debug;
 
-use crate::error::{LinalgError, LinalgResult};
 use super::conversions::{convert, convert_2d};
+use crate::error::{LinalgError, LinalgResult};
 
 /// Perform mixed-precision matrix-vector multiplication using f32 optimization
 ///
@@ -286,15 +286,16 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_mixed_precision_matvec_f32() {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
         let x = array![0.5f32, 0.5f32];
 
-        let result = mixed_precision_matvec_f32::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
+        let result =
+            mixed_precision_matvec_f32::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
 
         assert_eq!(result.len(), 2);
         assert_relative_eq!(result[0], 1.5f32, epsilon = 1e-6);
@@ -306,7 +307,8 @@ mod tests {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
         let b = array![[5.0f32, 6.0f32], [7.0f32, 8.0f32]];
 
-        let result = mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result =
+            mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 19.0f32, epsilon = 1e-5);
@@ -322,7 +324,8 @@ mod tests {
         let a = Array2::<f32>::ones((size, size));
         let b = Array2::<f32>::ones((size, size));
 
-        let result = mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result =
+            mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
 
         assert_eq!(result.shape(), &[size, size]);
         // Each element should be size (sum of 1*1 over size elements)

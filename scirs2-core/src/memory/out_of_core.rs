@@ -642,11 +642,7 @@ where
     }
 
     /// Deserialize chunk data from bytes
-    fn deserialize_chunk_data(
-        &self,
-        _data: &[u8],
-        shape: &[usize],
-    ) -> CoreResult<Array<T, IxDyn>> {
+    fn deserialize_chunk_data(&self, _data: &[u8], shape: &[usize]) -> CoreResult<Array<T, IxDyn>> {
         // Simplified implementation - in reality would properly deserialize
         let chunk = Array::<T, IxDyn>::default(IxDyn(shape));
         Ok(chunk)

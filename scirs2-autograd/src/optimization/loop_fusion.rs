@@ -87,14 +87,14 @@ impl<F: Float> FusionChain<F> {
 
     /// Add an operation to the chain
     pub fn add_operation(&mut self, op: FusableOperation<F>, input_shape: Vec<usize>) {
+        // Estimate performance benefit before moving op
+        self.performance_benefit += self.estimate_benefit(&op);
+
         self.operations.push(op);
         self.input_shapes.push(input_shape.clone());
 
         // For element-wise operations, output shape matches input shape
         self.output_shape = input_shape;
-
-        // Estimate performance benefit (simple heuristic)
-        self.performance_benefit += self.estimate_benefit(&op);
     }
 
     /// Estimate performance benefit of adding this operation
@@ -183,7 +183,7 @@ impl<F: Float> LoopFusionOptimizer<F> {
     }
 
     /// Find all element-wise operations in the graph
-    fn find_element_wise_operations(&self, graph: &Graph<F>) -> Vec<TensorID> {
+    fn find_element_wise_operations(&self, _graph: &Graph<F>) -> Vec<TensorID> {
         // This is a simplified implementation - in practice, would need to
         // inspect the actual graph structure and operation types
         Vec::new()
@@ -316,7 +316,7 @@ impl<F: Float> FusedKernel<F> {
         OpError,
     > {
         let operations = chain.operations.clone();
-        let output_shape = chain.output_shape.clone();
+        let _output_shape = chain.output_shape.clone();
 
         Ok(Box::new(
             move |inputs: &[&Array<F, IxDyn>]| -> Result<Array<F, IxDyn>, OpError> {
@@ -597,11 +597,11 @@ pub fn set_fusion_enabled(enabled: bool) -> Result<(), OpError> {
 /// Check if loop fusion is enabled
 pub fn is_fusion_enabled() -> bool {
     let manager = init_fusion_manager();
-    if let Ok(manager_guard) = manager.lock() {
-        manager_guard.is_enabled()
-    } else {
-        false
-    }
+    let result = match manager.lock() {
+        Ok(manager_guard) => manager_guard.is_enabled(),
+        Err(_) => false,
+    };
+    result
 }
 
 #[cfg(test)]

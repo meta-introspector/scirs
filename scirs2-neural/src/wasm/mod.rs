@@ -15,37 +15,33 @@
 //! - [`exports`] - WASM compilation and export configuration
 
 pub mod bindings;
-pub mod memory;
 pub mod exports;
+pub mod memory;
 
 // Re-export main types and functions for backward compatibility
 
 // From bindings module
 pub use bindings::{
-    BindingGenerator, WebBindingConfig, WebBindingLanguage, ModuleSystem, 
-    BundlingConfig, BundleFormat
+    BindingGenerator, BundleFormat, BundlingConfig, ModuleSystem, WebBindingConfig,
+    WebBindingLanguage,
 };
 
-// From memory module  
+// From memory module
 pub use memory::{
-    WasmMemoryConfig, MemoryGrowthStrategy, MemoryAlignment, MemoryManager,
-    ProgressiveLoadingConfig, LoadingStrategy, PreloadingConfig,
-    CachingConfig, CacheStrategy, CacheStorage, VersioningStrategy,
-    ParallelConfig, WasmMemoryExport, WasmMemoryImport,
-    MemoryRequirements, MemoryBreakdown
+    CacheStorage, CacheStrategy, CachingConfig, LoadingStrategy, MemoryAlignment, MemoryBreakdown,
+    MemoryGrowthStrategy, MemoryManager, MemoryRequirements, ParallelConfig, PreloadingConfig,
+    ProgressiveLoadingConfig, VersioningStrategy, WasmMemoryConfig, WasmMemoryExport,
+    WasmMemoryImport,
 };
 
 // From exports module
 pub use exports::{
-    WasmCompiler, WasmCompilationConfig, WasmCompilationResult, 
-    WasmVersion, WasmOptimization, InlineLevel, WasmFeatures,
-    WasmExports, WasmImports, WasmFunctionExport, WasmFunctionImport,
-    WasmGlobalExport, WasmGlobalImport, WasmTableExport, WasmTableImport,
-    WasmSignature, WasmType, PerformanceHint, WasmDebugConfig,
-    ProfilingConfig, ProfilingFormat, BundleInfo,
-    WebAccelerationConfig, WebGLConfig, WebGPUConfig, TextureFormat,
-    WebIntegrationConfig, WorkerConfig, WorkerType, MessagingStrategy,
-    WorkerPoolConfig
+    BundleInfo, InlineLevel, MessagingStrategy, PerformanceHint, ProfilingConfig, ProfilingFormat,
+    TextureFormat, WasmCompilationConfig, WasmCompilationResult, WasmCompiler, WasmDebugConfig,
+    WasmExports, WasmFeatures, WasmFunctionExport, WasmFunctionImport, WasmGlobalExport,
+    WasmGlobalImport, WasmImports, WasmOptimization, WasmSignature, WasmTableExport,
+    WasmTableImport, WasmType, WasmVersion, WebAccelerationConfig, WebGLConfig, WebGPUConfig,
+    WebIntegrationConfig, WorkerConfig, WorkerPoolConfig, WorkerType,
 };
 
 #[cfg(test)]
@@ -115,7 +111,7 @@ mod tests {
         assert!(compilation_result.bundle_info.total_size > 0);
     }
 
-    #[test] 
+    #[test]
     fn test_memory_manager_integration() {
         // Test memory manager with different configurations
         let performance_manager = MemoryManager::performance_optimized();
@@ -124,7 +120,8 @@ mod tests {
         let model_size = 10 * 1024 * 1024; // 10MB model
 
         let perf_requirements = performance_manager.calculate_memory_requirements(model_size);
-        let constrained_requirements = constrained_manager.calculate_memory_requirements(model_size);
+        let constrained_requirements =
+            constrained_manager.calculate_memory_requirements(model_size);
 
         // Performance config should use more memory
         assert!(perf_requirements.total > constrained_requirements.total);
@@ -137,7 +134,7 @@ mod tests {
     #[test]
     fn test_binding_generator_integration() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Test different binding configurations
         let js_config = WebBindingConfig {
             target_language: WebBindingLanguage::JavaScript,
@@ -209,7 +206,10 @@ mod tests {
         assert!(wasm_config.optimization_level.lto);
 
         let web_config = WebIntegrationConfig::default();
-        assert_eq!(web_config.bindings.target_language, WebBindingLanguage::Both);
+        assert_eq!(
+            web_config.bindings.target_language,
+            WebBindingLanguage::Both
+        );
         assert!(web_config.caching.enable);
         assert!(web_config.progressive_loading.enable);
         assert!(web_config.workers.enable);
@@ -217,7 +217,10 @@ mod tests {
         let memory_config = WasmMemoryConfig::default();
         assert_eq!(memory_config.initial_pages, 256);
         assert_eq!(memory_config.maximum_pages, Some(1024));
-        assert_eq!(memory_config.growth_strategy, MemoryGrowthStrategy::OnDemand);
+        assert_eq!(
+            memory_config.growth_strategy,
+            MemoryGrowthStrategy::OnDemand
+        );
     }
 
     #[test]
@@ -270,7 +273,7 @@ mod tests {
     #[test]
     fn test_memory_requirements_calculation() {
         let manager = MemoryManager::performance_optimized();
-        
+
         // Test different model sizes
         let small_model = 1024 * 1024; // 1MB
         let medium_model = 10 * 1024 * 1024; // 10MB
@@ -291,18 +294,20 @@ mod tests {
 
         // Check breakdown percentages sum to 100%
         let breakdown = medium_req.breakdown_percentages();
-        let total_percent = breakdown.base_percent + breakdown.model_percent + 
-                           breakdown.cache_percent + breakdown.preload_percent + 
-                           breakdown.worker_percent;
+        let total_percent = breakdown.base_percent
+            + breakdown.model_percent
+            + breakdown.cache_percent
+            + breakdown.preload_percent
+            + breakdown.worker_percent;
         assert!((total_percent - 100.0).abs() < 0.1);
     }
 
     #[test]
     fn test_chunk_size_recommendations() {
         let manager = MemoryManager::performance_optimized();
-        
+
         let small_model = 512 * 1024; // 512KB
-        let medium_model = 10 * 1024 * 1024; // 10MB  
+        let medium_model = 10 * 1024 * 1024; // 10MB
         let large_model = 200 * 1024 * 1024; // 200MB
 
         let small_chunk = manager.recommended_chunk_size(small_model);
@@ -312,7 +317,7 @@ mod tests {
         // Verify chunk size adaptation
         assert!(small_chunk < medium_chunk);
         assert!(medium_chunk <= large_chunk);
-        
+
         // Base chunk size should be used for medium models
         assert_eq!(medium_chunk, manager.progressive_config().chunk_size);
     }

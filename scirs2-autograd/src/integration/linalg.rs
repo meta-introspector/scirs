@@ -99,7 +99,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_svd(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_svd(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "SVD requires exactly 1 input tensor".to_string(),
@@ -126,7 +126,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_qr(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_qr(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "QR requires exactly 1 input tensor".to_string(),
@@ -152,7 +152,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_lu(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_lu(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "LU requires exactly 1 input tensor".to_string(),
@@ -179,7 +179,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_cholesky(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_cholesky(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "Cholesky requires exactly 1 input tensor".to_string(),
@@ -201,7 +201,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_eigenvalue(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_eigenvalue(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "Eigenvalue requires exactly 1 input tensor".to_string(),
@@ -226,7 +226,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_inverse(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_inverse(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "Inverse requires exactly 1 input tensor".to_string(),
@@ -248,7 +248,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_solve(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_solve(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 2 {
             return Err(IntegrationError::ModuleCompatibility(
                 "Solve requires exactly 2 input tensors (A, b)".to_string(),
@@ -271,7 +271,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_norm(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_norm(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "Norm requires exactly 1 input tensor".to_string(),
@@ -299,7 +299,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_det(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_det(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "Det requires exactly 1 input tensor".to_string(),
@@ -321,7 +321,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_trace(&self) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_trace(&self) -> Result<LinalgResult<'a, F>, IntegrationError> {
         if self.inputs.len() != 1 {
             return Err(IntegrationError::ModuleCompatibility(
                 "Trace requires exactly 1 input tensor".to_string(),
@@ -346,7 +346,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_custom(&self, _name: &str) -> Result<LinalgResult<F>, IntegrationError> {
+    fn execute_custom(&self, _name: &str) -> Result<LinalgResult<'a, F>, IntegrationError> {
         // Placeholder for custom operations
         let graph = if !self.inputs.is_empty() {
             self.inputs[0].graph()
@@ -373,7 +373,11 @@ impl<'a, F: Float> LinalgContext<'a, F> {
     }
 
     // Helper computation methods (simplified implementations)
-    fn compute_matmul(&self, a: &Tensor<F>, b: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
+    fn compute_matmul(
+        &self,
+        a: &Tensor<'a, F>,
+        b: &Tensor<'a, F>,
+    ) -> Result<Tensor<'a, F>, IntegrationError> {
         // Simplified matrix multiplication
         // In practice, would use optimized BLAS routines
         let a_shape = a.shape();
@@ -402,8 +406,8 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn compute_svd(
         &self,
-        input: &Tensor<F>,
-    ) -> Result<(Tensor<F>, Tensor<F>, Tensor<F>), IntegrationError> {
+        input: &Tensor<'a, F>,
+    ) -> Result<(Tensor<'a, F>, Tensor<'a, F>, Tensor<'a, F>), IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 {
             return Err(IntegrationError::TensorConversion(
@@ -427,7 +431,10 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         Ok((u, s, vt))
     }
 
-    fn compute_qr(&self, input: &Tensor<F>) -> Result<(Tensor<F>, Tensor<F>), IntegrationError> {
+    fn compute_qr(
+        &self,
+        input: &Tensor<'a, F>,
+    ) -> Result<(Tensor<'a, F>, Tensor<'a, F>), IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 {
             return Err(IntegrationError::TensorConversion(
@@ -450,8 +457,8 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn compute_lu(
         &self,
-        input: &Tensor<F>,
-    ) -> Result<(Tensor<F>, Tensor<F>, Tensor<F>), IntegrationError> {
+        input: &Tensor<'a, F>,
+    ) -> Result<(Tensor<'a, F>, Tensor<'a, F>, Tensor<'a, F>), IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
@@ -473,7 +480,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         Ok((l, u, p))
     }
 
-    fn compute_cholesky(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
+    fn compute_cholesky(&self, input: &Tensor<'a, F>) -> Result<Tensor<'a, F>, IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
@@ -488,8 +495,8 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn compute_eigenvalue(
         &self,
-        input: &Tensor<F>,
-    ) -> Result<(Tensor<F>, Tensor<F>), IntegrationError> {
+        input: &Tensor<'a, F>,
+    ) -> Result<(Tensor<'a, F>, Tensor<'a, F>), IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
@@ -508,7 +515,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         Ok((eigenvalues, eigenvectors))
     }
 
-    fn compute_inverse(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
+    fn compute_inverse(&self, input: &Tensor<'a, F>) -> Result<Tensor<'a, F>, IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
@@ -521,7 +528,11 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         Ok(Tensor::from_vec(inv_data, vec![n, n], input.graph()))
     }
 
-    fn compute_solve(&self, a: &Tensor<F>, b: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
+    fn compute_solve(
+        &self,
+        a: &Tensor<'a, F>,
+        b: &Tensor<'a, F>,
+    ) -> Result<Tensor<'a, F>, IntegrationError> {
         let a_shape = a.shape();
         let b_shape = b.shape();
 
@@ -543,9 +554,9 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn compute_norm(
         &self,
-        input: &Tensor<F>,
+        input: &Tensor<'a, F>,
         norm_type: &str,
-    ) -> Result<Tensor<F>, IntegrationError> {
+    ) -> Result<Tensor<'a, F>, IntegrationError> {
         let norm_value = match norm_type {
             "1" => self.compute_l1_norm(input),
             "2" | "fro" => self.compute_l2_norm(input),
@@ -561,7 +572,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         Ok(Tensor::from_vec(vec![norm_value], vec![1], input.graph()))
     }
 
-    fn compute_l1_norm(&self, input: &Tensor<F>) -> F {
+    fn compute_l1_norm(&self, input: &Tensor<'a, F>) -> F {
         input
             .data()
             .iter()
@@ -569,7 +580,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             .fold(F::zero(), |acc, x| acc + x)
     }
 
-    fn compute_l2_norm(&self, input: &Tensor<F>) -> F {
+    fn compute_l2_norm(&self, input: &Tensor<'a, F>) -> F {
         let sum_squares = input
             .data()
             .iter()
@@ -578,7 +589,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         sum_squares.sqrt()
     }
 
-    fn compute_inf_norm(&self, input: &Tensor<F>) -> F {
+    fn compute_inf_norm(&self, input: &Tensor<'a, F>) -> F {
         input.data().iter().map(|&x| x.abs()).fold(
             F::zero(),
             |acc, x| {
@@ -591,7 +602,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         )
     }
 
-    fn compute_det(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
+    fn compute_det(&self, input: &Tensor<'a, F>) -> Result<Tensor<'a, F>, IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
@@ -604,7 +615,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         Ok(Tensor::from_vec(vec![det_value], vec![1], input.graph()))
     }
 
-    fn compute_trace(&self, input: &Tensor<F>) -> Result<Tensor<F>, IntegrationError> {
+    fn compute_trace(&self, input: &Tensor<'a, F>) -> Result<Tensor<'a, F>, IntegrationError> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(
@@ -1031,7 +1042,19 @@ mod tests {
     fn test_scirs2_integration() {
         crate::run(|g| {
             let tensor = Tensor::from_vec(vec![1.0f32, 2.0], vec![2], g);
-            let result = LinalgResult::from_autograd_tensor(&tensor).unwrap();
+            let result = LinalgResult {
+                primary_output: tensor.clone(),
+                auxiliary_outputs: HashMap::new(),
+                operation_info: OperationInfo {
+                    operation: LinalgOperation::MatMul,
+                    computational_cost: ComputationalCost {
+                        flops: 1,
+                        memory_accesses: tensor.data().len() as u64,
+                    },
+                    numerical_stability: NumericalStability::Stable,
+                    memory_usage: tensor.data().len() * std::mem::size_of::<f32>(),
+                },
+            };
 
             assert_eq!(result.primary_output.data(), tensor.data());
 

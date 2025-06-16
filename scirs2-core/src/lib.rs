@@ -91,6 +91,7 @@ pub mod logging;
 pub mod memory;
 #[cfg(feature = "memory_efficient")]
 pub mod memory_efficient;
+pub mod metrics;
 pub mod ndarray_ext;
 pub mod numeric;
 #[cfg(feature = "parallel")]
@@ -106,14 +107,18 @@ pub mod simd;
 pub mod types;
 #[cfg(feature = "ufuncs")]
 pub mod ufuncs;
+pub mod units;
 pub mod utils;
 pub mod validation;
 
 // Re-exports
 #[cfg(feature = "cache")]
 pub use crate::cache::*;
-pub use crate::config::*;
-pub use crate::constants::*;
+pub use crate::config::production as config_production;
+pub use crate::config::{
+    get_config, get_config_value, set_config_value, set_global_config, Config, ConfigValue,
+};
+pub use crate::constants::{math, physical, prefixes};
 pub use crate::error::*;
 #[cfg(feature = "gpu")]
 pub use crate::gpu::*;
@@ -187,6 +192,10 @@ pub use crate::batch_conversions::{
 };
 #[cfg(all(feature = "memory_metrics", feature = "gpu"))]
 pub use crate::memory::metrics::{setup_gpu_memory_tracking, TrackedGpuBuffer, TrackedGpuContext};
+pub use crate::metrics::{
+    global_health_monitor, global_metrics_registry, Counter, Gauge, HealthCheck, HealthMonitor,
+    HealthStatus, Histogram, MetricPoint, MetricType, MetricValue, Timer,
+};
 pub use crate::numeric::*;
 #[cfg(feature = "parallel")]
 pub use crate::parallel::*;
@@ -198,8 +207,15 @@ pub use crate::random::*;
 pub use crate::simd::*;
 #[cfg(feature = "types")]
 pub use crate::types::{convert, ComplexConversionError, ComplexExt, ComplexOps};
+pub use crate::units::{
+    convert, global_unit_registry, unit_value, Dimension, UnitDefinition, UnitRegistry, UnitSystem,
+    UnitValue,
+};
 pub use crate::utils::*;
-pub use crate::validation::*;
+pub use crate::validation::production as validation_production;
+pub use crate::validation::{
+    check_array_finite, check_finite, check_in_bounds, check_positive, check_shape,
+};
 
 /// SciRS2 core version information
 pub fn version() -> &'static str {

@@ -119,8 +119,7 @@ mod error;
 // Recovery strategies and mechanisms
 pub mod recovery;
 pub use recovery::{
-    hints, CircuitBreaker, CircuitBreakerStatus, ErrorAggregator, ErrorSeverity, RecoverableError,
-    RecoveryHint, RecoveryStrategy, RetryExecutor,
+    hints, ErrorAggregator, ErrorSeverity, RecoverableError, RecoveryHint, RecoveryStrategy,
 };
 
 // Async error handling
@@ -138,6 +137,14 @@ pub mod diagnostics;
 pub use diagnostics::{
     diagnose_error, diagnose_error_with_context, EnvironmentInfo, ErrorDiagnosticReport,
     ErrorDiagnostics, ErrorOccurrence, ErrorPattern, PerformanceImpact,
+};
+
+// Circuit breaker and error recovery for production systems
+pub mod circuit_breaker;
+pub use circuit_breaker::{
+    get_circuit_breaker, list_circuit_breakers, CircuitBreaker, CircuitBreakerConfig,
+    CircuitBreakerStatus, CircuitState, FallbackStrategy, ResilientExecutor, RetryExecutor,
+    RetryPolicy,
 };
 
 // Convenience re-exports for common patterns

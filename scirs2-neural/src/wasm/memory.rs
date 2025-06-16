@@ -181,7 +181,7 @@ pub struct WasmMemoryImport {
 impl Default for WasmMemoryConfig {
     fn default() -> Self {
         Self {
-            initial_pages: 256,    // 16MB initial
+            initial_pages: 256,        // 16MB initial
             maximum_pages: Some(1024), // 64MB maximum
             shared: false,
             growth_strategy: MemoryGrowthStrategy::OnDemand,
@@ -261,7 +261,7 @@ impl WasmMemoryConfig {
     /// Create a configuration for small models
     pub fn small() -> Self {
         Self {
-            initial_pages: 64,     // 4MB initial
+            initial_pages: 64,        // 4MB initial
             maximum_pages: Some(256), // 16MB maximum
             shared: false,
             growth_strategy: MemoryGrowthStrategy::Fixed,
@@ -272,7 +272,7 @@ impl WasmMemoryConfig {
     /// Create a configuration for large models
     pub fn large() -> Self {
         Self {
-            initial_pages: 512,    // 32MB initial
+            initial_pages: 512,        // 32MB initial
             maximum_pages: Some(4096), // 256MB maximum
             shared: false,
             growth_strategy: MemoryGrowthStrategy::Streaming,
@@ -283,7 +283,7 @@ impl WasmMemoryConfig {
     /// Create a configuration for multi-threaded execution
     pub fn multithreaded() -> Self {
         Self {
-            initial_pages: 256,    // 16MB initial
+            initial_pages: 256,        // 16MB initial
             maximum_pages: Some(2048), // 128MB maximum
             shared: true,
             growth_strategy: MemoryGrowthStrategy::PreAllocated,
@@ -325,9 +325,9 @@ impl MemoryAlignment {
     /// Create alignment configuration optimized for size
     pub fn compact() -> Self {
         Self {
-            data_alignment: 4,      // Minimal alignment
-            function_alignment: 8,  // Minimal function alignment
-            simd_alignment: 16,     // Standard SIMD alignment
+            data_alignment: 4,     // Minimal alignment
+            function_alignment: 8, // Minimal function alignment
+            simd_alignment: 16,    // Standard SIMD alignment
         }
     }
 
@@ -563,7 +563,7 @@ impl MemoryManager {
     /// Check if configuration is suitable for given model size
     pub fn is_suitable_for_model(&self, model_size: usize) -> bool {
         let requirements = self.calculate_memory_requirements(model_size);
-        
+
         if let Some(max_size) = self.config.max_size_bytes() {
             requirements.total <= max_size
         } else {
@@ -574,7 +574,7 @@ impl MemoryManager {
     /// Get recommended chunk size for streaming
     pub fn recommended_chunk_size(&self, model_size: usize) -> usize {
         let base_chunk = self.progressive_config.chunk_size;
-        
+
         // Adjust chunk size based on model size
         if model_size < 1024 * 1024 {
             // Small models: use smaller chunks
@@ -609,7 +609,7 @@ impl MemoryRequirements {
     /// Get memory usage breakdown as percentages
     pub fn breakdown_percentages(&self) -> MemoryBreakdown {
         let total_f = self.total as f64;
-        
+
         MemoryBreakdown {
             base_percent: (self.base_memory as f64 / total_f) * 100.0,
             model_percent: (self.model_memory as f64 / total_f) * 100.0,
@@ -622,19 +622,19 @@ impl MemoryRequirements {
     /// Format memory size as human-readable string
     pub fn format_size(bytes: usize) -> String {
         const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
-        
+
         if bytes == 0 {
             return "0 B".to_string();
         }
-        
+
         let mut size = bytes as f64;
         let mut unit_index = 0;
-        
+
         while size >= 1024.0 && unit_index < UNITS.len() - 1 {
             size /= 1024.0;
             unit_index += 1;
         }
-        
+
         if unit_index == 0 {
             format!("{} {}", bytes, UNITS[unit_index])
         } else {
@@ -773,15 +773,22 @@ mod tests {
     fn test_memory_requirements_calculation() {
         let manager = MemoryManager::performance_optimized();
         let model_size = 10 * 1024 * 1024; // 10MB model
-        
+
         let requirements = manager.calculate_memory_requirements(model_size);
         assert!(requirements.total > model_size);
         assert!(requirements.model_memory == model_size);
-        
+
         let breakdown = requirements.breakdown_percentages();
-        assert!((breakdown.base_percent + breakdown.model_percent + 
-                breakdown.cache_percent + breakdown.preload_percent + 
-                breakdown.worker_percent - 100.0).abs() < 0.1);
+        assert!(
+            (breakdown.base_percent
+                + breakdown.model_percent
+                + breakdown.cache_percent
+                + breakdown.preload_percent
+                + breakdown.worker_percent
+                - 100.0)
+                .abs()
+                < 0.1
+        );
     }
 
     #[test]
@@ -795,15 +802,15 @@ mod tests {
     #[test]
     fn test_recommended_chunk_size() {
         let manager = MemoryManager::performance_optimized();
-        
+
         // Small model should get smaller chunks
         let small_chunk = manager.recommended_chunk_size(512 * 1024);
         assert!(small_chunk < manager.progressive_config().chunk_size);
-        
+
         // Large model should get larger chunks
         let large_chunk = manager.recommended_chunk_size(200 * 1024 * 1024);
         assert!(large_chunk > manager.progressive_config().chunk_size);
-        
+
         // Medium model should get default chunks
         let medium_chunk = manager.recommended_chunk_size(10 * 1024 * 1024);
         assert_eq!(medium_chunk, manager.progressive_config().chunk_size);

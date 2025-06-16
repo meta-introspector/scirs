@@ -62,21 +62,12 @@ impl AdvancedThreadPool {
 
         let (task, handle) = Task::new(task);
 
-        // Try to submit to least loaded worker first
-        if let Some(worker_id) = self.find_least_loaded_worker() {
-            if self.workers[worker_id].try_submit_local(task) {
-                return Ok(handle);
-            }
+        // Use global queue for all tasks to avoid move issues
+        let mut queue = self.global_queue.lock().unwrap();
+        if queue.len() >= self.config.max_queue_size {
+            return Err(ThreadPoolError::QueueFull);
         }
-
-        // Fall back to global queue
-        {
-            let mut queue = self.global_queue.lock().unwrap();
-            if queue.len() >= self.config.max_queue_size {
-                return Err(ThreadPoolError::QueueFull);
-            }
-            queue.push_back(task);
-        }
+        queue.push_back(task);
 
         Ok(handle)
     }
@@ -98,6 +89,7 @@ impl AdvancedThreadPool {
     }
 
     /// Find the least loaded worker
+    #[allow(dead_code)]
     fn find_least_loaded_worker(&self) -> Option<usize> {
         // Use round-robin strategy by default since ThreadPoolConfig doesn't have load_balancing
         if self.config.work_stealing {
@@ -169,7 +161,9 @@ impl AdvancedThreadPool {
 
 /// Work-stealing worker thread
 pub struct WorkStealingWorker {
+    #[allow(dead_code)]
     id: usize,
+    #[allow(dead_code)]
     local_queue: Arc<Mutex<VecDeque<Task>>>,
     thread_handle: Option<JoinHandle<()>>,
     shutdown_signal: Arc<(Mutex<bool>, Condvar)>,
@@ -306,6 +300,7 @@ impl WorkStealingWorker {
     }
 
     /// Try to submit a task to the local queue
+    #[allow(dead_code)]
     fn try_submit_local(&self, task: Task) -> bool {
         let mut queue = self.local_queue.lock().unwrap();
         if queue.len() < self.local_queue.lock().unwrap().capacity() {
@@ -529,6 +524,7 @@ impl AdvancedThreadPoolStats {
 /// NUMA-aware thread pool for systems with multiple memory nodes
 pub struct NumaAwareThreadPool {
     pools: Vec<AdvancedThreadPool>,
+    #[allow(dead_code)]
     numa_topology: NumaTopology,
 }
 

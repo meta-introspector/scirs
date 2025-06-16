@@ -7,11 +7,11 @@
 //! - Debugging and profiling configuration
 //! - Main WasmCompiler implementation
 
+use super::bindings::{BindingGenerator, WebBindingConfig};
+use super::memory::{CachingConfig, ParallelConfig, ProgressiveLoadingConfig, WasmMemoryConfig};
 use crate::error::{NeuralError, Result};
 use crate::models::sequential::Sequential;
 use crate::serving::PackageMetadata;
-use super::bindings::{WebBindingConfig, BindingGenerator};
-use super::memory::{WasmMemoryConfig, ParallelConfig, CachingConfig, ProgressiveLoadingConfig};
 use num_traits::Float;
 use std::fmt::Debug;
 use std::fs;
@@ -477,8 +477,9 @@ pub struct BundleInfo {
     pub estimated_load_time_ms: u64,
 }
 
-impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync>
-    WasmCompiler<F>
+impl<
+        F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOperand + Send + Sync,
+    > WasmCompiler<F>
 {
     /// Create a new WASM compiler
     pub fn new(
@@ -560,11 +561,9 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     }
 
     fn generate_bindings(&self) -> Result<Vec<PathBuf>> {
-        let binding_generator = BindingGenerator::new(
-            self.output_dir.clone(),
-            self.web_config.bindings.clone()
-        );
-        
+        let binding_generator =
+            BindingGenerator::new(self.output_dir.clone(), self.web_config.bindings.clone());
+
         binding_generator.generate_bindings()
     }
 
@@ -578,7 +577,9 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         }
 
         // Generate service worker if enabled
-        if self.web_config.workers.enable && self.web_config.workers.worker_type == WorkerType::Service {
+        if self.web_config.workers.enable
+            && self.web_config.workers.worker_type == WorkerType::Service
+        {
             let sw_path = self.generate_service_worker()?;
             web_files.push(sw_path);
         }
@@ -594,7 +595,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn generate_html_demo(&self) -> Result<PathBuf> {
         let html_path = self.output_dir.join("examples").join("demo.html");
-        
+
         let html_content = r#"<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -846,7 +847,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn generate_service_worker(&self) -> Result<PathBuf> {
         let sw_path = self.output_dir.join("dist").join("sw.js");
-        
+
         let sw_content = r#"// SciRS2 Service Worker for model caching
 const CACHE_NAME = 'scirs2-model-v1';
 const MODEL_URLS = [
@@ -944,7 +945,8 @@ void main() {
 
         // Generate README
         let readme_path = self.output_dir.join("README.md");
-        let readme_content = format!(r#"# SciRS2 WebAssembly Neural Network
+        let readme_content = format!(
+            r#"# SciRS2 WebAssembly Neural Network
 
 Generated WebAssembly bindings for SciRS2 neural network models.
 
@@ -1034,7 +1036,10 @@ MIT License - see [LICENSE](LICENSE) file for details.
             self.config.features.threads,
             self.config.features.bulk_memory,
             self.config.memory_config.initial_pages * 64, // Convert pages to KB
-            self.config.memory_config.maximum_pages.map_or("unlimited".to_string(), |p| format!("{}KB", p * 64))
+            self.config
+                .memory_config
+                .maximum_pages
+                .map_or("unlimited".to_string(), |p| format!("{}KB", p * 64))
         );
 
         fs::write(&readme_path, readme_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
@@ -1043,7 +1048,11 @@ MIT License - see [LICENSE](LICENSE) file for details.
         Ok(docs)
     }
 
-    fn calculate_bundle_info(&self, wasm_module: &Path, bindings: &[PathBuf]) -> Result<BundleInfo> {
+    fn calculate_bundle_info(
+        &self,
+        wasm_module: &Path,
+        bindings: &[PathBuf],
+    ) -> Result<BundleInfo> {
         let wasm_size = fs::metadata(wasm_module)
             .map_err(|e| NeuralError::IOError(e.to_string()))?
             .len() as usize;
@@ -1125,8 +1134,8 @@ impl Default for WasmCompilationConfig {
 
 impl Default for WebIntegrationConfig {
     fn default() -> Self {
-        use super::bindings::{WebBindingLanguage, ModuleSystem, BundlingConfig, BundleFormat};
-        
+        use super::bindings::{BundleFormat, BundlingConfig, ModuleSystem, WebBindingLanguage};
+
         Self {
             bindings: WebBindingConfig {
                 target_language: WebBindingLanguage::Both,

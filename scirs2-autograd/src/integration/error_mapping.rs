@@ -117,19 +117,19 @@ impl ErrorMapper {
         let mut by_category = HashMap::new();
         let mut by_module = HashMap::new();
 
-        for error in &errors {
+        for (index, error) in errors.iter().enumerate() {
             let category = self.classify_error(error);
             by_category
                 .entry(category.clone())
                 .or_insert_with(Vec::new)
-                .push(error);
+                .push(index);
 
             if let Some(module) = self.extract_module_from_error(error) {
-                by_module.entry(module).or_insert_with(Vec::new).push(error);
+                by_module.entry(module).or_insert_with(Vec::new).push(index);
             }
         }
 
-        let summary = self.generate_error_summary(&by_category);
+        let summary = self.generate_error_summary_from_indices(&errors, &by_category);
 
         AggregatedError {
             errors,
@@ -270,6 +270,7 @@ impl ErrorMapper {
         }
     }
 
+    #[allow(dead_code)]
     fn generate_error_summary(
         &self,
         by_category: &HashMap<String, Vec<&IntegrationError>>,
@@ -279,6 +280,21 @@ impl ErrorMapper {
 
         for (category, errors) in by_category {
             summary.push_str(&format!("  {}: {} errors\n", category, errors.len()));
+        }
+
+        summary
+    }
+
+    fn generate_error_summary_from_indices(
+        &self,
+        _errors: &[IntegrationError],
+        by_category: &HashMap<String, Vec<usize>>,
+    ) -> String {
+        let mut summary = String::new();
+        summary.push_str(&format!("Found {} error categories:\n", by_category.len()));
+
+        for (category, error_indices) in by_category {
+            summary.push_str(&format!("  {}: {} errors\n", category, error_indices.len()));
         }
 
         summary
@@ -401,10 +417,10 @@ pub struct EnrichedError {
 
 /// Aggregated error report
 #[derive(Debug)]
-pub struct AggregatedError<'a> {
+pub struct AggregatedError {
     pub errors: Vec<IntegrationError>,
-    pub by_category: HashMap<String, Vec<&'a IntegrationError>>,
-    pub by_module: HashMap<String, Vec<&'a IntegrationError>>,
+    pub by_category: HashMap<String, Vec<usize>>,
+    pub by_module: HashMap<String, Vec<usize>>,
     pub summary: String,
 }
 

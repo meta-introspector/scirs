@@ -39,17 +39,17 @@ pub use simd::{
 };
 
 // Submodules
+pub mod adaptive;
 pub mod conversions;
 pub mod f32_ops;
 pub mod f64_ops;
-pub mod adaptive;
 
 // Re-export conversion functions for backward compatibility
 pub use conversions::{convert, convert_2d};
 
 // Re-export f32-optimized operations
 pub use f32_ops::{
-    mixed_precision_matvec_f32, mixed_precision_matmul_f32_basic, mixed_precision_dot_f32,
+    mixed_precision_dot_f32, mixed_precision_matmul_f32_basic, mixed_precision_matvec_f32,
 };
 
 // Re-export f64-optimized operations
@@ -57,8 +57,8 @@ pub use f64_ops::mixed_precision_matmul_f64;
 
 // Re-export adaptive algorithms
 pub use adaptive::{
-    mixed_precision_solve, mixed_precision_cond, iterative_refinement_solve,
-    mixed_precision_qr, mixed_precision_svd,
+    iterative_refinement_solve, mixed_precision_cond, mixed_precision_qr, mixed_precision_solve,
+    mixed_precision_svd,
 };
 
 /// Perform mixed-precision matrix-vector multiplication
@@ -422,8 +422,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_mixed_precision_matvec() {
@@ -469,7 +469,7 @@ mod tests {
         let result = mixed_precision_inv::<f32, f32, f64>(&a.view()).unwrap();
 
         assert_eq!(result.shape(), &[2, 2]);
-        
+
         // Expected inverse: [[-2, 1], [1.5, -0.5]]
         assert_relative_eq!(result[[0, 0]], -2.0f32, epsilon = 1e-5);
         assert_relative_eq!(result[[0, 1]], 1.0f32, epsilon = 1e-5);
@@ -511,15 +511,18 @@ mod tests {
         let x = array![1.0f32, 2.0f32];
 
         // Test matrix multiplication
-        let matmul_result = mixed_precision_matmul::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let matmul_result =
+            mixed_precision_matmul::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
         assert_eq!(matmul_result.shape(), &[2, 2]);
 
         // Test matrix-vector multiplication
-        let matvec_result = mixed_precision_matvec::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
+        let matvec_result =
+            mixed_precision_matvec::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
         assert_eq!(matvec_result.len(), 2);
 
         // Test linear solve
-        let solve_result = mixed_precision_solve::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
+        let solve_result =
+            mixed_precision_solve::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
         assert_eq!(solve_result.len(), 2);
 
         // Test decompositions

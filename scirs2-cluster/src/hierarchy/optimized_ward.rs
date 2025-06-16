@@ -212,12 +212,10 @@ where
                 }
                 // Otherwise, this pair is stale, continue to next pair
             } else {
-                return Err(ClusteringError::ComputationError(
-                    format!(
-                        "No valid cluster pairs found in priority queue at merge step {}",
-                        merge_step
-                    ),
-                ));
+                return Err(ClusteringError::ComputationError(format!(
+                    "No valid cluster pairs found in priority queue at merge step {}",
+                    merge_step
+                )));
             }
         };
 
@@ -329,8 +327,7 @@ where
     // Estimate memory requirements
     let distance_matrix_size = n_samples * (n_samples - 1) / 2;
     let memory_per_float = std::mem::size_of::<F>();
-    let estimated_memory_mb =
-        (distance_matrix_size * memory_per_float).div_ceil(1024 * 1024);
+    let estimated_memory_mb = (distance_matrix_size * memory_per_float).div_ceil(1024 * 1024);
 
     if estimated_memory_mb > max_memory_mb {
         return Err(ClusteringError::InvalidInput(format!(

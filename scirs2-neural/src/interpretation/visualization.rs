@@ -114,7 +114,14 @@ pub struct NetworkDissectionResult {
 
 impl<F> AttentionVisualizer<F>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     /// Create a new attention visualizer
     pub fn new(
@@ -176,11 +183,14 @@ where
             AttentionAggregation::Head(head_idx) => {
                 // Select specific head
                 if attention_weights.ndim() >= 4 && *head_idx < self.num_heads {
-                    Ok(attention_weights.index_axis(ndarray::Axis(1), *head_idx).to_owned())
+                    Ok(attention_weights
+                        .index_axis(ndarray::Axis(1), *head_idx)
+                        .to_owned())
                 } else {
-                    Err(NeuralError::InvalidArchitecture(
-                        format!("Invalid head index {} for {} heads", head_idx, self.num_heads)
-                    ))
+                    Err(NeuralError::InvalidArchitecture(format!(
+                        "Invalid head index {} for {} heads",
+                        head_idx, self.num_heads
+                    )))
                 }
             }
             AttentionAggregation::Weighted(weights) => {
@@ -192,15 +202,15 @@ where
                 }
 
                 if attention_weights.ndim() >= 4 {
-                    let mut weighted_attention = attention_weights
-                        .index_axis(ndarray::Axis(1), 0)
-                        .to_owned() * F::from(weights[0]).unwrap();
+                    let mut weighted_attention =
+                        attention_weights.index_axis(ndarray::Axis(1), 0).to_owned()
+                            * F::from(weights[0]).unwrap();
 
                     for (i, &weight) in weights.iter().enumerate().skip(1) {
-                        let head_attention = attention_weights
-                            .index_axis(ndarray::Axis(1), i)
-                            .to_owned();
-                        weighted_attention = weighted_attention + head_attention * F::from(weight).unwrap();
+                        let head_attention =
+                            attention_weights.index_axis(ndarray::Axis(1), i).to_owned();
+                        weighted_attention =
+                            weighted_attention + head_attention * F::from(weight).unwrap();
                     }
 
                     Ok(weighted_attention)
@@ -226,11 +236,15 @@ where
     }
 
     /// Visualize attention flow between tokens
-    pub fn visualize_attention_flow(&self, layer_name: &str, token_indices: &[usize]) -> Result<Vec<f64>> {
+    pub fn visualize_attention_flow(
+        &self,
+        layer_name: &str,
+        token_indices: &[usize],
+    ) -> Result<Vec<f64>> {
         let attention = self.visualize_attention(layer_name)?;
-        
+
         let mut flow_scores = Vec::new();
-        
+
         for &token_idx in token_indices {
             if token_idx < self.sequence_length {
                 // Compute attention flow for this token
@@ -241,7 +255,7 @@ where
                 flow_scores.push(0.0);
             }
         }
-        
+
         Ok(flow_scores)
     }
 }
@@ -252,7 +266,14 @@ pub fn generate_feature_visualization<F>(
     input_shape: &[usize],
 ) -> Result<VisualizationResult<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     match method {
         VisualizationMethod::ActivationMaximization {
@@ -263,21 +284,20 @@ where
         } => {
             // Simplified activation maximization
             let mut optimized_input = ndarray::Array::zeros(input_shape).into_dyn();
-            
+
             for _iter in 0..*num_iterations {
                 // Apply gradient ascent (simplified)
-                optimized_input = optimized_input.mapv(|x| {
-                    x + F::from(*learning_rate * rand::random::<f64>()).unwrap()
-                });
+                optimized_input = optimized_input
+                    .mapv(|x| x + F::from(*learning_rate * rand::random::<f64>()).unwrap());
             }
-            
+
             let mut metadata = HashMap::new();
             metadata.insert("target_layer".to_string(), target_layer.clone());
             metadata.insert("iterations".to_string(), num_iterations.to_string());
             if let Some(unit) = target_unit {
                 metadata.insert("target_unit".to_string(), unit.to_string());
             }
-            
+
             Ok(VisualizationResult {
                 method: method.clone(),
                 visualization_data: optimized_input,
@@ -293,19 +313,20 @@ where
         } => {
             // Simplified deep dream implementation
             let mut dream_input = ndarray::Array::ones(input_shape).into_dyn();
-            
+
             for _iter in 0..*num_iterations {
                 // Amplify activations (simplified)
                 dream_input = dream_input.mapv(|x| {
-                    x * F::from(*amplify_factor).unwrap() + F::from(*learning_rate * rand::random::<f64>()).unwrap()
+                    x * F::from(*amplify_factor).unwrap()
+                        + F::from(*learning_rate * rand::random::<f64>()).unwrap()
                 });
             }
-            
+
             let mut metadata = HashMap::new();
             metadata.insert("target_layer".to_string(), target_layer.clone());
             metadata.insert("iterations".to_string(), num_iterations.to_string());
             metadata.insert("amplify_factor".to_string(), amplify_factor.to_string());
-            
+
             Ok(VisualizationResult {
                 method: method.clone(),
                 visualization_data: dream_input,
@@ -319,11 +340,14 @@ where
         } => {
             // Simplified feature inversion
             let inverted_input = ndarray::Array::zeros(input_shape).into_dyn();
-            
+
             let mut metadata = HashMap::new();
             metadata.insert("target_layer".to_string(), target_layer.clone());
-            metadata.insert("regularization".to_string(), regularization_weight.to_string());
-            
+            metadata.insert(
+                "regularization".to_string(),
+                regularization_weight.to_string(),
+            );
+
             Ok(VisualizationResult {
                 method: method.clone(),
                 visualization_data: inverted_input,
@@ -337,11 +361,11 @@ where
         } => {
             // Simplified CAM
             let cam_result = ndarray::Array::ones(input_shape).into_dyn();
-            
+
             let mut metadata = HashMap::new();
             metadata.insert("target_layer".to_string(), target_layer.clone());
             metadata.insert("target_class".to_string(), target_class.to_string());
-            
+
             Ok(VisualizationResult {
                 method: method.clone(),
                 visualization_data: cam_result,
@@ -349,14 +373,17 @@ where
                 quality_score: 0.85,
             })
         }
-        VisualizationMethod::NetworkDissection { concept_data, concept_labels } => {
+        VisualizationMethod::NetworkDissection {
+            concept_data,
+            concept_labels,
+        } => {
             // Simplified network dissection
             let dissection_result = ndarray::Array::zeros(input_shape).into_dyn();
-            
+
             let mut metadata = HashMap::new();
             metadata.insert("num_concepts".to_string(), concept_labels.len().to_string());
             metadata.insert("num_examples".to_string(), concept_data.len().to_string());
-            
+
             Ok(VisualizationResult {
                 method: method.clone(),
                 visualization_data: dissection_result,
@@ -379,34 +406,37 @@ pub fn perform_network_dissection(
             "Number of concept examples must match number of labels".to_string(),
         ));
     }
-    
+
     let mut concept_selectivity = HashMap::new();
     let mut concept_coverage = HashMap::new();
-    
+
     // Simplified network dissection
     for (concept_example, concept_label) in concept_data.iter().zip(concept_labels.iter()) {
         // Compute selectivity score (simplified correlation)
         let selectivity = if layer_activations.len() == concept_example.len() {
-            let correlation = layer_activations.iter()
+            let correlation = layer_activations
+                .iter()
                 .zip(concept_example.iter())
                 .map(|(&a, &b)| (a as f64) * (b as f64))
-                .sum::<f64>() / layer_activations.len() as f64;
+                .sum::<f64>()
+                / layer_activations.len() as f64;
             correlation.abs()
         } else {
             0.0
         };
-        
+
         concept_selectivity.insert(concept_label.clone(), selectivity);
-        
+
         // Count units that respond to this concept
-        let responsive_units = layer_activations.iter()
+        let responsive_units = layer_activations
+            .iter()
             .zip(concept_example.iter())
             .filter(|(&a, &b)| (a as f64) * (b as f64) > 0.5)
             .count();
-        
+
         concept_coverage.insert(concept_label.clone(), responsive_units);
     }
-    
+
     Ok(NetworkDissectionResult {
         layer_name,
         concept_selectivity,
@@ -421,25 +451,32 @@ pub fn create_attention_heatmap<F>(
     token_labels: &[String],
 ) -> Result<Vec<Vec<f64>>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     if attention_weights.ndim() < 2 {
         return Err(NeuralError::InvalidArchitecture(
             "Attention weights must be at least 2D".to_string(),
         ));
     }
-    
+
     let shape = attention_weights.shape();
     let seq_len = shape[shape.len() - 1];
-    
+
     if token_labels.len() != seq_len {
         return Err(NeuralError::InvalidArchitecture(
             "Number of token labels must match sequence length".to_string(),
         ));
     }
-    
+
     let mut heatmap = Vec::new();
-    
+
     for i in 0..seq_len {
         let mut row = Vec::new();
         for j in 0..seq_len {
@@ -455,7 +492,7 @@ where
         }
         heatmap.push(row);
     }
-    
+
     Ok(heatmap)
 }
 
@@ -472,7 +509,7 @@ mod tests {
             AttentionAggregation::Average,
             vec!["layer1".to_string(), "layer2".to_string()],
         );
-        
+
         assert_eq!(visualizer.num_heads, 8);
         assert_eq!(visualizer.sequence_length, 512);
         assert_eq!(visualizer.target_layers.len(), 2);
@@ -486,11 +523,11 @@ mod tests {
             AttentionAggregation::Average,
             vec!["test".to_string()],
         );
-        
+
         // Create mock attention weights: [batch=1, heads=2, seq=4, seq=4]
         let attention = Array::ones((1, 2, 4, 4)).into_dyn();
         visualizer.cache_attention_weights("test".to_string(), attention);
-        
+
         let aggregated = visualizer.visualize_attention("test");
         assert!(aggregated.is_ok());
     }
@@ -503,10 +540,10 @@ mod tests {
             num_iterations: 100,
             learning_rate: 0.01,
         };
-        
+
         let result = generate_feature_visualization::<f64>(&method, &[3, 32, 32]);
         assert!(result.is_ok());
-        
+
         let viz_result = result.unwrap();
         assert_eq!(viz_result.visualization_data.shape(), &[3, 32, 32]);
         assert!(viz_result.metadata.contains_key("target_layer"));
@@ -520,14 +557,14 @@ mod tests {
             Array::from_vec(vec![0.6, 0.9, 0.4, 1.0]).into_dyn(),
         ];
         let concept_labels = vec!["dog".to_string(), "car".to_string()];
-        
+
         let result = perform_network_dissection(
             "conv5".to_string(),
             &layer_activations,
             &concept_data,
             &concept_labels,
         );
-        
+
         assert!(result.is_ok());
         let dissection = result.unwrap();
         assert_eq!(dissection.layer_name, "conv5");
@@ -536,12 +573,14 @@ mod tests {
 
     #[test]
     fn test_attention_heatmap() {
-        let attention = Array::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).unwrap().into_dyn();
+        let attention = Array::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4])
+            .unwrap()
+            .into_dyn();
         let tokens = vec!["hello".to_string(), "world".to_string()];
-        
+
         let heatmap = create_attention_heatmap(&attention, &tokens);
         assert!(heatmap.is_ok());
-        
+
         let heatmap_data = heatmap.unwrap();
         assert_eq!(heatmap_data.len(), 2);
         assert_eq!(heatmap_data[0].len(), 2);

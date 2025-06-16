@@ -71,8 +71,7 @@ pub mod hessian_approximation {
             let grad_minus = gradient_fn(&param_minus)?;
 
             // Hessian diagonal: derivative of gradient using central difference
-            let second_deriv = (grad_plus[i] - grad_minus[i])
-                / (A::from(2.0).unwrap() * epsilon);
+            let second_deriv = (grad_plus[i] - grad_minus[i]) / (A::from(2.0).unwrap() * epsilon);
             hessian_diag[i] = second_deriv;
         }
 

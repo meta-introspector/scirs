@@ -8,8 +8,8 @@ use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, NumAssign, NumCast, ToPrimitive, Zero};
 use std::fmt::Debug;
 
-use crate::error::{LinalgError, LinalgResult};
 use super::conversions::convert_2d;
+use crate::error::{LinalgError, LinalgResult};
 
 /// Matrix multiplication using mixed precision with parallel processing (f64 optimized)
 ///
@@ -300,15 +300,16 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_mixed_precision_matmul_f64_small() {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
         let b = array![[5.0f32, 6.0f32], [7.0f32, 8.0f32]];
 
-        let result = mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result =
+            mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 19.0f32, epsilon = 1e-5);
@@ -324,7 +325,8 @@ mod tests {
         let a = Array2::<f32>::ones((size, size));
         let b = Array2::<f32>::ones((size, size));
 
-        let result = mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result =
+            mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
 
         assert_eq!(result.shape(), &[size, size]);
         // Each element should be size (sum of 1*1 over size elements)
@@ -342,11 +344,13 @@ mod tests {
         let a = Array2::<f32>::ones((size, size));
         let b = Array2::<f32>::ones((size, size));
 
-        let result = mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result =
+            mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
 
         assert_eq!(result.shape(), &[size, size]);
         // Each element should be size (sum of 1*1 over size elements)
-        for i in 0..10 {  // Check just a sample to avoid expensive testing
+        for i in 0..10 {
+            // Check just a sample to avoid expensive testing
             for j in 0..10 {
                 assert_relative_eq!(result[[i, j]], size as f32, epsilon = 1e-4);
             }
@@ -356,19 +360,14 @@ mod tests {
     #[test]
     fn test_mixed_precision_matmul_f64_precision() {
         // Test with values that might benefit from higher precision
-        let a = array![
-            [1e-6f32, 2e6f32],
-            [3e-6f32, 4e6f32]
-        ];
-        let b = array![
-            [5e6f32, 6e-6f32],
-            [7e-6f32, 8e6f32]
-        ];
+        let a = array![[1e-6f32, 2e6f32], [3e-6f32, 4e6f32]];
+        let b = array![[5e6f32, 6e-6f32], [7e-6f32, 8e6f32]];
 
-        let result = mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result =
+            mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
 
         assert_eq!(result.shape(), &[2, 2]);
-        
+
         // Verify results are reasonable (specific values depend on precision)
         assert!(result[[0, 0]].is_finite());
         assert!(result[[0, 1]].is_finite());
@@ -397,10 +396,11 @@ mod tests {
         let a = array![[1.0f32, 2.0f32, 3.0f32], [4.0f32, 5.0f32, 6.0f32]]; // 2x3
         let b = array![[7.0f32, 8.0f32], [9.0f32, 10.0f32], [11.0f32, 12.0f32]]; // 3x2
 
-        let result = mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result =
+            mixed_precision_matmul_f64::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
 
         assert_eq!(result.shape(), &[2, 2]);
-        
+
         // Calculate expected values manually:
         // [1*7 + 2*9 + 3*11, 1*8 + 2*10 + 3*12] = [58, 64]
         // [4*7 + 5*9 + 6*11, 4*8 + 5*10 + 6*12] = [139, 154]

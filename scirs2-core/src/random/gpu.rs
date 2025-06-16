@@ -370,9 +370,10 @@ impl GpuRandomGenerator {
 
     /// Generate uniform random numbers [0, 1)
     pub fn generate_uniform(&self, count: usize) -> CoreResult<Array<f32, IxDyn>> {
-        let kernel = self.kernels.get("uniform").ok_or_else(|| {
-            CoreError::ComputationError("Uniform kernel not found".to_string())
-        })?;
+        let kernel = self
+            .kernels
+            .get("uniform")
+            .ok_or_else(|| CoreError::ComputationError("Uniform kernel not found".to_string()))?;
 
         // Create GPU buffers
         let state = self.state.lock().unwrap();
@@ -465,11 +466,7 @@ impl GpuRandomGenerator {
     }
 
     /// Generate exponential random numbers
-    pub fn generate_exponential(
-        &self,
-        count: usize,
-        lambda: f32,
-    ) -> CoreResult<Array<f32, IxDyn>> {
+    pub fn generate_exponential(&self, count: usize, lambda: f32) -> CoreResult<Array<f32, IxDyn>> {
         // Generate uniform samples and transform using inverse CDF
         let uniform_samples = self.generate_uniform(count)?;
         let exponential_samples: Vec<f32> = uniform_samples
@@ -615,9 +612,7 @@ impl GpuRngManager {
     ) -> CoreResult<Arc<GpuRandomGenerator>> {
         let device = device
             .or_else(|| self.default_device.clone())
-            .ok_or_else(|| {
-                CoreError::ComputationError("No GPU device available".to_string())
-            })?;
+            .ok_or_else(|| CoreError::ComputationError("No GPU device available".to_string()))?;
 
         let generator = Arc::new(GpuRandomGenerator::new(device, generator_type)?);
         self.generators.insert(name.to_string(), generator.clone());

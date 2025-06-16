@@ -114,7 +114,14 @@ pub fn compute_saliency_attribution<F>(
     _target_class: Option<usize>,
 ) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let grad_key = "input_gradient";
     if let Some(gradient) = interpreter.get_cached_gradients(grad_key) {
@@ -135,7 +142,14 @@ pub fn compute_integrated_gradients<F>(
     _target_class: Option<usize>,
 ) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let baseline_input = create_baseline(input, baseline)?;
     let mut accumulated_gradients = Array::zeros(input.raw_dim());
@@ -163,22 +177,33 @@ pub fn compute_gradcam_attribution<F>(
     _target_class: Option<usize>,
 ) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     // Get activations and gradients for target layer
-    let activations = interpreter.get_cached_activations(target_layer).ok_or_else(|| {
-        NeuralError::ComputationError(format!(
-            "Activations not found for layer: {}",
-            target_layer
-        ))
-    })?;
+    let activations = interpreter
+        .get_cached_activations(target_layer)
+        .ok_or_else(|| {
+            NeuralError::ComputationError(format!(
+                "Activations not found for layer: {}",
+                target_layer
+            ))
+        })?;
 
-    let gradients = interpreter.get_cached_gradients(target_layer).ok_or_else(|| {
-        NeuralError::ComputationError(format!(
-            "Gradients not found for layer: {}",
-            target_layer
-        ))
-    })?;
+    let gradients = interpreter
+        .get_cached_gradients(target_layer)
+        .ok_or_else(|| {
+            NeuralError::ComputationError(format!(
+                "Gradients not found for layer: {}",
+                target_layer
+            ))
+        })?;
 
     if activations.ndim() < 3 {
         return Err(NeuralError::InvalidArchitecture(
@@ -231,7 +256,14 @@ pub fn compute_guided_backprop_attribution<F>(
     _target_class: Option<usize>,
 ) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     // Guided backpropagation - simplified implementation
     // In practice, this would modify the backward pass to zero negative gradients
@@ -251,7 +283,14 @@ pub fn compute_deeplift_attribution<F>(
     _target_class: Option<usize>,
 ) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let baseline_input = create_baseline(input, baseline)?;
 
@@ -275,7 +314,14 @@ pub fn compute_shap_attribution<F>(
     _target_class: Option<usize>,
 ) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     // SHAP attribution - simplified implementation
     // In practice, this would use proper Shapley value computation
@@ -310,7 +356,14 @@ pub fn compute_lrp_attribution<F>(
     _target_class: Option<usize>,
 ) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     // Layer-wise Relevance Propagation - simplified implementation
     // In practice, this would require propagating relevance backwards through the network
@@ -372,12 +425,16 @@ where
 }
 
 /// Create baseline input based on baseline method
-pub fn create_baseline<F>(
-    input: &ArrayD<F>,
-    baseline: &BaselineMethod,
-) -> Result<ArrayD<F>>
+pub fn create_baseline<F>(input: &ArrayD<F>, baseline: &BaselineMethod) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     match baseline {
         BaselineMethod::Zero => Ok(Array::zeros(input.raw_dim())),
@@ -396,7 +453,7 @@ where
         BaselineMethod::Custom(custom_baseline) => {
             // Convert f32 custom baseline to F type
             let converted_baseline = custom_baseline.mapv(|x| F::from(x).unwrap());
-            
+
             // Ensure dimensions match
             if converted_baseline.raw_dim() == input.raw_dim() {
                 Ok(converted_baseline)
@@ -410,12 +467,16 @@ where
 }
 
 /// Helper function to resize attribution maps
-fn resize_attribution<F>(
-    _attribution: &ArrayD<F>,
-    target_dim: IxDyn,
-) -> Result<ArrayD<F>>
+fn resize_attribution<F>(_attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<ArrayD<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     // Simplified resize - in practice would use proper interpolation
     // For now, just return a zero array with the target dimensions
@@ -430,14 +491,17 @@ mod tests {
     #[test]
     fn test_baseline_creation() {
         let input = Array::ones((2, 3, 4)).into_dyn();
-        
+
         // Test zero baseline
         let zero_baseline = create_baseline::<f64>(&input, &BaselineMethod::Zero).unwrap();
         assert_eq!(zero_baseline.sum(), 0.0);
-        
+
         // Test custom baseline
-        let custom_data = Array::ones((2, 3, 4)).mapv(|x: f64| x as f32 * 0.5).into_dyn();
-        let custom_baseline = create_baseline::<f64>(&input, &BaselineMethod::Custom(custom_data)).unwrap();
+        let custom_data = Array::ones((2, 3, 4))
+            .mapv(|x: f64| x as f32 * 0.5)
+            .into_dyn();
+        let custom_baseline =
+            create_baseline::<f64>(&input, &BaselineMethod::Custom(custom_data)).unwrap();
         assert!((custom_baseline.sum() - 12.0).abs() < 1e-10);
     }
 
@@ -448,7 +512,7 @@ mod tests {
             baseline: BaselineMethod::Zero,
             num_steps: 50,
         };
-        
+
         assert_ne!(method1, method2);
         assert_eq!(format!("{:?}", method1), "Saliency");
     }
@@ -457,8 +521,11 @@ mod tests {
     fn test_lrp_rules() {
         let rule1 = LRPRule::Epsilon;
         let rule2 = LRPRule::Gamma { gamma: 0.25 };
-        let rule3 = LRPRule::AlphaBeta { alpha: 2.0, beta: 1.0 };
-        
+        let rule3 = LRPRule::AlphaBeta {
+            alpha: 2.0,
+            beta: 1.0,
+        };
+
         assert_ne!(rule1, rule2);
         assert_ne!(rule2, rule3);
     }
@@ -468,7 +535,7 @@ mod tests {
         let baseline1 = BaselineMethod::Zero;
         let baseline2 = BaselineMethod::Random { seed: 42 };
         let baseline3 = BaselineMethod::GaussianBlur { sigma: 1.0 };
-        
+
         assert_ne!(baseline1, baseline2);
         assert_ne!(baseline2, baseline3);
     }

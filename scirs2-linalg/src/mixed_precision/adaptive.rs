@@ -5,12 +5,12 @@
 //! condition number estimation, and advanced matrix decompositions.
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::{Float, NumAssign, NumCast, ToPrimitive, Zero, One};
+use num_traits::{Float, NumAssign, NumCast, One, ToPrimitive, Zero};
 use std::fmt::Debug;
 
-use crate::error::{LinalgError, LinalgResult};
-use crate::decomposition::svd;
 use super::conversions::{convert, convert_2d};
+use crate::decomposition::svd;
+use crate::error::{LinalgError, LinalgResult};
 
 /// Solve a linear system using mixed precision
 ///
@@ -54,13 +54,7 @@ where
     A: Clone + Debug + ToPrimitive + Copy,
     B: Clone + Debug + ToPrimitive + Copy,
     C: Clone + Zero + NumCast + Debug,
-    H: Float
-        + Clone
-        + NumCast
-        + Debug
-        + Zero
-        + ToPrimitive
-        + NumAssign,
+    H: Float + Clone + NumCast + Debug + Zero + ToPrimitive + NumAssign,
 {
     // Check dimensions
     let a_shape = a.shape();
@@ -594,8 +588,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_mixed_precision_solve() {

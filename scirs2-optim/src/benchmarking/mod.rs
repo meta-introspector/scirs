@@ -1603,7 +1603,7 @@ mod tests {
         // With alternating signs, we should see some oscillation
         // The oscillation frequency depends on cosine similarity between gradients and updates
         assert!(stats.oscillation_frequency >= 0.0); // Just check it's computed correctly
-        // Note: stability score calculation may not work as expected with alternating patterns
+                                                     // Note: stability score calculation may not work as expected with alternating patterns
     }
 
     #[test]

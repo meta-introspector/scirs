@@ -80,7 +80,7 @@ fn demonstrate_1d_linear() -> Result<(), Box<dyn std::error::Error>> {
             x,
             interpolated,
             expected,
-            (interpolated - expected).abs()
+            (interpolated as f64 - expected as f64).abs()
         );
     }
 
@@ -133,7 +133,7 @@ fn demonstrate_2d_triangulation() -> Result<(), Box<dyn std::error::Error>> {
     for (i, &[x, y]) in query_data.iter().enumerate() {
         let expected = x + y;
         let interpolated = results[i];
-        let error = (interpolated - expected).abs();
+        let error = (interpolated as f64 - expected as f64).abs();
         println!(
             "   f({:.2}, {:.2}) = {:.4} (exact: {:.4}, error: {:.4})",
             x, y, interpolated, expected, error
@@ -145,7 +145,7 @@ fn demonstrate_2d_triangulation() -> Result<(), Box<dyn std::error::Error>> {
         query_data
             .iter()
             .enumerate()
-            .map(|(i, &[x, y])| (results[i] - (x + y)).abs())
+            .map(|(i, &[x, y])| (results[i] as f64 - (x + y) as f64).abs())
             .fold(0.0, f64::max)
     );
 
@@ -227,7 +227,7 @@ fn compare_interpolation_methods() -> Result<(), Box<dyn std::error::Error>> {
             None, // workers parameter
         ) {
             Ok(result) => {
-                let error = (result[0] - expected).abs();
+                let error = (result[0] as f64 - expected as f64).abs();
                 println!("   {}: {:.4} (error: {:.4})", name, result[0], error);
             }
             Err(e) => {

@@ -248,7 +248,7 @@ impl<F: Float> StabilityMetrics<F> {
         let original_output = function(parameters)?;
 
         // Compute sensitivity for each parameter
-        for (param_name, param_tensor) in parameters {
+        for (param_name, _param_tensor) in parameters {
             let sensitivity = self.compute_single_parameter_sensitivity(
                 &function,
                 parameters,
@@ -347,13 +347,13 @@ impl<F: Float> StabilityMetrics<F> {
 
     // Helper methods
 
-    fn create_random_perturbation(
+    fn create_random_perturbation<'a>(
         &self,
-        input: &Tensor<F>,
-        magnitude: f64,
-    ) -> Result<Tensor<F>, StabilityError> {
+        input: &Tensor<'a, F>,
+        _magnitude: f64,
+    ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create random perturbation with specified magnitude
-        let mut perturbed = input.clone();
+        let perturbed = input.clone();
         // Simplified - would add actual random noise
         Ok(perturbed)
     }
@@ -430,7 +430,7 @@ impl<F: Float> StabilityMetrics<F> {
         let output = function(input)?;
         let output_size = output.data().len();
 
-        let mut jacobian = Array::zeros(IxDyn(&[output_size, input_size]));
+        let jacobian = Array::zeros(IxDyn(&[output_size, input_size]));
         // Simplified - would compute actual Jacobian
 
         Ok(jacobian)
@@ -519,7 +519,7 @@ impl<F: Float> StabilityMetrics<F> {
 
         // Create perturbed parameter set
         let mut perturbed_params = parameters.clone();
-        if let Some(param) = perturbed_params.get_mut(param_name) {
+        if let Some(_param) = perturbed_params.get_mut(param_name) {
             // Add small perturbation to parameter
             // Simplified - would add actual perturbation
         }

@@ -1010,7 +1010,7 @@ export function createWorker() {
     /// Generate TypeScript declarations file
     pub fn generate_typescript_declarations(&self) -> Result<PathBuf> {
         let dts_path = self.output_dir.join("ts").join("scirs2-model.d.ts");
-        
+
         let dts_content = r#"// TypeScript declarations for SciRS2 Neural Network WebAssembly
 
 export interface WasmSupport {
@@ -1138,10 +1138,10 @@ mod tests {
 
         let generator = BindingGenerator::new(temp_dir.path().to_path_buf(), config);
         let js_path = generator.generate_javascript_bindings().unwrap();
-        
+
         assert!(js_path.exists());
         assert!(js_path.to_string_lossy().ends_with("scirs2-model.js"));
-        
+
         let content = fs::read_to_string(&js_path).unwrap();
         assert!(content.contains("class SciRS2Model"));
         assert!(content.contains("async initialize"));
@@ -1167,10 +1167,10 @@ mod tests {
 
         let generator = BindingGenerator::new(temp_dir.path().to_path_buf(), config);
         let ts_path = generator.generate_typescript_bindings().unwrap();
-        
+
         assert!(ts_path.exists());
         assert!(ts_path.to_string_lossy().ends_with("scirs2-model.ts"));
-        
+
         let content = fs::read_to_string(&ts_path).unwrap();
         assert!(content.contains("export class SciRS2Model"));
         assert!(content.contains("Promise<void>"));

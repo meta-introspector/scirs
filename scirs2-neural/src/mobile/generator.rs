@@ -13,7 +13,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::platform::{
-    MobilePlatform, MobileOptimizationConfig, QuantizationStrategy, PruningType,
+    MobileOptimizationConfig, MobilePlatform, PruningType, QuantizationStrategy,
 };
 
 /// Mobile deployment generator
@@ -474,7 +474,10 @@ impl<
         Ok(1024 * 1024) // Stub: 1MB
     }
 
-    pub fn generate_platform_packages(&self, model: &Sequential<F>) -> Result<Vec<PlatformPackage>> {
+    pub fn generate_platform_packages(
+        &self,
+        model: &Sequential<F>,
+    ) -> Result<Vec<PlatformPackage>> {
         let mut packages = Vec::new();
 
         match &self.platform {

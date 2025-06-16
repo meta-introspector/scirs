@@ -89,7 +89,14 @@ pub struct AdversarialExplanation<F: Float + Debug> {
 
 impl<F> CounterfactualGenerator<F>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     /// Create a new counterfactual generator
     pub fn new(
@@ -116,34 +123,39 @@ where
         // Simplified counterfactual generation
         // In practice, this would use optimization to find minimal perturbations
         let mut counterfactual = original_input.clone();
-        
+
         for _iteration in 0..self.max_iterations {
             // Apply small random perturbations
             counterfactual = counterfactual.mapv(|x| {
                 let perturbation = F::from(rand::random::<f64>() * 0.01).unwrap();
                 x + perturbation
             });
-            
+
             // In practice, would evaluate model and check if target is reached
             // For now, return the perturbed input
         }
-        
+
         Ok(counterfactual)
     }
 
     /// Compute distance between two inputs
     pub fn compute_distance(&self, input1: &ArrayD<F>, input2: &ArrayD<F>) -> f64 {
         match self.distance_metric {
-            DistanceMetric::L1 => {
-                (input1 - input2).mapv(|x| x.abs()).sum().to_f64().unwrap_or(0.0)
-            }
-            DistanceMetric::L2 => {
-                ((input1 - input2).mapv(|x| x * x).sum().sqrt()).to_f64().unwrap_or(0.0)
-            }
-            DistanceMetric::LInf => {
-                (input1 - input2).mapv(|x| x.abs()).iter().cloned()
-                    .fold(F::zero(), F::max).to_f64().unwrap_or(0.0)
-            }
+            DistanceMetric::L1 => (input1 - input2)
+                .mapv(|x| x.abs())
+                .sum()
+                .to_f64()
+                .unwrap_or(0.0),
+            DistanceMetric::L2 => ((input1 - input2).mapv(|x| x * x).sum().sqrt())
+                .to_f64()
+                .unwrap_or(0.0),
+            DistanceMetric::LInf => (input1 - input2)
+                .mapv(|x| x.abs())
+                .iter()
+                .cloned()
+                .fold(F::zero(), F::max)
+                .to_f64()
+                .unwrap_or(0.0),
             DistanceMetric::Custom => {
                 // Placeholder for custom distance
                 0.0
@@ -154,7 +166,14 @@ where
 
 impl<F> ConceptActivationVector<F>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     /// Create a new concept activation vector
     pub fn new(
@@ -178,7 +197,8 @@ where
         // Simplified concept activation computation
         // In practice, would use proper dot product or cosine similarity
         if layer_activations.len() == self.activation_vector.len() {
-            let dot_product: F = layer_activations.iter()
+            let dot_product: F = layer_activations
+                .iter()
                 .zip(self.activation_vector.iter())
                 .map(|(&a, &b)| a * b)
                 .sum();
@@ -191,7 +211,14 @@ where
 
 impl<F> LIMEExplainer<F>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     /// Create a new LIME explainer
     pub fn new(
@@ -217,36 +244,36 @@ where
     ) -> Result<ArrayD<F>> {
         // Simplified LIME implementation
         // In practice, would generate perturbations, train local model, extract coefficients
-        
+
         let mut explanation = input.mapv(|_| F::zero());
-        
+
         for _i in 0..self.num_perturbations {
             // Generate perturbation
             let perturbation = input.mapv(|x| {
                 let noise = F::from(rand::random::<f64>() * self.neighborhood_size).unwrap();
                 x + noise
             });
-            
+
             // In practice, would evaluate model on perturbation
             // and use results to train local linear model
-            
+
             // For now, assign simple importance scores
             explanation = explanation + perturbation.mapv(|x| x * F::from(0.1).unwrap());
         }
-        
+
         Ok(explanation / F::from(self.num_perturbations).unwrap())
     }
 
     /// Generate perturbations around input
     pub fn generate_perturbations(&mut self, input: &ArrayD<F>) -> Vec<ArrayD<F>> {
         let cache_key = format!("{:?}", input.shape());
-        
+
         if let Some(cached) = self.cached_perturbations.get(&cache_key) {
             return cached.clone();
         }
-        
+
         let mut perturbations = Vec::new();
-        
+
         for _ in 0..self.num_perturbations {
             let perturbation = input.mapv(|x| {
                 let noise = F::from(rand::random::<f64>() * self.neighborhood_size).unwrap();
@@ -254,8 +281,9 @@ where
             });
             perturbations.push(perturbation);
         }
-        
-        self.cached_perturbations.insert(cache_key, perturbations.clone());
+
+        self.cached_perturbations
+            .insert(cache_key, perturbations.clone());
         perturbations
     }
 }
@@ -267,35 +295,51 @@ pub fn generate_adversarial_explanation<F>(
     epsilon: f64,
 ) -> Result<AdversarialExplanation<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     // Simplified adversarial example generation
     let perturbation = match attack_method {
         "fgsm" => {
             // Fast Gradient Sign Method (simplified)
             original_input.mapv(|_| {
-                let sign = if rand::random::<f64>() > 0.5 { 1.0 } else { -1.0 };
+                let sign = if rand::random::<f64>() > 0.5 {
+                    1.0
+                } else {
+                    -1.0
+                };
                 F::from(epsilon * sign).unwrap()
             })
         }
         "pgd" => {
             // Projected Gradient Descent (simplified)
-            original_input.mapv(|_| {
-                F::from(rand::random::<f64>() * epsilon * 2.0 - epsilon).unwrap()
-            })
+            original_input
+                .mapv(|_| F::from(rand::random::<f64>() * epsilon * 2.0 - epsilon).unwrap())
         }
         _ => {
-            return Err(NeuralError::NotImplementedError(
-                format!("Attack method '{}' not implemented", attack_method)
-            ));
+            return Err(NeuralError::NotImplementedError(format!(
+                "Attack method '{}' not implemented",
+                attack_method
+            )));
         }
     };
-    
+
     let adversarial_input = original_input + &perturbation;
-    
+
     // Compute perturbation magnitude
-    let perturbation_magnitude = perturbation.mapv(|x| x * x).sum().sqrt().to_f64().unwrap_or(0.0);
-    
+    let perturbation_magnitude = perturbation
+        .mapv(|x| x * x)
+        .sum()
+        .sqrt()
+        .to_f64()
+        .unwrap_or(0.0);
+
     Ok(AdversarialExplanation {
         original_input: original_input.clone(),
         adversarial_input,
@@ -314,36 +358,46 @@ pub fn compute_concept_vectors<F>(
     layer_name: String,
 ) -> Result<Vec<ConceptActivationVector<F>>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     if concept_examples.len() != concept_labels.len() {
         return Err(NeuralError::InvalidArchitecture(
             "Number of examples must match number of labels".to_string(),
         ));
     }
-    
+
     let mut concept_vectors = Vec::new();
-    
+
     // Group examples by concept label
     let mut concept_groups: HashMap<String, Vec<&ArrayD<F>>> = HashMap::new();
     for (example, label) in concept_examples.iter().zip(concept_labels.iter()) {
-        concept_groups.entry(label.clone()).or_default().push(example);
+        concept_groups
+            .entry(label.clone())
+            .or_default()
+            .push(example);
     }
-    
+
     // Compute average activation for each concept
     for (concept_name, examples) in concept_groups {
         if examples.is_empty() {
             continue;
         }
-        
+
         let first_example = examples[0];
         let mut averaged_activation = first_example.clone();
-        
+
         for example in examples.iter().skip(1) {
             averaged_activation = averaged_activation + *example;
         }
         averaged_activation = averaged_activation / F::from(examples.len()).unwrap();
-        
+
         let concept_vector = ConceptActivationVector::new(
             concept_name,
             layer_name.clone(),
@@ -351,10 +405,10 @@ where
             0.8, // Placeholder confidence
             examples.len(),
         );
-        
+
         concept_vectors.push(concept_vector);
     }
-    
+
     Ok(concept_vectors)
 }
 
@@ -365,32 +419,22 @@ mod tests {
 
     #[test]
     fn test_counterfactual_generator() {
-        let mut generator = CounterfactualGenerator::<f64>::new(
-            5,
-            0.01,
-            100,
-            DistanceMetric::L2,
-        );
-        
+        let mut generator = CounterfactualGenerator::<f64>::new(5, 0.01, 100, DistanceMetric::L2);
+
         let input = Array::ones((2, 3)).into_dyn();
         let target = 0.5;
-        
+
         let counterfactual = generator.generate_counterfactual(&input, target);
         assert!(counterfactual.is_ok());
     }
 
     #[test]
     fn test_distance_metrics() {
-        let generator = CounterfactualGenerator::<f64>::new(
-            5,
-            0.01,
-            100,
-            DistanceMetric::L1,
-        );
-        
+        let generator = CounterfactualGenerator::<f64>::new(5, 0.01, 100, DistanceMetric::L1);
+
         let input1 = Array::ones((2, 2)).into_dyn();
         let input2 = Array::zeros((2, 2)).into_dyn();
-        
+
         let distance = generator.compute_distance(&input1, &input2);
         assert_eq!(distance, 4.0); // L1 distance should be 4
     }
@@ -405,7 +449,7 @@ mod tests {
             0.9,
             100,
         );
-        
+
         let layer_activations = Array::from_vec(vec![0.6, 0.7, 0.4]).into_dyn();
         let score = concept.compute_activation_score(&layer_activations);
         assert!(score > 0.0);
@@ -413,13 +457,8 @@ mod tests {
 
     #[test]
     fn test_lime_explainer() {
-        let mut explainer = LIMEExplainer::<f64>::new(
-            10,
-            0.1,
-            0.01,
-            42,
-        );
-        
+        let mut explainer = LIMEExplainer::<f64>::new(10, 0.1, 0.01, 42);
+
         let input = Array::ones((2, 3)).into_dyn();
         let explanation = explainer.explain_instance(&input, Some(0));
         assert!(explanation.is_ok());
@@ -430,7 +469,7 @@ mod tests {
         let input = Array::ones((2, 3)).into_dyn();
         let explanation = generate_adversarial_explanation::<f64>(&input, "fgsm", 0.1);
         assert!(explanation.is_ok());
-        
+
         let adv_exp = explanation.unwrap();
         assert_eq!(adv_exp.attack_method, "fgsm");
         assert!(adv_exp.perturbation_magnitude > 0.0);
@@ -443,10 +482,10 @@ mod tests {
             Array::from_vec(vec![0.8, 0.6]).into_dyn(),
         ];
         let labels = vec!["cat".to_string(), "cat".to_string()];
-        
+
         let concepts = compute_concept_vectors(&examples, &labels, "conv1".to_string());
         assert!(concepts.is_ok());
-        
+
         let concept_vectors = concepts.unwrap();
         assert_eq!(concept_vectors.len(), 1);
         assert_eq!(concept_vectors[0].concept_name, "cat");

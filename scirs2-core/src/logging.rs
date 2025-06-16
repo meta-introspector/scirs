@@ -59,6 +59,8 @@ use std::time::{Duration, Instant};
 // Enhanced progress tracking module
 pub mod progress;
 
+/// Smart rate limiting for high-frequency log events
+pub mod rate_limiting;
 
 /// Log level enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

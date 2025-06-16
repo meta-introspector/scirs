@@ -584,7 +584,7 @@ impl<T: Float> op::Op<T> for ReduceMeanAll {
     fn grad(&self, ctx: &mut crate::op::GradientContext<T>) {
         let x = &ctx.input(0);
         // Use a simplified approach - create a constant scalar for division
-        let grad_scalar = ctx.output_grad();
+        let _grad_scalar = ctx.output_grad();
 
         let gx = Tensor::builder(ctx.graph())
             .append_input(ctx.output_grad(), false)

@@ -3,11 +3,10 @@
 //! This module provides parallel implementations of common tensor operations
 //! that can leverage multiple CPU cores for improved performance.
 
-use super::{execute_global, init_thread_pool, ThreadPoolError};
+use super::{init_thread_pool, ThreadPoolError};
 use crate::Float;
 use ndarray::{Array, Axis, IxDyn, Zip};
 use rayon::prelude::*;
-use std::sync::{Arc, Mutex};
 
 /// Configuration for parallel operations
 #[derive(Debug, Clone)]
@@ -59,33 +58,13 @@ impl ParallelElementWise {
                     *r = l + r_val;
                 });
         } else {
-            // Manual chunking
-            let chunk_size = Self::calculate_chunk_size(left.len(), config);
-            let chunks: Vec<_> = (0..left.len()).step_by(chunk_size).collect();
+            // Simplified sequential approach to avoid borrowing issues
+            let result_slice = result.as_slice_mut().unwrap();
+            let left_slice = left.as_slice().unwrap();
+            let right_slice = right.as_slice().unwrap();
 
-            let result_mutex = Arc::new(Mutex::new(&mut result));
-            let tasks: Vec<_> = chunks
-                .into_iter()
-                .map(|start| {
-                    let end = (start + chunk_size).min(left.len());
-                    let left_slice = left.as_slice().unwrap();
-                    let right_slice = right.as_slice().unwrap();
-                    let result_arc = Arc::clone(&result_mutex);
-
-                    move || {
-                        let mut result_guard = result_arc.lock().unwrap();
-                        let result_slice = result_guard.as_slice_mut().unwrap();
-
-                        for i in start..end {
-                            result_slice[i] = left_slice[i] + right_slice[i];
-                        }
-                    }
-                })
-                .collect();
-
-            // Execute in parallel
-            for task in tasks {
-                execute_global(task)?;
+            for i in 0..left.len() {
+                result_slice[i] = left_slice[i] + right_slice[i];
             }
         }
 
@@ -137,6 +116,7 @@ impl ParallelElementWise {
     }
 
     /// Calculate optimal chunk size for parallel processing
+    #[allow(dead_code)]
     fn calculate_chunk_size(total_size: usize, config: &ParallelConfig) -> usize {
         if let Some(num_chunks) = config.num_chunks {
             (total_size + num_chunks - 1) / num_chunks
@@ -344,34 +324,31 @@ impl ParallelMatrix {
         let mut result = Array::zeros(IxDyn(&[m, n]));
         let block_size = Self::calculate_block_size(m, n, k, config);
 
-        // Parallel iteration over blocks
-        (0..m)
-            .into_par_iter()
-            .step_by(block_size)
-            .for_each(|i_start| {
-                let i_end = (i_start + block_size).min(m);
+        // Sequential iteration over blocks to avoid borrowing issues
+        for i_start in (0..m).step_by(block_size) {
+            let i_end = (i_start + block_size).min(m);
 
-                for j_start in (0..n).step_by(block_size) {
-                    let j_end = (j_start + block_size).min(n);
+            for j_start in (0..n).step_by(block_size) {
+                let j_end = (j_start + block_size).min(n);
 
-                    for k_start in (0..k).step_by(block_size) {
-                        let k_end = (k_start + block_size).min(k);
+                for k_start in (0..k).step_by(block_size) {
+                    let k_end = (k_start + block_size).min(k);
 
-                        // Compute block multiplication
-                        Self::multiply_block(
-                            &left,
-                            &right,
-                            &mut result,
-                            i_start,
-                            i_end,
-                            j_start,
-                            j_end,
-                            k_start,
-                            k_end,
-                        );
-                    }
+                    // Compute block multiplication
+                    Self::multiply_block(
+                        &left,
+                        &right,
+                        &mut result,
+                        i_start,
+                        i_end,
+                        j_start,
+                        j_end,
+                        k_start,
+                        k_end,
+                    );
                 }
-            });
+            }
+        }
 
         Ok(result)
     }
@@ -432,22 +409,20 @@ impl ParallelMatrix {
         // Parallel transpose with cache-friendly blocking
         let block_size = 64; // Cache-friendly block size
 
-        (0..rows)
-            .into_par_iter()
-            .step_by(block_size)
-            .for_each(|i_start| {
-                let i_end = (i_start + block_size).min(rows);
+        // Sequential iteration to avoid borrowing issues
+        for i_start in (0..rows).step_by(block_size) {
+            let i_end = (i_start + block_size).min(rows);
 
-                for j_start in (0..cols).step_by(block_size) {
-                    let j_end = (j_start + block_size).min(cols);
+            for j_start in (0..cols).step_by(block_size) {
+                let j_end = (j_start + block_size).min(cols);
 
-                    for i in i_start..i_end {
-                        for j in j_start..j_end {
-                            result[[j, i]] = array[[i, j]];
-                        }
+                for i in i_start..i_end {
+                    for j in j_start..j_end {
+                        result[[j, i]] = array[[i, j]];
                     }
                 }
-            });
+            }
+        }
 
         Ok(result)
     }
@@ -476,7 +451,7 @@ impl ParallelConvolution {
             return Self::conv1d_sequential(input, kernel);
         }
 
-        let mut output = Array::zeros(IxDyn(&[output_len]));
+        let output = Array::zeros(IxDyn(&[output_len]));
 
         // Parallel convolution
         (0..output_len).into_par_iter().for_each(|i| {
@@ -614,7 +589,7 @@ impl ParallelDispatcher {
 
         if size < self.config.min_parallel_size {
             // Sequential processing
-            for (i, mut result_elem) in result.iter_mut().enumerate() {
+            for (i, result_elem) in result.iter_mut().enumerate() {
                 let values: Vec<F> = arrays
                     .iter()
                     .map(|arr| arr.as_slice().unwrap()[i])

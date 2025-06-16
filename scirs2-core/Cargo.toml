@@ -26,6 +26,7 @@ uuid = { workspace = true }  # Used for unique identifiers
 tempfile = { workspace = true, optional = true }  # For temporary files in memory_efficient
 bincode = { workspace = true, optional = true }  # For serialization in memory_efficient
 memmap2 = { workspace = true, optional = true }  # For memory-mapped arrays
+regex = { workspace = true, optional = true }  # For string pattern validation
 
 # Feature-gated dependencies
 wide = { workspace = true, optional = true }  # SIMD acceleration
@@ -64,7 +65,7 @@ default = ["array", "serialization"]  # Enable array module by default
 simd = ["wide"]  # SIMD operations
 parallel = ["rayon", "ndarray/rayon", "crossbeam", "crossbeam-utils", "crossbeam-deque", "num_cpus"]  # Parallel processing with rayon
 cache = ["cached"]  # Caching and memoization functionality
-validation = []  # Validation utilities
+validation = ["regex"]  # Validation utilities
 logging = []  # Structured logging and diagnostics
 async = ["tokio"]  # Async error handling and recovery mechanisms
 gpu = []  # GPU acceleration abstractions

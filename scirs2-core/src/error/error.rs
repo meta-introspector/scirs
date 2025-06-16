@@ -210,6 +210,14 @@ pub enum CoreError {
     /// Timeout error (operation timed out)
     #[error("Timeout error: {0}")]
     TimeoutError(ErrorContext),
+
+    /// Compression error (error during compression/decompression)
+    #[error("Compression error: {0}")]
+    CompressionError(ErrorContext),
+
+    /// Invalid shape error (array shape is invalid)
+    #[error("Invalid shape: {0}")]
+    InvalidShape(ErrorContext),
 }
 
 /// Result type alias for core operations

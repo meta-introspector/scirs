@@ -70,14 +70,23 @@ pub fn analyze_layer_activations<F>(
     layer_name: &str,
 ) -> Result<LayerAnalysisStats<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
-    let activations = interpreter.get_cached_activations(layer_name).ok_or_else(|| {
-        NeuralError::ComputationError(format!(
-            "No cached activations found for layer: {}",
-            layer_name
-        ))
-    })?;
+    let activations = interpreter
+        .get_cached_activations(layer_name)
+        .ok_or_else(|| {
+            NeuralError::ComputationError(format!(
+                "No cached activations found for layer: {}",
+                layer_name
+            ))
+        })?;
 
     let stats = compute_layer_statistics(activations)?;
     interpreter.cache_layer_statistics(layer_name.to_string(), stats.clone());
@@ -87,7 +96,14 @@ where
 /// Compute detailed statistics for layer activations
 pub fn compute_layer_statistics<F>(activations: &ArrayD<F>) -> Result<LayerAnalysisStats<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let mean_activation = activations.mean().unwrap_or(F::zero());
     let variance = activations
@@ -154,14 +170,21 @@ where
 /// Compute attribution statistics for a single attribution method
 pub fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> AttributionStatistics<F>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let mean = attribution.mean().unwrap_or(F::zero());
     let abs_attribution = attribution.mapv(|x| x.abs());
     let mean_abs = abs_attribution.mean().unwrap_or(F::zero());
     let max_abs = abs_attribution.iter().cloned().fold(F::zero(), F::max);
-    let positive_ratio = attribution.iter().filter(|&&x| x > F::zero()).count() as f64
-        / attribution.len() as f64;
+    let positive_ratio =
+        attribution.iter().filter(|&&x| x > F::zero()).count() as f64 / attribution.len() as f64;
 
     AttributionStatistics {
         mean,
@@ -186,7 +209,14 @@ pub fn generate_interpretation_summary<F>(
     attributions: &HashMap<String, ArrayD<F>>,
 ) -> InterpretationSummary
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let num_methods = attributions.len();
 
@@ -208,8 +238,8 @@ where
             // Compute consistency as standard deviation (lower is more consistent)
             if !scores.is_empty() {
                 let mean = scores.iter().sum::<f64>() / scores.len() as f64;
-                let variance = scores.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
-                    / scores.len() as f64;
+                let variance =
+                    scores.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / scores.len() as f64;
                 let std_dev = variance.sqrt();
                 feature_consistency_scores.push(1.0 / (1.0 + std_dev)); // Higher is more consistent
             } else {
@@ -238,7 +268,14 @@ pub fn find_most_important_features<F>(
     top_k: usize,
 ) -> Vec<usize>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     if attributions.is_empty() {
         return Vec::new();
@@ -272,7 +309,14 @@ where
 /// Compute interpretation confidence based on method consistency
 pub fn compute_interpretation_confidence<F>(attributions: &HashMap<String, ArrayD<F>>) -> f64
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     if attributions.len() < 2 {
         return 1.0; // Single method, assume full confidence
@@ -305,7 +349,14 @@ where
 /// Compute Pearson correlation coefficient between two attribution arrays
 pub fn compute_correlation<F>(x: &ArrayD<F>, y: &ArrayD<F>) -> f64
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let n = x.len() as f64;
     if n == 0.0 {
@@ -343,33 +394,42 @@ where
     F: Float + Debug,
 {
     let mut analysis = HashMap::new();
-    
-    analysis.insert("dead_neuron_percentage".to_string(), stats.dead_neuron_percentage);
+
+    analysis.insert(
+        "dead_neuron_percentage".to_string(),
+        stats.dead_neuron_percentage,
+    );
     analysis.insert("sparsity_percentage".to_string(), stats.sparsity);
-    
+
     // Analyze distribution shape based on histogram
     let total_activations: u32 = stats.histogram.iter().sum();
     if total_activations > 0 {
         // Find peak bin
-        let (peak_bin, _) = stats.histogram
+        let (peak_bin, _) = stats
+            .histogram
             .iter()
             .enumerate()
             .max_by_key(|(_, &count)| count)
             .unwrap_or((0, &0));
-        
+
         let peak_position = peak_bin as f64 / stats.histogram.len() as f64;
         analysis.insert("peak_position".to_string(), peak_position);
-        
+
         // Compute skewness approximation
-        let mean_bin = stats.histogram
+        let mean_bin = stats
+            .histogram
             .iter()
             .enumerate()
             .map(|(i, &count)| i as f64 * count as f64)
-            .sum::<f64>() / total_activations as f64;
-        
-        analysis.insert("distribution_center".to_string(), mean_bin / stats.histogram.len() as f64);
+            .sum::<f64>()
+            / total_activations as f64;
+
+        analysis.insert(
+            "distribution_center".to_string(),
+            mean_bin / stats.histogram.len() as f64,
+        );
     }
-    
+
     analysis
 }
 
@@ -382,20 +442,22 @@ where
     F: Float + Debug,
 {
     let mut comparison = HashMap::new();
-    
+
     let mean_ratio = if stats2.mean_activation != F::zero() {
-        (stats1.mean_activation / stats2.mean_activation).to_f64().unwrap_or(0.0)
+        (stats1.mean_activation / stats2.mean_activation)
+            .to_f64()
+            .unwrap_or(0.0)
     } else {
         0.0
     };
     comparison.insert("mean_activation_ratio".to_string(), mean_ratio);
-    
+
     let sparsity_diff = stats1.sparsity - stats2.sparsity;
     comparison.insert("sparsity_difference".to_string(), sparsity_diff);
-    
+
     let dead_neuron_diff = stats1.dead_neuron_percentage - stats2.dead_neuron_percentage;
     comparison.insert("dead_neuron_difference".to_string(), dead_neuron_diff);
-    
+
     comparison
 }
 
@@ -408,7 +470,7 @@ mod tests {
     fn test_compute_layer_statistics() {
         let activations = Array::from_vec(vec![0.0, 0.1, 0.5, 1.0, 0.0, -0.2]).into_dyn();
         let stats = compute_layer_statistics(&activations).unwrap();
-        
+
         assert!(stats.mean_activation > -0.1 && stats.mean_activation < 0.5);
         assert!(stats.max_activation == 1.0);
         assert!(stats.min_activation == -0.2);
@@ -419,7 +481,7 @@ mod tests {
     fn test_compute_attribution_statistics() {
         let attribution = Array::from_vec(vec![0.5, -0.3, 0.8, 0.0, -0.1]).into_dyn();
         let stats = compute_attribution_statistics(&attribution);
-        
+
         assert!(stats.positive_attribution_ratio > 0.0);
         assert!(stats.total_positive_attribution > 0.0);
         assert!(stats.total_negative_attribution < 0.0);
@@ -429,7 +491,7 @@ mod tests {
     fn test_correlation_computation() {
         let x = Array::from_vec(vec![1.0, 2.0, 3.0, 4.0]).into_dyn();
         let y = Array::from_vec(vec![2.0, 4.0, 6.0, 8.0]).into_dyn();
-        
+
         let correlation = compute_correlation(&x, &y);
         assert!((correlation - 1.0).abs() < 1e-10); // Perfect positive correlation
     }
@@ -445,7 +507,7 @@ mod tests {
             "method2".to_string(),
             Array::from_vec(vec![0.2, 0.7, 0.4, 0.8, 0.1]).into_dyn(),
         );
-        
+
         let important_features = find_most_important_features(&attributions, 3);
         assert_eq!(important_features.len(), 3);
         assert_eq!(important_features[0], 3); // Index 3 has highest average attribution
@@ -462,7 +524,7 @@ mod tests {
             "gradcam".to_string(),
             Array::from_vec(vec![0.2, 0.4, 0.3]).into_dyn(),
         );
-        
+
         let summary = generate_interpretation_summary(&attributions);
         assert_eq!(summary.num_attribution_methods, 2);
         assert!(summary.interpretation_confidence > 0.0);

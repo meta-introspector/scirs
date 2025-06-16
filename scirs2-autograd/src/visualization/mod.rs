@@ -370,6 +370,7 @@ impl<F: Float> Default for GraphVisualizer<F> {
 
 /// Node analysis results
 struct NodeAnalysis {
+    #[allow(dead_code)]
     shapes: HashMap<usize, Vec<usize>>,
     operations: HashMap<usize, String>,
     depths: HashMap<usize, usize>,
@@ -389,7 +390,7 @@ impl<F: Float> GraphDebugger<F> {
     }
 
     /// Print graph statistics
-    pub fn print_stats(&self, graph: &Graph<F>) -> Result<(), VisualizationError> {
+    pub fn print_stats(&self, _graph: &Graph<F>) -> Result<(), VisualizationError> {
         println!("Graph Statistics:");
         println!("================");
 
@@ -404,7 +405,7 @@ impl<F: Float> GraphDebugger<F> {
 
     /// Validate graph structure
     pub fn validate_graph(&self, _graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
-        let mut issues = Vec::new();
+        let issues = Vec::new();
 
         // Check for common graph issues
         // - Cycles in the graph
@@ -492,7 +493,6 @@ pub enum VisualizationError {
 }
 
 /// Public API functions for graph visualization
-
 /// Visualize a computation graph in DOT format
 pub fn visualize_graph_dot<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let visualizer = GraphVisualizer::new();

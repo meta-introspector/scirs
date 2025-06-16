@@ -159,11 +159,12 @@ impl ThreadPool {
         }
 
         // Wait for all tasks to complete
+        let num_handles = handles.len();
         for rx in handles {
             rx.recv().map_err(|_| ThreadPoolError::ExecutionFailed)?;
         }
 
-        Ok(vec![(); handles.len()])
+        Ok(vec![(); num_handles])
     }
 
     /// Get thread pool statistics
@@ -214,6 +215,7 @@ impl Default for ThreadPool {
 
 /// Worker thread in the thread pool
 struct Worker {
+    #[allow(dead_code)]
     id: usize,
     thread: Option<JoinHandle<()>>,
 }

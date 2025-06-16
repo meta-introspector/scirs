@@ -408,6 +408,12 @@ pub mod cross_device;
 /// Out-of-core processing for datasets larger than memory
 pub mod out_of_core;
 
+/// Compressed memory buffers for memory-constrained environments
+pub mod compressed_buffers;
+
+/// Production-level memory safety features with bounds checking and overflow protection
+pub mod safety;
+
 // Re-export key metric functions for convenient usage
 pub use metrics::{
     format_memory_report, generate_memory_report, track_allocation, track_deallocation,

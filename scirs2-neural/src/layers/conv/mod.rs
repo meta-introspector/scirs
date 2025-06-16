@@ -18,8 +18,8 @@ pub mod pooling;
 pub use common::PaddingMode;
 pub use conv2d::Conv2D;
 pub use pooling::{
-    MaxPool2D, GlobalAvgPool2D, AdaptiveAvgPool2D, AdaptiveMaxPool2D,
-    AdaptiveAvgPool1D, AdaptiveMaxPool1D, AdaptiveAvgPool3D, AdaptiveMaxPool3D,
+    AdaptiveAvgPool1D, AdaptiveAvgPool2D, AdaptiveAvgPool3D, AdaptiveMaxPool1D, AdaptiveMaxPool2D,
+    AdaptiveMaxPool3D, GlobalAvgPool2D, MaxPool2D,
 };
 
 #[cfg(test)]
@@ -291,9 +291,18 @@ mod tests {
         let kernel_size = (3, 3);
         let dilation = (1, 1);
 
-        assert_eq!(PaddingMode::Valid.calculate_padding(kernel_size, dilation), (0, 0));
-        assert_eq!(PaddingMode::Same.calculate_padding(kernel_size, dilation), (1, 1));
-        assert_eq!(PaddingMode::Custom(2).calculate_padding(kernel_size, dilation), (2, 2));
+        assert_eq!(
+            PaddingMode::Valid.calculate_padding(kernel_size, dilation),
+            (0, 0)
+        );
+        assert_eq!(
+            PaddingMode::Same.calculate_padding(kernel_size, dilation),
+            (1, 1)
+        );
+        assert_eq!(
+            PaddingMode::Custom(2).calculate_padding(kernel_size, dilation),
+            (2, 2)
+        );
     }
 }
 

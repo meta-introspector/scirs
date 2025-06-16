@@ -45,13 +45,13 @@
 //! ```
 
 // Re-export submodules
-pub mod standard;
 pub mod generalized;
 pub mod sparse;
+pub mod standard;
 
 // Re-export key types for convenience
-pub use standard::EigenResult;
 use crate::error::LinalgResult;
+pub use standard::EigenResult;
 
 // Import all the main functions from submodules
 use ndarray::{Array1, Array2, ArrayView2};
@@ -59,11 +59,11 @@ use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
 // Re-export main functions for backward compatibility
-pub use standard::{eig, eigvals, eigh, power_iteration};
 pub use generalized::{eig_gen, eigh_gen, eigvals_gen, eigvalsh_gen};
+pub use standard::{eig, eigh, eigvals, power_iteration};
 
 // Re-export sparse functions (when implemented)
-pub use sparse::{lanczos, arnoldi, eigs_gen, svds};
+pub use sparse::{arnoldi, eigs_gen, lanczos, svds};
 
 /// Compute only the eigenvalues of a symmetric/Hermitian matrix.
 ///
@@ -224,7 +224,7 @@ where
 {
     // Base tolerance
     let base_tol = F::epsilon() * F::from(100.0).unwrap();
-    
+
     // Adjust based on condition number
     if condition_number > F::from(1e12).unwrap() {
         base_tol * F::from(1000.0).unwrap()
@@ -240,8 +240,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_backward_compatibility() {
@@ -251,7 +251,7 @@ mod tests {
         // Test eig
         let (w1, v1) = eig(&a.view(), None).unwrap();
         let (w2, v2) = standard::eig(&a.view(), None).unwrap();
-        
+
         // Should be the same (allowing for different ordering)
         assert_eq!(w1.len(), w2.len());
         assert_eq!(v1.dim(), v2.dim());
@@ -259,20 +259,20 @@ mod tests {
         // Test eigh
         let (w1, v1) = eigh(&a.view(), None).unwrap();
         let (w2, v2) = standard::eigh(&a.view(), None).unwrap();
-        
+
         assert_eq!(w1.len(), w2.len());
         assert_eq!(v1.dim(), v2.dim());
 
         // Test eigvals
         let w1 = eigvals(&a.view(), None).unwrap();
         let w2 = standard::eigvals(&a.view(), None).unwrap();
-        
+
         assert_eq!(w1.len(), w2.len());
 
         // Test eigvalsh
         let w1 = eigvalsh(&a.view(), None).unwrap();
         let (w2, _) = eigh(&a.view(), None).unwrap();
-        
+
         for i in 0..w1.len() {
             assert_relative_eq!(w1[i], w2[i], epsilon = 1e-10);
         }
@@ -286,13 +286,13 @@ mod tests {
         // Test re-exported generalized functions
         let (w1, v1) = eig_gen(&a.view(), &b.view(), None).unwrap();
         let (w2, v2) = generalized::eig_gen(&a.view(), &b.view(), None).unwrap();
-        
+
         assert_eq!(w1.len(), w2.len());
         assert_eq!(v1.dim(), v2.dim());
 
         let (w1, v1) = eigh_gen(&a.view(), &b.view(), None).unwrap();
         let (w2, v2) = generalized::eigh_gen(&a.view(), &b.view(), None).unwrap();
-        
+
         assert_eq!(w1.len(), w2.len());
         assert_eq!(v1.dim(), v2.dim());
     }
@@ -300,11 +300,11 @@ mod tests {
     #[test]
     fn test_ultra_precision_fallback() {
         let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-        
+
         // Should not fail (falls back to standard eigh)
         let result = ultra_precision_eig(&a.view(), 1e-12);
         assert!(result.is_ok());
-        
+
         let (w, v) = result.unwrap();
         assert_eq!(w.len(), 2);
         assert_eq!(v.dim(), (2, 2));
@@ -339,14 +339,14 @@ mod tests {
     fn test_module_organization() {
         // Test that all modules are accessible
         let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-        
+
         // Standard module
         let _ = standard::eig(&a.view(), None).unwrap();
-        
+
         // Generalized module
         let b = Array2::eye(2);
         let _ = generalized::eig_gen(&a.view(), &b.view(), None).unwrap();
-        
+
         // Sparse module (should return not implemented error)
         let csr = sparse::CsrMatrix::new(2, 2, vec![], vec![], vec![]);
         let result = sparse::lanczos(&csr, 1, "largest", 0.0_f64, 10, 1e-6);

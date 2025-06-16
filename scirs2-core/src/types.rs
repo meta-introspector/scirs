@@ -1143,6 +1143,9 @@ pub mod units {
     }
 }
 
+/// Dynamic type dispatch for heterogeneous collections
+pub mod dynamic_dispatch;
+
 /// Specialized numeric types for scientific computing
 pub mod scientific {
 

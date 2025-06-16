@@ -694,6 +694,12 @@ impl<T: ScientificNumber + Neg<Output = T>> Neg for Scalar<T> {
     }
 }
 
+/// Automated precision tracking for numerical computations
+pub mod precision_tracking;
+
+/// Specialized numeric types for scientific domains
+pub mod scientific_types;
+
 #[cfg(test)]
 mod tests {
     use super::*;

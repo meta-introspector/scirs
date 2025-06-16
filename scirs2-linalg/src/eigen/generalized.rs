@@ -347,7 +347,7 @@ where
     F: Float + NumAssign,
 {
     let n = b.nrows();
-    
+
     for i in 0..n {
         for j in 0..n {
             let expected = if i == j { F::one() } else { F::zero() };
@@ -356,7 +356,7 @@ where
             }
         }
     }
-    
+
     true
 }
 
@@ -366,25 +366,26 @@ where
     F: Float + NumAssign,
 {
     let n = matrix.nrows();
-    
+
     for i in 0..n {
         for j in 0..n {
             if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() {
-                return Err(LinalgError::ShapeError(
-                    format!("Matrix {} must be symmetric for eigh_gen", name),
-                ));
+                return Err(LinalgError::ShapeError(format!(
+                    "Matrix {} must be symmetric for eigh_gen",
+                    name
+                )));
             }
         }
     }
-    
+
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_eig_gen_identity() {

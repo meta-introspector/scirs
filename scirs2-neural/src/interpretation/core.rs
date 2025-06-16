@@ -12,11 +12,11 @@ use std::fmt::Debug;
 use std::iter::Sum;
 
 // Re-export types from other modules
-pub use super::attribution::{AttributionMethod, BaselineMethod, LRPRule};
 pub use super::analysis::LayerAnalysisStats;
-pub use super::explanations::{CounterfactualGenerator, ConceptActivationVector, LIMEExplainer};
+pub use super::attribution::{AttributionMethod, BaselineMethod, LRPRule};
+pub use super::explanations::{ConceptActivationVector, CounterfactualGenerator, LIMEExplainer};
+pub use super::reporting::{ComprehensiveInterpretationReport, InterpretationReport};
 pub use super::visualization::{AttentionVisualizer, VisualizationMethod};
-pub use super::reporting::{InterpretationReport, ComprehensiveInterpretationReport};
 
 /// Model interpreter for analyzing neural network decisions
 ///
@@ -117,7 +117,8 @@ impl<
 
     /// Check if a specific layer has cached data
     pub fn has_layer_data(&self, layer_name: &str) -> bool {
-        self.activation_cache.contains_key(layer_name) || self.gradient_cache.contains_key(layer_name)
+        self.activation_cache.contains_key(layer_name)
+            || self.gradient_cache.contains_key(layer_name)
     }
 
     /// Get all cached layer names
@@ -190,17 +191,17 @@ impl<
     ) -> Result<ArrayD<F>> {
         // Import attribution computation functions
         use super::attribution::{
-            compute_saliency_attribution, compute_integrated_gradients, compute_gradcam_attribution,
-            compute_guided_backprop_attribution, compute_deeplift_attribution, compute_shap_attribution,
+            compute_deeplift_attribution, compute_gradcam_attribution,
+            compute_guided_backprop_attribution, compute_integrated_gradients,
+            compute_saliency_attribution, compute_shap_attribution,
         };
 
         match method {
-            AttributionMethod::Saliency => {
-                compute_saliency_attribution(self, input, target_class)
-            }
-            AttributionMethod::IntegratedGradients { baseline, num_steps } => {
-                compute_integrated_gradients(self, input, baseline, *num_steps, target_class)
-            }
+            AttributionMethod::Saliency => compute_saliency_attribution(self, input, target_class),
+            AttributionMethod::IntegratedGradients {
+                baseline,
+                num_steps,
+            } => compute_integrated_gradients(self, input, baseline, *num_steps, target_class),
             AttributionMethod::GradCAM { target_layer } => {
                 compute_gradcam_attribution(self, input, target_layer, target_class)
             }
@@ -210,12 +211,20 @@ impl<
             AttributionMethod::DeepLIFT { baseline } => {
                 compute_deeplift_attribution(self, input, baseline, target_class)
             }
-            AttributionMethod::SHAP { background_samples, num_samples } => {
-                compute_shap_attribution(self, input, *background_samples, *num_samples, target_class)
-            }
-            _ => Err(NeuralError::NotImplementedError(
-                format!("Attribution method {:?} not yet implemented", method)
-            )),
+            AttributionMethod::SHAP {
+                background_samples,
+                num_samples,
+            } => compute_shap_attribution(
+                self,
+                input,
+                *background_samples,
+                *num_samples,
+                target_class,
+            ),
+            _ => Err(NeuralError::NotImplementedError(format!(
+                "Attribution method {:?} not yet implemented",
+                method
+            ))),
         }
     }
 
@@ -230,7 +239,10 @@ impl<
     /// Generate comprehensive interpretation report
     ///
     /// Delegates to the reporting module for unified reporting.
-    pub fn generate_report(&self, input: &ArrayD<F>) -> Result<ComprehensiveInterpretationReport<F>> {
+    pub fn generate_report(
+        &self,
+        input: &ArrayD<F>,
+    ) -> Result<ComprehensiveInterpretationReport<F>> {
         use super::reporting::generate_comprehensive_report;
         generate_comprehensive_report(self, input)
     }
@@ -267,20 +279,20 @@ mod tests {
     #[test]
     fn test_cache_management() {
         let mut interpreter: ModelInterpreter<f64> = ModelInterpreter::new();
-        
+
         let activations = Array::zeros((2, 3, 4)).into_dyn();
         let gradients = Array::ones((2, 3, 4)).into_dyn();
-        
+
         interpreter.cache_activations("conv1".to_string(), activations.clone());
         interpreter.cache_gradients("conv1".to_string(), gradients.clone());
-        
+
         assert!(interpreter.has_layer_data("conv1"));
         assert!(!interpreter.has_layer_data("conv2"));
-        
+
         let cached_layers = interpreter.cached_layers();
         assert_eq!(cached_layers.len(), 1);
         assert!(cached_layers.contains(&"conv1".to_string()));
-        
+
         interpreter.clear_caches();
         assert_eq!(interpreter.cached_layers().len(), 0);
     }
@@ -288,18 +300,21 @@ mod tests {
     #[test]
     fn test_attribution_method_management() {
         let mut interpreter: ModelInterpreter<f64> = ModelInterpreter::new();
-        
+
         let method = AttributionMethod::Saliency;
         interpreter.add_attribution_method(method);
-        
+
         assert_eq!(interpreter.attribution_methods().len(), 1);
-        assert_eq!(interpreter.attribution_methods()[0], AttributionMethod::Saliency);
+        assert_eq!(
+            interpreter.attribution_methods()[0],
+            AttributionMethod::Saliency
+        );
     }
 
     #[test]
     fn test_concept_vector_management() {
         let interpreter: ModelInterpreter<f64> = ModelInterpreter::new();
-        
+
         // This would normally be a real ConceptActivationVector, but we'll use a placeholder
         // The actual struct will be defined in the explanations module
         // For now, just test the interface exists

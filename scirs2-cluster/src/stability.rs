@@ -703,7 +703,7 @@ mod tests {
 
         assert!(result.is_ok());
         let (optimal_k, scores) = result.unwrap();
-        assert!(optimal_k >= 2 && optimal_k <= 5);
+        assert!((2..=5).contains(&optimal_k));
         assert_eq!(scores.len(), 4); // k=2,3,4,5
     }
 
@@ -729,7 +729,7 @@ mod tests {
 
         assert!(result.is_ok());
         let (optimal_k, gap_scores) = result.unwrap();
-        assert!(optimal_k >= 2 && optimal_k <= 4);
+        assert!((2..=4).contains(&optimal_k));
         assert_eq!(gap_scores.len(), 3); // k=2,3,4
     }
 }

@@ -737,8 +737,10 @@ mod tests {
         ];
 
         for orientation in orientations {
-            let mut config = DendrogramConfig::default();
-            config.orientation = orientation;
+            let config = DendrogramConfig {
+                orientation,
+                ..Default::default()
+            };
 
             let plot = create_dendrogram_plot(linkage_matrix.view(), None, config).unwrap();
 

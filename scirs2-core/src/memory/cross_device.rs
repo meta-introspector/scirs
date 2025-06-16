@@ -463,10 +463,7 @@ impl CrossDeviceMemoryManager {
     }
 
     /// Allocate memory on the default device
-    pub fn allocate_default<T: 'static>(
-        &self,
-        count: usize,
-    ) -> CoreResult<CrossDeviceBuffer<T>> {
+    pub fn allocate_default<T: 'static>(&self, count: usize) -> CoreResult<CrossDeviceBuffer<T>> {
         let default_device = self
             .get_default_device()
             .ok_or_else(|| CrossDeviceError::DeviceNotFound("No default device set".to_string()))?;

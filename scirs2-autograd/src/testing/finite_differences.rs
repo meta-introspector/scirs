@@ -145,7 +145,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
 
         // Compute partial derivatives
-        for (i, mut input_perturbed) in self.create_perturbed_inputs(input, step).enumerate() {
+        for (i, input_perturbed) in self.create_perturbed_inputs(input, step).enumerate() {
             let f_x_plus_h = function(&input_perturbed)?;
 
             // ∂f/∂x_i ≈ (f(x + h*e_i) - f(x)) / h
@@ -253,7 +253,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
                 self.compute_five_point_stencil(&function, input, i, step)?;
 
             // ∂f/∂x_i ≈ (-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)) / (12h)
-            let two = F::from(2.0).unwrap();
+            let _two = F::from(2.0).unwrap();
             let eight = F::from(8.0).unwrap();
             let twelve = F::from(12.0).unwrap();
 
@@ -345,8 +345,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     #[allow(dead_code)]
     fn compute_partial_derivative(
         &self,
-        f_perturbed: &Tensor<F>,
-        f_original: &Tensor<F>,
+        _f_perturbed: &Tensor<F>,
+        _f_original: &Tensor<F>,
         step: F,
     ) -> F {
         // Simplified - would compute actual difference between tensor values
@@ -357,8 +357,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     #[allow(dead_code)]
     fn compute_central_partial_derivative(
         &self,
-        f_plus: &Tensor<F>,
-        f_minus: &Tensor<F>,
+        _f_plus: &Tensor<F>,
+        _f_minus: &Tensor<F>,
         step: F,
     ) -> F {
         // Simplified - would compute actual difference between tensor values
@@ -480,11 +480,11 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     fn create_single_perturbation<'a>(
         &self,
         input: &Tensor<'a, F>,
-        index: usize,
-        delta: F,
+        _index: usize,
+        _delta: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with a single component perturbed
-        let mut perturbed = input.clone();
+        let perturbed = input.clone();
         // Simplified - would actually perturb the specific index
         Ok(perturbed)
     }
@@ -493,19 +493,19 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     fn create_double_perturbation<'a>(
         &self,
         input: &Tensor<'a, F>,
-        i: usize,
-        j: usize,
-        delta_i: F,
-        delta_j: F,
+        _i: usize,
+        _j: usize,
+        _delta_i: F,
+        _delta_j: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with two components perturbed
-        let mut perturbed = input.clone();
+        let perturbed = input.clone();
         // Simplified - would actually perturb the specific indices
         Ok(perturbed)
     }
 
     #[allow(dead_code)]
-    fn extract_scalar<'a>(&self, tensor: &Tensor<'a, F>) -> Result<F, StabilityError> {
+    fn extract_scalar<'a>(&self, _tensor: &Tensor<'a, F>) -> Result<F, StabilityError> {
         // Extract a scalar value from the tensor (assumes output is scalar)
         // Simplified implementation
         Ok(F::from(1.0).unwrap())
@@ -521,6 +521,7 @@ impl<F: Float> Default for FiniteDifferenceComputer<F> {
 /// Iterator for creating perturbed inputs
 pub struct PerturbedInputIterator<'a, F: Float> {
     input: Tensor<'a, F>,
+    #[allow(dead_code)]
     step: F,
     current_index: usize,
     max_index: usize,
@@ -547,7 +548,7 @@ impl<'a, F: Float> Iterator for PerturbedInputIterator<'a, F> {
         }
 
         // Create perturbed input
-        let mut perturbed = self.input.clone();
+        let perturbed = self.input.clone();
         // Simplified - would actually perturb the current index
 
         self.current_index += 1;
@@ -558,6 +559,7 @@ impl<'a, F: Float> Iterator for PerturbedInputIterator<'a, F> {
 /// Iterator for creating central difference perturbed inputs
 pub struct CentralPerturbedInputIterator<'a, F: Float> {
     input: Tensor<'a, F>,
+    #[allow(dead_code)]
     step: F,
     current_index: usize,
     max_index: usize,
@@ -584,8 +586,8 @@ impl<'a, F: Float> Iterator for CentralPerturbedInputIterator<'a, F> {
         }
 
         // Create both positive and negative perturbations
-        let mut input_plus = self.input.clone();
-        let mut input_minus = self.input.clone();
+        let input_plus = self.input.clone();
+        let input_minus = self.input.clone();
         // Simplified - would actually perturb the current index
 
         self.current_index += 1;

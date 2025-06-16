@@ -362,19 +362,15 @@ where
 
         if a12 != F::zero() {
             complex_eigenvectors[[0, 0]] = Complex::new(a12, F::zero());
-            complex_eigenvectors[[1, 0]] =
-                Complex::new(eigenvalues[0].re - a11, eigenvalues[0].im);
+            complex_eigenvectors[[1, 0]] = Complex::new(eigenvalues[0].re - a11, eigenvalues[0].im);
 
             complex_eigenvectors[[0, 1]] = Complex::new(a12, F::zero());
-            complex_eigenvectors[[1, 1]] =
-                Complex::new(eigenvalues[1].re - a11, eigenvalues[1].im);
+            complex_eigenvectors[[1, 1]] = Complex::new(eigenvalues[1].re - a11, eigenvalues[1].im);
         } else if a21 != F::zero() {
-            complex_eigenvectors[[0, 0]] =
-                Complex::new(eigenvalues[0].re - a22, eigenvalues[0].im);
+            complex_eigenvectors[[0, 0]] = Complex::new(eigenvalues[0].re - a22, eigenvalues[0].im);
             complex_eigenvectors[[1, 0]] = Complex::new(a21, F::zero());
 
-            complex_eigenvectors[[0, 1]] =
-                Complex::new(eigenvalues[1].re - a22, eigenvalues[1].im);
+            complex_eigenvectors[[0, 1]] = Complex::new(eigenvalues[1].re - a22, eigenvalues[1].im);
             complex_eigenvectors[[1, 1]] = Complex::new(a21, F::zero());
         }
 
@@ -397,8 +393,10 @@ where
     }
 }
 
-/// Solve 2x2 symmetric eigenvalue problem 
-fn solve_2x2_symmetric_eigenvalue_problem<F>(a: &ArrayView2<F>) -> LinalgResult<(Array1<F>, Array2<F>)>
+/// Solve 2x2 symmetric eigenvalue problem
+fn solve_2x2_symmetric_eigenvalue_problem<F>(
+    a: &ArrayView2<F>,
+) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + 'static,
 {
@@ -489,7 +487,9 @@ where
 }
 
 /// Solve 3x3 symmetric eigenvalue problem using analytical methods
-fn solve_3x3_symmetric_eigenvalue_problem<F>(a: &ArrayView2<F>) -> LinalgResult<(Array1<F>, Array2<F>)>
+fn solve_3x3_symmetric_eigenvalue_problem<F>(
+    a: &ArrayView2<F>,
+) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + 'static,
 {
@@ -560,7 +560,9 @@ where
 }
 
 /// Solve symmetric matrices with power iteration (simplified implementation)
-fn solve_symmetric_with_power_iteration<F>(a: &ArrayView2<F>) -> LinalgResult<(Array1<F>, Array2<F>)>
+fn solve_symmetric_with_power_iteration<F>(
+    a: &ArrayView2<F>,
+) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + 'static,
 {
@@ -574,8 +576,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_1x1_matrix() {

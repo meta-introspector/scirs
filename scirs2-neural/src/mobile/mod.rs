@@ -15,20 +15,19 @@
 //! - [`templates`] - Platform-specific code generation templates
 //! - [`guides`] - Documentation and integration guide content
 
-pub mod platform;
 pub mod generator;
-pub mod templates;
 pub mod guides;
+pub mod platform;
+pub mod templates;
 
 // Re-export main types and functions for backward compatibility
-pub use platform::*;
 pub use generator::{
-    MobileDeploymentGenerator, MobileDeploymentResult, PlatformPackage,
-    IntegrationInstructions, ConfigurationStep, ConfigurationChange, ChangeType,
-    CodeExample, TroubleshootingStep, OptimizationReport, OptimizationTechnique,
-    PerformanceImprovement, PerformanceMetrics, LatencyMetrics, MemoryMetrics,
-    PowerMetrics, ThermalMetrics,
+    ChangeType, CodeExample, ConfigurationChange, ConfigurationStep, IntegrationInstructions,
+    LatencyMetrics, MemoryMetrics, MobileDeploymentGenerator, MobileDeploymentResult,
+    OptimizationReport, OptimizationTechnique, PerformanceImprovement, PerformanceMetrics,
+    PlatformPackage, PowerMetrics, ThermalMetrics, TroubleshootingStep,
 };
+pub use platform::*;
 
 #[cfg(test)]
 mod tests {
@@ -297,7 +296,7 @@ mod tests {
         assert!(!guides::IOS_INTEGRATION_GUIDE.is_empty());
         assert!(!guides::ANDROID_INTEGRATION_GUIDE.is_empty());
         assert!(!guides::OPTIMIZATION_GUIDE.is_empty());
-        
+
         // Test that guides contain expected sections
         assert!(guides::IOS_INTEGRATION_GUIDE.contains("# iOS Integration Guide"));
         assert!(guides::ANDROID_INTEGRATION_GUIDE.contains("# Android Integration Guide"));

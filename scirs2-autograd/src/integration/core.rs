@@ -442,14 +442,16 @@ pub fn create_module_adapter<F: Float>(module_info: ModuleInfo) -> ModuleAdapter
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::graph::Graph;
     use crate::tensor::Tensor;
 
     #[test]
     fn test_scirs2_data_creation() {
+        let graph = Graph::default();
         let data = SciRS2Data::<f32>::new()
             .add_tensor(
                 "input".to_string(),
-                Tensor::from_vec(vec![1.0, 2.0], vec![2]),
+                Tensor::from_vec(vec![1.0, 2.0], vec![2], &graph),
             )
             .add_metadata("module_name".to_string(), "test".to_string())
             .add_parameter("learning_rate".to_string(), Parameter::Float(0.01));
@@ -467,9 +469,12 @@ mod tests {
 
     #[test]
     fn test_data_validation() {
+        let graph = Graph::default();
         let mut data = SciRS2Data::<f32>::new();
-        data.tensors
-            .insert("test".to_string(), Tensor::from_vec(vec![1.0], vec![1]));
+        data.tensors.insert(
+            "test".to_string(),
+            Tensor::from_vec(vec![1.0], vec![1], &graph),
+        );
 
         // Should fail without module_name
         assert!(data.validate().is_err());
@@ -527,10 +532,11 @@ mod tests {
 
     #[test]
     fn test_precision_conversion() {
+        let graph = Graph::default();
         let data = SciRS2Data::<f32>::new()
             .add_tensor(
                 "test".to_string(),
-                Tensor::from_vec(vec![1.0f32, 2.0], vec![2]),
+                Tensor::from_vec(vec![1.0f32, 2.0], vec![2], &graph),
             )
             .add_metadata("module_name".to_string(), "test".to_string());
 

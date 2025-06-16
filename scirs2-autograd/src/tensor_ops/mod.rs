@@ -633,7 +633,7 @@ where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
     let x = x.as_ref();
-    let g = x.graph();
+    let _g = x.graph();
     // Use a reshape operation to flatten to 1D
     // For now, use a simple approach that preserves the tensor structure
     let shape_val = [-1i32]; // Use -1 to indicate flatten to 1D

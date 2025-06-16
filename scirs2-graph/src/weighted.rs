@@ -833,10 +833,7 @@ pub mod utils {
     }
 
     /// Calculate weight correlation between two graphs with same structure
-    pub fn weight_correlation<N, E>(
-        graph1: &Graph<N, E>,
-        graph2: &Graph<N, E>,
-    ) -> Result<f64>
+    pub fn weight_correlation<N, E>(graph1: &Graph<N, E>, graph2: &Graph<N, E>) -> Result<f64>
     where
         N: Node + Clone + std::fmt::Debug,
         E: EdgeWeight + Clone + std::fmt::Debug + Into<f64>,

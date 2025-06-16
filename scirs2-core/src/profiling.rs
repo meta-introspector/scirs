@@ -686,6 +686,9 @@ pub mod hardware_counters;
 /// Continuous performance monitoring for long-running processes
 pub mod continuous_monitoring;
 
+/// Function-level performance hinting system
+pub mod performance_hints;
+
 /// Advanced profiling capabilities for Alpha 6
 pub mod advanced {
     use super::*;

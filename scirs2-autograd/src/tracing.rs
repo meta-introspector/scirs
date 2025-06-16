@@ -85,7 +85,7 @@ impl ExecutionTracer {
     /// Record an execution event
     pub fn record_event(&mut self, event: ExecutionEvent) {
         let should_record = self.should_record_event(&event);
-        
+
         if let Some(ref mut session) = self.current_session {
             if should_record {
                 session.events.push(event.clone());

@@ -173,9 +173,9 @@ impl ThreadPoolManager {
         #[cfg(feature = "rayon")]
         return self.execute(|| {
             use rayon::prelude::*;
-            
+
             let mut output = Array::zeros((batch_size, out_channels, out_height, out_width));
-            
+
             output
                 .axis_iter_mut(ndarray::Axis(0))
                 .into_par_iter()
@@ -227,7 +227,7 @@ impl ThreadPoolManager {
         {
             // Serial implementation as fallback
             let mut output = Array::zeros((batch_size, out_channels, out_height, out_width));
-            
+
             for batch in 0..batch_size {
                 for out_ch in 0..out_channels {
                     for out_h in 0..out_height {
@@ -267,7 +267,7 @@ impl ThreadPoolManager {
                     }
                 }
             }
-            
+
             Ok(output.into_dyn())
         }
     }
@@ -319,7 +319,7 @@ impl PerformanceProfiler {
     /// use scirs2_neural::performance::threading::PerformanceProfiler;
     ///
     /// let mut profiler = PerformanceProfiler::new(true);
-    /// 
+    ///
     /// let timer = profiler.start_timer("forward_pass");
     /// // ... perform operation
     /// profiler.end_timer("forward_pass".to_string(), timer);
@@ -349,13 +349,13 @@ impl PerformanceProfiler {
         if self.enabled {
             if let Some(start) = start_time {
                 let elapsed = start.elapsed();
-                
+
                 // Update total time
                 *self.timings.entry(name.clone()).or_insert(Duration::ZERO) += elapsed;
-                
+
                 // Update call count
                 *self.call_counts.entry(name.clone()).or_insert(0) += 1;
-                
+
                 // Remove from active timers
                 self.active_timers.remove(&name);
             }
@@ -385,7 +385,9 @@ impl PerformanceProfiler {
 
     /// Get average timing for an operation
     pub fn get_average_time(&self, name: &str) -> Option<Duration> {
-        if let (Some(&total_time), Some(&count)) = (self.timings.get(name), self.call_counts.get(name)) {
+        if let (Some(&total_time), Some(&count)) =
+            (self.timings.get(name), self.call_counts.get(name))
+        {
             if count > 0 {
                 Some(total_time / count as u32)
             } else {
@@ -419,7 +421,11 @@ impl PerformanceProfiler {
         for name in operations {
             let total_time = self.timings[name];
             let count = self.call_counts.get(name).unwrap_or(&0);
-            let avg_time = if *count > 0 { total_time / *count as u32 } else { Duration::ZERO };
+            let avg_time = if *count > 0 {
+                total_time / *count as u32
+            } else {
+                Duration::ZERO
+            };
 
             println!(
                 "{}: {:.3}ms total, {} calls, {:.3}ms avg",
@@ -431,14 +437,17 @@ impl PerformanceProfiler {
         }
 
         let total_time: Duration = self.timings.values().sum();
-        println!("\nTotal profiled time: {:.3}ms", total_time.as_secs_f64() * 1000.0);
+        println!(
+            "\nTotal profiled time: {:.3}ms",
+            total_time.as_secs_f64() * 1000.0
+        );
     }
 
     /// Get profiling statistics
     pub fn get_stats(&self) -> ProfilingStats {
         let total_time: Duration = self.timings.values().sum();
         let total_calls: usize = self.call_counts.values().sum();
-        
+
         ProfilingStats {
             enabled: self.enabled,
             total_operations: self.timings.len(),
@@ -642,9 +651,10 @@ pub mod distributed {
                     self.process_group = Some(Arc::new(InMemoryProcessGroup::new(&self.config)?));
                 }
                 _ => {
-                    return Err(NeuralError::ComputationError(
-                        format!("Backend {:?} not yet implemented", self.config.backend),
-                    ));
+                    return Err(NeuralError::ComputationError(format!(
+                        "Backend {:?} not yet implemented",
+                        self.config.backend
+                    )));
                 }
             }
             Ok(())
@@ -655,14 +665,14 @@ pub mod distributed {
             if let Some(ref pg) = self.process_group {
                 let start_time = Instant::now();
                 pg.all_reduce(tensor)?;
-                
+
                 // Update statistics
                 if let Ok(mut stats) = self.stats.lock() {
                     stats.allreduce_count += 1;
                     stats.communication_time += start_time.elapsed();
                     stats.bytes_communicated += (tensor.len() * std::mem::size_of::<f32>()) as u64;
                 }
-                
+
                 Ok(())
             } else {
                 Err(NeuralError::ComputationError(

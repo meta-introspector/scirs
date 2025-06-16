@@ -626,11 +626,7 @@ impl HardwareCounterManager {
     }
 
     /// Start a profiling session with specific counters
-    pub fn start_session(
-        &self,
-        session_name: &str,
-        counters: Vec<CounterType>,
-    ) -> CoreResult<()> {
+    pub fn start_session(&self, session_name: &str, counters: Vec<CounterType>) -> CoreResult<()> {
         // Start all requested counters
         for counter in &counters {
             self.backend.start_counter(counter)?;

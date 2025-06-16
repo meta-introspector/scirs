@@ -1,6 +1,7 @@
 //! Validation utilities for SciRS2
 //!
-//! This module provides utilities for validating data and parameters.
+//! This module provides utilities for validating data and parameters, including
+//! production-level security hardening and comprehensive input validation.
 
 use ndarray::{ArrayBase, Dimension, ScalarOperand};
 use num_traits::{Float, One, Zero};
@@ -875,3 +876,6 @@ mod tests {
         }
     }
 }
+
+// Production-level validation with comprehensive security and performance features
+pub mod production;

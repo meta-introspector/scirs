@@ -1499,7 +1499,7 @@ mod tests {
         // First update: average = (1+3)/2 = 2.0, momentum buffer starts at 0, so result = 0.1 * 2.0 = 0.2
         let node_parameters1 = vec![(0, params1.clone()), (1, params2.clone())];
         averager.average_parameters(&node_parameters1).unwrap();
-        
+
         let result1 = averager.get_averaged_parameters();
         // First result should be small due to zero initialization
         assert!(result1[0][0] >= 0.0 && result1[0][0] <= 0.5);
@@ -1642,7 +1642,7 @@ mod tests {
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             averager.average_parameters(&node_parameters)
         }));
-        
+
         // Either it returns an error or panics due to dimension mismatch
         assert!(result.is_err() || (result.is_ok() && result.unwrap().is_err()));
     }
@@ -1750,7 +1750,7 @@ mod tests {
 
         // Use a larger array to make compression effective
         let gradients = vec![Array1::from_vec(vec![
-            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
         ])];
 
         let compressed = compressor.compress(&gradients).unwrap();

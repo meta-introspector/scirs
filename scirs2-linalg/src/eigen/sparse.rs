@@ -39,16 +39,16 @@ pub type SparseEigenResult<F> = LinalgResult<(Array1<Complex<F>>, Array2<Complex
 pub trait SparseMatrix<F> {
     /// Get the number of rows
     fn nrows(&self) -> usize;
-    
+
     /// Get the number of columns  
     fn ncols(&self) -> usize;
-    
+
     /// Matrix-vector multiplication: y = A * x
     fn matvec(&self, x: &ArrayView1<F>, y: &mut Array1<F>) -> LinalgResult<()>;
-    
+
     /// Check if the matrix is symmetric
     fn is_symmetric(&self) -> bool;
-    
+
     /// Get the sparsity ratio (number of non-zeros / total elements)
     fn sparsity(&self) -> f64;
 }
@@ -75,7 +75,7 @@ pub trait SparseMatrix<F> {
 ///
 /// ```rust,ignore
 /// use scirs2_linalg::eigen::sparse::{lanczos, SparseMatrix};
-/// 
+///
 /// // This is a placeholder example - actual implementation pending
 /// // let sparse_matrix = create_sparse_matrix();
 /// // let (w, v) = lanczos(&sparse_matrix, 5, "largest", 0.0, 100, 1e-6).unwrap();
@@ -123,7 +123,7 @@ where
 ///
 /// ```rust,ignore
 /// use scirs2_linalg::eigen::sparse::{arnoldi, SparseMatrix};
-/// 
+///
 /// // This is a placeholder example - actual implementation pending
 /// // let sparse_matrix = create_sparse_matrix();
 /// // let (w, v) = arnoldi(&sparse_matrix, 3, 1.5, 100, 1e-6).unwrap();
@@ -171,7 +171,7 @@ where
 ///
 /// ```rust,ignore
 /// use scirs2_linalg::eigen::sparse::{eigs_gen, SparseMatrix};
-/// 
+///
 /// // This is a placeholder example - actual implementation pending
 /// // let (w, v) = eigs_gen(&sparse_a, &sparse_b, 4, "smallest", 0.0, 100, 1e-6).unwrap();
 /// ```
@@ -220,7 +220,7 @@ where
 ///
 /// ```rust,ignore
 /// use scirs2_linalg::eigen::sparse::{svds, SparseMatrix};
-/// 
+///
 /// // This is a placeholder example - actual implementation pending
 /// // let (s, u, vt) = svds(&sparse_matrix, 6, "largest", 100, 1e-6).unwrap();
 /// ```
@@ -264,7 +264,7 @@ where
 /// ```rust,ignore
 /// use ndarray::Array2;
 /// use scirs2_linalg::eigen::sparse::dense_to_sparse;
-/// 
+///
 /// // This is a placeholder example - actual implementation pending
 /// // let dense = Array2::eye(1000);
 /// // let sparse = dense_to_sparse(&dense.view(), 1e-12).unwrap();
@@ -360,20 +360,26 @@ mod tests {
     fn test_sparse_placeholder() {
         // Test that the sparse eigenvalue functions return the expected "not implemented" error
         let csr = CsrMatrix::new(10, 10, vec![], vec![], vec![]);
-        
+
         let result = lanczos(&csr, 3, "largest", 0.0_f64, 100, 1e-6);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("not yet implemented"));
-        
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("not yet implemented"));
+
         let result = arnoldi(&csr, 3, Complex::new(1.0_f64, 0.0), 100, 1e-6);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("not yet implemented"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("not yet implemented"));
     }
 
     #[test]
     fn test_csr_matrix_interface() {
         let csr = CsrMatrix::new(5, 5, vec![], vec![], vec![]);
-        
+
         assert_eq!(csr.nrows(), 5);
         assert_eq!(csr.ncols(), 5);
         assert!(!csr.is_symmetric()); // Placeholder always returns false

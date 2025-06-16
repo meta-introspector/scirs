@@ -4,8 +4,8 @@
 //! all convolutional and pooling layer implementations including padding modes,
 //! type aliases for caching, and common validation functions.
 
-use std::sync::{Arc, RwLock};
 use ndarray::{Array, IxDyn};
+use std::sync::{Arc, RwLock};
 
 /// Type alias for caching max indices in 2D pooling operations
 pub type MaxIndicesCache = Arc<RwLock<Option<Array<(usize, usize), IxDyn>>>>;
@@ -32,7 +32,11 @@ impl Default for PaddingMode {
 
 impl PaddingMode {
     /// Calculate padding values for a given kernel size and dilation
-    pub fn calculate_padding(&self, kernel_size: (usize, usize), dilation: (usize, usize)) -> (usize, usize) {
+    pub fn calculate_padding(
+        &self,
+        kernel_size: (usize, usize),
+        dilation: (usize, usize),
+    ) -> (usize, usize) {
         match self {
             PaddingMode::Valid => (0, 0),
             PaddingMode::Same => (
@@ -163,7 +167,7 @@ pub fn calculate_pool_output_shape(
     padding: Option<(usize, usize)>,
 ) -> (usize, usize) {
     let (pad_h, pad_w) = padding.unwrap_or((0, 0));
-    
+
     let output_height = (input_height + 2 * pad_h - pool_size.0) / stride.0 + 1;
     let output_width = (input_width + 2 * pad_w - pool_size.1) / stride.1 + 1;
 
@@ -194,25 +198,34 @@ mod tests {
         let kernel_size = (3, 3);
         let dilation = (1, 1);
 
-        assert_eq!(PaddingMode::Valid.calculate_padding(kernel_size, dilation), (0, 0));
-        assert_eq!(PaddingMode::Same.calculate_padding(kernel_size, dilation), (1, 1));
-        assert_eq!(PaddingMode::Custom(2).calculate_padding(kernel_size, dilation), (2, 2));
+        assert_eq!(
+            PaddingMode::Valid.calculate_padding(kernel_size, dilation),
+            (0, 0)
+        );
+        assert_eq!(
+            PaddingMode::Same.calculate_padding(kernel_size, dilation),
+            (1, 1)
+        );
+        assert_eq!(
+            PaddingMode::Custom(2).calculate_padding(kernel_size, dilation),
+            (2, 2)
+        );
     }
 
     #[test]
     fn test_validate_conv_params() {
         // Valid parameters
         assert!(validate_conv_params(3, 8, (3, 3), (1, 1), (1, 1), 1).is_ok());
-        
+
         // Invalid channels
         assert!(validate_conv_params(0, 8, (3, 3), (1, 1), (1, 1), 1).is_err());
-        
+
         // Invalid kernel size
         assert!(validate_conv_params(3, 8, (0, 3), (1, 1), (1, 1), 1).is_err());
-        
+
         // Invalid stride
         assert!(validate_conv_params(3, 8, (3, 3), (0, 1), (1, 1), 1).is_err());
-        
+
         // Invalid groups
         assert!(validate_conv_params(3, 8, (3, 3), (1, 1), (1, 1), 2).is_err());
     }
@@ -221,10 +234,10 @@ mod tests {
     fn test_validate_pool_params() {
         // Valid parameters
         assert!(validate_pool_params((2, 2), (2, 2)).is_ok());
-        
+
         // Invalid pool size
         assert!(validate_pool_params((0, 2), (2, 2)).is_err());
-        
+
         // Invalid stride
         assert!(validate_pool_params((2, 2), (0, 2)).is_err());
     }
@@ -236,13 +249,13 @@ mod tests {
             calculate_output_shape(32, 32, (3, 3), (1, 1), (0, 0), (1, 1)),
             (30, 30)
         );
-        
+
         // Same padding, stride 1
         assert_eq!(
             calculate_output_shape(32, 32, (3, 3), (1, 1), (1, 1), (1, 1)),
             (32, 32)
         );
-        
+
         // Stride 2
         assert_eq!(
             calculate_output_shape(32, 32, (3, 3), (2, 2), (1, 1), (1, 1)),

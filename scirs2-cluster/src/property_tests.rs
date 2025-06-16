@@ -23,7 +23,7 @@ mod tests {
         #[test]
         fn test_kmeans_all_points_assigned(data in clustering_data_strategy(), seed in any::<u64>()) {
             let n_points = data.shape()[0];
-            let k = (n_points / 2).max(2).min(5); // Reasonable k value
+            let k = (n_points / 2).clamp(2, 5); // Reasonable k value
 
             let result = kmeans2(
                 data.view(),
@@ -62,7 +62,7 @@ mod tests {
             seed in any::<u64>()
         ) {
             let n_points = data.shape()[0];
-            let k = (n_points / 2).max(2).min(4);
+            let k = (n_points / 2).clamp(2, 4);
 
             let result1 = kmeans2(
                 data.view(),

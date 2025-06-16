@@ -4,9 +4,9 @@
 //! convolution operations using im2col matrix multiplication, support for
 //! various padding modes, dilated convolutions, and grouped convolutions.
 
+use super::common::{calculate_output_shape, validate_conv_params, PaddingMode};
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
-use super::common::{PaddingMode, validate_conv_params, calculate_output_shape};
 use ndarray::{Array, ArrayView, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
@@ -142,7 +142,14 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + 'static> Conv2D<F>
         rng: &mut R,
     ) -> Result<Self> {
         // Validate parameters
-        validate_conv_params(in_channels, out_channels, kernel_size, stride, dilation, groups)?;
+        validate_conv_params(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            dilation,
+            groups,
+        )?;
 
         // Calculate padding values based on padding mode
         let padding_values = padding.calculate_padding(kernel_size, dilation);

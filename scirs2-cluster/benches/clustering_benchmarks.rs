@@ -36,13 +36,13 @@ fn generate_clustered_data(
         // Create cluster center
         let mut center = Array1::zeros(n_features);
         for j in 0..n_features {
-            center[j] = rng.gen_range(-10.0..10.0);
+            center[j] = rng.random_range(-10.0..10.0);
         }
 
         // Generate points around cluster center
         for i in start_idx..end_idx {
             for j in 0..n_features {
-                data[[i, j]] = center[j] + rng.gen_range(-noise..noise);
+                data[[i, j]] = center[j] + rng.random_range(-noise..noise);
             }
         }
     }
@@ -57,7 +57,7 @@ fn generate_random_data(n_samples: usize, n_features: usize) -> Array2<f64> {
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            data[[i, j]] = rng.gen_range(-1.0..1.0);
+            data[[i, j]] = rng.random_range(-1.0..1.0);
         }
     }
 
@@ -168,14 +168,14 @@ fn bench_dbscan(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("eps_0.5_min_5", n_samples),
             &data,
-            |b, data| b.iter(|| dbscan(data.view(), 0.5, 5)),
+            |b, data| b.iter(|| dbscan(data.view(), 0.5, 5, None)),
         );
 
         // Test different parameter combinations
         group.bench_with_input(
             BenchmarkId::new("eps_1.0_min_3", n_samples),
             &data,
-            |b, data| b.iter(|| dbscan(data.view(), 1.0, 3)),
+            |b, data| b.iter(|| dbscan(data.view(), 1.0, 3, None)),
         );
     }
 
@@ -199,6 +199,7 @@ fn bench_spectral(c: &mut Criterion) {
 
         let options = SpectralClusteringOptions {
             affinity: AffinityMode::RBF,
+            n_neighbors: 10,
             gamma: 1.0,
             normalized_laplacian: true,
             max_iter: 20, // Reduced iterations for benchmarking
@@ -326,14 +327,14 @@ fn bench_data_structures(c: &mut Criterion) {
                     // Perform random unions
                     let mut rng = StdRng::seed_from_u64(42);
                     for _ in 0..(n / 2) {
-                        let i = rng.gen_range(0..n);
-                        let j = rng.gen_range(0..n);
+                        let i = rng.random_range(0..n);
+                        let j = rng.random_range(0..n);
                         ds.union(i, j);
                     }
 
                     // Perform random finds
                     for _ in 0..n {
-                        let i = rng.gen_range(0..n);
+                        let i = rng.random_range(0..n);
                         ds.find(&i);
                     }
                 })
@@ -404,7 +405,7 @@ fn bench_scalability(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("dbscan_scalability", n_samples),
             &data,
-            |b, data| b.iter(|| dbscan(data.view(), 1.0, 5)),
+            |b, data| b.iter(|| dbscan(data.view(), 1.0, 5, None)),
         );
     }
 
@@ -438,7 +439,7 @@ fn bench_worst_case(c: &mut Criterion) {
     });
 
     group.bench_function("dbscan_random_data", |b| {
-        b.iter(|| dbscan(random_data.view(), 0.5, 5))
+        b.iter(|| dbscan(random_data.view(), 0.5, 5, None))
     });
 
     // High-dimensional data

@@ -171,14 +171,18 @@ impl MemoryEfficientProcessor {
     }
 
     /// Calculate optimal chunk size based on tensor dimensions and memory constraints
-    pub fn calculate_optimal_chunk_size(&self, tensor_shape: &[usize], element_size: usize) -> usize {
+    pub fn calculate_optimal_chunk_size(
+        &self,
+        tensor_shape: &[usize],
+        element_size: usize,
+    ) -> usize {
         // Calculate memory per sample
         let elements_per_sample = tensor_shape[1..].iter().product::<usize>();
         let bytes_per_sample = elements_per_sample * element_size;
-        
+
         // Reserve some memory for intermediate computations (factor of 3)
         let available_bytes = (self.max_memory_mb * 1024 * 1024) / 3;
-        
+
         let optimal_chunk = available_bytes / bytes_per_sample;
         optimal_chunk.max(1).min(self.chunk_size)
     }
@@ -395,7 +399,11 @@ impl std::fmt::Display for OptimizationCapabilities {
             }
         )?;
         writeln!(f, "  Threads: {}", self.num_threads)?;
-        writeln!(f, "  Optimization Score: {:.1}%", self.optimization_score() * 100.0)?;
+        writeln!(
+            f,
+            "  Optimization Score: {:.1}%",
+            self.optimization_score() * 100.0
+        )?;
         Ok(())
     }
 }
@@ -460,7 +468,11 @@ impl std::fmt::Display for SIMDStats {
         )?;
         writeln!(f, "  F32 Vector Width: {}", self.vector_width_f32)?;
         writeln!(f, "  F64 Vector Width: {}", self.vector_width_f64)?;
-        writeln!(f, "  Theoretical Speedup: {:.1}x", self.theoretical_speedup())?;
+        writeln!(
+            f,
+            "  Theoretical Speedup: {:.1}x",
+            self.theoretical_speedup()
+        )?;
         writeln!(f, "  Supported Operations:")?;
         for op in &self.supported_operations {
             writeln!(f, "    - {}", op)?;
@@ -551,11 +563,7 @@ impl MemoryEfficientProcessor {
         Self
     }
 
-    pub fn process_in_chunks<F, T>(
-        &self,
-        _input: &ArrayD<f32>,
-        _processor: F,
-    ) -> Result<ArrayD<T>>
+    pub fn process_in_chunks<F, T>(&self, _input: &ArrayD<f32>, _processor: F) -> Result<ArrayD<T>>
     where
         F: FnMut(&ArrayView<f32, IxDyn>) -> Result<ArrayD<T>>,
         T: Clone + Debug + Default,

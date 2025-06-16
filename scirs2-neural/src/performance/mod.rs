@@ -55,24 +55,24 @@
 //! ```
 
 // Re-export all public modules
-pub mod simd;
 pub mod memory;
+pub mod simd;
 pub mod threading;
 
 // Re-export commonly used types and functions
 pub use simd::SIMDOperations;
 
 pub use memory::{
-    MemoryEfficientProcessor, MemoryPool, MemoryPoolStats, MemorySettings, MemoryMonitor,
+    MemoryEfficientProcessor, MemoryMonitor, MemoryPool, MemoryPoolStats, MemorySettings,
     MemoryStats, OptimizationCapabilities, SIMDStats,
 };
 
 pub use threading::{
-    ThreadPoolManager, ThreadPoolStats, PerformanceProfiler, ProfilingStats,
     distributed::{
-        CommunicationBackend, DistributedStrategy, GradientSyncMethod, ProcessInfo,
-        DistributedConfig, DistributedStats, DistributedManager,
+        CommunicationBackend, DistributedConfig, DistributedManager, DistributedStats,
+        DistributedStrategy, GradientSyncMethod, ProcessInfo,
     },
+    PerformanceProfiler, ProfilingStats, ThreadPoolManager, ThreadPoolStats,
 };
 
 use crate::error::{NeuralError, Result};
@@ -124,7 +124,7 @@ impl PerformanceOptimizer {
         enable_profiling: bool,
     ) -> Result<Self> {
         let capabilities = OptimizationCapabilities::detect();
-        
+
         Ok(Self {
             #[cfg(feature = "simd")]
             simd_ops: SIMDOperations,
@@ -188,7 +188,8 @@ impl PerformanceOptimizer {
             }
         };
 
-        self.profiler.end_timer("optimized_matmul".to_string(), timer);
+        self.profiler
+            .end_timer("optimized_matmul".to_string(), timer);
         Ok(result)
     }
 
@@ -207,21 +208,30 @@ impl PerformanceOptimizer {
             #[cfg(feature = "simd")]
             {
                 // Try SIMD convolution if available
-                if let Ok(result) = SIMDOperations::simd_conv2d_f32(&input.view(), &kernel.view(), bias, stride, padding) {
+                if let Ok(result) = SIMDOperations::simd_conv2d_f32(
+                    &input.view(),
+                    &kernel.view(),
+                    bias,
+                    stride,
+                    padding,
+                ) {
                     result
                 } else {
                     // Fallback to parallel convolution
-                    self.thread_pool.parallel_conv2d(input, kernel, bias, stride, padding)?
+                    self.thread_pool
+                        .parallel_conv2d(input, kernel, bias, stride, padding)?
                 }
             }
             #[cfg(not(feature = "simd"))]
             {
                 // Use parallel convolution when SIMD is not available
-                self.thread_pool.parallel_conv2d(input, kernel, bias, stride, padding)?
+                self.thread_pool
+                    .parallel_conv2d(input, kernel, bias, stride, padding)?
             }
         };
 
-        self.profiler.end_timer("optimized_conv2d".to_string(), timer);
+        self.profiler
+            .end_timer("optimized_conv2d".to_string(), timer);
         Ok(result)
     }
 
@@ -236,8 +246,11 @@ impl PerformanceOptimizer {
         F: Fn(&ndarray::ArrayView<f32, ndarray::IxDyn>) -> Result<ArrayD<f32>>,
     {
         let timer = self.profiler.start_timer("memory_efficient_forward");
-        let result = self.memory_processor.memory_efficient_forward(input, forward_fn);
-        self.profiler.end_timer("memory_efficient_forward".to_string(), timer);
+        let result = self
+            .memory_processor
+            .memory_efficient_forward(input, forward_fn);
+        self.profiler
+            .end_timer("memory_efficient_forward".to_string(), timer);
         result
     }
 
@@ -254,7 +267,8 @@ impl PerformanceOptimizer {
     {
         let timer = self.profiler.start_timer("process_in_chunks");
         let result = self.memory_processor.process_in_chunks(input, processor);
-        self.profiler.end_timer("process_in_chunks".to_string(), timer);
+        self.profiler
+            .end_timer("process_in_chunks".to_string(), timer);
         result
     }
 
@@ -278,19 +292,24 @@ impl PerformanceOptimizer {
         if a.ndim() != 2 || b.ndim() != 2 {
             return false;
         }
-        
+
         let (m, k) = (a.shape()[0], a.shape()[1]);
         let n = b.shape()[1];
-        
+
         // SIMD is more effective for medium-sized matrices
         // Very small matrices have too much overhead, very large ones benefit more from parallelism
         m >= 32 && n >= 32 && k >= 32 && m <= 2048 && n <= 2048 && k <= 2048
     }
 
     /// Benchmark different optimization strategies
-    pub fn benchmark_strategies(&mut self, a: &ArrayD<f32>, b: &ArrayD<f32>, iterations: usize) -> Result<BenchmarkResults> {
+    pub fn benchmark_strategies(
+        &mut self,
+        a: &ArrayD<f32>,
+        b: &ArrayD<f32>,
+        iterations: usize,
+    ) -> Result<BenchmarkResults> {
         let mut results = BenchmarkResults::default();
-        
+
         // Benchmark SIMD matmul
         #[cfg(feature = "simd")]
         {
@@ -300,21 +319,21 @@ impl PerformanceOptimizer {
             }
             results.simd_time = Some(start.elapsed() / iterations as u32);
         }
-        
+
         // Benchmark parallel matmul
         let start = std::time::Instant::now();
         for _ in 0..iterations {
             let _ = self.thread_pool.parallel_matmul(a, b)?;
         }
         results.parallel_time = start.elapsed() / iterations as u32;
-        
+
         // Benchmark serial matmul
         let start = std::time::Instant::now();
         for _ in 0..iterations {
             let _ = self.serial_matmul(a, b)?;
         }
         results.serial_time = start.elapsed() / iterations as u32;
-        
+
         Ok(results)
     }
 
@@ -372,7 +391,11 @@ impl std::fmt::Display for PerformanceStats {
         writeln!(f, "  Enabled: {}", self.profiling_stats.enabled)?;
         writeln!(f, "  Operations: {}", self.profiling_stats.total_operations)?;
         writeln!(f, "  Total Calls: {}", self.profiling_stats.total_calls)?;
-        writeln!(f, "  Total Time: {:.3}ms", self.profiling_stats.total_time.as_secs_f64() * 1000.0)?;
+        writeln!(
+            f,
+            "  Total Time: {:.3}ms",
+            self.profiling_stats.total_time.as_secs_f64() * 1000.0
+        )?;
         writeln!(f, "  Active Timers: {}", self.profiling_stats.active_timers)?;
         Ok(())
     }
@@ -397,13 +420,14 @@ impl BenchmarkResults {
 
     /// Get speedup of SIMD vs serial
     pub fn simd_speedup(&self) -> Option<f64> {
-        self.simd_time.map(|simd| self.serial_time.as_secs_f64() / simd.as_secs_f64())
+        self.simd_time
+            .map(|simd| self.serial_time.as_secs_f64() / simd.as_secs_f64())
     }
 
     /// Get the best performing strategy
     pub fn best_strategy(&self) -> &'static str {
         let parallel_faster = self.parallel_time < self.serial_time;
-        
+
         if let Some(simd_time) = self.simd_time {
             if simd_time < self.parallel_time && simd_time < self.serial_time {
                 "SIMD"
@@ -424,15 +448,27 @@ impl std::fmt::Display for BenchmarkResults {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Benchmark Results:")?;
         writeln!(f, "==================")?;
-        writeln!(f, "Serial Time: {:.3}ms", self.serial_time.as_secs_f64() * 1000.0)?;
-        writeln!(f, "Parallel Time: {:.3}ms", self.parallel_time.as_secs_f64() * 1000.0)?;
+        writeln!(
+            f,
+            "Serial Time: {:.3}ms",
+            self.serial_time.as_secs_f64() * 1000.0
+        )?;
+        writeln!(
+            f,
+            "Parallel Time: {:.3}ms",
+            self.parallel_time.as_secs_f64() * 1000.0
+        )?;
         writeln!(f, "Parallel Speedup: {:.2}x", self.parallel_speedup())?;
-        
+
         if let Some(simd_time) = self.simd_time {
             writeln!(f, "SIMD Time: {:.3}ms", simd_time.as_secs_f64() * 1000.0)?;
-            writeln!(f, "SIMD Speedup: {:.2}x", self.simd_speedup().unwrap_or(0.0))?;
+            writeln!(
+                f,
+                "SIMD Speedup: {:.2}x",
+                self.simd_speedup().unwrap_or(0.0)
+            )?;
         }
-        
+
         writeln!(f, "Best Strategy: {}", self.best_strategy())?;
         Ok(())
     }
@@ -485,11 +521,9 @@ mod tests {
     fn test_memory_efficient_processor() {
         let processor = MemoryEfficientProcessor::new(Some(10), Some(100));
         let input = Array::ones((20, 5)).into_dyn();
-        
-        let result = processor.process_in_chunks(&input, |chunk| {
-            Ok(chunk.to_owned())
-        });
-        
+
+        let result = processor.process_in_chunks(&input, |chunk| Ok(chunk.to_owned()));
+
         assert!(result.is_ok());
     }
 

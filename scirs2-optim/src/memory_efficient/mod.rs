@@ -1541,7 +1541,11 @@ mod tests {
 
         // Check that strategy was adapted (should checkpoint more frequently)
         // With interval 4, should checkpoint at 0, 4, 8... but optimization might change this
-        assert!(checkpointer.should_checkpoint(0) || checkpointer.should_checkpoint(1) || checkpointer.should_checkpoint(2));
+        assert!(
+            checkpointer.should_checkpoint(0)
+                || checkpointer.should_checkpoint(1)
+                || checkpointer.should_checkpoint(2)
+        );
     }
 
     #[test]

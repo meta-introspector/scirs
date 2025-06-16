@@ -83,47 +83,55 @@ pub fn generate_comprehensive_report<F>(
     input: &ArrayD<F>,
 ) -> Result<ComprehensiveInterpretationReport<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     // Generate basic interpretation report
     let basic_report = generate_basic_report(interpreter, input, None)?;
-    
+
     // Gather additional interpretation data
-    let counterfactual_explanations = if let Some(_cf_generator) = interpreter.counterfactual_generator() {
-        // Would generate counterfactuals here
-        Some(vec![input.clone()])
-    } else {
-        None
-    };
-    
+    let counterfactual_explanations =
+        if let Some(_cf_generator) = interpreter.counterfactual_generator() {
+            // Would generate counterfactuals here
+            Some(vec![input.clone()])
+        } else {
+            None
+        };
+
     let lime_explanations = if let Some(_lime_explainer) = interpreter.lime_explainer() {
         // Would generate LIME explanations here
         Some(input.clone())
     } else {
         None
     };
-    
+
     // Collect concept activations
     let mut concept_activations = HashMap::new();
     // Would compute concept activations here
     concept_activations.insert("placeholder_concept".to_string(), 0.7);
-    
+
     // Collect attention visualizations
     let mut attention_visualizations = HashMap::new();
     if let Some(_attention_viz) = interpreter.attention_visualizer() {
         // Would generate attention visualizations here
         attention_visualizations.insert("layer_1".to_string(), input.clone());
     }
-    
+
     // Generate feature visualizations
     let feature_visualizations = generate_feature_visualizations(interpreter, input)?;
-    
+
     // Compute confidence estimates
     let confidence_estimates = compute_confidence_estimates(&basic_report)?;
-    
+
     // Perform robustness analysis
     let robustness_analysis = Some(perform_robustness_analysis(interpreter, input)?);
-    
+
     Ok(ComprehensiveInterpretationReport {
         basic_report,
         counterfactual_explanations,
@@ -143,7 +151,14 @@ pub fn generate_basic_report<F>(
     target_class: Option<usize>,
 ) -> Result<InterpretationReport<F>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let mut attributions = HashMap::new();
 
@@ -179,49 +194,58 @@ fn generate_feature_visualizations<F>(
     input: &ArrayD<F>,
 ) -> Result<HashMap<String, ArrayD<F>>>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     let mut visualizations = HashMap::new();
-    
+
     // Placeholder feature visualizations
     visualizations.insert("activation_maximization".to_string(), input.clone());
-    visualizations.insert("gradient_ascent".to_string(), input.mapv(|x| x * F::from(0.5).unwrap()));
-    
+    visualizations.insert(
+        "gradient_ascent".to_string(),
+        input.mapv(|x| x * F::from(0.5).unwrap()),
+    );
+
     Ok(visualizations)
 }
 
 /// Compute confidence estimates for interpretation results
-fn compute_confidence_estimates<F>(
-    report: &InterpretationReport<F>,
-) -> Result<ConfidenceEstimates>
+fn compute_confidence_estimates<F>(report: &InterpretationReport<F>) -> Result<ConfidenceEstimates>
 where
     F: Float + Debug,
 {
     let overall_confidence = report.interpretation_summary.interpretation_confidence;
-    
+
     let mut method_confidence = HashMap::new();
     let mut attribution_uncertainty = HashMap::new();
     let mut reliability_indicators = HashMap::new();
-    
+
     for (method_name, stats) in &report.attribution_statistics {
         // Compute method-specific confidence based on attribution characteristics
-        let confidence = if stats.positive_attribution_ratio > 0.1 && stats.positive_attribution_ratio < 0.9 {
-            0.8 // Good balance of positive and negative attributions
-        } else {
-            0.5 // Potentially biased attributions
-        };
-        
+        let confidence =
+            if stats.positive_attribution_ratio > 0.1 && stats.positive_attribution_ratio < 0.9 {
+                0.8 // Good balance of positive and negative attributions
+            } else {
+                0.5 // Potentially biased attributions
+            };
+
         method_confidence.insert(method_name.clone(), confidence);
-        
+
         // Compute uncertainty based on attribution variance
         let uncertainty = 1.0 - confidence;
         attribution_uncertainty.insert(method_name.clone(), uncertainty);
-        
+
         // Reliability indicator based on magnitude distribution
         let reliability = stats.mean_absolute.to_f64().unwrap_or(0.0).min(1.0);
         reliability_indicators.insert(method_name.clone(), reliability);
     }
-    
+
     Ok(ConfidenceEstimates {
         overall_confidence,
         method_confidence,
@@ -236,21 +260,28 @@ fn perform_robustness_analysis<F>(
     _input: &ArrayD<F>,
 ) -> Result<RobustnessAnalysis>
 where
-    F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
 {
     // Simplified robustness analysis
     let vulnerability_score = 0.3; // Placeholder
-    
+
     let mut perturbation_sensitivity = HashMap::new();
     perturbation_sensitivity.insert("gaussian_noise".to_string(), 0.2);
     perturbation_sensitivity.insert("adversarial".to_string(), 0.4);
-    
+
     let attribution_stability = 0.8; // Placeholder
-    
+
     let mut confidence_adjustments = HashMap::new();
     confidence_adjustments.insert("saliency".to_string(), 0.9);
     confidence_adjustments.insert("integrated_gradients".to_string(), 0.85);
-    
+
     Ok(RobustnessAnalysis {
         vulnerability_score,
         perturbation_sensitivity,
@@ -267,62 +298,67 @@ where
     F: Float + Debug,
 {
     let mut summary = HashMap::new();
-    
+
     // Basic statistics
     summary.insert(
         "num_attribution_methods".to_string(),
         report.basic_report.attribution_statistics.len().to_string(),
     );
-    
+
     summary.insert(
         "overall_confidence".to_string(),
         format!("{:.3}", report.confidence_estimates.overall_confidence),
     );
-    
+
     summary.insert(
         "num_layers_analyzed".to_string(),
         report.basic_report.layer_statistics.len().to_string(),
     );
-    
+
     // Feature analysis
     if let Some(target_class) = report.basic_report.target_class {
         summary.insert("target_class".to_string(), target_class.to_string());
     }
-    
+
     summary.insert(
         "top_features_count".to_string(),
-        report.basic_report.interpretation_summary.most_important_features.len().to_string(),
+        report
+            .basic_report
+            .interpretation_summary
+            .most_important_features
+            .len()
+            .to_string(),
     );
-    
+
     // Robustness information
     if let Some(ref robustness) = report.robustness_analysis {
         summary.insert(
             "vulnerability_score".to_string(),
             format!("{:.3}", robustness.vulnerability_score),
         );
-        
+
         summary.insert(
             "attribution_stability".to_string(),
             format!("{:.3}", robustness.attribution_stability),
         );
     }
-    
+
     // Additional capabilities
     summary.insert(
         "has_counterfactuals".to_string(),
         report.counterfactual_explanations.is_some().to_string(),
     );
-    
+
     summary.insert(
         "has_lime_explanations".to_string(),
         report.lime_explanations.is_some().to_string(),
     );
-    
+
     summary.insert(
         "num_concept_activations".to_string(),
         report.concept_activations.len().to_string(),
     );
-    
+
     summary
 }
 
@@ -338,9 +374,10 @@ where
         "json" => export_to_json(report),
         "summary" => Ok(format_summary_report(report)),
         "csv" => export_to_csv(report),
-        _ => Err(NeuralError::NotImplementedError(
-            format!("Export format '{}' not supported", format)
-        )),
+        _ => Err(NeuralError::NotImplementedError(format!(
+            "Export format '{}' not supported",
+            format
+        ))),
     }
 }
 
@@ -358,18 +395,18 @@ where
 {
     let summary = generate_report_summary(report);
     let mut output = String::new();
-    
+
     output.push_str("=== Interpretation Report Summary ===\n\n");
-    
+
     for (key, value) in summary {
         output.push_str(&format!("{}: {}\n", key, value));
     }
-    
+
     output.push_str("\n=== Method Confidence Scores ===\n");
     for (method, confidence) in &report.confidence_estimates.method_confidence {
         output.push_str(&format!("{}: {:.3}\n", method, confidence));
     }
-    
+
     output
 }
 
@@ -378,7 +415,10 @@ where
     F: Float + Debug,
 {
     // Simplified CSV export
-    Ok("method,confidence,uncertainty\nsaliency,0.8,0.2\nintegrated_gradients,0.85,0.15".to_string())
+    Ok(
+        "method,confidence,uncertainty\nsaliency,0.8,0.2\nintegrated_gradients,0.85,0.15"
+            .to_string(),
+    )
 }
 
 // Display implementation for reports
@@ -387,16 +427,19 @@ impl<F: Float + Debug> std::fmt::Display for InterpretationReport<F> {
         writeln!(f, "Interpretation Report")?;
         writeln!(f, "===================")?;
         writeln!(f, "Input shape: {:?}", self.input_shape)?;
-        
+
         if let Some(class) = self.target_class {
             writeln!(f, "Target class: {}", class)?;
         }
-        
+
         writeln!(f, "Attribution methods: {}", self.attributions.len())?;
         writeln!(f, "Layers analyzed: {}", self.layer_statistics.len())?;
-        writeln!(f, "Interpretation confidence: {:.3}", 
-                 self.interpretation_summary.interpretation_confidence)?;
-        
+        writeln!(
+            f,
+            "Interpretation confidence: {:.3}",
+            self.interpretation_summary.interpretation_confidence
+        )?;
+
         Ok(())
     }
 }
@@ -406,20 +449,48 @@ impl<F: Float + Debug> std::fmt::Display for ComprehensiveInterpretationReport<F
         writeln!(f, "Comprehensive Interpretation Report")?;
         writeln!(f, "==================================")?;
         write!(f, "{}", self.basic_report)?;
-        
+
         writeln!(f, "\nAdditional Analysis:")?;
-        writeln!(f, "- Counterfactuals: {}", self.counterfactual_explanations.is_some())?;
-        writeln!(f, "- LIME explanations: {}", self.lime_explanations.is_some())?;
-        writeln!(f, "- Concept activations: {}", self.concept_activations.len())?;
-        writeln!(f, "- Attention visualizations: {}", self.attention_visualizations.len())?;
-        writeln!(f, "- Feature visualizations: {}", self.feature_visualizations.len())?;
-        
+        writeln!(
+            f,
+            "- Counterfactuals: {}",
+            self.counterfactual_explanations.is_some()
+        )?;
+        writeln!(
+            f,
+            "- LIME explanations: {}",
+            self.lime_explanations.is_some()
+        )?;
+        writeln!(
+            f,
+            "- Concept activations: {}",
+            self.concept_activations.len()
+        )?;
+        writeln!(
+            f,
+            "- Attention visualizations: {}",
+            self.attention_visualizations.len()
+        )?;
+        writeln!(
+            f,
+            "- Feature visualizations: {}",
+            self.feature_visualizations.len()
+        )?;
+
         if let Some(ref robustness) = self.robustness_analysis {
             writeln!(f, "\nRobustness Analysis:")?;
-            writeln!(f, "- Vulnerability score: {:.3}", robustness.vulnerability_score)?;
-            writeln!(f, "- Attribution stability: {:.3}", robustness.attribution_stability)?;
+            writeln!(
+                f,
+                "- Vulnerability score: {:.3}",
+                robustness.vulnerability_score
+            )?;
+            writeln!(
+                f,
+                "- Attribution stability: {:.3}",
+                robustness.attribution_stability
+            )?;
         }
-        
+
         Ok(())
     }
 }
@@ -432,7 +503,7 @@ mod tests {
     #[test]
     fn test_confidence_estimates() {
         use super::super::analysis::AttributionStatistics;
-        
+
         let mut attribution_stats = HashMap::new();
         attribution_stats.insert(
             "saliency".to_string(),
@@ -445,7 +516,7 @@ mod tests {
                 total_negative_attribution: -5.0,
             },
         );
-        
+
         let report = InterpretationReport {
             input_shape: Array::<f64, _>::ones((3, 32, 32)).into_dyn().raw_dim(),
             target_class: Some(1),
@@ -459,10 +530,10 @@ mod tests {
                 interpretation_confidence: 0.85,
             },
         };
-        
+
         let confidence = compute_confidence_estimates(&report);
         assert!(confidence.is_ok());
-        
+
         let conf_estimates = confidence.unwrap();
         assert!(conf_estimates.overall_confidence > 0.0);
         assert!(conf_estimates.method_confidence.contains_key("saliency"));
@@ -483,7 +554,7 @@ mod tests {
                 interpretation_confidence: 0.8,
             },
         };
-        
+
         let comprehensive_report = ComprehensiveInterpretationReport {
             basic_report,
             counterfactual_explanations: None,
@@ -499,7 +570,7 @@ mod tests {
             },
             robustness_analysis: None,
         };
-        
+
         let summary = generate_report_summary(&comprehensive_report);
         assert!(summary.contains_key("overall_confidence"));
         assert!(summary.contains_key("target_class"));
@@ -520,7 +591,7 @@ mod tests {
                 interpretation_confidence: 0.8,
             },
         };
-        
+
         let report = ComprehensiveInterpretationReport {
             basic_report,
             counterfactual_explanations: None,
@@ -536,13 +607,13 @@ mod tests {
             },
             robustness_analysis: None,
         };
-        
+
         let json_export = export_report_data(&report, "json");
         assert!(json_export.is_ok());
-        
+
         let summary_export = export_report_data(&report, "summary");
         assert!(summary_export.is_ok());
-        
+
         let csv_export = export_report_data(&report, "csv");
         assert!(csv_export.is_ok());
     }
