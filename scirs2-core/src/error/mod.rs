@@ -1,4 +1,4 @@
-//! Advanced error handling and recovery system for SciRS2
+//! Advanced error handling and recovery system for ``SciRS2``
 //!
 //! This module provides a comprehensive error handling framework including:
 //! - Core error types and context management
@@ -156,6 +156,11 @@ pub use error::{
 /// Alpha 6 Enhanced Diagnostic Functions
 ///
 /// Analyze an error with comprehensive diagnostics including Alpha 6 features
+///
+/// # Errors
+///
+/// This function does not return errors but analyzes the provided error.
+#[must_use]
 pub fn diagnose_error_advanced(
     error: &CoreError,
     context: Option<&str>,
@@ -184,12 +189,14 @@ pub fn record_error_occurrence(error: &CoreError, context: String) {
 }
 
 /// Get predictive error analysis for a given context
+#[must_use]
 pub fn predict_errors_for_context(context: &str) -> Vec<String> {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.predict_potential_errors(context)
 }
 
 /// Get domain-specific recovery strategies for an error
+#[must_use]
 pub fn get_domain_recovery_strategies(error: &CoreError, domain: &str) -> Vec<String> {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.suggest_domain_recovery(error, domain)

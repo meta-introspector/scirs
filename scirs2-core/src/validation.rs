@@ -1,4 +1,4 @@
-//! Validation utilities for SciRS2
+//! Validation utilities for ``SciRS2``
 //!
 //! This module provides utilities for validating data and parameters, including
 //! production-level security hardening and comprehensive input validation.
@@ -21,6 +21,10 @@ use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 ///
 /// * `Ok(value)` if the value is within bounds
 /// * `Err(CoreError::ValueError)` if the value is out of bounds
+///
+/// # Errors
+///
+/// Returns `CoreError::ValueError` if the value is outside the specified bounds.
 pub fn check_in_bounds<T, S>(value: T, min: T, max: T, name: S) -> CoreResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy,
@@ -29,11 +33,8 @@ where
     if value < min || value > max {
         return Err(CoreError::ValueError(
             ErrorContext::new(format!(
-                "{} must be between {} and {}, got {}",
-                name.into(),
-                min,
-                max,
-                value
+                "{} must be between {min} and {max}, got {value}",
+                name.into()
             ))
             .with_location(ErrorLocation::new(file!(), line!())),
         ));
@@ -52,6 +53,10 @@ where
 ///
 /// * `Ok(value)` if the value is positive
 /// * `Err(CoreError::ValueError)` if the value is not positive
+///
+/// # Errors
+///
+/// Returns `CoreError::ValueError` if the value is not positive.
 pub fn check_positive<T, S>(value: T, name: S) -> CoreResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy + Zero,
@@ -59,7 +64,7 @@ where
 {
     if value <= T::zero() {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!("{} must be positive, got {}", name.into(), value))
+            ErrorContext::new(format!("{} must be positive, got {value}", name.into()))
                 .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
@@ -77,6 +82,10 @@ where
 ///
 /// * `Ok(value)` if the value is non-negative
 /// * `Err(CoreError::ValueError)` if the value is negative
+///
+/// # Errors
+///
+/// Returns `CoreError::ValueError` if the value is negative.
 pub fn check_non_negative<T, S>(value: T, name: S) -> CoreResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy + Zero,
@@ -84,12 +93,8 @@ where
 {
     if value < T::zero() {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!(
-                "{} must be non-negative, got {}",
-                name.into(),
-                value
-            ))
-            .with_location(ErrorLocation::new(file!(), line!())),
+            ErrorContext::new(format!("{} must be non-negative, got {value}", name.into()))
+                .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
     Ok(value)
@@ -106,6 +111,10 @@ where
 ///
 /// * `Ok(value)` if the value is finite
 /// * `Err(CoreError::ValueError)` if the value is not finite
+///
+/// # Errors
+///
+/// Returns `CoreError::ValueError` if the value is not finite.
 pub fn check_finite<T, S>(value: T, name: S) -> CoreResult<T>
 where
     T: Float + std::fmt::Display + Copy,
@@ -113,7 +122,7 @@ where
 {
     if !value.is_finite() {
         return Err(CoreError::ValueError(
-            ErrorContext::new(format!("{} must be finite, got {}", name.into(), value))
+            ErrorContext::new(format!("{} must be finite, got {value}", name.into()))
                 .with_location(ErrorLocation::new(file!(), line!())),
         ));
     }
@@ -131,6 +140,10 @@ where
 ///
 /// * `Ok(())` if all values are finite
 /// * `Err(CoreError::ValueError)` if any value is not finite
+///
+/// # Errors
+///
+/// Returns `CoreError::ValueError` if any value in the array is not finite.
 pub fn check_array_finite<S, A, D>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -143,8 +156,7 @@ where
         if !value.is_finite() {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
-                    "{} must contain only finite values, got {} at {:?}",
-                    name, value, idx
+                    "{name} must contain only finite values, got {value} at {idx:?}"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -165,6 +177,10 @@ where
 ///
 /// * `Ok(())` if the array has the expected shape
 /// * `Err(CoreError::ShapeError)` if the array does not have the expected shape
+///
+/// # Errors
+///
+/// Returns `CoreError::ShapeError` if the array does not have the expected shape.
 pub fn check_shape<S, D, A>(
     array: &ArrayBase<S, D>,
     expected_shape: &[usize],
@@ -179,10 +195,8 @@ where
     if actual_shape != expected_shape {
         return Err(CoreError::ShapeError(
             ErrorContext::new(format!(
-                "{} has incorrect shape: expected {:?}, got {:?}",
-                name.into(),
-                expected_shape,
-                actual_shape
+                "{} has incorrect shape: expected {expected_shape:?}, got {actual_shape:?}",
+                name.into()
             ))
             .with_location(ErrorLocation::new(file!(), line!())),
         ));
@@ -201,6 +215,10 @@ where
 ///
 /// * `Ok(())` if the array is 1D
 /// * `Err(CoreError::ShapeError)` if the array is not 1D
+///
+/// # Errors
+///
+/// Returns `CoreError::ShapeError` if the array is not 1D.
 pub fn check_1d<S, D, A>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -227,6 +245,10 @@ where
 ///
 /// * `Ok(())` if the array is 2D
 /// * `Err(CoreError::ShapeError)` if the array is not 2D
+///
+/// # Errors
+///
+/// Returns `CoreError::ShapeError` if the array is not 2D.
 pub fn check_2d<S, D, A>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -255,6 +277,10 @@ where
 ///
 /// * `Ok(())` if the arrays have the same shape
 /// * `Err(CoreError::ShapeError)` if the arrays have different shapes
+///
+/// # Errors
+///
+/// Returns `CoreError::ShapeError` if the arrays have different shapes.
 pub fn check_same_shape<S1, S2, D1, D2, A, B>(
     a: &ArrayBase<S1, D1>,
     a_name: A,
@@ -297,6 +323,10 @@ where
 ///
 /// * `Ok(())` if the matrix is square
 /// * `Err(CoreError::ShapeError)` if the matrix is not square
+///
+/// # Errors
+///
+/// Returns `CoreError::ShapeError` if the matrix is not square.
 pub fn check_square<S, D, A>(matrix: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -329,6 +359,10 @@ where
 ///
 /// * `Ok(p)` if the probability is valid
 /// * `Err(CoreError::ValueError)` if the probability is not valid
+///
+/// # Errors
+///
+/// Returns `CoreError::ValueError` if the probability is not between 0 and 1.
 pub fn check_probability<T, S>(p: T, name: S) -> CoreResult<T>
 where
     T: Float + std::fmt::Display + Copy,
@@ -358,6 +392,10 @@ where
 ///
 /// * `Ok(())` if all values are valid probabilities
 /// * `Err(CoreError::ValueError)` if any value is not a valid probability
+///
+/// # Errors
+///
+/// Returns `CoreError::ValueError` if any value is not a valid probability.
 pub fn check_probabilities<S, D, A>(probs: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,

@@ -1,6 +1,6 @@
-//! Error types for the SciRS2 core module
+//! Error types for the ``SciRS2`` core module
 //!
-//! This module provides common error types used throughout the SciRS2 ecosystem.
+//! This module provides common error types used throughout the ``SciRS2`` ecosystem.
 
 use std::fmt;
 use thiserror::Error;
@@ -20,8 +20,9 @@ pub struct ErrorLocation {
 
 impl ErrorLocation {
     /// Create a new error location
+    #[must_use]
     #[inline]
-    pub fn new(file: &'static str, line: u32) -> Self {
+    pub const fn new(file: &'static str, line: u32) -> Self {
         Self {
             file,
             line,
@@ -31,8 +32,9 @@ impl ErrorLocation {
     }
 
     /// Create a new error location with function information
+    #[must_use]
     #[inline]
-    pub fn with_function(file: &'static str, line: u32, function: &'static str) -> Self {
+    pub const fn with_function(file: &'static str, line: u32, function: &'static str) -> Self {
         Self {
             file,
             line,
@@ -42,8 +44,9 @@ impl ErrorLocation {
     }
 
     /// Create a new error location with column information
+    #[must_use]
     #[inline]
-    pub fn with_column(file: &'static str, line: u32, column: u32) -> Self {
+    pub const fn with_column(file: &'static str, line: u32, column: u32) -> Self {
         Self {
             file,
             line,
@@ -53,8 +56,9 @@ impl ErrorLocation {
     }
 
     /// Create a new error location with function and column information
+    #[must_use]
     #[inline]
-    pub fn full(file: &'static str, line: u32, column: u32, function: &'static str) -> Self {
+    pub const fn full(file: &'static str, line: u32, column: u32, function: &'static str) -> Self {
         Self {
             file,
             line,
@@ -90,6 +94,7 @@ pub struct ErrorContext {
 
 impl ErrorContext {
     /// Create a new error context
+    #[must_use]
     pub fn new<S: Into<String>>(message: S) -> Self {
         Self {
             message: message.into(),
@@ -99,12 +104,14 @@ impl ErrorContext {
     }
 
     /// Add location information to the error context
+    #[must_use]
     pub fn with_location(mut self, location: ErrorLocation) -> Self {
         self.location = Some(location);
         self
     }
 
     /// Add a cause to the error context
+    #[must_use]
     pub fn with_cause(mut self, cause: CoreError) -> Self {
         self.cause = Some(Box::new(cause));
         self
@@ -124,7 +131,7 @@ impl fmt::Display for ErrorContext {
     }
 }
 
-/// Core error type for SciRS2
+/// Core error type for ``SciRS2``
 #[derive(Error, Debug, Clone)]
 pub enum CoreError {
     /// Computation error (generic error)
@@ -226,7 +233,7 @@ pub type CoreResult<T> = Result<T, CoreError>;
 /// Convert from std::io::Error to CoreError
 impl From<std::io::Error> for CoreError {
     fn from(err: std::io::Error) -> Self {
-        CoreError::IoError(ErrorContext::new(format!("IO error: {}", err)))
+        CoreError::IoError(ErrorContext::new(format!("IO error: {err}")))
     }
 }
 
@@ -234,7 +241,7 @@ impl From<std::io::Error> for CoreError {
 #[cfg(feature = "serialization")]
 impl From<serde_json::Error> for CoreError {
     fn from(err: serde_json::Error) -> Self {
-        CoreError::JSONError(ErrorContext::new(format!("JSON error: {}", err)))
+        CoreError::JSONError(ErrorContext::new(format!("JSON error: {err}")))
     }
 }
 
@@ -339,6 +346,10 @@ macro_rules! computation_error {
 ///
 /// * `Ok(())` if the condition is true
 /// * `Err(CoreError::DomainError)` if the condition is false
+///
+/// # Errors
+///
+/// Returns `CoreError::DomainError` if the condition is false.
 pub fn check_domain<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
     if condition {
         Ok(())
@@ -360,6 +371,10 @@ pub fn check_domain<S: Into<String>>(condition: bool, message: S) -> CoreResult<
 ///
 /// * `Ok(())` if the condition is true
 /// * `Err(CoreError::DimensionError)` if the condition is false
+///
+/// # Errors
+///
+/// Returns `CoreError::DimensionError` if the condition is false.
 pub fn check_dimensions<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
     if condition {
         Ok(())
@@ -381,6 +396,10 @@ pub fn check_dimensions<S: Into<String>>(condition: bool, message: S) -> CoreRes
 ///
 /// * `Ok(())` if the condition is true
 /// * `Err(CoreError::ValueError)` if the condition is false
+///
+/// # Errors
+///
+/// Returns `CoreError::ValueError` if the condition is false.
 pub fn check_value<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
     if condition {
         Ok(())
@@ -403,6 +422,10 @@ pub fn check_value<S: Into<String>>(condition: bool, message: S) -> CoreResult<(
 ///
 /// * `Ok(value)` if the value is valid
 /// * `Err(CoreError::ValidationError)` if the value is invalid
+///
+/// # Errors
+///
+/// Returns `CoreError::ValidationError` if the validator function returns false.
 pub fn validate<T, F, S>(value: T, validator: F, message: S) -> CoreResult<T>
 where
     F: FnOnce(&T) -> bool,
@@ -427,6 +450,7 @@ where
 /// # Returns
 ///
 /// * A CoreError with the original error as its cause
+#[must_use]
 pub fn convert_error<E, S>(error: E, message: S) -> CoreError
 where
     E: std::error::Error + 'static,
@@ -435,7 +459,7 @@ where
     // Create a computation error that contains the original error
     // We combine the provided message with the error's own message for extra context
     let message_str = message.into();
-    let error_message = format!("{} | Original error: {}", message_str, error);
+    let error_message = format!("{message_str} | Original error: {error}");
 
     // For I/O errors we have direct conversion via From trait implementation
     // but we can't use it directly due to the generic bounds.
@@ -458,6 +482,7 @@ where
 /// # Returns
 ///
 /// * A CoreError with the original error as its cause
+#[must_use]
 pub fn chain_error<S>(error: CoreError, message: S) -> CoreError
 where
     S: Into<String>,

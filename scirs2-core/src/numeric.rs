@@ -30,56 +30,72 @@ pub trait ScientificNumber:
     + NumCast
 {
     /// Absolute value
+    #[must_use]
     fn abs(self) -> Self;
 
     /// Square root
+    #[must_use]
     fn sqrt(self) -> Self;
 
     /// Square
+    #[must_use]
     fn square(self) -> Self {
         self * self
     }
 
     /// Maximum of two values
+    #[must_use]
     fn max(self, other: Self) -> Self;
 
     /// Minimum of two values
+    #[must_use]
     fn min(self, other: Self) -> Self;
 
     /// Check if the value is finite
+    #[must_use]
     fn is_finite(self) -> bool;
 
     /// Convert to f64
+    #[must_use]
     fn to_f64(self) -> Option<f64>;
 
     /// Convert from f64
+    #[must_use]
     fn from_f64(value: f64) -> Option<Self>;
 }
 
 /// A trait for real-valued floating point types
 pub trait RealNumber: ScientificNumber + Float {
     /// Returns the machine epsilon (the difference between 1.0 and the least value greater than 1.0)
+    #[must_use]
     fn epsilon() -> Self;
 
     /// Exponential function (e^x)
+    #[must_use]
     fn exp(self) -> Self;
 
     /// Natural logarithm (ln(x))
+    #[must_use]
     fn ln(self) -> Self;
 
     /// Base-10 logarithm
+    #[must_use]
     fn log10(self) -> Self;
 
     /// Base-2 logarithm
+    #[must_use]
     fn log2(self) -> Self;
 
     /// Sine function
+    #[must_use]
     fn sin(self) -> Self;
 
     /// Cosine function
+    #[must_use]
     fn cos(self) -> Self;
 
     /// Tangent function
+    #[must_use]
     fn tan(self) -> Self;
 
     /// Hyperbolic sine
