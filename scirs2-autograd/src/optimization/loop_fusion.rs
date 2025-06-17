@@ -376,7 +376,7 @@ impl<F: Float> FusedKernel<F> {
     }
 
     /// Apply a unary function
-    fn apply_unary_function(value: F, func: &UnaryFunction<F>) -> F {
+    pub fn apply_unary_function(value: F, func: &UnaryFunction<F>) -> F {
         match func {
             UnaryFunction::ReLU => {
                 if value > F::zero() {
@@ -400,7 +400,7 @@ impl<F: Float> FusedKernel<F> {
     }
 
     /// Apply a scalar operation
-    fn apply_scalar_operation(value: F, scalar: F, func: &BinaryFunction) -> F {
+    pub fn apply_scalar_operation(value: F, scalar: F, func: &BinaryFunction) -> F {
         match func {
             BinaryFunction::AddScalar => value + scalar,
             BinaryFunction::MulScalar => value * scalar,
@@ -705,7 +705,7 @@ mod tests {
 
         let kernel = FusedKernel::from_chain(chain).unwrap();
 
-        let input = Array::from_shape_vec((5,).into_dyn(), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        let input = Array::from_shape_vec(IxDyn(&[5]), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
         let result = kernel.execute(&[&input]).unwrap();
 
         // Should be (x^2) * 2 = [2, 8, 18, 32, 50]
@@ -723,13 +723,13 @@ mod tests {
             enable_parallel_fusion: false,
         };
 
-        let manager = LoopFusionManager::with_config(config.clone());
+        let manager: LoopFusionManager<f32> = LoopFusionManager::with_config(config.clone());
         assert!(!manager.is_enabled());
     }
 
     #[test]
     fn test_fusion_stats() {
-        let mut stats = FusionStats::default();
+        let mut stats: FusionStats<f32> = FusionStats::default();
         stats.chains_identified = 5;
         stats.total_operations_fused = 20;
 
@@ -764,7 +764,7 @@ mod tests {
 
         let kernel = FusedKernel::from_chain(chain).unwrap();
 
-        let input = Array::from_shape_vec((4,).into_dyn(), vec![-2.0, -1.0, 1.0, 2.0]).unwrap();
+        let input = Array::from_shape_vec(IxDyn(&[4]), vec![-2.0, -1.0, 1.0, 2.0]).unwrap();
         let result = kernel.execute(&[&input]).unwrap();
 
         // Expected: x^2 -> ReLU -> *3 -> +1

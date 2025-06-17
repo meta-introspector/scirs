@@ -219,10 +219,10 @@ fn test_comprehensive_parallel_operations() {
 
     for (i, config) in configs.iter().enumerate() {
         // Test parallel element-wise operations
-        let a = Array::from_shape_vec((1000,).into_dyn(), (0..1000).map(|x| x as f32).collect())
+        let a = Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| x as f32).collect())
             .unwrap();
         let b = Array::from_shape_vec(
-            (1000,).into_dyn(),
+            IxDyn(&[1000]),
             (0..1000).map(|x| (x * 2) as f32).collect(),
         )
         .unwrap();

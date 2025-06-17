@@ -285,7 +285,7 @@ mod graph_enhancement_tests {
     fn test_smart_checkpointing() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|i| i as f64).collect())
+                Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|i| i as f32).collect())
                     .unwrap(),
                 ctx,
             );
