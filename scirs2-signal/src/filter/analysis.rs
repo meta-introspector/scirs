@@ -7,7 +7,7 @@
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 
-use super::application::{group_delay, find_polynomial_roots, evaluate_transfer_function};
+use super::application::{evaluate_transfer_function, find_polynomial_roots, group_delay};
 
 /// Comprehensive filter analysis results
 ///
@@ -106,7 +106,7 @@ impl Default for FilterStability {
 /// // Analyze a Butterworth filter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
 /// let analysis = analyze_filter(&b, &a, Some(256)).unwrap();
-/// 
+///
 /// println!("3dB cutoff: {:.3}", analysis.cutoff_3db);
 /// println!("Stopband attenuation: {:.1} dB", analysis.stopband_attenuation);
 /// ```
@@ -235,7 +235,7 @@ pub fn analyze_filter(
 /// // Check stability of a Butterworth filter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
 /// let stability = check_filter_stability(&a).unwrap();
-/// 
+///
 /// println!("Filter is stable: {}", stability.is_stable);
 /// println!("Stability margin: {:.6}", stability.stability_margin);
 /// ```
@@ -351,7 +351,7 @@ pub fn frequency_response(
 ///
 /// let (b, a) = butter(2, 0.3, "lowpass").unwrap();
 /// let (zeros, poles) = find_poles_zeros(&b, &a).unwrap();
-/// 
+///
 /// println!("Number of zeros: {}", zeros.len());
 /// println!("Number of poles: {}", poles.len());
 /// ```
@@ -400,21 +400,23 @@ pub fn find_poles_zeros(b: &[f64], a: &[f64]) -> SignalResult<(Vec<Complex64>, V
 /// ```
 pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult<f64> {
     let analysis = analyze_filter(b, a, Some(num_points))?;
-    
+
     // Find the peak frequency
     let max_mag = analysis.magnitude.iter().fold(0.0, |a, &b| a.max(b));
-    let peak_idx = analysis.magnitude.iter()
+    let peak_idx = analysis
+        .magnitude
+        .iter()
         .position(|&mag| mag == max_mag)
         .unwrap_or(0);
-    
+
     let peak_freq = analysis.frequencies[peak_idx];
-    
+
     // Find -3dB points around the peak
     let target_mag = max_mag / std::f64::consts::SQRT_2; // -3dB point
-    
+
     let mut lower_freq = 0.0;
     let mut upper_freq = 1.0;
-    
+
     // Find lower -3dB point
     for i in (0..peak_idx).rev() {
         if analysis.magnitude[i] <= target_mag {
@@ -422,7 +424,7 @@ pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult
             break;
         }
     }
-    
+
     // Find upper -3dB point
     for i in peak_idx..analysis.magnitude.len() {
         if analysis.magnitude[i] <= target_mag {
@@ -430,9 +432,9 @@ pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult
             break;
         }
     }
-    
+
     let bandwidth = upper_freq - lower_freq;
-    
+
     if bandwidth > 1e-10 {
         Ok(peak_freq / bandwidth)
     } else {

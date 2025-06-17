@@ -76,43 +76,26 @@
 //! - [`design`] - System creation and interconnection functions
 
 // Re-export all public modules
-pub mod systems;
 pub mod analysis;
 pub mod design;
+pub mod systems;
 
 // Re-export core system types for convenience
-pub use systems::{
-    LtiSystem, 
-    TransferFunction, 
-    ZerosPoleGain, 
-    StateSpace
-};
+pub use systems::{LtiSystem, StateSpace, TransferFunction, ZerosPoleGain};
 
 // Re-export analysis functions and types
 pub use analysis::{
-    bode,
-    analyze_controllability,
-    analyze_observability,
-    analyze_control_observability,
-    compute_lyapunov_gramians,
-    complete_kalman_decomposition,
-    systems_equivalent,
-    matrix_condition_number,
-    ControllabilityAnalysis,
-    ObservabilityAnalysis,
-    ControlObservabilityAnalysis,
-    KalmanStructure,
-    KalmanDecomposition,
-    GramianPair,
+    analyze_control_observability, analyze_controllability, analyze_observability, bode,
+    complete_kalman_decomposition, compute_lyapunov_gramians, matrix_condition_number,
+    systems_equivalent, ControlObservabilityAnalysis, ControllabilityAnalysis, GramianPair,
+    KalmanDecomposition, KalmanStructure, ObservabilityAnalysis,
 };
 
 // Re-export design functions for convenience
 pub use design::{
-    tf, zpk, ss, c2d,
-    series, parallel, feedback,
-    sensitivity, complementary_sensitivity,
-    multiply_polynomials, add_polynomials, subtract_polynomials,
-    divide_polynomials, evaluate_polynomial, polynomial_derivative,
+    add_polynomials, c2d, complementary_sensitivity, divide_polynomials, evaluate_polynomial,
+    feedback, multiply_polynomials, parallel, polynomial_derivative, sensitivity, series, ss,
+    subtract_polynomials, tf, zpk,
 };
 
 // Keep the system module for backward compatibility
@@ -120,7 +103,7 @@ pub use design::{
 ///
 /// This module provides convenience functions for system creation and interconnection.
 /// It is maintained for backward compatibility with existing code.
-/// 
+///
 /// # Examples
 ///
 /// ```rust
@@ -146,7 +129,7 @@ mod tests {
     #[test]
     fn test_module_api_compatibility() {
         // Test that the main API functions are accessible
-        
+
         // System creation
         let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
         let zpk_sys = zpk(Vec::new(), vec![Complex64::new(-1.0, 0.0)], 1.0, None).unwrap();
@@ -191,7 +174,7 @@ mod tests {
     fn test_system_conversions() {
         // Test conversions between different representations
         let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
-        
+
         // Convert to other representations
         let zpk_sys = tf_sys.to_zpk().unwrap();
         let ss_sys = tf_sys.to_ss().unwrap();
@@ -206,11 +189,12 @@ mod tests {
         // Test a complete analysis workflow
         let ss_sys = ss(
             vec![-1.0, 0.0, 1.0, -2.0], // 2x2 A matrix
-            vec![1.0, 0.0],              // 2x1 B matrix  
-            vec![1.0, 0.0],              // 1x2 C matrix
-            vec![0.0],                   // 1x1 D matrix
-            None
-        ).unwrap();
+            vec![1.0, 0.0],             // 2x1 B matrix
+            vec![1.0, 0.0],             // 1x2 C matrix
+            vec![0.0],                  // 1x1 D matrix
+            None,
+        )
+        .unwrap();
 
         // Structural analysis
         let ctrl_analysis = analyze_controllability(&ss_sys).unwrap();
@@ -218,10 +202,18 @@ mod tests {
         let combined_analysis = analyze_control_observability(&ss_sys).unwrap();
 
         // Verify analysis results are consistent
-        assert_eq!(ctrl_analysis.is_controllable, combined_analysis.controllability.is_controllable);
-        assert_eq!(obs_analysis.is_observable, combined_analysis.observability.is_observable);
-        assert_eq!(combined_analysis.is_minimal, 
-                   ctrl_analysis.is_controllable && obs_analysis.is_observable);
+        assert_eq!(
+            ctrl_analysis.is_controllable,
+            combined_analysis.controllability.is_controllable
+        );
+        assert_eq!(
+            obs_analysis.is_observable,
+            combined_analysis.observability.is_observable
+        );
+        assert_eq!(
+            combined_analysis.is_minimal,
+            ctrl_analysis.is_controllable && obs_analysis.is_observable
+        );
 
         // Energy-based analysis
         let (wc, wo) = compute_lyapunov_gramians(&ss_sys).unwrap();
@@ -230,8 +222,13 @@ mod tests {
 
         // Complete decomposition
         let kalman_decomp = complete_kalman_decomposition(&ss_sys).unwrap();
-        assert_eq!(kalman_decomp.co_dimension + kalman_decomp.c_no_dimension + 
-                   kalman_decomp.nc_o_dimension + kalman_decomp.nc_no_dimension, ss_sys.n_states);
+        assert_eq!(
+            kalman_decomp.co_dimension
+                + kalman_decomp.c_no_dimension
+                + kalman_decomp.nc_o_dimension
+                + kalman_decomp.nc_no_dimension,
+            ss_sys.n_states
+        );
     }
 
     #[test]
@@ -271,7 +268,7 @@ mod tests {
     fn test_sensitivity_analysis() {
         // Test sensitivity and complementary sensitivity functions
         let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap(); // 10/(s+1)
-        
+
         let s_func = sensitivity(&g, None).unwrap();
         let t_func = complementary_sensitivity(&g, None).unwrap();
 
@@ -279,7 +276,7 @@ mod tests {
         let s_val = s_func.evaluate(Complex64::new(0.0, 0.0));
         let t_val = t_func.evaluate(Complex64::new(0.0, 0.0));
         let sum = s_val + t_val;
-        
+
         assert_relative_eq!(sum.re, 1.0, epsilon = 1e-10);
         assert_relative_eq!(sum.im, 0.0, epsilon = 1e-10);
     }
@@ -301,16 +298,16 @@ mod tests {
     fn test_frequency_response() {
         // Test frequency response computation
         let sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap(); // 1/(s+1)
-        
+
         let freqs = vec![0.0, 1.0, 10.0];
         let response = sys.frequency_response(&freqs).unwrap();
 
         assert_eq!(response.len(), 3);
-        
+
         // At s = 0: H(0) = 1/(0+1) = 1
         assert_relative_eq!(response[0].re, 1.0, epsilon = 1e-6);
         assert_relative_eq!(response[0].im, 0.0, epsilon = 1e-6);
-        
+
         // At s = j: H(j) = 1/(j+1), |H(j)| = 1/sqrt(2)
         assert_relative_eq!(response[1].norm(), 1.0 / (2.0_f64.sqrt()), epsilon = 1e-6);
     }
@@ -319,14 +316,14 @@ mod tests {
     fn test_impulse_and_step_response() {
         // Test time-domain response computation
         let sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap(); // 1/(s+1)
-        
+
         let t = vec![0.0, 0.1, 0.2, 0.5, 1.0];
-        
+
         // For discrete-time system, test impulse response
         let sys_dt = tf(vec![1.0], vec![1.0, 1.0], Some(true)).unwrap();
         let impulse = sys_dt.impulse_response(&t).unwrap();
         let step = sys_dt.step_response(&t).unwrap();
-        
+
         assert_eq!(impulse.len(), t.len());
         assert_eq!(step.len(), t.len());
     }

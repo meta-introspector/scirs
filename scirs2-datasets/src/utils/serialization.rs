@@ -186,15 +186,15 @@ mod tests {
     #[test]
     fn test_array2_serialization_roundtrip() {
         let original = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
-        
+
         // Serialize to JSON
         let json = serde_json::to_string(&original.map(|x| *x)).unwrap();
-        
+
         // For testing, we need to manually test the serialization functions
         // since they're designed to work with serde attributes
         let vec = vec![2.0, 3.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let reconstructed = Array2::from_shape_vec((2, 3), vec[2..].to_vec()).unwrap();
-        
+
         assert_eq!(original, reconstructed);
     }
 
@@ -203,7 +203,7 @@ mod tests {
         let original = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let vec = original.to_vec();
         let reconstructed = Array1::from(vec);
-        
+
         assert_eq!(original, reconstructed);
     }
 

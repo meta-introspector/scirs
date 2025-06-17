@@ -58,51 +58,49 @@
 //! ```
 
 // Re-export all public modules
-pub mod common;
-pub mod iir;
-pub mod fir;
-pub mod application;
 pub mod analysis;
-pub mod transform;
+pub mod application;
+pub mod common;
+pub mod fir;
+pub mod iir;
 pub mod specialized;
+pub mod transform;
 
 // Re-export commonly used types for convenience
 pub use common::{
-    FilterType, FilterTypeParam, FilterCoefficients, FilterAnalysis, FilterStability,
-    validation::{validate_order, validate_cutoff_frequency, validate_band_frequencies, convert_filter_type},
-    math::{prewarp_frequency, bilinear_pole_transform, butterworth_poles, add_digital_zeros},
+    math::{add_digital_zeros, bilinear_pole_transform, butterworth_poles, prewarp_frequency},
+    validation::{
+        convert_filter_type, validate_band_frequencies, validate_cutoff_frequency, validate_order,
+    },
+    FilterAnalysis, FilterCoefficients, FilterStability, FilterType, FilterTypeParam,
 };
 
 // Re-export all IIR filter design functions
-pub use iir::{
-    butter, butter_bandpass_bandstop, cheby1, cheby2, ellip, bessel,
-};
+pub use iir::{bessel, butter, butter_bandpass_bandstop, cheby1, cheby2, ellip};
 
-// Re-export all FIR filter design functions  
-pub use fir::{
-    firwin, remez,
-};
+// Re-export all FIR filter design functions
+pub use fir::{firwin, remez};
 
 // Re-export filter application functions
 pub use application::{
-    filtfilt, lfilter, minimum_phase, group_delay, matched_filter, matched_filter_detect,
+    filtfilt, group_delay, lfilter, matched_filter, matched_filter_detect, minimum_phase,
 };
 
 // Re-export filter analysis functions
 pub use analysis::{
-    analyze_filter, check_filter_stability, frequency_response, find_poles_zeros, compute_q_factor,
+    analyze_filter, check_filter_stability, compute_q_factor, find_poles_zeros, frequency_response,
 };
 
 // Re-export filter transformation functions
 pub use transform::{
-    bilinear_transform, zpk_to_tf, tf_to_zpk, lp_to_lp_transform, lp_to_hp_transform,
-    lp_to_bp_transform, lp_to_bs_transform, normalize_coefficients,
+    bilinear_transform, lp_to_bp_transform, lp_to_bs_transform, lp_to_hp_transform,
+    lp_to_lp_transform, normalize_coefficients, tf_to_zpk, zpk_to_tf,
 };
 
 // Re-export specialized filter functions
 pub use specialized::{
-    notch_filter, comb_filter, allpass_filter, allpass_second_order, hilbert_filter,
-    differentiator_filter, integrator_filter, fractional_delay_filter, dc_blocker, peak_filter,
+    allpass_filter, allpass_second_order, comb_filter, dc_blocker, differentiator_filter,
+    fractional_delay_filter, hilbert_filter, integrator_filter, notch_filter, peak_filter,
 };
 
 #[cfg(test)]
@@ -114,7 +112,7 @@ mod tests {
         // Test basic Butterworth filter design
         let result = butter(4, 0.3, FilterType::Lowpass);
         assert!(result.is_ok());
-        
+
         let (b, a) = result.unwrap();
         assert_eq!(a.len(), 5); // 4th order = 5 coefficients
         assert_eq!(a[0], 1.0); // Normalized denominator
@@ -125,12 +123,12 @@ mod tests {
         // Test basic FIR window method design
         let result = firwin(21, 0.3, "hamming", true);
         assert!(result.is_ok());
-        
+
         let h = result.unwrap();
         assert_eq!(h.len(), 21);
-        
+
         // Check symmetry (linear phase)
-        for i in 0..h.len()/2 {
+        for i in 0..h.len() / 2 {
             assert!((h[i] - h[h.len() - 1 - i]).abs() < 1e-10);
         }
     }
@@ -141,7 +139,7 @@ mod tests {
         let (b, a) = butter(4, 0.2, "lowpass").unwrap();
         let result = analyze_filter(&b, &a, Some(256));
         assert!(result.is_ok());
-        
+
         let analysis = result.unwrap();
         assert_eq!(analysis.frequencies.len(), 256);
         assert_eq!(analysis.magnitude.len(), 256);
@@ -155,7 +153,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
         let result = filtfilt(&b, &a, &signal);
         assert!(result.is_ok());
-        
+
         let filtered = result.unwrap();
         assert_eq!(filtered.len(), signal.len());
     }
@@ -165,7 +163,7 @@ mod tests {
         // Test specialized notch filter
         let result = notch_filter(0.25, 35.0);
         assert!(result.is_ok());
-        
+
         let (b, a) = result.unwrap();
         assert!(b.len() >= 2);
         assert!(a.len() >= 2);
@@ -178,7 +176,7 @@ mod tests {
         let (b, a) = butter(4, 0.2, "lowpass").unwrap();
         let result = check_filter_stability(&a);
         assert!(result.is_ok());
-        
+
         let stability = result.unwrap();
         assert!(stability.is_stable);
         assert!(stability.stability_margin > 0.0);
@@ -188,14 +186,14 @@ mod tests {
     fn test_zpk_transform() {
         // Test zeros-poles-gain transformation
         use num_complex::Complex64;
-        
+
         let zeros = vec![Complex64::new(-1.0, 0.0)];
         let poles = vec![Complex64::new(0.5, 0.0)];
         let gain = 1.0;
-        
+
         let result = zpk_to_tf(&zeros, &poles, gain);
         assert!(result.is_ok());
-        
+
         let (b, a) = result.unwrap();
         assert_eq!(a[0], 1.0); // Normalized
     }
@@ -206,7 +204,7 @@ mod tests {
         let filter_type = convert_filter_type(FilterTypeParam::String("lowpass".to_string()));
         assert!(filter_type.is_ok());
         assert_eq!(filter_type.unwrap(), FilterType::Lowpass);
-        
+
         let filter_type = convert_filter_type(FilterTypeParam::Type(FilterType::Highpass));
         assert!(filter_type.is_ok());
         assert_eq!(filter_type.unwrap(), FilterType::Highpass);
@@ -217,11 +215,11 @@ mod tests {
         // Test parameter validation
         assert!(validate_order(0).is_err());
         assert!(validate_order(4).is_ok());
-        
+
         assert!(validate_cutoff_frequency(0.5).is_ok());
         assert!(validate_cutoff_frequency(1.5).is_err());
         assert!(validate_cutoff_frequency(-0.1).is_err());
-        
+
         assert!(validate_band_frequencies(0.1, 0.4).is_ok());
         assert!(validate_band_frequencies(0.4, 0.1).is_err());
         assert!(validate_band_frequencies(-0.1, 0.4).is_err());

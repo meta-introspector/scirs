@@ -154,9 +154,10 @@ pub mod validation {
     where
         T: Float + NumCast + Debug,
     {
-        let wn = num_traits::cast::cast::<T, f64>(cutoff)
-            .ok_or_else(|| SignalError::ValueError(format!("Could not convert {:?} to f64", cutoff)))?;
-        
+        let wn = num_traits::cast::cast::<T, f64>(cutoff).ok_or_else(|| {
+            SignalError::ValueError(format!("Could not convert {:?} to f64", cutoff))
+        })?;
+
         if wn <= 0.0 || wn >= 1.0 {
             return Err(SignalError::ValueError(format!(
                 "Cutoff frequency must be between 0 and 1, got {}",
@@ -191,7 +192,7 @@ pub mod math {
     use std::f64::consts::PI;
 
     /// Pre-warp frequency for bilinear transform
-    /// 
+    ///
     /// Pre-warps the digital frequency to compensate for the frequency warping
     /// effect of the bilinear transform.
     pub fn prewarp_frequency(digital_freq: f64) -> f64 {
@@ -199,21 +200,21 @@ pub mod math {
     }
 
     /// Apply bilinear transform to convert analog pole to digital
-    /// 
+    ///
     /// Transforms analog domain pole using bilinear transform: z = (2 + s) / (2 - s)
     pub fn bilinear_pole_transform(analog_pole: Complex64) -> Complex64 {
         (2.0 + analog_pole) / (2.0 - analog_pole)
     }
 
     /// Apply bilinear transform to convert analog zero to digital
-    /// 
+    ///
     /// Transforms analog domain zero using bilinear transform: z = (2 + s) / (2 - s)
     pub fn bilinear_zero_transform(analog_zero: Complex64) -> Complex64 {
         (2.0 + analog_zero) / (2.0 - analog_zero)
     }
 
     /// Calculate poles for analog Butterworth prototype
-    /// 
+    ///
     /// Generates the poles for an analog Butterworth lowpass prototype filter
     /// of the specified order.
     pub fn butterworth_poles(order: usize) -> Vec<Complex64> {
@@ -228,12 +229,12 @@ pub mod math {
     }
 
     /// Add zeros for digital filter based on filter type
-    /// 
+    ///
     /// Adds appropriate zeros in the digital domain based on the filter type
     /// to complete the bilinear transform process.
     pub fn add_digital_zeros(filter_type: FilterType, order: usize) -> Vec<Complex64> {
         let mut digital_zeros = Vec::new();
-        
+
         match filter_type {
             FilterType::Lowpass => {
                 // Lowpass: zeros at z = -1 (Nyquist frequency)
@@ -252,7 +253,7 @@ pub mod math {
                 // This is handled in the specific transformation functions
             }
         }
-        
+
         digital_zeros
     }
 }

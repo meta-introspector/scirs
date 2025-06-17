@@ -9,7 +9,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::config::TurningPointsConfig;
-use super::utils::{calculate_pearson_correlation, detect_turning_points};
+use super::utils::detect_turning_points;
 use crate::error::{Result, TimeSeriesError};
 
 /// Comprehensive turning points analysis features

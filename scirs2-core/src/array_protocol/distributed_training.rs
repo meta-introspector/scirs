@@ -245,7 +245,7 @@ pub trait DistributedCommunication: Send + Sync {
     fn box_clone(&self) -> Box<dyn DistributedCommunication>;
 }
 
-/// A wrapper type that makes Box<dyn DistributedCommunication> cloneable
+/// A wrapper type that makes `Box<dyn DistributedCommunication>` cloneable
 #[derive(Clone)]
 pub struct CommunicationChannel(Arc<Box<dyn DistributedCommunication>>);
 
@@ -261,7 +261,7 @@ impl CommunicationChannel {
     }
 }
 
-/// Make the Box<dyn DistributedCommunication> cloneable via box_clone
+/// Make the `Box<dyn DistributedCommunication>` cloneable via box_clone
 impl Clone for Box<dyn DistributedCommunication> {
     fn clone(&self) -> Self {
         self.box_clone()

@@ -441,7 +441,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         let start_time = Instant::now();
 
         let forward_metrics = compute_forward_stability(
-            scenario.function.as_ref(),
+            &scenario.function,
             &scenario.input,
             scenario.perturbation_magnitude,
         )?;

@@ -8,8 +8,8 @@
 //! - System equivalence checking
 //! - Matrix utilities for system analysis
 
-use crate::error::{SignalError, SignalResult};
 use super::systems::{LtiSystem, StateSpace};
+use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 
 /// Calculate the Bode plot data (magnitude and phase) for an LTI system
@@ -534,7 +534,7 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
 /// use scirs2_signal::lti::{systems::StateSpace, analysis::complete_kalman_decomposition};
 ///
 /// let ss = StateSpace::new(
-///     vec![-1.0, 0.0, 1.0, -2.0], vec![1.0, 0.0], 
+///     vec![-1.0, 0.0, 1.0, -2.0], vec![1.0, 0.0],
 ///     vec![1.0, 0.0], vec![0.0], None
 /// ).unwrap();
 /// let decomp = complete_kalman_decomposition(&ss).unwrap();
@@ -680,7 +680,12 @@ pub fn systems_equivalent(
     }
 
     // Check if all coefficients match after scaling
-    for ((&a, &b), (&c, &d)) in tf1.num.iter().zip(&tf2.num).zip(tf1.den.iter().zip(&tf2.den)) {
+    for ((&a, &b), (&c, &d)) in tf1
+        .num
+        .iter()
+        .zip(&tf2.num)
+        .zip(tf1.den.iter().zip(&tf2.den))
+    {
         if (b - scale_num * a).abs() > tolerance || (d - scale_den * c).abs() > tolerance {
             return Ok(false);
         }
@@ -1034,7 +1039,8 @@ mod tests {
             vec![1.0],  // C = [1]
             vec![0.0],  // D = [0]
             None,
-        ).unwrap();
+        )
+        .unwrap();
 
         let analysis = analyze_controllability(&ss).unwrap();
         assert!(analysis.is_controllable);
@@ -1051,7 +1057,8 @@ mod tests {
             vec![1.0],  // C = [1]
             vec![0.0],  // D = [0]
             None,
-        ).unwrap();
+        )
+        .unwrap();
 
         let analysis = analyze_observability(&ss).unwrap();
         assert!(analysis.is_observable);
@@ -1068,7 +1075,8 @@ mod tests {
             vec![1.0],  // C = [1]
             vec![0.0],  // D = [0]
             None,
-        ).unwrap();
+        )
+        .unwrap();
 
         let analysis = analyze_control_observability(&ss).unwrap();
         assert!(analysis.is_minimal);
@@ -1094,30 +1102,18 @@ mod tests {
     #[test]
     fn test_matrix_rank() {
         // Test rank of identity matrix
-        let identity = vec![
-            vec![1.0, 0.0],
-            vec![0.0, 1.0],
-        ];
+        let identity = vec![vec![1.0, 0.0], vec![0.0, 1.0]];
         assert_eq!(matrix_rank(&identity).unwrap(), 2);
 
         // Test rank of singular matrix
-        let singular = vec![
-            vec![1.0, 2.0],
-            vec![2.0, 4.0],
-        ];
+        let singular = vec![vec![1.0, 2.0], vec![2.0, 4.0]];
         assert_eq!(matrix_rank(&singular).unwrap(), 1);
     }
 
     #[test]
     fn test_matrix_multiply() {
-        let a = vec![
-            vec![1.0, 2.0],
-            vec![3.0, 4.0],
-        ];
-        let b = vec![
-            vec![5.0, 6.0],
-            vec![7.0, 8.0],
-        ];
+        let a = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
+        let b = vec![vec![5.0, 6.0], vec![7.0, 8.0]];
 
         let result = matrix_multiply(&a, &b).unwrap();
         assert_eq!(result.len(), 2);

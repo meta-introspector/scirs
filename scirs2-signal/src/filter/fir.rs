@@ -8,7 +8,7 @@ use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
-use super::common::validation::{validate_cutoff_frequency};
+use super::common::validation::validate_cutoff_frequency;
 
 /// FIR filter design using window method
 ///
@@ -37,12 +37,7 @@ use super::common::validation::{validate_cutoff_frequency};
 /// // Design a highpass filter
 /// let h = firwin(65, 0.3, "hamming", false).unwrap();
 /// ```
-pub fn firwin<T>(
-    numtaps: usize,
-    cutoff: T,
-    window: &str,
-    pass_zero: bool,
-) -> SignalResult<Vec<f64>>
+pub fn firwin<T>(numtaps: usize, cutoff: T, window: &str, pass_zero: bool) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
@@ -60,7 +55,7 @@ where
 
     for i in 0..numtaps {
         let n = i as f64 - mid;
-        
+
         if n == 0.0 {
             // At n=0, use L'Hôpital's rule result
             h[i] = if pass_zero {
@@ -98,7 +93,9 @@ where
         }
     } else if !pass_zero {
         // For highpass, normalize for unity gain at Nyquist
-        let nyquist_response: f64 = h.iter().enumerate()
+        let nyquist_response: f64 = h
+            .iter()
+            .enumerate()
             .map(|(i, &coeff)| coeff * (-1.0_f64).powi(i as i32))
             .sum();
         if nyquist_response.abs() > 1e-10 {
@@ -360,7 +357,7 @@ pub fn remez(
 /// * Window coefficients as a vector
 fn generate_window(length: usize, window_type: &str) -> SignalResult<Vec<f64>> {
     let mut window = vec![0.0; length];
-    
+
     match window_type.to_lowercase().as_str() {
         "hamming" => {
             for (i, w) in window.iter_mut().enumerate() {
@@ -394,7 +391,7 @@ fn generate_window(length: usize, window_type: &str) -> SignalResult<Vec<f64>> {
             )));
         }
     }
-    
+
     Ok(window)
 }
 

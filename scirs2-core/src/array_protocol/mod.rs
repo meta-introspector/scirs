@@ -98,7 +98,7 @@ pub trait ArrayProtocol: Any + Send + Sync {
     fn box_clone(&self) -> Box<dyn ArrayProtocol>;
 }
 
-/// Make Box<dyn ArrayProtocol> cloneable via box_clone
+/// Make `Box<dyn ArrayProtocol>` cloneable via box_clone
 impl Clone for Box<dyn ArrayProtocol> {
     fn clone(&self) -> Self {
         self.box_clone()
@@ -525,7 +525,7 @@ pub trait JITFunction: Send + Sync {
     /// Get information about how the function was compiled.
     fn compile_info(&self) -> HashMap<String, String>;
 
-    /// Clone this JIT function into a Box<dyn JITFunction>.
+    /// Clone this JIT function into a `Box<dyn JITFunction>`.
     fn clone_box(&self) -> Box<dyn JITFunction>;
 }
 
@@ -1592,7 +1592,7 @@ mod examples {
         }
     }
 }
-/// Make Box<dyn JITFunction> cloneable via clone_box
+/// Make `Box<dyn JITFunction>` cloneable via clone_box
 impl Clone for Box<dyn JITFunction> {
     fn clone(&self) -> Self {
         self.clone_box()

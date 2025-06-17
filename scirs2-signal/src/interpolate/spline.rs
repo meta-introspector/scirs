@@ -3,11 +3,11 @@
 //! This module provides cubic spline and cubic Hermite spline (PCHIP) interpolation
 //! algorithms for filling missing values in signals with smooth curves.
 
+use super::basic::linear_interpolate;
+use super::core::{enforce_monotonicity, smooth_signal, InterpolationConfig};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 use scirs2_linalg::solve;
-use super::core::{InterpolationConfig, smooth_signal, enforce_monotonicity};
-use super::basic::linear_interpolate;
 
 /// Applies cubic spline interpolation to fill missing values in a signal
 ///
@@ -360,8 +360,8 @@ pub fn cubic_hermite_interpolate(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array1;
     use crate::interpolate::core::InterpolationConfig;
+    use ndarray::Array1;
 
     #[test]
     fn test_cubic_spline_interpolate_no_missing() {
@@ -376,15 +376,15 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, f64::NAN, 5.0]);
         let config = InterpolationConfig::default();
         let result = cubic_spline_interpolate(&signal, &config).unwrap();
-        
+
         // Should produce smooth interpolation
         assert_eq!(result[0], 1.0);
         assert_eq!(result[4], 5.0);
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         // Should be monotonically increasing
         for i in 1..result.len() {
-            assert!(result[i] >= result[i-1]);
+            assert!(result[i] >= result[i - 1]);
         }
     }
 
@@ -393,7 +393,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
         let config = InterpolationConfig::default();
         let result = cubic_spline_interpolate(&signal, &config).unwrap();
-        
+
         // Should fall back to linear interpolation
         assert_eq!(result[0], 1.0);
         assert_eq!(result[1], 2.0);
@@ -421,10 +421,10 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 2.0]);
         let config = InterpolationConfig::default();
         let result = cubic_hermite_interpolate(&signal, &config).unwrap();
-        
+
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         // Original values should be preserved
         assert_eq!(result[0], 1.0);
         assert_eq!(result[2], 3.0);
@@ -436,7 +436,7 @@ mod tests {
         let signal = Array1::from_vec(vec![f64::NAN, 2.0, f64::NAN]);
         let config = InterpolationConfig::default();
         let result = cubic_hermite_interpolate(&signal, &config).unwrap();
-        
+
         // Should fill with constant value
         assert_eq!(result[0], 2.0);
         assert_eq!(result[1], 2.0);
@@ -456,10 +456,10 @@ mod tests {
         let signal = Array1::from_vec(vec![f64::NAN, 2.0, 3.0, f64::NAN]);
         let mut config = InterpolationConfig::default();
         config.extrapolate = true;
-        
+
         let result = cubic_spline_interpolate(&signal, &config).unwrap();
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         let result = cubic_hermite_interpolate(&signal, &config).unwrap();
         assert!(result.iter().all(|&x| !x.is_nan()));
     }
@@ -470,10 +470,10 @@ mod tests {
         let mut config = InterpolationConfig::default();
         config.smoothing = true;
         config.smoothing_factor = 0.3;
-        
+
         let result = cubic_spline_interpolate(&signal, &config).unwrap();
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         let result = cubic_hermite_interpolate(&signal, &config).unwrap();
         assert!(result.iter().all(|&x| !x.is_nan()));
     }
@@ -483,12 +483,12 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0, f64::NAN, 6.0]);
         let mut config = InterpolationConfig::default();
         config.monotonic = true;
-        
+
         let result = cubic_spline_interpolate(&signal, &config).unwrap();
-        
+
         // Should be monotonically increasing
         for i in 1..result.len() {
-            assert!(result[i] >= result[i-1]);
+            assert!(result[i] >= result[i - 1]);
         }
     }
 }

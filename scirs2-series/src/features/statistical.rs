@@ -9,8 +9,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::utils::{
-    calculate_mad, calculate_median, calculate_percentile, calculate_std_dev,
-    calculate_trimmed_mean, calculate_winsorized_mean, find_min_max,
+    calculate_mad, calculate_percentile, calculate_trimmed_mean, calculate_winsorized_mean,
 };
 use crate::error::{Result, TimeSeriesError};
 

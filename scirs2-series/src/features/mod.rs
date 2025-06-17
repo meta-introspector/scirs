@@ -14,12 +14,21 @@ pub mod wavelet;
 pub mod window_based;
 
 // Re-export commonly used items for convenience
+#[allow(ambiguous_glob_reexports)]
 pub use complexity::*;
+#[allow(ambiguous_glob_reexports)]
 pub use config::*;
+#[allow(ambiguous_glob_reexports)]
 pub use frequency::*;
+#[allow(ambiguous_glob_reexports)]
 pub use statistical::*;
+#[allow(ambiguous_glob_reexports)]
 pub use temporal::*;
+#[allow(ambiguous_glob_reexports)]
 pub use turning_points::*;
+#[allow(ambiguous_glob_reexports)]
 pub use utils::*;
+#[allow(ambiguous_glob_reexports)]
 pub use wavelet::*;
+#[allow(ambiguous_glob_reexports)]
 pub use window_based::*;

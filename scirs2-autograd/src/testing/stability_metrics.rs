@@ -26,12 +26,12 @@ impl<F: Float> StabilityMetrics<F> {
     /// Compute forward stability metrics
     pub fn compute_forward_stability<Func>(
         &self,
-        function: Func,
+        function: &Func,
         input: &Tensor<F>,
         perturbation_magnitude: f64,
     ) -> Result<ForwardStabilityMetrics, StabilityError>
     where
-        Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + ?Sized,
     {
         let mut metrics = ForwardStabilityMetrics::default();
 
@@ -83,12 +83,12 @@ impl<F: Float> StabilityMetrics<F> {
     /// Compute backward stability metrics
     pub fn compute_backward_stability<Func>(
         &self,
-        function: Func,
+        function: &Func,
         input: &Tensor<F>,
         target_output: &Tensor<F>,
     ) -> Result<BackwardStabilityMetrics, StabilityError>
     where
-        Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + ?Sized,
     {
         let mut metrics = BackwardStabilityMetrics::default();
 
@@ -121,13 +121,13 @@ impl<F: Float> StabilityMetrics<F> {
     /// Compute mixed forward-backward stability metrics
     pub fn compute_mixed_stability<'a, Func>(
         &self,
-        function: Func,
+        function: &Func,
         input: &'a Tensor<'a, F>,
     ) -> Result<MixedStabilityMetrics, StabilityError>
     where
-        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Clone,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + ?Sized,
     {
-        let forward_metrics = self.compute_forward_stability(function.clone(), input, 1e-8)?;
+        let forward_metrics = self.compute_forward_stability(function, input, 1e-8)?;
         let output = function(input)?;
         let backward_metrics = self.compute_backward_stability(function, input, &output)?;
 
@@ -155,11 +155,11 @@ impl<F: Float> StabilityMetrics<F> {
     /// Compute spectral stability metrics (eigenvalue sensitivity)
     pub fn compute_spectral_stability<Func>(
         &self,
-        function: Func,
+        function: &Func,
         input: &Tensor<F>,
     ) -> Result<SpectralStabilityMetrics, StabilityError>
     where
-        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + ?Sized,
     {
         let mut metrics = SpectralStabilityMetrics::default();
 
@@ -190,12 +190,12 @@ impl<F: Float> StabilityMetrics<F> {
     /// Compute local Lipschitz constants
     pub fn compute_lipschitz_constants<Func>(
         &self,
-        function: Func,
+        function: &Func,
         input: &Tensor<F>,
         neighborhood_size: f64,
     ) -> Result<LipschitzMetrics, StabilityError>
     where
-        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + ?Sized,
     {
         let mut metrics = LipschitzMetrics::default();
 
@@ -423,7 +423,7 @@ impl<F: Float> StabilityMetrics<F> {
         input: &Tensor<F>,
     ) -> Result<Array<F, IxDyn>, StabilityError>
     where
-        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + ?Sized,
     {
         // Simplified Jacobian computation using finite differences
         let input_size = input.data().len();
@@ -498,7 +498,7 @@ impl<F: Float> StabilityMetrics<F> {
         _input: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where
-        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + ?Sized,
     {
         // Simplified condition number estimation
         Ok(1e6)
@@ -736,7 +736,7 @@ pub enum SpectralStabilityAssessment {
 /// Public API functions
 /// Compute forward stability for a function
 pub fn compute_forward_stability<'a, F: Float, Func>(
-    function: Func,
+    function: &Func,
     input: &'a Tensor<'a, F>,
     perturbation_magnitude: f64,
 ) -> Result<ForwardStabilityMetrics, StabilityError>
@@ -749,7 +749,7 @@ where
 
 /// Compute backward stability for a function
 pub fn compute_backward_stability<'a, F: Float, Func>(
-    function: Func,
+    function: &Func,
     input: &'a Tensor<'a, F>,
     target_output: &'a Tensor<'a, F>,
 ) -> Result<BackwardStabilityMetrics, StabilityError>
@@ -762,7 +762,7 @@ where
 
 /// Quick stability assessment
 pub fn quick_stability_check<'a, F: Float, Func>(
-    function: Func,
+    function: &Func,
     input: &'a Tensor<'a, F>,
 ) -> Result<StabilityGrade, StabilityError>
 where

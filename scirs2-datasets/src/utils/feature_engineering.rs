@@ -581,7 +581,8 @@ mod tests {
     #[test]
     fn test_feature_extraction_pipeline() {
         // Test a complete feature extraction pipeline
-        let data = Array2::from_shape_vec((4, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0])
+            .unwrap();
 
         // Step 1: Generate polynomial features
         let poly_data = polynomial_features(&data, 2, false).unwrap();
@@ -603,7 +604,8 @@ mod tests {
     #[test]
     fn test_binning_strategies_comparison() {
         // Create data with outliers
-        let data = Array2::from_shape_vec((7, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 100.0]).unwrap();
+        let data =
+            Array2::from_shape_vec((7, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 100.0]).unwrap();
 
         let uniform_binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
         let quantile_binned = create_binned_features(&data, 3, BinningStrategy::Quantile).unwrap();

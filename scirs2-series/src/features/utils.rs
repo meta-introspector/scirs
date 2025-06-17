@@ -10,7 +10,6 @@ use std::fmt::Debug;
 
 use super::config::TurningPointsConfig;
 use crate::error::{Result, TimeSeriesError};
-use crate::utils::autocorrelation;
 
 /// Type alias for spectral peak detection results
 pub type SpectralPeakResult<F> = (Vec<F>, Vec<F>, Vec<F>, Vec<F>, usize, F, F, Vec<F>);

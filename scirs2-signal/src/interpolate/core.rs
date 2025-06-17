@@ -7,10 +7,12 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2};
 
 // Import the specific interpolation functions from their respective modules
+use super::advanced::{
+    gaussian_process_interpolate, kriging_interpolate, minimum_energy_interpolate, rbf_interpolate,
+};
 use super::basic::{linear_interpolate, nearest_neighbor_interpolate};
-use super::spline::{cubic_spline_interpolate, cubic_hermite_interpolate};
-use super::spectral::{sinc_interpolate, spectral_interpolate, auto_interpolate};
-use super::advanced::{gaussian_process_interpolate, minimum_energy_interpolate, kriging_interpolate, rbf_interpolate};
+use super::spectral::{auto_interpolate, sinc_interpolate, spectral_interpolate};
+use super::spline::{cubic_hermite_interpolate, cubic_spline_interpolate};
 
 /// Configuration for interpolation algorithms
 #[derive(Debug, Clone)]
@@ -431,7 +433,7 @@ mod tests {
     fn test_smooth_signal() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let smoothed = smooth_signal(&signal, 0.2);
-        
+
         // With 20% window size (1 element), result should be similar to original
         assert!((smoothed[2] - 3.0).abs() < 1e-10);
     }
@@ -439,13 +441,13 @@ mod tests {
     #[test]
     fn test_find_nearest_valid_index() {
         let valid_indices = vec![0, 2, 5, 8];
-        
+
         // Test finding nearest to index 1 (should be 0)
         assert_eq!(find_nearest_valid_index(1, &valid_indices), 0);
-        
+
         // Test finding nearest to index 3 (should be 1, which corresponds to index 2)
         assert_eq!(find_nearest_valid_index(3, &valid_indices), 1);
-        
+
         // Test finding nearest to index 6 (should be 2, which corresponds to index 5)
         assert_eq!(find_nearest_valid_index(6, &valid_indices), 2);
     }
@@ -454,17 +456,17 @@ mod tests {
     fn test_enforce_monotonicity_increasing() {
         let signal = Array1::from_vec(vec![1.0, 3.0, 2.0, 4.0, 3.5, 6.0]);
         let result = enforce_monotonicity(&signal);
-        
+
         // Should be monotonically increasing
         for i in 1..result.len() {
-            assert!(result[i] >= result[i-1]);
+            assert!(result[i] >= result[i - 1]);
         }
     }
 
     #[test]
     fn test_nearest_neighbor_interpolate_2d() {
         use ndarray::Array2;
-        
+
         let mut image = Array2::zeros((3, 3));
         image[[0, 0]] = 1.0;
         image[[0, 1]] = f64::NAN;
@@ -477,10 +479,10 @@ mod tests {
         image[[2, 2]] = 9.0;
 
         let result = nearest_neighbor_interpolate_2d(&image).unwrap();
-        
+
         // All values should be valid (non-NaN)
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         // Original valid values should be preserved
         assert_eq!(result[[0, 0]], 1.0);
         assert_eq!(result[[1, 1]], 5.0);

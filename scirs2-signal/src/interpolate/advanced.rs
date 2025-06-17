@@ -4,10 +4,10 @@
 //! Gaussian process interpolation, Kriging, Radial Basis Functions (RBF),
 //! and minimum energy interpolation.
 
+use super::core::InterpolationConfig;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 use scirs2_linalg::{cholesky, solve, solve_triangular};
-use super::core::InterpolationConfig;
 
 /// Applies Gaussian process interpolation to fill missing values in a signal
 ///
@@ -644,17 +644,17 @@ pub mod rbf_functions {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array1;
     use crate::interpolate::core::InterpolationConfig;
+    use ndarray::Array1;
 
     #[test]
     fn test_gaussian_process_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
         let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).unwrap();
-        
+
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         // Original values should be preserved
         assert_eq!(result[0], 1.0);
         assert_eq!(result[2], 3.0);
@@ -666,9 +666,9 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
         let config = InterpolationConfig::default();
         let variogram = |h: f64| 1.0 - (-h / 2.0).exp();
-        
+
         let result = kriging_interpolate(&signal, variogram, &config).unwrap();
-        
+
         assert!(result.iter().all(|&x| !x.is_nan()));
         assert_eq!(result[0], 1.0);
         assert_eq!(result[2], 3.0);
@@ -679,9 +679,9 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
         let config = InterpolationConfig::default();
         let rbf = |r: f64| (-r * r).exp();
-        
+
         let result = rbf_interpolate(&signal, rbf, &config).unwrap();
-        
+
         assert!(result.iter().all(|&x| !x.is_nan()));
         assert_eq!(result[0], 1.0);
         assert_eq!(result[2], 3.0);
@@ -691,13 +691,13 @@ mod tests {
     fn test_minimum_energy_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0]);
         let config = InterpolationConfig::default();
-        
+
         let result = minimum_energy_interpolate(&signal, &config).unwrap();
-        
+
         assert!(result.iter().all(|&x| !x.is_nan()));
         assert_eq!(result[0], 1.0);
         assert_eq!(result[3], 4.0);
-        
+
         // Should produce smooth interpolation
         assert!(result[1] > 1.0 && result[1] < 4.0);
         assert!(result[2] > 1.0 && result[2] < 4.0);
@@ -747,7 +747,7 @@ mod tests {
     fn test_all_missing_error() {
         let signal = Array1::from_vec(vec![f64::NAN, f64::NAN, f64::NAN]);
         let config = InterpolationConfig::default();
-        
+
         assert!(gaussian_process_interpolate(&signal, 1.0, 1.0, 0.01).is_err());
         assert!(kriging_interpolate(&signal, |_| 1.0, &config).is_err());
         assert!(rbf_interpolate(&signal, |_| 1.0, &config).is_err());
@@ -758,12 +758,12 @@ mod tests {
     fn test_no_missing_passthrough() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let config = InterpolationConfig::default();
-        
+
         let result1 = gaussian_process_interpolate(&signal, 1.0, 1.0, 0.01).unwrap();
         let result2 = kriging_interpolate(&signal, |_| 1.0, &config).unwrap();
         let result3 = rbf_interpolate(&signal, |_| 1.0, &config).unwrap();
         let result4 = minimum_energy_interpolate(&signal, &config).unwrap();
-        
+
         assert_eq!(result1, signal);
         assert_eq!(result2, signal);
         assert_eq!(result3, signal);

@@ -9,8 +9,8 @@ use ndarray::{Array1, Array2};
 use rustfft::{num_complex::Complex, FftPlanner};
 use std::f64::consts::PI;
 
-use super::core::{InterpolationConfig, InterpolationMethod, find_nearest_valid_index};
 use super::basic::linear_interpolate;
+use super::core::{find_nearest_valid_index, InterpolationConfig, InterpolationMethod};
 
 /// Applies sinc interpolation to fill missing values in a bandlimited signal
 ///
@@ -502,7 +502,7 @@ pub mod resampling {
 
         for (i, kernel_val) in kernel.iter_mut().enumerate() {
             let x = (i as f64 - half_length as f64) / config.oversampling_factor as f64;
-            
+
             // Sinc function
             let sinc = if x.abs() < 1e-10 {
                 1.0
@@ -513,7 +513,7 @@ pub mod resampling {
 
             // Kaiser window
             let window = kaiser_window(i, config.kernel_length, config.kaiser_beta);
-            
+
             *kernel_val = sinc * window;
         }
 
@@ -523,7 +523,7 @@ pub mod resampling {
     /// Evaluates the sinc kernel at a fractional position
     fn evaluate_sinc_kernel(kernel: &[f64], position: f64, _cutoff: f64) -> f64 {
         let idx = position.round() as i32 + kernel.len() as i32 / 2;
-        
+
         if idx >= 0 && (idx as usize) < kernel.len() {
             kernel[idx as usize]
         } else {
@@ -535,7 +535,7 @@ pub mod resampling {
     fn kaiser_window(n: usize, length: usize, beta: f64) -> f64 {
         let alpha = (length - 1) as f64 / 2.0;
         let x = (n as f64 - alpha) / alpha;
-        
+
         if x.abs() <= 1.0 {
             bessel_i0(beta * (1.0 - x * x).sqrt()) / bessel_i0(beta)
         } else {
@@ -548,22 +548,22 @@ pub mod resampling {
         let mut sum = 1.0;
         let mut term = 1.0;
         let x_half_squared = (x / 2.0).powi(2);
-        
+
         for k in 1..=50 {
             term *= x_half_squared / (k as f64).powi(2);
             sum += term;
-            
+
             if term < 1e-12 * sum {
                 break;
             }
         }
-        
+
         sum
     }
 
-    /// Additional resampling utilities would be included here
-    /// (polyphase filtering, bandlimited interpolation, etc.)
-    /// This is a simplified version focusing on the core functionality
+    // Additional resampling utilities would be included here
+    // (polyphase filtering, bandlimited interpolation, etc.)
+    // This is a simplified version focusing on the core functionality
 }
 
 /// Polynomial interpolation and curve fitting utilities
@@ -748,7 +748,7 @@ pub mod polynomial {
 
         // Compute divided differences table
         let mut dd_table = vec![vec![0.0; n]; n];
-        
+
         // Initialize first column with y values
         for i in 0..n {
             dd_table[i][0] = y_known[i];
@@ -769,7 +769,7 @@ pub mod polynomial {
 
         // Evaluate Newton polynomial at target points
         let mut result = vec![0.0; x_target.len()];
-        
+
         for (target_idx, &x) in x_target.iter().enumerate() {
             let mut value = dd_table[0][0];
             let mut product = 1.0;
@@ -789,18 +789,18 @@ pub mod polynomial {
 /// Unit tests for spectral interpolation methods
 #[cfg(test)]
 mod tests {
+    use super::super::core::InterpolationConfig;
     use super::*;
     use ndarray::Array1;
-    use super::super::core::InterpolationConfig;
 
     #[test]
     fn test_sinc_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
         let result = sinc_interpolate(&signal, 0.4).unwrap();
-        
+
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         // Original values should be preserved
         assert_eq!(result[0], 1.0);
         assert_eq!(result[2], 3.0);
@@ -810,7 +810,7 @@ mod tests {
     #[test]
     fn test_sinc_interpolate_invalid_cutoff() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
-        
+
         assert!(sinc_interpolate(&signal, 0.0).is_err());
         assert!(sinc_interpolate(&signal, 0.6).is_err());
     }
@@ -820,10 +820,10 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
         let config = InterpolationConfig::default();
         let result = spectral_interpolate(&signal, &config).unwrap();
-        
+
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         // Original values should be preserved
         assert_eq!(result[0], 1.0);
         assert_eq!(result[2], 3.0);
@@ -834,26 +834,32 @@ mod tests {
     fn test_auto_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
         let config = InterpolationConfig::default();
-        
+
         let (result, method) = auto_interpolate(&signal, &config, false).unwrap();
-        
+
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
-        
+
         // Should return a valid method
-        assert!(matches!(method, InterpolationMethod::Linear | InterpolationMethod::CubicSpline | 
-                        InterpolationMethod::CubicHermite | InterpolationMethod::Sinc |
-                        InterpolationMethod::Spectral | InterpolationMethod::MinimumEnergy |
-                        InterpolationMethod::NearestNeighbor));
+        assert!(matches!(
+            method,
+            InterpolationMethod::Linear
+                | InterpolationMethod::CubicSpline
+                | InterpolationMethod::CubicHermite
+                | InterpolationMethod::Sinc
+                | InterpolationMethod::Spectral
+                | InterpolationMethod::MinimumEnergy
+                | InterpolationMethod::NearestNeighbor
+        ));
     }
 
     #[test]
     fn test_auto_interpolate_cross_validation() {
         let signal = Array1::from_vec(vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0, f64::NAN, 8.0]);
         let config = InterpolationConfig::default();
-        
+
         let (result, _method) = auto_interpolate(&signal, &config, true).unwrap();
-        
+
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
     }
@@ -862,11 +868,11 @@ mod tests {
     fn test_no_missing_passthrough() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let config = InterpolationConfig::default();
-        
+
         let result1 = sinc_interpolate(&signal, 0.4).unwrap();
         let result2 = spectral_interpolate(&signal, &config).unwrap();
         let (result3, _) = auto_interpolate(&signal, &config, false).unwrap();
-        
+
         assert_eq!(result1, signal);
         assert_eq!(result2, signal);
         assert_eq!(result3, signal);
@@ -876,7 +882,7 @@ mod tests {
     fn test_all_missing_error() {
         let signal = Array1::from_vec(vec![f64::NAN, f64::NAN, f64::NAN]);
         let config = InterpolationConfig::default();
-        
+
         assert!(sinc_interpolate(&signal, 0.4).is_err());
         assert!(spectral_interpolate(&signal, &config).is_err());
     }
@@ -892,13 +898,13 @@ mod tests {
     #[test]
     fn test_polynomial_lagrange() {
         use polynomial::lagrange_interpolate;
-        
+
         let x_known = [0.0, 1.0, 2.0];
         let y_known = [1.0, 2.0, 5.0]; // y = x^2 + 1
         let x_target = [0.5, 1.5];
-        
+
         let result = lagrange_interpolate(&x_known, &y_known, &x_target).unwrap();
-        
+
         // Should be close to [1.25, 3.25] for y = x^2 + 1
         assert!((result[0] - 1.25).abs() < 1e-10);
         assert!((result[1] - 3.25).abs() < 1e-10);
@@ -906,16 +912,16 @@ mod tests {
 
     #[test]
     fn test_polynomial_fit() {
-        use polynomial::{polynomial_fit, polynomial_eval};
-        
+        use polynomial::{polynomial_eval, polynomial_fit};
+
         let x = [0.0, 1.0, 2.0, 3.0];
         let y = [1.0, 2.0, 5.0, 10.0]; // Roughly y = x^2 + 1
-        
+
         let coeffs = polynomial_fit(&x, &y, 2).unwrap();
         assert_eq!(coeffs.len(), 3); // degree 2 + 1
-        
+
         let y_eval = polynomial_eval(&coeffs, &x);
-        
+
         // Should approximate the original data well
         for (orig, approx) in y.iter().zip(y_eval.iter()) {
             assert!((orig - approx).abs() < 1e-10);

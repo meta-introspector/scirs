@@ -964,8 +964,9 @@ mod tests {
             vec![Complex64::new(-2.0, 0.0)],
             1.0,
             None,
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         assert_eq!(zpk.zeros.len(), 1);
         assert_eq!(zpk.poles.len(), 1);
         assert_eq!(zpk.gain, 1.0);
@@ -980,29 +981,20 @@ mod tests {
             vec![Complex64::new(-1.0, 0.0), Complex64::new(-2.0, 0.0)],
             1.0,
             None,
-        ).unwrap();
+        )
+        .unwrap();
         assert!(zpk_stable.is_stable().unwrap());
 
         // Unstable system (pole in RHP)
-        let zpk_unstable = ZerosPoleGain::new(
-            Vec::new(),
-            vec![Complex64::new(1.0, 0.0)],
-            1.0,
-            None,
-        ).unwrap();
+        let zpk_unstable =
+            ZerosPoleGain::new(Vec::new(), vec![Complex64::new(1.0, 0.0)], 1.0, None).unwrap();
         assert!(!zpk_unstable.is_stable().unwrap());
     }
 
     #[test]
     fn test_state_space_creation() {
-        let ss = StateSpace::new(
-            vec![-1.0],
-            vec![1.0],
-            vec![1.0],
-            vec![0.0],
-            None,
-        ).unwrap();
-        
+        let ss = StateSpace::new(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();
+
         assert_eq!(ss.n_states, 1);
         assert_eq!(ss.n_inputs, 1);
         assert_eq!(ss.n_outputs, 1);
@@ -1013,23 +1005,24 @@ mod tests {
     fn test_state_space_matrix_access() {
         let ss = StateSpace::new(
             vec![-1.0, 0.0, 1.0, -2.0], // 2x2 A matrix
-            vec![1.0, 0.0],              // 2x1 B matrix
-            vec![1.0, 0.0],              // 1x2 C matrix
-            vec![0.0],                   // 1x1 D matrix
+            vec![1.0, 0.0],             // 2x1 B matrix
+            vec![1.0, 0.0],             // 1x2 C matrix
+            vec![0.0],                  // 1x1 D matrix
             None,
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         assert_eq!(ss.a(0, 0).unwrap(), -1.0);
         assert_eq!(ss.a(0, 1).unwrap(), 0.0);
         assert_eq!(ss.a(1, 0).unwrap(), 1.0);
         assert_eq!(ss.a(1, 1).unwrap(), -2.0);
-        
+
         assert_eq!(ss.b(0, 0).unwrap(), 1.0);
         assert_eq!(ss.b(1, 0).unwrap(), 0.0);
-        
+
         assert_eq!(ss.c(0, 0).unwrap(), 1.0);
         assert_eq!(ss.c(0, 1).unwrap(), 0.0);
-        
+
         assert_eq!(ss.d(0, 0).unwrap(), 0.0);
     }
 

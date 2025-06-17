@@ -132,23 +132,42 @@ where
 
     for i in 0..n {
         // Compute output
-        y[i] = if !b_norm.is_empty() { b_norm[0] * x_f64[i] } else { 0.0 }
-            + if !z.is_empty() { z[0] } else { 0.0 };
+        y[i] = if !b_norm.is_empty() {
+            b_norm[0] * x_f64[i]
+        } else {
+            0.0
+        } + if !z.is_empty() { z[0] } else { 0.0 };
 
         // Update state variables
         for j in 1..z.len() {
-            let b_term = if j < b_norm.len() { b_norm[j] * x_f64[i] } else { 0.0 };
-            let a_term = if j < a_norm.len() { a_norm[j] * y[i] } else { 0.0 };
+            let b_term = if j < b_norm.len() {
+                b_norm[j] * x_f64[i]
+            } else {
+                0.0
+            };
+            let a_term = if j < a_norm.len() {
+                a_norm[j] * y[i]
+            } else {
+                0.0
+            };
             let next_z = if j + 1 < z.len() { z[j] } else { 0.0 };
-            
+
             z[j - 1] = b_term + next_z - a_term;
         }
 
         // Update last state variable if it exists
         if !z.is_empty() {
             let last = z.len() - 1;
-            let b_term = if last + 1 < b_norm.len() { b_norm[last + 1] * x_f64[i] } else { 0.0 };
-            let a_term = if last + 1 < a_norm.len() { a_norm[last + 1] * y[i] } else { 0.0 };
+            let b_term = if last + 1 < b_norm.len() {
+                b_norm[last + 1] * x_f64[i]
+            } else {
+                0.0
+            };
+            let a_term = if last + 1 < a_norm.len() {
+                a_norm[last + 1] * y[i]
+            } else {
+                0.0
+            };
             z[last] = b_term - a_term;
         }
     }
@@ -384,10 +403,10 @@ pub fn matched_filter_detect(
     normalize: bool,
 ) -> SignalResult<Vec<f64>> {
     let mf = matched_filter(template, normalize)?;
-    
+
     // Apply the matched filter using convolution
     let mut output = vec![0.0; signal.len()];
-    
+
     for i in 0..signal.len() {
         for (j, &coeff) in mf.iter().enumerate() {
             if i >= j {
@@ -395,7 +414,7 @@ pub fn matched_filter_detect(
             }
         }
     }
-    
+
     Ok(output)
 }
 
@@ -524,10 +543,7 @@ fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
 }
 
 /// Evaluate polynomial and its derivative at a complex point
-fn evaluate_polynomial_and_derivative(
-    coeffs: &[f64],
-    z: Complex64,
-) -> (Complex64, Complex64) {
+fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
     if coeffs.is_empty() {
         return (Complex64::zero(), Complex64::zero());
     }

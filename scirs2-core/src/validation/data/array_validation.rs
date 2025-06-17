@@ -138,7 +138,7 @@ impl ArrayValidator {
         let mut inf_count = 0;
         let total_count = array.len();
 
-#[cfg(feature = "parallel")]
+        #[cfg(feature = "parallel")]
         let check_parallel = array.len() > 10000;
 
         #[cfg(feature = "parallel")]

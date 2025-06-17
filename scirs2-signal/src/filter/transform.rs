@@ -9,7 +9,7 @@ use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
-use super::common::{FilterType, FilterCoefficients};
+use super::common::{FilterCoefficients, FilterType};
 
 /// Apply bilinear transform to convert analog filter to digital
 ///
@@ -633,10 +633,7 @@ fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
 }
 
 /// Evaluate polynomial and its derivative at a complex point
-fn evaluate_polynomial_and_derivative(
-    coeffs: &[f64],
-    z: Complex64,
-) -> (Complex64, Complex64) {
+fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
     if coeffs.is_empty() {
         return (Complex64::zero(), Complex64::zero());
     }

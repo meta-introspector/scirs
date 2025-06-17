@@ -204,8 +204,7 @@ mod tests {
 
     #[test]
     fn test_normalize() {
-        let mut data =
-            Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         normalize(&mut data);
 
         // Check that each column has approximately zero mean
@@ -376,14 +375,16 @@ mod tests {
     #[test]
     fn test_scaling_pipeline() {
         // Test a complete scaling pipeline
-        let mut data1 = Array2::from_shape_vec((4, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0]).unwrap();
+        let mut data1 =
+            Array2::from_shape_vec((4, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0])
+                .unwrap();
         let mut data2 = data1.clone();
         let mut data3 = data1.clone();
 
         // Apply different scaling methods
-        normalize(&mut data1);        // Z-score normalization
+        normalize(&mut data1); // Z-score normalization
         min_max_scale(&mut data2, (0.0, 1.0)); // Min-max scaling
-        robust_scale(&mut data3);     // Robust scaling
+        robust_scale(&mut data3); // Robust scaling
 
         // All methods should produce finite transformed data
         assert!(data1.iter().all(|&x| x.is_finite()));

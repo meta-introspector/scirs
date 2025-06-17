@@ -51,60 +51,48 @@
 //! | Spectral | Periodic signals | Good for frequency content | Iterative process |
 
 // Re-export all submodules
-pub mod core;
-pub mod basic;
-pub mod spline;
 pub mod advanced;
+pub mod basic;
+pub mod core;
 pub mod spectral;
+pub mod spline;
 
 // Re-export all main types and functions for API compatibility
 pub use core::{
-    InterpolationConfig, InterpolationMethod, interpolate, interpolate_2d,
-    nearest_neighbor_interpolate_2d, smooth_signal, enforce_monotonicity,
-    find_nearest_valid_index
+    enforce_monotonicity, find_nearest_valid_index, interpolate, interpolate_2d,
+    nearest_neighbor_interpolate_2d, smooth_signal, InterpolationConfig, InterpolationMethod,
 };
 
-pub use basic::{
-    linear_interpolate, nearest_neighbor_interpolate
-};
+pub use basic::{linear_interpolate, nearest_neighbor_interpolate};
 
-pub use spline::{
-    cubic_spline_interpolate, cubic_hermite_interpolate
-};
+pub use spline::{cubic_hermite_interpolate, cubic_spline_interpolate};
 
 pub use advanced::{
-    gaussian_process_interpolate, kriging_interpolate, rbf_interpolate,
-    minimum_energy_interpolate, variogram_models, rbf_functions
+    gaussian_process_interpolate, kriging_interpolate, minimum_energy_interpolate, rbf_functions,
+    rbf_interpolate, variogram_models,
 };
 
 pub use spectral::{
-    sinc_interpolate, spectral_interpolate, auto_interpolate,
-    resampling, polynomial
+    auto_interpolate, polynomial, resampling, sinc_interpolate, spectral_interpolate,
 };
 
 // Re-export the comprehensive variogram and RBF function collections
 pub use advanced::variogram_models::{
-    spherical as spherical_variogram,
-    exponential as exponential_variogram,
-    gaussian as gaussian_variogram,
-    linear as linear_variogram,
+    exponential as exponential_variogram, gaussian as gaussian_variogram,
+    linear as linear_variogram, spherical as spherical_variogram,
 };
 
 pub use advanced::rbf_functions::{
-    gaussian as gaussian_rbf,
-    multiquadric as multiquadric_rbf,
-    inverse_multiquadric as inverse_multiquadric_rbf,
-    thin_plate_spline as thin_plate_spline_rbf,
+    gaussian as gaussian_rbf, inverse_multiquadric as inverse_multiquadric_rbf,
+    multiquadric as multiquadric_rbf, thin_plate_spline as thin_plate_spline_rbf,
 };
 
 // Re-export resampling utilities
-pub use spectral::resampling::{
-    ResamplingConfig, sinc_resample
-};
+pub use spectral::resampling::{sinc_resample, ResamplingConfig};
 
 // Re-export polynomial utilities
 pub use spectral::polynomial::{
-    lagrange_interpolate, polynomial_fit, polynomial_eval, newton_interpolate
+    lagrange_interpolate, newton_interpolate, polynomial_eval, polynomial_fit,
 };
 
 /// Convenience function for linear interpolation (most commonly used)
@@ -155,7 +143,9 @@ pub fn linear(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarr
 /// let result = cubic_spline(&signal).unwrap();
 /// // Result contains smooth interpolated values
 /// ```
-pub fn cubic_spline(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarray::Array1<f64>> {
+pub fn cubic_spline(
+    signal: &ndarray::Array1<f64>,
+) -> crate::error::SignalResult<ndarray::Array1<f64>> {
     let config = InterpolationConfig::default();
     cubic_spline_interpolate(signal, &config)
 }
@@ -182,7 +172,9 @@ pub fn cubic_spline(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult
 /// let (result, method) = auto(&signal).unwrap();
 /// println!("Selected method: {:?}", method);
 /// ```
-pub fn auto(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<(ndarray::Array1<f64>, InterpolationMethod)> {
+pub fn auto(
+    signal: &ndarray::Array1<f64>,
+) -> crate::error::SignalResult<(ndarray::Array1<f64>, InterpolationMethod)> {
     let config = InterpolationConfig::default();
     auto_interpolate(signal, &config, false)
 }
@@ -287,17 +279,27 @@ impl InterpolationBuilder {
     }
 
     /// Performs interpolation with the configured settings
-    pub fn interpolate(self, signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarray::Array1<f64>> {
+    pub fn interpolate(
+        self,
+        signal: &ndarray::Array1<f64>,
+    ) -> crate::error::SignalResult<ndarray::Array1<f64>> {
         interpolate(signal, self.method, &self.config)
     }
 
     /// Performs 2D interpolation with the configured settings
-    pub fn interpolate_2d(self, image: &ndarray::Array2<f64>) -> crate::error::SignalResult<ndarray::Array2<f64>> {
+    pub fn interpolate_2d(
+        self,
+        image: &ndarray::Array2<f64>,
+    ) -> crate::error::SignalResult<ndarray::Array2<f64>> {
         interpolate_2d(image, self.method, &self.config)
     }
 
     /// Performs automatic method selection and interpolation
-    pub fn auto_interpolate(self, signal: &ndarray::Array1<f64>, cross_validation: bool) -> crate::error::SignalResult<(ndarray::Array1<f64>, InterpolationMethod)> {
+    pub fn auto_interpolate(
+        self,
+        signal: &ndarray::Array1<f64>,
+        cross_validation: bool,
+    ) -> crate::error::SignalResult<(ndarray::Array1<f64>, InterpolationMethod)> {
         auto_interpolate(signal, &self.config, cross_validation)
     }
 }
@@ -347,10 +349,8 @@ impl InterpolationMethods {
     ];
 
     /// Frequency-domain methods
-    pub const SPECTRAL: &'static [InterpolationMethod] = &[
-        InterpolationMethod::Sinc,
-        InterpolationMethod::Spectral,
-    ];
+    pub const SPECTRAL: &'static [InterpolationMethod] =
+        &[InterpolationMethod::Sinc, InterpolationMethod::Spectral];
 }
 
 /// Unit tests for the unified interpolation API
@@ -362,13 +362,13 @@ mod tests {
     #[test]
     fn test_convenience_functions() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
-        
+
         let result1 = linear(&signal).unwrap();
         assert_eq!(result1[1], 2.0);
-        
+
         let result2 = cubic_spline(&signal).unwrap();
         assert!(!result2[1].is_nan());
-        
+
         let (result3, _method) = auto(&signal).unwrap();
         assert!(!result3[1].is_nan());
     }
@@ -376,14 +376,14 @@ mod tests {
     #[test]
     fn test_interpolation_builder() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
-        
+
         let result = InterpolationBuilder::new()
             .method(InterpolationMethod::Linear)
             .smoothing(false)
             .extrapolate(false)
             .interpolate(&signal)
             .unwrap();
-        
+
         assert_eq!(result[1], 2.0);
     }
 
@@ -401,7 +401,7 @@ mod tests {
             .smoothing_factor(0.2)
             .frequency_constraint(true)
             .cutoff_frequency(0.4);
-        
+
         // Builder should be configured correctly
         assert_eq!(builder.method, InterpolationMethod::CubicSpline);
         assert_eq!(builder.config.max_iterations, 200);
@@ -421,14 +421,14 @@ mod tests {
     fn test_api_compatibility() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
         let config = InterpolationConfig::default();
-        
+
         // Test that all main API functions work
         let result1 = interpolate(&signal, InterpolationMethod::Linear, &config).unwrap();
         let result2 = linear_interpolate(&signal).unwrap();
         let result3 = cubic_spline_interpolate(&signal, &config).unwrap();
         let result4 = sinc_interpolate(&signal, 0.4).unwrap();
         let (result5, _) = auto_interpolate(&signal, &config, false).unwrap();
-        
+
         // All results should have no NaN values
         assert!(result1.iter().all(|&x| !x.is_nan()));
         assert!(result2.iter().all(|&x| !x.is_nan()));
@@ -442,7 +442,7 @@ mod tests {
         // Test that exported variogram models work
         let spherical = spherical_variogram(10.0, 1.0, 0.1);
         assert_eq!(spherical(0.0), 0.0);
-        
+
         let gaussian_rbf_fn = gaussian_rbf(1.0);
         assert_eq!(gaussian_rbf_fn(0.0), 1.0);
     }
@@ -452,7 +452,7 @@ mod tests {
         // Test resampling config
         let config = ResamplingConfig::default();
         assert_eq!(config.kernel_length, 65);
-        
+
         // Test polynomial fitting
         let x = [0.0, 1.0, 2.0];
         let y = [1.0, 2.0, 5.0];

@@ -11,9 +11,9 @@ use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
 use super::common::{
-    FilterType, FilterTypeParam, FilterCoefficients,
-    validation::{validate_order, validate_cutoff_frequency, convert_filter_type},
-    math::{prewarp_frequency, bilinear_pole_transform, butterworth_poles, add_digital_zeros},
+    math::{add_digital_zeros, bilinear_pole_transform, butterworth_poles, prewarp_frequency},
+    validation::{convert_filter_type, validate_cutoff_frequency, validate_order},
+    FilterCoefficients, FilterType, FilterTypeParam,
 };
 
 /// Butterworth filter design
@@ -214,11 +214,13 @@ pub fn butter_bandpass_bandstop(
     };
 
     // Apply bilinear transform to convert to digital filter
-    let digital_poles: Vec<_> = transformed_poles.iter()
+    let digital_poles: Vec<_> = transformed_poles
+        .iter()
         .map(|&pole| bilinear_pole_transform(pole))
         .collect();
 
-    let digital_zeros: Vec<_> = analog_zeros.iter()
+    let digital_zeros: Vec<_> = analog_zeros
+        .iter()
         .map(|&zero| bilinear_pole_transform(zero))
         .collect();
 
@@ -296,7 +298,11 @@ where
         FilterType::Lowpass => {
             let warped_freq = prewarp_frequency(wn);
             let scaled_poles: Vec<_> = poles.iter().map(|p| p * warped_freq).collect();
-            (Vec::<Complex64>::new(), scaled_poles, warped_freq.powi(order as i32))
+            (
+                Vec::<Complex64>::new(),
+                scaled_poles,
+                warped_freq.powi(order as i32),
+            )
         }
         FilterType::Highpass => {
             let warped_freq = prewarp_frequency(wn);
@@ -306,11 +312,13 @@ where
         _ => unreachable!(),
     };
 
-    let digital_poles: Vec<_> = transformed_poles.iter()
+    let digital_poles: Vec<_> = transformed_poles
+        .iter()
         .map(|&pole| bilinear_pole_transform(pole))
         .collect();
 
-    let mut digital_zeros: Vec<_> = analog_zeros.iter()
+    let mut digital_zeros: Vec<_> = analog_zeros
+        .iter()
         .map(|&zero| bilinear_pole_transform(zero))
         .collect();
 

@@ -17,36 +17,33 @@ pub mod splitting;
 // Re-export main types and functions for backward compatibility
 
 // Dataset and serialization
-pub use dataset::{Dataset};
+pub use dataset::Dataset;
 pub use serialization::*;
 
 // Data splitting
 pub use splitting::{
-    train_test_split, k_fold_split, stratified_k_fold_split, time_series_split,
+    k_fold_split, stratified_k_fold_split, time_series_split, train_test_split,
     CrossValidationFolds,
 };
 
 // Data sampling
 pub use sampling::{
-    random_sample, stratified_sample, importance_sample, bootstrap_sample,
-    multiple_bootstrap_samples,
+    bootstrap_sample, importance_sample, multiple_bootstrap_samples, random_sample,
+    stratified_sample,
 };
 
 // Data balancing
 pub use balancing::{
-    random_oversample, random_undersample, generate_synthetic_samples,
-    create_balanced_dataset, BalancingStrategy,
+    create_balanced_dataset, generate_synthetic_samples, random_oversample, random_undersample,
+    BalancingStrategy,
 };
 
 // Data scaling and normalization
-pub use scaling::{
-    normalize, min_max_scale, robust_scale, StatsExt as ScalingStatsExt,
-};
+pub use scaling::{min_max_scale, normalize, robust_scale, StatsExt as ScalingStatsExt};
 
 // Feature engineering
 pub use feature_engineering::{
-    polynomial_features, statistical_features, create_binned_features,
-    BinningStrategy, StatsExt,
+    create_binned_features, polynomial_features, statistical_features, BinningStrategy, StatsExt,
 };
 
 // Trait extensions
@@ -64,31 +61,38 @@ mod tests {
     #[test]
     fn test_module_integration() {
         // Test that all major functionality is accessible through the module
-        let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
+        let data = Array2::from_shape_vec(
+            (6, 2),
+            vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+            ],
+        )
+        .unwrap();
         let target = ndarray::Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
-        
+
         // Test dataset creation
         let dataset = Dataset::new(data.clone(), Some(target.clone()));
         assert_eq!(dataset.n_samples(), 6);
         assert_eq!(dataset.n_features(), 2);
-        
+
         // Test data splitting
         let (train, test) = train_test_split(&dataset, 0.3, Some(42)).unwrap();
         assert_eq!(train.n_samples() + test.n_samples(), 6);
-        
+
         // Test sampling
         let indices = random_sample(6, 3, false, Some(42)).unwrap();
         assert_eq!(indices.len(), 3);
-        
+
         // Test balancing
-        let (balanced_data, balanced_targets) = random_oversample(&data, &target, Some(42)).unwrap();
+        let (balanced_data, balanced_targets) =
+            random_oversample(&data, &target, Some(42)).unwrap();
         assert!(balanced_data.nrows() > data.nrows()); // Should have more samples after oversampling
-        
+
         // Test scaling
         let mut scaled_data = data.clone();
         min_max_scale(&mut scaled_data, (0.0, 1.0));
         assert!(scaled_data.iter().all(|&x| x >= 0.0 && x <= 1.0));
-        
+
         // Test feature engineering
         let poly_features = polynomial_features(&data, 2, true).unwrap();
         assert!(poly_features.ncols() > data.ncols()); // Should have more features
@@ -98,16 +102,23 @@ mod tests {
     fn test_backward_compatibility() {
         // Test that the old API still works after refactoring
         use crate::utils::*;
-        
-        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+
+        let data =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let targets = ndarray::Array1::from(vec![0.0, 0.0, 1.0, 1.0]);
-        
+
         // These should all work exactly as they did before refactoring
         let dataset = Dataset::new(data.clone(), Some(targets.clone()));
         let folds = k_fold_split(4, 2, false, Some(42)).unwrap();
         let sample_indices = stratified_sample(&targets, 2, Some(42)).unwrap();
-        let (bal_data, bal_targets) = create_balanced_dataset(&data, &targets, BalancingStrategy::RandomOversample, Some(42)).unwrap();
-        
+        let (bal_data, bal_targets) = create_balanced_dataset(
+            &data,
+            &targets,
+            BalancingStrategy::RandomOversample,
+            Some(42),
+        )
+        .unwrap();
+
         assert_eq!(dataset.n_samples(), 4);
         assert_eq!(folds.len(), 2);
         assert_eq!(sample_indices.len(), 2);
@@ -119,17 +130,17 @@ mod tests {
         // Test cross-validation functionality that spans multiple modules
         let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let targets = ndarray::Array1::from((0..10).map(|x| (x % 3) as f64).collect::<Vec<_>>());
-        
+
         let dataset = Dataset::new(data, Some(targets.clone()));
-        
+
         // Test k-fold splitting
         let folds = k_fold_split(dataset.n_samples(), 5, true, Some(42)).unwrap();
         assert_eq!(folds.len(), 5);
-        
+
         // Test stratified splitting
         let stratified_folds = stratified_k_fold_split(&targets, 3, true, Some(42)).unwrap();
         assert_eq!(stratified_folds.len(), 3);
-        
+
         // Test time series splitting
         let ts_folds = time_series_split(dataset.n_samples(), 3, 2, 1).unwrap();
         assert_eq!(ts_folds.len(), 3);

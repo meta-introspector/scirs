@@ -4,13 +4,13 @@
 //! statistical features, cross-window correlations, change detection, rolling statistics,
 //! technical indicators, and normalized features for financial and statistical analysis.
 
-use ndarray::{s, Array1, ArrayView1};
+use ndarray::{s, Array1};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::config::WindowConfig;
 use super::utils::{calculate_pearson_correlation, linear_fit};
-use crate::error::{Result, TimeSeriesError};
+use crate::error::Result;
 
 /// Window-based aggregation features for time series analysis
 ///

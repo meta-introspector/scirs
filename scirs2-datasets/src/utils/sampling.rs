@@ -423,7 +423,7 @@ pub fn multiple_bootstrap_samples(
     };
 
     let mut bootstrap_samples = Vec::with_capacity(n_bootstrap_rounds);
-    
+
     for _ in 0..n_bootstrap_rounds {
         let sample = random_sample(n_samples, sample_size, true, Some(rng.next_u64()))?;
         bootstrap_samples.push(sample);
@@ -441,10 +441,10 @@ mod tests {
     #[test]
     fn test_random_sample_without_replacement() {
         let indices = random_sample(10, 5, false, Some(42)).unwrap();
-        
+
         assert_eq!(indices.len(), 5);
         assert!(indices.iter().all(|&i| i < 10));
-        
+
         // All indices should be unique (no replacement)
         let unique_indices: HashSet<_> = indices.iter().cloned().collect();
         assert_eq!(unique_indices.len(), 5);
@@ -453,10 +453,10 @@ mod tests {
     #[test]
     fn test_random_sample_with_replacement() {
         let indices = random_sample(5, 10, true, Some(42)).unwrap();
-        
+
         assert_eq!(indices.len(), 10);
         assert!(indices.iter().all(|&i| i < 5));
-        
+
         // Some indices might be repeated (with replacement)
         let unique_indices: HashSet<_> = indices.iter().cloned().collect();
         assert!(unique_indices.len() <= 10);
@@ -466,10 +466,10 @@ mod tests {
     fn test_random_sample_invalid_params() {
         // Zero samples
         assert!(random_sample(0, 5, false, None).is_err());
-        
+
         // Zero sample size
         assert!(random_sample(10, 0, false, None).is_err());
-        
+
         // Too many samples without replacement
         assert!(random_sample(5, 10, false, None).is_err());
     }
@@ -478,16 +478,16 @@ mod tests {
     fn test_stratified_sample() {
         let targets = array![0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0]; // 2, 3, 3 samples per class
         let indices = stratified_sample(&targets, 6, Some(42)).unwrap();
-        
+
         assert_eq!(indices.len(), 6);
-        
+
         // Count samples per class in the result
         let mut class_counts = HashMap::new();
         for &idx in &indices {
             let class = targets[idx] as i32;
             *class_counts.entry(class).or_insert(0) += 1;
         }
-        
+
         // Should maintain rough proportions
         assert!(class_counts.len() <= 3); // At most 3 classes
     }
@@ -495,7 +495,7 @@ mod tests {
     #[test]
     fn test_stratified_sample_insufficient_samples() {
         let targets = array![0.0, 1.0]; // Only 1 sample per class
-        // Requesting 4 samples but only 2 total
+                                        // Requesting 4 samples but only 2 total
         assert!(stratified_sample(&targets, 4, Some(42)).is_err());
     }
 
@@ -503,10 +503,10 @@ mod tests {
     fn test_importance_sample() {
         let weights = array![0.1, 0.1, 0.1, 0.8, 0.9, 1.0]; // Higher weights at the end
         let indices = importance_sample(&weights, 3, false, Some(42)).unwrap();
-        
+
         assert_eq!(indices.len(), 3);
         assert!(indices.iter().all(|&i| i < 6));
-        
+
         // All indices should be unique (no replacement)
         let unique_indices: HashSet<_> = indices.iter().cloned().collect();
         assert_eq!(unique_indices.len(), 3);
@@ -527,10 +527,10 @@ mod tests {
     #[test]
     fn test_bootstrap_sample() {
         let indices = bootstrap_sample(20, 20, Some(42)).unwrap();
-        
+
         assert_eq!(indices.len(), 20);
         assert!(indices.iter().all(|&i| i < 20));
-        
+
         // Should likely have some repeated indices
         let unique_indices: HashSet<_> = indices.iter().cloned().collect();
         assert!(unique_indices.len() < 20); // Very likely with size 20
@@ -539,11 +539,11 @@ mod tests {
     #[test]
     fn test_multiple_bootstrap_samples() {
         let samples = multiple_bootstrap_samples(10, 8, 5, Some(42)).unwrap();
-        
+
         assert_eq!(samples.len(), 5);
         assert!(samples.iter().all(|sample| sample.len() == 8));
         assert!(samples.iter().all(|sample| sample.iter().all(|&i| i < 10)));
-        
+
         // Different bootstrap samples should be different
         assert_ne!(samples[0], samples[1]); // Very likely to be different
     }

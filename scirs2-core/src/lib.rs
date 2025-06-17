@@ -243,9 +243,8 @@ pub use crate::validation::{
 
 #[cfg(feature = "data_validation")]
 pub use crate::validation::data::{
-    Constraint, DataType, FieldDefinition,
-    ValidationConfig, ValidationError, ValidationResult, ValidationRule, ValidationSchema,
-    Validator,
+    Constraint, DataType, FieldDefinition, ValidationConfig, ValidationError, ValidationResult,
+    ValidationRule, ValidationSchema, Validator,
 };
 
 // Production-level feature re-exports

@@ -3,9 +3,9 @@
 //! This module provides simple, fast interpolation algorithms including
 //! linear interpolation and nearest neighbor interpolation.
 
+use super::core::find_nearest_valid_index;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
-use super::core::find_nearest_valid_index;
 
 /// Applies linear interpolation to fill missing values in a signal
 ///
@@ -289,7 +289,7 @@ mod tests {
         let signal = Array1::from_vec(vec![]);
         let result = linear_interpolate(&signal).unwrap();
         assert_eq!(result.len(), 0);
-        
+
         let result = nearest_neighbor_interpolate(&signal).unwrap();
         assert_eq!(result.len(), 0);
     }
@@ -299,7 +299,7 @@ mod tests {
         let signal = Array1::from_vec(vec![5.0]);
         let result = linear_interpolate(&signal).unwrap();
         assert_eq!(result[0], 5.0);
-        
+
         let result = nearest_neighbor_interpolate(&signal).unwrap();
         assert_eq!(result[0], 5.0);
     }
@@ -309,7 +309,7 @@ mod tests {
         let signal = Array1::from_vec(vec![f64::NAN]);
         let result = linear_interpolate(&signal);
         assert!(result.is_err());
-        
+
         let result = nearest_neighbor_interpolate(&signal);
         assert!(result.is_err());
     }

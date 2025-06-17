@@ -8,10 +8,7 @@ use ndarray::{s, Array1, Array2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use super::utils::{
-    calculate_entropy, euclidean_distance_subsequence, gaussian_breakpoints,
-    standard_normal_quantile,
-};
+use super::utils::{calculate_entropy, euclidean_distance_subsequence, gaussian_breakpoints};
 use crate::error::{Result, TimeSeriesError};
 
 /// Temporal pattern features for time series analysis

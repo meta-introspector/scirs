@@ -4,7 +4,7 @@
 //! Discrete Wavelet Transform (DWT), Continuous Wavelet Transform (CWT),
 //! multi-resolution analysis, time-frequency analysis, and wavelet-based denoising.
 
-use ndarray::{s, Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

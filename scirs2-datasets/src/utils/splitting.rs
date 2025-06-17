@@ -400,7 +400,7 @@ mod tests {
         let dataset = Dataset::new(data, target);
 
         let (train, test) = train_test_split(&dataset, 0.4, Some(42)).unwrap();
-        
+
         assert_eq!(train.n_samples() + test.n_samples(), 5);
         assert_eq!(test.n_samples(), 2); // 40% of 5 samples
         assert_eq!(train.n_samples(), 3); // Remaining samples
@@ -420,16 +420,16 @@ mod tests {
     #[test]
     fn test_k_fold_split() {
         let folds = k_fold_split(10, 3, false, Some(42)).unwrap();
-        
+
         assert_eq!(folds.len(), 3);
-        
+
         // Check that all samples are covered exactly once in validation
         let mut all_validation_indices = Vec::new();
         for (_, val_indices) in &folds {
             all_validation_indices.extend(val_indices);
         }
         all_validation_indices.sort();
-        
+
         let expected: Vec<usize> = (0..10).collect();
         assert_eq!(all_validation_indices, expected);
     }
@@ -438,7 +438,7 @@ mod tests {
     fn test_k_fold_split_invalid_params() {
         // Too few folds
         assert!(k_fold_split(10, 1, false, None).is_err());
-        
+
         // Too many folds
         assert!(k_fold_split(5, 6, false, None).is_err());
     }
@@ -447,16 +447,16 @@ mod tests {
     fn test_stratified_k_fold_split() {
         let targets = array![0.0, 0.0, 1.0, 1.0, 0.0, 1.0]; // 3 class 0, 3 class 1
         let folds = stratified_k_fold_split(&targets, 2, false, Some(42)).unwrap();
-        
+
         assert_eq!(folds.len(), 2);
-        
+
         // Check that all samples are covered
         let mut all_validation_indices = Vec::new();
         for (_, val_indices) in &folds {
             all_validation_indices.extend(val_indices);
         }
         all_validation_indices.sort();
-        
+
         let expected: Vec<usize> = (0..6).collect();
         assert_eq!(all_validation_indices, expected);
     }
@@ -464,14 +464,14 @@ mod tests {
     #[test]
     fn test_time_series_split() {
         let folds = time_series_split(20, 3, 5, 1).unwrap();
-        
+
         assert_eq!(folds.len(), 3);
-        
+
         // Check that training sets are increasing in size
         for i in 1..folds.len() {
-            assert!(folds[i].0.len() > folds[i-1].0.len());
+            assert!(folds[i].0.len() > folds[i - 1].0.len());
         }
-        
+
         // Check that validation sets have correct size
         for (_, val_indices) in &folds {
             assert_eq!(val_indices.len(), 5);
@@ -482,7 +482,7 @@ mod tests {
     fn test_time_series_split_insufficient_data() {
         // Not enough samples
         assert!(time_series_split(5, 3, 5, 1).is_err());
-        
+
         // Invalid parameters
         assert!(time_series_split(100, 0, 10, 0).is_err());
         assert!(time_series_split(100, 5, 0, 0).is_err());

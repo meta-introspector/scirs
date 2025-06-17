@@ -8,8 +8,8 @@
 //! - Sensitivity function analysis
 //! - Polynomial utility functions
 
+use super::systems::{LtiSystem, StateSpace, TransferFunction, ZerosPoleGain};
 use crate::error::{SignalError, SignalResult};
-use super::systems::{LtiSystem, TransferFunction, ZerosPoleGain, StateSpace};
 use num_complex::Complex64;
 
 /// Create a transfer function system from numerator and denominator coefficients
@@ -192,10 +192,7 @@ pub fn c2d<T: LtiSystem>(system: &T, _dt: f64) -> SignalResult<StateSpace> {
 /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
 /// let series_sys = series(&g1, &g2).unwrap();              // 2/((s+1)(s+2))
 /// ```
-pub fn series<T1: LtiSystem, T2: LtiSystem>(
-    g1: &T1,
-    g2: &T2,
-) -> SignalResult<TransferFunction> {
+pub fn series<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
     let tf1 = g1.to_tf()?;
     let tf2 = g2.to_tf()?;
 
@@ -237,10 +234,7 @@ pub fn series<T1: LtiSystem, T2: LtiSystem>(
 /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
 /// let parallel_sys = parallel(&g1, &g2).unwrap();          // (3s+4)/((s+1)(s+2))
 /// ```
-pub fn parallel<T1: LtiSystem, T2: LtiSystem>(
-    g1: &T1,
-    g2: &T2,
-) -> SignalResult<TransferFunction> {
+pub fn parallel<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
     let tf1 = g1.to_tf()?;
     let tf2 = g2.to_tf()?;
 
@@ -328,7 +322,7 @@ pub fn feedback<T1: LtiSystem>(
 /// Get the sensitivity function for a feedback system
 ///
 /// Sensitivity S(s) = 1 / (1 + G(s)*H(s))
-/// 
+///
 /// The sensitivity function represents how sensitive the output is to
 /// disturbances at the reference input. Lower sensitivity is generally better.
 ///
@@ -384,7 +378,7 @@ pub fn sensitivity<T1: LtiSystem>(
 /// Get the complementary sensitivity function for a feedback system
 ///
 /// Complementary sensitivity T(s) = G(s)*H(s) / (1 + G(s)*H(s))
-/// 
+///
 /// The complementary sensitivity function represents how well the system
 /// tracks the reference signal. Together with the sensitivity function,
 /// it satisfies S(s) + T(s) = 1.
@@ -705,14 +699,13 @@ mod tests {
             vec![Complex64::new(-2.0, 0.0)],
             1.0,
             None,
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(zpk_sys.zeros.len(), 1);
         assert_eq!(zpk_sys.poles.len(), 1);
 
         // Test state-space creation
-        let ss_sys = ss(
-            vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
-        ).unwrap();
+        let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();
         assert_eq!(ss_sys.n_states, 1);
     }
 
@@ -851,7 +844,7 @@ mod tests {
     fn test_polynomial_division() {
         // Test polynomial division: (x^2 + 3x + 2) / (x + 1) = (x + 2) remainder 0
         let dividend = vec![1.0, 3.0, 2.0]; // x^2 + 3x + 2
-        let divisor = vec![1.0, 1.0];       // x + 1
+        let divisor = vec![1.0, 1.0]; // x + 1
 
         let (quotient, remainder) = divide_polynomials(&dividend, &divisor).unwrap();
 

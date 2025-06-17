@@ -26,7 +26,7 @@ use std::collections::HashMap;
 /// let dataset = Dataset::new(data, None)
 ///     .with_feature_names(vec!["feature1".to_string(), "feature2".to_string()])
 ///     .with_description("Sample dataset".to_string());
-/// 
+///
 /// assert_eq!(dataset.n_samples(), 3);
 /// assert_eq!(dataset.n_features(), 2);
 /// ```
@@ -273,9 +273,9 @@ mod tests {
     fn test_dataset_creation() {
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
         let target = Some(array![0.0, 1.0, 0.0]);
-        
+
         let dataset = Dataset::new(data.clone(), target.clone());
-        
+
         assert_eq!(dataset.n_samples(), 3);
         assert_eq!(dataset.n_features(), 2);
         assert_eq!(dataset.shape(), (3, 2));
@@ -287,13 +287,13 @@ mod tests {
     #[test]
     fn test_dataset_builder_pattern() {
         let data = array![[1.0, 2.0], [3.0, 4.0]];
-        
+
         let dataset = Dataset::new(data, None)
             .with_feature_names(vec!["feat1".to_string(), "feat2".to_string()])
             .with_description("Test dataset".to_string())
             .with_metadata("version", "1.0")
             .with_metadata("author", "test");
-        
+
         assert_eq!(dataset.feature_names().unwrap().len(), 2);
         assert_eq!(dataset.description().unwrap(), "Test dataset");
         assert_eq!(dataset.get_metadata("version").unwrap(), "1.0");
@@ -304,7 +304,7 @@ mod tests {
     fn test_dataset_without_target() {
         let data = array![[1.0, 2.0], [3.0, 4.0]];
         let dataset = Dataset::new(data, None);
-        
+
         assert!(!dataset.has_target());
         assert!(dataset.target.is_none());
     }
@@ -313,14 +313,14 @@ mod tests {
     fn test_metadata_operations() {
         let data = array![[1.0, 2.0]];
         let mut dataset = Dataset::new(data, None);
-        
+
         dataset.set_metadata("key1", "value1");
         dataset.set_metadata("key2", "value2");
-        
+
         assert_eq!(dataset.get_metadata("key1").unwrap(), "value1");
         assert_eq!(dataset.get_metadata("key2").unwrap(), "value2");
         assert!(dataset.get_metadata("nonexistent").is_none());
-        
+
         // Update existing key
         dataset.set_metadata("key1", "updated_value");
         assert_eq!(dataset.get_metadata("key1").unwrap(), "updated_value");
