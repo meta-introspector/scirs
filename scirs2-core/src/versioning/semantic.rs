@@ -1,7 +1,7 @@
 //! # Semantic Versioning Implementation
 //!
-//! Comprehensive semantic versioning implementation with SciRS2-specific
-//! extensions for scientific computing environments. Provides SemVer 2.0.0
+//! Comprehensive semantic versioning implementation with `SciRS2`-specific
+//! extensions for scientific computing environments. Provides `SemVer` 2.0.0
 //! compliance with additional features for research and enterprise use.
 
 use crate::error::CoreError;
@@ -12,7 +12,7 @@ use std::str::FromStr;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Semantic version representation following SemVer 2.0.0
+/// Semantic version representation following `SemVer` 2.0.0
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Version {
@@ -86,7 +86,7 @@ impl Version {
         let parts: Vec<&str> = core_version.split('.').collect();
         if parts.len() != 3 {
             return Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new(format!("Invalid version format: {}", version)),
+                crate::error::ErrorContext::new(format!("Invalid version format: {version}")),
             ));
         }
 
@@ -188,19 +188,19 @@ impl Version {
     }
 
     /// Check if this version is compatible with another version
-    pub fn is_compatible_with(&self, other: &Version) -> bool {
-        // Same major version means compatible (assuming proper SemVer)
+    pub fn is_compatible_with(&self, other: &Self) -> bool {
+        // Same major version means compatible (assuming proper `SemVer`)
         self.major == other.major && self.major > 0
     }
 
     /// Check if this version has breaking changes compared to another
-    pub fn has_breaking_changes_from(&self, other: &Version) -> bool {
+    pub fn has_breaking_changes_from(&self, other: &Self) -> bool {
         self.major > other.major
     }
 
     /// Get the core version without pre-release or build metadata
-    pub fn core_version(&self) -> Version {
-        Version::new(self.major, self.minor, self.patch)
+    pub fn core_version(&self) -> Self {
+        Self::new(self.major, self.minor, self.patch)
     }
 }
 
@@ -209,11 +209,11 @@ impl fmt::Display for Version {
         write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?;
 
         if let Some(ref pre_release) = self.pre_release {
-            write!(f, "-{}", pre_release)?;
+            write!(f, "-{pre_release}")?;
         }
 
         if let Some(ref build_metadata) = self.build_metadata {
-            write!(f, "+{}", build_metadata)?;
+            write!(f, "+{build_metadata}")?;
         }
 
         Ok(())
@@ -224,7 +224,7 @@ impl FromStr for Version {
     type Err = CoreError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Version::parse(s)
+        Self::parse(s)
     }
 }
 
@@ -262,7 +262,7 @@ impl Ord for Version {
     }
 }
 
-/// Compare pre-release versions according to SemVer rules
+/// Compare pre-release versions according to `SemVer` rules
 fn compare_pre_release(a: &str, b: &str) -> Ordering {
     let a_parts: Vec<&str> = a.split('.').collect();
     let b_parts: Vec<&str> = b.split('.').collect();
@@ -274,13 +274,13 @@ fn compare_pre_release(a: &str, b: &str) -> Ordering {
 
         match (a_num, b_num) {
             (Ok(a_n), Ok(b_n)) => match a_n.cmp(&b_n) {
-                Ordering::Equal => continue,
+                Ordering::Equal => {}
                 other => return other,
             },
             (Ok(_), Err(_)) => return Ordering::Less, // Numeric < alphanumeric
             (Err(_), Ok(_)) => return Ordering::Greater, // Alphanumeric > numeric
             (Err(_), Err(_)) => match a_part.cmp(b_part) {
-                Ordering::Equal => continue,
+                Ordering::Equal => {}
                 other => return other,
             },
         }
@@ -324,62 +324,62 @@ impl VersionConstraint {
         let constraint = constraint.trim();
 
         if constraint == "*" {
-            return Ok(VersionConstraint::Any);
+            return Ok(Self::Any);
         }
 
         if let Some(stripped) = constraint.strip_prefix(">=") {
             let version = Version::parse(stripped)?;
-            return Ok(VersionConstraint::GreaterThanOrEqual(version));
+            return Ok(Self::GreaterThanOrEqual(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix("<=") {
             let version = Version::parse(stripped)?;
-            return Ok(VersionConstraint::LessThanOrEqual(version));
+            return Ok(Self::LessThanOrEqual(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('>') {
             let version = Version::parse(stripped)?;
-            return Ok(VersionConstraint::GreaterThan(version));
+            return Ok(Self::GreaterThan(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('<') {
             let version = Version::parse(stripped)?;
-            return Ok(VersionConstraint::LessThan(version));
+            return Ok(Self::LessThan(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('~') {
             let version = Version::parse(stripped)?;
-            return Ok(VersionConstraint::Tilde(version));
+            return Ok(Self::Tilde(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('^') {
             let version = Version::parse(stripped)?;
-            return Ok(VersionConstraint::Caret(version));
+            return Ok(Self::Caret(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('=') {
             let version = Version::parse(stripped)?;
-            return Ok(VersionConstraint::Exact(version));
+            return Ok(Self::Exact(version));
         }
 
         // Default to exact match
         let version = Version::parse(constraint)?;
-        Ok(VersionConstraint::Exact(version))
+        Ok(Self::Exact(version))
     }
 
     /// Check if a version matches this constraint
     pub fn matches(&self, version: &Version) -> bool {
         match self {
-            VersionConstraint::Exact(v) => version == v,
-            VersionConstraint::GreaterThan(v) => version > v,
-            VersionConstraint::GreaterThanOrEqual(v) => version >= v,
-            VersionConstraint::LessThan(v) => version < v,
-            VersionConstraint::LessThanOrEqual(v) => version <= v,
-            VersionConstraint::Compatible(v) => version.major() == v.major() && version >= v,
-            VersionConstraint::Tilde(v) => {
+            Self::Exact(v) => version == v,
+            Self::GreaterThan(v) => version > v,
+            Self::GreaterThanOrEqual(v) => version >= v,
+            Self::LessThan(v) => version < v,
+            Self::LessThanOrEqual(v) => version <= v,
+            Self::Compatible(v) => version.major() == v.major() && version >= v,
+            Self::Tilde(v) => {
                 version.major() == v.major() && version.minor() == v.minor() && version >= v
             }
-            VersionConstraint::Caret(v) => {
+            Self::Caret(v) => {
                 if v.major() > 0 {
                     version.major() == v.major() && version >= v
                 } else if v.minor() > 0 {
@@ -391,9 +391,9 @@ impl VersionConstraint {
                         && version >= v
                 }
             }
-            VersionConstraint::Any => true,
-            VersionConstraint::And(constraints) => constraints.iter().all(|c| c.matches(version)),
-            VersionConstraint::Or(constraints) => constraints.iter().any(|c| c.matches(version)),
+            Self::Any => true,
+            Self::And(constraints) => constraints.iter().all(|c| c.matches(version)),
+            Self::Or(constraints) => constraints.iter().any(|c| c.matches(version)),
         }
     }
 }
@@ -401,24 +401,26 @@ impl VersionConstraint {
 impl fmt::Display for VersionConstraint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            VersionConstraint::Exact(v) => write!(f, "={}", v),
-            VersionConstraint::GreaterThan(v) => write!(f, ">{}", v),
-            VersionConstraint::GreaterThanOrEqual(v) => write!(f, ">={}", v),
-            VersionConstraint::LessThan(v) => write!(f, "<{}", v),
-            VersionConstraint::LessThanOrEqual(v) => write!(f, "<={}", v),
-            VersionConstraint::Compatible(v) => write!(f, "~{}", v),
-            VersionConstraint::Tilde(v) => write!(f, "~{}", v),
-            VersionConstraint::Caret(v) => write!(f, "^{}", v),
-            VersionConstraint::Any => write!(f, "*"),
-            VersionConstraint::And(constraints) => {
+            Self::Exact(v) => write!(f, "={v}"),
+            Self::GreaterThan(v) => write!(f, ">{v}"),
+            Self::GreaterThanOrEqual(v) => write!(f, ">={v}"),
+            Self::LessThan(v) => write!(f, "<{v}"),
+            Self::LessThanOrEqual(v) => write!(f, "<={v}"),
+            Self::Compatible(v) => write!(f, "~{v}"),
+            Self::Tilde(v) => write!(f, "~{v}"),
+            Self::Caret(v) => write!(f, "^{v}"),
+            Self::Any => write!(f, "*"),
+            Self::And(constraints) => {
                 let constraint_strs: Vec<String> =
                     constraints.iter().map(|c| c.to_string()).collect();
-                write!(f, "{}", constraint_strs.join(" && "))
+                let joined = constraint_strs.join(" && ");
+                write!(f, "{joined}")
             }
-            VersionConstraint::Or(constraints) => {
+            Self::Or(constraints) => {
                 let constraint_strs: Vec<String> =
                     constraints.iter().map(|c| c.to_string()).collect();
-                write!(f, "{}", constraint_strs.join(" || "))
+                let joined = constraint_strs.join(" || ");
+                write!(f, "{joined}")
             }
         }
     }

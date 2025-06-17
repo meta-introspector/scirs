@@ -5,7 +5,7 @@
 //! and comprehensive resampling utilities.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use rustfft::{num_complex::Complex, FftPlanner};
 use std::f64::consts::PI;
 

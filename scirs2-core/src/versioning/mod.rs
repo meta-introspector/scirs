@@ -1,12 +1,12 @@
 //! # API Versioning Infrastructure
 //!
-//! Production-grade API versioning system for SciRS2 Core providing semantic
+//! Production-grade API versioning system for `SciRS2` Core providing semantic
 //! versioning, backward compatibility guarantees, and version negotiation
 //! capabilities for enterprise deployments and long-term API stability.
 //!
 //! ## Features
 //!
-//! - Semantic versioning (SemVer) compliance with custom extensions
+//! - Semantic versioning (`SemVer`) compliance with custom extensions
 //! - Backward compatibility enforcement and validation
 //! - API version negotiation and client-server compatibility
 //! - Breaking change detection and migration assistance
@@ -17,7 +17,7 @@
 //!
 //! ## Modules
 //!
-//! - `semantic`: Semantic versioning implementation with SciRS2 extensions
+//! - `semantic`: Semantic versioning implementation with `SciRS2` extensions
 //! - `compatibility`: Backward compatibility checking and enforcement
 //! - `negotiation`: Version negotiation between clients and servers
 //! - `migration`: Migration assistance for API upgrades
@@ -119,14 +119,15 @@ pub enum StabilityLevel {
 
 impl StabilityLevel {
     /// Get the string representation
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            StabilityLevel::Experimental => "experimental",
-            StabilityLevel::Alpha => "alpha",
-            StabilityLevel::Beta => "beta",
-            StabilityLevel::Stable => "stable",
-            StabilityLevel::Mature => "mature",
-            StabilityLevel::Legacy => "legacy",
+            Self::Experimental => "experimental",
+            Self::Alpha => "alpha",
+            Self::Beta => "beta",
+            Self::Stable => "stable",
+            Self::Mature => "mature",
+            Self::Legacy => "legacy",
         }
     }
 }
@@ -149,13 +150,14 @@ pub enum SupportStatus {
 
 impl SupportStatus {
     /// Get the string representation
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            SupportStatus::Active => "active",
-            SupportStatus::Maintenance => "maintenance",
-            SupportStatus::Deprecated => "deprecated",
-            SupportStatus::EndOfLife => "end_of_life",
-            SupportStatus::SecurityOnly => "security_only",
+            Self::Active => "active",
+            Self::Maintenance => "maintenance",
+            Self::Deprecated => "deprecated",
+            Self::EndOfLife => "end_of_life",
+            Self::SecurityOnly => "security_only",
         }
     }
 }
@@ -178,6 +180,7 @@ pub struct VersionManager {
 
 impl VersionManager {
     /// Create a new version manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             versions: HashMap::new(),
@@ -190,6 +193,10 @@ impl VersionManager {
     }
 
     /// Register an API version
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the version is already registered.
     pub fn register_version(&mut self, api_version: ApiVersion) -> Result<(), CoreError> {
         let version = api_version.version.clone();
 
@@ -217,6 +224,10 @@ impl VersionManager {
     }
 
     /// Set the current active version
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the version is not registered.
     pub fn set_current_version(&mut self, version: Version) -> Result<(), CoreError> {
         if !self.versions.contains_key(&version) {
             return Err(CoreError::ComputationError(
@@ -229,11 +240,13 @@ impl VersionManager {
     }
 
     /// Get the current active version
+    #[must_use]
     pub fn current_version(&self) -> Option<&Version> {
         self.current_version.as_ref()
     }
 
     /// Get all registered versions
+    #[must_use]
     pub fn get_versions(&self) -> Vec<&ApiVersion> {
         let mut versions: Vec<_> = self.versions.values().collect();
         versions.sort_by(|a, b| a.version.cmp(&b.version));
@@ -241,6 +254,7 @@ impl VersionManager {
     }
 
     /// Get supported versions (active and maintenance)
+    #[must_use]
     pub fn get_supported_versions(&self) -> Vec<&ApiVersion> {
         self.versions
             .values()
@@ -254,11 +268,16 @@ impl VersionManager {
     }
 
     /// Get version by version number
+    #[must_use]
     pub fn get_version(&self, version: &Version) -> Option<&ApiVersion> {
         self.versions.get(version)
     }
 
     /// Check compatibility between two versions
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if compatibility checking fails.
     pub fn check_compatibility(
         &self,
         from_version: &Version,
@@ -269,6 +288,10 @@ impl VersionManager {
     }
 
     /// Get detailed compatibility report
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if compatibility report generation fails.
     pub fn get_compatibility_report(
         &self,
         from_version: &Version,
@@ -279,6 +302,10 @@ impl VersionManager {
     }
 
     /// Negotiate version with client
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if version negotiation fails.
     pub fn negotiate_version(
         &self,
         client_capabilities: &ClientCapabilities,
@@ -294,6 +321,10 @@ impl VersionManager {
     }
 
     /// Get migration plan between versions
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if migration plan generation fails.
     pub fn get_migration_plan(
         &self,
         from_version: &Version,
@@ -304,6 +335,7 @@ impl VersionManager {
     }
 
     /// Check if a version is deprecated
+    #[must_use]
     pub fn is_deprecated(&self, version: &Version) -> bool {
         if let Some(api_version) = self.versions.get(version) {
             matches!(
@@ -316,11 +348,16 @@ impl VersionManager {
     }
 
     /// Get deprecation information for a version
+    #[must_use]
     pub fn get_deprecation_info(&self, version: &Version) -> Option<DeprecationStatus> {
         self.deprecation_manager.get_deprecation_status(version)
     }
 
     /// Update deprecation status
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the deprecation status update fails.
     pub fn update_deprecation_status(
         &mut self,
         version: &Version,
@@ -330,6 +367,7 @@ impl VersionManager {
     }
 
     /// Get the latest version in a major version line
+    #[must_use]
     pub fn get_latest_in_major(&self, major: u64) -> Option<&ApiVersion> {
         self.versions
             .values()
@@ -338,6 +376,7 @@ impl VersionManager {
     }
 
     /// Get the latest stable version
+    #[must_use]
     pub fn get_latest_stable(&self) -> Option<&ApiVersion> {
         self.versions
             .values()
@@ -349,12 +388,17 @@ impl VersionManager {
     }
 
     /// Check if an upgrade path exists
+    #[must_use]
     pub fn has_upgrade_path(&self, from_version: &Version, to_version: &Version) -> bool {
         self.migration_manager
             .has_migration_path(from_version, to_version)
     }
 
     /// Validate version constraints
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if validation fails.
     pub fn validate_constraint(
         &self,
         constraint: &VersionConstraint,
@@ -369,6 +413,7 @@ impl VersionManager {
     }
 
     /// Get version statistics
+    #[must_use]
     pub fn get_version_statistics(&self) -> VersionStatistics {
         let mut stats = VersionStatistics::default();
 
@@ -397,6 +442,10 @@ impl VersionManager {
     }
 
     /// Perform version maintenance tasks
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if maintenance tasks fail.
     pub fn perform_maintenance(&mut self) -> Result<MaintenanceReport, CoreError> {
         let mut report = MaintenanceReport::default();
         let now = chrono::Utc::now();
@@ -489,6 +538,7 @@ pub struct ApiVersionBuilder {
 
 impl ApiVersionBuilder {
     /// Create a new API version builder
+    #[must_use]
     pub fn new(version: Version) -> Self {
         Self {
             version: Some(version),
@@ -507,72 +557,87 @@ impl ApiVersionBuilder {
     }
 
     /// Set release date
+    #[must_use]
     pub fn release_date(mut self, date: chrono::DateTime<chrono::Utc>) -> Self {
         self.release_date = date;
         self
     }
 
     /// Set stability level
+    #[must_use]
     pub fn stability(mut self, stability: StabilityLevel) -> Self {
         self.stability = stability;
         self
     }
 
     /// Set support status
+    #[must_use]
     pub fn support_status(mut self, status: SupportStatus) -> Self {
         self.support_status = status;
         self
     }
 
     /// Set end of life date
+    #[must_use]
     pub fn end_of_life(mut self, date: chrono::DateTime<chrono::Utc>) -> Self {
         self.end_of_life = Some(date);
         self
     }
 
     /// Add a feature
+    #[must_use]
     pub fn feature(mut self, feature: &str) -> Self {
         self.features.insert(feature.to_string());
         self
     }
 
     /// Add a breaking change
+    #[must_use]
     pub fn breaking_change(mut self, change: &str) -> Self {
         self.breaking_changes.push(change.to_string());
         self
     }
 
     /// Add a new feature
+    #[must_use]
     pub fn new_feature(mut self, feature: &str) -> Self {
         self.new_features.push(feature.to_string());
         self
     }
 
     /// Add a bug fix
+    #[must_use]
     pub fn bug_fix(mut self, fix: &str) -> Self {
         self.bug_fixes.push(fix.to_string());
         self
     }
 
     /// Add a deprecated feature
+    #[must_use]
     pub fn deprecated_feature(mut self, feature: &str) -> Self {
         self.deprecated_features.push(feature.to_string());
         self
     }
 
     /// Set minimum client version
+    #[must_use]
     pub fn min_client_version(mut self, version: Version) -> Self {
         self.min_client_version = Some(version);
         self
     }
 
     /// Set maximum client version
+    #[must_use]
     pub fn max_client_version(mut self, version: Version) -> Self {
         self.max_client_version = Some(version);
         self
     }
 
     /// Build the API version
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the version is not set.
     pub fn build(self) -> Result<ApiVersion, CoreError> {
         let version = self.version.ok_or_else(|| {
             CoreError::ComputationError(crate::error::ErrorContext::new(

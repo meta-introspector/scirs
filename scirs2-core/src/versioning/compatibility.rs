@@ -28,7 +28,7 @@ pub enum CompatibilityLevel {
 
 impl CompatibilityLevel {
     /// Get the string representation
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             CompatibilityLevel::BackwardCompatible => "backward_compatible",
             CompatibilityLevel::MostlyCompatible => "mostly_compatible",

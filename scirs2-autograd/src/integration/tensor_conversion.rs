@@ -496,7 +496,7 @@ mod tests {
             // Test precision conversion (function returns () currently)
             let _result = convert_tensor_precision::<f32, f64>(&tensor);
             assert!(_result.is_err()); // Should error with context requirement
-            // assert_eq!(tensor_f64.shape(), tensor.shape());
+                                       // assert_eq!(tensor_f64.shape(), tensor.shape());
         });
     }
 }

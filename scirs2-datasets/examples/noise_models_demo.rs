@@ -251,7 +251,7 @@ fn demonstrate_real_world_applications() {
 
     println!("\n1. **Medical Data Simulation**:");
     let medical_data = load_iris().unwrap(); // Stand-in for medical measurements
-    let corrupted_medical = make_corrupted_dataset(
+    let _corrupted_medical = make_corrupted_dataset(
         &medical_data,
         0.15,                 // 15% missing - common in medical data
         MissingPattern::MNAR, // High values often missing (privacy, measurement issues)
@@ -294,7 +294,7 @@ fn demonstrate_real_world_applications() {
 
     println!("\n3. **Survey Data Simulation**:");
     let survey_data = load_iris().unwrap(); // Stand-in for survey responses
-    let corrupted_survey = make_corrupted_dataset(
+    let _corrupted_survey = make_corrupted_dataset(
         &survey_data,
         0.25,                // 25% missing - typical for surveys
         MissingPattern::MAR, // Missing depends on other responses

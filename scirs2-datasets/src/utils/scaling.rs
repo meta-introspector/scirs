@@ -200,7 +200,7 @@ impl StatsExt for ndarray::ArrayView1<'_, f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ndarray::{array, Array1};
 
     #[test]
     fn test_normalize() {
@@ -347,7 +347,7 @@ mod tests {
 
         // Test mean calculation
         let mean = view.mean().unwrap();
-        assert!((mean - 3.0).abs() < 1e-10);
+        assert!((mean - 3.0_f64).abs() < 1e-10);
 
         // Test standard deviation calculation
         let std = view.std(0.0); // Population standard deviation
@@ -362,7 +362,7 @@ mod tests {
 
     #[test]
     fn test_stats_ext_empty_array() {
-        let data = array![];
+        let data: Array1<f64> = array![];
         let view = data.view();
 
         // Mean of empty array should be None

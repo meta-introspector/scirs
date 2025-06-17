@@ -683,7 +683,7 @@ mod tests {
 
         // Verify file contents
         let file_contents = std::fs::read(&file_path).unwrap();
-        let expected = [data1, data2].concat();
+        let expected = [&data1[..], &data2[..]].concat();
         assert_eq!(file_contents, expected);
     }
 
@@ -693,9 +693,10 @@ mod tests {
         let input = Cursor::new(input_data);
         let mut output = Vec::new();
 
-        let mut progress_reports = 0;
-        let callback = Box::new(|progress: StreamProgress| {
-            progress_reports += 1;
+        let progress_reports = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let progress_reports_clone = progress_reports.clone();
+        let callback = Box::new(move |progress: StreamProgress| {
+            progress_reports_clone.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             assert!(progress.bytes_transferred <= input_data.len() as u64);
             assert!(progress.rate >= 0.0);
         }) as ProgressCallback;

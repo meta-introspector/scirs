@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn test_sparse_placeholder() {
         // Test that the sparse eigenvalue functions return the expected "not implemented" error
-        let csr = CsrMatrix::new(10, 10, vec![], vec![], vec![]);
+        let csr = CsrMatrix::<f64>::new(10, 10, vec![], vec![], vec![]);
 
         let result = lanczos(&csr, 3, "largest", 0.0_f64, 100, 1e-6);
         assert!(result.is_err());
@@ -378,7 +378,7 @@ mod tests {
 
     #[test]
     fn test_csr_matrix_interface() {
-        let csr = CsrMatrix::new(5, 5, vec![], vec![], vec![]);
+        let csr = CsrMatrix::<f64>::new(5, 5, vec![], vec![], vec![]);
 
         assert_eq!(csr.nrows(), 5);
         assert_eq!(csr.ncols(), 5);

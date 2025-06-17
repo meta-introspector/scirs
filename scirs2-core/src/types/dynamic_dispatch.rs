@@ -125,7 +125,7 @@ impl DynamicValue {
     }
 
     /// Get type information
-    pub fn type_info(&self) -> &TypeInfo {
+    pub const fn type_info(&self) -> &TypeInfo {
         &self.type_info
     }
 
@@ -140,7 +140,7 @@ impl DynamicValue {
     }
 
     /// Get all metadata
-    pub fn metadata(&self) -> &HashMap<String, String> {
+    pub const fn metadata(&self) -> &HashMap<String, String> {
         &self.metadata
     }
 

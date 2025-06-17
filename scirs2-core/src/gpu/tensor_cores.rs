@@ -180,12 +180,12 @@ impl TensorCoreManager {
     }
 
     /// Get tensor core capabilities for the current device
-    pub fn capabilities(&self) -> &TensorCoreCapabilities {
+    pub const fn capabilities(&self) -> &TensorCoreCapabilities {
         &self.capabilities
     }
 
     /// Get current configuration
-    pub fn config(&self) -> &TensorCoreConfig {
+    pub const fn config(&self) -> &TensorCoreConfig {
         &self.config
     }
 

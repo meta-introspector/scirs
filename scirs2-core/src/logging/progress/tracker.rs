@@ -165,7 +165,7 @@ impl EnhancedProgressTracker {
     }
 
     /// Use a specific progress style
-    pub fn with_style(mut self, style: ProgressStyle) -> Self {
+    pub const fn with_style(mut self, style: ProgressStyle) -> Self {
         self.config.style = style;
         self
     }
@@ -177,13 +177,13 @@ impl EnhancedProgressTracker {
     }
 
     /// Show or hide ETA
-    pub fn with_eta(mut self, show: bool) -> Self {
+    pub const fn with_eta(mut self, show: bool) -> Self {
         self.config.show_eta = show;
         self
     }
 
     /// Show or hide statistics
-    pub fn with_statistics(mut self, show: bool) -> Self {
+    pub const fn with_statistics(mut self, show: bool) -> Self {
         self.config.show_statistics = show;
         self
     }
@@ -418,49 +418,49 @@ impl ProgressBuilder {
     }
 
     /// Set the progress style
-    pub fn style(mut self, style: ProgressStyle) -> Self {
+    pub const fn style(mut self, style: ProgressStyle) -> Self {
         self.style = style;
         self
     }
 
     /// Set the progress bar width
-    pub fn width(mut self, width: usize) -> Self {
+    pub const fn width(mut self, width: usize) -> Self {
         self.width = width;
         self
     }
 
     /// Show or hide ETA
-    pub fn show_eta(mut self, show: bool) -> Self {
+    pub const fn show_eta(mut self, show: bool) -> Self {
         self.show_eta = show;
         self
     }
 
     /// Show or hide statistics
-    pub fn show_statistics(mut self, show: bool) -> Self {
+    pub const fn show_statistics(mut self, show: bool) -> Self {
         self.show_statistics = show;
         self
     }
 
     /// Show or hide speed
-    pub fn show_speed(mut self, show: bool) -> Self {
+    pub const fn show_speed(mut self, show: bool) -> Self {
         self.show_speed = show;
         self
     }
 
     /// Enable or disable adaptive update rate
-    pub fn adaptive_rate(mut self, enable: bool) -> Self {
+    pub const fn adaptive_rate(mut self, enable: bool) -> Self {
         self.adaptive_rate = enable;
         self
     }
 
     /// Set the minimum update interval
-    pub fn min_update_interval(mut self, interval: Duration) -> Self {
+    pub const fn min_update_interval(mut self, interval: Duration) -> Self {
         self.min_update_interval = interval;
         self
     }
 
     /// Set the maximum update interval
-    pub fn max_update_interval(mut self, interval: Duration) -> Self {
+    pub const fn max_update_interval(mut self, interval: Duration) -> Self {
         self.max_update_interval = interval;
         self
     }
@@ -478,7 +478,7 @@ impl ProgressBuilder {
     }
 
     /// Hide the progress bar
-    pub fn hidden(mut self, hidden: bool) -> Self {
+    pub const fn hidden(mut self, hidden: bool) -> Self {
         self.hidden = hidden;
         self
     }

@@ -81,7 +81,7 @@ pub enum LogLevel {
 
 impl LogLevel {
     /// Convert a log level to a string
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             LogLevel::Trace => "TRACE",
             LogLevel::Debug => "DEBUG",
@@ -630,6 +630,7 @@ pub mod distributed {
         /// Unique entry ID
         pub id: u64,
         /// Source node
+        #[allow(dead_code)]
         pub node_id: NodeId,
         /// Timestamp (Unix epoch milliseconds)
         pub timestamp: u64,
@@ -683,7 +684,9 @@ pub mod distributed {
     }
 
     /// Log aggregator that collects and processes distributed log entries
+    #[allow(dead_code)]
     pub struct LogAggregator {
+        #[allow(dead_code)]
         node_id: NodeId,
         entries: Arc<RwLock<VecDeque<DistributedLogEntry>>>,
         max_entries: usize,
@@ -915,6 +918,7 @@ pub mod distributed {
 
     /// Distributed logger that coordinates with multiple nodes
     pub struct DistributedLogger {
+        #[allow(dead_code)]
         node_id: NodeId,
         local_logger: Logger,
         aggregator: Arc<LogAggregator>,
@@ -1289,7 +1293,8 @@ mod distributed_tests {
 
         let stats = coordinator.get_global_stats();
         // Should have basic structure even if no messages
-        assert!(stats.total_entries >= 0);
+        // Note: total_entries is u64 so always >= 0, just check it exists
+        let _ = stats.total_entries;
     }
 
     #[test]

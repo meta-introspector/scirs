@@ -1,7 +1,7 @@
 //! Universal Function (ufunc) system for scientific computing
 //!
 //! This module provides a flexible and extensible universal function (ufunc) system
-//! similar to NumPy's ufuncs, allowing for vectorized element-wise operations with
+//! similar to `NumPy`'s ufuncs, allowing for vectorized element-wise operations with
 //! automatic broadcasting.
 
 use ndarray::{Array, ArrayView, Ix1, Ix2};

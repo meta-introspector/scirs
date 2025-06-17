@@ -10,7 +10,6 @@ use crate::models::sequential::Sequential;
 use ndarray;
 use num_traits::Float;
 use serde::Serialize;
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::path::PathBuf;

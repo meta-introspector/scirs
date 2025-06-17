@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 use std::time::{Duration, Instant};
 
 /// Rate limiting strategy
@@ -242,7 +242,7 @@ impl RateLimiterState {
         now: Instant,
     ) -> RateLimitDecision {
         // Remove events outside the current window
-        let window_start = now.saturating_duration_since(window_duration);
+        let window_start = now.checked_sub(window_duration).unwrap_or(Instant::now());
         self.event_times.retain(|&time| time >= window_start);
 
         if self.event_times.len() < max_events as usize {
@@ -267,7 +267,7 @@ impl RateLimiterState {
         now: Instant,
     ) -> RateLimitDecision {
         // Remove events outside the sliding window
-        let window_start = now.saturating_duration_since(window_duration);
+        let window_start = now.checked_sub(window_duration).unwrap_or(Instant::now());
         self.event_times.retain(|&time| time >= window_start);
 
         if self.event_times.len() < max_events as usize {
@@ -364,7 +364,7 @@ impl RateLimiterState {
         };
 
         // Use sliding window with adjusted limits
-        let window_start = now.saturating_duration_since(base_window);
+        let window_start = now.checked_sub(base_window).unwrap_or(Instant::now());
         self.event_times.retain(|&time| time >= window_start);
 
         if self.event_times.len() < adjusted_max_events as usize {
@@ -685,7 +685,7 @@ impl SmartRateLimiter {
     }
 
     /// Get current configuration
-    pub fn get_config(&self) -> &RateLimiterConfig {
+    pub const fn get_config(&self) -> &RateLimiterConfig {
         &self.config
     }
 }

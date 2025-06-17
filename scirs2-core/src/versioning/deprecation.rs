@@ -118,7 +118,7 @@ pub enum DeprecationPhase {
 
 impl DeprecationPhase {
     /// Get the string representation
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             DeprecationPhase::Active => "active",
             DeprecationPhase::Announced => "announced",
@@ -559,7 +559,7 @@ impl DeprecationManager {
 
     /// Apply usage-based deprecation rule
     fn apply_usage_based_rule(
-        &mut self,
+        &self,
         _min_usage_percent: f64,
     ) -> Result<Vec<MaintenanceAction>, CoreError> {
         // This would require actual usage metrics
@@ -568,7 +568,7 @@ impl DeprecationManager {
     }
 
     /// Apply stable version released rule
-    fn apply_stable_release_rule(&mut self) -> Result<Vec<MaintenanceAction>, CoreError> {
+    fn apply_stable_release_rule(&self) -> Result<Vec<MaintenanceAction>, CoreError> {
         // This would deprecate pre-release versions when stable is available
         // For now, return empty actions
         Ok(Vec::new())

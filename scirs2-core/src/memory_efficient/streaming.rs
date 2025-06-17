@@ -132,85 +132,85 @@ impl StreamConfigBuilder {
     }
 
     /// Set the processing mode
-    pub fn mode(mut self, mode: StreamMode) -> Self {
+    pub const fn mode(mut self, mode: StreamMode) -> Self {
         self.config.mode = mode;
         self
     }
 
     /// Set the buffer size
-    pub fn buffer_size(mut self, size: usize) -> Self {
+    pub const fn buffer_size(mut self, size: usize) -> Self {
         self.config.buffer_size = size;
         self
     }
 
     /// Set the maximum batch size
-    pub fn max_batch_size(mut self, size: usize) -> Self {
+    pub const fn max_batch_size(mut self, size: usize) -> Self {
         self.config.max_batch_size = size;
         self
     }
 
     /// Set the minimum batch size
-    pub fn min_batch_size(mut self, size: usize) -> Self {
+    pub const fn min_batch_size(mut self, size: usize) -> Self {
         self.config.min_batch_size = size;
         self
     }
 
     /// Set the chunk size
-    pub fn chunk_size(mut self, size: usize) -> Self {
+    pub const fn chunk_size(mut self, size: usize) -> Self {
         self.config.chunk_size = size;
         self
     }
 
     /// Enable or disable parallel processing
-    pub fn parallel(mut self, enable: bool) -> Self {
+    pub const fn parallel(mut self, enable: bool) -> Self {
         self.config.parallel = enable;
         self
     }
 
     /// Set the number of worker threads
-    pub fn workers(mut self, workers: Option<usize>) -> Self {
+    pub const fn workers(mut self, workers: Option<usize>) -> Self {
         self.config.workers = workers;
         self
     }
 
     /// Set the rate limit
-    pub fn rate_limit(mut self, limit: usize) -> Self {
+    pub const fn rate_limit(mut self, limit: usize) -> Self {
         self.config.rate_limit = limit;
         self
     }
 
     /// Set the timeout
-    pub fn timeout_ms(mut self, timeout: u64) -> Self {
+    pub const fn timeout_ms(mut self, timeout: u64) -> Self {
         self.config.timeout_ms = timeout;
         self
     }
 
     /// Enable or disable prefetching
-    pub fn enable_prefetch(mut self, enable: bool) -> Self {
+    pub const fn enable_prefetch(mut self, enable: bool) -> Self {
         self.config.enable_prefetch = enable;
         self
     }
 
     /// Set the prefetch configuration
-    pub fn prefetch_config(mut self, config: Option<PrefetchConfig>) -> Self {
+    pub const fn prefetch_config(mut self, config: Option<PrefetchConfig>) -> Self {
         self.config.prefetch_config = config;
         self
     }
 
     /// Enable or disable backpressure handling
-    pub fn enable_backpressure(mut self, enable: bool) -> Self {
+    pub const fn enable_backpressure(mut self, enable: bool) -> Self {
         self.config.enable_backpressure = enable;
         self
     }
 
     /// Set the window size for sliding window mode
-    pub fn window_size(mut self, size: usize) -> Self {
+    pub const fn window_size(mut self, size: usize) -> Self {
         self.config.window_size = size;
         self
     }
 
     /// Set the window stride for sliding window mode
-    pub fn window_stride(mut self, stride: usize) -> Self {
+    pub const fn window_stride(mut self, stride: usize) -> Self {
         self.config.window_stride = stride;
         self
     }

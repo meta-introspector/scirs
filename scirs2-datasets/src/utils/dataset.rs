@@ -4,7 +4,6 @@
 //! crate, along with its core methods for creation, metadata management, and
 //! basic properties.
 
-use crate::error::Result;
 use crate::utils::serialization;
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};

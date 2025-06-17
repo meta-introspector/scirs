@@ -567,7 +567,7 @@ impl WorkloadProfileBuilder {
     }
 
     /// Set parallelism profile
-    pub fn with_parallelism(
+    pub const fn with_parallelism(
         mut self,
         parallelizable: bool,
         optimal_threads: Option<usize>,
@@ -778,6 +778,7 @@ pub struct AdaptiveOptimizer {
     /// Active recommendations
     active_recommendations: Arc<Mutex<Vec<OptimizationRecommendation>>>,
     /// Learning history for ML algorithms
+    #[allow(dead_code)]
     learning_history: Arc<Mutex<VecDeque<LearningDataPoint>>>,
 }
 
@@ -800,12 +801,16 @@ pub enum OptimizerState {
 #[derive(Debug, Clone)]
 struct LearningDataPoint {
     /// Input parameters
+    #[allow(dead_code)]
     parameters: HashMap<String, f64>,
     /// Performance metrics
+    #[allow(dead_code)]
     metrics: HashMap<String, f64>,
     /// Timestamp
+    #[allow(dead_code)]
     timestamp: SystemTime,
     /// Workload context
+    #[allow(dead_code)]
     workload: String,
 }
 

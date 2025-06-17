@@ -1,11 +1,11 @@
 #![recursion_limit = "512"]
 
-//! # SciRS2 Core (Alpha 6 Enhanced)
+//! # ``SciRS2`` Core (Alpha 6 Enhanced)
 //!
-//! Core utilities and common functionality for the SciRS2 library.
+//! Core utilities and common functionality for the ``SciRS2`` library.
 //!
 //! This crate provides shared utilities, error types, and common traits
-//! used across the SciRS2 ecosystem of crates.
+//! used across the ``SciRS2`` ecosystem of crates.
 //!
 //! ## Alpha 6 Enhanced Features
 //!
@@ -64,7 +64,7 @@
 //! * `gpu`: Enable GPU acceleration abstractions
 //! * `memory_management`: Enable advanced memory management
 //! * `memory_efficient`: Enable memory-efficient array operations and views
-//! * `array`: Enable scientific array types (MaskedArray, RecordArray)
+//! * `array`: Enable scientific array types (``MaskedArray``, ``RecordArray``)
 //! * `profiling`: Enable performance profiling tools
 //! * `random`: Enable random number generation utilities
 //! * `types`: Enable type conversion utilities
@@ -261,8 +261,8 @@ pub use crate::benchmarking::{
     BenchmarkSuite,
 };
 
-/// SciRS2 core version information
-pub fn version() -> &'static str {
+/// ``SciRS2`` core version information
+pub const fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
@@ -270,12 +270,12 @@ pub mod alpha6_api {
     //! Alpha 6 API consistency enhancements and comprehensive usage patterns
     //!
     //! This module provides standardized patterns, comprehensive examples,
-    //! and integration guidelines for combining SciRS2 Core features.
+    //! and integration guidelines for combining ``SciRS2`` Core features.
 
     pub mod signatures {
-        //! Standard function signature patterns used throughout SciRS2 Core
+        //! Standard function signature patterns used throughout ``SciRS2`` Core
         //!
-        //! All SciRS2 Core functions follow these standardized patterns:
+        //! All ``SciRS2`` Core functions follow these standardized patterns:
         //!
         //! ## Error Handling Pattern
         //! ```ignore
@@ -331,9 +331,9 @@ pub mod alpha6_api {
     }
 
     pub mod examples {
-        //! Comprehensive usage examples demonstrating SciRS2 Core features
+        //! Comprehensive usage examples demonstrating ``SciRS2`` Core features
         //!
-        //! These examples show how to use various SciRS2 Core features both
+        //! These examples show how to use various ``SciRS2`` Core features both
         //! individually and in combination.
 
         /// # Basic Error Handling Example
@@ -361,7 +361,7 @@ pub mod alpha6_api {
         ///     }
         /// }
         /// ```
-        pub fn basic_error_handling() {}
+        pub const fn basic_error_handling() {}
 
         /// # SIMD Operations Example
         ///
@@ -384,7 +384,7 @@ pub mod alpha6_api {
         ///     println!("SIMD capabilities: {:?}", caps);
         /// }
         /// ```
-        pub fn simd_operations() {}
+        pub const fn simd_operations() {}
 
         /// # Memory-Efficient Processing Example
         ///
@@ -412,11 +412,11 @@ pub mod alpha6_api {
         ///     Ok(())
         /// }
         /// ```
-        pub fn memory_efficient_processing() {}
+        pub const fn memory_efficient_processing() {}
     }
 
     pub mod integration_patterns {
-        //! Guidelines and patterns for combining multiple SciRS2 Core features
+        //! Guidelines and patterns for combining multiple ``SciRS2`` Core features
         //!
         //! This module demonstrates how to effectively combine various features
         //! for optimal performance and functionality.
@@ -494,7 +494,7 @@ pub mod alpha6_api {
         ///     Ok(result)
         /// }
         /// ```
-        pub fn high_performance_pipeline() {}
+        pub const fn high_performance_pipeline() {}
 
         /// # Robust Error Handling with Recovery
         ///
@@ -560,7 +560,7 @@ pub mod alpha6_api {
         ///     }
         /// }
         /// ```
-        pub fn robust_error_handling() {}
+        pub const fn robust_error_handling() {}
 
         /// # Performance Monitoring and Optimization
         ///
@@ -608,18 +608,18 @@ pub mod alpha6_api {
         ///     }
         /// }
         /// ```
-        pub fn performance_monitoring() {}
+        pub const fn performance_monitoring() {}
     }
 
     pub mod type_system {
         //! Comprehensive type system documentation and conversion patterns
         //!
-        //! This module documents the SciRS2 Core type system and provides
+        //! This module documents the ``SciRS2`` Core type system and provides
         //! guidelines for safe and efficient type conversions.
 
         /// # Type Safety Patterns
         ///
-        /// SciRS2 Core uses the Rust type system to ensure safety and correctness:
+        /// ``SciRS2`` Core uses the Rust type system to ensure safety and correctness:
         ///
         /// ## Numeric Type Safety
         /// ```
@@ -660,6 +660,6 @@ pub mod alpha6_api {
         ///     Ok(U::default())
         /// }
         /// ```
-        pub fn type_safety_patterns() {}
+        pub const fn type_safety_patterns() {}
     }
 }

@@ -113,7 +113,7 @@ mod tests {
         let result = butter(4, 0.3, FilterType::Lowpass);
         assert!(result.is_ok());
 
-        let (b, a) = result.unwrap();
+        let (_b, a) = result.unwrap();
         assert_eq!(a.len(), 5); // 4th order = 5 coefficients
         assert_eq!(a[0], 1.0); // Normalized denominator
     }
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn test_stability_check() {
         // Test filter stability analysis
-        let (b, a) = butter(4, 0.2, "lowpass").unwrap();
+        let (_b, a) = butter(4, 0.2, "lowpass").unwrap();
         let result = check_filter_stability(&a);
         assert!(result.is_ok());
 
@@ -194,7 +194,7 @@ mod tests {
         let result = zpk_to_tf(&zeros, &poles, gain);
         assert!(result.is_ok());
 
-        let (b, a) = result.unwrap();
+        let (_b, a) = result.unwrap();
         assert_eq!(a[0], 1.0); // Normalized
     }
 

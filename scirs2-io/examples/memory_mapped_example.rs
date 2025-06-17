@@ -154,7 +154,7 @@ fn demonstrate_mutable_memory_mapping() -> Result<(), Box<dyn std::error::Error>
     // Modify data directly in the memory-mapped file
     {
         let mut array_view = mmap_array.as_array_view_mut(&shape)?;
-        let mut slice = array_view.as_slice_mut().unwrap();
+        let slice = array_view.as_slice_mut().unwrap();
 
         // Create a pattern
         for i in 0..100 {

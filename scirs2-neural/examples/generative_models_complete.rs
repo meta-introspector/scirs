@@ -155,6 +155,7 @@ pub struct VAEEncoder {
     feature_extractor: Sequential<f32>,
     mean_head: Sequential<f32>,
     logvar_head: Sequential<f32>,
+    #[allow(dead_code)]
     config: GenerativeConfig,
 }
 
@@ -232,7 +233,7 @@ impl VAEEncoder {
         // Flatten features
         let batch_size = features.shape()[0];
         let feature_dim = features.len() / batch_size;
-        let flattened = features.into_shape(IxDyn(&[batch_size, feature_dim]))?;
+        let flattened = features.to_shape(IxDyn(&[batch_size, feature_dim]))?.to_owned();
 
         // Get mean and log variance
         let mean = self.mean_head.forward(&flattened)?;
@@ -299,7 +300,7 @@ impl VAEDecoder {
 
         // Reshape to spatial format
         let batch_size = projected.shape()[0];
-        let reshaped = projected.into_shape(IxDyn(&[batch_size, 128, 4, 4]))?;
+        let reshaped = projected.into_shape_with_order(IxDyn(&[batch_size, 128, 4, 4]))?;
 
         // Upsample to target size (simplified)
         let upsampled = self.upsample(&reshaped)?;
@@ -537,7 +538,7 @@ impl GANGenerator {
         // Reshape to image format
         let batch_size = output.shape()[0];
         let (height, width) = self.config.input_size;
-        let reshaped = output.into_shape(IxDyn(&[batch_size, 1, height, width]))?;
+        let reshaped = output.to_shape(IxDyn(&[batch_size, 1, height, width]))?.to_owned();
 
         Ok(reshaped)
     }
@@ -581,7 +582,7 @@ impl GANDiscriminator {
         // Flatten input
         let batch_size = input.shape()[0];
         let input_size = self.config.input_size.0 * self.config.input_size.1;
-        let flattened = input.clone().into_shape(IxDyn(&[batch_size, input_size]))?;
+        let flattened = input.to_shape(IxDyn(&[batch_size, input_size]))?.to_owned();
 
         Ok(self.layers.forward(&flattened)?)
     }
@@ -589,6 +590,7 @@ impl GANDiscriminator {
 
 /// Generative model evaluation metrics
 pub struct GenerativeMetrics {
+    #[allow(dead_code)]
     config: GenerativeConfig,
 }
 

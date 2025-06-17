@@ -1,6 +1,6 @@
 //! # Security Testing Framework
 //!
-//! This module provides security testing capabilities for SciRS2 Core,
+//! This module provides security testing capabilities for `SciRS2` Core,
 //! focusing on input validation, bounds checking, and vulnerability discovery.
 //! It includes:
 //! - Input validation testing

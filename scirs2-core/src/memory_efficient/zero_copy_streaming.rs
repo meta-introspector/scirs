@@ -185,7 +185,7 @@ impl ZeroCopyBuffer {
     }
 
     /// Get a slice view of the buffer
-    pub fn as_slice(&self) -> &[u8] {
+    pub const fn as_slice(&self) -> &[u8] {
         unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.size) }
     }
 
@@ -914,7 +914,7 @@ where
     }
 
     /// Get buffer pool reference
-    pub fn buffer_pool(&self) -> &Arc<BufferPool> {
+    pub const fn buffer_pool(&self) -> &Arc<BufferPool> {
         &self.buffer_pool
     }
 }

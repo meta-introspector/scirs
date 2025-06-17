@@ -594,7 +594,7 @@ mod tests {
     fn test_2x2_diagonal_matrix() {
         let a = array![[3.0_f64, 0.0], [0.0, 4.0]];
 
-        let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();
+        let (eigenvalues, _eigenvectors) = eig(&a.view(), None).unwrap();
 
         // Eigenvalues could be returned in any order
         assert_relative_eq!(eigenvalues[0].im, 0.0, epsilon = 1e-10);

@@ -6,8 +6,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
-use num_traits::{Float, NumCast};
-use std::fmt::Debug;
 
 use super::common::{validation::validate_cutoff_frequency, FilterCoefficients};
 use super::transform::zpk_to_tf;

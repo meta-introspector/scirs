@@ -787,139 +787,139 @@ where
 // Add placeholder implementations for remaining helper functions
 // These would need to be fully implemented in a production system
 
-fn calculate_harmonic_mean<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_harmonic_mean<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_geometric_mean<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_geometric_mean<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_quadratic_mean<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_quadratic_mean<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_cubic_mean<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_cubic_mean<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_mode_approximation<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_mode_approximation<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_l_moments<F>(ts: &Array1<F>) -> Result<(F, F, F)>
+fn calculate_l_moments<F>(_ts: &Array1<F>) -> Result<(F, F, F)>
 where
     F: Float + FromPrimitive,
 {
     Ok((F::zero(), F::zero(), F::zero()))
 }
-fn p75_minus_p25<F>(sorted: &[F]) -> F
+fn p75_minus_p25<F>(_sorted: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
     F::zero()
 }
-fn p87_5_minus_p12_5<F>(sorted: &[F]) -> F
+fn p87_5_minus_p12_5<F>(_sorted: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
     F::zero()
 }
-fn calculate_jarque_bera_statistic<F>(ts: &Array1<F>, mean: F, std: F) -> Result<F>
+fn calculate_jarque_bera_statistic<F>(_ts: &Array1<F>, _mean: F, _std: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_anderson_darling_approximation<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_anderson_darling_approximation<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_ks_statistic_approximation<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_ks_statistic_approximation<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_shapiro_wilk_approximation<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_shapiro_wilk_approximation<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_dagostino_statistic<F>(ts: &Array1<F>, mean: F, std: F) -> Result<F>
+fn calculate_dagostino_statistic<F>(_ts: &Array1<F>, _mean: F, _std: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_normality_composite_score<F>(jb: F, ad: F, ks: F) -> F
+fn calculate_normality_composite_score<F>(_jb: F, _ad: F, _ks: F) -> F
 where
     F: Float,
 {
     F::zero()
 }
-fn calculate_biweight_midvariance<F>(ts: &Array1<F>, median: F) -> Result<F>
+fn calculate_biweight_midvariance<F>(_ts: &Array1<F>, _median: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_qn_estimator<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_qn_estimator<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_sn_estimator<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_sn_estimator<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_zero_crossings<F>(ts: &Array1<F>, mean: F) -> usize
+fn calculate_zero_crossings<F>(_ts: &Array1<F>, _mean: F) -> usize
 where
     F: Float,
 {
     0
 }
-fn calculate_local_extrema_counts<F>(ts: &Array1<F>) -> (usize, usize)
+fn calculate_local_extrema_counts<F>(_ts: &Array1<F>) -> (usize, usize)
 where
     F: Float,
 {
     (0, 0)
 }
-fn calculate_concentration_coefficient<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_concentration_coefficient<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_herfindahl_index<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_herfindahl_index<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_shannon_diversity<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_shannon_diversity<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
-fn calculate_simpson_diversity<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_simpson_diversity<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {

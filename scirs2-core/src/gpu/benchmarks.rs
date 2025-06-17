@@ -63,7 +63,7 @@ pub enum BenchmarkOperation {
 
 impl BenchmarkOperation {
     /// Get human-readable name
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
             BenchmarkOperation::MatrixMultiply => "Matrix Multiplication",
             BenchmarkOperation::VectorOperations => "Vector Operations",
@@ -224,7 +224,7 @@ impl DataType {
     }
 
     /// Get type name
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
             DataType::Float32 => "f32",
             DataType::Float64 => "f64",

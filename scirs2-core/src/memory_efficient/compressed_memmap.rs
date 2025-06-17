@@ -456,7 +456,7 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     }
 
     /// Get the shape of the array.
-    pub fn shape(&self) -> &[usize] {
+    pub const fn shape(&self) -> &[usize] {
         &self.metadata.shape
     }
 
@@ -471,7 +471,7 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     }
 
     /// Get the metadata for the compressed file.
-    pub fn metadata(&self) -> &CompressedFileMetadata {
+    pub const fn metadata(&self) -> &CompressedFileMetadata {
         &self.metadata
     }
 

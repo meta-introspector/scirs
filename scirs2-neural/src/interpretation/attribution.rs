@@ -95,13 +95,26 @@ pub enum LRPRule {
     /// Basic LRP rule (ε-rule)
     Epsilon,
     /// LRP-γ rule for lower layers
-    Gamma { gamma: f64 },
+    Gamma { 
+        /// Gamma parameter for the rule
+        gamma: f64 
+    },
     /// LRP-α1β0 rule (equivalent to LRP-α2β1 with α=2, β=1)
-    AlphaBeta { alpha: f64, beta: f64 },
+    AlphaBeta { 
+        /// Alpha parameter for the rule
+        alpha: f64, 
+        /// Beta parameter for the rule
+        beta: f64 
+    },
     /// LRP-z+ rule for input layer
     ZPlus,
     /// LRP-zB rule with bounds
-    ZB { low: f64, high: f64 },
+    ZB { 
+        /// Lower bound for the rule
+        low: f64, 
+        /// Upper bound for the rule
+        high: f64 
+    },
 }
 
 // Import the ModelInterpreter type for function signatures

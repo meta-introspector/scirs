@@ -1,8 +1,8 @@
-//! Memory layout optimizations with C/F order support for NumPy compatibility.
+//! Memory layout optimizations with C/F order support for `NumPy` compatibility.
 //!
-//! This module provides comprehensive memory layout management that matches NumPy's
+//! This module provides comprehensive memory layout management that matches `NumPy`'s
 //! array memory ordering conventions. It enables seamless interoperability with
-//! NumPy and SciPy while optimizing performance for different access patterns.
+//! `NumPy` and SciPy while optimizing performance for different access patterns.
 //!
 //! ## Features
 //!
@@ -39,7 +39,7 @@ use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use ndarray::{Array, ArrayBase, Data, Dimension, Ix, IxDyn, RawData, ShapeBuilder};
 use std::mem;
 
-/// Memory layout order following NumPy conventions
+/// Memory layout order following `NumPy` conventions
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LayoutOrder {
     /// C-order (row-major): last axis is contiguous
@@ -60,7 +60,7 @@ impl Default for LayoutOrder {
 
 impl LayoutOrder {
     /// Convert to string representation
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             LayoutOrder::C => "C",
             LayoutOrder::Fortran => "F",
@@ -69,7 +69,7 @@ impl LayoutOrder {
         }
     }
 
-    /// Parse from string (NumPy-compatible)
+    /// Parse from string (`NumPy`-compatible)
     pub fn from_str(s: &str) -> CoreResult<Self> {
         match s.to_uppercase().as_str() {
             "C" => Ok(LayoutOrder::C),
@@ -712,11 +712,11 @@ impl LayoutConverter {
     }
 }
 
-/// NumPy-compatible array creation functions
+/// `NumPy`-compatible array creation functions
 pub struct ArrayCreation;
 
 impl ArrayCreation {
-    /// Create array with specified layout order (NumPy-compatible)
+    /// Create array with specified layout order (`NumPy`-compatible)
     pub fn array_with_order<A, D>(
         data: Vec<A>,
         shape: D,

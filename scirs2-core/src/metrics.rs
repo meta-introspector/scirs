@@ -1,7 +1,7 @@
 //! # Production-Level Metrics Collection and Monitoring
 //!
 //! This module provides comprehensive metrics collection, health checks, and monitoring
-//! capabilities for production deployments of SciRS2 Core.
+//! capabilities for production deployments of ``SciRS2`` Core.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::HashMap;
@@ -43,11 +43,11 @@ pub enum MetricValue {
 impl fmt::Display for MetricValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            MetricValue::Integer(v) => write!(f, "{}", v),
-            MetricValue::Float(v) => write!(f, "{}", v),
-            MetricValue::Duration(v) => write!(f, "{:?}", v),
-            MetricValue::Boolean(v) => write!(f, "{}", v),
-            MetricValue::String(v) => write!(f, "{}", v),
+            MetricValue::Integer(v) => write!(f, "{v}"),
+            MetricValue::Float(v) => write!(f, "{v}"),
+            MetricValue::Duration(v) => write!(f, "{v:?}"),
+            MetricValue::Boolean(v) => write!(f, "{v}"),
+            MetricValue::String(v) => write!(f, "{v}"),
         }
     }
 }
@@ -798,14 +798,14 @@ mod tests {
         let gauge = Gauge::new("test_gauge".to_string());
         assert_eq!(gauge.get(), 0.0);
 
-        gauge.set(3.14);
-        assert!((gauge.get() - 3.14).abs() < f64::EPSILON);
+        gauge.set(std::f64::consts::PI);
+        assert!((gauge.get() - std::f64::consts::PI).abs() < f64::EPSILON);
 
         gauge.inc();
-        assert!((gauge.get() - 4.14).abs() < 1e-10);
+        assert!((gauge.get() - (std::f64::consts::PI + 1.0)).abs() < 1e-10);
 
         gauge.dec();
-        assert!((gauge.get() - 3.14).abs() < 1e-10);
+        assert!((gauge.get() - std::f64::consts::PI).abs() < 1e-10);
     }
 
     #[test]

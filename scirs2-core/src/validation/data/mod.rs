@@ -1,6 +1,6 @@
 //! Comprehensive Data Validation System
 //!
-//! Production-grade data validation system for SciRS2 Core providing schema
+//! Production-grade data validation system for `SciRS2` Core providing schema
 //! validation, constraint enforcement, and data integrity checks for scientific
 //! computing applications in regulated environments.
 //!

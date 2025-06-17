@@ -409,7 +409,7 @@ impl Widget {
     }
 
     /// Set widget layout
-    pub fn with_layout(mut self, x: u32, y: u32, width: u32, height: u32) -> Self {
+    pub const fn with_layout(mut self, x: u32, y: u32, width: u32, height: u32) -> Self {
         self.layout = WidgetLayout {
             x,
             y,

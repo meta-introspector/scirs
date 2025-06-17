@@ -74,8 +74,7 @@ where
             let mut windowed = signal_complex;
             for (i, sample) in windowed.iter_mut().enumerate() {
                 let angle = 2.0 * PI * i as f64 / (n - 1) as f64;
-                let window_val = 0.21557895
-                    - 0.41663158 * angle.cos()
+                let window_val = 0.21557895 - 0.41663158 * angle.cos()
                     + 0.277263158 * (2.0 * angle).cos()
                     - 0.083578947 * (3.0 * angle).cos()
                     + 0.006947368 * (4.0 * angle).cos();
@@ -128,7 +127,7 @@ mod tests {
     fn test_apply_window_none() {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
         let result = apply_window(&signal, WindowFunction::None, 14.0).unwrap();
-        
+
         assert_eq!(result.len(), 4);
         assert_eq!(result[0], Complex64::new(1.0, 0.0));
         assert_eq!(result[1], Complex64::new(2.0, 0.0));
@@ -138,7 +137,7 @@ mod tests {
     fn test_apply_window_hann() {
         let signal = vec![1.0; 4];
         let result = apply_window(&signal, WindowFunction::Hann, 14.0).unwrap();
-        
+
         assert_eq!(result.len(), 4);
         // First and last samples should be zero for Hann window
         assert!((result[0].re).abs() < 1e-10);
@@ -149,7 +148,7 @@ mod tests {
     fn test_apply_window_hamming() {
         let signal = vec![1.0; 4];
         let result = apply_window(&signal, WindowFunction::Hamming, 14.0).unwrap();
-        
+
         assert_eq!(result.len(), 4);
         // Hamming window should not be zero at endpoints
         assert!(result[0].re > 0.0);
@@ -161,7 +160,7 @@ mod tests {
         // Test known values
         let result = modified_bessel_i0(0.0);
         assert!((result - 1.0).abs() < 1e-10);
-        
+
         let result = modified_bessel_i0(1.0);
         assert!((result - 1.2660658777520084).abs() < 1e-10);
     }

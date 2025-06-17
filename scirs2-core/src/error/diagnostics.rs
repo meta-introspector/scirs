@@ -1,4 +1,4 @@
-//! Advanced error diagnostics and reporting for SciRS2
+//! Advanced error diagnostics and reporting for ``SciRS2``
 //!
 //! This module provides enhanced error diagnostics including:
 //! - Contextual error analysis
@@ -27,7 +27,7 @@ pub struct EnvironmentInfo {
     pub cpu_cores: Option<usize>,
     /// Rust compiler version
     pub rustc_version: Option<String>,
-    /// SciRS2 version
+    /// ``SciRS2`` version
     pub scirs2_version: String,
     /// Enabled features
     pub features: Vec<String>,
@@ -860,7 +860,7 @@ impl ErrorDiagnosticReport {
         let mut report = String::new();
 
         // Header
-        report.push_str("🔍 SciRS2 Error Diagnostic Report\n");
+        report.push_str("🔍 `SciRS2` Error Diagnostic Report\n");
         report.push_str(&format!("Generated: {:?}\n", self.generated_at));
         report.push_str("═══════════════════════════════════════════════════════════════\n\n");
 
@@ -878,7 +878,7 @@ impl ErrorDiagnosticReport {
         if let Some(env) = &self.environment {
             report.push_str("🖥️  Environment Information:\n");
             report.push_str(&format!("   OS: {} ({})\n", env.os, env.arch));
-            report.push_str(&format!("   SciRS2 Version: {}\n", env.scirs2_version));
+            report.push_str(&format!("   `SciRS2` Version: {}\n", env.scirs2_version));
 
             if let Some(cores) = env.cpu_cores {
                 report.push_str(&format!("   CPU Cores: {}\n", cores));

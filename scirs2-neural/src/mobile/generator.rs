@@ -474,6 +474,7 @@ impl<
         Ok(1024 * 1024) // Stub: 1MB
     }
 
+    /// Generate platform-specific packages for the model
     pub fn generate_platform_packages(
         &self,
         model: &Sequential<F>,
@@ -507,6 +508,7 @@ impl<
         Ok(packages)
     }
 
+    /// Generate iOS package for the model
     pub fn generate_ios_package(&self, model: &Sequential<F>) -> Result<PlatformPackage> {
         // Save optimized model
         let model_path = self.output_dir.join("ios").join("SciRS2Model.mlmodel");
@@ -580,6 +582,7 @@ let output = try model.predict(input: input)"#
         })
     }
 
+    /// Generate Android package for the model
     pub fn generate_android_package(&self, model: &Sequential<F>) -> Result<PlatformPackage> {
         // Save optimized model
         let model_path = self.output_dir.join("android").join("scirs2_model.tflite");
@@ -672,6 +675,7 @@ val output = model.predict(input)"#
         Ok(())
     }
 
+    /// Generate iOS framework for deployment
     pub fn generate_ios_framework(&self, path: &Path) -> Result<()> {
         // Generate iOS framework structure
         fs::create_dir_all(path)?;
@@ -680,39 +684,46 @@ val output = model.predict(input)"#
         Ok(())
     }
 
+    /// Generate Swift wrapper for the model
     pub fn generate_swift_wrapper(&self, path: &Path) -> Result<()> {
         fs::write(path, super::templates::SWIFT_WRAPPER)?;
         Ok(())
     }
 
+    /// Generate Objective-C wrapper for the model
     pub fn generate_objc_wrapper(&self, header_path: &Path, impl_path: &Path) -> Result<()> {
         fs::write(header_path, super::templates::OBJC_HEADER)?;
         fs::write(impl_path, super::templates::OBJC_IMPL)?;
         Ok(())
     }
 
+    /// Generate Android AAR package
     pub fn generate_android_aar(&self, path: &Path) -> Result<()> {
         // Generate Android AAR package
         fs::write(path, b"Android AAR Package")?;
         Ok(())
     }
 
+    /// Generate Java wrapper for the model
     pub fn generate_java_wrapper(&self, path: &Path) -> Result<()> {
         fs::write(path, super::templates::JAVA_WRAPPER)?;
         Ok(())
     }
 
+    /// Generate Kotlin wrapper for the model
     pub fn generate_kotlin_wrapper(&self, path: &Path) -> Result<()> {
         fs::write(path, super::templates::KOTLIN_WRAPPER)?;
         Ok(())
     }
 
+    /// Generate JNI wrapper for native integration
     pub fn generate_jni_wrapper(&self, header_path: &Path, impl_path: &Path) -> Result<()> {
         fs::write(header_path, super::templates::JNI_HEADER)?;
         fs::write(impl_path, super::templates::JNI_IMPL)?;
         Ok(())
     }
 
+    /// Benchmark model performance on mobile platform
     pub fn benchmark_performance(&self, _model: &Sequential<F>) -> Result<PerformanceMetrics> {
         // Performance benchmarking implementation
         // This would run actual inference tests and measure performance
@@ -745,6 +756,7 @@ val output = model.predict(input)"#
         })
     }
 
+    /// Generate integration guides for mobile deployment
     pub fn generate_integration_guides(&self) -> Result<Vec<PathBuf>> {
         let mut guides = Vec::new();
 
@@ -772,18 +784,21 @@ val output = model.predict(input)"#
         Ok(guides)
     }
 
+    /// Generate iOS-specific integration guide
     pub fn generate_ios_integration_guide(&self) -> Result<PathBuf> {
         let guide_path = self.output_dir.join("docs").join("ios_integration.md");
         fs::write(&guide_path, super::guides::IOS_INTEGRATION_GUIDE)?;
         Ok(guide_path)
     }
 
+    /// Generate Android-specific integration guide
     pub fn generate_android_integration_guide(&self) -> Result<PathBuf> {
         let guide_path = self.output_dir.join("docs").join("android_integration.md");
         fs::write(&guide_path, super::guides::ANDROID_INTEGRATION_GUIDE)?;
         Ok(guide_path)
     }
 
+    /// Generate optimization guide for mobile deployment
     pub fn generate_optimization_guide(&self) -> Result<PathBuf> {
         let guide_path = self.output_dir.join("docs").join("optimization_guide.md");
         fs::write(&guide_path, super::guides::OPTIMIZATION_GUIDE)?;

@@ -251,7 +251,7 @@ pub fn check_filter_stability(a: &[f64]) -> SignalResult<FilterStability> {
 
     // Check if all poles are inside unit circle
     let mut is_stable = true;
-    let mut max_magnitude = 0.0;
+    let mut max_magnitude: f64 = 0.0;
     let mut min_distance_to_unit_circle = f64::INFINITY;
 
     for &pole in &poles {
@@ -402,7 +402,7 @@ pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult
     let analysis = analyze_filter(b, a, Some(num_points))?;
 
     // Find the peak frequency
-    let max_mag = analysis.magnitude.iter().fold(0.0, |a, &b| a.max(b));
+    let max_mag = analysis.magnitude.iter().fold(0.0f64, |a, &b| a.max(b));
     let peak_idx = analysis
         .magnitude
         .iter()

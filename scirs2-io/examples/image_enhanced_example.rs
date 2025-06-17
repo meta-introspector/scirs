@@ -10,10 +10,10 @@
 use ndarray::Array3;
 use scirs2_io::image::enhanced::{
     batch_convert_with_compression, create_image_pyramid, save_high_quality, save_lossless,
-    CompressionOptions, CompressionQuality, EnhancedImageProcessor, ImagePyramid,
+    CompressionOptions, CompressionQuality, EnhancedImageProcessor,
     InterpolationMethod, PyramidConfig,
 };
-use scirs2_io::image::{load_image, save_image, ColorMode, ImageData, ImageFormat, ImageMetadata};
+use scirs2_io::image::{save_image, ColorMode, ImageData, ImageFormat, ImageMetadata};
 use std::time::Instant;
 use tempfile::tempdir;
 
@@ -683,7 +683,7 @@ fn demonstrate_performance_features() -> Result<(), Box<dyn std::error::Error>> 
                     dyn Fn(
                         &EnhancedImageProcessor,
                         &ImageData,
-                    ) -> Result<ImageData, crate::error::IoError>,
+                    ) -> Result<ImageData, scirs2_io::error::IoError>,
                 >,
         ),
         (

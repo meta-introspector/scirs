@@ -947,6 +947,7 @@ pub mod advanced {
         /// Configuration for detection
         config: BottleneckConfig,
         /// Performance history
+        #[allow(dead_code)]
         performance_history: HashMap<String, Vec<PerformanceStats>>,
     }
 

@@ -41,32 +41,32 @@ pub enum Dimension {
 impl fmt::Display for Dimension {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
-            Dimension::Length => "Length",
-            Dimension::Time => "Time",
-            Dimension::Mass => "Mass",
-            Dimension::Temperature => "Temperature",
-            Dimension::Current => "Current",
-            Dimension::Amount => "Amount",
-            Dimension::LuminousIntensity => "Luminous Intensity",
-            Dimension::Angle => "Angle",
-            Dimension::SolidAngle => "Solid Angle",
-            Dimension::Area => "Area",
-            Dimension::Volume => "Volume",
-            Dimension::Velocity => "Velocity",
-            Dimension::Acceleration => "Acceleration",
-            Dimension::Force => "Force",
-            Dimension::Energy => "Energy",
-            Dimension::Power => "Power",
-            Dimension::Pressure => "Pressure",
-            Dimension::Frequency => "Frequency",
-            Dimension::Voltage => "Voltage",
-            Dimension::Resistance => "Resistance",
-            Dimension::Capacitance => "Capacitance",
-            Dimension::Inductance => "Inductance",
-            Dimension::MagneticField => "Magnetic Field",
-            Dimension::Dimensionless => "Dimensionless",
+            Self::Length => "Length",
+            Self::Time => "Time",
+            Self::Mass => "Mass",
+            Self::Temperature => "Temperature",
+            Self::Current => "Current",
+            Self::Amount => "Amount",
+            Self::LuminousIntensity => "Luminous Intensity",
+            Self::Angle => "Angle",
+            Self::SolidAngle => "Solid Angle",
+            Self::Area => "Area",
+            Self::Volume => "Volume",
+            Self::Velocity => "Velocity",
+            Self::Acceleration => "Acceleration",
+            Self::Force => "Force",
+            Self::Energy => "Energy",
+            Self::Power => "Power",
+            Self::Pressure => "Pressure",
+            Self::Frequency => "Frequency",
+            Self::Voltage => "Voltage",
+            Self::Resistance => "Resistance",
+            Self::Capacitance => "Capacitance",
+            Self::Inductance => "Inductance",
+            Self::MagneticField => "Magnetic Field",
+            Self::Dimensionless => "Dimensionless",
         };
-        write!(f, "{}", name)
+        write!(f, "{name}")
     }
 }
 
@@ -84,14 +84,14 @@ pub enum UnitSystem {
 impl fmt::Display for UnitSystem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
-            UnitSystem::SI => "SI",
-            UnitSystem::Imperial => "Imperial",
-            UnitSystem::CGS => "CGS",
-            UnitSystem::Natural => "Natural",
-            UnitSystem::Atomic => "Atomic",
-            UnitSystem::Planck => "Planck",
+            Self::SI => "SI",
+            Self::Imperial => "Imperial",
+            Self::CGS => "CGS",
+            Self::Natural => "Natural",
+            Self::Atomic => "Atomic",
+            Self::Planck => "Planck",
         };
-        write!(f, "{}", name)
+        write!(f, "{name}")
     }
 }
 
@@ -242,11 +242,11 @@ impl UnitRegistry {
     /// Convert a value from one unit to another
     pub fn convert(&self, value: f64, from_unit: &str, to_unit: &str) -> CoreResult<f64> {
         let from = self.get_unit(from_unit).ok_or_else(|| {
-            CoreError::InvalidArgument(ErrorContext::new(format!("Unknown unit: {}", from_unit)))
+            CoreError::InvalidArgument(ErrorContext::new(format!("Unknown unit: {from_unit}")))
         })?;
 
         let to = self.get_unit(to_unit).ok_or_else(|| {
-            CoreError::InvalidArgument(ErrorContext::new(format!("Unknown unit: {}", to_unit)))
+            CoreError::InvalidArgument(ErrorContext::new(format!("Unknown unit: {to_unit}")))
         })?;
 
         if from.dimension != to.dimension {
@@ -531,7 +531,7 @@ impl UnitRegistry {
             "yr".to_string(),
             Dimension::Time,
             UnitSystem::SI,
-            31557600.0,
+            31_557_600.0,
             0.0,
             false,
         )); // Julian year
@@ -551,7 +551,7 @@ impl UnitRegistry {
             "lb".to_string(),
             Dimension::Mass,
             UnitSystem::Imperial,
-            0.45359237,
+            0.453_592_37,
             0.0,
             false,
         ));
@@ -560,7 +560,7 @@ impl UnitRegistry {
             "oz".to_string(),
             Dimension::Mass,
             UnitSystem::Imperial,
-            0.028349523125,
+            0.028_349_523_125,
             0.0,
             false,
         ));
@@ -629,7 +629,7 @@ impl UnitRegistry {
             "eV".to_string(),
             Dimension::Energy,
             UnitSystem::Atomic,
-            1.602176634e-19,
+            1.602_176_634e-19,
             0.0,
             false,
         ));
@@ -638,7 +638,7 @@ impl UnitRegistry {
             "kWh".to_string(),
             Dimension::Energy,
             UnitSystem::SI,
-            3600000.0,
+            3_600_000.0,
             0.0,
             false,
         ));
@@ -660,7 +660,7 @@ impl UnitRegistry {
             "atm".to_string(),
             Dimension::Pressure,
             UnitSystem::SI,
-            101325.0,
+            101_325.0,
             0.0,
             false,
         ));
@@ -669,7 +669,7 @@ impl UnitRegistry {
             "bar".to_string(),
             Dimension::Pressure,
             UnitSystem::SI,
-            100000.0,
+            100_000.0,
             0.0,
             false,
         ));
@@ -780,11 +780,11 @@ pub mod conversions {
 
     /// Mass conversions
     pub fn kilograms_to_pounds(kg: f64) -> f64 {
-        kg / 0.45359237
+        kg / 0.453_592_37
     }
 
     pub fn pounds_to_kilograms(lbs: f64) -> f64 {
-        lbs * 0.45359237
+        lbs * 0.453_592_37
     }
 
     /// Angle conversions
@@ -806,11 +806,11 @@ pub mod conversions {
     }
 
     pub fn ev_to_joules(ev: f64) -> f64 {
-        ev * 1.602176634e-19
+        ev * 1.602_176_634e-19
     }
 
     pub fn joules_to_ev(joules: f64) -> f64 {
-        joules / 1.602176634e-19
+        joules / 1.602_176_634e-19
     }
 }
 
@@ -856,7 +856,7 @@ mod tests {
 
         // Meter to foot
         let result = registry.convert(1.0, "m", "ft").unwrap();
-        assert!((result - 3.280839895).abs() < 1e-6);
+        assert!((result - 3.280_839_895).abs() < 1e-6);
 
         // Inch to centimeter
         let result = registry.convert(1.0, "in", "cm").unwrap();
@@ -905,7 +905,7 @@ mod tests {
 
         // eV to Joules
         let result = registry.convert(1.0, "eV", "J").unwrap();
-        assert!((result - 1.602176634e-19).abs() < 1e-25);
+        assert!((result - 1.602_176_634e-19).abs() < 1e-25);
     }
 
     #[test]
@@ -983,7 +983,7 @@ mod tests {
         assert!((degrees_to_radians(180.0) - std::f64::consts::PI).abs() < 1e-10);
         assert!((radians_to_degrees(std::f64::consts::PI) - 180.0).abs() < 1e-10);
 
-        assert!((meters_to_feet(1.0) - 3.280839895).abs() < 1e-6);
+        assert!((meters_to_feet(1.0) - 3.280_839_895).abs() < 1e-6);
         assert!((feet_to_meters(1.0) - 0.3048).abs() < 1e-10);
     }
 }

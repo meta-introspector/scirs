@@ -407,7 +407,7 @@ mod tests {
         let query = vec![1.0, 1.0, 1.0, 1.0, 1.0];
         let k = 5;
 
-        let kdtree = KdTree::new(&points).unwrap();
+        let kdtree = KdTree::new(points).unwrap();
         let standard_result = kdtree.k_nearest_neighbors(&query, k).unwrap();
         let optimized_result = kdtree
             .k_nearest_neighbors_optimized(&query, k, None)
@@ -422,7 +422,7 @@ mod tests {
         {
             assert_eq!(idx1, idx2, "Index mismatch at position {}", i);
             assert!(
-                (dist1 - dist2).abs() < 1e-10,
+                (dist1 - dist2).abs() < 1e-10_f64,
                 "Distance mismatch at position {}: {} vs {}",
                 i,
                 dist1,

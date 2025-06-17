@@ -122,7 +122,7 @@ fn test_spectral_flatness() {
 #[test]
 fn test_windowing_functions() {
     let signal = vec![1.0, 2.0, 3.0, 4.0];
-    
+
     // Test Hann window
     let result = windowing::apply_window(&signal, config::WindowFunction::Hann, 14.0).unwrap();
     assert_eq!(result.len(), 4);
@@ -174,7 +174,7 @@ fn test_adaptive_sparse_fft() {
 
     // Test adaptive sparse FFT
     let result = adaptive_sparse_fft(&signal, 0.1).unwrap();
-    
+
     // Should find some components
     assert!(!result.values.is_empty());
     assert!(result.estimated_sparsity > 0);
@@ -210,7 +210,7 @@ fn test_performance_measurement() {
     let signal = create_sparse_signal(n, &frequencies);
 
     let result = sparse_fft(&signal, 4, None, None).unwrap();
-    
+
     // Check that computation time was measured
     assert!(result.computation_time.as_nanos() > 0);
 }
@@ -303,7 +303,10 @@ fn test_complex_input_conversion() {
     assert_eq!(config::try_as_complex(complex_val), Some(complex_val));
 
     let complex32_val = num_complex::Complex32::new(1.0f32, 2.0f32);
-    assert_eq!(config::try_as_complex(complex32_val), Some(num_complex::Complex64::new(1.0, 2.0)));
+    assert_eq!(
+        config::try_as_complex(complex32_val),
+        Some(num_complex::Complex64::new(1.0, 2.0))
+    );
 }
 
 #[test]
@@ -327,7 +330,7 @@ fn test_filtered_reconstruction() {
     assert_eq!(filtered.len(), n);
 }
 
-#[test] 
+#[test]
 fn test_multidimensional_placeholders() {
     // Test 2D sparse FFT placeholder
     let signal_2d = vec![vec![1.0, 2.0], vec![3.0, 4.0]];

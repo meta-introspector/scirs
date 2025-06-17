@@ -1,6 +1,6 @@
 //! # Memory Leak Detection System
 //!
-//! Production-grade memory leak detection and monitoring system for SciRS2 Core
+//! Production-grade memory leak detection and monitoring system for `SciRS2` Core
 //! providing comprehensive memory profiling, leak testing, and integration with
 //! memory profiling tools for enterprise deployments.
 //!

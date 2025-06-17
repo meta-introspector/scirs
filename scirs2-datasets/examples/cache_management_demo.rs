@@ -5,7 +5,6 @@
 //! detailed cache statistics.
 
 use scirs2_datasets::{get_cache_dir, CacheManager, DatasetCache};
-use std::path::PathBuf;
 
 fn main() {
     println!("=== Enhanced Cache Management Demonstration ===\n");

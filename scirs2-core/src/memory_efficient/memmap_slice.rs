@@ -57,12 +57,12 @@ where
     }
 
     /// Returns a reference to the source memory-mapped array.
-    pub fn source(&self) -> &MemoryMappedArray<A> {
+    pub const fn source(&self) -> &MemoryMappedArray<A> {
         &self.source
     }
 
     /// Returns the slice information.
-    pub fn slice_info(&self) -> &SliceInfo<Vec<SliceInfoElem>, D, D> {
+    pub const fn slice_info(&self) -> &SliceInfo<Vec<SliceInfoElem>, D, D> {
         &self.slice_info
     }
 

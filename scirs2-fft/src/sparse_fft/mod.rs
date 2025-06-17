@@ -20,10 +20,10 @@
 //!
 //! // Create a sparse signal
 //! let signal = vec![1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.25, 0.0];
-//! 
+//!
 //! // Compute sparse FFT with 4 components
 //! let result = sparse_fft(&signal, 4, None, None).unwrap();
-//! 
+//!
 //! println!("Found {} sparse components", result.values.len());
 //! ```
 

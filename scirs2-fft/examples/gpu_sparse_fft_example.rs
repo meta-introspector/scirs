@@ -28,7 +28,7 @@ fn main() {
         &signal,
         6,
         Some(SparseFFTAlgorithm::Sublinear),
-        Some(WindowFunction::Hann),
+        Some(42),
     )
     .unwrap();
     let cpu_elapsed = cpu_start.elapsed();
@@ -59,7 +59,7 @@ fn main() {
             6,
             backend,
             Some(SparseFFTAlgorithm::Sublinear),
-            Some(WindowFunction::Hann),
+            Some(42),
         )
         .unwrap();
         let gpu_elapsed = gpu_start.elapsed();

@@ -86,37 +86,37 @@ impl PrefetchConfigBuilder {
     }
 
     /// Enable or disable prefetching.
-    pub fn enabled(mut self, enabled: bool) -> Self {
+    pub const fn enabled(mut self, enabled: bool) -> Self {
         self.config.enabled = enabled;
         self
     }
 
     /// Set the number of blocks to prefetch ahead of the current access.
-    pub fn prefetch_count(mut self, count: usize) -> Self {
+    pub const fn prefetch_count(mut self, count: usize) -> Self {
         self.config.prefetch_count = count;
         self
     }
 
     /// Set the maximum number of blocks to keep in the prefetch history.
-    pub fn history_size(mut self, size: usize) -> Self {
+    pub const fn history_size(mut self, size: usize) -> Self {
         self.config.history_size = size;
         self
     }
 
     /// Set the minimum number of accesses needed to detect a pattern.
-    pub fn min_pattern_length(mut self, length: usize) -> Self {
+    pub const fn min_pattern_length(mut self, length: usize) -> Self {
         self.config.min_pattern_length = length;
         self
     }
 
     /// Enable or disable asynchronous prefetching.
-    pub fn async_prefetch(mut self, async_prefetch: bool) -> Self {
+    pub const fn async_prefetch(mut self, async_prefetch: bool) -> Self {
         self.config.async_prefetch = async_prefetch;
         self
     }
 
     /// Set the timeout for prefetch operations.
-    pub fn prefetch_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn prefetch_timeout(mut self, timeout: Duration) -> Self {
         self.config.prefetch_timeout = timeout;
         self
     }
@@ -589,7 +589,7 @@ impl<A: Clone + Copy + 'static> PrefetchingCompressedArray<A> {
     }
 
     /// Get access to the underlying compressed memory-mapped array.
-    pub fn inner(&self) -> &CompressedMemMappedArray<A> {
+    pub const fn inner(&self) -> &CompressedMemMappedArray<A> {
         &self.array
     }
 

@@ -358,6 +358,7 @@ mod tests {
         assert!(!client.config.compression);
     }
 
+    #[cfg(feature = "async")]
     #[tokio::test]
     async fn test_cache_operations() {
         let temp_dir = tempfile::tempdir().unwrap();

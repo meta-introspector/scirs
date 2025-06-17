@@ -4,7 +4,7 @@
 //! access large datasets stored on disk. Memory mapping allows the operating system to
 //! page in data as needed, reducing memory usage for very large arrays.
 //!
-//! Based on NumPy's memmap implementation, this provides similar functionality in Rust.
+//! Based on `NumPy`'s memmap implementation, this provides similar functionality in Rust.
 
 use super::validation;
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
@@ -35,7 +35,7 @@ pub enum AccessMode {
 
 impl AccessMode {
     /// Convert to string representation
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             AccessMode::ReadOnly => "r",
             AccessMode::ReadWrite => "r+",
@@ -56,7 +56,7 @@ impl std::str::FromStr for AccessMode {
             "w+" => Ok(AccessMode::Write),
             "c" => Ok(AccessMode::CopyOnWrite),
             _ => Err(CoreError::ValidationError(
-                ErrorContext::new(format!("Invalid access mode: {}", s))
+                ErrorContext::new(format!("Invalid access mode: {s}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )),
         }
@@ -143,7 +143,7 @@ where
             // Try to deserialize the header
             let header: MemoryMappedHeader = deserialize(&header_buffer).map_err(|e| {
                 CoreError::ValidationError(
-                    ErrorContext::new(format!("Failed to deserialize header: {}", e))
+                    ErrorContext::new(format!("Failed to deserialize header: {e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
@@ -169,9 +169,8 @@ where
                 if offset + data_size > file_size {
                     return Err(CoreError::ValidationError(
                         ErrorContext::new(format!(
-                            "File too small: need {} bytes, but file is only {} bytes",
-                            offset + data_size,
-                            file_size
+                            "File too small: need {needed} bytes, but file is only {file_size} bytes",
+                            needed = offset + data_size
                         ))
                         .with_location(ErrorLocation::new(file!(), line!())),
                     ));

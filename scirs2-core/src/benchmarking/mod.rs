@@ -1,4 +1,4 @@
-//! # Comprehensive Benchmarking System for SciRS2 Core
+//! # Comprehensive Benchmarking System for `SciRS2` Core
 //!
 //! This module provides a production-ready benchmarking infrastructure that includes:
 //! - Performance regression testing

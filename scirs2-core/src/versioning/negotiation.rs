@@ -248,12 +248,11 @@ impl VersionNegotiator {
                 if let Some(ref preferred) = client_capabilities.preferred_version {
                     if compatible_versions.contains(preferred) {
                         return Ok(preferred.clone());
-                    } else {
-                        metadata.warnings.push(
-                            "Client preferred version not available, falling back to latest"
-                                .to_string(),
-                        );
                     }
+                    metadata.warnings.push(
+                        "Client preferred version not available, falling back to latest"
+                            .to_string(),
+                    );
                 }
                 // Fall back to latest
                 let mut versions = compatible_versions.to_vec();

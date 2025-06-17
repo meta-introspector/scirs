@@ -1,4 +1,4 @@
-//! Advanced error recovery and resilience mechanisms for SciRS2
+//! Advanced error recovery and resilience mechanisms for ``SciRS2``
 //!
 //! This module provides sophisticated error handling patterns including:
 //! - Automatic retry mechanisms with backoff strategies
@@ -331,7 +331,7 @@ impl RecoverableError {
                 vec![
                     RecoveryHint::new(
                         "Use alternative implementation",
-                        "This feature is not yet implemented in SciRS2",
+                        "This feature is not yet implemented in `SciRS2`",
                         0.8,
                     ).with_examples(vec![
                         "Check if a similar function exists in another module",

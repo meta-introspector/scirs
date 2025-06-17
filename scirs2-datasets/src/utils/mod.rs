@@ -47,10 +47,13 @@ pub use feature_engineering::{
 };
 
 // Trait extensions
-pub use extensions::*;
+// pub use extensions::*;
 
 // Type aliases for convenience
+
+/// Convenience alias for ndarray 1D array
 pub type Array1<T> = ndarray::Array1<T>;
+/// Convenience alias for ndarray 2D array
 pub type Array2<T> = ndarray::Array2<T>;
 
 #[cfg(test)]
@@ -84,7 +87,7 @@ mod tests {
         assert_eq!(indices.len(), 3);
 
         // Test balancing
-        let (balanced_data, balanced_targets) =
+        let (balanced_data, _balanced_targets) =
             random_oversample(&data, &target, Some(42)).unwrap();
         assert!(balanced_data.nrows() > data.nrows()); // Should have more samples after oversampling
 
@@ -111,7 +114,7 @@ mod tests {
         let dataset = Dataset::new(data.clone(), Some(targets.clone()));
         let folds = k_fold_split(4, 2, false, Some(42)).unwrap();
         let sample_indices = stratified_sample(&targets, 2, Some(42)).unwrap();
-        let (bal_data, bal_targets) = create_balanced_dataset(
+        let (bal_data, _bal_targets) = create_balanced_dataset(
             &data,
             &targets,
             BalancingStrategy::RandomOversample,

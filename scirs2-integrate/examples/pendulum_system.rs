@@ -245,7 +245,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
 
     #[test]
     fn test_simple_pendulum_small_angle() {
@@ -259,7 +258,7 @@ mod tests {
         let final_angle = result.y.last().unwrap()[0];
 
         // For small angles, the theoretical period is 2π√(L/g)
-        let theoretical_period = 2.0 * PI * (1.0 / 9.81).sqrt();
+        let theoretical_period = 2.0 * PI * (1.0_f64 / 9.81).sqrt();
 
         // After 2 seconds (less than one period), should still be oscillating
         assert!(final_angle.abs() < 0.2); // Should stay within reasonable bounds

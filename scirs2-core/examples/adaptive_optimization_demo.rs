@@ -4,8 +4,8 @@
 //! for runtime performance tuning and workload-aware optimization in enterprise environments.
 
 use scirs2_core::profiling::adaptive::{
-    AdaptiveOptimizer, AlgorithmPreference, IOType, LoadBalanceType, MemoryPattern,
-    OptimizationConfig, OptimizationGoal, Priority, RiskLevel, WorkloadProfile, WorkloadType,
+    AdaptiveOptimizer, IOType, MemoryPattern, OptimizationConfig, OptimizationGoal, Priority,
+    RiskLevel, WorkloadProfile, WorkloadType,
 };
 use scirs2_core::CoreResult;
 use std::thread;
@@ -686,7 +686,7 @@ fn demo_enterprise_features() -> CoreResult<()> {
             .with_workload_type(WorkloadType::MemoryIntensive)
             .with_priority(Priority::High)
             .with_data_size(100_000_000)
-            .with_io_profile(0.6, IOType::Database)
+            .with_io_profile(0.6, IOType::Disk)
             .build(),
         WorkloadProfile::builder()
             .with_name("real_time_fraud_detection")

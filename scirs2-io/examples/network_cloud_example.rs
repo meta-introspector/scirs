@@ -12,14 +12,18 @@ use scirs2_io::network::cloud::{
     create_mock_metadata, validate_config, AzureConfig, CloudProvider, GcsConfig, S3Config,
 };
 use scirs2_io::network::http::{
-    calculate_speed, format_file_size, format_speed, HttpClient, HttpMethod,
+    calculate_speed, format_file_size, format_speed, HttpClient,
 };
 use scirs2_io::network::streaming::{
-    copy_with_progress, ChunkedReader, ChunkedWriter, ProgressReader, ProgressWriter, StreamConfig,
+    copy_with_progress, ChunkedReader, ChunkedWriter, StreamConfig,
     StreamProgress,
 };
+#[cfg(feature = "reqwest")]
 use scirs2_io::network::{
-    batch_download, batch_upload_to_cloud, create_cloud_client, download_file, upload_file,
+    batch_download, download_file, upload_file,
+};
+use scirs2_io::network::{
+    batch_upload_to_cloud, create_cloud_client,
     NetworkClient, NetworkConfig,
 };
 use std::collections::HashMap;
@@ -122,7 +126,7 @@ async fn demonstrate_http_operations() -> Result<(), Box<dyn std::error::Error>>
     // Test HTTP client creation and configuration
     println!("  🔹 Creating HTTP client:");
     let config = NetworkConfig::default();
-    let mut http_client = HttpClient::new(config);
+    let http_client = HttpClient::new(config);
 
     // Initialize client (only works with reqwest feature)
     println!("  🔹 Testing HTTP functionality:");
@@ -371,9 +375,7 @@ async fn demonstrate_streaming_operations() -> Result<(), Box<dyn std::error::Er
     let output_file_path = temp_dir.path().join("progress_output.dat");
     let output_file = std::fs::File::create(&output_file_path)?;
 
-    let mut progress_reports = 0;
     let progress_callback = Box::new(|progress: StreamProgress| {
-        progress_reports += 1;
         if let Some(percentage) = progress.percentage() {
             println!(
                 "    Progress: {:.1}% ({} bytes, {:.1} KB/s, ETA: {:.1}s)",
@@ -405,7 +407,6 @@ async fn demonstrate_streaming_operations() -> Result<(), Box<dyn std::error::Er
         copied_bytes,
         copy_time.as_secs_f64() * 1000.0
     );
-    println!("    Progress reports: {}", progress_reports);
 
     // Verify copied file
     let copied_data = std::fs::read(&output_file_path)?;
@@ -496,19 +497,24 @@ async fn demonstrate_batch_operations() -> Result<(), Box<dyn std::error::Error>
     let s3_config = S3Config::new("demo-bucket", "us-east-1", "demo-key", "demo-secret");
     let cloud_client = create_cloud_client(CloudProvider::S3(s3_config));
 
-    let upload_tasks: Vec<(&str, &str)> = upload_files
+    let upload_tasks: Vec<(String, String)> = upload_files
         .iter()
         .map(|(filename, _)| {
             let local_path = temp_dir.path().join(filename).to_string_lossy().to_string();
             (
-                local_path.as_str(),
-                format!("uploads/{}", filename).as_str(),
+                local_path,
+                format!("uploads/{}", filename),
             )
         })
         .collect();
 
+    let upload_task_refs: Vec<(&str, &str)> = upload_tasks
+        .iter()
+        .map(|(local, remote)| (local.as_str(), remote.as_str()))
+        .collect();
+
     // This will show feature errors since cloud SDKs are not enabled
-    let upload_results = batch_upload_to_cloud(&cloud_client, upload_tasks).await?;
+    let upload_results = batch_upload_to_cloud(&cloud_client, upload_task_refs).await?;
 
     let mut upload_successful = 0;
     let mut upload_failed = 0;

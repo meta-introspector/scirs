@@ -285,7 +285,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
 
     #[test]
     fn test_rc_circuit_time_constant() {
@@ -302,7 +301,6 @@ mod tests {
         let tau = r * c; // 0.1 seconds
 
         // For very short time (much less than τ), use linear approximation
-        let expected_voltage = v_source * t_span[1] / tau;
         let actual_voltage = result.y.last().unwrap()[0];
 
         // Should be close for small times

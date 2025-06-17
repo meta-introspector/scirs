@@ -444,6 +444,14 @@ pub struct WindowConfig {
     pub ewma_alpha: f64,
     /// Change detection threshold
     pub change_threshold: f64,
+    /// Change detection threshold (alias for compatibility)
+    pub change_detection_threshold: f64,
+    /// Bollinger band window size
+    pub bollinger_window: usize,
+    /// Bollinger band multiplier (alias for std_dev)
+    pub bollinger_multiplier: f64,
+    /// Normalization window size
+    pub normalization_window: usize,
 }
 
 impl Default for WindowConfig {
@@ -464,6 +472,10 @@ impl Default for WindowConfig {
             bollinger_std_dev: 2.0,
             ewma_alpha: 0.1,
             change_threshold: 2.0,
+            change_detection_threshold: 2.0,
+            bollinger_window: 20,
+            bollinger_multiplier: 2.0,
+            normalization_window: 20,
         }
     }
 }

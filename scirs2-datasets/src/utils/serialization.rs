@@ -188,7 +188,7 @@ mod tests {
         let original = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
         // Serialize to JSON
-        let json = serde_json::to_string(&original.map(|x| *x)).unwrap();
+        let _json = serde_json::to_string(&original.map(|x| *x)).unwrap();
 
         // For testing, we need to manually test the serialization functions
         // since they're designed to work with serde attributes

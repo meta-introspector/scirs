@@ -3,13 +3,15 @@
 //! This example demonstrates the comprehensive test coverage analysis system
 //! with enterprise-grade features for production environments.
 
+use scirs2_core::profiling::adaptive::Priority;
 use scirs2_core::profiling::coverage::{
     BranchCoverage, BranchType, CoverageAnalyzer, CoverageConfig, CoverageType, FileCoverage,
-    FunctionCoverage, IntegrationPoint, IntegrationType, MetricTimeSeries, Priority, ReportFormat,
+    FunctionCoverage, IntegrationPoint, IntegrationType, ReportFormat,
 };
+use scirs2_core::profiling::dashboards::MetricTimeSeries;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧪 Test Coverage Analysis Demo");
@@ -68,7 +70,7 @@ fn demo_production_configuration() -> Result<(), Box<dyn std::error::Error>> {
     println!("   • Report Formats: {:?}", config.report_formats);
 
     // Create analyzer with production config
-    let analyzer = CoverageAnalyzer::new(config)?;
+    let _analyzer = CoverageAnalyzer::new(config)?;
     println!("✅ Coverage analyzer initialized for production use");
 
     println!();

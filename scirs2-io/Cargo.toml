@@ -54,7 +54,11 @@ compression = []
 validation = []
 hdf5 = ["dep:hdf5"]
 async = ["dep:tokio", "dep:futures"]
-all = ["csv", "compression", "validation", "hdf5", "async"]
+reqwest = []
+aws-sdk-s3 = []
+google-cloud-storage = []
+azure-storage-blobs = []
+all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs"]
 
 [[example]]
 name = "hdf5_example"
@@ -65,3 +69,8 @@ required-features = ["hdf5"]
 name = "async_io_example"
 path = "examples/async_io_example.rs"
 required-features = ["async"]
+
+[[example]]
+name = "network_cloud_example"
+path = "examples/network_cloud_example.rs"
+required-features = ["async", "reqwest"]

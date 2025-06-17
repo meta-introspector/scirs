@@ -12,10 +12,7 @@ use std::fmt::Debug;
 use super::config::{SparseFFTConfig, SparsityEstimationMethod};
 
 /// Estimate sparsity of a signal using various methods
-pub fn estimate_sparsity<T>(
-    signal: &[T],
-    config: &SparseFFTConfig,
-) -> FFTResult<usize>
+pub fn estimate_sparsity<T>(signal: &[T], config: &SparseFFTConfig) -> FFTResult<usize>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -34,17 +31,16 @@ where
             estimate_sparsity_frequency_pruning(signal, config.pruning_sensitivity)
         }
 
-        SparsityEstimationMethod::SpectralFlatness => {
-            estimate_sparsity_spectral_flatness(signal, config.flatness_threshold, config.window_size)
-        }
+        SparsityEstimationMethod::SpectralFlatness => estimate_sparsity_spectral_flatness(
+            signal,
+            config.flatness_threshold,
+            config.window_size,
+        ),
     }
 }
 
 /// Estimate sparsity using magnitude thresholding
-pub fn estimate_sparsity_threshold<T>(
-    signal: &[T],
-    threshold: f64,
-) -> FFTResult<usize>
+pub fn estimate_sparsity_threshold<T>(signal: &[T], threshold: f64) -> FFTResult<usize>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -121,16 +117,18 @@ where
     let window_size = (n / 16).max(3).min(n);
 
     for i in 0..n {
-        let start = if i >= window_size / 2 { i - window_size / 2 } else { 0 };
+        let start = if i >= window_size / 2 {
+            i - window_size / 2
+        } else {
+            0
+        };
         let end = (i + window_size / 2 + 1).min(n);
-        
+
         let window_mags = &magnitudes[start..end];
         let mean = window_mags.iter().sum::<f64>() / window_mags.len() as f64;
-        let variance = window_mags
-            .iter()
-            .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / window_mags.len() as f64;
-        
+        let variance =
+            window_mags.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window_mags.len() as f64;
+
         local_variances.push(variance);
     }
 
@@ -236,7 +234,7 @@ mod tests {
         let n = 64;
         let frequencies = vec![(3, 1.0), (7, 0.5)];
         let signal = create_sparse_signal(n, &frequencies);
-        
+
         let result = estimate_sparsity_threshold(&signal, 0.1).unwrap();
         // Should find approximately 4 components (positive and negative frequencies)
         assert!(result >= 2 && result <= 8);
@@ -247,7 +245,7 @@ mod tests {
         let n = 64;
         let frequencies = vec![(3, 1.0), (7, 0.5), (15, 0.25)];
         let signal = create_sparse_signal(n, &frequencies);
-        
+
         let result = estimate_sparsity_adaptive(&signal, 0.25, 10).unwrap();
         // Should find some components (adaptive method can vary)
         assert!(result >= 2 && result <= 15);
@@ -258,7 +256,7 @@ mod tests {
         let n = 64;
         let frequencies = vec![(3, 1.0), (7, 0.5)];
         let signal = create_sparse_signal(n, &frequencies);
-        
+
         let result = estimate_sparsity_frequency_pruning(&signal, 2.0).unwrap();
         assert!(result >= 1);
     }
@@ -268,7 +266,7 @@ mod tests {
         let n = 64;
         let frequencies = vec![(3, 1.0), (7, 0.5)];
         let signal = create_sparse_signal(n, &frequencies);
-        
+
         let result = estimate_sparsity_spectral_flatness(&signal, 0.3, 8).unwrap();
         assert!(result >= 1);
     }

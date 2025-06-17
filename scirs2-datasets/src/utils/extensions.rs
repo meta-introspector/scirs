@@ -22,7 +22,7 @@ mod tests {
 
         // Test that we can use the StatsExt trait methods
         let mean = view.mean().unwrap();
-        assert!((mean - 3.0).abs() < 1e-10);
+        assert!((mean - 3.0_f64).abs() < 1e-10);
 
         let std = view.std(0.0);
         assert!(std > 0.0);

@@ -331,7 +331,11 @@ impl SparseFFT {
             let (best_idx, best_value) = spectrum
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.norm().partial_cmp(&b.norm()).unwrap_or(std::cmp::Ordering::Equal))
+                .max_by(|(_, a), (_, b)| {
+                    a.norm()
+                        .partial_cmp(&b.norm())
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
                 .map(|(i, &val)| (i, val))
                 .ok_or_else(|| FFTError::ValueError("Empty spectrum".to_string()))?;
 
@@ -348,7 +352,8 @@ impl SparseFFT {
             // In a real implementation, this would be more sophisticated
             let n = signal_complex.len();
             for (i, sample) in signal_complex.iter_mut().enumerate() {
-                let phase = 2.0 * std::f64::consts::PI * (best_idx as f64) * (i as f64) / (n as f64);
+                let phase =
+                    2.0 * std::f64::consts::PI * (best_idx as f64) * (i as f64) / (n as f64);
                 let component = best_value * Complex64::new(phase.cos(), phase.sin()) / (n as f64);
                 *sample -= component;
             }
@@ -398,10 +403,7 @@ impl SparseFFT {
         // Compute statistics for pruning
         let n = magnitudes.len();
         let mean: f64 = magnitudes.iter().sum::<f64>() / n as f64;
-        let variance: f64 = magnitudes
-            .iter()
-            .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / n as f64;
+        let variance: f64 = magnitudes.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
         let std_dev = variance.sqrt();
 
         // Define pruning threshold
@@ -420,8 +422,14 @@ impl SparseFFT {
 
         // Take top k components
         let selected_count = k.min(candidates.len());
-        let selected_indices: Vec<usize> = candidates[..selected_count].iter().map(|(_, i, _)| *i).collect();
-        let selected_values: Vec<Complex64> = candidates[..selected_count].iter().map(|(_, _, c)| *c).collect();
+        let selected_indices: Vec<usize> = candidates[..selected_count]
+            .iter()
+            .map(|(_, i, _)| *i)
+            .collect();
+        let selected_values: Vec<Complex64> = candidates[..selected_count]
+            .iter()
+            .map(|(_, _, c)| *c)
+            .collect();
 
         Ok((selected_values, selected_indices))
     }
@@ -495,7 +503,8 @@ impl SparseFFT {
                 .map(|(i, &c)| (c.norm(), i, c))
                 .collect();
 
-            remaining_candidates.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+            remaining_candidates
+                .sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
             let needed = k - selected_indices.len();
             for (_, idx, val) in remaining_candidates.into_iter().take(needed) {
@@ -594,7 +603,9 @@ where
     T: NumCast + Copy + Debug + 'static,
 {
     // Placeholder implementation
-    Err(FFTError::ValueError("2D sparse FFT not yet implemented".to_string()))
+    Err(FFTError::ValueError(
+        "2D sparse FFT not yet implemented".to_string(),
+    ))
 }
 
 /// N-dimensional sparse FFT (placeholder implementation)
@@ -608,5 +619,7 @@ where
     T: NumCast + Copy + Debug + 'static,
 {
     // Placeholder implementation
-    Err(FFTError::ValueError("N-dimensional sparse FFT not yet implemented".to_string()))
+    Err(FFTError::ValueError(
+        "N-dimensional sparse FFT not yet implemented".to_string(),
+    ))
 }

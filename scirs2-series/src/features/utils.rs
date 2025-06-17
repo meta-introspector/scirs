@@ -33,23 +33,35 @@ pub type MultiscaleSpectralResult<F> = (Vec<F>, Vec<ScaleSpectralFeatures<F>>, V
 pub type CrossFrequencyCouplingResult<F> = (F, F, F, F, F, F, F, Vec<F>, Vec<F>, F);
 
 // Forward declarations for types used in type aliases
+
+/// Phase spectrum analysis features
 #[derive(Debug, Clone, Default)]
 pub struct PhaseSpectrumFeatures<F> {
+    /// Mean phase value
     pub phase_mean: F,
+    /// Standard deviation of phase
     pub phase_std: F,
+    /// Phase entropy measure
     pub phase_entropy: F,
 }
 
+/// Bispectrum analysis features
 #[derive(Debug, Clone, Default)]
 pub struct BispectrumFeatures<F> {
+    /// Peak value in bispectrum
     pub bispectrum_peak: F,
+    /// Entropy of bispectrum
     pub bispectrum_entropy: F,
 }
 
+/// Scale-based spectral analysis features
 #[derive(Debug, Clone, Default)]
 pub struct ScaleSpectralFeatures<F> {
+    /// Scale parameter
     pub scale: F,
+    /// Energy at this scale
     pub energy: F,
+    /// Entropy at this scale
     pub entropy: F,
 }
 

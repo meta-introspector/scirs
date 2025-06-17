@@ -1,7 +1,7 @@
 //! # Resource Discovery and Hardware Detection
 //!
 //! This module provides automatic hardware detection and resource discovery
-//! capabilities for optimizing SciRS2 Core performance based on available
+//! capabilities for optimizing `SciRS2` Core performance based on available
 //! system resources. It includes:
 //! - CPU detection and optimization parameter tuning
 //! - Memory hierarchy analysis

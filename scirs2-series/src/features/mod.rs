@@ -19,7 +19,7 @@ pub use complexity::*;
 #[allow(ambiguous_glob_reexports)]
 pub use config::*;
 #[allow(ambiguous_glob_reexports)]
-pub use frequency::*;
+// pub use frequency::*;
 #[allow(ambiguous_glob_reexports)]
 pub use statistical::*;
 #[allow(ambiguous_glob_reexports)]

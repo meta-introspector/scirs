@@ -174,7 +174,7 @@ impl ResourceAwareConfigBuilder {
     }
 
     /// Set the sampling interval.
-    pub fn with_sampling_interval(mut self, interval: Duration) -> Self {
+    pub const fn with_sampling_interval(mut self, interval: Duration) -> Self {
         self.config.sampling_interval = interval;
         self
     }
@@ -204,25 +204,25 @@ impl ResourceAwareConfigBuilder {
     }
 
     /// Enable or disable automatic adjustment.
-    pub fn with_auto_adjust(mut self, auto_adjust: bool) -> Self {
+    pub const fn with_auto_adjust(mut self, auto_adjust: bool) -> Self {
         self.config.auto_adjust = auto_adjust;
         self
     }
 
     /// Enable or disable disabling prefetching under high load.
-    pub fn with_disable_under_pressure(mut self, disable: bool) -> Self {
+    pub const fn with_disable_under_pressure(mut self, disable: bool) -> Self {
         self.config.disable_under_pressure = disable;
         self
     }
 
     /// Set the minimum prefetch count.
-    pub fn with_min_prefetch_count(mut self, count: usize) -> Self {
+    pub const fn with_min_prefetch_count(mut self, count: usize) -> Self {
         self.config.min_prefetch_count = count;
         self
     }
 
     /// Set the maximum prefetch count.
-    pub fn with_max_prefetch_count(mut self, count: usize) -> Self {
+    pub const fn with_max_prefetch_count(mut self, count: usize) -> Self {
         self.config.max_prefetch_count = count;
         self
     }

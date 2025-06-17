@@ -4,7 +4,6 @@
 //! helping to monitor and control numerical accuracy throughout complex scientific calculations.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::RwLock;
@@ -62,11 +61,11 @@ pub enum PrecisionLossSeverity {
 impl fmt::Display for PrecisionLossSeverity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PrecisionLossSeverity::Minimal => write!(f, "Minimal"),
-            PrecisionLossSeverity::Moderate => write!(f, "Moderate"),
-            PrecisionLossSeverity::Significant => write!(f, "Significant"),
-            PrecisionLossSeverity::Severe => write!(f, "Severe"),
-            PrecisionLossSeverity::Catastrophic => write!(f, "Catastrophic"),
+            Self::Minimal => write!(f, "Minimal"),
+            Self::Moderate => write!(f, "Moderate"),
+            Self::Significant => write!(f, "Significant"),
+            Self::Severe => write!(f, "Severe"),
+            Self::Catastrophic => write!(f, "Catastrophic"),
         }
     }
 }
@@ -147,9 +146,8 @@ impl PrecisionContext {
         self.precision_loss_sources.push(PrecisionLossSource {
             operation: operation.to_string(),
             precision_lost: loss,
-            description: description.unwrap_or_else(|| {
-                format!("Precision loss of {:.2} digits in {}", loss, operation)
-            }),
+            description: description
+                .unwrap_or_else(|| format!("Precision loss of {loss:.2} digits in {operation}")),
             severity,
             location,
         });
@@ -169,7 +167,7 @@ impl PrecisionContext {
             self.record_precision_loss(
                 "ill_conditioning",
                 (cond.log10() - 12.0).max(0.0),
-                Some(format!("Ill-conditioned problem (κ = {:.2e})", cond)),
+                Some(format!("Ill-conditioned problem (κ = {cond:.2e})")),
                 None,
             );
             // Force instability for very high condition numbers
@@ -179,7 +177,7 @@ impl PrecisionContext {
             self.record_precision_loss(
                 "moderate_conditioning",
                 (cond.log10() - 8.0).max(0.0),
-                Some(format!("Moderately ill-conditioned (κ = {:.2e})", cond)),
+                Some(format!("Moderately ill-conditioned (κ = {cond:.2e})")),
                 None,
             );
         }
@@ -303,7 +301,7 @@ impl fmt::Display for PrecisionWarning {
         if !self.suggestions.is_empty() {
             writeln!(f, "Suggestions:")?;
             for suggestion in &self.suggestions {
-                writeln!(f, "  • {}", suggestion)?;
+                writeln!(f, "  • {suggestion}")?;
             }
         }
         Ok(())
@@ -406,9 +404,9 @@ impl<T> PrecisionTracked for TrackedFloat<T> {
 /// Implement arithmetic operations with precision tracking
 impl TrackedFloat<f64> {
     /// Add two tracked floats
-    pub fn add(&self, other: &TrackedFloat<f64>) -> TrackedFloat<f64> {
+    pub fn add(&self, other: &Self) -> Self {
         let result_value = self.value + other.value;
-        let mut result = TrackedFloat::new(result_value);
+        let mut result = Self::new(result_value);
 
         // Estimate precision loss from addition
         let min_precision = self.context.precision.min(other.context.precision);
@@ -422,9 +420,9 @@ impl TrackedFloat<f64> {
     }
 
     /// Subtract two tracked floats
-    pub fn sub(&self, other: &TrackedFloat<f64>) -> TrackedFloat<f64> {
+    pub fn sub(&self, other: &Self) -> Self {
         let result_value = self.value - other.value;
-        let mut result = TrackedFloat::new(result_value);
+        let mut result = Self::new(result_value);
 
         // Check for catastrophic cancellation
         let relative_magnitude =
@@ -446,9 +444,9 @@ impl TrackedFloat<f64> {
     }
 
     /// Multiply two tracked floats
-    pub fn mul(&self, other: &TrackedFloat<f64>) -> TrackedFloat<f64> {
+    pub fn mul(&self, other: &Self) -> Self {
         let result_value = self.value * other.value;
-        let mut result = TrackedFloat::new(result_value);
+        let mut result = Self::new(result_value);
 
         let min_precision = self.context.precision.min(other.context.precision);
         let relative_error = estimate_multiplication_error(self.value, other.value);
@@ -461,7 +459,7 @@ impl TrackedFloat<f64> {
     }
 
     /// Divide two tracked floats
-    pub fn div(&self, other: &TrackedFloat<f64>) -> CoreResult<TrackedFloat<f64>> {
+    pub fn div(&self, other: &Self) -> CoreResult<Self> {
         if other.value.abs() < f64::EPSILON {
             return Err(CoreError::DomainError(ErrorContext::new(
                 "Division by zero or near-zero value",
@@ -469,7 +467,7 @@ impl TrackedFloat<f64> {
         }
 
         let result_value = self.value / other.value;
-        let mut result = TrackedFloat::new(result_value);
+        let mut result = Self::new(result_value);
 
         let min_precision = self.context.precision.min(other.context.precision);
         let relative_error = estimate_division_error(self.value, other.value);
@@ -492,7 +490,7 @@ impl TrackedFloat<f64> {
     }
 
     /// Take square root with precision tracking
-    pub fn sqrt(&self) -> CoreResult<TrackedFloat<f64>> {
+    pub fn sqrt(&self) -> CoreResult<Self> {
         if self.value < 0.0 {
             return Err(CoreError::DomainError(ErrorContext::new(
                 "Square root of negative number",
@@ -500,7 +498,7 @@ impl TrackedFloat<f64> {
         }
 
         let result_value = self.value.sqrt();
-        let mut result = TrackedFloat::new(result_value);
+        let mut result = Self::new(result_value);
 
         // Square root generally preserves precision well
         let precision_loss = 0.5; // Typical loss for sqrt
@@ -511,7 +509,7 @@ impl TrackedFloat<f64> {
     }
 
     /// Natural logarithm with precision tracking
-    pub fn ln(&self) -> CoreResult<TrackedFloat<f64>> {
+    pub fn ln(&self) -> CoreResult<Self> {
         if self.value <= 0.0 {
             return Err(CoreError::DomainError(ErrorContext::new(
                 "Logarithm of non-positive number",
@@ -519,7 +517,7 @@ impl TrackedFloat<f64> {
         }
 
         let result_value = self.value.ln();
-        let mut result = TrackedFloat::new(result_value);
+        let mut result = Self::new(result_value);
 
         // Logarithm near 1 can cause precision loss
         if (self.value - 1.0).abs() < 1e-10 {
@@ -601,8 +599,7 @@ impl PrecisionRegistry {
             context.update_precision(precision, operation);
         } else {
             return Err(CoreError::ValidationError(ErrorContext::new(format!(
-                "Computation '{}' not found in registry",
-                name
+                "Computation '{name}' not found in registry"
             ))));
         }
         Ok(())
@@ -687,7 +684,8 @@ impl Default for PrecisionRegistry {
 }
 
 /// Global precision registry instance
-static GLOBAL_PRECISION_REGISTRY: Lazy<PrecisionRegistry> = Lazy::new(PrecisionRegistry::new);
+static GLOBAL_PRECISION_REGISTRY: std::sync::LazyLock<PrecisionRegistry> =
+    std::sync::LazyLock::new(PrecisionRegistry::new);
 
 /// Get the global precision registry
 pub fn global_precision_registry() -> &'static PrecisionRegistry {
@@ -755,7 +753,7 @@ mod tests {
 
     #[test]
     fn test_catastrophic_cancellation() {
-        let a = TrackedFloat::with_precision(1.0000000000001, 15.0);
+        let a = TrackedFloat::with_precision(1.000_000_000_000_1, 15.0);
         let b = TrackedFloat::with_precision(1.0, 15.0);
 
         let result = a.sub(&b);

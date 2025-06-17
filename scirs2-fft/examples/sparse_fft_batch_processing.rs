@@ -182,7 +182,7 @@ fn process_signals_sequentially(
             signal,
             10, // Look for up to 10 components
             Some(SparseFFTAlgorithm::Sublinear),
-            Some(WindowFunction::Hann),
+            Some(42), // Random seed
         )?;
 
         results.push(result);

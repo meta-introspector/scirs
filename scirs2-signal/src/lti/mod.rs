@@ -132,7 +132,7 @@ mod tests {
 
         // System creation
         let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
-        let zpk_sys = zpk(Vec::new(), vec![Complex64::new(-1.0, 0.0)], 1.0, None).unwrap();
+        let _zpk_sys = zpk(Vec::new(), vec![Complex64::new(-1.0, 0.0)], 1.0, None).unwrap();
         let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();
 
         // Analysis
@@ -315,7 +315,7 @@ mod tests {
     #[test]
     fn test_impulse_and_step_response() {
         // Test time-domain response computation
-        let sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap(); // 1/(s+1)
+        let _sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap(); // 1/(s+1)
 
         let t = vec![0.0, 0.1, 0.2, 0.5, 1.0];
 

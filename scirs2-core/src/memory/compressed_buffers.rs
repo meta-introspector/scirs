@@ -221,7 +221,7 @@ where
     }
 
     /// Get the array shape
-    pub fn shape(&self) -> &D {
+    pub const fn shape(&self) -> &D {
         &self.shape
     }
 }

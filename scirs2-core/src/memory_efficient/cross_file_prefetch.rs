@@ -211,43 +211,43 @@ impl CrossFilePrefetchConfigBuilder {
     }
 
     /// Set the correlation window.
-    pub fn with_correlation_window(mut self, window: Duration) -> Self {
+    pub const fn with_correlation_window(mut self, window: Duration) -> Self {
         self.config.correlation_window = window;
         self
     }
 
     /// Set the minimum occurrences for correlation.
-    pub fn with_min_occurrences(mut self, occurrences: usize) -> Self {
+    pub const fn with_min_occurrences(mut self, occurrences: usize) -> Self {
         self.config.min_occurrences = occurrences;
         self
     }
 
     /// Set the maximum number of datasets to prefetch.
-    pub fn with_max_prefetch_datasets(mut self, max_datasets: usize) -> Self {
+    pub const fn with_max_prefetch_datasets(mut self, max_datasets: usize) -> Self {
         self.config.max_prefetch_datasets = max_datasets;
         self
     }
 
     /// Set the maximum elements to prefetch per dataset.
-    pub fn with_max_prefetch_elements(mut self, max_elements: usize) -> Self {
+    pub const fn with_max_prefetch_elements(mut self, max_elements: usize) -> Self {
         self.config.max_prefetch_elements = max_elements;
         self
     }
 
     /// Enable or disable prefetching entire files.
-    pub fn with_prefetch_entire_file(mut self, enable: bool) -> Self {
+    pub const fn with_prefetch_entire_file(mut self, enable: bool) -> Self {
         self.config.prefetch_entire_file = enable;
         self
     }
 
     /// Set the correlation expiry time.
-    pub fn with_correlation_expiry(mut self, expiry: Duration) -> Self {
+    pub const fn with_correlation_expiry(mut self, expiry: Duration) -> Self {
         self.config.correlation_expiry = expiry;
         self
     }
 
     /// Enable or disable learning from access patterns.
-    pub fn with_enable_learning(mut self, enable: bool) -> Self {
+    pub const fn with_enable_learning(mut self, enable: bool) -> Self {
         self.config.enable_learning = enable;
         self
     }
@@ -900,7 +900,7 @@ impl<A: Clone + Copy + 'static, T> TrackedArray<A, T> {
     }
 
     /// Get a reference to the underlying array.
-    pub fn inner(&self) -> &T {
+    pub const fn inner(&self) -> &T {
         &self.array
     }
 
@@ -910,7 +910,7 @@ impl<A: Clone + Copy + 'static, T> TrackedArray<A, T> {
     }
 
     /// Get the dataset ID.
-    pub fn dataset_id(&self) -> &DatasetId {
+    pub const fn dataset_id(&self) -> &DatasetId {
         &self.dataset_id
     }
 

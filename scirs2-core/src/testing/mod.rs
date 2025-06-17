@@ -1,4 +1,4 @@
-//! # Testing Framework for SciRS2 Core
+//! # Testing Framework for `SciRS2` Core
 //!
 //! This module provides comprehensive testing infrastructure including:
 //! - Property-based testing for mathematical properties

@@ -779,23 +779,23 @@ mod tests {
         // Test ideal vs non-ideal models
         let mut ideal_calc = calculator.clone();
         ideal_calc.set_activity_model(ActivityModel::Ideal);
-        let ideal_coeffs = ideal_calc
-            .calculate_activity_coefficients(&concentrations)
+        let ideal_result = ideal_calc
+            .calculate_equilibrium(concentrations.clone(), None)
             .unwrap();
 
         let mut real_calc = calculator.clone();
         real_calc.set_activity_model(ActivityModel::ExtendedDebyeHuckel);
-        let real_coeffs = real_calc
-            .calculate_activity_coefficients(&concentrations)
+        let real_result = real_calc
+            .calculate_equilibrium(concentrations.clone(), None)
             .unwrap();
 
         // Ideal coefficients should be 1
-        for &coeff in ideal_coeffs.iter() {
+        for &coeff in ideal_result.activity_coefficients.iter() {
             assert_abs_diff_eq!(coeff, 1.0, epsilon = 1e-10);
         }
 
         // Real coefficients for ions should be < 1
-        assert!(real_coeffs[1] < 1.0); // H+
-        assert!(real_coeffs[2] < 1.0); // A-
+        assert!(real_result.activity_coefficients[1] < 1.0); // H+
+        assert!(real_result.activity_coefficients[2] < 1.0); // A-
     }
 }

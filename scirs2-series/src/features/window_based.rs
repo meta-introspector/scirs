@@ -380,7 +380,7 @@ pub fn calculate_window_based_features<F>(
     config: &WindowConfig,
 ) -> Result<WindowBasedFeatures<F>>
 where
-    F: Float + FromPrimitive + Debug + Clone + ndarray::ScalarOperand,
+    F: Float + FromPrimitive + Debug + Clone + ndarray::ScalarOperand + std::iter::Sum,
 {
     let n = ts.len();
 

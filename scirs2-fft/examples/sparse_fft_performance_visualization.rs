@@ -85,7 +85,7 @@ fn benchmark_and_visualize() {
                 &signal,
                 10, // Sparsity
                 Some(algorithm),
-                Some(WindowFunction::Hann),
+                Some(42),
             )
             .unwrap();
             let cpu_time = cpu_start.elapsed().as_millis() as f64;
@@ -99,7 +99,7 @@ fn benchmark_and_visualize() {
                     10, // Sparsity
                     0,  // Device ID
                     Some(algorithm),
-                    Some(WindowFunction::Hann),
+                    Some(42),
                 )
                 .unwrap();
                 let gpu_time = gpu_start.elapsed().as_millis() as f64;
@@ -253,7 +253,7 @@ fn benchmark_accuracy() {
                 &signal,
                 10, // Sparsity
                 Some(algorithm),
-                Some(WindowFunction::Hann),
+                Some(42),
             )
             .unwrap();
 

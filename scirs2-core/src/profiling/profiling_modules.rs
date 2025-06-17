@@ -1,6 +1,6 @@
 //! # Profiling Module
 //!
-//! Comprehensive profiling capabilities for SciRS2 Core including production-level
+//! Comprehensive profiling capabilities for `SciRS2` Core including production-level
 //! performance analysis, bottleneck identification, and performance monitoring.
 
 pub mod continuous_monitoring;

@@ -108,7 +108,7 @@ pub enum CounterType {
 
 impl CounterType {
     /// Get a human-readable description of the counter
-    pub fn description(&self) -> &'static str {
+    pub const fn description(&self) -> &'static str {
         match self {
             CounterType::CpuCycles => "CPU cycles",
             CounterType::Instructions => "Instructions retired",
@@ -140,7 +140,7 @@ impl CounterType {
     }
 
     /// Get the unit for this counter type
-    pub fn unit(&self) -> &'static str {
+    pub const fn unit(&self) -> &'static str {
         match self {
             CounterType::CpuCycles
             | CounterType::Instructions

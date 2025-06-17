@@ -1,7 +1,7 @@
 //! # Fuzzing Framework
 //!
 //! This module provides fuzzing capabilities for discovering edge cases and potential
-//! vulnerabilities in SciRS2 Core functions. It includes:
+//! vulnerabilities in `SciRS2` Core functions. It includes:
 //! - Random input generation with configurable constraints
 //! - Edge case exploration
 //! - Boundary condition testing

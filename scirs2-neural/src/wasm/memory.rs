@@ -651,10 +651,15 @@ impl MemoryRequirements {
 /// Memory usage breakdown in percentages
 #[derive(Debug, Clone)]
 pub struct MemoryBreakdown {
+    /// Percentage of memory for base operations
     pub base_percent: f64,
+    /// Percentage of memory for model storage
     pub model_percent: f64,
+    /// Percentage of memory for caching
     pub cache_percent: f64,
+    /// Percentage of memory for preloading
     pub preload_percent: f64,
+    /// Percentage of memory for worker threads
     pub worker_percent: f64,
 }
 

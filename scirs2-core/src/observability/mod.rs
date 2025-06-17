@@ -1,6 +1,6 @@
 //! # Observability Infrastructure
 //!
-//! Production-grade observability infrastructure for SciRS2 Core providing
+//! Production-grade observability infrastructure for `SciRS2` Core providing
 //! comprehensive monitoring, tracing, and auditing capabilities for enterprise
 //! deployments and regulated environments.
 //!

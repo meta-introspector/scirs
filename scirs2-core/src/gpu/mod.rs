@@ -387,7 +387,7 @@ impl GpuContext {
     }
 
     /// Get the backend name
-    pub fn backend_name(&self) -> &str {
+    pub const fn backend_name(&self) -> &str {
         match self.backend {
             GpuBackend::Cuda => "CUDA",
             GpuBackend::Rocm => "ROCm",

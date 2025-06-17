@@ -439,12 +439,13 @@ mod tests {
         );
 
         config.dt = 0.001;
+        let dt = config.dt; // Save dt before moving config
         let mut integrator = MechanicalIntegrator::new(config, properties);
         let mut state = initial_state;
 
         // Integrate for one period (1000 steps)
         for i in 0..1000 {
-            let t = i as f64 * config.dt;
+            let t = i as f64 * dt;
             let result = integrator.step(t, &state).unwrap();
             state = result.state;
         }
@@ -471,12 +472,13 @@ mod tests {
         );
 
         config.dt = 0.001;
+        let dt = config.dt; // Save dt before moving config
         let mut integrator = MechanicalIntegrator::new(config, properties);
         let mut state = initial_state;
 
         // Integrate for many steps
         for i in 0..500 {
-            let t = i as f64 * config.dt;
+            let t = i as f64 * dt;
             let result = integrator.step(t, &state).unwrap();
             state = result.state;
         }

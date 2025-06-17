@@ -646,23 +646,23 @@ mod tests {
         let value = 2.0f32;
 
         assert_eq!(
-            LoopFusionOptimizer::<f32>::apply_unary_function(value, &UnaryFunction::Square),
+            FusedKernel::<f32>::apply_unary_function(value, &UnaryFunction::Square),
             4.0
         );
         assert_eq!(
-            LoopFusionOptimizer::<f32>::apply_unary_function(-1.0, &UnaryFunction::ReLU),
+            FusedKernel::<f32>::apply_unary_function(-1.0, &UnaryFunction::ReLU),
             0.0
         );
         assert_eq!(
-            LoopFusionOptimizer::<f32>::apply_unary_function(1.0, &UnaryFunction::ReLU),
+            FusedKernel::<f32>::apply_unary_function(1.0, &UnaryFunction::ReLU),
             1.0
         );
         assert_eq!(
-            LoopFusionOptimizer::<f32>::apply_unary_function(4.0, &UnaryFunction::Sqrt),
+            FusedKernel::<f32>::apply_unary_function(4.0, &UnaryFunction::Sqrt),
             2.0
         );
         assert_eq!(
-            LoopFusionOptimizer::<f32>::apply_unary_function(-2.0, &UnaryFunction::Abs),
+            FusedKernel::<f32>::apply_unary_function(-2.0, &UnaryFunction::Abs),
             2.0
         );
     }
@@ -673,7 +673,7 @@ mod tests {
         let scalar = 2.0f32;
 
         assert_eq!(
-            LoopFusionOptimizer::<f32>::apply_scalar_operation(
+            FusedKernel::<f32>::apply_scalar_operation(
                 value,
                 scalar,
                 &BinaryFunction::AddScalar
@@ -681,7 +681,7 @@ mod tests {
             5.0
         );
         assert_eq!(
-            LoopFusionOptimizer::<f32>::apply_scalar_operation(
+            FusedKernel::<f32>::apply_scalar_operation(
                 value,
                 scalar,
                 &BinaryFunction::MulScalar
@@ -689,7 +689,7 @@ mod tests {
             6.0
         );
         assert_eq!(
-            LoopFusionOptimizer::<f32>::apply_scalar_operation(value, scalar, &BinaryFunction::Pow),
+            FusedKernel::<f32>::apply_scalar_operation(value, scalar, &BinaryFunction::Pow),
             9.0
         );
     }

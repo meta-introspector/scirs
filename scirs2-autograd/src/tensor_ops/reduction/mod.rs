@@ -388,7 +388,7 @@ where
 ///    let lse = reduce_logsumexp(x, 0, false);
 ///    // Should be approximately log(e^1 + e^2 + e^3) ≈ 3.407
 ///    let result = lse.eval(g).unwrap();
-///    assert!((result[ndarray::IxDyn(&[])] - 3.407).abs() < 0.01);
+///    assert!((result[ndarray::IxDyn(&[])] - 3.407_f64).abs() < 0.01);
 /// });
 /// ```
 pub fn reduce_logsumexp<'graph, A, F: Float>(x: A, axis: isize, keep_dim: bool) -> Tensor<'graph, F>

@@ -891,7 +891,7 @@ pub mod units {
         }
 
         /// Get dimensions
-        pub fn dimensions(&self) -> &Dimensions {
+        pub const fn dimensions(&self) -> &Dimensions {
             &self.dimensions
         }
 
@@ -925,7 +925,7 @@ pub mod units {
         }
 
         /// Get unit
-        pub fn unit(&self) -> &Unit {
+        pub const fn unit(&self) -> &Unit {
             &self.unit
         }
 

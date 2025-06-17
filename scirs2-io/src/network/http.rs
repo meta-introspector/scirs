@@ -7,15 +7,22 @@ use crate::error::{IoError, Result};
 use crate::network::NetworkConfig;
 use std::collections::HashMap;
 use std::path::Path;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+#[cfg(feature = "reqwest")]
+use std::time::Instant;
 
 /// HTTP request method
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum HttpMethod {
+    /// GET method
     GET,
+    /// POST method
     POST,
+    /// PUT method
     PUT,
+    /// DELETE method
     DELETE,
+    /// HEAD method
     HEAD,
 }
 
@@ -52,6 +59,7 @@ pub type ProgressCallback = Box<dyn Fn(u64, Option<u64>) + Send + Sync>;
 /// HTTP client for network operations
 #[derive(Debug)]
 pub struct HttpClient {
+    #[allow(dead_code)]
     config: NetworkConfig,
     #[cfg(feature = "reqwest")]
     client: Option<reqwest::Client>,
@@ -345,6 +353,7 @@ impl HttpClient {
 
     // Fallback implementations when reqwest feature is not enabled
     #[cfg(not(feature = "reqwest"))]
+    /// Download a file (fallback implementation when reqwest feature is disabled)
     pub async fn download<P: AsRef<Path>>(&self, _url: &str, _local_path: P) -> Result<()> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
@@ -352,6 +361,7 @@ impl HttpClient {
     }
 
     #[cfg(not(feature = "reqwest"))]
+    /// Upload a file (fallback implementation when reqwest feature is disabled)
     pub async fn upload<P: AsRef<Path>>(&self, _local_path: P, _url: &str) -> Result<()> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
@@ -359,6 +369,7 @@ impl HttpClient {
     }
 
     #[cfg(not(feature = "reqwest"))]
+    /// Make an HTTP request (fallback implementation when reqwest feature is disabled)
     pub async fn request(
         &self,
         _method: HttpMethod,
@@ -371,6 +382,7 @@ impl HttpClient {
     }
 
     #[cfg(not(feature = "reqwest"))]
+    /// Check if URL is reachable (fallback implementation when reqwest feature is disabled)
     pub async fn check_url(&self, _url: &str) -> Result<bool> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
@@ -378,6 +390,7 @@ impl HttpClient {
     }
 
     #[cfg(not(feature = "reqwest"))]
+    /// Get remote file size (fallback implementation when reqwest feature is disabled)
     pub async fn get_remote_file_size(&self, _url: &str) -> Result<Option<u64>> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
@@ -481,7 +494,7 @@ mod tests {
     #[test]
     fn test_http_client_creation() {
         let config = NetworkConfig::default();
-        let client = HttpClient::new(config);
+        let _client = HttpClient::new(config);
 
         // Client should be created successfully
         assert!(true); // Basic creation test
@@ -514,6 +527,7 @@ mod tests {
         assert_eq!(format_speed(1024.0 * 1024.0), "1.0 MB/s");
     }
 
+    #[cfg(feature = "async")]
     #[tokio::test]
     async fn test_http_client_without_reqwest_feature() {
         let config = NetworkConfig::default();

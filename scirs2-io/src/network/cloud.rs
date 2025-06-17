@@ -686,6 +686,7 @@ mod tests {
         assert!(!url.unwrap().is_empty());
     }
 
+    #[cfg(feature = "async")]
     #[tokio::test]
     async fn test_cloud_provider_operations_without_features() {
         let s3_config = CloudProvider::S3(S3Config::new("bucket", "region", "key", "secret"));

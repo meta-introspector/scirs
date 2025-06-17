@@ -68,7 +68,7 @@ pub enum DeviceType {
 
 impl DeviceType {
     /// Get a string representation of the device type
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             DeviceType::Cpu => "CPU",
             DeviceType::CudaGpu(_) => "CUDA_GPU",
@@ -652,7 +652,7 @@ impl<T> CrossDeviceBuffer<T> {
     }
 
     /// Get the device type this buffer is allocated on
-    pub fn device_type(&self) -> &DeviceType {
+    pub const fn device_type(&self) -> &DeviceType {
         &self.device_type
     }
 

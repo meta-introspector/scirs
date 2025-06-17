@@ -547,7 +547,7 @@ where
         .collect::<Vec<_>>();
 
     // Calculate spectral moments
-    let total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
+    let _total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
     let spectral_centroid = calculate_spectral_centroid(&spectrum, &frequencies);
     let spectral_spread = calculate_spectral_spread(&spectrum, &frequencies, spectral_centroid);
     let spectral_skewness =
@@ -563,7 +563,7 @@ where
     let dominant_frequency = find_dominant_frequency(&spectrum, &frequencies);
 
     // Calculate spectral peaks
-    let (peak_frequencies, peak_magnitudes) = find_spectral_peaks(&spectrum, &frequencies)?;
+    let (peak_frequencies, _peak_magnitudes) = find_spectral_peaks(&spectrum, &frequencies)?;
     let spectral_peaks = peak_frequencies.len();
 
     // Calculate frequency bands
@@ -1310,6 +1310,8 @@ where
 }
 
 // Additional placeholder functions for completeness
+
+/// Calculate window analysis for enhanced periodogram
 pub fn calculate_window_analysis<F>(
     _ts: &Array1<F>,
     config: &EnhancedPeriodogramConfig,
@@ -1323,6 +1325,7 @@ where
     })
 }
 
+/// Calculate window effectiveness metrics
 pub fn calculate_window_effectiveness<F>(_window_info: &WindowTypeInfo<F>) -> F
 where
     F: Float + FromPrimitive,
@@ -1330,6 +1333,7 @@ where
     F::from(0.8).unwrap() // Placeholder
 }
 
+/// Calculate spectral leakage measures
 pub fn calculate_spectral_leakage<F>(_window_info: &WindowTypeInfo<F>) -> F
 where
     F: Float + FromPrimitive,
@@ -1337,6 +1341,7 @@ where
     F::from(0.1).unwrap() // Placeholder
 }
 
+/// Calculate confidence intervals for periodogram
 pub fn calculate_periodogram_confidence_intervals<F>(
     _periodogram: &[F],
     _config: &EnhancedPeriodogramConfig,
@@ -1347,6 +1352,7 @@ where
     Ok(Vec::new()) // Placeholder
 }
 
+/// Calculate peak significance for periodogram
 pub fn calculate_peak_significance<F>(
     _periodogram: &[F],
     _config: &EnhancedPeriodogramConfig,
@@ -1357,6 +1363,7 @@ where
     Ok(Vec::new()) // Placeholder
 }
 
+/// Calculate bias-corrected periodogram
 pub fn calculate_bias_corrected_periodogram<F>(
     periodogram: &[F],
     _config: &EnhancedPeriodogramConfig,
@@ -1367,6 +1374,7 @@ where
     Ok(periodogram.to_vec()) // Placeholder
 }
 
+/// Calculate variance-reduced periodogram
 pub fn calculate_variance_reduced_periodogram<F>(
     periodogram: &[F],
     _config: &EnhancedPeriodogramConfig,
@@ -1377,6 +1385,7 @@ where
     Ok(periodogram.to_vec()) // Placeholder
 }
 
+/// Calculate smoothed periodogram
 pub fn calculate_smoothed_periodogram<F>(
     periodogram: &[F],
     _config: &EnhancedPeriodogramConfig,
@@ -1387,6 +1396,7 @@ where
     Ok(periodogram.to_vec()) // Placeholder
 }
 
+/// Calculate zero-padded periodogram
 pub fn calculate_zero_padded_periodogram<F>(
     ts: &Array1<F>,
     _config: &EnhancedPeriodogramConfig,
@@ -1398,6 +1408,7 @@ where
     calculate_simple_periodogram(ts) // Placeholder
 }
 
+/// Calculate interpolated periodogram
 pub fn calculate_interpolated_periodogram<F>(
     periodogram: &[F],
     _config: &EnhancedPeriodogramConfig,
@@ -1408,6 +1419,7 @@ where
     Ok(periodogram.to_vec()) // Placeholder
 }
 
+/// Calculate zero padding effectiveness
 pub fn calculate_zero_padding_effectiveness<F>(_padded: &[F], _original: &[F]) -> F
 where
     F: Float + FromPrimitive,
@@ -1415,6 +1427,7 @@ where
     F::from(0.9).unwrap() // Placeholder
 }
 
+/// Calculate interpolation effectiveness
 pub fn calculate_interpolation_effectiveness<F>(_interpolated: &[F], _original: &[F]) -> F
 where
     F: Float + FromPrimitive,
@@ -1422,6 +1435,7 @@ where
     F::from(0.85).unwrap() // Placeholder
 }
 
+/// Calculate signal-to-noise ratio from periodogram
 pub fn calculate_snr_from_periodogram<F>(periodogram: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -1441,6 +1455,7 @@ where
     }
 }
 
+/// Calculate dynamic range of periodogram
 pub fn calculate_dynamic_range<F>(periodogram: &[F]) -> F
 where
     F: Float + FromPrimitive,
@@ -1459,6 +1474,7 @@ where
     }
 }
 
+/// Calculate spectral purity measure
 pub fn calculate_spectral_purity<F>(periodogram: &[F]) -> F
 where
     F: Float + FromPrimitive,

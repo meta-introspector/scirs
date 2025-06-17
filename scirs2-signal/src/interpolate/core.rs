@@ -11,7 +11,7 @@ use super::advanced::{
     gaussian_process_interpolate, kriging_interpolate, minimum_energy_interpolate, rbf_interpolate,
 };
 use super::basic::{linear_interpolate, nearest_neighbor_interpolate};
-use super::spectral::{auto_interpolate, sinc_interpolate, spectral_interpolate};
+use super::spectral::{sinc_interpolate, spectral_interpolate};
 use super::spline::{cubic_hermite_interpolate, cubic_spline_interpolate};
 
 /// Configuration for interpolation algorithms

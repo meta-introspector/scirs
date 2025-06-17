@@ -1151,13 +1151,13 @@ where
         }
 
         let mut thresholded_level = Array1::zeros(coeff_level.len());
-        let mut level_thresholded = 0;
+        let mut _level_thresholded = 0;
 
         for (i, &coeff) in coeff_level.iter().enumerate() {
             let abs_coeff = coeff.abs();
 
             if abs_coeff <= threshold {
-                level_thresholded += 1;
+                _level_thresholded += 1;
                 total_thresholded += 1;
                 // Coefficient is set to zero (already initialized)
             } else {

@@ -406,7 +406,6 @@ pub fn create_balanced_dataset(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
 
     #[test]
     fn test_random_oversample() {

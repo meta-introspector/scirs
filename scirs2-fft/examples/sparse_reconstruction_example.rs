@@ -36,7 +36,7 @@ fn main() {
         &noisy_signal,
         6,
         Some(SparseFFTAlgorithm::SpectralFlatness),
-        Some(WindowFunction::Blackman), // Use windowing to reduce spectral leakage
+        Some(42), // Use seed for deterministic behavior
     )
     .unwrap();
 

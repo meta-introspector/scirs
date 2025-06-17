@@ -292,8 +292,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::algorithms::sparse_fft;
+    use super::*;
     use std::f64::consts::PI;
 
     fn create_test_signal(n: usize) -> Vec<f64> {
@@ -310,18 +310,26 @@ mod tests {
         let signal = create_test_signal(64);
         let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
         let spectrum = reconstruct_spectrum(&sparse_result, 64).unwrap();
-        
+
         assert_eq!(spectrum.len(), 64);
         // Verify that the reconstructed spectrum has the expected sparse structure
         // Count non-zero components
         let non_zero_count = spectrum.iter().filter(|&c| c.norm() > 1e-10).count();
         assert_eq!(non_zero_count, sparse_result.values.len());
-        
+
         // Verify that all sparse components are present in the spectrum
-        for (&index, &_value) in sparse_result.indices.iter().zip(sparse_result.values.iter()) {
+        for (&index, &_value) in sparse_result
+            .indices
+            .iter()
+            .zip(sparse_result.values.iter())
+        {
             assert!(index < spectrum.len());
             // The value should be non-zero at this index
-            assert!(spectrum[index].norm() > 1e-10, "Expected non-zero value at index {}", index);
+            assert!(
+                spectrum[index].norm() > 1e-10,
+                "Expected non-zero value at index {}",
+                index
+            );
         }
     }
 
@@ -330,7 +338,7 @@ mod tests {
         let signal = create_test_signal(64);
         let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
         let reconstructed = reconstruct_time_domain(&sparse_result, 64).unwrap();
-        
+
         assert_eq!(reconstructed.len(), 64);
     }
 
@@ -339,7 +347,7 @@ mod tests {
         let signal = create_test_signal(32);
         let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
         let high_res = reconstruct_high_resolution(&sparse_result, 32, 64).unwrap();
-        
+
         assert_eq!(high_res.len(), 64);
     }
 
@@ -348,7 +356,7 @@ mod tests {
         let signal = create_test_signal(32);
         let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
         let result = reconstruct_high_resolution(&sparse_result, 32, 16);
-        
+
         assert!(result.is_err());
     }
 
@@ -356,7 +364,7 @@ mod tests {
     fn test_reconstruct_filtered() {
         let signal = create_test_signal(64);
         let sparse_result = sparse_fft(&signal, 6, None, None).unwrap();
-        
+
         // Low-pass filter
         let filter = |freq_index: usize, n: usize| -> f64 {
             if freq_index <= n / 8 || freq_index >= 7 * n / 8 {
@@ -365,7 +373,7 @@ mod tests {
                 0.0
             }
         };
-        
+
         let filtered = reconstruct_filtered(&sparse_result, 64, filter).unwrap();
         assert_eq!(filtered.len(), 64);
     }

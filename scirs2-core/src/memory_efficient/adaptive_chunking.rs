@@ -442,19 +442,19 @@ impl AdaptiveChunkingBuilder {
     }
 
     /// Set the target memory usage per chunk.
-    pub fn with_target_memory(mut self, bytes: usize) -> Self {
+    pub const fn with_target_memory(mut self, bytes: usize) -> Self {
         self.params.target_memory_usage = bytes;
         self
     }
 
     /// Set the maximum chunk size.
-    pub fn with_max_chunk_size(mut self, size: usize) -> Self {
+    pub const fn with_max_chunk_size(mut self, size: usize) -> Self {
         self.params.max_chunk_size = size;
         self
     }
 
     /// Set the minimum chunk size.
-    pub fn with_min_chunk_size(mut self, size: usize) -> Self {
+    pub const fn with_min_chunk_size(mut self, size: usize) -> Self {
         self.params.min_chunk_size = size;
         self
     }
@@ -466,13 +466,13 @@ impl AdaptiveChunkingBuilder {
     }
 
     /// Enable consideration of data distribution.
-    pub fn consider_distribution(mut self, enable: bool) -> Self {
+    pub const fn consider_distribution(mut self, enable: bool) -> Self {
         self.params.consider_distribution = enable;
         self
     }
 
     /// Enable optimization for parallel processing.
-    pub fn optimize_for_parallel(mut self, enable: bool) -> Self {
+    pub const fn optimize_for_parallel(mut self, enable: bool) -> Self {
         self.params.optimize_for_parallel = enable;
         self
     }

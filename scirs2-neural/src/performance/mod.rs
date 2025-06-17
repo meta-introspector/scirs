@@ -288,6 +288,7 @@ impl PerformanceOptimizer {
     }
 
     /// Helper to determine if matrices are suitable for SIMD operations
+    #[allow(dead_code)]
     fn is_suitable_for_simd(&self, a: &ArrayD<f32>, b: &ArrayD<f32>) -> bool {
         if a.ndim() != 2 || b.ndim() != 2 {
             return false;

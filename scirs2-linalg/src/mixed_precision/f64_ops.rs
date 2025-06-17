@@ -289,7 +289,7 @@ where
 {
     #[cfg(feature = "parallel")]
     {
-        mixed_precision_matmul_f64_parallel(a, b)
+        mixed_precision_matmul_f64_parallel::<A, B, C, H>(a, b)
     }
     #[cfg(not(feature = "parallel"))]
     {

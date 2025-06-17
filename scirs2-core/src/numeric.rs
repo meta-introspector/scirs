@@ -99,33 +99,43 @@ pub trait RealNumber: ScientificNumber + Float {
     fn tan(self) -> Self;
 
     /// Hyperbolic sine
+    #[must_use]
     fn sinh(self) -> Self;
 
     /// Hyperbolic cosine
+    #[must_use]
     fn cosh(self) -> Self;
 
     /// Hyperbolic tangent
+    #[must_use]
     fn tanh(self) -> Self;
 
     /// Inverse sine
+    #[must_use]
     fn asin(self) -> Self;
 
     /// Inverse cosine
+    #[must_use]
     fn acos(self) -> Self;
 
     /// Inverse tangent
+    #[must_use]
     fn atan(self) -> Self;
 
     /// Inverse tangent of y/x with correct quadrant
+    #[must_use]
     fn atan2(self, other: Self) -> Self;
 
     /// Power function
+    #[must_use]
     fn powf(self, n: Self) -> Self;
 
     /// Integer power function
+    #[must_use]
     fn powi(self, n: i32) -> Self;
 
     /// Factorial function (approximation for non-integers)
+    #[must_use]
     fn factorial(self) -> Self;
 }
 
@@ -135,69 +145,90 @@ pub trait ComplexNumber: ScientificNumber {
     type RealPart: RealNumber;
 
     /// Returns the real part of the complex number
+    #[must_use]
     fn re(&self) -> Self::RealPart;
 
     /// Returns the imaginary part of the complex number
+    #[must_use]
     fn im(&self) -> Self::RealPart;
 
     /// Create a new complex number from real and imaginary parts
+    #[must_use]
     fn new(re: Self::RealPart, im: Self::RealPart) -> Self;
 
     /// Returns the complex conjugate
+    #[must_use]
     fn conj(self) -> Self;
 
     /// Returns the magnitude (absolute value)
+    #[must_use]
     fn abs(self) -> Self::RealPart;
 
     /// Returns the argument (phase)
+    #[must_use]
     fn arg(self) -> Self::RealPart;
 
     /// Returns the complex number in exponential form (r, theta)
+    #[must_use]
     fn to_polar(self) -> (Self::RealPart, Self::RealPart);
 
     /// Creates a complex number from polar coordinates
+    #[must_use]
     fn from_polar(r: Self::RealPart, theta: Self::RealPart) -> Self;
 
     /// Exponential function
+    #[must_use]
     fn exp(self) -> Self;
 
     /// Natural logarithm
+    #[must_use]
     fn ln(self) -> Self;
 
     /// Power function with complex exponent
+    #[must_use]
     fn powc(self, exp: Self) -> Self;
 
     /// Power function with real exponent
+    #[must_use]
     fn powf(self, exp: Self::RealPart) -> Self;
 
     /// Square root
+    #[must_use]
     fn sqrt(self) -> Self;
 }
 
 /// A trait for integers that can be used in scientific calculations
 pub trait ScientificInteger: ScientificNumber + Eq {
     /// Greatest common divisor
+    #[must_use]
     fn gcd(self, other: Self) -> Self;
 
     /// Least common multiple
+    #[must_use]
     fn lcm(self, other: Self) -> Self;
 
     /// Check if the number is prime
+    #[must_use]
     fn is_prime(self) -> bool;
 
     /// Check if the number is even
+    #[must_use]
     fn is_even(self) -> bool;
 
     /// Check if the number is odd
+    #[must_use]
     fn is_odd(self) -> bool;
 
     /// Modular exponentiation (self^exp mod modulus)
+    #[must_use]
     fn mod_pow(self, exp: Self, modulus: Self) -> Self;
 
     /// Factorial
+    #[must_use]
     fn factorial(self) -> Self;
 
     /// Binomial coefficient (n choose k)
+    #[must_use]
     fn binomial(self, k: Self) -> Self;
 }
 

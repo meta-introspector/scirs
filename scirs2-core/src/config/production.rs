@@ -346,7 +346,7 @@ impl ProductionConfig {
         // Parse configuration based on file extension
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("json") => self.parse_json_config(&content),
-            Some("yaml") | Some("yml") => self.parse_yaml_config(&content),
+            Some("yaml" | "yml") => self.parse_yaml_config(&content),
             Some("toml") => self.parse_toml_config(&content),
             _ => Err(CoreError::ConfigError(ErrorContext::new(format!(
                 "Unsupported config file format: {}",
@@ -537,7 +537,7 @@ impl ProductionConfig {
     }
 
     /// Get current environment
-    pub fn environment(&self) -> &Environment {
+    pub const fn environment(&self) -> &Environment {
         &self.environment
     }
 

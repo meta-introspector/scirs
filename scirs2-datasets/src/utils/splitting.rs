@@ -6,7 +6,7 @@
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use rand::prelude::*;
 use rand::rng;
 use rand::rngs::StdRng;
@@ -424,7 +424,7 @@ mod tests {
         assert_eq!(folds.len(), 3);
 
         // Check that all samples are covered exactly once in validation
-        let mut all_validation_indices = Vec::new();
+        let mut all_validation_indices: Vec<usize> = Vec::new();
         for (_, val_indices) in &folds {
             all_validation_indices.extend(val_indices);
         }
@@ -451,7 +451,7 @@ mod tests {
         assert_eq!(folds.len(), 2);
 
         // Check that all samples are covered
-        let mut all_validation_indices = Vec::new();
+        let mut all_validation_indices: Vec<usize> = Vec::new();
         for (_, val_indices) in &folds {
             all_validation_indices.extend(val_indices);
         }

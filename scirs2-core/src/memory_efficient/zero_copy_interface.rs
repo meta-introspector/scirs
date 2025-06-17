@@ -1,7 +1,7 @@
 //! Zero-copy interface for efficient data exchange between components.
 //!
 //! This module provides a comprehensive zero-copy interface that enables efficient
-//! data sharing between different components of the SciRS2 library without
+//! data sharing between different components of the `SciRS2` library without
 //! unnecessary memory allocations or data copying.
 //!
 //! ## Features
@@ -221,12 +221,12 @@ where
     }
 
     /// Get metadata about this data
-    pub fn metadata(&self) -> &DataMetadata {
+    pub const fn metadata(&self) -> &DataMetadata {
         &self.inner.metadata
     }
 
     /// Get a reference to the data
-    pub fn as_slice(&self) -> &[T] {
+    pub const fn as_slice(&self) -> &[T] {
         &self.inner.data
     }
 
@@ -343,7 +343,7 @@ impl<T> ZeroCopyView<T> {
     }
 
     /// Get a slice of the viewed data
-    pub fn as_slice(&self) -> &[T] {
+    pub const fn as_slice(&self) -> &[T] {
         &self.data.as_slice()[self.start..self.start + self.len]
     }
 
@@ -358,7 +358,7 @@ impl<T> ZeroCopyView<T> {
     }
 
     /// Get the underlying data
-    pub fn underlying_data(&self) -> &ZeroCopyData<T> {
+    pub const fn underlying_data(&self) -> &ZeroCopyData<T> {
         &self.data
     }
 

@@ -1,7 +1,7 @@
 //! # Performance Benchmarking
 //!
 //! This module provides specific benchmarking tools for measuring and validating
-//! performance characteristics of SciRS2 Core functions and algorithms.
+//! performance characteristics of `SciRS2` Core functions and algorithms.
 
 use crate::benchmarking::{BenchmarkConfig, BenchmarkResult, BenchmarkRunner, BenchmarkSuite};
 use crate::error::{CoreError, CoreResult};

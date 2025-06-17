@@ -133,31 +133,31 @@ impl TransferOptionsBuilder {
     }
 
     /// Set the transfer mode
-    pub fn mode(mut self, mode: TransferMode) -> Self {
+    pub const fn mode(mut self, mode: TransferMode) -> Self {
         self.options.mode = mode;
         self
     }
 
     /// Set the memory layout
-    pub fn layout(mut self, layout: MemoryLayout) -> Self {
+    pub const fn layout(mut self, layout: MemoryLayout) -> Self {
         self.options.layout = layout;
         self
     }
 
     /// Set whether to use pinned memory
-    pub fn use_pinned_memory(mut self, use_pinned_memory: bool) -> Self {
+    pub const fn use_pinned_memory(mut self, use_pinned_memory: bool) -> Self {
         self.options.use_pinned_memory = use_pinned_memory;
         self
     }
 
     /// Set whether to enable streaming transfers
-    pub fn enable_streaming(mut self, enable_streaming: bool) -> Self {
+    pub const fn enable_streaming(mut self, enable_streaming: bool) -> Self {
         self.options.enable_streaming = enable_streaming;
         self
     }
 
     /// Set the stream ID for asynchronous transfers
-    pub fn stream_id(mut self, stream_id: Option<usize>) -> Self {
+    pub const fn stream_id(mut self, stream_id: Option<usize>) -> Self {
         self.options.stream_id = stream_id;
         self
     }
@@ -735,7 +735,7 @@ impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
     }
 
     /// Get the shape of the array
-    pub fn shape(&self) -> &D {
+    pub const fn shape(&self) -> &D {
         &self.shape
     }
 

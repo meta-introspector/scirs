@@ -710,10 +710,15 @@ pub mod distributed {
 
     /// Process group trait for different communication backends
     pub trait ProcessGroup: Send + Sync {
+        /// Perform all-reduce operation on tensor across all processes
         fn all_reduce(&self, tensor: &mut ArrayD<f32>) -> Result<()>;
+        /// Synchronize all processes
         fn barrier(&self) -> Result<()>;
+        /// Broadcast tensor from root process to all others
         fn broadcast(&self, tensor: &mut ArrayD<f32>, root: usize) -> Result<()>;
+        /// Get the rank of current process
         fn get_rank(&self) -> usize;
+        /// Get the total number of processes
         fn get_world_size(&self) -> usize;
     }
 
@@ -724,6 +729,7 @@ pub mod distributed {
     }
 
     impl TcpProcessGroup {
+        /// Create a new TCP process group
         pub fn new(config: &DistributedConfig) -> Result<Self> {
             Ok(Self {
                 rank: config.process_info.global_rank,
@@ -765,10 +771,12 @@ pub mod distributed {
     pub struct InMemoryProcessGroup {
         rank: usize,
         world_size: usize,
+        #[allow(dead_code)]
         shared_data: Arc<RwLock<HashMap<String, ArrayD<f32>>>>,
     }
 
     impl InMemoryProcessGroup {
+        /// Create a new in-memory process group
         pub fn new(config: &DistributedConfig) -> Result<Self> {
             Ok(Self {
                 rank: config.process_info.global_rank,

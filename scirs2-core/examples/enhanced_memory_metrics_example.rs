@@ -309,7 +309,7 @@ fn demo_memory_profiler() -> Result<(), Box<dyn std::error::Error>> {
         println!("\nProfiling Results:");
         println!("==================");
         println!("Session ID: {}", result.session.id);
-        println!("Duration: {:?}", result.session.duration);
+        println!("Duration: {} micros", result.session.duration_micros);
         println!("Events recorded: {}", result.session.event_count);
         println!("Components tracked: {}", result.session.component_count);
         println!(

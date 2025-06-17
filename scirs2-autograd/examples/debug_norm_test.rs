@@ -25,7 +25,7 @@ fn main() {
 
         // Check the shape of norm (should be scalar)
         let norm_shape = norm.shape();
-        println!("Norm shape: {:?}", norm_shape.eval(ctx).unwrap());
+        println!("Norm shape: {:?}", norm_shape);
 
         // Try gradient computation
         println!("Computing gradient...");

@@ -133,8 +133,10 @@ impl SobolGenerator {
 
         // First dimension uses powers of 2
         let mut first_dim = Vec::new();
-        for i in 0..self.max_bits {
-            first_dim.push(1u32 << (31 - i));
+        for i in 0..self.max_bits.min(32) {
+            if i <= 31 {
+                first_dim.push(1u32 << (31 - i));
+            }
         }
         self.direction_numbers.push(first_dim);
 

@@ -156,6 +156,7 @@ pub struct TraceContext {
 
 impl TraceContext {
     /// Create a new trace context
+    #[must_use]
     pub fn new() -> Self {
         Self {
             trace_id: Uuid::new_v4(),
@@ -169,6 +170,7 @@ impl TraceContext {
     }
 
     /// Create a child context
+    #[must_use]
     pub fn child(&self) -> Self {
         Self {
             trace_id: self.trace_id,
@@ -182,6 +184,7 @@ impl TraceContext {
     }
 
     /// Create a remote child context (from another service)
+    #[must_use]
     pub fn remote_child(&self) -> Self {
         let mut child = self.child();
         child.is_remote = true;
@@ -189,23 +192,27 @@ impl TraceContext {
     }
 
     /// Check if trace is sampled
-    pub fn is_sampled(&self) -> bool {
+    #[must_use]
+    pub const fn is_sampled(&self) -> bool {
         self.trace_flags & 1 != 0
     }
 
     /// Add baggage item
+    #[must_use]
     pub fn with_baggage(mut self, key: String, value: String) -> Self {
         self.baggage.insert(key, value);
         self
     }
 
     /// Set trace state
+    #[must_use]
     pub fn with_trace_state(mut self, trace_state: String) -> Self {
         self.trace_state = Some(trace_state);
         self
     }
 
     /// Create W3C traceparent header value
+    #[must_use]
     pub fn to_traceparent(&self) -> String {
         format!(
             "{:02x}-{}-{}-{:02x}",
@@ -217,6 +224,10 @@ impl TraceContext {
     }
 
     /// Parse W3C traceparent header
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the traceparent header format is invalid.
     pub fn from_traceparent(header: &str) -> Result<Self, CoreError> {
         let parts: Vec<&str> = header.split('-').collect();
         if parts.len() != 4 {
@@ -293,6 +304,7 @@ impl TraceContext {
     }
 
     /// Create baggage header value
+    #[must_use]
     pub fn to_baggage(&self) -> Option<String> {
         if self.baggage.is_empty() {
             None
@@ -300,7 +312,7 @@ impl TraceContext {
             Some(
                 self.baggage
                     .iter()
-                    .map(|(k, v)| format!("{}={}", k, v))
+                    .map(|(k, v)| format!("{k}={v}"))
                     .collect::<Vec<_>>()
                     .join(", "),
             )
@@ -308,6 +320,7 @@ impl TraceContext {
     }
 
     /// Parse baggage header
+    #[must_use]
     pub fn with_baggage_header(mut self, header: &str) -> Self {
         for item in header.split(',') {
             let item = item.trim();
@@ -412,6 +425,10 @@ pub struct ActiveSpan {
 
 impl ActiveSpan {
     /// Add an attribute to the span
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span lock cannot be acquired.
     pub fn add_attribute(&self, key: &str, value: &str) -> Result<(), CoreError> {
         let mut span = self.span.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -423,6 +440,10 @@ impl ActiveSpan {
     }
 
     /// Record an event
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span lock cannot be acquired.
     pub fn add_event(
         &self,
         name: &str,
@@ -445,6 +466,10 @@ impl ActiveSpan {
     }
 
     /// Add a custom metric
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span lock cannot be acquired.
     pub fn add_metric(&self, name: &str, value: f64) -> Result<(), CoreError> {
         let mut span = self.span.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -456,6 +481,10 @@ impl ActiveSpan {
     }
 
     /// Set span status
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span lock cannot be acquired.
     pub fn set_status(&self, status: SpanStatus) -> Result<(), CoreError> {
         let mut span = self.span.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -467,6 +496,10 @@ impl ActiveSpan {
     }
 
     /// Set error information
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span lock cannot be acquired.
     pub fn set_error(&self, error: &str) -> Result<(), CoreError> {
         let mut span = self.span.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -479,6 +512,7 @@ impl ActiveSpan {
     }
 
     /// Execute a closure within the span context
+    #[must_use]
     pub fn in_span<F, R>(&self, f: F) -> R
     where
         F: FnOnce() -> R,
@@ -508,6 +542,11 @@ impl ActiveSpan {
     }
 
     /// Get the span's trace context
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span lock cannot be acquired.
+    #[must_use]
     pub fn context(&self) -> Result<TraceContext, CoreError> {
         let span = self.span.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -546,7 +585,7 @@ impl Drop for ActiveSpan {
 
                 // Report span to tracing system
                 if let Err(e) = self.tracing_system.record_span(span.clone()) {
-                    eprintln!("Failed to record span: {}", e);
+                    eprintln!("Failed to record span: {e}");
                 }
             }
         }
@@ -564,6 +603,7 @@ pub struct SpanBuilder {
 
 impl SpanBuilder {
     /// Create a new span builder
+    #[must_use]
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -575,30 +615,38 @@ impl SpanBuilder {
     }
 
     /// Set span kind
+    #[must_use]
     pub fn with_kind(mut self, kind: SpanKind) -> Self {
         self.kind = kind;
         self
     }
 
     /// Add an attribute
+    #[must_use]
     pub fn with_attribute(mut self, key: &str, value: &str) -> Self {
         self.attributes.insert(key.to_string(), value.to_string());
         self
     }
 
     /// Set parent context
+    #[must_use]
     pub fn with_parent(mut self, context: TraceContext) -> Self {
         self.parent_context = Some(context);
         self
     }
 
     /// Set component name
+    #[must_use]
     pub fn with_component(mut self, component: &str) -> Self {
         self.component = Some(component.to_string());
         self
     }
 
     /// Build the span using the tracing system
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span cannot be started.
     pub fn start(self, tracing_system: &TracingSystem) -> Result<ActiveSpan, CoreError> {
         tracing_system.start_span_with_builder(self)
     }
@@ -618,6 +666,7 @@ struct SpanStorage {
 }
 
 impl SpanStorage {
+    #[must_use]
     fn new(max_active_spans: usize) -> Self {
         Self {
             active_spans: RwLock::new(HashMap::new()),
@@ -626,6 +675,11 @@ impl SpanStorage {
         }
     }
 
+    /// Add an active span to storage
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the maximum active spans is exceeded or if locks cannot be acquired.
     fn add_active_span(&self, span: Arc<Mutex<Span>>) -> Result<(), CoreError> {
         let mut active = self.active_spans.write().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -652,6 +706,7 @@ impl SpanStorage {
         Ok(())
     }
 
+    #[must_use]
     fn remove_active_span(&self, span_id: Uuid) -> Option<Arc<Mutex<Span>>> {
         if let Ok(mut active) = self.active_spans.write() {
             active.remove(&span_id)
@@ -660,6 +715,11 @@ impl SpanStorage {
         }
     }
 
+    /// Record a completed span
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the completed spans lock cannot be acquired.
     fn record_completed_span(&self, span: Span) -> Result<(), CoreError> {
         let mut completed = self.completed_spans.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -670,6 +730,7 @@ impl SpanStorage {
         Ok(())
     }
 
+    #[must_use]
     fn get_active_span_count(&self) -> usize {
         self.active_spans
             .read()
@@ -677,6 +738,11 @@ impl SpanStorage {
             .unwrap_or(0)
     }
 
+    /// Clean up expired spans
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if locks cannot be acquired.
     fn cleanup_expired_spans(&self, timeout: Duration) -> Result<Vec<Span>, CoreError> {
         let mut expired_spans = Vec::new();
         let now = SystemTime::now();
@@ -725,6 +791,10 @@ pub struct TracingSystem {
 
 impl TracingSystem {
     /// Create a new tracing system
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the system cannot be initialized.
     pub fn new(config: TracingConfig) -> Result<Self, CoreError> {
         let storage = SpanStorage::new(config.max_active_spans);
         let sampler = Box::new(ProbabilitySampler::new(config.sampling_rate));
@@ -740,18 +810,27 @@ impl TracingSystem {
     }
 
     /// Set a custom trace exporter
+    #[must_use]
     pub fn with_exporter(mut self, exporter: Box<dyn TraceExporter + Send + Sync>) -> Self {
         self.exporter = Some(exporter);
         self
     }
 
     /// Start a new span
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span cannot be started.
     pub fn start_span(&self, name: &str) -> Result<ActiveSpan, CoreError> {
         let builder = SpanBuilder::new(name);
         self.start_span_with_builder(builder)
     }
 
     /// Start a span with a builder
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span cannot be started.
     pub fn start_span_with_builder(&self, builder: SpanBuilder) -> Result<ActiveSpan, CoreError> {
         // Create trace context
         let context = if let Some(parent) = builder.parent_context {
@@ -839,14 +918,19 @@ impl TracingSystem {
     }
 
     /// Get current span from context
+    #[must_use]
     pub fn current_span(&self) -> Option<Arc<Mutex<Span>>> {
         CURRENT_SPAN.with(|current| current.borrow().clone())
     }
 
     /// Record a completed span
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the span cannot be recorded or exported.
     pub fn record_span(&self, span: Span) -> Result<(), CoreError> {
         // Remove from active spans
-        self.storage.remove_active_span(span.context.span_id);
+        let _ = self.storage.remove_active_span(span.context.span_id);
 
         // Update metrics
         if let Ok(mut metrics) = self.metrics.lock() {
@@ -872,6 +956,10 @@ impl TracingSystem {
     }
 
     /// Cleanup expired spans
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if expired spans cannot be cleaned up.
     pub fn cleanup_expired_spans(&self) -> Result<(), CoreError> {
         let expired_spans = self
             .storage
@@ -885,6 +973,11 @@ impl TracingSystem {
     }
 
     /// Get tracing metrics
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metrics lock cannot be acquired.
+    #[must_use]
     pub fn get_metrics(&self) -> Result<TracingMetrics, CoreError> {
         let metrics = self.metrics.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -895,6 +988,10 @@ impl TracingSystem {
     }
 
     /// Flush all pending spans
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the exporter flush fails.
     pub fn flush(&self) -> Result<(), CoreError> {
         if let Some(ref exporter) = self.exporter {
             exporter.flush()?;

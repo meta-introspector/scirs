@@ -7,7 +7,7 @@ use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
     distance::{euclidean, pdist},
-    simd_distance::{parallel_pdist, simd_euclidean_distance_batch},
+    simd_distance::{parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch},
     KDTree,
 };
 use std::time::Instant;

@@ -9,7 +9,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         AdaptiveOptimizer, OptimizationConfig, OptimizationGoal, Priority, WorkloadProfile,
         WorkloadType,
     };
-    use std::time::Duration;
 
     println!("🧠 Simple Adaptive Optimization Test");
     println!("====================================\n");

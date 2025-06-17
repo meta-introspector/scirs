@@ -408,9 +408,9 @@ fn demonstrate_model_interpretation() -> Result<()> {
     })
     .into_dyn();
 
-    interpreter.analyze_layer_activations("conv_layer".to_string(), &layer_activations)?;
+    interpreter.analyze_layer_activations("conv_layer")?;
 
-    if let Some(stats) = interpreter.get_layer_statistics("conv_layer") {
+    if let Some(stats) = interpreter.layer_statistics().get("conv_layer") {
         println!("   Layer statistics:");
         println!("     Mean activation: {:.4}", stats.mean_activation);
         println!("     Std activation: {:.4}", stats.std_activation);
@@ -420,7 +420,7 @@ fn demonstrate_model_interpretation() -> Result<()> {
 
     // Generate comprehensive interpretation report
     println!("\n3. Generating interpretation report...");
-    let report = interpreter.generate_interpretation_report(&input, Some(1))?;
+    let report = interpreter.generate_report(&input)?;
     println!("{}", report);
 
     println!("✅ Model interpretation demonstration completed!\n");

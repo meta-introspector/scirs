@@ -750,50 +750,61 @@ impl SIMDOperations {
 }
 
 // Provide no-op implementations when SIMD is not available
+/// SIMD operations for neural network computations (fallback implementation)
 #[cfg(not(feature = "simd"))]
 pub struct SIMDOperations;
 
 #[cfg(not(feature = "simd"))]
 impl SIMDOperations {
+    /// Apply ReLU activation in-place using SIMD operations
     pub fn simd_relu_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
         // No-op fallback
     }
 
+    /// Apply ReLU activation using SIMD operations
     pub fn simd_relu_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         // Fallback to standard operation
         _input.mapv(|x| x.max(0.0))
     }
 
+    /// Apply sigmoid activation in-place using SIMD operations
     pub fn simd_sigmoid_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
         // No-op fallback
     }
 
+    /// Apply sigmoid activation using SIMD operations
     pub fn simd_sigmoid_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         _input.mapv(|x| 1.0 / (1.0 + (-x).exp()))
     }
 
+    /// Apply tanh activation in-place using SIMD operations
     pub fn simd_tanh_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
         // No-op fallback
     }
 
+    /// Apply tanh activation using SIMD operations
     pub fn simd_tanh_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         _input.mapv(|x| x.tanh())
     }
 
+    /// Apply GELU activation using SIMD operations
     pub fn simd_gelu_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         _input.mapv(|x| 0.5 * x * (1.0 + (x * 0.7978845608 * (1.0 + 0.044715 * x * x)).tanh()))
     }
 
+    /// Apply Swish activation using SIMD operations
     pub fn simd_swish_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         _input.mapv(|x| x / (1.0 + (-x).exp()))
     }
 
+    /// Apply softmax activation using SIMD operations
     pub fn simd_softmax_f32(_input: &ArrayD<f32>, _axis: Option<usize>) -> Result<ArrayD<f32>> {
         Err(NeuralError::ComputationError(
             "SIMD softmax requires 'simd' feature".to_string(),
         ))
     }
 
+    /// Compute cross-entropy loss using SIMD operations
     pub fn simd_cross_entropy_loss_f32(
         _predictions: &ArrayView<f32, IxDyn>,
         _targets: &ArrayView<f32, IxDyn>,
@@ -804,6 +815,7 @@ impl SIMDOperations {
         ))
     }
 
+    /// Perform matrix multiplication using SIMD operations
     pub fn simd_matmul_f32(
         _a: &ArrayView<f32, IxDyn>,
         _b: &ArrayView<f32, IxDyn>,
@@ -813,6 +825,7 @@ impl SIMDOperations {
         ))
     }
 
+    /// Perform element-wise addition using SIMD operations
     pub fn simd_add_f32(
         _a: &ArrayView<f32, IxDyn>,
         _b: &ArrayView<f32, IxDyn>,
@@ -822,6 +835,7 @@ impl SIMDOperations {
         ))
     }
 
+    /// Perform 2D convolution using SIMD operations
     pub fn simd_conv2d_f32(
         _input: &ArrayView<f32, IxDyn>,
         _kernel: &ArrayView<f32, IxDyn>,
@@ -834,6 +848,7 @@ impl SIMDOperations {
         ))
     }
 
+    /// Perform batch normalization using SIMD operations
     pub fn simd_batch_norm_f32(
         _input: &ArrayView<f32, IxDyn>,
         _gamma: Option<&[f32]>,

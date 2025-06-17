@@ -10,7 +10,6 @@
 
 use super::systems::{LtiSystem, StateSpace};
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
 
 /// Calculate the Bode plot data (magnitude and phase) for an LTI system
 ///

@@ -282,11 +282,9 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
         layer_name: &str,
         activations: &ArrayD<F>,
     ) -> Result<ActivationStatistics<F>> {
-        use num_traits::Zero;
-
         let total_elements = activations.len();
         if total_elements == 0 {
-            return Err(NeuralError::ValueError(
+            return Err(NeuralError::InvalidArgument(
                 "Empty activation tensor".to_string(),
             ));
         }

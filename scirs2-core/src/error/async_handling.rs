@@ -1,4 +1,4 @@
-//! Async error handling and recovery mechanisms for SciRS2
+//! Async error handling and recovery mechanisms for ``SciRS2``
 //!
 //! This module provides error handling patterns specifically designed for asynchronous operations:
 //! - Async retry mechanisms with backoff
@@ -471,7 +471,7 @@ impl<F> TrackedAsyncOperation<F> {
     }
 
     /// Get reference to the progress tracker
-    pub fn tracker(&self) -> &AsyncProgressTracker {
+    pub const fn tracker(&self) -> &AsyncProgressTracker {
         &self.tracker
     }
 }

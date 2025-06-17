@@ -945,19 +945,19 @@ impl WorkStealingConfigBuilder {
     }
 
     /// Set the maximum queue size
-    pub fn max_queue_size(mut self, size: usize) -> Self {
+    pub const fn max_queue_size(mut self, size: usize) -> Self {
         self.config.max_queue_size = size;
         self
     }
 
     /// Enable NUMA-aware scheduling
-    pub fn numa_aware(mut self, enable: bool) -> Self {
+    pub const fn numa_aware(mut self, enable: bool) -> Self {
         self.config.numa_aware = enable;
         self
     }
 
     /// Enable priority-based scheduling
-    pub fn priority_scheduling(mut self, enable: bool) -> Self {
+    pub const fn priority_scheduling(mut self, enable: bool) -> Self {
         self.config.priority_scheduling = enable;
         self
     }
@@ -975,13 +975,13 @@ impl WorkStealingConfigBuilder {
     }
 
     /// Enable performance monitoring
-    pub fn enable_monitoring(mut self, enable: bool) -> Self {
+    pub const fn enable_monitoring(mut self, enable: bool) -> Self {
         self.config.enable_monitoring = enable;
         self
     }
 
     /// Enable adaptive load balancing
-    pub fn adaptive_balancing(mut self, enable: bool) -> Self {
+    pub const fn adaptive_balancing(mut self, enable: bool) -> Self {
         self.config.adaptive_balancing = enable;
         self
     }

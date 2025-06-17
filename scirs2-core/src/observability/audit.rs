@@ -1,6 +1,6 @@
 //! # Audit Logging System
 //!
-//! Enterprise-grade audit logging system for SciRS2 Core providing comprehensive
+//! Enterprise-grade audit logging system for `SciRS2` Core providing comprehensive
 //! security event logging, data access tracking, and regulatory compliance features
 //! suitable for regulated environments and enterprise deployments.
 //!
@@ -82,6 +82,7 @@ use serde::{Deserialize, Serialize};
 /// Audit logging configuration
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[allow(clippy::struct_excessive_bools)]
 pub struct AuditConfig {
     /// Directory for audit log storage
     pub log_directory: PathBuf,
@@ -224,13 +225,13 @@ pub struct S3Credentials {
 pub enum ComplianceMode {
     /// Standard compliance (basic requirements)
     Standard,
-    /// Financial compliance (SOX, PCI-DSS)
+    /// Financial compliance (`SOX`, `PCI-DSS`)
     Financial,
-    /// Healthcare compliance (HIPAA, HITECH)
+    /// Healthcare compliance (`HIPAA`, `HITECH`)
     Healthcare,
-    /// Data protection compliance (GDPR, CCPA)
+    /// Data protection compliance (`GDPR`, `CCPA`)
     DataProtection,
-    /// Government compliance (FedRAMP, FISMA)
+    /// Government compliance (`FedRAMP`, `FISMA`)
     Government,
 }
 
@@ -280,17 +281,18 @@ pub enum EventCategory {
 
 impl EventCategory {
     /// Get the string representation
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            EventCategory::Authentication => "authentication",
-            EventCategory::Authorization => "authorization",
-            EventCategory::DataAccess => "data_access",
-            EventCategory::Configuration => "configuration",
-            EventCategory::Security => "security",
-            EventCategory::Performance => "performance",
-            EventCategory::Error => "error",
-            EventCategory::Administrative => "administrative",
-            EventCategory::Compliance => "compliance",
+            Self::Authentication => "authentication",
+            Self::Authorization => "authorization",
+            Self::DataAccess => "data_access",
+            Self::Configuration => "configuration",
+            Self::Security => "security",
+            Self::Performance => "performance",
+            Self::Error => "error",
+            Self::Administrative => "administrative",
+            Self::Compliance => "compliance",
         }
     }
 }
@@ -311,12 +313,13 @@ pub enum EventSeverity {
 
 impl EventSeverity {
     /// Get the string representation
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            EventSeverity::Info => "info",
-            EventSeverity::Warning => "warning",
-            EventSeverity::Error => "error",
-            EventSeverity::Critical => "critical",
+            Self::Info => "info",
+            Self::Warning => "warning",
+            Self::Error => "error",
+            Self::Critical => "critical",
         }
     }
 }
@@ -343,6 +346,7 @@ pub struct SystemContext {
 
 impl SystemContext {
     /// Create system context from current environment
+    #[must_use]
     pub fn current() -> Self {
         Self {
             process_id: std::process::id(),
@@ -356,12 +360,14 @@ impl SystemContext {
     }
 
     /// Set session ID
+    #[must_use]
     pub fn with_session_id(mut self, session_id: String) -> Self {
         self.session_id = Some(session_id);
         self
     }
 
     /// Set request ID
+    #[must_use]
     pub fn with_request_id(mut self, request_id: String) -> Self {
         self.request_id = Some(request_id);
         self
@@ -430,13 +436,14 @@ pub enum EventOutcome {
 
 impl EventOutcome {
     /// Get the string representation
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            EventOutcome::Success => "success",
-            EventOutcome::Failure => "failure",
-            EventOutcome::Denied => "denied",
-            EventOutcome::Cancelled => "cancelled",
-            EventOutcome::Unknown => "unknown",
+            Self::Success => "success",
+            Self::Failure => "failure",
+            Self::Denied => "denied",
+            Self::Cancelled => "cancelled",
+            Self::Unknown => "unknown",
         }
     }
 }
@@ -459,13 +466,14 @@ pub enum DataClassification {
 
 impl DataClassification {
     /// Get the string representation
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            DataClassification::Public => "public",
-            DataClassification::Internal => "internal",
-            DataClassification::Confidential => "confidential",
-            DataClassification::Restricted => "restricted",
-            DataClassification::TopSecret => "top_secret",
+            Self::Public => "public",
+            Self::Internal => "internal",
+            Self::Confidential => "confidential",
+            Self::Restricted => "restricted",
+            Self::TopSecret => "top_secret",
         }
     }
 }
@@ -477,6 +485,7 @@ pub struct AuditEventBuilder {
 
 impl AuditEventBuilder {
     /// Create a new audit event builder
+    #[must_use]
     pub fn new(category: EventCategory, action: &str) -> Self {
         Self {
             event: AuditEvent {
@@ -504,36 +513,42 @@ impl AuditEventBuilder {
     }
 
     /// Set event severity
-    pub fn severity(mut self, severity: EventSeverity) -> Self {
+    #[must_use]
+    pub const fn severity(mut self, severity: EventSeverity) -> Self {
         self.event.severity = severity;
         self
     }
 
     /// Set user ID
+    #[must_use]
     pub fn user_id(mut self, user_id: &str) -> Self {
         self.event.user_id = Some(user_id.to_string());
         self
     }
 
     /// Set resource ID
+    #[must_use]
     pub fn resource_id(mut self, resource_id: &str) -> Self {
         self.event.resource_id = Some(resource_id.to_string());
         self
     }
 
     /// Set source IP
+    #[must_use]
     pub fn source_ip(mut self, ip: &str) -> Self {
         self.event.source_ip = Some(ip.to_string());
         self
     }
 
     /// Set description
+    #[must_use]
     pub fn description(mut self, description: &str) -> Self {
         self.event.description = description.to_string();
         self
     }
 
     /// Add metadata
+    #[must_use]
     pub fn metadata(mut self, key: &str, value: &str) -> Self {
         self.event
             .metadata
@@ -542,36 +557,42 @@ impl AuditEventBuilder {
     }
 
     /// Set system context
+    #[must_use]
     pub fn system_context(mut self, context: SystemContext) -> Self {
         self.event.system_context = Some(context);
         self
     }
 
     /// Set correlation ID
+    #[must_use]
     pub fn correlation_id(mut self, id: &str) -> Self {
         self.event.correlation_id = Some(id.to_string());
         self
     }
 
     /// Set outcome
-    pub fn outcome(mut self, outcome: EventOutcome) -> Self {
+    #[must_use]
+    pub const fn outcome(mut self, outcome: EventOutcome) -> Self {
         self.event.outcome = outcome;
         self
     }
 
     /// Set data classification
+    #[must_use]
     pub fn data_classification(mut self, classification: DataClassification) -> Self {
         self.event.data_classification = Some(classification);
         self
     }
 
     /// Add compliance tag
+    #[must_use]
     pub fn compliance_tag(mut self, tag: &str) -> Self {
         self.event.compliance_tags.push(tag.to_string());
         self
     }
 
     /// Build the audit event
+    #[must_use]
     pub fn build(self) -> AuditEvent {
         self.event
     }
@@ -588,12 +609,16 @@ struct LogFileManager {
 }
 
 impl LogFileManager {
+    /// Create a new log file manager.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the log directory cannot be created.
     fn new(config: AuditConfig) -> Result<Self, CoreError> {
         // Create log directory if it doesn't exist
         std::fs::create_dir_all(&config.log_directory).map_err(|e| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Failed to create log directory: {}",
-                e
+                "Failed to create log directory: {e}"
             )))
         })?;
 
@@ -607,6 +632,11 @@ impl LogFileManager {
         })
     }
 
+    /// Write an audit event to the log file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be serialized or written to the log file.
     fn write_event(&mut self, event: &mut AuditEvent) -> Result<(), CoreError> {
         // Set up hash chain if enabled
         if self.config.enable_hash_chain {
@@ -623,7 +653,7 @@ impl LogFileManager {
             self.serialize_text(event)
         };
 
-        let data = format!("{}\n", serialized);
+        let data = format!("{serialized}\n");
         let data_size = data.len() as u64;
 
         // Check if we need to rotate the log file
@@ -636,8 +666,7 @@ impl LogFileManager {
         if let Some(ref mut file) = self.current_file {
             file.write_all(data.as_bytes()).map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to write to log file: {}",
-                    e
+                    "Failed to write to log file: {e}"
                 )))
             })?;
 
@@ -647,20 +676,24 @@ impl LogFileManager {
         Ok(())
     }
 
+    /// Rotate the current log file to a new file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the current file cannot be flushed or a new file cannot be created.
     fn rotate_log_file(&mut self) -> Result<(), CoreError> {
         // Close current file
         if let Some(mut file) = self.current_file.take() {
             file.flush().map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to flush log file: {}",
-                    e
+                    "Failed to flush log file: {e}"
                 )))
             })?;
         }
 
         // Create new log file
         let timestamp = Utc::now().format("%Y%m%d_%H%M%S");
-        let filename = format!("audit_{}_{:06}.log", timestamp, self.file_counter);
+        let filename = format!("audit_{timestamp}_{:06}.log", self.file_counter);
         let filepath = self.config.log_directory.join(filename);
 
         let file = OpenOptions::new()
@@ -669,8 +702,7 @@ impl LogFileManager {
             .open(&filepath)
             .map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to create log file: {}",
-                    e
+                    "Failed to create log file: {e}"
                 )))
             })?;
 
@@ -684,6 +716,11 @@ impl LogFileManager {
         Ok(())
     }
 
+    /// Clean up old log files according to the retention policy.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if log files cannot be read or deleted.
     fn cleanup_old_files(&self) -> Result<(), CoreError> {
         let mut log_files = Vec::new();
 
@@ -713,7 +750,7 @@ impl LogFileManager {
             let files_to_remove = log_files.len() - self.config.max_files;
             for (path, _) in log_files.iter().take(files_to_remove) {
                 if let Err(e) = std::fs::remove_file(path) {
-                    eprintln!("Failed to remove old log file {:?}: {}", path, e);
+                    eprintln!("Failed to remove old log file {path:?}: {e}");
                 }
             }
         }
@@ -721,18 +758,27 @@ impl LogFileManager {
         Ok(())
     }
 
+    /// Serialize an audit event to JSON format.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be serialized to JSON.
     #[cfg(feature = "serde")]
     fn serialize_json(&self, event: &AuditEvent) -> Result<String, CoreError> {
         serde_json::to_string(event).map_err(|e| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Failed to serialize event to JSON: {}",
-                e
+                "Failed to serialize event to JSON: {e}"
             )))
         })
     }
 
+    /// Serialize an audit event to JSON format (serde feature required).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error indicating that the serde feature is required.
     #[cfg(not(feature = "serde"))]
-    fn serialize_json(&self, event: &AuditEvent) -> Result<String, CoreError> {
+    fn serialize_json(&self, _event: &AuditEvent) -> Result<String, CoreError> {
         Err(CoreError::ComputationError(
             crate::error::ErrorContext::new(
                 "JSON serialization requires serde feature".to_string(),
@@ -740,6 +786,8 @@ impl LogFileManager {
         ))
     }
 
+    /// Serialize an audit event to text format.
+    #[must_use]
     fn serialize_text(&self, event: &AuditEvent) -> String {
         format!(
             "[{}] {} {} {} user={} resource={} outcome={} description=\"{}\"",
@@ -754,18 +802,27 @@ impl LogFileManager {
         )
     }
 
+    /// Flush pending data to the log file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be flushed.
     fn flush(&mut self) -> Result<(), CoreError> {
         if let Some(ref mut file) = self.current_file {
             file.flush().map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to flush log file: {}",
-                    e
+                    "Failed to flush log file: {e}"
                 )))
             })?;
         }
         Ok(())
     }
 
+    /// Calculate a cryptographic hash for an audit event.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the hash cannot be calculated.
     #[cfg(feature = "crypto")]
     fn calculate_event_hash(&self, event: &AuditEvent) -> Result<String, CoreError> {
         let mut hasher = Sha256::new();
@@ -795,6 +852,11 @@ impl LogFileManager {
         Ok(format!("{:x}", result))
     }
 
+    /// Calculate a fallback hash for an audit event (crypto feature recommended).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the hash cannot be calculated.
     #[cfg(not(feature = "crypto"))]
     fn calculate_event_hash(&self, event: &AuditEvent) -> Result<String, CoreError> {
         // Simple fallback hash implementation
@@ -811,6 +873,11 @@ impl LogFileManager {
     }
 
     /// Verify hash chain integrity
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if hash chain verification fails.
+    #[must_use]
     pub fn verify_hash_chain(&self) -> Result<bool, CoreError> {
         if !self.config.enable_hash_chain {
             return Ok(true); // No verification needed
@@ -822,8 +889,12 @@ impl LogFileManager {
     }
 
     /// Archive old log files according to retention policy
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if archival operations fail.
     #[allow(dead_code)]
-    fn archive_old_files(&mut self) -> Result<(), CoreError> {
+    fn archive_old_files(&self) -> Result<(), CoreError> {
         if !self.config.retention_policy.enable_auto_archive {
             return Ok(());
         }
@@ -837,8 +908,12 @@ impl LogFileManager {
     }
 
     /// Clean up files according to retention policy
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if cleanup operations fail.
     #[allow(dead_code)]
-    fn cleanup_expired_files(&mut self) -> Result<(), CoreError> {
+    fn cleanup_expired_files(&self) -> Result<(), CoreError> {
         if !self.config.retention_policy.enable_auto_delete {
             return Ok(());
         }
@@ -859,6 +934,8 @@ struct AlertManager {
 }
 
 impl AlertManager {
+    /// Create a new alert manager.
+    #[must_use]
     fn new(config: AlertingConfig) -> Self {
         Self {
             config,
@@ -867,6 +944,11 @@ impl AlertManager {
         }
     }
 
+    /// Process an audit event for alerting.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if event processing or alerting fails.
     fn process_event(&self, event: &AuditEvent) -> Result<(), CoreError> {
         if !self.config.enabled {
             return Ok(());
@@ -890,6 +972,11 @@ impl AlertManager {
         Ok(())
     }
 
+    /// Update alert counter and check if threshold is exceeded.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if counter update fails.
     fn update_counter_and_check_threshold(
         &self,
         alert_key: &str,
@@ -926,6 +1013,11 @@ impl AlertManager {
         Ok(new_count >= threshold && self.check_cooldown(alert_key)?)
     }
 
+    /// Check if alert cooldown period has elapsed.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if cooldown check fails.
     fn check_cooldown(&self, alert_key: &str) -> Result<bool, CoreError> {
         let last_alert_times = self.last_alert_time.read().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -943,6 +1035,11 @@ impl AlertManager {
         }
     }
 
+    /// Send an alert for the given event.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if alert sending fails.
     fn send_alert(&self, alert_key: &str, event: &AuditEvent) -> Result<(), CoreError> {
         // Update last alert time
         {
@@ -955,8 +1052,8 @@ impl AlertManager {
         }
 
         let alert_message = format!(
-            "SECURITY ALERT: {} threshold exceeded - {} - {}",
-            alert_key, event.action, event.description
+            "SECURITY ALERT: {alert_key} threshold exceeded - {} - {}",
+            event.action, event.description
         );
 
         // Send webhook alert
@@ -970,11 +1067,16 @@ impl AlertManager {
         }
 
         // Log the alert
-        eprintln!("AUDIT ALERT: {}", alert_message);
+        eprintln!("AUDIT ALERT: {alert_message}");
 
         Ok(())
     }
 
+    /// Send a webhook alert.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the webhook request fails.
     #[cfg(feature = "reqwest")]
     fn send_webhook_alert(&self, webhook_url: &str, message: &str) -> Result<(), CoreError> {
         use reqwest::blocking::Client;
@@ -998,16 +1100,26 @@ impl AlertManager {
         Ok(())
     }
 
+    /// Send a webhook alert (reqwest feature required).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error indicating that the reqwest feature is required.
     #[cfg(not(feature = "reqwest"))]
     fn send_webhook_alert(&self, _webhook_url: &str, _message: &str) -> Result<(), CoreError> {
         eprintln!("Webhook alerts require reqwest feature");
         Ok(())
     }
 
+    /// Send an email alert.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if email sending fails.
     fn send_email_alert(&self, _email: &str, _message: &str) -> Result<(), CoreError> {
         // Email implementation would go here
         // For now, just log that we would send an email
-        eprintln!("Would send email alert to: {}", _email);
+        eprintln!("Would send email alert to: {_email}");
         Ok(())
     }
 }
@@ -1023,6 +1135,10 @@ pub struct AuditLogger {
 
 impl AuditLogger {
     /// Create a new audit logger
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the logger cannot be initialized.
     pub fn new(config: AuditConfig) -> Result<Self, CoreError> {
         let file_manager = Arc::new(Mutex::new(LogFileManager::new(config.clone())?));
 
@@ -1041,6 +1157,10 @@ impl AuditLogger {
     }
 
     /// Log a general audit event
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be logged.
     pub fn log_event(&self, event: AuditEvent) -> Result<(), CoreError> {
         // Process alerts
         if let Some(ref alert_manager) = self.alert_manager {
@@ -1069,6 +1189,10 @@ impl AuditLogger {
     }
 
     /// Log a data access event
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be logged.
     pub fn log_data_access(
         &self,
         user_id: &str,
@@ -1091,6 +1215,10 @@ impl AuditLogger {
     }
 
     /// Log a security event
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be logged.
     pub fn log_security_event(
         &self,
         category: EventCategory,
@@ -1117,6 +1245,10 @@ impl AuditLogger {
     }
 
     /// Log an authentication event
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be logged.
     pub fn log_authentication(
         &self,
         user_id: &str,
@@ -1149,6 +1281,10 @@ impl AuditLogger {
     }
 
     /// Log a configuration change
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be logged.
     pub fn log_configuration_change(
         &self,
         user_id: &str,
@@ -1182,6 +1318,10 @@ impl AuditLogger {
     }
 
     /// Search audit events within a date range
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if events cannot be searched or parsed.
     pub fn search_events(
         &self,
         start_date: DateTime<Utc>,
@@ -1218,6 +1358,11 @@ impl AuditLogger {
         Ok(events)
     }
 
+    /// Search for audit events in a specific log file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be opened or read.
     fn search_file(
         &self,
         file_path: &Path,
@@ -1229,8 +1374,7 @@ impl AuditLogger {
     ) -> Result<(), CoreError> {
         let file = File::open(file_path).map_err(|e| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Failed to open log file: {}",
-                e
+                "Failed to open log file: {e}"
             )))
         })?;
 
@@ -1239,8 +1383,7 @@ impl AuditLogger {
         for line in reader.lines() {
             let line = line.map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to read line: {}",
-                    e
+                    "Failed to read line: {e}"
                 )))
             })?;
 
@@ -1271,13 +1414,17 @@ impl AuditLogger {
         Ok(())
     }
 
+    /// Parse a log line into an audit event.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the log line cannot be parsed.
     #[cfg(feature = "serde")]
     fn parse_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
         if self.config.enable_json_format {
             serde_json::from_str(line).map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Failed to parse JSON log line: {}",
-                    e
+                    "Failed to parse JSON log line: {e}"
                 )))
             })
         } else {
@@ -1285,6 +1432,11 @@ impl AuditLogger {
         }
     }
 
+    /// Parse a log line into an audit event (serde feature required for JSON).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the log line cannot be parsed.
     #[cfg(not(feature = "serde"))]
     fn parse_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
         if self.config.enable_json_format {
@@ -1296,6 +1448,11 @@ impl AuditLogger {
         }
     }
 
+    /// Parse a text format log line into an audit event.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error indicating that text parsing is not fully implemented.
     fn parse_text_log_line(&self, _line: &str) -> Result<AuditEvent, CoreError> {
         // Simplified text parsing - in production, you'd want a robust parser
         Err(CoreError::ComputationError(
@@ -1303,6 +1460,11 @@ impl AuditLogger {
         ))
     }
 
+    /// Flush the event buffer to the log file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if events cannot be written to the log file.
     fn flush_buffer(&self, buffer: &mut Vec<AuditEvent>) -> Result<(), CoreError> {
         let mut file_manager = self.file_manager.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -1318,6 +1480,11 @@ impl AuditLogger {
         Ok(())
     }
 
+    /// Check if the flush interval has elapsed and flush if needed.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if flushing fails.
     fn check_flush_interval(&self) -> Result<(), CoreError> {
         let mut last_flush = self.last_flush.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -1346,6 +1513,10 @@ impl AuditLogger {
     }
 
     /// Force flush all pending events
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if flushing fails.
     pub fn flush(&self) -> Result<(), CoreError> {
         let mut buffer = self.event_buffer.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -1361,6 +1532,10 @@ impl AuditLogger {
     }
 
     /// Get audit statistics
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if statistics cannot be calculated.
     pub fn get_statistics(&self, days: u32) -> Result<AuditStatistics, CoreError> {
         let end_date = Utc::now();
         let start_date = end_date - chrono::Duration::days(days as i64);
@@ -1390,6 +1565,10 @@ impl AuditLogger {
     }
 
     /// Add an audit event method with integrity verification
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if event verification or logging fails.
     pub fn log_event_with_verification(&self, event: AuditEvent) -> Result<(), CoreError> {
         // Verify event integrity if hash chain is enabled
         if self.config.enable_hash_chain {
@@ -1403,6 +1582,10 @@ impl AuditLogger {
     }
 
     /// Export audit logs for compliance reporting
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the compliance report cannot be generated.
     pub fn export_compliance_report(
         &self,
         start_date: DateTime<Utc>,
@@ -1444,6 +1627,11 @@ impl AuditLogger {
     }
 
     /// Verify overall system integrity
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if integrity verification fails.
+    #[must_use]
     pub fn verify_integrity(&self) -> Result<bool, CoreError> {
         let file_manager = self.file_manager.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -1510,6 +1698,10 @@ pub struct AsyncAuditLogger {
 #[cfg(feature = "async")]
 impl AsyncAuditLogger {
     /// Create a new async audit logger
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the logger cannot be initialized.
     pub async fn new(config: AuditConfig) -> Result<Self, CoreError> {
         let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
 
@@ -1537,6 +1729,10 @@ impl AsyncAuditLogger {
     }
 
     /// Log an event asynchronously
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be sent to the background logger.
     pub async fn log_event(&self, event: AuditEvent) -> Result<(), CoreError> {
         self.event_sender.send(event).map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -1546,6 +1742,10 @@ impl AsyncAuditLogger {
     }
 
     /// Log data access asynchronously
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be logged.
     pub async fn log_data_access(
         &self,
         user_id: &str,
@@ -1570,6 +1770,7 @@ impl AsyncAuditLogger {
 
 // Utility functions
 
+#[must_use]
 fn get_thread_id() -> u64 {
     use std::thread;
     // This is a simplified implementation
@@ -1581,17 +1782,20 @@ fn get_thread_id() -> u64 {
         .fold(0, |acc, d| acc * 10 + d)
 }
 
+#[must_use]
 fn get_hostname() -> String {
     std::env::var("HOSTNAME")
         .or_else(|_| std::env::var("COMPUTERNAME"))
         .unwrap_or_else(|_| "unknown".to_string())
 }
 
+#[must_use]
 fn get_local_ip() -> Option<String> {
     // Simplified IP detection - in production, use proper network detection
     Some("127.0.0.1".to_string())
 }
 
+#[must_use]
 fn get_stack_trace() -> String {
     // Simplified stack trace - in production, use proper stack trace capture
     "Stack trace capture not implemented".to_string()

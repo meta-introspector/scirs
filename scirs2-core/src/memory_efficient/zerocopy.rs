@@ -538,7 +538,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> ZeroCopyOps<A> for MemoryMappedArr
 pub trait BroadcastOps<A: Clone + Copy + 'static> {
     /// Broadcasts an operation between two arrays of compatible shapes.
     ///
-    /// Follows the NumPy broadcasting rules:
+    /// Follows the `NumPy` broadcasting rules:
     /// 1. If arrays don't have the same rank, prepend shape with 1s
     /// 2. Two dimensions are compatible if:
     ///    - They are equal, or

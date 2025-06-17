@@ -85,9 +85,13 @@ pub use attention::{
 };
 
 // Convenience type aliases for common use cases
+/// Convenient type alias for network visualization
 pub type NetworkViz<F> = NetworkVisualizer<F>;
+/// Convenient type alias for training visualization  
 pub type TrainingViz<F> = TrainingVisualizer<F>;
+/// Convenient type alias for activation visualization
 pub type ActivationViz<F> = ActivationVisualizer<F>;
+/// Convenient type alias for attention visualization
 pub type AttentionViz<F> = AttentionVisualizer<F>;
 
 /// Combined visualization suite for comprehensive neural network analysis
@@ -99,7 +103,8 @@ where
         + 'static
         + num_traits::FromPrimitive
         + Send
-        + Sync,
+        + Sync
+        + serde::Serialize,
 {
     /// Network architecture visualizer
     pub network: NetworkVisualizer<F>,
@@ -121,7 +126,8 @@ where
         + 'static
         + num_traits::FromPrimitive
         + Send
-        + Sync,
+        + Sync
+        + serde::Serialize,
 {
     /// Create a new comprehensive visualization suite
     pub fn new(
@@ -129,8 +135,15 @@ where
         config: VisualizationConfig,
     ) -> Self {
         let training = TrainingVisualizer::new(config.clone());
-        let activation = ActivationVisualizer::new(model.clone(), config.clone());
-        let attention = AttentionVisualizer::new(model.clone(), config.clone());
+        // Create default/empty models for visualizers that need them but don't use them actively
+        let activation = ActivationVisualizer::new(
+            crate::models::sequential::Sequential::default(),
+            config.clone(),
+        );
+        let attention = AttentionVisualizer::new(
+            crate::models::sequential::Sequential::default(),
+            config.clone(),
+        );
         let network = NetworkVisualizer::new(model, config.clone());
 
         Self {

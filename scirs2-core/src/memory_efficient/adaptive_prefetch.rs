@@ -906,49 +906,49 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Enable or disable prefetching.
-    pub fn enabled(mut self, enabled: bool) -> Self {
+    pub const fn enabled(mut self, enabled: bool) -> Self {
         self.config.base.enabled = enabled;
         self
     }
 
     /// Set the number of blocks to prefetch ahead of the current access.
-    pub fn prefetch_count(mut self, count: usize) -> Self {
+    pub const fn prefetch_count(mut self, count: usize) -> Self {
         self.config.base.prefetch_count = count;
         self
     }
 
     /// Set the maximum number of blocks to keep in the prefetch history.
-    pub fn history_size(mut self, size: usize) -> Self {
+    pub const fn history_size(mut self, size: usize) -> Self {
         self.config.base.history_size = size;
         self
     }
 
     /// Set the minimum number of accesses needed to detect a pattern.
-    pub fn min_pattern_length(mut self, length: usize) -> Self {
+    pub const fn min_pattern_length(mut self, length: usize) -> Self {
         self.config.base.min_pattern_length = length;
         self
     }
 
     /// Enable or disable asynchronous prefetching.
-    pub fn async_prefetch(mut self, async_prefetch: bool) -> Self {
+    pub const fn async_prefetch(mut self, async_prefetch: bool) -> Self {
         self.config.base.async_prefetch = async_prefetch;
         self
     }
 
     /// Set the timeout for prefetch operations.
-    pub fn prefetch_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn prefetch_timeout(mut self, timeout: Duration) -> Self {
         self.config.base.prefetch_timeout = timeout;
         self
     }
 
     /// Set whether to use the adaptive tracker.
-    pub fn use_adaptive_tracker(mut self, use_adaptive: bool) -> Self {
+    pub const fn use_adaptive_tracker(mut self, use_adaptive: bool) -> Self {
         self.config.use_adaptive_tracker = use_adaptive;
         self
     }
 
     /// Enable or disable reinforcement learning.
-    pub fn enable_learning(mut self, enable: bool) -> Self {
+    pub const fn enable_learning(mut self, enable: bool) -> Self {
         self.config.enable_learning = enable;
         self
     }
@@ -960,13 +960,13 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Set the learning rate for Q-value updates.
-    pub fn learning_rate(mut self, rate: f64) -> Self {
+    pub const fn learning_rate(mut self, rate: f64) -> Self {
         self.config.learning_rate = rate;
         self
     }
 
     /// Set how often to evaluate strategies.
-    pub fn evaluation_interval(mut self, interval: Duration) -> Self {
+    pub const fn evaluation_interval(mut self, interval: Duration) -> Self {
         self.config.evaluation_interval = interval;
         self
     }

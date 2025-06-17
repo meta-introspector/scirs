@@ -139,7 +139,7 @@ mod tests {
     fn test_try_as_complex() {
         let val = Complex64::new(1.0, 2.0);
         assert_eq!(try_as_complex(val), Some(val));
-        
+
         let val32 = num_complex::Complex::new(1.0f32, 2.0f32);
         assert_eq!(try_as_complex(val32), Some(Complex64::new(1.0, 2.0)));
     }

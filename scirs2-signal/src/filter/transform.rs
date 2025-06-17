@@ -6,10 +6,9 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
-use num_traits::{Float, NumCast};
-use std::fmt::Debug;
+use num_traits::Zero;
 
-use super::common::{FilterCoefficients, FilterType};
+use super::common::FilterCoefficients;
 
 /// Apply bilinear transform to convert analog filter to digital
 ///

@@ -258,8 +258,16 @@ pub struct AttentionStatistics<F: Float + Debug> {
 
 // Implementation for AttentionVisualizer
 
-impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Send + Sync>
-    AttentionVisualizer<F>
+impl<
+        F: Float
+            + Debug
+            + 'static
+            + num_traits::FromPrimitive
+            + ScalarOperand
+            + Send
+            + Sync
+            + Serialize,
+    > AttentionVisualizer<F>
 {
     /// Create a new attention visualizer
     pub fn new(model: Sequential<F>, config: VisualizationConfig) -> Self {
@@ -323,7 +331,10 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
         export_options: &ExportOptions,
     ) -> Result<PathBuf> {
         let attention_data = self.attention_cache.get(layer_name).ok_or_else(|| {
-            NeuralError::ValueError(format!("No attention data found for layer: {}", layer_name))
+            NeuralError::InvalidArgument(format!(
+                "No attention data found for layer: {}",
+                layer_name
+            ))
         })?;
 
         match &export_options.format {
@@ -407,13 +418,11 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ScalarOperand + Se
         layer_name: &str,
         attention_data: &AttentionData<F>,
     ) -> Result<AttentionStatistics<F>> {
-        use num_traits::Zero;
-
         let weights = &attention_data.weights;
         let total_weights = weights.len();
 
         if total_weights == 0 {
-            return Err(NeuralError::ValueError(
+            return Err(NeuralError::InvalidArgument(
                 "Empty attention weights".to_string(),
             ));
         }

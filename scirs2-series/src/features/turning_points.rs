@@ -503,7 +503,7 @@ where
 fn analyze_directional_changes<F>(
     ts: &Array1<F>,
     turning_points: &[usize],
-    config: &TurningPointsConfig,
+    _config: &TurningPointsConfig,
 ) -> Result<(usize, usize, DirectionalChangeStats<F>)>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -987,22 +987,17 @@ fn detect_advanced_patterns<F>(
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let mut double_peak_count = 0;
-    let mut double_bottom_count = 0;
-    let mut head_shoulders_count = 0;
-    let mut triangular_pattern_count = 0;
-
     // Detect double peaks (M patterns)
-    double_peak_count = detect_double_peaks(ts, local_maxima)?;
+    let double_peak_count = detect_double_peaks(ts, local_maxima)?;
 
     // Detect double bottoms (W patterns)
-    double_bottom_count = detect_double_bottoms(ts, local_minima)?;
+    let double_bottom_count = detect_double_bottoms(ts, local_minima)?;
 
     // Detect head and shoulders patterns
-    head_shoulders_count = detect_head_and_shoulders(ts, local_maxima, local_minima)?;
+    let head_shoulders_count = detect_head_and_shoulders(ts, local_maxima, local_minima)?;
 
     // Detect triangular patterns
-    triangular_pattern_count = detect_triangular_patterns(ts, local_maxima, local_minima)?;
+    let triangular_pattern_count = detect_triangular_patterns(ts, local_maxima, local_minima)?;
 
     Ok(AdvancedPatternFeatures {
         double_peak_count,

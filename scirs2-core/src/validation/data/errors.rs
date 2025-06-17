@@ -83,15 +83,15 @@ impl ValidationError {
         let mut message = format!("{}: {}", self.field_path, self.message);
 
         if let Some(expected) = &self.expected {
-            message.push_str(&format!(" (expected: {})", expected));
+            message.push_str(&format!(" (expected: {expected})"));
         }
 
         if let Some(actual) = &self.actual {
-            message.push_str(&format!(" (actual: {})", actual));
+            message.push_str(&format!(" (actual: {actual})"));
         }
 
         if let Some(constraint) = &self.constraint {
-            message.push_str(&format!(" (constraint: {})", constraint));
+            message.push_str(&format!(" (constraint: {constraint})"));
         }
 
         message

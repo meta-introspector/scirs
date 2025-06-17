@@ -362,22 +362,22 @@ fn generate_window(length: usize, window_type: &str) -> SignalResult<Vec<f64>> {
         "hamming" => {
             for (i, w) in window.iter_mut().enumerate() {
                 let n = i as f64;
-                let N = length as f64;
-                *w = 0.54 - 0.46 * (2.0 * std::f64::consts::PI * n / (N - 1.0)).cos();
+                let total = length as f64;
+                *w = 0.54 - 0.46 * (2.0 * std::f64::consts::PI * n / (total - 1.0)).cos();
             }
         }
         "hann" | "hanning" => {
             for (i, w) in window.iter_mut().enumerate() {
                 let n = i as f64;
-                let N = length as f64;
-                *w = 0.5 * (1.0 - (2.0 * std::f64::consts::PI * n / (N - 1.0)).cos());
+                let total = length as f64;
+                *w = 0.5 * (1.0 - (2.0 * std::f64::consts::PI * n / (total - 1.0)).cos());
             }
         }
         "blackman" => {
             for (i, w) in window.iter_mut().enumerate() {
                 let n = i as f64;
-                let N = length as f64;
-                let arg = 2.0 * std::f64::consts::PI * n / (N - 1.0);
+                let total = length as f64;
+                let arg = 2.0 * std::f64::consts::PI * n / (total - 1.0);
                 *w = 0.42 - 0.5 * arg.cos() + 0.08 * (2.0 * arg).cos();
             }
         }

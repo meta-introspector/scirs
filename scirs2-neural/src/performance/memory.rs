@@ -554,15 +554,18 @@ impl std::fmt::Display for MemoryStats {
 }
 
 // Provide no-op implementations when memory_efficient feature is not available
+/// Memory efficient processor for handling large models (no-op implementation when feature disabled)
 #[cfg(not(feature = "memory_efficient"))]
 pub struct MemoryEfficientProcessor;
 
 #[cfg(not(feature = "memory_efficient"))]
 impl MemoryEfficientProcessor {
+    /// Create a new memory efficient processor
     pub fn new(_chunk_size: Option<usize>, _max_memory_mb: Option<usize>) -> Self {
         Self
     }
 
+    /// Process input data in chunks to reduce memory usage
     pub fn process_in_chunks<F, T>(&self, _input: &ArrayD<f32>, _processor: F) -> Result<ArrayD<T>>
     where
         F: FnMut(&ArrayView<f32, IxDyn>) -> Result<ArrayD<T>>,
@@ -573,6 +576,7 @@ impl MemoryEfficientProcessor {
         ))
     }
 
+    /// Perform memory-efficient forward pass
     pub fn memory_efficient_forward<F>(
         &self,
         _input: &ArrayD<f32>,

@@ -6,7 +6,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
-use num_traits::{Float, NumCast};
+use num_traits::{Float, NumCast, Zero};
 use std::fmt::Debug;
 
 /// Apply a digital filter forward and backward to a signal (zero-phase filtering)
@@ -421,7 +421,7 @@ pub fn matched_filter_detect(
 // Helper functions for internal use
 
 /// Evaluate transfer function H(z) = B(z)/A(z) at a frequency
-fn evaluate_transfer_function(b: &[f64], a: &[f64], w: f64) -> Complex64 {
+pub fn evaluate_transfer_function(b: &[f64], a: &[f64], w: f64) -> Complex64 {
     let z = Complex64::new(w.cos(), w.sin());
 
     // Evaluate numerator
@@ -449,7 +449,7 @@ fn evaluate_transfer_function(b: &[f64], a: &[f64], w: f64) -> Complex64 {
 ///
 /// This is a basic implementation for demonstration purposes.
 /// Production code would use more robust algorithms like Jenkins-Traub or eigenvalue methods.
-fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
+pub fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
     if coeffs.is_empty() {
         return Ok(Vec::new());
     }

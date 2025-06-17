@@ -13,7 +13,7 @@ fn main() {
     println!("=== Feature Extraction Utilities Demonstration ===\n");
 
     // Create a sample dataset for demonstration
-    let mut data = Array2::from_shape_vec(
+    let data = Array2::from_shape_vec(
         (6, 2),
         vec![
             1.0, 10.0, // Normal data
