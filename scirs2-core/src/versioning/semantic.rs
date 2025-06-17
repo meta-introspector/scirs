@@ -327,38 +327,38 @@ impl VersionConstraint {
             return Ok(VersionConstraint::Any);
         }
 
-        if constraint.starts_with(">=") {
-            let version = Version::parse(&constraint[2..])?;
+        if let Some(stripped) = constraint.strip_prefix(">=") {
+            let version = Version::parse(stripped)?;
             return Ok(VersionConstraint::GreaterThanOrEqual(version));
         }
 
-        if constraint.starts_with("<=") {
-            let version = Version::parse(&constraint[2..])?;
+        if let Some(stripped) = constraint.strip_prefix("<=") {
+            let version = Version::parse(stripped)?;
             return Ok(VersionConstraint::LessThanOrEqual(version));
         }
 
-        if constraint.starts_with('>') {
-            let version = Version::parse(&constraint[1..])?;
+        if let Some(stripped) = constraint.strip_prefix('>') {
+            let version = Version::parse(stripped)?;
             return Ok(VersionConstraint::GreaterThan(version));
         }
 
-        if constraint.starts_with('<') {
-            let version = Version::parse(&constraint[1..])?;
+        if let Some(stripped) = constraint.strip_prefix('<') {
+            let version = Version::parse(stripped)?;
             return Ok(VersionConstraint::LessThan(version));
         }
 
-        if constraint.starts_with('~') {
-            let version = Version::parse(&constraint[1..])?;
+        if let Some(stripped) = constraint.strip_prefix('~') {
+            let version = Version::parse(stripped)?;
             return Ok(VersionConstraint::Tilde(version));
         }
 
-        if constraint.starts_with('^') {
-            let version = Version::parse(&constraint[1..])?;
+        if let Some(stripped) = constraint.strip_prefix('^') {
+            let version = Version::parse(stripped)?;
             return Ok(VersionConstraint::Caret(version));
         }
 
-        if constraint.starts_with('=') {
-            let version = Version::parse(&constraint[1..])?;
+        if let Some(stripped) = constraint.strip_prefix('=') {
+            let version = Version::parse(stripped)?;
             return Ok(VersionConstraint::Exact(version));
         }
 

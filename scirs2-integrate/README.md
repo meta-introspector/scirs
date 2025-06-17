@@ -756,44 +756,44 @@ The boundary value problem (BVP) solver implements a collocation method that dis
 - Automatic mesh refinement based on solution gradient
 - Newton's method for solving the resulting nonlinear systems
 
-### Enhanced ODE Solvers
+### ODE Solvers
 
-The ODE solvers have been significantly enhanced with:
+The ODE solvers provide:
 
-- Improved Runge-Kutta methods with adaptive step size (RK23, RK45)
-- Enhanced BDF implementation for stiff equations with:
+- Runge-Kutta methods with adaptive step size (RK23, RK45)
+- BDF implementation for stiff equations featuring:
   - Intelligent Jacobian strategy selection based on problem size
-  - Jacobian reuse and Broyden updating for better performance
-  - Better error estimation using lower-order solutions
+  - Jacobian reuse and Broyden updating for performance
+  - Error estimation using lower-order solutions
   - Specialized linear solvers for different matrix structures
   - Adaptive order selection (1-5) with error control
-- Enhanced LSODA implementation with better stiffness detection:
+- LSODA implementation with automatic stiffness detection:
   - Automatic method switching for problems that change character
-  - More robust stiffness detection using multiple indicators
-  - Improved error estimation and step size control
+  - Stiffness detection using multiple indicators
+  - Error estimation and step size control
   - Detailed diagnostics about method switching decisions
 - Comprehensive error estimation and step size control
 - Support for structured and banded Jacobians
-- Advanced event detection capabilities:
-  - Detect zero-crossings during integration with precise timing
-  - Support for terminal events that stop integration
+- Event detection capabilities:
+  - Zero-crossing detection during integration with precise timing
+  - Terminal events that stop integration
   - Direction-specific event detection (rising, falling, or both)
   - Continuous output for accurate event localization
-  - Ability to track event histories and properties
-- Flexible mass matrix support:
+  - Event history and property tracking
+- Mass matrix support:
   - Constant, time-dependent, and state-dependent mass matrices
   - Direct handling of M(t,y)·y' = f(t,y) form equations
   - Efficient solving approaches for different mass matrix types
   - Combined use with event detection for complex mechanical systems
 
-The enhanced methods provide significant performance improvements:
-- 2-10x faster for large stiff systems through optimized linear solvers
-- Improved convergence for highly nonlinear problems
-- Better stability for problems with dynamic stiffness changes
+Performance characteristics:
+- Optimized for large stiff systems through specialized linear solvers
+- Efficient convergence for highly nonlinear problems
+- Stable performance for problems with dynamic stiffness changes
 
 ### PDE Solvers
 
-Support for solving partial differential equations (PDEs) has been added:
+The library supports solving partial differential equations (PDEs):
 
 - Method of Lines (MOL) approach for time-dependent PDEs:
   - Support for 1D, 2D, and 3D parabolic PDEs (heat equation, advection-diffusion)

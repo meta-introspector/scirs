@@ -822,12 +822,13 @@ impl LogFileManager {
     }
 
     /// Archive old log files according to retention policy
+    #[allow(dead_code)]
     fn archive_old_files(&mut self) -> Result<(), CoreError> {
         if !self.config.retention_policy.enable_auto_archive {
             return Ok(());
         }
 
-        let cutoff_date = Utc::now()
+        let _cutoff_date = Utc::now()
             - chrono::Duration::days(self.config.retention_policy.active_retention_days as i64);
 
         // Implementation for archiving files older than cutoff_date
@@ -836,12 +837,13 @@ impl LogFileManager {
     }
 
     /// Clean up files according to retention policy
+    #[allow(dead_code)]
     fn cleanup_expired_files(&mut self) -> Result<(), CoreError> {
         if !self.config.retention_policy.enable_auto_delete {
             return Ok(());
         }
 
-        let archive_cutoff = Utc::now()
+        let _archive_cutoff = Utc::now()
             - chrono::Duration::days(self.config.retention_policy.archive_retention_days as i64);
 
         // Implementation for deleting files older than archive retention
@@ -891,7 +893,7 @@ impl AlertManager {
     fn update_counter_and_check_threshold(
         &self,
         alert_key: &str,
-        event: &AuditEvent,
+        _event: &AuditEvent,
     ) -> Result<bool, CoreError> {
         let mut counters = self.alert_counters.write().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -1386,11 +1388,11 @@ impl AuditLogger {
     }
 
     /// Add an audit event method with integrity verification
-    pub fn log_event_with_verification(&self, mut event: AuditEvent) -> Result<(), CoreError> {
+    pub fn log_event_with_verification(&self, event: AuditEvent) -> Result<(), CoreError> {
         // Verify event integrity if hash chain is enabled
         if self.config.enable_hash_chain {
             // Add current system state to event hash
-            if let Some(context) = &event.system_context {
+            if let Some(_context) = &event.system_context {
                 // Hash would include system context
             }
         }

@@ -8,8 +8,8 @@ use ndarray::{s, Array1, Array2, ArrayView1};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
+use super::config::{DenoisingMethod, WaveletConfig, WaveletFamily};
 use crate::error::{Result, TimeSeriesError};
-use super::config::{WaveletConfig, WaveletFamily, DenoisingMethod};
 
 /// Wavelet-based features for time series analysis
 ///
@@ -1050,20 +1050,21 @@ where
 {
     // Perform DWT
     let dwt_result = discrete_wavelet_transform(signal, config)?;
-    
+
     // Calculate optimal threshold
-    let threshold = calculate_optimal_threshold(&dwt_result.coefficients, &config.denoising_method)?;
-    
+    let threshold =
+        calculate_optimal_threshold(&dwt_result.coefficients, &config.denoising_method)?;
+
     // Apply thresholding
     let (thresholded_coeffs, coefficients_thresholded) = apply_thresholding(
-        &dwt_result.coefficients, 
-        threshold, 
-        &config.denoising_method
+        &dwt_result.coefficients,
+        threshold,
+        &config.denoising_method,
     )?;
-    
+
     // Reconstruct signal (simplified - in practice would use inverse DWT)
     let denoised_signal = reconstruct_signal_simplified(&thresholded_coeffs)?;
-    
+
     // Calculate denoising features
     let original_energy = signal.mapv(|x| x * x).sum();
     let denoised_energy = denoised_signal.mapv(|x| x * x).sum();
@@ -1072,13 +1073,13 @@ where
     } else {
         F::zero()
     };
-    
+
     // Calculate SNR improvement (simplified)
     let snr_improvement = calculate_snr_improvement(signal, &denoised_signal)?;
-    
+
     // Calculate MSE reduction (simplified)
     let mse_reduction = calculate_mse_reduction(signal, &denoised_signal)?;
-    
+
     let features = WaveletDenoisingFeatures {
         snr_improvement,
         energy_preserved,
@@ -1086,15 +1087,12 @@ where
         optimal_threshold: threshold,
         mse_reduction,
     };
-    
+
     Ok((denoised_signal, features))
 }
 
 /// Calculate optimal threshold for denoising
-fn calculate_optimal_threshold<F>(
-    coefficients: &[Array1<F>], 
-    method: &DenoisingMethod
-) -> Result<F>
+fn calculate_optimal_threshold<F>(coefficients: &[Array1<F>], method: &DenoisingMethod) -> Result<F>
 where
     F: Float + FromPrimitive + PartialOrd,
 {
@@ -1103,19 +1101,19 @@ where
     if finest_detail.is_empty() {
         return Ok(F::zero());
     }
-    
+
     let mut sorted_coeffs: Vec<F> = finest_detail.iter().map(|&x| x.abs()).collect();
     sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     let median_idx = sorted_coeffs.len() / 2;
     let mad = if sorted_coeffs.len() % 2 == 0 {
         (sorted_coeffs[median_idx - 1] + sorted_coeffs[median_idx]) / F::from(2.0).unwrap()
     } else {
         sorted_coeffs[median_idx]
     };
-    
+
     let sigma = mad / F::from(0.6745).unwrap(); // MAD to standard deviation conversion
-    
+
     match method {
         DenoisingMethod::Hard | DenoisingMethod::Soft => {
             // Universal threshold
@@ -1135,29 +1133,29 @@ where
 
 /// Apply thresholding to wavelet coefficients
 fn apply_thresholding<F>(
-    coefficients: &[Array1<F>], 
-    threshold: F, 
-    method: &DenoisingMethod
+    coefficients: &[Array1<F>],
+    threshold: F,
+    method: &DenoisingMethod,
 ) -> Result<(Vec<Array1<F>>, usize)>
 where
     F: Float + FromPrimitive + PartialOrd + Clone,
 {
     let mut thresholded_coeffs = Vec::new();
     let mut total_thresholded = 0;
-    
+
     for (level, coeff_level) in coefficients.iter().enumerate() {
         if level == 0 {
             // Don't threshold approximation coefficients
             thresholded_coeffs.push(coeff_level.clone());
             continue;
         }
-        
+
         let mut thresholded_level = Array1::zeros(coeff_level.len());
         let mut level_thresholded = 0;
-        
+
         for (i, &coeff) in coeff_level.iter().enumerate() {
             let abs_coeff = coeff.abs();
-            
+
             if abs_coeff <= threshold {
                 level_thresholded += 1;
                 total_thresholded += 1;
@@ -1166,21 +1164,29 @@ where
                 thresholded_level[i] = match method {
                     DenoisingMethod::Hard => coeff,
                     DenoisingMethod::Soft => {
-                        let sign = if coeff >= F::zero() { F::one() } else { -F::one() };
+                        let sign = if coeff >= F::zero() {
+                            F::one()
+                        } else {
+                            -F::one()
+                        };
                         sign * (abs_coeff - threshold)
                     }
                     DenoisingMethod::Sure | DenoisingMethod::Minimax => {
                         // Use soft thresholding for these methods
-                        let sign = if coeff >= F::zero() { F::one() } else { -F::one() };
+                        let sign = if coeff >= F::zero() {
+                            F::one()
+                        } else {
+                            -F::one()
+                        };
                         sign * (abs_coeff - threshold)
                     }
                 };
             }
         }
-        
+
         thresholded_coeffs.push(thresholded_level);
     }
-    
+
     Ok((thresholded_coeffs, total_thresholded))
 }
 
@@ -1192,22 +1198,22 @@ where
     if coefficients.is_empty() {
         return Ok(Array1::zeros(0));
     }
-    
+
     // Simplified reconstruction: use approximation coefficients scaled by levels
     let approx_coeffs = &coefficients[0];
     let mut reconstructed = approx_coeffs.clone();
-    
+
     // Add scaled detail coefficients (simplified approach)
     for (level, detail_coeffs) in coefficients.iter().enumerate().skip(1) {
         let scale_factor = F::from(2.0_f64.powi(level as i32)).unwrap();
-        
+
         // Upsample and add details (very simplified)
         for (i, &detail) in detail_coeffs.iter().enumerate() {
             let target_idx = i.min(reconstructed.len() - 1);
             reconstructed[target_idx] = reconstructed[target_idx] + detail / scale_factor;
         }
     }
-    
+
     Ok(reconstructed)
 }
 
@@ -1217,15 +1223,17 @@ where
     F: Float + FromPrimitive,
 {
     let signal_power = original.mapv(|x| x * x).sum();
-    let noise_power = original.iter()
+    let noise_power = original
+        .iter()
         .zip(denoised.iter())
         .fold(F::zero(), |acc, (&orig, &den)| {
             let diff = orig - den;
             acc + diff * diff
         });
-    
+
     if noise_power > F::zero() && signal_power > F::zero() {
-        let snr = (signal_power / noise_power).ln() / F::from(10.0).unwrap().ln() * F::from(10.0).unwrap();
+        let snr = (signal_power / noise_power).ln() / F::from(10.0).unwrap().ln()
+            * F::from(10.0).unwrap();
         Ok(snr)
     } else {
         Ok(F::zero())
@@ -1238,13 +1246,15 @@ where
     F: Float + FromPrimitive,
 {
     let n = F::from(original.len()).unwrap();
-    let mse = original.iter()
+    let mse = original
+        .iter()
         .zip(denoised.iter())
         .fold(F::zero(), |acc, (&orig, &den)| {
             let diff = orig - den;
             acc + diff * diff
-        }) / n;
-    
+        })
+        / n;
+
     // Return normalized MSE reduction
     let signal_variance = original.mapv(|x| x * x).sum() / n;
     if signal_variance > F::zero() {

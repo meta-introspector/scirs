@@ -1,7 +1,7 @@
 # SciRS2 NDImage
 
 [![crates.io](https://img.shields.io/crates/v/scirs2-ndimage.svg)](https://crates.io/crates/scirs2-ndimage)
-[[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)]](../LICENSE)
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](../LICENSE)
 [![Documentation](https://img.shields.io/docsrs/scirs2-ndimage)](https://docs.rs/scirs2-ndimage)
 
 Multidimensional image processing functionality for the SciRS2 scientific computing library. This module provides a comprehensive set of tools for image processing in n-dimensional arrays, including filtering, morphology, measurements, segmentation, and interpolation.

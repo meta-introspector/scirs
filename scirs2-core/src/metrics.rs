@@ -341,7 +341,7 @@ pub struct TimerGuard<'a> {
     start_time: Instant,
 }
 
-impl<'a> Drop for TimerGuard<'a> {
+impl Drop for TimerGuard<'_> {
     fn drop(&mut self) {
         let duration = self.start_time.elapsed();
         self.timer.observe(duration);

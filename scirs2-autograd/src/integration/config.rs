@@ -482,7 +482,7 @@ impl Default for ModuleConfig {
 }
 
 /// Resource limits for modules
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ResourceLimits {
     /// Maximum memory usage in bytes
     pub max_memory: Option<usize>,
@@ -492,17 +492,6 @@ pub struct ResourceLimits {
     pub max_compute_time: Option<f64>,
     /// GPU memory limit in bytes
     pub max_gpu_memory: Option<usize>,
-}
-
-impl Default for ResourceLimits {
-    fn default() -> Self {
-        Self {
-            max_memory: None,
-            max_threads: None,
-            max_compute_time: None,
-            max_gpu_memory: None,
-        }
-    }
 }
 
 /// Performance configuration

@@ -74,7 +74,7 @@ impl CpuInfo {
     #[cfg(target_os = "linux")]
     fn detect_linux() -> CoreResult<Self> {
         let cpuinfo = fs::read_to_string("/proc/cpuinfo").map_err(|e| {
-            CoreError::IoError(crate::error::ErrorContext::new(&format!(
+            CoreError::IoError(crate::error::ErrorContext::new(format!(
                 "Failed to read /proc/cpuinfo: {}",
                 e
             )))
@@ -101,11 +101,7 @@ impl CpuInfo {
                 logical_cores += 1;
             } else if line.starts_with("flags") {
                 if let Some(value) = line.split(':').nth(1) {
-                    flags = value
-                        .trim()
-                        .split_whitespace()
-                        .map(|s| s.to_string())
-                        .collect();
+                    flags = value.split_whitespace().map(|s| s.to_string()).collect();
                 }
             }
         }
@@ -154,19 +150,19 @@ impl CpuInfo {
 
         // Try to read cache sizes from sysfs
         if let Ok(content) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cache/index0/size") {
-            if let Ok(size) = Self::parse_cache_size(&content.trim()) {
+            if let Ok(size) = Self::parse_cache_size(content.trim()) {
                 l1_kb = size;
             }
         }
 
         if let Ok(content) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cache/index2/size") {
-            if let Ok(size) = Self::parse_cache_size(&content.trim()) {
+            if let Ok(size) = Self::parse_cache_size(content.trim()) {
                 l2_kb = size;
             }
         }
 
         if let Ok(content) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cache/index3/size") {
-            if let Ok(size) = Self::parse_cache_size(&content.trim()) {
+            if let Ok(size) = Self::parse_cache_size(content.trim()) {
                 l3_kb = size;
             }
         }
@@ -179,7 +175,7 @@ impl CpuInfo {
         if size_str.ends_with('K') || size_str.ends_with('k') {
             let num_str = &size_str[..size_str.len() - 1];
             let size = num_str.parse::<usize>().map_err(|e| {
-                CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                CoreError::ValidationError(crate::error::ErrorContext::new(format!(
                     "Failed to parse cache size: {}",
                     e
                 )))
@@ -188,7 +184,7 @@ impl CpuInfo {
         } else if size_str.ends_with('M') || size_str.ends_with('m') {
             let num_str = &size_str[..size_str.len() - 1];
             let size = num_str.parse::<usize>().map_err(|e| {
-                CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                CoreError::ValidationError(crate::error::ErrorContext::new(format!(
                     "Failed to parse cache size: {}",
                     e
                 )))
@@ -196,7 +192,7 @@ impl CpuInfo {
             Ok(size)
         } else {
             let size = size_str.parse::<usize>().map_err(|e| {
-                CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                CoreError::ValidationError(crate::error::ErrorContext::new(format!(
                     "Failed to parse cache size: {}",
                     e
                 )))

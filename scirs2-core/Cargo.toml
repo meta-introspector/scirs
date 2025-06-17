@@ -59,6 +59,7 @@ tokio = { workspace = true, optional = true }  # Async runtime for async error h
 
 # Production-level feature dependencies
 reqwest = { workspace = true, optional = true }  # HTTP client for tracing export
+sha2 = { workspace = true, optional = true }  # Cryptographic hash functions
 
 [dev-dependencies]
 approx = { workspace = true }
@@ -120,6 +121,10 @@ observability_http = ["observability", "reqwest"]  # HTTP export for observabili
 versioning = ["serde", "serde_json"]  # API versioning and compatibility management
 leak_detection = ["memory_management", "serde", "serde_json"]  # Memory leak detection system
 data_validation = ["validation", "serde", "serde_json", "regex"]  # Comprehensive data validation
+s3 = []  # S3 integration for remote storage
+crypto = []  # Cryptographic features (placeholder)
+compression = ["flate2"]  # Compression support
+database = []  # Database integration features
 production = ["observability", "versioning", "leak_detection", "data_validation"]  # All production features
 all = [
     "simd", "parallel", "cache", "validation", "logging",

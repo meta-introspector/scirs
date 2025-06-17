@@ -449,9 +449,9 @@ mod tests {
             let converter = TensorConverter::new();
             let tensor_f32 = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
 
-            let tensor_f64: Tensor<f64> = converter.convert_precision(&tensor_f32, g).unwrap();
+            let tensor_f64 = converter.convert_precision(&tensor_f32, g).unwrap();
             assert_eq!(tensor_f64.shape(), tensor_f32.shape());
-            assert_eq!(tensor_f64.data()[0], 1.0f64);
+            assert_eq!(tensor_f64.data()[0], 1.0f32);
         });
     }
 

@@ -319,12 +319,15 @@ impl ResourceDiscovery {
             cached_resources: std::sync::Mutex::new(None),
         }
     }
+}
 
-    /// Create with default configuration
-    pub fn default() -> Self {
+impl Default for ResourceDiscovery {
+    fn default() -> Self {
         Self::new(DiscoveryConfig::default())
     }
+}
 
+impl ResourceDiscovery {
     /// Discover system resources with caching
     pub fn discover(&self) -> CoreResult<SystemResources> {
         if self.config.cache_results {
@@ -430,7 +433,7 @@ impl ResourceDiscovery {
 
 /// Global resource discovery instance
 static GLOBAL_RESOURCE_DISCOVERY: std::sync::LazyLock<ResourceDiscovery> =
-    std::sync::LazyLock::new(|| ResourceDiscovery::default());
+    std::sync::LazyLock::new(ResourceDiscovery::default);
 
 /// Get the global resource discovery instance
 pub fn global_resource_discovery() -> &'static ResourceDiscovery {
@@ -438,7 +441,6 @@ pub fn global_resource_discovery() -> &'static ResourceDiscovery {
 }
 
 /// Quick access functions for common operations
-
 /// Get system resources using global discovery
 pub fn get_system_resources() -> CoreResult<SystemResources> {
     global_resource_discovery().discover()

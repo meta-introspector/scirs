@@ -107,7 +107,7 @@ impl<'a, F: Float> SciRS2Data<'a, F> {
     }
 }
 
-impl<'a, F: Float> Default for SciRS2Data<'a, F> {
+impl<F: Float> Default for SciRS2Data<'_, F> {
     fn default() -> Self {
         Self::new()
     }
@@ -428,8 +428,8 @@ pub fn execute_cross_module_operation<'a, F: Float>(
 }
 
 /// Validate data for cross-module compatibility
-pub fn validate_cross_module_data<'a, F: Float>(
-    data: &SciRS2Data<'a, F>,
+pub fn validate_cross_module_data<F: Float>(
+    data: &SciRS2Data<'_, F>,
 ) -> Result<(), IntegrationError> {
     data.validate()
 }

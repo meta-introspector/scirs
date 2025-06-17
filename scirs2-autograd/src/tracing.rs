@@ -856,7 +856,7 @@ mod tests {
     fn test_session_lifecycle() {
         let mut tracer = ExecutionTracer::new();
 
-        let session_id = tracer.start_session("test_session");
+        let _session_id = tracer.start_session("test_session");
         assert!(tracer.current_session.is_some());
 
         let record = tracer.end_session();

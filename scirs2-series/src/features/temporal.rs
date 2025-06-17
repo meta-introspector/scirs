@@ -8,8 +8,11 @@ use ndarray::{s, Array1, Array2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
+use super::utils::{
+    calculate_entropy, euclidean_distance_subsequence, gaussian_breakpoints,
+    standard_normal_quantile,
+};
 use crate::error::{Result, TimeSeriesError};
-use super::utils::{euclidean_distance_subsequence, gaussian_breakpoints, standard_normal_quantile, calculate_entropy};
 
 /// Temporal pattern features for time series analysis
 #[derive(Debug, Clone)]
@@ -593,10 +596,7 @@ where
 }
 
 /// Calculate distance matrix for time series subsequences
-pub fn calculate_distance_matrix<F>(
-    ts: &Array1<F>,
-    subsequence_length: usize,
-) -> Result<Array2<F>>
+pub fn calculate_distance_matrix<F>(ts: &Array1<F>, subsequence_length: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -622,10 +622,7 @@ where
 }
 
 /// Find nearest neighbors for each subsequence
-pub fn find_nearest_neighbors<F>(
-    distance_matrix: &Array2<F>,
-    k: usize,
-) -> Result<Vec<Vec<usize>>>
+pub fn find_nearest_neighbors<F>(distance_matrix: &Array2<F>, k: usize) -> Result<Vec<Vec<usize>>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -638,7 +635,8 @@ where
             .map(|j| (distance_matrix[[i, j]], j))
             .collect();
 
-        distances_with_indices.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        distances_with_indices
+            .sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
         let nearest_k: Vec<usize> = distances_with_indices
             .into_iter()
@@ -671,7 +669,7 @@ where
 
         distances.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        if distances.len() < k || distances[k-1] == F::zero() {
+        if distances.len() < k || distances[k - 1] == F::zero() {
             lid_values.push(F::zero());
             continue;
         }
@@ -679,8 +677,8 @@ where
         // Calculate LID using the maximum likelihood estimator
         let mut sum = F::zero();
         for j in 0..k {
-            if distances[j] > F::zero() && distances[k-1] > F::zero() {
-                sum = sum + (distances[k-1] / distances[j]).ln();
+            if distances[j] > F::zero() && distances[k - 1] > F::zero() {
+                sum = sum + (distances[k - 1] / distances[j]).ln();
             }
         }
 

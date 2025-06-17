@@ -8,9 +8,9 @@ use ndarray::{s, Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use crate::error::{Result, TimeSeriesError};
 use super::config::WindowConfig;
 use super::utils::{calculate_pearson_correlation, linear_fit};
+use crate::error::{Result, TimeSeriesError};
 
 /// Window-based aggregation features for time series analysis
 ///
@@ -469,8 +469,7 @@ where
         let mean = window.sum() / F::from(window_size).unwrap();
         rolling_means.push(mean);
 
-        let variance =
-            window.mapv(|x| (x - mean).powi(2)).sum() / F::from(window_size).unwrap();
+        let variance = window.mapv(|x| (x - mean).powi(2)).sum() / F::from(window_size).unwrap();
         let std = variance.sqrt();
         rolling_stds.push(std);
 
@@ -512,8 +511,7 @@ where
             let sum_quad = window.mapv(|x| ((x - mean) / std).powi(4)).sum();
 
             let skewness = sum_cube / F::from(window_size).unwrap();
-            let kurtosis =
-                sum_quad / F::from(window_size).unwrap() - F::from(3.0).unwrap();
+            let kurtosis = sum_quad / F::from(window_size).unwrap() - F::from(3.0).unwrap();
 
             rolling_skewness.push(skewness);
             rolling_kurtosis.push(kurtosis);
@@ -567,9 +565,9 @@ where
     // Mean and std of rolling means
     let mean_of_means = rolling_means.iter().fold(F::zero(), |acc, &x| acc + x) / n_f;
     let std_of_means = if n > 1 {
-        let variance = rolling_means.iter()
-            .fold(F::zero(), |acc, &x| acc + (x - mean_of_means) * (x - mean_of_means)) 
-            / F::from(n - 1).unwrap();
+        let variance = rolling_means.iter().fold(F::zero(), |acc, &x| {
+            acc + (x - mean_of_means) * (x - mean_of_means)
+        }) / F::from(n - 1).unwrap();
         variance.sqrt()
     } else {
         F::zero()
@@ -578,16 +576,18 @@ where
     // Mean and std of rolling stds
     let mean_of_stds = rolling_stds.iter().fold(F::zero(), |acc, &x| acc + x) / n_f;
     let std_of_stds = if n > 1 {
-        let variance = rolling_stds.iter()
-            .fold(F::zero(), |acc, &x| acc + (x - mean_of_stds) * (x - mean_of_stds)) 
-            / F::from(n - 1).unwrap();
+        let variance = rolling_stds.iter().fold(F::zero(), |acc, &x| {
+            acc + (x - mean_of_stds) * (x - mean_of_stds)
+        }) / F::from(n - 1).unwrap();
         variance.sqrt()
     } else {
         F::zero()
     };
 
     // Range statistics
-    let max_range = rolling_ranges.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
+    let max_range = rolling_ranges
+        .iter()
+        .fold(F::neg_infinity(), |a, &b| a.max(b));
     let min_range = rolling_ranges.iter().fold(F::infinity(), |a, &b| a.min(b));
     let mean_range = rolling_ranges.iter().fold(F::zero(), |acc, &x| acc + x) / n_f;
 
@@ -599,8 +599,9 @@ where
     // Variability index (CV of CVs)
     let mean_cv = rolling_cv.iter().fold(F::zero(), |acc, &x| acc + x) / n_f;
     let variability_index = if mean_cv != F::zero() && n > 1 {
-        let cv_variance = rolling_cv.iter()
-            .fold(F::zero(), |acc, &x| acc + (x - mean_cv) * (x - mean_cv)) 
+        let cv_variance = rolling_cv
+            .iter()
+            .fold(F::zero(), |acc, &x| acc + (x - mean_cv) * (x - mean_cv))
             / F::from(n - 1).unwrap();
         cv_variance.sqrt() / mean_cv
     } else {
@@ -639,12 +640,13 @@ where
         for i in 0..num_windows {
             let window = ts.slice(s![i..i + window_size]);
             let mean = window.sum() / F::from(window_size).unwrap();
-            let variance = window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
+            let variance =
+                window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
             scale_variances.push(variance);
         }
 
         let mean_variance = if !scale_variances.is_empty() {
-            scale_variances.iter().fold(F::zero(), |acc, &x| acc + x) 
+            scale_variances.iter().fold(F::zero(), |acc, &x| acc + x)
                 / F::from(scale_variances.len()).unwrap()
         } else {
             F::zero()
@@ -676,7 +678,7 @@ where
         }
 
         let mean_trend = if !scale_trends.is_empty() {
-            scale_trends.iter().fold(F::zero(), |acc, &x| acc + x) 
+            scale_trends.iter().fold(F::zero(), |acc, &x| acc + x)
                 / F::from(scale_trends.len()).unwrap()
         } else {
             F::zero()
@@ -702,7 +704,9 @@ where
     F: Float + FromPrimitive + Debug + Clone + std::iter::Sum + ndarray::ScalarOperand,
 {
     // Align arrays by taking common length
-    let min_len = small.rolling_means.len()
+    let min_len = small
+        .rolling_means
+        .len()
         .min(medium.rolling_means.len())
         .min(large.rolling_means.len());
 
@@ -725,7 +729,7 @@ where
         let small_val = small.rolling_means[i];
         let medium_val = medium.rolling_means[i];
         let large_val = large.rolling_means[i];
-        
+
         let phase_diff_sm = (small_val - medium_val).abs();
         let phase_diff_ml = (medium_val - large_val).abs();
         scale_phase_differences.push(phase_diff_sm);
@@ -733,13 +737,18 @@ where
     }
 
     // Cross-scale consistency
-    let correlations = vec![small_medium_correlation, medium_large_correlation, small_large_correlation];
-    let mean_correlation = correlations.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(3.0).unwrap();
+    let correlations = vec![
+        small_medium_correlation,
+        medium_large_correlation,
+        small_large_correlation,
+    ];
+    let mean_correlation =
+        correlations.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(3.0).unwrap();
     let cross_scale_consistency = mean_correlation;
 
     // Multi-scale coherence (average of absolute correlations)
-    let multi_scale_coherence = correlations.iter()
-        .fold(F::zero(), |acc, &x| acc + x.abs()) / F::from(3.0).unwrap();
+    let multi_scale_coherence =
+        correlations.iter().fold(F::zero(), |acc, &x| acc + x.abs()) / F::from(3.0).unwrap();
 
     Ok(CrossWindowFeatures {
         small_medium_correlation,
@@ -778,7 +787,7 @@ where
     for &value in ts.iter() {
         cusum_mean = cusum_mean + (value - target_mean);
         cusum_mean_changes.push(cusum_mean);
-        
+
         if cusum_mean.abs() > F::from(config.change_detection_threshold).unwrap() {
             mean_change_points += 1;
             cusum_mean = F::zero(); // Reset after detection
@@ -788,7 +797,8 @@ where
     // CUSUM for variance changes
     let rolling_stds = &window_features.rolling_stds;
     let target_std = if !rolling_stds.is_empty() {
-        rolling_stds.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(rolling_stds.len()).unwrap()
+        rolling_stds.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(rolling_stds.len()).unwrap()
     } else {
         F::zero()
     };
@@ -800,7 +810,7 @@ where
     for &std_val in rolling_stds.iter() {
         cusum_variance = cusum_variance + (std_val - target_std);
         cusum_variance_changes.push(cusum_variance);
-        
+
         if cusum_variance.abs() > F::from(config.change_detection_threshold).unwrap() {
             variance_change_points += 1;
             cusum_variance = F::zero(); // Reset after detection
@@ -808,9 +818,11 @@ where
     }
 
     // Maximum CUSUM values
-    let max_cusum_mean = cusum_mean_changes.iter()
+    let max_cusum_mean = cusum_mean_changes
+        .iter()
         .fold(F::neg_infinity(), |a, &b| a.max(b.abs()));
-    let max_cusum_variance = cusum_variance_changes.iter()
+    let max_cusum_variance = cusum_variance_changes
+        .iter()
         .fold(F::neg_infinity(), |a, &b| a.max(b.abs()));
 
     // Stability measure
@@ -818,7 +830,7 @@ where
     let stability_measure = F::one() - F::from(total_changes).unwrap() / F::from(n).unwrap();
 
     // Relative change magnitude
-    let data_range = ts.iter().fold(F::neg_infinity(), |a, &b| a.max(b)) 
+    let data_range = ts.iter().fold(F::neg_infinity(), |a, &b| a.max(b))
         - ts.iter().fold(F::infinity(), |a, &b| a.min(b));
     let relative_change_magnitude = if data_range > F::zero() {
         max_cusum_mean / data_range
@@ -843,25 +855,28 @@ where
 // =============================================================================
 
 /// Calculate rolling statistics including technical indicators
-fn calculate_rolling_statistics<F>(ts: &Array1<F>, config: &WindowConfig) -> Result<RollingStatistics<F>>
+fn calculate_rolling_statistics<F>(
+    ts: &Array1<F>,
+    config: &WindowConfig,
+) -> Result<RollingStatistics<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     // Calculate EWMA
     let ewma = calculate_ewma(ts, config.ewma_alpha)?;
-    
+
     // Calculate EWMV
     let ewmv = calculate_ewmv(ts, &ewma, config.ewma_alpha)?;
-    
+
     // Calculate Bollinger Bands
     let bollinger_bands = calculate_bollinger_bands(ts, config)?;
-    
+
     // Calculate MACD
     let macd_features = calculate_macd_features(ts, config)?;
-    
+
     // Calculate RSI
     let rsi_values = calculate_rsi(ts, config.rsi_period)?;
-    
+
     // Calculate normalized features
     let normalized_features = calculate_normalized_features(ts, config)?;
 
@@ -883,18 +898,18 @@ where
     let alpha_f = F::from(alpha).unwrap();
     let one_minus_alpha = F::one() - alpha_f;
     let mut ewma = Vec::with_capacity(ts.len());
-    
+
     if ts.is_empty() {
         return Ok(ewma);
     }
-    
+
     ewma.push(ts[0]);
-    
+
     for i in 1..ts.len() {
         let new_val = alpha_f * ts[i] + one_minus_alpha * ewma[i - 1];
         ewma.push(new_val);
     }
-    
+
     Ok(ewma)
 }
 
@@ -906,59 +921,63 @@ where
     let alpha_f = F::from(alpha).unwrap();
     let one_minus_alpha = F::one() - alpha_f;
     let mut ewmv = Vec::with_capacity(ts.len());
-    
+
     if ts.is_empty() || ewma.is_empty() {
         return Ok(ewmv);
     }
-    
+
     ewmv.push(F::zero());
-    
+
     for i in 1..ts.len() {
         let diff = ts[i] - ewma[i];
         let new_var = alpha_f * diff * diff + one_minus_alpha * ewmv[i - 1];
         ewmv.push(new_var);
     }
-    
+
     Ok(ewmv)
 }
 
 /// Calculate Bollinger Bands
-fn calculate_bollinger_bands<F>(ts: &Array1<F>, config: &WindowConfig) -> Result<BollingerBandFeatures<F>>
+fn calculate_bollinger_bands<F>(
+    ts: &Array1<F>,
+    config: &WindowConfig,
+) -> Result<BollingerBandFeatures<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     let window_size = config.bollinger_window;
     let multiplier = F::from(config.bollinger_multiplier).unwrap();
     let n = ts.len();
-    
+
     if n < window_size {
         return Ok(BollingerBandFeatures::default());
     }
-    
+
     let mut upper_band = Vec::new();
     let mut lower_band = Vec::new();
     let mut band_width = Vec::new();
-    
+
     // Calculate rolling mean and std for Bollinger Bands
     for i in 0..=(n - window_size) {
         let window = ts.slice(s![i..i + window_size]);
         let mean = window.sum() / F::from(window_size).unwrap();
-        let variance = window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
+        let variance =
+            window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
         let std = variance.sqrt();
-        
+
         let upper = mean + multiplier * std;
         let lower = mean - multiplier * std;
         let width = upper - lower;
-        
+
         upper_band.push(upper);
         lower_band.push(lower);
         band_width.push(width);
     }
-    
+
     // Calculate additional Bollinger Band features
     let mut above_upper = 0;
     let mut below_lower = 0;
-    
+
     for (i, &value) in ts.iter().enumerate() {
         if i < upper_band.len() {
             if value > upper_band[i] {
@@ -969,21 +988,24 @@ where
             }
         }
     }
-    
+
     let percent_above_upper = F::from(above_upper).unwrap() / F::from(upper_band.len()).unwrap();
     let percent_below_lower = F::from(below_lower).unwrap() / F::from(lower_band.len()).unwrap();
-    
+
     let mean_band_width = if !band_width.is_empty() {
         band_width.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(band_width.len()).unwrap()
     } else {
         F::zero()
     };
-    
+
     // Count squeeze periods (when band width is unusually low)
     let min_width = band_width.iter().fold(F::infinity(), |a, &b| a.min(b));
     let squeeze_threshold = min_width * F::from(1.2).unwrap();
-    let squeeze_periods = band_width.iter().filter(|&&w| w <= squeeze_threshold).count();
-    
+    let squeeze_periods = band_width
+        .iter()
+        .filter(|&&w| w <= squeeze_threshold)
+        .count();
+
     Ok(BollingerBandFeatures {
         upper_band,
         lower_band,
@@ -1003,35 +1025,37 @@ where
     let fast_period = config.macd_fast_period;
     let slow_period = config.macd_slow_period;
     let signal_period = config.macd_signal_period;
-    
+
     // Calculate EMAs
     let fast_alpha = 2.0 / (fast_period as f64 + 1.0);
     let slow_alpha = 2.0 / (slow_period as f64 + 1.0);
     let signal_alpha = 2.0 / (signal_period as f64 + 1.0);
-    
+
     let fast_ema = calculate_ewma(ts, fast_alpha)?;
     let slow_ema = calculate_ewma(ts, slow_alpha)?;
-    
+
     // Calculate MACD line
-    let macd_line: Vec<F> = fast_ema.iter()
+    let macd_line: Vec<F> = fast_ema
+        .iter()
         .zip(slow_ema.iter())
         .map(|(&fast, &slow)| fast - slow)
         .collect();
-    
+
     // Calculate signal line (EMA of MACD)
     let macd_array = Array1::from_vec(macd_line.clone());
     let signal_line = calculate_ewma(&macd_array, signal_alpha)?;
-    
+
     // Calculate histogram
-    let histogram: Vec<F> = macd_line.iter()
+    let histogram: Vec<F> = macd_line
+        .iter()
         .zip(signal_line.iter())
         .map(|(&macd, &signal)| macd - signal)
         .collect();
-    
+
     // Count crossovers
     let mut bullish_crossovers = 0;
     let mut bearish_crossovers = 0;
-    
+
     for i in 1..histogram.len() {
         if histogram[i - 1] <= F::zero() && histogram[i] > F::zero() {
             bullish_crossovers += 1;
@@ -1039,17 +1063,17 @@ where
             bearish_crossovers += 1;
         }
     }
-    
+
     let mean_histogram = if !histogram.is_empty() {
         histogram.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(histogram.len()).unwrap()
     } else {
         F::zero()
     };
-    
+
     // Calculate divergence measure (simplified)
-    let divergence_measure = histogram.iter()
-        .fold(F::zero(), |acc, &x| acc + x.abs()) / F::from(histogram.len().max(1)).unwrap();
-    
+    let divergence_measure = histogram.iter().fold(F::zero(), |acc, &x| acc + x.abs())
+        / F::from(histogram.len().max(1)).unwrap();
+
     Ok(MACDFeatures {
         macd_line,
         signal_line,
@@ -1070,13 +1094,13 @@ where
     if n < period + 1 {
         return Ok(Vec::new());
     }
-    
+
     let mut rsi_values = Vec::new();
-    
+
     // Calculate price changes
     let mut gains = Vec::new();
     let mut losses = Vec::new();
-    
+
     for i in 1..n {
         let change = ts[i] - ts[i - 1];
         if change > F::zero() {
@@ -1087,51 +1111,59 @@ where
             losses.push(-change);
         }
     }
-    
+
     // Calculate RSI for each window
     for i in 0..=(gains.len() - period) {
-        let avg_gain = gains[i..i + period].iter().fold(F::zero(), |acc, &x| acc + x) 
+        let avg_gain = gains[i..i + period]
+            .iter()
+            .fold(F::zero(), |acc, &x| acc + x)
             / F::from(period).unwrap();
-        let avg_loss = losses[i..i + period].iter().fold(F::zero(), |acc, &x| acc + x) 
+        let avg_loss = losses[i..i + period]
+            .iter()
+            .fold(F::zero(), |acc, &x| acc + x)
             / F::from(period).unwrap();
-        
+
         let rs = if avg_loss != F::zero() {
             avg_gain / avg_loss
         } else {
             F::from(100.0).unwrap()
         };
-        
+
         let rsi = F::from(100.0).unwrap() - (F::from(100.0).unwrap() / (F::one() + rs));
         rsi_values.push(rsi);
     }
-    
+
     Ok(rsi_values)
 }
 
 /// Calculate normalized features
-fn calculate_normalized_features<F>(ts: &Array1<F>, config: &WindowConfig) -> Result<NormalizedRollingFeatures<F>>
+fn calculate_normalized_features<F>(
+    ts: &Array1<F>,
+    config: &WindowConfig,
+) -> Result<NormalizedRollingFeatures<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     let window_size = config.normalization_window;
     let n = ts.len();
-    
+
     if n < window_size {
         return Ok(NormalizedRollingFeatures::default());
     }
-    
+
     let mut normalized_means = Vec::new();
     let mut normalized_stds = Vec::new();
     let mut percentile_ranks = Vec::new();
     let mut outlier_scores = Vec::new();
     let mut outlier_count = 0;
-    
+
     for i in 0..=(n - window_size) {
         let window = ts.slice(s![i..i + window_size]);
         let mean = window.sum() / F::from(window_size).unwrap();
-        let variance = window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
+        let variance =
+            window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
         let std = variance.sqrt();
-        
+
         // Z-score normalization
         let current_value = ts[i + window_size - 1];
         let z_score_mean = if std != F::zero() {
@@ -1140,28 +1172,28 @@ where
             F::zero()
         };
         normalized_means.push(z_score_mean);
-        
+
         let z_score_std = if mean != F::zero() {
             std / mean.abs()
         } else {
             F::zero()
         };
         normalized_stds.push(z_score_std);
-        
+
         // Percentile rank
         let rank = window.iter().filter(|&&x| x <= current_value).count();
         let percentile = F::from(rank).unwrap() / F::from(window_size).unwrap();
         percentile_ranks.push(percentile);
-        
+
         // Outlier detection (values beyond 2 standard deviations)
         let outlier_score = z_score_mean.abs();
         outlier_scores.push(outlier_score);
-        
+
         if outlier_score > F::from(2.0).unwrap() {
             outlier_count += 1;
         }
     }
-    
+
     Ok(NormalizedRollingFeatures {
         normalized_means,
         normalized_stds,

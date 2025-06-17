@@ -94,11 +94,11 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         })?;
 
         // Simplified linear transformation: input @ weight.T + bias
-        let mut output = input.clone(); // Placeholder implementation
+        let output = *input; // Placeholder implementation
 
         if let Some(_bias) = self.get_parameter("bias") {
             // Add bias (simplified)
-            output = output.clone(); // Placeholder
+            // output = output + bias; // Placeholder - bias addition would go here
         }
 
         Ok(output)

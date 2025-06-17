@@ -19,7 +19,7 @@ Input/Output module for the SciRS2 scientific computing library. This module pro
 
 ### Data Processing
 - **Image Support**: Read and write common image formats (PNG, JPEG, BMP, TIFF) with basic EXIF metadata
-- **Data Serialization**: Serialize and deserialize arrays, structs, and enhanced sparse matrices (COO, CSR, CSC)
+- **Data Serialization**: Serialize and deserialize arrays, structs, and sparse matrices (COO, CSR, CSC)
 - **Data Compression**: Compress and decompress data using multiple algorithms (GZIP, ZSTD, LZ4, BZIP2) with parallel processing support
 - **Data Validation**: Verify data integrity through checksums, format validation, and comprehensive schema-based validation
 - **Sparse Matrix Operations**: Advanced sparse matrix support with format conversion and operations
@@ -621,9 +621,9 @@ The Matrix Market module supports:
   - Conversion between 0-based and 1-based indexing
   - Integration with sparse matrix operations
 
-### Enhanced Sparse Matrix Support
+### Sparse Matrix Support
 
-The serialization module now includes:
+The serialization module provides:
 - Multiple sparse matrix formats:
   - COO (Coordinate) - flexible, easy to construct
   - CSR (Compressed Sparse Row) - efficient row operations

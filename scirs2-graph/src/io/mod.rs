@@ -10,15 +10,24 @@ use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 
 pub mod adjacency_list;
+pub mod dot;
 pub mod edge_list;
+pub mod matrix_market;
 
 use adjacency_list::{
-    read_adjacency_list_format, read_adjacency_list_format_digraph,
-    write_adjacency_list_format, write_adjacency_list_format_digraph,
+    read_adjacency_list_format, read_adjacency_list_format_digraph, write_adjacency_list_format,
+    write_adjacency_list_format_digraph,
+};
+use dot::{
+    read_dot_format, read_dot_format_digraph, write_dot_format, write_dot_format_digraph,
 };
 use edge_list::{
-    read_edge_list_format, read_edge_list_format_digraph,
-    write_edge_list_format, write_edge_list_format_digraph,
+    read_edge_list_format, read_edge_list_format_digraph, write_edge_list_format,
+    write_edge_list_format_digraph,
+};
+use matrix_market::{
+    read_matrix_market_format, read_matrix_market_format_digraph,
+    write_matrix_market_format, write_matrix_market_format_digraph,
 };
 
 /// Supported file formats for graph I/O
@@ -51,11 +60,7 @@ pub enum GraphFormat {
 /// # Returns
 /// * `Ok(Graph)` - The graph read from the file
 /// * `Err(GraphError)` - If there was an error reading the file
-pub fn read_graph<N, E, P>(
-    path: P,
-    format: GraphFormat,
-    weighted: bool,
-) -> Result<Graph<N, E>>
+pub fn read_graph<N, E, P>(path: P, format: GraphFormat, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -82,11 +87,7 @@ where
 /// # Returns
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading the file
-pub fn read_digraph<N, E, P>(
-    path: P,
-    format: GraphFormat,
-    weighted: bool,
-) -> Result<DiGraph<N, E>>
+pub fn read_digraph<N, E, P>(path: P, format: GraphFormat, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -184,15 +185,7 @@ where
 // TODO: Implement the remaining format functions
 // For now, these are placeholders that return errors
 
-
-fn read_dot_format<N, E, P>(_path: P, _weighted: bool) -> Result<Graph<N, E>>
-where
-    N: Node + std::fmt::Debug + FromStr + Clone,
-    E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
-    P: AsRef<Path>,
-{
-    Err(GraphError::Other("DOT format not yet implemented".to_string()))
-}
+// DOT format is now implemented in the dot module
 
 fn read_json_format<N, E, P>(_path: P, _weighted: bool) -> Result<Graph<N, E>>
 where
@@ -200,7 +193,9 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("JSON format not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "JSON format not yet implemented".to_string(),
+    ))
 }
 
 fn read_graphml_format<N, E, P>(_path: P, _weighted: bool) -> Result<Graph<N, E>>
@@ -209,7 +204,9 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("GraphML format not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "GraphML format not yet implemented".to_string(),
+    ))
 }
 
 fn read_gml_format<N, E, P>(_path: P, _weighted: bool) -> Result<Graph<N, E>>
@@ -218,28 +215,16 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("GML format not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "GML format not yet implemented".to_string(),
+    ))
 }
 
-fn read_matrix_market_format<N, E, P>(_path: P, _weighted: bool) -> Result<Graph<N, E>>
-where
-    N: Node + std::fmt::Debug + FromStr + Clone,
-    E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
-    P: AsRef<Path>,
-{
-    Err(GraphError::Other("Matrix Market format not yet implemented".to_string()))
-}
+// Matrix Market format is now implemented in the matrix_market module
 
 // Digraph placeholder functions
 
-fn read_dot_format_digraph<N, E, P>(_path: P, _weighted: bool) -> Result<DiGraph<N, E>>
-where
-    N: Node + std::fmt::Debug + FromStr + Clone,
-    E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
-    P: AsRef<Path>,
-{
-    Err(GraphError::Other("DOT format for digraph not yet implemented".to_string()))
-}
+// DOT digraph format is now implemented in the dot module
 
 fn read_json_format_digraph<N, E, P>(_path: P, _weighted: bool) -> Result<DiGraph<N, E>>
 where
@@ -247,7 +232,9 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("JSON format for digraph not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "JSON format for digraph not yet implemented".to_string(),
+    ))
 }
 
 fn read_graphml_format_digraph<N, E, P>(_path: P, _weighted: bool) -> Result<DiGraph<N, E>>
@@ -256,7 +243,9 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("GraphML format for digraph not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "GraphML format for digraph not yet implemented".to_string(),
+    ))
 }
 
 fn read_gml_format_digraph<N, E, P>(_path: P, _weighted: bool) -> Result<DiGraph<N, E>>
@@ -265,44 +254,18 @@ where
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("GML format for digraph not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "GML format for digraph not yet implemented".to_string(),
+    ))
 }
 
-fn read_matrix_market_format_digraph<N, E, P>(_path: P, _weighted: bool) -> Result<DiGraph<N, E>>
-where
-    N: Node + std::fmt::Debug + FromStr + Clone,
-    E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
-    P: AsRef<Path>,
-{
-    Err(GraphError::Other("Matrix Market format for digraph not yet implemented".to_string()))
-}
+// Matrix Market digraph format is now implemented in the matrix_market module
 
 // Write placeholder functions
 
-fn write_dot_format<N, E, Ix, P>(
-    _graph: &Graph<N, E, Ix>,
-    _path: P,
-    _weighted: bool,
-) -> Result<()>
-where
-    N: Node + std::fmt::Debug + std::fmt::Display + Clone,
-    E: EdgeWeight
-        + std::marker::Copy
-        + std::fmt::Debug
-        + std::default::Default
-        + std::fmt::Display
-        + Clone,
-    Ix: petgraph::graph::IndexType,
-    P: AsRef<Path>,
-{
-    Err(GraphError::Other("DOT write format not yet implemented".to_string()))
-}
+// DOT write format is now implemented in the dot module
 
-fn write_json_format<N, E, Ix, P>(
-    _graph: &Graph<N, E, Ix>,
-    _path: P,
-    _weighted: bool,
-) -> Result<()>
+fn write_json_format<N, E, Ix, P>(_graph: &Graph<N, E, Ix>, _path: P, _weighted: bool) -> Result<()>
 where
     N: Node + std::fmt::Debug + std::fmt::Display + Clone,
     E: EdgeWeight
@@ -314,7 +277,9 @@ where
     Ix: petgraph::graph::IndexType,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("JSON write format not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "JSON write format not yet implemented".to_string(),
+    ))
 }
 
 fn write_graphml_format<N, E, Ix, P>(
@@ -333,14 +298,12 @@ where
     Ix: petgraph::graph::IndexType,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("GraphML write format not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "GraphML write format not yet implemented".to_string(),
+    ))
 }
 
-fn write_gml_format<N, E, Ix, P>(
-    _graph: &Graph<N, E, Ix>,
-    _path: P,
-    _weighted: bool,
-) -> Result<()>
+fn write_gml_format<N, E, Ix, P>(_graph: &Graph<N, E, Ix>, _path: P, _weighted: bool) -> Result<()>
 where
     N: Node + std::fmt::Debug + std::fmt::Display + Clone,
     E: EdgeWeight
@@ -352,48 +315,16 @@ where
     Ix: petgraph::graph::IndexType,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("GML write format not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "GML write format not yet implemented".to_string(),
+    ))
 }
 
-fn write_matrix_market_format<N, E, Ix, P>(
-    _graph: &Graph<N, E, Ix>,
-    _path: P,
-    _weighted: bool,
-) -> Result<()>
-where
-    N: Node + std::fmt::Debug + std::fmt::Display + Clone,
-    E: EdgeWeight
-        + std::marker::Copy
-        + std::fmt::Debug
-        + std::default::Default
-        + std::fmt::Display
-        + Clone,
-    Ix: petgraph::graph::IndexType,
-    P: AsRef<Path>,
-{
-    Err(GraphError::Other("Matrix Market write format not yet implemented".to_string()))
-}
+// Matrix Market write format is now implemented in the matrix_market module
 
 // Digraph write placeholder functions
 
-fn write_dot_format_digraph<N, E, Ix, P>(
-    _graph: &DiGraph<N, E, Ix>,
-    _path: P,
-    _weighted: bool,
-) -> Result<()>
-where
-    N: Node + std::fmt::Debug + std::fmt::Display + Clone,
-    E: EdgeWeight
-        + std::marker::Copy
-        + std::fmt::Debug
-        + std::default::Default
-        + std::fmt::Display
-        + Clone,
-    Ix: petgraph::graph::IndexType,
-    P: AsRef<Path>,
-{
-    Err(GraphError::Other("DOT write format for digraph not yet implemented".to_string()))
-}
+// DOT digraph write format is now implemented in the dot module
 
 fn write_json_format_digraph<N, E, Ix, P>(
     _graph: &DiGraph<N, E, Ix>,
@@ -411,7 +342,9 @@ where
     Ix: petgraph::graph::IndexType,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("JSON write format for digraph not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "JSON write format for digraph not yet implemented".to_string(),
+    ))
 }
 
 fn write_graphml_format_digraph<N, E, Ix, P>(
@@ -430,7 +363,9 @@ where
     Ix: petgraph::graph::IndexType,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("GraphML write format for digraph not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "GraphML write format for digraph not yet implemented".to_string(),
+    ))
 }
 
 fn write_gml_format_digraph<N, E, Ix, P>(
@@ -449,24 +384,9 @@ where
     Ix: petgraph::graph::IndexType,
     P: AsRef<Path>,
 {
-    Err(GraphError::Other("GML write format for digraph not yet implemented".to_string()))
+    Err(GraphError::Other(
+        "GML write format for digraph not yet implemented".to_string(),
+    ))
 }
 
-fn write_matrix_market_format_digraph<N, E, Ix, P>(
-    _graph: &DiGraph<N, E, Ix>,
-    _path: P,
-    _weighted: bool,
-) -> Result<()>
-where
-    N: Node + std::fmt::Debug + std::fmt::Display + Clone,
-    E: EdgeWeight
-        + std::marker::Copy
-        + std::fmt::Debug
-        + std::default::Default
-        + std::fmt::Display
-        + Clone,
-    Ix: petgraph::graph::IndexType,
-    P: AsRef<Path>,
-{
-    Err(GraphError::Other("Matrix Market write format for digraph not yet implemented".to_string()))
-}
+// Matrix Market digraph write format is now implemented in the matrix_market module

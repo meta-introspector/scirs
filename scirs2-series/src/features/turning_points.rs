@@ -8,9 +8,9 @@ use ndarray::{s, Array1};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use crate::error::{Result, TimeSeriesError};
 use super::config::TurningPointsConfig;
-use super::utils::{detect_turning_points, calculate_pearson_correlation};
+use super::utils::{calculate_pearson_correlation, detect_turning_points};
+use crate::error::{Result, TimeSeriesError};
 
 /// Comprehensive turning points analysis features
 #[derive(Debug, Clone)]
@@ -517,11 +517,11 @@ where
     for window in turning_points.windows(2) {
         let start_idx = window[0];
         let end_idx = window[1];
-        
+
         if start_idx < ts.len() && end_idx < ts.len() {
             let change = ts[end_idx] - ts[start_idx];
             let magnitude = change.abs();
-            
+
             if change > F::zero() {
                 upward_changes += 1;
                 upward_magnitudes.push(magnitude);
@@ -540,29 +540,33 @@ where
     };
 
     let average_upward_magnitude = if !upward_magnitudes.is_empty() {
-        upward_magnitudes.iter().fold(F::zero(), |acc, &x| acc + x) 
+        upward_magnitudes.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(upward_magnitudes.len()).unwrap()
     } else {
         F::zero()
     };
 
     let average_downward_magnitude = if !downward_magnitudes.is_empty() {
-        downward_magnitudes.iter().fold(F::zero(), |acc, &x| acc + x) 
+        downward_magnitudes
+            .iter()
+            .fold(F::zero(), |acc, &x| acc + x)
             / F::from(downward_magnitudes.len()).unwrap()
     } else {
         F::zero()
     };
 
     // Calculate standard deviation of all directional changes
-    let all_magnitudes: Vec<F> = upward_magnitudes.into_iter()
+    let all_magnitudes: Vec<F> = upward_magnitudes
+        .into_iter()
         .chain(downward_magnitudes.into_iter())
         .collect();
-    
+
     let directional_change_std = if all_magnitudes.len() > 1 {
-        let mean = all_magnitudes.iter().fold(F::zero(), |acc, &x| acc + x) 
+        let mean = all_magnitudes.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(all_magnitudes.len()).unwrap();
-        let variance = all_magnitudes.iter()
-            .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean)) 
+        let variance = all_magnitudes
+            .iter()
+            .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
             / F::from(all_magnitudes.len() - 1).unwrap();
         variance.sqrt()
     } else {
@@ -598,7 +602,7 @@ where
     // Analyze consecutive directional movements
     for i in 1..n {
         let change = ts[i] - ts[i - 1];
-        
+
         if change > F::zero() {
             // Upward movement
             current_up_sequence += 1;
@@ -614,7 +618,7 @@ where
             }
             current_up_sequence = 0;
         }
-        
+
         longest_upward_sequence = longest_upward_sequence.max(current_up_sequence);
         longest_downward_sequence = longest_downward_sequence.max(current_down_sequence);
     }
@@ -629,24 +633,30 @@ where
 
     // Calculate average sequence lengths
     let average_upward_sequence_length = if !upward_sequences.is_empty() {
-        F::from(upward_sequences.iter().sum::<usize>()).unwrap() 
+        F::from(upward_sequences.iter().sum::<usize>()).unwrap()
             / F::from(upward_sequences.len()).unwrap()
     } else {
         F::zero()
     };
 
     let average_downward_sequence_length = if !downward_sequences.is_empty() {
-        F::from(downward_sequences.iter().sum::<usize>()).unwrap() 
+        F::from(downward_sequences.iter().sum::<usize>()).unwrap()
             / F::from(downward_sequences.len()).unwrap()
     } else {
         F::zero()
     };
 
     // Calculate momentum persistence ratio
-    let long_sequences = upward_sequences.iter().filter(|&&len| len >= config.min_sequence_length * 2).count()
-        + downward_sequences.iter().filter(|&&len| len >= config.min_sequence_length * 2).count();
+    let long_sequences = upward_sequences
+        .iter()
+        .filter(|&&len| len >= config.min_sequence_length * 2)
+        .count()
+        + downward_sequences
+            .iter()
+            .filter(|&&len| len >= config.min_sequence_length * 2)
+            .count();
     let total_sequences = upward_sequences.len() + downward_sequences.len();
-    
+
     let momentum_persistence_ratio = if total_sequences > 0 {
         F::from(long_sequences).unwrap() / F::from(total_sequences).unwrap()
     } else {
@@ -672,18 +682,20 @@ where
     F: Float + FromPrimitive + Debug,
 {
     // Calculate peak amplitudes
-    let peak_amplitudes: Vec<F> = local_maxima.iter()
+    let peak_amplitudes: Vec<F> = local_maxima
+        .iter()
         .filter_map(|&idx| if idx < ts.len() { Some(ts[idx]) } else { None })
         .collect();
 
     // Calculate valley amplitudes
-    let valley_amplitudes: Vec<F> = local_minima.iter()
+    let valley_amplitudes: Vec<F> = local_minima
+        .iter()
         .filter_map(|&idx| if idx < ts.len() { Some(ts[idx]) } else { None })
         .collect();
 
     // Average peak amplitude
     let average_peak_amplitude = if !peak_amplitudes.is_empty() {
-        peak_amplitudes.iter().fold(F::zero(), |acc, &x| acc + x) 
+        peak_amplitudes.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(peak_amplitudes.len()).unwrap()
     } else {
         F::zero()
@@ -691,7 +703,7 @@ where
 
     // Average valley amplitude
     let average_valley_amplitude = if !valley_amplitudes.is_empty() {
-        valley_amplitudes.iter().fold(F::zero(), |acc, &x| acc + x) 
+        valley_amplitudes.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(valley_amplitudes.len()).unwrap()
     } else {
         F::zero()
@@ -699,9 +711,9 @@ where
 
     // Peak amplitude standard deviation
     let peak_amplitude_std = if peak_amplitudes.len() > 1 {
-        let variance = peak_amplitudes.iter()
-            .fold(F::zero(), |acc, &x| acc + (x - average_peak_amplitude) * (x - average_peak_amplitude)) 
-            / F::from(peak_amplitudes.len() - 1).unwrap();
+        let variance = peak_amplitudes.iter().fold(F::zero(), |acc, &x| {
+            acc + (x - average_peak_amplitude) * (x - average_peak_amplitude)
+        }) / F::from(peak_amplitudes.len() - 1).unwrap();
         variance.sqrt()
     } else {
         F::zero()
@@ -709,9 +721,9 @@ where
 
     // Valley amplitude standard deviation
     let valley_amplitude_std = if valley_amplitudes.len() > 1 {
-        let variance = valley_amplitudes.iter()
-            .fold(F::zero(), |acc, &x| acc + (x - average_valley_amplitude) * (x - average_valley_amplitude)) 
-            / F::from(valley_amplitudes.len() - 1).unwrap();
+        let variance = valley_amplitudes.iter().fold(F::zero(), |acc, &x| {
+            acc + (x - average_valley_amplitude) * (x - average_valley_amplitude)
+        }) / F::from(valley_amplitudes.len() - 1).unwrap();
         variance.sqrt()
     } else {
         F::zero()
@@ -725,24 +737,25 @@ where
     };
 
     // Extrema asymmetry (skewness of combined peak and valley distributions)
-    let all_extrema: Vec<F> = peak_amplitudes.into_iter()
+    let all_extrema: Vec<F> = peak_amplitudes
+        .into_iter()
         .chain(valley_amplitudes.into_iter())
         .collect();
-    
+
     let extrema_asymmetry = if all_extrema.len() > 2 {
-        let mean = all_extrema.iter().fold(F::zero(), |acc, &x| acc + x) 
+        let mean = all_extrema.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(all_extrema.len()).unwrap();
-        let variance = all_extrema.iter()
-            .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean)) 
+        let variance = all_extrema
+            .iter()
+            .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
             / F::from(all_extrema.len()).unwrap();
-        
+
         if variance > F::zero() {
             let std_dev = variance.sqrt();
-            let skewness = all_extrema.iter()
-                .fold(F::zero(), |acc, &x| {
-                    let normalized = (x - mean) / std_dev;
-                    acc + normalized * normalized * normalized
-                }) / F::from(all_extrema.len()).unwrap();
+            let skewness = all_extrema.iter().fold(F::zero(), |acc, &x| {
+                let normalized = (x - mean) / std_dev;
+                acc + normalized * normalized * normalized
+            }) / F::from(all_extrema.len()).unwrap();
             skewness
         } else {
             F::zero()
@@ -784,10 +797,10 @@ where
     for window in turning_points.windows(2) {
         let start_idx = window[0];
         let end_idx = window[1];
-        
+
         if start_idx < ts.len() && end_idx < ts.len() {
             let change_magnitude = (ts[end_idx] - ts[start_idx]).abs();
-            
+
             if change_magnitude >= major_abs_threshold {
                 major_reversals.push(change_magnitude);
             } else {
@@ -800,20 +813,20 @@ where
     let minor_trend_reversals = minor_reversals.len();
 
     let average_major_reversal_magnitude = if !major_reversals.is_empty() {
-        major_reversals.iter().fold(F::zero(), |acc, &x| acc + x) 
+        major_reversals.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(major_reversals.len()).unwrap()
     } else {
         F::zero()
     };
 
     let average_minor_reversal_magnitude = if !minor_reversals.is_empty() {
-        minor_reversals.iter().fold(F::zero(), |acc, &x| acc + x) 
+        minor_reversals.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(minor_reversals.len()).unwrap()
     } else {
         F::zero()
     };
 
-    let trend_reversal_frequency = F::from(major_trend_reversals + minor_trend_reversals).unwrap() 
+    let trend_reversal_frequency = F::from(major_trend_reversals + minor_trend_reversals).unwrap()
         / F::from(ts.len()).unwrap();
 
     let reversal_strength_index = major_reversals.iter().fold(F::zero(), |acc, &x| acc + x)
@@ -842,18 +855,19 @@ where
     }
 
     // Calculate intervals between turning points
-    let intervals: Vec<F> = turning_points.windows(2)
+    let intervals: Vec<F> = turning_points
+        .windows(2)
         .map(|w| F::from(w[1] - w[0]).unwrap())
         .collect();
 
     // Turning point regularity (coefficient of variation of intervals)
-    let mean_interval = intervals.iter().fold(F::zero(), |acc, &x| acc + x) 
-        / F::from(intervals.len()).unwrap();
-    
+    let mean_interval =
+        intervals.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(intervals.len()).unwrap();
+
     let interval_variance = if intervals.len() > 1 {
-        intervals.iter()
-            .fold(F::zero(), |acc, &x| acc + (x - mean_interval) * (x - mean_interval)) 
-            / F::from(intervals.len() - 1).unwrap()
+        intervals.iter().fold(F::zero(), |acc, &x| {
+            acc + (x - mean_interval) * (x - mean_interval)
+        }) / F::from(intervals.len() - 1).unwrap()
     } else {
         F::zero()
     };
@@ -895,26 +909,28 @@ where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    
+
     // Turning point volatility (average local variance around turning points)
     let mut local_variances = Vec::new();
     let window_size = 5; // Local window around turning points
-    
+
     for &tp_idx in turning_points {
         let start = tp_idx.saturating_sub(window_size / 2);
         let end = (tp_idx + window_size / 2 + 1).min(n);
-        
+
         if end > start + 1 {
             let local_slice = ts.slice(s![start..end]);
             let local_mean = local_slice.sum() / F::from(local_slice.len()).unwrap();
-            let local_variance = local_slice.mapv(|x| (x - local_mean) * (x - local_mean)).sum() 
+            let local_variance = local_slice
+                .mapv(|x| (x - local_mean) * (x - local_mean))
+                .sum()
                 / F::from(local_slice.len()).unwrap();
             local_variances.push(local_variance);
         }
     }
 
     let turning_point_volatility = if !local_variances.is_empty() {
-        local_variances.iter().fold(F::zero(), |acc, &x| acc + x) 
+        local_variances.iter().fold(F::zero(), |acc, &x| acc + x)
             / F::from(local_variances.len()).unwrap()
     } else {
         F::zero()
@@ -930,7 +946,8 @@ where
 
     // Noise-to-signal ratio
     let signal_mean = ts.sum() / F::from(n).unwrap();
-    let signal_variance = ts.mapv(|x| (x - signal_mean) * (x - signal_mean)).sum() / F::from(n).unwrap();
+    let signal_variance =
+        ts.mapv(|x| (x - signal_mean) * (x - signal_mean)).sum() / F::from(n).unwrap();
     let noise_signal_ratio = if signal_variance > F::zero() {
         turning_point_volatility / signal_variance
     } else {
@@ -948,8 +965,9 @@ where
             }
         }
     }
-    
-    let trend_consistency = F::one() - F::from(directional_changes).unwrap() / F::from(n - 2).unwrap();
+
+    let trend_consistency =
+        F::one() - F::from(directional_changes).unwrap() / F::from(n - 2).unwrap();
 
     Ok(StabilityFeatures {
         turning_point_volatility,
@@ -1018,38 +1036,41 @@ where
     let midpoint = min_val + range / F::from(2.0).unwrap();
 
     // Analyze turning point positions
-    let tp_values: Vec<F> = turning_points.iter()
+    let tp_values: Vec<F> = turning_points
+        .iter()
         .filter_map(|&idx| if idx < ts.len() { Some(ts[idx]) } else { None })
         .collect();
 
     let upper_half_count = tp_values.iter().filter(|&&x| x > midpoint).count();
     let total_count = tp_values.len();
 
-    let upper_half_turning_points = F::from(upper_half_count).unwrap() / F::from(total_count).unwrap();
+    let upper_half_turning_points =
+        F::from(upper_half_count).unwrap() / F::from(total_count).unwrap();
     let lower_half_turning_points = F::one() - upper_half_turning_points;
 
     // Calculate skewness and kurtosis of turning point positions
-    let mean_position = tp_values.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(total_count).unwrap();
-    
-    let variance = tp_values.iter()
-        .fold(F::zero(), |acc, &x| acc + (x - mean_position) * (x - mean_position)) 
-        / F::from(total_count).unwrap();
+    let mean_position =
+        tp_values.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(total_count).unwrap();
 
-    let (turning_point_position_skewness, turning_point_position_kurtosis) = if variance > F::zero() {
+    let variance = tp_values.iter().fold(F::zero(), |acc, &x| {
+        acc + (x - mean_position) * (x - mean_position)
+    }) / F::from(total_count).unwrap();
+
+    let (turning_point_position_skewness, turning_point_position_kurtosis) = if variance > F::zero()
+    {
         let std_dev = variance.sqrt();
-        
-        let skewness = tp_values.iter()
-            .fold(F::zero(), |acc, &x| {
-                let normalized = (x - mean_position) / std_dev;
-                acc + normalized * normalized * normalized
-            }) / F::from(total_count).unwrap();
 
-        let kurtosis = tp_values.iter()
-            .fold(F::zero(), |acc, &x| {
-                let normalized = (x - mean_position) / std_dev;
-                let normalized_sq = normalized * normalized;
-                acc + normalized_sq * normalized_sq
-            }) / F::from(total_count).unwrap() - F::from(3.0).unwrap();
+        let skewness = tp_values.iter().fold(F::zero(), |acc, &x| {
+            let normalized = (x - mean_position) / std_dev;
+            acc + normalized * normalized * normalized
+        }) / F::from(total_count).unwrap();
+
+        let kurtosis = tp_values.iter().fold(F::zero(), |acc, &x| {
+            let normalized = (x - mean_position) / std_dev;
+            let normalized_sq = normalized * normalized;
+            acc + normalized_sq * normalized_sq
+        }) / F::from(total_count).unwrap()
+            - F::from(3.0).unwrap();
 
         (skewness, kurtosis)
     } else {
@@ -1079,7 +1100,7 @@ where
     for &window_size in &config.smoothing_windows {
         // Apply simple moving average smoothing
         let smoothed = apply_moving_average(ts, window_size)?;
-        
+
         // Create smoothed config
         let smoothed_config = TurningPointsConfig {
             min_turning_point_threshold: config.min_turning_point_threshold,
@@ -1093,16 +1114,17 @@ where
             min_sequence_length: config.min_sequence_length,
             multiscale_analysis: false,
         };
-        
+
         // Detect turning points at this scale
         let (tp, _, _) = detect_turning_points(&smoothed, &smoothed_config)?;
         multiscale_turning_points.push(tp.len());
-        
+
         // Calculate scale consistency (similarity with original scale)
         if !multiscale_turning_points.is_empty() {
             let original_count = multiscale_turning_points[0] as f64;
             let current_count = tp.len() as f64;
-            let consistency = 1.0 - (original_count - current_count).abs() / original_count.max(current_count);
+            let consistency =
+                1.0 - (original_count - current_count).abs() / original_count.max(current_count);
             scale_consistencies.push(F::from(consistency).unwrap());
         }
     }
@@ -1122,7 +1144,9 @@ where
 
     // Calculate cross-scale consistency
     let cross_scale_consistency = if !scale_consistencies.is_empty() {
-        scale_consistencies.iter().fold(F::zero(), |acc, &x| acc + x) 
+        scale_consistencies
+            .iter()
+            .fold(F::zero(), |acc, &x| acc + x)
             / F::from(scale_consistencies.len()).unwrap()
     } else {
         F::zero()
@@ -1132,8 +1156,10 @@ where
     let hierarchical_structure_index = if multiscale_turning_points.len() > 2 {
         let mut structure_measure = F::zero();
         for i in 1..multiscale_turning_points.len() {
-            let ratio = F::from(multiscale_turning_points[i - 1]).unwrap() 
-                / F::from(multiscale_turning_points[i]).unwrap().max(F::from(1.0).unwrap());
+            let ratio = F::from(multiscale_turning_points[i - 1]).unwrap()
+                / F::from(multiscale_turning_points[i])
+                    .unwrap()
+                    .max(F::from(1.0).unwrap());
             structure_measure = structure_measure + ratio;
         }
         structure_measure / F::from(multiscale_turning_points.len() - 1).unwrap()
@@ -1169,7 +1195,7 @@ where
     for i in 0..n {
         let start = i.saturating_sub(half_window);
         let end = (i + half_window + 1).min(n);
-        
+
         let window_sum = ts.slice(s![start..end]).sum();
         let window_len = F::from(end - start).unwrap();
         smoothed[i] = window_sum / window_len;
@@ -1199,10 +1225,11 @@ where
         return Ok(F::zero());
     }
 
-    let mean_ratio = ratios.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(ratios.len()).unwrap();
-    let variance = ratios.iter()
-        .fold(F::zero(), |acc, &x| acc + (x - mean_ratio) * (x - mean_ratio)) 
-        / F::from(ratios.len()).unwrap();
+    let mean_ratio =
+        ratios.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(ratios.len()).unwrap();
+    let variance = ratios.iter().fold(F::zero(), |acc, &x| {
+        acc + (x - mean_ratio) * (x - mean_ratio)
+    }) / F::from(ratios.len()).unwrap();
 
     // Clustering is inverse of variance (higher variance = less clustering)
     Ok(F::one() / (F::one() + variance))
@@ -1236,10 +1263,10 @@ where
     }
 
     let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
-    
+
     let mut numerator = F::zero();
     let mut denominator = F::zero();
-    
+
     for i in 0..n {
         let x_centered = data[i] - mean;
         let y_centered = data[i + lag] - mean;
@@ -1264,7 +1291,7 @@ where
     for window in local_maxima.windows(3) {
         let spacing1 = window[1] - window[0];
         let spacing2 = window[2] - window[1];
-        
+
         // Simple heuristic: double peaks have similar spacing
         if spacing1 > 0 && spacing2 > 0 {
             let ratio = spacing1 as f64 / spacing2 as f64;
@@ -1285,7 +1312,7 @@ where
     for window in local_minima.windows(3) {
         let spacing1 = window[1] - window[0];
         let spacing2 = window[2] - window[1];
-        
+
         // Simple heuristic: double bottoms have similar spacing
         if spacing1 > 0 && spacing2 > 0 {
             let ratio = spacing1 as f64 / spacing2 as f64;
@@ -1312,8 +1339,9 @@ where
             // Simple spacing check for head-and-shoulders pattern
             let spacing1 = window[1] - window[0];
             let spacing2 = window[2] - window[1];
-            
-            if spacing1 > 0 && spacing2 > 0 && spacing1 <= spacing2 * 2 && spacing2 <= spacing1 * 2 {
+
+            if spacing1 > 0 && spacing2 > 0 && spacing1 <= spacing2 * 2 && spacing2 <= spacing1 * 2
+            {
                 count += 1;
             }
         }
@@ -1332,7 +1360,7 @@ where
     // Simplified: count patterns where extrema converge
     let min_pattern_length = 4;
     let mut count = 0;
-    
+
     if local_maxima.len() >= 2 && local_minima.len() >= 2 {
         // Check for converging pattern in peaks and valleys
         for i in 0..(local_maxima.len().saturating_sub(min_pattern_length)) {
@@ -1342,13 +1370,13 @@ where
             } else {
                 continue;
             };
-            
+
             // Simple convergence check
             if peak_range_end > 0 && peak_range_start > peak_range_end {
                 count += 1;
             }
         }
     }
-    
+
     Ok(count)
 }

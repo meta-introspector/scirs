@@ -1,54 +1,46 @@
-//! Adjacency list format I/O operations
+//! Adjacency list format I/O for graphs
 //!
-//! This module provides functions for reading and writing graphs in adjacency list format.
-//! Adjacency list format represents each node and its neighbors on a single line:
-//! - For unweighted graphs: `source: target1 target2 target3 ...`
-//! - For weighted graphs: `source: target1 target2 target3 weight1 weight2 weight3 ...`
+//! This module provides functionality for reading and writing graphs in adjacency list format.
+//! In this format, each line represents a node and all its neighbors.
 //!
-//! The format uses a colon (`:`) to separate the source node from its neighbors.
-//! For weighted graphs, weights are listed after all the target nodes.
+//! # Format Specification
 //!
-//! Lines starting with '#' are treated as comments and ignored.
-//! Empty lines are also ignored.
+//! ## Unweighted format:
+//! ```text
+//! node1: neighbor1 neighbor2 neighbor3
+//! node2: neighbor1 neighbor4
+//! # Comments start with #
+//! node3:
+//! ```
+//!
+//! ## Weighted format:
+//! ```text
+//! node1: neighbor1 weight1 neighbor2 weight2
+//! node2: neighbor1 weight1
+//! ```
 //!
 //! # Examples
 //!
 //! ```rust
-//! use scirs2_graph::io::adjacency_list::{read_adjacency_list_format, write_adjacency_list_format};
-//! use scirs2_graph::base::Graph;
+//! use std::fs::File;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
+//! use scirs2_graph::base::Graph;
+//! use scirs2_graph::io::adjacency_list::{read_adjacency_list_format, write_adjacency_list_format};
 //!
-//! // Create a test file with unweighted adjacency list
+//! // Create a temporary file with adjacency list data
 //! let mut temp_file = NamedTempFile::new().unwrap();
 //! writeln!(temp_file, "1: 2 3").unwrap();
 //! writeln!(temp_file, "2: 1 3").unwrap();
 //! writeln!(temp_file, "3: 1 2").unwrap();
 //! temp_file.flush().unwrap();
 //!
-//! // Read an unweighted graph from adjacency list format
-//! let graph: Graph<i32, f64> = read_adjacency_list_format(temp_file.path(), false).unwrap();
+//! // Read the graph
+//! let graph: Graph<i32, ()> = read_adjacency_list_format(temp_file.path(), false).unwrap();
 //! assert_eq!(graph.node_count(), 3);
-//! ```
-//!
-//! ```rust
-//! use scirs2_graph::io::adjacency_list::{read_adjacency_list_format, write_adjacency_list_format};
-//! use scirs2_graph::base::Graph;
-//! use std::io::Write;
-//! use tempfile::NamedTempFile;
-//!
-//! // Create a test file with weighted adjacency list
-//! let mut temp_file = NamedTempFile::new().unwrap();
-//! writeln!(temp_file, "1: 2 3 1.5 2.0").unwrap();
-//! writeln!(temp_file, "2: 1 1.5").unwrap();
-//! temp_file.flush().unwrap();
-//!
-//! // Read a weighted graph from adjacency list format
-//! let graph: Graph<i32, f64> = read_adjacency_list_format(temp_file.path(), true).unwrap();
-//! assert_eq!(graph.node_count(), 3);
+//! assert_eq!(graph.edge_count(), 3); // Each edge is only stored once in undirected graph
 //! ```
 
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
@@ -57,49 +49,38 @@ use std::str::FromStr;
 use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 
-/// Read an undirected graph from adjacency list format
+/// Reads an undirected graph from a file in adjacency list format
 ///
 /// # Arguments
 ///
 /// * `path` - Path to the input file
-/// * `weighted` - Whether to parse edge weights
+/// * `weighted` - Whether the adjacency list includes edge weights
 ///
 /// # Returns
 ///
-/// Returns a `Graph` with the parsed nodes and edges
-///
-/// # Errors
-///
-/// Returns an error if:
-/// - The file cannot be opened
-/// - Lines cannot be parsed
-/// - Node or edge weight parsing fails
-/// - Format is malformed (missing colon, inconsistent weight count)
+/// * `Ok(Graph)` - The graph read from the file
+/// * `Err(GraphError)` - If there was an error reading or parsing the file
 ///
 /// # Format
 ///
-/// Each line should contain:
-/// - `source: target1 target2 ...` for unweighted graphs
-/// - `source: target1 target2 ... weight1 weight2 ...` for weighted graphs
-/// - Lines starting with '#' are treated as comments
-/// - Empty lines are ignored
-/// - Malformed lines are skipped with a warning
+/// Each line should contain a node followed by a colon and its neighbors:
+/// - Unweighted: `node: neighbor1 neighbor2 neighbor3`
+/// - Weighted: `node: neighbor1 weight1 neighbor2 weight2`
 ///
-/// For weighted graphs, the number of weights must match the number of targets.
+/// Lines starting with '#' are treated as comments and ignored.
+/// Empty lines are also ignored.
 pub fn read_adjacency_list_format<N, E, P>(path: P, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file =
-        File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {}", e)))?;
+    let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut graph = Graph::new();
 
-    for line_result in reader.lines() {
-        let line =
-            line_result.map_err(|e| GraphError::Other(format!("Error reading line: {}", e)))?;
+    for (line_num, line) in reader.lines().enumerate() {
+        let line = line?;
         let line = line.trim();
 
         // Skip empty lines and comments
@@ -107,67 +88,225 @@ where
             continue;
         }
 
-        // Parse line: source: target1 target2 ... [weight1 weight2 ...]
-        let parts: Vec<&str> = line.split(':').collect();
-        if parts.len() != 2 {
-            continue; // Skip malformed lines (no colon or multiple colons)
-        }
+        // Parse the line
+        if let Some(colon_pos) = line.find(':') {
+            let node_str = line[..colon_pos].trim();
+            let neighbors_str = line[colon_pos + 1..].trim();
 
-        let source_str = parts[0].trim();
-        let targets_str = parts[1].trim();
-
-        if targets_str.is_empty() {
-            continue; // Skip lines with no targets
-        }
-
-        // Parse source node
-        let source_data = match N::from_str(source_str) {
-            Ok(data) => data,
-            Err(_) => continue, // Skip lines with malformed source nodes
-        };
-
-        // Parse targets and weights
-        let target_parts: Vec<&str> = targets_str.split_whitespace().collect();
-        if target_parts.is_empty() {
-            continue; // Skip empty target lists
-        }
-
-        if weighted {
-            // For weighted graphs, we expect: target1 target2 ... weight1 weight2 ...
-            // The number of weights should equal the number of targets
-            if target_parts.len() % 2 != 0 {
-                continue; // Skip lines with odd number of parts (inconsistent format)
-            }
-
-            let num_targets = target_parts.len() / 2;
-            let targets = &target_parts[0..num_targets];
-            let weights = &target_parts[num_targets..];
-
-            for (target_str, weight_str) in targets.iter().zip(weights.iter()) {
-                // Skip parsing errors for individual target/weight pairs
-                if let (Ok(target_data), Ok(edge_weight)) = (N::from_str(target_str), E::from_str(weight_str)) {
-                    let _ = graph.add_edge(source_data.clone(), target_data, edge_weight);
-                    // Silently skip edge addition failures
+            // Parse the source node
+            let source_node = match N::from_str(node_str) {
+                Ok(node) => node,
+                Err(_) => {
+                    return Err(GraphError::Other(format!(
+                        "Failed to parse node '{}' on line {}",
+                        node_str,
+                        line_num + 1
+                    )));
                 }
-                // Silently skip malformed target nodes or weights
+            };
+
+            // Parse neighbors
+            if !neighbors_str.is_empty() {
+                let tokens: Vec<&str> = neighbors_str.split_whitespace().collect();
+
+                if weighted {
+                    // For weighted format: neighbor1 weight1 neighbor2 weight2 ...
+                    if tokens.len() % 2 != 0 {
+                        return Err(GraphError::Other(format!(
+                            "Weighted adjacency list must have even number of tokens (neighbor weight pairs) on line {}",
+                            line_num + 1
+                        )));
+                    }
+
+                    for chunk in tokens.chunks(2) {
+                        let neighbor_str = chunk[0];
+                        let weight_str = chunk[1];
+
+                        // Parse neighbor node
+                        let neighbor_node = match N::from_str(neighbor_str) {
+                            Ok(node) => node,
+                            Err(_) => {
+                                return Err(GraphError::Other(format!(
+                                    "Failed to parse neighbor '{}' on line {}",
+                                    neighbor_str,
+                                    line_num + 1
+                                )));
+                            }
+                        };
+
+                        // Parse weight
+                        let weight = match E::from_str(weight_str) {
+                            Ok(w) => w,
+                            Err(_) => {
+                                return Err(GraphError::Other(format!(
+                                    "Failed to parse weight '{}' on line {}",
+                                    weight_str,
+                                    line_num + 1
+                                )));
+                            }
+                        };
+
+                        // Add edge if it doesn't exist (undirected graph)
+                        if !graph.has_edge(&source_node, &neighbor_node) {
+                            graph.add_edge(source_node.clone(), neighbor_node, weight)?;
+                        }
+                    }
+                } else {
+                    // For unweighted format: neighbor1 neighbor2 neighbor3 ...
+                    for neighbor_str in tokens {
+                        // Parse neighbor node
+                        let neighbor_node = match N::from_str(neighbor_str) {
+                            Ok(node) => node,
+                            Err(_) => {
+                                return Err(GraphError::Other(format!(
+                                    "Failed to parse neighbor '{}' on line {}",
+                                    neighbor_str,
+                                    line_num + 1
+                                )));
+                            }
+                        };
+
+                        // Add edge if it doesn't exist (undirected graph)
+                        if !graph.has_edge(&source_node, &neighbor_node) {
+                            graph.add_edge(source_node.clone(), neighbor_node, E::default())?;
+                        }
+                    }
+                }
             }
         } else {
-            // For unweighted graphs, all parts are targets
-            for target_str in target_parts {
-                // Skip parsing errors for individual targets (malformed nodes)
-                if let Ok(target_data) = N::from_str(target_str) {
-                    let _ = graph.add_edge(source_data.clone(), target_data, E::default());
-                    // Silently skip edge addition failures
-                }
-                // Silently skip malformed target nodes
-            }
+            return Err(GraphError::Other(format!(
+                "Missing ':' separator on line {}",
+                line_num + 1
+            )));
         }
     }
 
     Ok(graph)
 }
 
-/// Write an undirected graph to adjacency list format
+/// Reads a directed graph from a file in adjacency list format
+///
+/// # Arguments
+///
+/// * `path` - Path to the input file
+/// * `weighted` - Whether the adjacency list includes edge weights
+///
+/// # Returns
+///
+/// * `Ok(DiGraph)` - The directed graph read from the file
+/// * `Err(GraphError)` - If there was an error reading or parsing the file
+pub fn read_adjacency_list_format_digraph<N, E, P>(path: P, weighted: bool) -> Result<DiGraph<N, E>>
+where
+    N: Node + std::fmt::Debug + FromStr + Clone,
+    E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
+    P: AsRef<Path>,
+{
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+    let mut graph = DiGraph::new();
+
+    for (line_num, line) in reader.lines().enumerate() {
+        let line = line?;
+        let line = line.trim();
+
+        // Skip empty lines and comments
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+
+        // Parse the line
+        if let Some(colon_pos) = line.find(':') {
+            let node_str = line[..colon_pos].trim();
+            let neighbors_str = line[colon_pos + 1..].trim();
+
+            // Parse the source node
+            let source_node = match N::from_str(node_str) {
+                Ok(node) => node,
+                Err(_) => {
+                    return Err(GraphError::Other(format!(
+                        "Failed to parse node '{}' on line {}",
+                        node_str,
+                        line_num + 1
+                    )));
+                }
+            };
+
+            // Parse neighbors
+            if !neighbors_str.is_empty() {
+                let tokens: Vec<&str> = neighbors_str.split_whitespace().collect();
+
+                if weighted {
+                    // For weighted format: neighbor1 weight1 neighbor2 weight2 ...
+                    if tokens.len() % 2 != 0 {
+                        return Err(GraphError::Other(format!(
+                            "Weighted adjacency list must have even number of tokens (neighbor weight pairs) on line {}",
+                            line_num + 1
+                        )));
+                    }
+
+                    for chunk in tokens.chunks(2) {
+                        let neighbor_str = chunk[0];
+                        let weight_str = chunk[1];
+
+                        // Parse neighbor node
+                        let neighbor_node = match N::from_str(neighbor_str) {
+                            Ok(node) => node,
+                            Err(_) => {
+                                return Err(GraphError::Other(format!(
+                                    "Failed to parse neighbor '{}' on line {}",
+                                    neighbor_str,
+                                    line_num + 1
+                                )));
+                            }
+                        };
+
+                        // Parse weight
+                        let weight = match E::from_str(weight_str) {
+                            Ok(w) => w,
+                            Err(_) => {
+                                return Err(GraphError::Other(format!(
+                                    "Failed to parse weight '{}' on line {}",
+                                    weight_str,
+                                    line_num + 1
+                                )));
+                            }
+                        };
+
+                        // Add directed edge
+                        graph.add_edge(source_node.clone(), neighbor_node, weight)?;
+                    }
+                } else {
+                    // For unweighted format: neighbor1 neighbor2 neighbor3 ...
+                    for neighbor_str in tokens {
+                        // Parse neighbor node
+                        let neighbor_node = match N::from_str(neighbor_str) {
+                            Ok(node) => node,
+                            Err(_) => {
+                                return Err(GraphError::Other(format!(
+                                    "Failed to parse neighbor '{}' on line {}",
+                                    neighbor_str,
+                                    line_num + 1
+                                )));
+                            }
+                        };
+
+                        // Add directed edge
+                        graph.add_edge(source_node.clone(), neighbor_node, E::default())?;
+                    }
+                }
+            }
+        } else {
+            return Err(GraphError::Other(format!(
+                "Missing ':' separator on line {}",
+                line_num + 1
+            )));
+        }
+    }
+
+    Ok(graph)
+}
+
+/// Writes an undirected graph to a file in adjacency list format
 ///
 /// # Arguments
 ///
@@ -175,20 +314,10 @@ where
 /// * `path` - Path to the output file
 /// * `weighted` - Whether to include edge weights in the output
 ///
-/// # Errors
+/// # Returns
 ///
-/// Returns an error if:
-/// - The file cannot be created
-/// - Writing to the file fails
-///
-/// # Format
-///
-/// Each line will contain:
-/// - `source: target1 target2 ...` for unweighted output
-/// - `source: target1 target2 ... weight1 weight2 ...` for weighted output
-///
-/// Nodes are written in the order they appear in the graph.
-/// For each node, its neighbors are listed after the colon.
+/// * `Ok(())` - If the graph was written successfully
+/// * `Err(GraphError)` - If there was an error writing the file
 pub fn write_adjacency_list_format<N, E, Ix, P>(
     graph: &Graph<N, E, Ix>,
     path: P,
@@ -205,180 +334,62 @@ where
     Ix: petgraph::graph::IndexType,
     P: AsRef<Path>,
 {
-    let mut file =
-        File::create(path).map_err(|e| GraphError::Other(format!("Cannot create file: {}", e)))?;
+    let mut file = File::create(path)?;
 
-    // Build adjacency lists from edges
-    let mut adjacency_lists: HashMap<N, Vec<(N, E)>> = HashMap::new();
+    writeln!(file, "# Adjacency list format")?;
+    writeln!(file, "# node: neighbor1 neighbor2 ...")?;
+    if weighted {
+        writeln!(file, "# Format: node: neighbor1 weight1 neighbor2 weight2")?;
+    }
+    writeln!(file)?;
 
-    // Initialize adjacency lists for all nodes
-    for node in graph.nodes() {
-        adjacency_lists.insert(node.clone(), Vec::new());
+    // Get all nodes and their neighbors
+    let all_edges = graph.edges();
+    let all_nodes = graph.nodes();
+
+    // Group edges by source node
+    let mut node_neighbors = std::collections::HashMap::new();
+    for edge in all_edges {
+        let source = &edge.source;
+        let target = &edge.target;
+        let weight = &edge.weight;
+
+        node_neighbors
+            .entry(source.clone())
+            .or_insert_with(Vec::new)
+            .push((target.clone(), weight.clone()));
     }
 
-    // Populate adjacency lists from edges
-    for edge in graph.edges() {
-        // For undirected graphs, add both directions
-        adjacency_lists
-            .entry(edge.source.clone())
-            .or_default()
-            .push((edge.target.clone(), edge.weight));
+    // Write adjacency list for each node
+    for node in all_nodes {
+        write!(file, "{}: ", node)?;
 
-        adjacency_lists
-            .entry(edge.target.clone())
-            .or_default()
-            .push((edge.source.clone(), edge.weight));
-    }
+        if let Some(neighbors) = node_neighbors.get(node) {
+            let neighbor_strs: Vec<String> = neighbors
+                .iter()
+                .map(|(neighbor, weight)| {
+                    if weighted {
+                        format!("{} {}", neighbor, weight)
+                    } else {
+                        format!("{}", neighbor)
+                    }
+                })
+                .collect();
 
-    // Write adjacency lists
-    let mut nodes: Vec<_> = adjacency_lists.keys().cloned().collect();
-    nodes.sort_by(|a, b| format!("{}", a).cmp(&format!("{}", b))); // Sort by string representation
-
-    for source in nodes {
-        let neighbors = &adjacency_lists[&source];
-        
-        write!(file, "{}:", source)
-            .map_err(|e| GraphError::Other(format!("Error writing source node: {}", e)))?;
-
-        if neighbors.is_empty() {
-            writeln!(file)
-                .map_err(|e| GraphError::Other(format!("Error writing newline: {}", e)))?;
-            continue;
-        }
-
-        // Write targets first
-        for (target, _) in neighbors {
-            write!(file, " {}", target)
-                .map_err(|e| GraphError::Other(format!("Error writing target node: {}", e)))?;
-        }
-
-        // Write weights if requested
-        if weighted {
-            for (_, weight) in neighbors {
-                write!(file, " {}", weight)
-                    .map_err(|e| GraphError::Other(format!("Error writing weight: {}", e)))?;
+            if !neighbor_strs.is_empty() {
+                writeln!(file, "{}", neighbor_strs.join(" "))?;
+            } else {
+                writeln!(file)?;
             }
+        } else {
+            writeln!(file)?;
         }
-
-        writeln!(file)
-            .map_err(|e| GraphError::Other(format!("Error writing newline: {}", e)))?;
     }
 
     Ok(())
 }
 
-/// Read a directed graph from adjacency list format
-///
-/// # Arguments
-///
-/// * `path` - Path to the input file
-/// * `weighted` - Whether to parse edge weights
-///
-/// # Returns
-///
-/// Returns a `DiGraph` with the parsed nodes and edges
-///
-/// # Errors
-///
-/// Returns an error if:
-/// - The file cannot be opened
-/// - Lines cannot be parsed
-/// - Node or edge weight parsing fails
-/// - Format is malformed (missing colon, inconsistent weight count)
-///
-/// # Format
-///
-/// Each line should contain:
-/// - `source: target1 target2 ...` for unweighted graphs
-/// - `source: target1 target2 ... weight1 weight2 ...` for weighted graphs
-/// - Lines starting with '#' are treated as comments
-/// - Empty lines are ignored
-/// - Malformed lines are skipped with a warning
-///
-/// For weighted graphs, the number of weights must match the number of targets.
-/// In directed graphs, only outgoing edges from the source are represented.
-pub fn read_adjacency_list_format_digraph<N, E, P>(path: P, weighted: bool) -> Result<DiGraph<N, E>>
-where
-    N: Node + std::fmt::Debug + FromStr + Clone,
-    E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
-    P: AsRef<Path>,
-{
-    let file =
-        File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {}", e)))?;
-    let reader = BufReader::new(file);
-    let mut graph = DiGraph::new();
-
-    for line_result in reader.lines() {
-        let line =
-            line_result.map_err(|e| GraphError::Other(format!("Error reading line: {}", e)))?;
-        let line = line.trim();
-
-        // Skip empty lines and comments
-        if line.is_empty() || line.starts_with('#') {
-            continue;
-        }
-
-        // Parse line: source: target1 target2 ... [weight1 weight2 ...]
-        let parts: Vec<&str> = line.split(':').collect();
-        if parts.len() != 2 {
-            continue; // Skip malformed lines (no colon or multiple colons)
-        }
-
-        let source_str = parts[0].trim();
-        let targets_str = parts[1].trim();
-
-        if targets_str.is_empty() {
-            continue; // Skip lines with no targets
-        }
-
-        // Parse source node
-        let source_data = match N::from_str(source_str) {
-            Ok(data) => data,
-            Err(_) => continue, // Skip lines with malformed source nodes
-        };
-
-        // Parse targets and weights
-        let target_parts: Vec<&str> = targets_str.split_whitespace().collect();
-        if target_parts.is_empty() {
-            continue; // Skip empty target lists
-        }
-
-        if weighted {
-            // For weighted graphs, we expect: target1 target2 ... weight1 weight2 ...
-            // The number of weights should equal the number of targets
-            if target_parts.len() % 2 != 0 {
-                continue; // Skip lines with odd number of parts (inconsistent format)
-            }
-
-            let num_targets = target_parts.len() / 2;
-            let targets = &target_parts[0..num_targets];
-            let weights = &target_parts[num_targets..];
-
-            for (target_str, weight_str) in targets.iter().zip(weights.iter()) {
-                // Skip parsing errors for individual target/weight pairs
-                if let (Ok(target_data), Ok(edge_weight)) = (N::from_str(target_str), E::from_str(weight_str)) {
-                    let _ = graph.add_edge(source_data.clone(), target_data, edge_weight);
-                    // Silently skip edge addition failures
-                }
-                // Silently skip malformed target nodes or weights
-            }
-        } else {
-            // For unweighted graphs, all parts are targets
-            for target_str in target_parts {
-                // Skip parsing errors for individual targets (malformed nodes)
-                if let Ok(target_data) = N::from_str(target_str) {
-                    let _ = graph.add_edge(source_data.clone(), target_data, E::default());
-                    // Silently skip edge addition failures
-                }
-                // Silently skip malformed target nodes
-            }
-        }
-    }
-
-    Ok(graph)
-}
-
-/// Write a directed graph to adjacency list format
+/// Writes a directed graph to a file in adjacency list format
 ///
 /// # Arguments
 ///
@@ -386,20 +397,10 @@ where
 /// * `path` - Path to the output file
 /// * `weighted` - Whether to include edge weights in the output
 ///
-/// # Errors
+/// # Returns
 ///
-/// Returns an error if:
-/// - The file cannot be created
-/// - Writing to the file fails
-///
-/// # Format
-///
-/// Each line will contain:
-/// - `source: target1 target2 ...` for unweighted output
-/// - `source: target1 target2 ... weight1 weight2 ...` for weighted output
-///
-/// For directed graphs, only outgoing edges from each source node are written.
-/// Nodes are written in the order they appear in the graph.
+/// * `Ok(())` - If the graph was written successfully
+/// * `Err(GraphError)` - If there was an error writing the file
 pub fn write_adjacency_list_format_digraph<N, E, Ix, P>(
     graph: &DiGraph<N, E, Ix>,
     path: P,
@@ -416,57 +417,56 @@ where
     Ix: petgraph::graph::IndexType,
     P: AsRef<Path>,
 {
-    let mut file =
-        File::create(path).map_err(|e| GraphError::Other(format!("Cannot create file: {}", e)))?;
+    let mut file = File::create(path)?;
 
-    // Build adjacency lists from edges (only outgoing edges for directed graphs)
-    let mut adjacency_lists: HashMap<N, Vec<(N, E)>> = HashMap::new();
+    writeln!(file, "# Directed adjacency list format")?;
+    writeln!(file, "# node: neighbor1 neighbor2 ...")?;
+    if weighted {
+        writeln!(file, "# Format: node: neighbor1 weight1 neighbor2 weight2")?;
+    }
+    writeln!(file)?;
 
-    // Initialize adjacency lists for all nodes
-    for node in graph.nodes() {
-        adjacency_lists.insert(node.clone(), Vec::new());
+    // Get all edges and nodes
+    let all_edges = graph.edges();
+    let all_nodes = graph.nodes();
+
+    // Group edges by source node (for directed graph, only outgoing edges)
+    let mut node_neighbors = std::collections::HashMap::new();
+    for edge in all_edges {
+        let source = &edge.source;
+        let target = &edge.target;
+        let weight = &edge.weight;
+
+        node_neighbors
+            .entry(source.clone())
+            .or_insert_with(Vec::new)
+            .push((target.clone(), weight.clone()));
     }
 
-    // Populate adjacency lists from edges (only outgoing for directed graphs)
-    for edge in graph.edges() {
-        adjacency_lists
-            .entry(edge.source.clone())
-            .or_default()
-            .push((edge.target.clone(), edge.weight));
-    }
+    // Write adjacency list for each node
+    for node in all_nodes {
+        write!(file, "{}: ", node)?;
 
-    // Write adjacency lists
-    let mut nodes: Vec<_> = adjacency_lists.keys().cloned().collect();
-    nodes.sort_by(|a, b| format!("{}", a).cmp(&format!("{}", b))); // Sort by string representation
+        if let Some(neighbors) = node_neighbors.get(node) {
+            let neighbor_strs: Vec<String> = neighbors
+                .iter()
+                .map(|(neighbor, weight)| {
+                    if weighted {
+                        format!("{} {}", neighbor, weight)
+                    } else {
+                        format!("{}", neighbor)
+                    }
+                })
+                .collect();
 
-    for source in nodes {
-        let neighbors = &adjacency_lists[&source];
-        
-        write!(file, "{}:", source)
-            .map_err(|e| GraphError::Other(format!("Error writing source node: {}", e)))?;
-
-        if neighbors.is_empty() {
-            writeln!(file)
-                .map_err(|e| GraphError::Other(format!("Error writing newline: {}", e)))?;
-            continue;
-        }
-
-        // Write targets first
-        for (target, _) in neighbors {
-            write!(file, " {}", target)
-                .map_err(|e| GraphError::Other(format!("Error writing target node: {}", e)))?;
-        }
-
-        // Write weights if requested
-        if weighted {
-            for (_, weight) in neighbors {
-                write!(file, " {}", weight)
-                    .map_err(|e| GraphError::Other(format!("Error writing weight: {}", e)))?;
+            if !neighbor_strs.is_empty() {
+                writeln!(file, "{}", neighbor_strs.join(" "))?;
+            } else {
+                writeln!(file)?;
             }
+        } else {
+            writeln!(file)?;
         }
-
-        writeln!(file)
-            .map_err(|e| GraphError::Other(format!("Error writing newline: {}", e)))?;
     }
 
     Ok(())
@@ -479,75 +479,80 @@ mod tests {
     use tempfile::NamedTempFile;
 
     #[test]
-    fn test_adjacency_list_format_unweighted() {
-        // Create a temporary file with adjacency list data
+    fn test_read_unweighted_adjacency_list() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "# This is a comment").unwrap();
+        writeln!(temp_file, "# Test adjacency list").unwrap();
         writeln!(temp_file, "1: 2 3").unwrap();
         writeln!(temp_file, "2: 1 3").unwrap();
         writeln!(temp_file, "3: 1 2").unwrap();
-        writeln!(temp_file, "").unwrap(); // Empty line
         temp_file.flush().unwrap();
 
         let graph: Graph<i32, f64> = read_adjacency_list_format(temp_file.path(), false).unwrap();
+
         assert_eq!(graph.node_count(), 3);
-        // Each undirected edge is added in both directions, so 3 lines * 2 edges per line = 6 edges
-        assert_eq!(graph.edge_count(), 6);
+        assert_eq!(graph.edge_count(), 3); // Each undirected edge stored once
     }
 
     #[test]
-    fn test_adjacency_list_format_weighted() {
-        // Create a temporary file with weighted adjacency list data
+    fn test_read_weighted_adjacency_list() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1: 2 3 1.5 2.0").unwrap();
-        writeln!(temp_file, "2: 1 1.5").unwrap();
-        writeln!(temp_file, "3: 1 2.0").unwrap();
+        writeln!(temp_file, "1: 2 0.5 3 1.0").unwrap();
+        writeln!(temp_file, "2: 1 0.5").unwrap();
         temp_file.flush().unwrap();
 
         let graph: Graph<i32, f64> = read_adjacency_list_format(temp_file.path(), true).unwrap();
+
         assert_eq!(graph.node_count(), 3);
-        assert_eq!(graph.edge_count(), 4); // 2 + 1 + 1 edges
+        assert_eq!(graph.edge_count(), 2);
     }
 
     #[test]
-    fn test_digraph_adjacency_list_format() {
-        // Create a temporary file with adjacency list data for directed graph
+    fn test_read_directed_adjacency_list() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1: 2 3 1.0 2.0").unwrap();
-        writeln!(temp_file, "2: 3 1.5").unwrap();
+        writeln!(temp_file, "1: 2 3").unwrap();
+        writeln!(temp_file, "2: 3").unwrap();
+        writeln!(temp_file, "3:").unwrap();
         temp_file.flush().unwrap();
 
-        let graph: DiGraph<i32, f64> = read_adjacency_list_format_digraph(temp_file.path(), true).unwrap();
+        let graph: DiGraph<i32, f64> =
+            read_adjacency_list_format_digraph(temp_file.path(), false).unwrap();
+
         assert_eq!(graph.node_count(), 3);
-        assert_eq!(graph.edge_count(), 3); // 2 + 1 edges (directed)
+        assert_eq!(graph.edge_count(), 3); // Directed edges
     }
 
     #[test]
-    fn test_adjacency_list_empty_neighbors() {
-        // Test nodes with no neighbors
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1: 2").unwrap();
-        writeln!(temp_file, "2:").unwrap(); // Node 2 has no outgoing edges
-        writeln!(temp_file, "3: 1").unwrap();
-        temp_file.flush().unwrap();
+    fn test_write_read_roundtrip() {
+        let mut original_graph: Graph<i32, f64> = Graph::new();
+        original_graph.add_edge(1i32, 2i32, 0.0f64).unwrap();
+        original_graph.add_edge(2i32, 3i32, 0.0f64).unwrap();
 
-        let graph: DiGraph<i32, f64> = read_adjacency_list_format_digraph(temp_file.path(), false).unwrap();
-        assert_eq!(graph.node_count(), 3);
-        assert_eq!(graph.edge_count(), 2); // Only edges 1->2 and 3->1
+        let temp_file = NamedTempFile::new().unwrap();
+        write_adjacency_list_format(&original_graph, temp_file.path(), false).unwrap();
+
+        let read_graph: Graph<i32, f64> =
+            read_adjacency_list_format(temp_file.path(), false).unwrap();
+
+        assert_eq!(read_graph.node_count(), original_graph.node_count());
+        assert_eq!(read_graph.edge_count(), original_graph.edge_count());
     }
 
     #[test]
-    fn test_adjacency_list_malformed_lines() {
-        // Test handling of malformed lines
+    fn test_malformed_line_handling() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1: 2 3").unwrap(); // Valid line
-        writeln!(temp_file, "2 3 4").unwrap();  // No colon - should be skipped
-        writeln!(temp_file, "3: 1: 2").unwrap(); // Multiple colons - should be skipped
-        writeln!(temp_file, "4: 1 2 x").unwrap(); // Invalid node name - should be skipped
+        writeln!(temp_file, "1 2 3").unwrap(); // Missing colon
         temp_file.flush().unwrap();
+
+        let result: Result<Graph<i32, f64>> = read_adjacency_list_format(temp_file.path(), false);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_empty_file() {
+        let temp_file = NamedTempFile::new().unwrap();
 
         let graph: Graph<i32, f64> = read_adjacency_list_format(temp_file.path(), false).unwrap();
-        assert_eq!(graph.node_count(), 3); // Only nodes 1, 2, 3 from the valid line
-        assert_eq!(graph.edge_count(), 4); // 1->2, 2->1, 1->3, 3->1
+        assert_eq!(graph.node_count(), 0);
+        assert_eq!(graph.edge_count(), 0);
     }
 }

@@ -8,9 +8,9 @@ use ndarray::{s, Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use crate::error::{Result, TimeSeriesError};
-use crate::utils::{autocorrelation};
 use super::config::TurningPointsConfig;
+use crate::error::{Result, TimeSeriesError};
+use crate::utils::autocorrelation;
 
 /// Type alias for spectral peak detection results
 pub type SpectralPeakResult<F> = (Vec<F>, Vec<F>, Vec<F>, Vec<F>, usize, F, F, Vec<F>);
@@ -274,7 +274,11 @@ where
 }
 
 /// Refined coarse grain series with offset
-pub fn refined_coarse_grain_series<F>(ts: &Array1<F>, scale: usize, offset: usize) -> Result<Array1<F>>
+pub fn refined_coarse_grain_series<F>(
+    ts: &Array1<F>,
+    scale: usize,
+    offset: usize,
+) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {

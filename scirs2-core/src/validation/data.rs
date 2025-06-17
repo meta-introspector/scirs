@@ -51,13 +51,13 @@
 
 use crate::error::{CoreError, ErrorContext};
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, RwLock};
-use std::hash::{Hash, Hasher};
 use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::sync::{Arc, RwLock};
 
 // Core dependencies for array/matrix validation
 use ndarray::{ArrayBase, Data, Dimension, ScalarOperand};
-use num_traits::{Float, Zero, One};
+use num_traits::{Float, FromPrimitive, One, Zero};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -109,7 +109,7 @@ impl Default for ValidationConfig {
 }
 
 /// Shape constraints for arrays and matrices
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ShapeConstraints {
     /// Exact dimensions required (None = any size for that dimension)
@@ -125,7 +125,7 @@ pub struct ShapeConstraints {
 }
 
 /// Sparse matrix formats
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SparseFormat {
     /// Compressed Sparse Row
@@ -139,7 +139,7 @@ pub enum SparseFormat {
 }
 
 /// Time series constraints
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TimeConstraints {
     /// Minimum time interval between samples
@@ -281,7 +281,7 @@ pub enum QualityIssueType {
 }
 
 /// Data types supported by the validation system
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DataType {
     /// Boolean value
@@ -353,7 +353,7 @@ impl DataType {
                 })
             }
             (DataType::Union(types), value) => types.iter().any(|t| t.matches(value)),
-            (DataType::Optional(inner_type), JsonValue::Null) => true,
+            (DataType::Optional(_inner_type), JsonValue::Null) => true,
             (DataType::Optional(inner_type), value) => inner_type.matches(value),
             (DataType::Any, _) => true,
             _ => false,
@@ -382,12 +382,47 @@ impl DataType {
             DataType::Matrix {
                 element_type,
                 dimensions,
+                shape_constraints: _,
             } => {
                 if let Some(dims) = dimensions {
                     format!("matrix<{}, {:?}>", element_type.type_name(), dims)
                 } else {
                     format!("matrix<{}>", element_type.type_name())
                 }
+            }
+            DataType::NDArray {
+                element_type,
+                min_dimensions,
+                max_dimensions,
+                shape_constraints: _,
+            } => match (min_dimensions, max_dimensions) {
+                (Some(min), Some(max)) if min == max => {
+                    format!("ndarray<{}, {}D>", element_type.type_name(), min)
+                }
+                (Some(min), Some(max)) => {
+                    format!("ndarray<{}, {}D-{}D>", element_type.type_name(), min, max)
+                }
+                (Some(min), None) => {
+                    format!("ndarray<{}, {}D+>", element_type.type_name(), min)
+                }
+                (None, Some(max)) => {
+                    format!("ndarray<{}, <={}D>", element_type.type_name(), max)
+                }
+                (None, None) => {
+                    format!("ndarray<{}>", element_type.type_name())
+                }
+            },
+            DataType::SparseMatrix {
+                element_type,
+                format,
+            } => {
+                format!("sparse_matrix<{}, {:?}>", element_type.type_name(), format)
+            }
+            DataType::TimeSeries {
+                element_type,
+                time_constraints: _,
+            } => {
+                format!("time_series<{}>", element_type.type_name())
             }
         }
     }
@@ -630,7 +665,6 @@ pub struct ValidationError {
     /// Additional context
     pub context: HashMap<String, String>,
 }
-
 
 /// Error severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -988,6 +1022,7 @@ impl Validator {
 
     /// Validate field constraints
     #[cfg(feature = "serde")]
+    #[allow(unused_variables)] // warnings is used conditionally based on regex feature
     fn validate_field_constraints(
         &self,
         value: &JsonValue,
@@ -1331,12 +1366,12 @@ impl Validator {
         &self,
         array: &ArrayBase<S, D>,
         constraints: &ArrayValidationConstraints<S::Elem>,
-        config: &ValidationConfig,
+        _config: &ValidationConfig,
     ) -> Result<ValidationResult, CoreError>
     where
         S: Data,
         D: Dimension,
-        S::Elem: Float + fmt::Debug + Send + Sync,
+        S::Elem: Float + fmt::Debug + Send + Sync + ScalarOperand + FromPrimitive,
     {
         let start_time = std::time::Instant::now();
         let mut errors = Vec::new();
@@ -1348,7 +1383,10 @@ impl Validator {
             if !self.validate_array_shape(array, expected_shape)? {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::ShapeError,
-                    field_path: constraints.field_name.clone().unwrap_or("array".to_string()),
+                    field_path: constraints
+                        .field_name
+                        .clone()
+                        .unwrap_or("array".to_string()),
                     message: format!(
                         "Array shape {:?} does not match expected {:?}",
                         array.shape(),
@@ -1370,7 +1408,12 @@ impl Validator {
 
         // Statistical validation
         if let Some(stat_constraints) = &constraints.statistical_constraints {
-            self.validate_statistical_properties(array, stat_constraints, &mut errors, &mut warnings)?;
+            self.validate_statistical_properties(
+                array,
+                stat_constraints,
+                &mut errors,
+                &mut warnings,
+            )?;
         }
 
         // Performance validation for large arrays
@@ -1378,7 +1421,10 @@ impl Validator {
             self.validate_array_performance(array, &mut warnings)?;
         }
 
-        let valid = errors.is_empty() && !warnings.iter().any(|w| w.severity == ErrorSeverity::Critical);
+        let valid = errors.is_empty()
+            && !warnings
+                .iter()
+                .any(|w| w.severity == ErrorSeverity::Critical);
         let duration = start_time.elapsed();
 
         Ok(ValidationResult {
@@ -1407,8 +1453,8 @@ impl Validator {
     /// Validate numeric quality (NaN, infinity, precision)
     fn validate_numeric_quality<S, D>(
         &self,
-        array: &ArrayBase<S, D>,
-        errors: &mut Vec<ValidationError>,
+        _array: &ArrayBase<S, D>,
+        _errors: &mut Vec<ValidationError>,
         warnings: &mut Vec<ValidationError>,
         stats: &mut ValidationStats,
     ) -> Result<(), CoreError>
@@ -1417,15 +1463,15 @@ impl Validator {
         D: Dimension,
         S::Elem: Float + fmt::Debug,
     {
-        let mut nan_count = 0;
-        let mut inf_count = 0;
-        let mut total_count = 0;
+        let nan_count = 0;
+        let inf_count = 0;
+        let total_count = 0;
 
         #[cfg(feature = "parallel")]
-        let check_parallel = array.len() > 10000;
+        let _check_parallel = array.len() > 10000;
 
         #[cfg(feature = "parallel")]
-        if check_parallel {
+        if _check_parallel {
             let results: Vec<_> = array
                 .as_slice()
                 .unwrap_or(&[])
@@ -1465,7 +1511,10 @@ impl Validator {
             warnings.push(ValidationError {
                 error_type: ValidationErrorType::InvalidNumeric,
                 field_path: "array".to_string(),
-                message: format!("Found {} NaN values out of {} total", nan_count, total_count),
+                message: format!(
+                    "Found {} NaN values out of {} total",
+                    nan_count, total_count
+                ),
                 expected: Some("finite values".to_string()),
                 actual: Some(format!("{} NaN values", nan_count)),
                 constraint: Some("numeric_quality".to_string()),
@@ -1478,7 +1527,10 @@ impl Validator {
             warnings.push(ValidationError {
                 error_type: ValidationErrorType::InvalidNumeric,
                 field_path: "array".to_string(),
-                message: format!("Found {} infinite values out of {} total", inf_count, total_count),
+                message: format!(
+                    "Found {} infinite values out of {} total",
+                    inf_count, total_count
+                ),
                 expected: Some("finite values".to_string()),
                 actual: Some(format!("{} infinite values", inf_count)),
                 constraint: Some("numeric_quality".to_string()),
@@ -1501,7 +1553,7 @@ impl Validator {
     where
         S: Data,
         D: Dimension,
-        S::Elem: Float + fmt::Debug + ScalarOperand,
+        S::Elem: Float + fmt::Debug + ScalarOperand + FromPrimitive,
     {
         if array.is_empty() {
             return Ok(());
@@ -1551,7 +1603,10 @@ impl Validator {
                 warnings.push(ValidationError {
                     error_type: ValidationErrorType::ConstraintViolation,
                     field_path: "array.std".to_string(),
-                    message: format!("Array standard deviation {:?} is below minimum {:?}", std_dev, min_std),
+                    message: format!(
+                        "Array standard deviation {:?} is below minimum {:?}",
+                        std_dev, min_std
+                    ),
                     expected: Some(format!("std >= {}", min_std)),
                     actual: Some(format!("{:?}", std_dev)),
                     constraint: Some("statistical.min_std".to_string()),
@@ -1567,7 +1622,10 @@ impl Validator {
                 warnings.push(ValidationError {
                     error_type: ValidationErrorType::ConstraintViolation,
                     field_path: "array.std".to_string(),
-                    message: format!("Array standard deviation {:?} exceeds maximum {:?}", std_dev, max_std),
+                    message: format!(
+                        "Array standard deviation {:?} exceeds maximum {:?}",
+                        std_dev, max_std
+                    ),
                     expected: Some(format!("std <= {}", max_std)),
                     actual: Some(format!("{:?}", std_dev)),
                     constraint: Some("statistical.max_std".to_string()),
@@ -1643,7 +1701,7 @@ impl Validator {
     where
         S: Data,
         D: Dimension,
-        S::Elem: Float + fmt::Debug + ScalarOperand + Send + Sync,
+        S::Elem: Float + fmt::Debug + ScalarOperand + Send + Sync + FromPrimitive,
     {
         let mut issues = Vec::new();
         let mut recommendations = Vec::new();
@@ -1662,10 +1720,16 @@ impl Validator {
                 issue_type: QualityIssueType::MissingData,
                 location: field_name.to_string(),
                 description: format!("Low data completeness: {:.1}%", completeness * 100.0),
-                severity: if completeness < 0.8 { ErrorSeverity::Error } else { ErrorSeverity::Warning },
-                suggestion: Some("Consider data imputation or removal of incomplete records".to_string()),
+                severity: if completeness < 0.8 {
+                    ErrorSeverity::Error
+                } else {
+                    ErrorSeverity::Warning
+                },
+                suggestion: Some(
+                    "Consider data imputation or removal of incomplete records".to_string(),
+                ),
             });
-            
+
             if completeness < 0.8 {
                 recommendations.push("Critical: Data completeness is below 80%. Consider data quality improvement before analysis.".to_string());
             }
@@ -1683,7 +1747,10 @@ impl Validator {
             issues.push(QualityIssue {
                 issue_type: QualityIssueType::InvalidNumeric,
                 location: field_name.to_string(),
-                description: format!("Invalid numeric values detected: {:.1}% valid", validity * 100.0),
+                description: format!(
+                    "Invalid numeric values detected: {:.1}% valid",
+                    validity * 100.0
+                ),
                 severity: ErrorSeverity::Warning,
                 suggestion: Some("Remove or replace NaN and infinite values".to_string()),
             });
@@ -1693,20 +1760,29 @@ impl Validator {
         let statistical_summary = if total_elements > 0 && nan_count < total_elements {
             let finite_values: Vec<_> = array.iter().filter(|&&x| x.is_finite()).cloned().collect();
             if !finite_values.is_empty() {
-                let mean = finite_values.iter().fold(S::Elem::zero(), |acc, &x| acc + x) / 
-                          num_traits::cast(finite_values.len()).unwrap_or(S::Elem::one());
-                
-                let variance = finite_values.iter()
+                let mean = finite_values
+                    .iter()
+                    .fold(S::Elem::zero(), |acc, &x| acc + x)
+                    / num_traits::cast(finite_values.len()).unwrap_or(S::Elem::one());
+
+                let variance = finite_values
+                    .iter()
                     .map(|&x| {
                         let diff = x - mean;
                         diff * diff
                     })
-                    .fold(S::Elem::zero(), |acc, x| acc + x) / 
-                    num_traits::cast(finite_values.len()).unwrap_or(S::Elem::one());
-                
+                    .fold(S::Elem::zero(), |acc, x| acc + x)
+                    / num_traits::cast(finite_values.len()).unwrap_or(S::Elem::one());
+
                 let std_dev = variance.sqrt();
-                let min_val = finite_values.iter().fold(finite_values[0], |acc, &x| if x < acc { x } else { acc });
-                let max_val = finite_values.iter().fold(finite_values[0], |acc, &x| if x > acc { x } else { acc });
+                let min_val =
+                    finite_values
+                        .iter()
+                        .fold(finite_values[0], |acc, &x| if x < acc { x } else { acc });
+                let max_val =
+                    finite_values
+                        .iter()
+                        .fold(finite_values[0], |acc, &x| if x > acc { x } else { acc });
 
                 Some(StatisticalSummary {
                     count: finite_values.len(),
@@ -1714,7 +1790,7 @@ impl Validator {
                     std_dev: num_traits::cast(std_dev).unwrap_or(0.0),
                     min: num_traits::cast(min_val).unwrap_or(0.0),
                     max: num_traits::cast(max_val).unwrap_or(0.0),
-                    outliers: 0, // TODO: Implement outlier detection
+                    outliers: 0,        // TODO: Implement outlier detection
                     distribution: None, // TODO: Implement distribution detection
                 })
             } else {
@@ -1726,7 +1802,10 @@ impl Validator {
 
         // Calculate overall quality score
         let consistency = 1.0; // TODO: Implement pattern consistency check
-        let accuracy = if issues.iter().any(|i| matches!(i.issue_type, QualityIssueType::ConstraintViolation)) {
+        let accuracy = if issues
+            .iter()
+            .any(|i| matches!(i.issue_type, QualityIssueType::ConstraintViolation))
+        {
             0.8
         } else {
             1.0
@@ -1736,11 +1815,17 @@ impl Validator {
 
         // Add performance recommendations
         if total_elements > 1_000_000 {
-            recommendations.push("Large dataset detected. Consider parallel processing for better performance.".to_string());
+            recommendations.push(
+                "Large dataset detected. Consider parallel processing for better performance."
+                    .to_string(),
+            );
         }
 
         if quality_score < 0.8 {
-            recommendations.push("Overall data quality is low. Review data collection and preprocessing procedures.".to_string());
+            recommendations.push(
+                "Overall data quality is low. Review data collection and preprocessing procedures."
+                    .to_string(),
+            );
         }
 
         Ok(DataQualityReport {
@@ -1783,7 +1868,6 @@ pub trait ValidationRule {
 }
 
 /// Array validation constraints
-#[derive(Debug, Clone)]
 pub struct ArrayValidationConstraints<T> {
     /// Expected array shape
     pub expected_shape: Option<Vec<usize>>,
@@ -1797,6 +1881,22 @@ pub struct ArrayValidationConstraints<T> {
     pub check_performance: bool,
     /// Custom element-wise validation function
     pub element_validator: Option<Box<dyn Fn(&T) -> Result<(), String> + Send + Sync>>,
+}
+
+impl<T> std::fmt::Debug for ArrayValidationConstraints<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ArrayValidationConstraints")
+            .field("expected_shape", &self.expected_shape)
+            .field("field_name", &self.field_name)
+            .field("check_numeric_quality", &self.check_numeric_quality)
+            .field("statistical_constraints", &self.statistical_constraints)
+            .field("check_performance", &self.check_performance)
+            .field(
+                "element_validator",
+                &self.element_validator.as_ref().map(|_| "<function>"),
+            )
+            .finish()
+    }
 }
 
 impl<T> Default for ArrayValidationConstraints<T> {
@@ -1840,7 +1940,7 @@ impl Default for StatisticalConstraints {
 }
 
 /// Checksum algorithms supported for data integrity validation
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ChecksumAlgorithm {
     /// Simple hash-based checksum
@@ -1862,20 +1962,24 @@ pub struct DataIntegrityValidator {
 impl DataIntegrityValidator {
     /// Create a new data integrity validator
     pub fn new() -> Self {
-        let mut algorithms: HashMap<ChecksumAlgorithm, Box<dyn Fn(&[u8]) -> String + Send + Sync>> = HashMap::new();
-        
+        let mut algorithms: HashMap<ChecksumAlgorithm, Box<dyn Fn(&[u8]) -> String + Send + Sync>> =
+            HashMap::new();
+
         // Simple hash-based checksum
-        algorithms.insert(ChecksumAlgorithm::Hash, Box::new(|data: &[u8]| {
-            let mut hasher = DefaultHasher::new();
-            hasher.write(data);
-            format!("{:x}", hasher.finish())
-        }));
-        
+        algorithms.insert(
+            ChecksumAlgorithm::Hash,
+            Box::new(|data: &[u8]| {
+                let mut hasher = DefaultHasher::new();
+                hasher.write(data);
+                format!("{:x}", hasher.finish())
+            }),
+        );
+
         // TODO: Add other checksum algorithms when dependencies are available
-        
+
         Self { algorithms }
     }
-    
+
     /// Calculate checksum for data
     pub fn calculate_checksum<T>(
         &self,
@@ -1885,11 +1989,13 @@ impl DataIntegrityValidator {
     where
         T: Copy + std::fmt::Debug,
     {
-        let calculator = self.algorithms.get(&algorithm)
-            .ok_or_else(|| CoreError::ComputationError(
-                ErrorContext::new(format!("Unsupported checksum algorithm: {:?}", algorithm))
-            ))?;
-        
+        let calculator = self.algorithms.get(&algorithm).ok_or_else(|| {
+            CoreError::ComputationError(ErrorContext::new(format!(
+                "Unsupported checksum algorithm: {:?}",
+                algorithm
+            )))
+        })?;
+
         // Convert data to bytes for hashing
         let bytes = unsafe {
             std::slice::from_raw_parts(
@@ -1899,7 +2005,7 @@ impl DataIntegrityValidator {
         };
         Ok(calculator(bytes))
     }
-    
+
     /// Verify data against expected checksum
     pub fn verify_checksum<T>(
         &self,
@@ -1949,12 +2055,16 @@ impl NumericDataValidator {
             if value.is_nan() {
                 report.nan_count += 1;
                 if !allow_nan {
-                    report.issues.push("NaN values detected but not allowed".to_string());
+                    report
+                        .issues
+                        .push("NaN values detected but not allowed".to_string());
                 }
             } else if value.is_infinite() {
                 report.infinite_count += 1;
                 if !allow_infinite {
-                    report.issues.push("Infinite values detected but not allowed".to_string());
+                    report
+                        .issues
+                        .push("Infinite values detected but not allowed".to_string());
                 }
             } else {
                 report.finite_count += 1;
@@ -1971,10 +2081,10 @@ impl NumericDataValidator {
         if report.total_count > 0 {
             let finite_ratio = report.finite_count as f64 / report.total_count as f64;
             report.quality_score = finite_ratio;
-            
+
             if finite_ratio < 0.95 {
                 report.issues.push(format!(
-                    "Low finite value ratio: {:.1}%", 
+                    "Low finite value ratio: {:.1}%",
                     finite_ratio * 100.0
                 ));
             }
@@ -1984,7 +2094,7 @@ impl NumericDataValidator {
 
         Ok(report)
     }
-    
+
     /// Detect outliers in numeric data using IQR method
     pub fn detect_outliers<T>(data: &[T]) -> Result<Vec<usize>, CoreError>
     where
@@ -2006,7 +2116,7 @@ impl NumericDataValidator {
         let q1 = sorted_data[q1_index];
         let q3 = sorted_data[q3_index];
         let iqr = q3 - q1;
-        
+
         let lower_bound = q1 - iqr * num_traits::cast(1.5).unwrap_or(T::one());
         let upper_bound = q3 + iqr * num_traits::cast(1.5).unwrap_or(T::one());
 
@@ -2170,11 +2280,11 @@ mod tests {
             min: 0.0,
             max: 100.0,
         };
-        let length_constraint = Constraint::Length {
+        let _length_constraint = Constraint::Length {
             min: Some(1),
             max: Some(50),
         };
-        let enum_constraint = Constraint::Enum(vec!["A".to_string(), "B".to_string()]);
+        let _enum_constraint = Constraint::Enum(vec!["A".to_string(), "B".to_string()]);
 
         match range_constraint {
             Constraint::Range { min, max } => {
@@ -2245,10 +2355,10 @@ mod tests {
     #[test]
     fn test_ndarray_validation() {
         use ndarray::Array2;
-        
+
         let config = ValidationConfig::default();
-        let validator = Validator::new(config).unwrap();
-        
+        let validator = Validator::new(config.clone()).unwrap();
+
         // Create a test array
         let array = Array2::<f64>::zeros((3, 4));
         let constraints = ArrayValidationConstraints {
@@ -2259,10 +2369,12 @@ mod tests {
             check_performance: false,
             element_validator: None,
         };
-        
-        let result = validator.validate_ndarray(&array, &constraints, &config).unwrap();
+
+        let result = validator
+            .validate_ndarray(&array, &constraints, &config)
+            .unwrap();
         assert!(result.is_valid());
-        
+
         // Test with wrong shape
         let constraints_wrong_shape = ArrayValidationConstraints {
             expected_shape: Some(vec![2, 3]),
@@ -2272,23 +2384,25 @@ mod tests {
             check_performance: false,
             element_validator: None,
         };
-        
-        let result = validator.validate_ndarray(&array, &constraints_wrong_shape, &config).unwrap();
+
+        let result = validator
+            .validate_ndarray(&array, &constraints_wrong_shape, &config)
+            .unwrap();
         assert!(!result.is_valid());
     }
-    
+
     #[test]
     fn test_numeric_quality_validation() {
         let data = vec![1.0, 2.0, f64::NAN, 4.0, f64::INFINITY];
         let report = NumericDataValidator::validate_numeric_quality(&data, false, false).unwrap();
-        
+
         assert_eq!(report.total_count, 5);
         assert_eq!(report.finite_count, 3);
         assert_eq!(report.nan_count, 1);
         assert_eq!(report.infinite_count, 1);
         assert!(!report.issues.is_empty());
     }
-    
+
     #[test]
     fn test_outlier_detection() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 100.0]; // 100.0 is an outlier
@@ -2296,47 +2410,55 @@ mod tests {
         assert!(!outliers.is_empty());
         assert!(outliers.contains(&5)); // Index of 100.0
     }
-    
+
     #[test]
     fn test_data_integrity_validator() {
         let validator = DataIntegrityValidator::new();
         let data = vec![1u32, 2u32, 3u32, 4u32];
-        
-        let checksum = validator.calculate_checksum(&data, ChecksumAlgorithm::Hash).unwrap();
+
+        let checksum = validator
+            .calculate_checksum(&data, ChecksumAlgorithm::Hash)
+            .unwrap();
         assert!(!checksum.is_empty());
-        
-        let is_valid = validator.verify_checksum(&data, ChecksumAlgorithm::Hash, &checksum).unwrap();
+
+        let is_valid = validator
+            .verify_checksum(&data, ChecksumAlgorithm::Hash, &checksum)
+            .unwrap();
         assert!(is_valid);
-        
-        let is_invalid = validator.verify_checksum(&data, ChecksumAlgorithm::Hash, "wrong_checksum").unwrap();
+
+        let is_invalid = validator
+            .verify_checksum(&data, ChecksumAlgorithm::Hash, "wrong_checksum")
+            .unwrap();
         assert!(!is_invalid);
     }
-    
+
     #[test]
     fn test_quality_report_generation() {
         use ndarray::Array1;
-        
+
         let config = ValidationConfig::default();
         let validator = Validator::new(config).unwrap();
-        
+
         let array = Array1::from_vec(vec![1.0, 2.0, 3.0, f64::NAN, 5.0]);
-        let report = validator.generate_quality_report(&array, "test_field").unwrap();
-        
+        let report = validator
+            .generate_quality_report(&array, "test_field")
+            .unwrap();
+
         assert!(report.quality_score < 1.0); // Should be less than perfect due to NaN
         assert!(!report.issues.is_empty()); // Should have issues due to NaN
         assert!(report.metrics.completeness < 1.0); // Should be less than 100% complete
     }
-    
+
     #[test]
     fn test_statistical_constraints() {
         use ndarray::Array1;
-        
+
         let config = ValidationConfig::default();
-        let validator = Validator::new(config).unwrap();
-        
+        let validator = Validator::new(config.clone()).unwrap();
+
         // Array with mean around 3.0
         let array = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        
+
         let constraints = ArrayValidationConstraints {
             expected_shape: None,
             field_name: Some("test_array".to_string()),
@@ -2351,10 +2473,12 @@ mod tests {
             check_performance: false,
             element_validator: None,
         };
-        
-        let result = validator.validate_ndarray(&array, &constraints, &config).unwrap();
+
+        let result = validator
+            .validate_ndarray(&array, &constraints, &config)
+            .unwrap();
         assert!(result.is_valid());
-        
+
         // Test with constraints that should fail
         let failing_constraints = ArrayValidationConstraints {
             expected_shape: None,
@@ -2370,18 +2494,20 @@ mod tests {
             check_performance: false,
             element_validator: None,
         };
-        
-        let result = validator.validate_ndarray(&array, &failing_constraints, &config).unwrap();
+
+        let result = validator
+            .validate_ndarray(&array, &failing_constraints, &config)
+            .unwrap();
         assert!(!result.is_valid());
     }
-    
+
     #[test]
     fn test_performance_validation() {
         use ndarray::Array1;
-        
+
         let config = ValidationConfig::default();
-        let validator = Validator::new(config).unwrap();
-        
+        let validator = Validator::new(config.clone()).unwrap();
+
         // Small array - should not trigger performance warnings
         let small_array = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let constraints = ArrayValidationConstraints {
@@ -2392,12 +2518,14 @@ mod tests {
             check_performance: true,
             element_validator: None,
         };
-        
-        let result = validator.validate_ndarray(&small_array, &constraints, &config).unwrap();
+
+        let result = validator
+            .validate_ndarray(&small_array, &constraints, &config)
+            .unwrap();
         assert!(result.is_valid());
         assert!(result.warnings.is_empty());
     }
-    
+
     #[test]
     fn test_shape_constraints() {
         let shape_constraints = ShapeConstraints {
@@ -2407,13 +2535,13 @@ mod tests {
             require_square: false,
             allow_broadcasting: true,
         };
-        
+
         // Test basic structure
         assert_eq!(shape_constraints.dimensions.len(), 2);
         assert_eq!(shape_constraints.min_elements, Some(10));
         assert!(!shape_constraints.require_square);
     }
-    
+
     #[test]
     fn test_quality_issue_types() {
         let issue = QualityIssue {
@@ -2423,7 +2551,7 @@ mod tests {
             severity: ErrorSeverity::Warning,
             suggestion: Some("Fix the data".to_string()),
         };
-        
+
         assert_eq!(issue.issue_type, QualityIssueType::MissingData);
         assert_eq!(issue.severity, ErrorSeverity::Warning);
         assert!(issue.suggestion.is_some());

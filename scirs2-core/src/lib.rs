@@ -217,7 +217,7 @@ pub use crate::numeric::*;
 #[cfg(feature = "parallel")]
 pub use crate::parallel::*;
 #[cfg(feature = "profiling")]
-pub use crate::profiling::{profiling_memory_tracker, Profiler, Timer};
+pub use crate::profiling::{profiling_memory_tracker, Profiler};
 #[cfg(feature = "random")]
 pub use crate::random::*;
 pub use crate::resource::{

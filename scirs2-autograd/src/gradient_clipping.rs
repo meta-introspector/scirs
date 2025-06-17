@@ -408,7 +408,7 @@ impl<F: Float> Tensor<'_, F> {
     /// # Arguments
     /// * `max_norm` - Maximum allowed norm
     pub fn clip_norm(self, max_norm: F) -> Self {
-        let norm = tensor_ops::frobenius_norm(&self);
+        let norm = tensor_ops::frobenius_norm(self);
         let max_norm_tensor = tensor_ops::scalar(max_norm, self.graph());
         let one_tensor = tensor_ops::scalar(F::one(), self.graph());
         let ratio = max_norm_tensor / norm;

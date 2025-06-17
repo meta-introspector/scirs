@@ -938,18 +938,19 @@ mod tests {
 
     #[test]
     fn test_scenario_creation() {
-        let graph = crate::Graph::<f32>::new();
-        let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0], vec![3], &graph);
-        let scenario = create_test_scenario(
-            "test_scenario".to_string(),
-            "A test scenario".to_string(),
-            |x: &Tensor<f32>| Ok(x.clone()),
-            input,
-            StabilityGrade::Good,
-        );
+        crate::VariableEnvironment::<f32>::new().run(|g| {
+            let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0], vec![3], g);
+            let scenario = create_test_scenario(
+                "test_scenario".to_string(),
+                "A test scenario".to_string(),
+                |x: &Tensor<f32>| Ok(x.clone()),
+                input,
+                StabilityGrade::Good,
+            );
 
-        assert_eq!(scenario.name, "test_scenario");
-        assert_eq!(scenario.expected_grade, StabilityGrade::Good);
+            assert_eq!(scenario.name, "test_scenario");
+            assert_eq!(scenario.expected_grade, StabilityGrade::Good);
+        });
     }
 
     #[test]

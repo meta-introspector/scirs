@@ -40,7 +40,7 @@
 
 use crate::error::CoreError;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime};
 use uuid::Uuid;
@@ -50,7 +50,9 @@ use serde::{Deserialize, Serialize};
 
 // W3C Trace Context constants for OpenTelemetry compatibility
 const TRACE_VERSION: u8 = 0;
+#[allow(dead_code)]
 const TRACE_HEADER_NAME: &str = "traceparent";
+#[allow(dead_code)]
 const TRACE_STATE_HEADER_NAME: &str = "tracestate";
 
 /// Distributed tracing system configuration
@@ -586,7 +588,7 @@ impl SpanBuilder {
     }
 }
 
-/// Thread-local storage for current span
+// Thread-local storage for current span
 thread_local! {
     static CURRENT_SPAN: std::cell::RefCell<Option<Arc<Mutex<Span>>>> = std::cell::RefCell::new(None);
 }
@@ -1337,23 +1339,23 @@ fn get_current_memory_usage() -> Result<u64, CoreError> {
 }
 
 /// Global tracing system instance
-static mut GLOBAL_TRACER: Option<Arc<TracingSystem>> = None;
-static TRACER_INIT: std::sync::Once = std::sync::Once::new();
+static GLOBAL_TRACER: std::sync::OnceLock<Arc<TracingSystem>> = std::sync::OnceLock::new();
 
 /// Initialize global tracing system
 pub fn init_tracing(config: TracingConfig) -> Result<(), CoreError> {
-    TRACER_INIT.call_once(|| {
-        let tracer = TracingSystem::new(config).expect("Failed to create tracing system");
-        unsafe {
-            GLOBAL_TRACER = Some(Arc::new(tracer));
+    let tracer = TracingSystem::new(config)?;
+    match GLOBAL_TRACER.set(Arc::new(tracer)) {
+        Ok(()) => Ok(()),
+        Err(_) => {
+            // Already initialized, which is fine
+            Ok(())
         }
-    });
-    Ok(())
+    }
 }
 
 /// Get global tracing system
 pub fn global_tracer() -> Option<Arc<TracingSystem>> {
-    unsafe { GLOBAL_TRACER.as_ref().cloned() }
+    GLOBAL_TRACER.get().cloned()
 }
 
 /// Convenience macro for creating traced functions
@@ -1516,7 +1518,7 @@ impl ResourceAttribution {
 }
 
 /// Enhanced span metrics with resource attribution
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct EnhancedSpanMetrics {
     /// Basic span metrics
@@ -1525,16 +1527,6 @@ pub struct EnhancedSpanMetrics {
     pub resources: ResourceAttribution,
     /// Custom performance counters
     pub performance_counters: HashMap<String, u64>,
-}
-
-impl Default for EnhancedSpanMetrics {
-    fn default() -> Self {
-        Self {
-            basic: SpanMetrics::default(),
-            resources: ResourceAttribution::default(),
-            performance_counters: HashMap::new(),
-        }
-    }
 }
 
 impl EnhancedSpanMetrics {
@@ -1599,7 +1591,7 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
     };
 
     let tracing = TracingSystem::new(config)?;
-    let adaptive_sampler = AdaptiveSampler::new(0.1, 1000.0); // 10% base rate, target 1000 samples/sec
+    let _adaptive_sampler = AdaptiveSampler::new(0.1, 1000.0); // 10% base rate, target 1000 samples/sec
     let batch_exporter = BatchExporter::new(
         Box::new(ConsoleExporter::new(true)),
         50,                     // batch size
@@ -1613,7 +1605,7 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
     computation_span.add_attribute("matrix_size", "1000x1000")?;
     computation_span.add_attribute("algorithm", "block_multiplication")?;
 
-    let result = computation_span.in_span(|| {
+    let _result = computation_span.in_span(|| {
         // Start memory allocation span
         let alloc_span = tracing.start_span("memory_allocation")?;
         alloc_span.add_attribute("allocation_size", "8MB")?;

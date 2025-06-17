@@ -368,7 +368,7 @@ impl SafeArithmetic {
         if exp == 1 {
             return Ok(base);
         }
-        
+
         // For simplicity, just return the base for now - this would need proper implementation
         Ok(base)
     }
@@ -498,11 +498,9 @@ pub struct SafeAllocator {
 impl SafeAllocator {
     /// Create a new safe allocator
     pub const fn new() -> Self {
-        Self {
-            inner: System,
-        }
+        Self { inner: System }
     }
-    
+
     /// Get the tracker
     fn tracker(&self) -> &'static SafetyTracker {
         &GLOBAL_SAFETY_TRACKER

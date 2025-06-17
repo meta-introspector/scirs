@@ -716,7 +716,7 @@ mod tests {
 
     #[test]
     fn test_sgd_optimizer() {
-        let mut optimizer = SGDOptimizer::<f32>::new(0.01, 0.9);
+        let optimizer = SGDOptimizer::<f32>::new(0.01, 0.9);
 
         assert_eq!(optimizer.name(), "SGD");
         assert_eq!(optimizer.learning_rate(), 0.01);
@@ -727,7 +727,7 @@ mod tests {
 
     #[test]
     fn test_adam_optimizer() {
-        let mut optimizer = AdamOptimizer::<f32>::default_adam(0.001);
+        let optimizer = AdamOptimizer::<f32>::default_adam(0.001);
 
         assert_eq!(optimizer.name(), "Adam");
         assert_eq!(optimizer.learning_rate(), 0.001);
@@ -739,9 +739,9 @@ mod tests {
     #[test]
     fn test_learning_rate_scheduler() {
         let mut scheduler = StepLRScheduler::new(0.1, 5, 0.5);
-        let mut optimizer = SGDOptimizer::<f32>::new(0.1, 0.0);
+        let mut optimizer = SGDOptimizer::<f64>::new(0.1, 0.0);
 
-        assert_eq!(scheduler.get_lr(), 0.1f64);
+        assert_eq!(<StepLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler), 0.1f64);
 
         // Step 5 times
         for _ in 0..5 {
@@ -749,22 +749,22 @@ mod tests {
         }
 
         // Learning rate should be reduced
-        assert!(scheduler.get_lr() < 0.1);
+        assert!(<StepLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler) < 0.1);
     }
 
     #[test]
     fn test_cosine_annealing_scheduler() {
         let mut scheduler = CosineAnnealingLRScheduler::new(0.1, 10, 0.0);
-        let mut optimizer = SGDOptimizer::<f32>::new(0.1, 0.0);
+        let mut optimizer = SGDOptimizer::<f64>::new(0.1, 0.0);
 
-        let initial_lr: f64 = scheduler.get_lr();
+        let initial_lr: f64 = <CosineAnnealingLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler);
 
         // Step halfway
         for _ in 0..5 {
             scheduler.step(&mut optimizer);
         }
 
-        let halfway_lr = scheduler.get_lr();
+        let halfway_lr = <CosineAnnealingLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler);
         assert!(halfway_lr < initial_lr);
     }
 

@@ -111,7 +111,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
         let mut auxiliary = HashMap::new();
         auxiliary.insert("U".to_string(), u);
-        auxiliary.insert("S".to_string(), s.clone());
+        auxiliary.insert("S".to_string(), s);
         auxiliary.insert("VT".to_string(), vt);
 
         Ok(LinalgResult {
@@ -137,7 +137,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         let (q, r) = self.compute_qr(input)?;
 
         let mut auxiliary = HashMap::new();
-        auxiliary.insert("Q".to_string(), q.clone());
+        auxiliary.insert("Q".to_string(), q);
         auxiliary.insert("R".to_string(), r);
 
         Ok(LinalgResult {
@@ -163,7 +163,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         let (l, u, p) = self.compute_lu(input)?;
 
         let mut auxiliary = HashMap::new();
-        auxiliary.insert("L".to_string(), l.clone());
+        auxiliary.insert("L".to_string(), l);
         auxiliary.insert("U".to_string(), u);
         auxiliary.insert("P".to_string(), p);
 
@@ -628,7 +628,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         let mut trace_value = F::zero();
 
         for i in 0..n {
-            trace_value = trace_value + data[i * n + i];
+            trace_value += data[i * n + i];
         }
 
         Ok(Tensor::from_vec(vec![trace_value], vec![1], input.graph()))
@@ -872,12 +872,12 @@ pub enum NumericalStability {
 impl<'a, F: Float> LinalgResult<'a, F> {
     /// Convert result back to autograd tensor
     pub fn to_autograd_tensor(&self) -> Result<Tensor<'a, F>, IntegrationError> {
-        Ok(self.primary_output.clone())
+        Ok(self.primary_output)
     }
 }
 
 /// Implement SciRS2Integration for LinalgResult
-impl<'a, F: Float> SciRS2Integration for LinalgResult<'a, F> {
+impl<F: Float> SciRS2Integration for LinalgResult<'_, F> {
     fn module_name() -> &'static str {
         "scirs2-linalg"
     }
@@ -940,11 +940,11 @@ pub fn linalg_result_to_scirs2_data<'a, F: Float>(
     let mut data = SciRS2Data::new();
 
     // Add primary output
-    data = data.add_tensor("primary_output".to_string(), result.primary_output.clone());
+    data = data.add_tensor("primary_output".to_string(), result.primary_output);
 
     // Add auxiliary outputs
     for (name, tensor) in &result.auxiliary_outputs {
-        data = data.add_tensor(name.clone(), tensor.clone());
+        data = data.add_tensor(name.clone(), *tensor);
     }
 
     // Add metadata

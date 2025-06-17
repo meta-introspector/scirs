@@ -689,6 +689,10 @@ pub mod continuous_monitoring;
 /// Function-level performance hinting system
 pub mod performance_hints;
 
+/// Production profiling with real-workload analysis and bottleneck identification
+#[path = "profiling/production.rs"]
+pub mod production;
+
 /// Advanced profiling capabilities for Alpha 6
 pub mod advanced {
     use super::*;

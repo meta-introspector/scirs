@@ -62,7 +62,7 @@ impl MemoryInfo {
     #[cfg(target_os = "linux")]
     fn detect_linux() -> CoreResult<Self> {
         let meminfo = fs::read_to_string("/proc/meminfo").map_err(|e| {
-            CoreError::IoError(crate::error::ErrorContext::new(&format!(
+            CoreError::IoError(crate::error::ErrorContext::new(format!(
                 "Failed to read /proc/meminfo: {}",
                 e
             )))
@@ -296,20 +296,15 @@ impl SwapInfo {
 }
 
 /// Memory pressure levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum MemoryPressure {
     /// Low memory pressure
+    #[default]
     Low,
     /// Medium memory pressure
     Medium,
     /// High memory pressure
     High,
-}
-
-impl Default for MemoryPressure {
-    fn default() -> Self {
-        MemoryPressure::Low
-    }
 }
 
 /// Memory allocation strategies

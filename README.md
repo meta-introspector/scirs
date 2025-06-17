@@ -463,33 +463,28 @@ The following modules are in preview state and may undergo API changes:
 - **Memory Metrics** for detailed memory usage analysis
 - **Optimized SIMD Operations** for performance-critical code
 
-### Current Focus: Quality and Performance
+### Key Capabilities
 
-Recent accomplishments in Alpha 5:
-- **Advanced Error Handling**: Comprehensive error framework with intelligent recovery strategies, async support, and advanced diagnostics engine
-- **Computer Vision Registration**: Complete implementation of rigid, affine, homography, and non-rigid registration algorithms with RANSAC robustness
-- **Performance Benchmarking**: Automated benchmarking framework with SciPy comparison and optimization identification
-- **Numerical Improvements**: Enhanced eigenvalue solver precision (20x improvement) and comprehensive quality fixes
+SciRS2 provides:
+- **Advanced Error Handling**: Comprehensive error framework with recovery strategies, async support, and diagnostics engine
+- **Computer Vision Registration**: Rigid, affine, homography, and non-rigid registration algorithms with RANSAC robustness
+- **Performance Benchmarking**: Automated benchmarking framework with SciPy comparison and optimization tools
+- **Numerical Precision**: High-precision eigenvalue solvers and optimized numerical algorithms
 
-Currently working on:
-- API stabilization and consistency improvements
-- Performance optimization based on benchmarking results  
-- Enhanced cross-module integration
-- Community feedback integration and beta preparation
+### Installation
 
-### Publication Status and Plans
+All SciRS2 modules are available on crates.io. Add the modules you need to your `Cargo.toml`:
 
-All SciRS2 modules have been published to crates.io as alpha releases (0.1.0-alpha.5), making the entire ecosystem available to the Rust community while development continues.
+```toml
+[dependencies]
+scirs2 = "0.1.0-alpha.5"  # Core library with all modules
+# Or individual modules:
+scirs2-linalg = "0.1.0-alpha.5"  # Linear algebra
+scirs2-stats = "0.1.0-alpha.5"   # Statistics
+# ... and more
+```
 
-- **Alpha Release (0.1.0-alpha.1)**: Initial modules released on crates.io (April 2025)
-- **Alpha Release (0.1.0-alpha.2)**: All modules released on crates.io (May 2025)
-- **Alpha Release (0.1.0-alpha.3)**: Fixed memory metrics snapshot system and updated tests (May 2025)
-- **Alpha Release (0.1.0-alpha.4)**: Enhanced autograd module, fixed matrix operations, and cleaned up repository (June 2025)
-- **Alpha Release (0.1.0-alpha.5)**: Advanced error handling, computer vision registration algorithms, performance benchmarking framework, and comprehensive quality improvements (June 2025)
-- **Beta Release (0.1.0-beta.1)**: Planned after incorporating feedbacks (August 2025)
-- **First Stable Release (0.1.0)**: Targeted after API stabilization and comprehensive testing (September 2025)
-
-For a detailed development roadmap, check the [TODO.md](TODO.md) file.
+For development roadmap and contribution guidelines, see [TODO.md](TODO.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Performance Characteristics
 

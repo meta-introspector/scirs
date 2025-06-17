@@ -8,12 +8,14 @@ use ndarray::{s, Array1};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
+use super::config::{EnhancedPeriodogramConfig, SpectralAnalysisConfig};
+use super::utils::{
+    BispectrumFeatures, CrossFrequencyCouplingResult, FrequencyFeatureResult,
+    MultiscaleSpectralResult, PhaseSpectrumFeatures, PhaseSpectrumResult, ScaleSpectralFeatures,
+    SpectralPeakResult,
+};
 use crate::error::{Result, TimeSeriesError};
 use crate::utils::autocorrelation;
-use super::config::{SpectralAnalysisConfig, EnhancedPeriodogramConfig};
-use super::utils::{SpectralPeakResult, PhaseSpectrumResult, FrequencyFeatureResult, 
-                   MultiscaleSpectralResult, CrossFrequencyCouplingResult,
-                   PhaseSpectrumFeatures, BispectrumFeatures, ScaleSpectralFeatures};
 
 /// Comprehensive frequency domain features for time series analysis
 #[derive(Debug, Clone)]
@@ -412,9 +414,13 @@ where
             // Cross-periodogram analysis
             cross_periodogram: Vec::new(),
             coherence_function: Vec::new(),
-            phase_spectrum_result: (Vec::new(), Vec::new(), F::zero(), 
-                                   PhaseSpectrumFeatures::default(), 
-                                   BispectrumFeatures::default()),
+            phase_spectrum_result: (
+                Vec::new(),
+                Vec::new(),
+                F::zero(),
+                PhaseSpectrumFeatures::default(),
+                BispectrumFeatures::default(),
+            ),
             periodogram_xcorr: Vec::new(),
 
             // Statistical analysis
@@ -546,15 +552,18 @@ where
     let total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
     let spectral_centroid = calculate_spectral_centroid(&spectrum, &frequencies);
     let spectral_spread = calculate_spectral_spread(&spectrum, &frequencies, spectral_centroid);
-    let spectral_skewness = calculate_spectral_skewness(&spectrum, &frequencies, spectral_centroid, spectral_spread);
-    let spectral_kurtosis = calculate_spectral_kurtosis(&spectrum, &frequencies, spectral_centroid, spectral_spread);
+    let spectral_skewness =
+        calculate_spectral_skewness(&spectrum, &frequencies, spectral_centroid, spectral_spread);
+    let spectral_kurtosis =
+        calculate_spectral_kurtosis(&spectrum, &frequencies, spectral_centroid, spectral_spread);
 
     // Calculate other spectral features
     let spectral_entropy = calculate_spectral_entropy(&spectrum);
-    let spectral_rolloff = calculate_spectral_rolloff(&spectrum, &frequencies, F::from(0.95).unwrap());
+    let spectral_rolloff =
+        calculate_spectral_rolloff(&spectrum, &frequencies, F::from(0.95).unwrap());
     let spectral_flux = F::zero(); // Would need previous spectrum for comparison
     let dominant_frequency = find_dominant_frequency(&spectrum, &frequencies);
-    
+
     // Calculate spectral peaks
     let (peak_frequencies, peak_magnitudes) = find_spectral_peaks(&spectrum, &frequencies)?;
     let spectral_peaks = peak_frequencies.len();
@@ -898,17 +907,15 @@ where
     // For now, return a smoothed version of the regular periodogram
     let periodogram = calculate_simple_periodogram(ts)?;
     let order = config.enhanced_ar_order.min(periodogram.len() / 4);
-    
+
     let mut ar_periodogram = periodogram.clone();
-    
+
     // Apply simple smoothing as placeholder for proper AR method
     for i in order..(ar_periodogram.len() - order) {
-        let sum = (0..2*order+1).fold(F::zero(), |acc, j| {
-            acc + periodogram[i - order + j]
-        });
-        ar_periodogram[i] = sum / F::from(2*order + 1).unwrap();
+        let sum = (0..2 * order + 1).fold(F::zero(), |acc, j| acc + periodogram[i - order + j]);
+        ar_periodogram[i] = sum / F::from(2 * order + 1).unwrap();
     }
-    
+
     Ok(ar_periodogram)
 }
 
@@ -926,32 +933,36 @@ where
     // Simplified FFT-based periodogram calculation
     // In a real implementation, you would use a proper FFT library
     let mut periodogram = vec![F::zero(); n / 2];
-    
+
     // Calculate power spectrum (simplified)
     let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
-    let variance = ts.iter().fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean)) / F::from_usize(n).unwrap();
-    
+    let variance = ts
+        .iter()
+        .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
+        / F::from_usize(n).unwrap();
+
     // For demonstration, create a simple spectrum based on autocorrelation
     for k in 0..periodogram.len() {
         let mut power = F::zero();
-        let freq = F::from(k).unwrap() / F::from(n).unwrap() * F::from(2.0 * std::f64::consts::PI).unwrap();
-        
-        for lag in 0..std::cmp::min(n/4, 50) {
+        let freq = F::from(k).unwrap() / F::from(n).unwrap()
+            * F::from(2.0 * std::f64::consts::PI).unwrap();
+
+        for lag in 0..std::cmp::min(n / 4, 50) {
             let mut autocorr = F::zero();
             let mut count = 0;
-            
+
             for i in 0..(n - lag) {
                 autocorr = autocorr + (ts[i] - mean) * (ts[i + lag] - mean);
                 count += 1;
             }
-            
+
             if count > 0 {
                 autocorr = autocorr / F::from_usize(count).unwrap();
                 let lag_f = F::from(lag).unwrap();
                 power = power + autocorr * (freq * lag_f).cos();
             }
         }
-        
+
         periodogram[k] = power.abs() / variance;
     }
 
@@ -992,7 +1003,8 @@ where
                 let arg =
                     F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64).unwrap();
                 let arg2 = F::from(2.0).unwrap() * arg;
-                *w = F::from(0.42).unwrap() - F::from(0.5).unwrap() * arg.cos() + F::from(0.08).unwrap() * arg2.cos();
+                *w = F::from(0.42).unwrap() - F::from(0.5).unwrap() * arg.cos()
+                    + F::from(0.08).unwrap() * arg2.cos();
             }
         }
         _ => {
@@ -1022,9 +1034,11 @@ where
         return F::zero();
     }
 
-    let weighted_sum = spectrum.iter().zip(frequencies.iter())
+    let weighted_sum = spectrum
+        .iter()
+        .zip(frequencies.iter())
         .fold(F::zero(), |acc, (&power, &freq)| acc + power * freq);
-    
+
     weighted_sum / total_power
 }
 
@@ -1038,17 +1052,25 @@ where
         return F::zero();
     }
 
-    let weighted_variance = spectrum.iter().zip(frequencies.iter())
-        .fold(F::zero(), |acc, (&power, &freq)| {
-            let diff = freq - centroid;
-            acc + power * diff * diff
-        });
-    
+    let weighted_variance =
+        spectrum
+            .iter()
+            .zip(frequencies.iter())
+            .fold(F::zero(), |acc, (&power, &freq)| {
+                let diff = freq - centroid;
+                acc + power * diff * diff
+            });
+
     (weighted_variance / total_power).sqrt()
 }
 
 /// Calculate spectral skewness
-pub fn calculate_spectral_skewness<F>(spectrum: &[F], frequencies: &[F], centroid: F, spread: F) -> F
+pub fn calculate_spectral_skewness<F>(
+    spectrum: &[F],
+    frequencies: &[F],
+    centroid: F,
+    spread: F,
+) -> F
 where
     F: Float + FromPrimitive,
 {
@@ -1061,17 +1083,25 @@ where
         return F::zero();
     }
 
-    let weighted_third_moment = spectrum.iter().zip(frequencies.iter())
-        .fold(F::zero(), |acc, (&power, &freq)| {
-            let standardized = (freq - centroid) / spread;
-            acc + power * standardized * standardized * standardized
-        });
-    
+    let weighted_third_moment =
+        spectrum
+            .iter()
+            .zip(frequencies.iter())
+            .fold(F::zero(), |acc, (&power, &freq)| {
+                let standardized = (freq - centroid) / spread;
+                acc + power * standardized * standardized * standardized
+            });
+
     weighted_third_moment / total_power
 }
 
 /// Calculate spectral kurtosis
-pub fn calculate_spectral_kurtosis<F>(spectrum: &[F], frequencies: &[F], centroid: F, spread: F) -> F
+pub fn calculate_spectral_kurtosis<F>(
+    spectrum: &[F],
+    frequencies: &[F],
+    centroid: F,
+    spread: F,
+) -> F
 where
     F: Float + FromPrimitive,
 {
@@ -1084,13 +1114,16 @@ where
         return F::zero();
     }
 
-    let weighted_fourth_moment = spectrum.iter().zip(frequencies.iter())
-        .fold(F::zero(), |acc, (&power, &freq)| {
-            let standardized = (freq - centroid) / spread;
-            let standardized_squared = standardized * standardized;
-            acc + power * standardized_squared * standardized_squared
-        });
-    
+    let weighted_fourth_moment =
+        spectrum
+            .iter()
+            .zip(frequencies.iter())
+            .fold(F::zero(), |acc, (&power, &freq)| {
+                let standardized = (freq - centroid) / spread;
+                let standardized_squared = standardized * standardized;
+                acc + power * standardized_squared * standardized_squared
+            });
+
     weighted_fourth_moment / total_power - F::from(3.0).unwrap()
 }
 
@@ -1111,7 +1144,7 @@ where
             entropy = entropy - prob * prob.ln();
         }
     }
-    
+
     entropy
 }
 
@@ -1122,7 +1155,7 @@ where
 {
     let total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
     let target_power = total_power * threshold;
-    
+
     let mut cumulative_power = F::zero();
     for (i, &power) in spectrum.iter().enumerate() {
         cumulative_power = cumulative_power + power;
@@ -1130,7 +1163,7 @@ where
             return frequencies[i];
         }
     }
-    
+
     frequencies.last().copied().unwrap_or(F::zero())
 }
 
@@ -1139,12 +1172,13 @@ pub fn find_dominant_frequency<F>(spectrum: &[F], frequencies: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
-    let max_idx = spectrum.iter()
+    let max_idx = spectrum
+        .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .map(|(idx, _)| idx)
         .unwrap_or(0);
-    
+
     frequencies[max_idx]
 }
 
@@ -1155,19 +1189,19 @@ where
 {
     let mut peak_frequencies = Vec::new();
     let mut peak_magnitudes = Vec::new();
-    
+
     if spectrum.len() < 3 {
         return Ok((peak_frequencies, peak_magnitudes));
     }
-    
+
     // Simple peak detection: find local maxima
     for i in 1..(spectrum.len() - 1) {
-        if spectrum[i] > spectrum[i-1] && spectrum[i] > spectrum[i+1] {
+        if spectrum[i] > spectrum[i - 1] && spectrum[i] > spectrum[i + 1] {
             peak_frequencies.push(frequencies[i]);
             peak_magnitudes.push(spectrum[i]);
         }
     }
-    
+
     Ok((peak_frequencies, peak_magnitudes))
 }
 
@@ -1177,16 +1211,16 @@ where
     F: Float + FromPrimitive,
 {
     let mut bands = Vec::new();
-    
+
     // Standard EEG frequency bands (normalized)
     let band_boundaries = [
         (F::from(0.0).unwrap(), F::from(0.05).unwrap()), // Delta (0-4Hz normalized to 0-0.05)
-        (F::from(0.05).unwrap(), F::from(0.1).unwrap()),  // Theta (4-8Hz)
-        (F::from(0.1).unwrap(), F::from(0.15).unwrap()),  // Alpha (8-12Hz)
+        (F::from(0.05).unwrap(), F::from(0.1).unwrap()), // Theta (4-8Hz)
+        (F::from(0.1).unwrap(), F::from(0.15).unwrap()), // Alpha (8-12Hz)
         (F::from(0.15).unwrap(), F::from(0.375).unwrap()), // Beta (12-30Hz)
-        (F::from(0.375).unwrap(), F::from(0.5).unwrap()),  // Gamma (30-100Hz)
+        (F::from(0.375).unwrap(), F::from(0.5).unwrap()), // Gamma (30-100Hz)
     ];
-    
+
     for (low, high) in band_boundaries.iter() {
         let mut band_power = F::zero();
         for (i, &freq) in frequencies.iter().enumerate() {
@@ -1196,7 +1230,7 @@ where
         }
         bands.push(band_power);
     }
-    
+
     bands
 }
 
@@ -1217,20 +1251,20 @@ where
     let frequencies = (0..spectrum.len())
         .map(|i| F::from(i).unwrap() / F::from(spectrum.len() * 2).unwrap())
         .collect::<Vec<_>>();
-    
+
     let mut features = SpectralAnalysisFeatures::default();
-    
+
     if config.calculate_welch_psd {
         features.welch_psd = spectrum.clone();
     }
-    
+
     if config.calculate_periodogram_psd {
         features.periodogram_psd = spectrum.clone();
     }
-    
+
     features.total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
     features.frequency_resolution = F::from(1.0).unwrap() / F::from(ts.len()).unwrap();
-    
+
     // Calculate frequency bands
     let bands = calculate_frequency_bands(&spectrum, &frequencies);
     if bands.len() >= 5 {
@@ -1240,10 +1274,10 @@ where
         features.beta_power = bands[3];
         features.gamma_power = bands[4];
     }
-    
+
     features.spectral_shannon_entropy = calculate_spectral_entropy(&spectrum);
     features.spectral_flatness = calculate_spectral_flatness(&spectrum);
-    
+
     Ok(features)
 }
 
@@ -1255,12 +1289,12 @@ where
     if spectrum.is_empty() {
         return F::zero();
     }
-    
+
     // Geometric mean / Arithmetic mean
     let mut geometric_mean = F::one();
     let mut arithmetic_mean = F::zero();
     let mut count = 0;
-    
+
     for &power in spectrum.iter() {
         if power > F::zero() {
             geometric_mean = geometric_mean * power;
@@ -1268,15 +1302,15 @@ where
             count += 1;
         }
     }
-    
+
     if count == 0 {
         return F::zero();
     }
-    
+
     let count_f = F::from_usize(count).unwrap();
     geometric_mean = geometric_mean.powf(F::one() / count_f);
     arithmetic_mean = arithmetic_mean / count_f;
-    
+
     if arithmetic_mean == F::zero() {
         F::zero()
     } else {
@@ -1285,8 +1319,12 @@ where
 }
 
 // Additional placeholder functions for completeness
-pub fn calculate_window_analysis<F>(_ts: &Array1<F>, config: &EnhancedPeriodogramConfig) -> Result<WindowTypeInfo<F>>
-where F: Float + FromPrimitive,
+pub fn calculate_window_analysis<F>(
+    _ts: &Array1<F>,
+    config: &EnhancedPeriodogramConfig,
+) -> Result<WindowTypeInfo<F>>
+where
+    F: Float + FromPrimitive,
 {
     Ok(WindowTypeInfo {
         window_name: config.primary_window_type.clone(),
@@ -1295,81 +1333,115 @@ where F: Float + FromPrimitive,
 }
 
 pub fn calculate_window_effectiveness<F>(_window_info: &WindowTypeInfo<F>) -> F
-where F: Float + FromPrimitive,
+where
+    F: Float + FromPrimitive,
 {
     F::from(0.8).unwrap() // Placeholder
 }
 
 pub fn calculate_spectral_leakage<F>(_window_info: &WindowTypeInfo<F>) -> F
-where F: Float + FromPrimitive,
+where
+    F: Float + FromPrimitive,
 {
     F::from(0.1).unwrap() // Placeholder
 }
 
-pub fn calculate_periodogram_confidence_intervals<F>(_periodogram: &[F], _config: &EnhancedPeriodogramConfig) -> Result<Vec<(F, F)>>
-where F: Float + FromPrimitive,
+pub fn calculate_periodogram_confidence_intervals<F>(
+    _periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
+) -> Result<Vec<(F, F)>>
+where
+    F: Float + FromPrimitive,
 {
     Ok(Vec::new()) // Placeholder
 }
 
-pub fn calculate_peak_significance<F>(_periodogram: &[F], _config: &EnhancedPeriodogramConfig) -> Result<Vec<F>>
-where F: Float + FromPrimitive,
+pub fn calculate_peak_significance<F>(
+    _periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
+) -> Result<Vec<F>>
+where
+    F: Float + FromPrimitive,
 {
     Ok(Vec::new()) // Placeholder
 }
 
-pub fn calculate_bias_corrected_periodogram<F>(periodogram: &[F], _config: &EnhancedPeriodogramConfig) -> Result<Vec<F>>
-where F: Float + FromPrimitive,
+pub fn calculate_bias_corrected_periodogram<F>(
+    periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
+) -> Result<Vec<F>>
+where
+    F: Float + FromPrimitive,
 {
     Ok(periodogram.to_vec()) // Placeholder
 }
 
-pub fn calculate_variance_reduced_periodogram<F>(periodogram: &[F], _config: &EnhancedPeriodogramConfig) -> Result<Vec<F>>
-where F: Float + FromPrimitive,
+pub fn calculate_variance_reduced_periodogram<F>(
+    periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
+) -> Result<Vec<F>>
+where
+    F: Float + FromPrimitive,
 {
     Ok(periodogram.to_vec()) // Placeholder
 }
 
-pub fn calculate_smoothed_periodogram<F>(periodogram: &[F], _config: &EnhancedPeriodogramConfig) -> Result<Vec<F>>
-where F: Float + FromPrimitive,
+pub fn calculate_smoothed_periodogram<F>(
+    periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
+) -> Result<Vec<F>>
+where
+    F: Float + FromPrimitive,
 {
     Ok(periodogram.to_vec()) // Placeholder
 }
 
-pub fn calculate_zero_padded_periodogram<F>(ts: &Array1<F>, _config: &EnhancedPeriodogramConfig) -> Result<Vec<F>>
-where F: Float + FromPrimitive + Debug + std::iter::Sum,
+pub fn calculate_zero_padded_periodogram<F>(
+    ts: &Array1<F>,
+    _config: &EnhancedPeriodogramConfig,
+) -> Result<Vec<F>>
+where
+    F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
     calculate_simple_periodogram(ts) // Placeholder
 }
 
-pub fn calculate_interpolated_periodogram<F>(periodogram: &[F], _config: &EnhancedPeriodogramConfig) -> Result<Vec<F>>
-where F: Float + FromPrimitive,
+pub fn calculate_interpolated_periodogram<F>(
+    periodogram: &[F],
+    _config: &EnhancedPeriodogramConfig,
+) -> Result<Vec<F>>
+where
+    F: Float + FromPrimitive,
 {
     Ok(periodogram.to_vec()) // Placeholder
 }
 
 pub fn calculate_zero_padding_effectiveness<F>(_padded: &[F], _original: &[F]) -> F
-where F: Float + FromPrimitive,
+where
+    F: Float + FromPrimitive,
 {
     F::from(0.9).unwrap() // Placeholder
 }
 
 pub fn calculate_interpolation_effectiveness<F>(_interpolated: &[F], _original: &[F]) -> F
-where F: Float + FromPrimitive,
+where
+    F: Float + FromPrimitive,
 {
     F::from(0.85).unwrap() // Placeholder
 }
 
 pub fn calculate_snr_from_periodogram<F>(periodogram: &[F]) -> Result<F>
-where F: Float + FromPrimitive,
+where
+    F: Float + FromPrimitive,
 {
     if periodogram.is_empty() {
         return Ok(F::zero());
     }
-    
+
     let max_power = periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
-    let avg_power = periodogram.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(periodogram.len()).unwrap();
-    
+    let avg_power = periodogram.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from_usize(periodogram.len()).unwrap();
+
     if avg_power == F::zero() {
         Ok(F::zero())
     } else {
@@ -1378,15 +1450,16 @@ where F: Float + FromPrimitive,
 }
 
 pub fn calculate_dynamic_range<F>(periodogram: &[F]) -> F
-where F: Float + FromPrimitive,
+where
+    F: Float + FromPrimitive,
 {
     if periodogram.is_empty() {
         return F::zero();
     }
-    
+
     let max_power = periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
     let min_power = periodogram.iter().fold(F::infinity(), |a, &b| a.min(b));
-    
+
     if min_power == F::zero() || max_power == F::zero() {
         F::zero()
     } else {
@@ -1395,15 +1468,16 @@ where F: Float + FromPrimitive,
 }
 
 pub fn calculate_spectral_purity<F>(periodogram: &[F]) -> F
-where F: Float + FromPrimitive,
+where
+    F: Float + FromPrimitive,
 {
     if periodogram.len() < 2 {
         return F::zero();
     }
-    
+
     let max_power = periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
     let total_power = periodogram.iter().fold(F::zero(), |acc, &x| acc + x);
-    
+
     if total_power == F::zero() {
         F::zero()
     } else {

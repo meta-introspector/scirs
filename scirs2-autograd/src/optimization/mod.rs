@@ -388,7 +388,8 @@ impl<F: Float> PatternMatcher<F> {
     }
 
     /// Check if a tensor matches a pattern for simplification
-    pub fn matches_simplification_pattern(
+    #[allow(dead_code)]
+    pub(crate) fn matches_simplification_pattern(
         &self,
         _tensor_internal: &TensorInternal<F>,
     ) -> Option<SimplificationPattern> {
@@ -397,19 +398,26 @@ impl<F: Float> PatternMatcher<F> {
     }
 
     /// Check if tensors can be fused
-    pub fn can_fuse(&self, _tensor1: &TensorInternal<F>, _tensor2: &TensorInternal<F>) -> bool {
+    #[allow(dead_code)]
+    pub(crate) fn can_fuse(
+        &self,
+        _tensor1: &TensorInternal<F>,
+        _tensor2: &TensorInternal<F>,
+    ) -> bool {
         // Temporarily disabled - would be implemented with fusion analysis
         false
     }
 
     /// Check if a tensor represents a constant
-    pub fn is_constant(&self, _tensor_internal: &TensorInternal<F>) -> bool {
+    #[allow(dead_code)]
+    pub(crate) fn is_constant(&self, _tensor_internal: &TensorInternal<F>) -> bool {
         // Temporarily disabled - would be implemented with constant analysis
         false
     }
 
     /// Check if a tensor is dead (unreachable from outputs)
-    pub fn is_dead(
+    #[allow(dead_code)]
+    pub(crate) fn is_dead(
         &self,
         _tensor_internal: &TensorInternal<F>,
         _reachable: &HashSet<TensorID>,

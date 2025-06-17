@@ -847,14 +847,11 @@ mod tests {
             min_length: Some(3),
             max_length: Some(20),
             allowed_characters: Some(allowed_chars),
+            #[cfg(feature = "regex")]
+            pattern: None,
             check_injection_attacks: true,
             field_name: Some("username".to_string()),
         };
-
-        #[cfg(feature = "regex")]
-        {
-            constraints.pattern = None;
-        }
 
         // Valid string
         let result = validator.validate_string("validuser123", &constraints);

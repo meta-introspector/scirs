@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fmt;
 use std::fs;
+use std::str::FromStr;
 use std::path::Path;
 use std::sync::RwLock;
 use std::time::SystemTime;
@@ -86,16 +87,19 @@ impl fmt::Display for Environment {
     }
 }
 
-impl Environment {
+impl std::str::FromStr for Environment {
+    type Err = std::convert::Infallible;
+
     /// Parse environment from string
-    pub fn from_str(s: &str) -> Self {
-        match s.to_lowercase().as_str() {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let env = match s.to_lowercase().as_str() {
             "dev" | "development" => Environment::Development,
             "test" | "testing" => Environment::Testing,
             "stage" | "staging" => Environment::Staging,
             "prod" | "production" => Environment::Production,
             name => Environment::Custom(name.to_string()),
-        }
+        };
+        Ok(env)
     }
 }
 
@@ -272,7 +276,7 @@ impl ProductionConfig {
 
         // Determine environment from ENV var
         let env_str = env::var("SCIRS_ENV").unwrap_or_else(|_| "development".to_string());
-        let environment = Environment::from_str(&env_str);
+        let environment = Environment::from_str(&env_str).unwrap_or(Environment::Development);
 
         Self {
             entries: RwLock::new(HashMap::new()),

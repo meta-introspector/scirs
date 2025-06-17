@@ -336,7 +336,8 @@ mod tests {
         writeln!(temp_file, "2 3 2.0").unwrap();
         temp_file.flush().unwrap();
 
-        let graph: DiGraph<i32, f64> = read_edge_list_format_digraph(temp_file.path(), true).unwrap();
+        let graph: DiGraph<i32, f64> =
+            read_edge_list_format_digraph(temp_file.path(), true).unwrap();
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
     }

@@ -27,9 +27,8 @@ use std::fmt::Debug;
 
 // Import functions from utils module
 use super::utils::{
-    find_min_max, calculate_std_dev,
-    coarse_grain_series, refined_coarse_grain_series, get_ordinal_pattern,
-    discretize_and_get_probabilities, discretize_value, linear_fit
+    calculate_std_dev, coarse_grain_series, discretize_and_get_probabilities, discretize_value,
+    find_min_max, get_ordinal_pattern, linear_fit, refined_coarse_grain_series,
 };
 
 /// Calculate approximate entropy
@@ -767,7 +766,10 @@ where
 
 /// Calculate refined composite multiscale entropy
 #[allow(dead_code)]
-pub fn calculate_refined_composite_multiscale_entropy<F>(ts: &Array1<F>, n_scales: usize) -> Result<F>
+pub fn calculate_refined_composite_multiscale_entropy<F>(
+    ts: &Array1<F>,
+    n_scales: usize,
+) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -1308,7 +1310,6 @@ where
     Ok(F::from(hurst).unwrap().max(F::zero()).min(F::one()))
 }
 
-
 // =================================
 // Additional Simple Entropy Functions
 // =================================
@@ -1409,8 +1410,10 @@ mod tests {
 
     #[test]
     fn test_hurst_exponent() {
-        let data = Array1::from_vec(vec![1.0, 1.1, 1.2, 1.15, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5,
-                                         1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2.0]);
+        let data = Array1::from_vec(vec![
+            1.0, 1.1, 1.2, 1.15, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8,
+            1.85, 1.9, 1.95, 2.0,
+        ]);
         let result = calculate_hurst_exponent(&data);
         assert!(result.is_ok());
         let hurst = result.unwrap();
@@ -1420,8 +1423,10 @@ mod tests {
 
     #[test]
     fn test_dfa_exponent() {
-        let data = Array1::from_vec(vec![1.0, 1.1, 1.2, 1.15, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5,
-                                         1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2.0]);
+        let data = Array1::from_vec(vec![
+            1.0, 1.1, 1.2, 1.15, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8,
+            1.85, 1.9, 1.95, 2.0,
+        ]);
         let result = calculate_dfa_exponent(&data);
         assert!(result.is_ok());
         assert!(result.unwrap() >= 0.0);
@@ -1437,8 +1442,9 @@ mod tests {
 
     #[test]
     fn test_multiscale_entropy() {
-        let data = Array1::from_vec(vec![1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 
-                                         1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0]);
+        let data = Array1::from_vec(vec![
+            1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0,
+        ]);
         let result = calculate_multiscale_entropy(&data, 3, 2, 0.1);
         assert!(result.is_ok());
         let entropies = result.unwrap();

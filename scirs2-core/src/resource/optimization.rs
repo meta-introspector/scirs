@@ -124,7 +124,7 @@ impl OptimizationParams {
             .powf(1.0 / 3.0)) as usize;
 
         // Ensure it's a reasonable size (between 4KB and 64MB)
-        geometric_mean.max(4 * 1024).min(64 * 1024 * 1024)
+        geometric_mean.clamp(4 * 1024, 64 * 1024 * 1024)
     }
 
     /// Determine if SIMD should be enabled
@@ -218,10 +218,10 @@ impl CacheParams {
         let alignment = cache_line_size;
 
         // Prefetch distance based on cache size
-        let prefetch_distance = (cpu.cache_l1_kb * 1024 / 16).max(64).min(1024);
+        let prefetch_distance = (cpu.cache_l1_kb * 1024 / 16).clamp(64, 1024);
 
         // Tile size based on L1 cache
-        let tile_size = (cpu.cache_l1_kb * 1024 / 8).max(64).min(4096);
+        let tile_size = (cpu.cache_l1_kb * 1024 / 8).clamp(64, 4096);
 
         Self {
             cache_line_size,
