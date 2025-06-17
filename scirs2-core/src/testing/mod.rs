@@ -16,10 +16,10 @@
 //! - **Security auditing**: Input validation and bounds checking verification
 
 pub mod fuzzing;
-pub mod property_based;
-pub mod stress;
 pub mod large_scale;
+pub mod property_based;
 pub mod security;
+pub mod stress;
 
 use crate::error::{CoreError, CoreResult};
 use std::time::{Duration, Instant};
@@ -164,11 +164,9 @@ impl TestRunner {
         }
 
         let start_time = Instant::now();
-        
+
         // Execute the test with timeout monitoring
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            test_fn()
-        }));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| test_fn()));
 
         let duration = start_time.elapsed();
 
@@ -193,11 +191,15 @@ impl TestRunner {
                 } else {
                     "Unknown panic".to_string()
                 };
-                
+
                 if self.config.verbose {
                     println!("Test {} panicked: {}", test_name, error_msg);
                 }
-                Ok(TestResult::failure(duration, 1, format!("Panic: {}", error_msg)))
+                Ok(TestResult::failure(
+                    duration,
+                    1,
+                    format!("Panic: {}", error_msg),
+                ))
             }
         }
     }
@@ -208,7 +210,10 @@ impl TestRunner {
         F: Fn(usize) -> CoreResult<()>,
     {
         if self.config.verbose {
-            println!("Executing {} iterations of test: {}", self.config.iterations, test_name);
+            println!(
+                "Executing {} iterations of test: {}",
+                self.config.iterations, test_name
+            );
         }
 
         let start_time = Instant::now();
@@ -229,19 +234,20 @@ impl TestRunner {
             match test_fn(i) {
                 Ok(()) => {
                     cases_executed += 1;
-                    
+
                     // Monitor memory usage (simplified)
                     #[cfg(target_os = "linux")]
                     {
                         if let Ok(memory) = self.get_memory_usage() {
                             max_memory = max_memory.max(memory);
-                            
+
                             if memory > self.config.memory_limit {
                                 return Ok(TestResult::failure(
                                     start_time.elapsed(),
                                     cases_executed,
                                     format!("Memory limit exceeded: {} bytes", memory),
-                                ).with_memory_usage(memory));
+                                )
+                                .with_memory_usage(memory));
                             }
                         }
                     }
@@ -251,14 +257,18 @@ impl TestRunner {
                         start_time.elapsed(),
                         cases_executed,
                         format!("Test failed at iteration {}: {:?}", i, e),
-                    ).with_memory_usage(max_memory));
+                    )
+                    .with_memory_usage(max_memory));
                 }
             }
         }
 
         let duration = start_time.elapsed();
         if self.config.verbose {
-            println!("Test {} completed {} iterations in {:?}", test_name, cases_executed, duration);
+            println!(
+                "Test {} completed {} iterations in {:?}",
+                test_name, cases_executed, duration
+            );
         }
 
         Ok(TestResult::success(duration, cases_executed).with_memory_usage(max_memory))
@@ -268,25 +278,27 @@ impl TestRunner {
     #[cfg(target_os = "linux")]
     fn get_memory_usage(&self) -> CoreResult<usize> {
         use std::fs;
-        
+
         let status = fs::read_to_string("/proc/self/status")
             .map_err(|e| CoreError::IoError(format!("Failed to read /proc/self/status: {}", e)))?;
-            
+
         for line in status.lines() {
             if line.starts_with("VmRSS:") {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 2 {
-                    let kb: usize = parts[1].parse()
-                        .map_err(|e| CoreError::ValidationError(
-                            crate::error::ErrorContext::new(&format!("Failed to parse memory: {}", e))
-                        ))?;
+                    let kb: usize = parts[1].parse().map_err(|e| {
+                        CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                            "Failed to parse memory: {}",
+                            e
+                        )))
+                    })?;
                     return Ok(kb * 1024); // Convert KB to bytes
                 }
             }
         }
-        
+
         Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("Could not find VmRSS in /proc/self/status")
+            crate::error::ErrorContext::new("Could not find VmRSS in /proc/self/status"),
         ))
     }
 
@@ -330,7 +342,7 @@ impl TestSuite {
     /// Run all tests in the suite
     pub fn run(&self) -> CoreResult<Vec<TestResult>> {
         println!("Running test suite: {}", self.name);
-        
+
         let runner = TestRunner::new(self.config.clone());
         let mut results = Vec::new();
 
@@ -353,7 +365,10 @@ impl TestSuite {
         // Print summary
         let passed = results.iter().filter(|r| r.passed).count();
         let total = results.len();
-        println!("Test suite {} completed: {}/{} tests passed", self.name, passed, total);
+        println!(
+            "Test suite {} completed: {}/{} tests passed",
+            self.name, passed, total
+        );
 
         Ok(results)
     }

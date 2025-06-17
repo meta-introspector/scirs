@@ -22,7 +22,7 @@ rand = { workspace = true }
 rand_distr = { workspace = true }
 serde = { workspace = true, optional = true }  # Serialization
 serde_json = { workspace = true, optional = true }  # JSON serialization
-uuid = { workspace = true }  # Used for unique identifiers
+uuid = { workspace = true, features = ["serde"] }  # Used for unique identifiers
 tempfile = { workspace = true, optional = true }  # For temporary files in memory_efficient
 bincode = { workspace = true, optional = true }  # For serialization in memory_efficient
 memmap2 = { workspace = true, optional = true }  # For memory-mapped arrays
@@ -40,6 +40,8 @@ num_cpus = { workspace = true, optional = true }  # CPU count detection
 lz4 = { workspace = true, optional = true }   # LZ4 compression
 zstd = { workspace = true, optional = true }  # Zstandard compression
 snap = { workspace = true, optional = true }   # Snappy compression
+flate2 = { workspace = true, optional = true }  # DEFLATE compression
+bytemuck = { workspace = true, optional = true }  # Zero-copy type casting
 
 # System monitoring for resource-aware prefetching
 libc = { workspace = true, optional = true }  # System calls for resource monitoring
@@ -54,6 +56,9 @@ cranelift-frontend = { workspace = true, optional = true }  # JIT compiler front
 
 # Async runtime for async error handling
 tokio = { workspace = true, optional = true }  # Async runtime for async error handling
+
+# Production-level feature dependencies
+reqwest = { workspace = true, optional = true }  # HTTP client for tracing export
 
 [dev-dependencies]
 approx = { workspace = true }
@@ -83,7 +88,7 @@ int64 = []    # Support for i64 in zero-copy operations
 uint32 = []   # Support for u32 in zero-copy operations
 uint64 = []   # Support for u64 in zero-copy operations
 all_ints = [] # Support for all integer types in zero-copy operations
-memory_compression = ["memory_efficient", "lz4", "zstd", "snap", "serde", "serde_json", "libc", "num_cpus"]  # Compressed memory-mapped arrays
+memory_compression = ["memory_efficient", "lz4", "zstd", "snap", "flate2", "bytemuck", "serde", "serde_json", "libc", "num_cpus"]  # Compressed memory-mapped arrays
 memory_metrics = ["memory_management", "serde", "serde_json"]  # Enhanced memory metrics tracking
 serialization = ["serde", "serde_json"]  # Serialization support
 array = []  # Scientific array types (MaskedArray, RecordArray)
@@ -109,11 +114,18 @@ array_protocol_metal = ["array_protocol_gpu", "metal"]  # Metal support for Arra
 array_protocol_wgpu = ["array_protocol_gpu", "wgpu"]  # WebGPU support for Array Protocol
 array_protocol_distributed = ["array_protocol", "parallel"]  # Distributed computing for Array Protocol
 array_protocol_all = ["array_protocol", "array_protocol_jit", "array_protocol_cuda", "array_protocol_distributed"]  # All Array Protocol features
+# Production-level features for enterprise deployments
+observability = ["serde", "serde_json"]  # Observability infrastructure (tracing, audit logging)
+observability_http = ["observability", "reqwest"]  # HTTP export for observability
+versioning = ["serde", "serde_json"]  # API versioning and compatibility management
+leak_detection = ["memory_management", "serde", "serde_json"]  # Memory leak detection system
+data_validation = ["validation", "serde", "serde_json", "regex"]  # Comprehensive data validation
+production = ["observability", "versioning", "leak_detection", "data_validation"]  # All production features
 all = [
     "simd", "parallel", "cache", "validation", "logging",
     "gpu", "cuda", "memory_management", "memory_efficient", "memory_compression",
     "array", "profiling", "random", "types", "ufuncs", "testing", "benchmarking",
-    "array_protocol_all"
+    "array_protocol_all", "production"
 ]  # Enable all features except mutually exclusive BLAS backends
 # NOTE: BLAS backends (openblas, intel-mkl, netlib) are mutually exclusive
 # Use --features openblas (default), --features intel-mkl, or --features netlib
@@ -353,4 +365,9 @@ required-features = ["memory_efficient"]
 name = "advanced_error_handling"
 path = "examples/advanced_error_handling.rs"
 required-features = []
+
+[[example]]
+name = "leak_detection_demo"
+path = "examples/leak_detection_demo.rs"
+required-features = ["leak_detection"]
 

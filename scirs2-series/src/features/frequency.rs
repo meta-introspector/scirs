@@ -50,7 +50,7 @@ pub struct FrequencyFeatures<F> {
 
 impl<F> Default for FrequencyFeatures<F>
 where
-    F: Float + FromPrimitive,
+    F: Float + FromPrimitive + Default,
 {
     fn default() -> Self {
         Self {
@@ -208,7 +208,7 @@ pub struct SpectralAnalysisFeatures<F> {
 
 impl<F> Default for SpectralAnalysisFeatures<F>
 where
-    F: Float + FromPrimitive,
+    F: Float + FromPrimitive + Default,
 {
     fn default() -> Self {
         Self {
@@ -389,7 +389,7 @@ pub struct EnhancedPeriodogramFeatures<F> {
 
 impl<F> Default for EnhancedPeriodogramFeatures<F>
 where
-    F: Float + FromPrimitive,
+    F: Float + FromPrimitive + Default,
 {
     fn default() -> Self {
         Self {
@@ -528,7 +528,7 @@ pub fn calculate_frequency_features<F>(
     config: &SpectralAnalysisConfig,
 ) -> Result<FrequencyFeatures<F>>
 where
-    F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + std::iter::Sum,
+    F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + std::iter::Sum + Default,
     for<'a> F: std::iter::Sum<&'a F>,
 {
     let n = ts.len();

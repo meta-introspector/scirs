@@ -232,6 +232,12 @@ pub struct EnhancedPeriodogramConfig {
     // Bias Correction and Variance Reduction
     /// Enable bias correction methods
     pub enable_bias_correction: bool,
+    /// Enable variance reduction methods
+    pub enable_variance_reduction: bool,
+    /// Enable smoothing methods
+    pub enable_smoothing: bool,
+    /// Enable zero padding for frequency resolution enhancement
+    pub enable_zero_padding: bool,
 }
 
 impl Default for EnhancedPeriodogramConfig {
@@ -281,6 +287,9 @@ impl Default for EnhancedPeriodogramConfig {
 
             // Bias Correction and Variance Reduction
             enable_bias_correction: false,
+            enable_variance_reduction: false,
+            enable_smoothing: false,
+            enable_zero_padding: false,
         }
     }
 }
@@ -592,7 +601,7 @@ pub enum DenoisingMethod {
 }
 
 /// Window types for spectral analysis
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WindowType {
     /// Rectangular window
     Rectangular,

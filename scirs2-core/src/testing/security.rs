@@ -204,15 +204,14 @@ impl InputValidationTester {
 
         // Test various malicious input patterns
         let patterns = self.generate_malicious_patterns();
-        
+
         for (i, pattern) in patterns.iter().enumerate() {
             result.tests_executed += 1;
-            
+
             // Test with timeout
             let test_start = Instant::now();
-            let test_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                test_function(pattern)
-            }));
+            let test_result =
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| test_function(pattern)));
 
             let test_duration = test_start.elapsed();
 
@@ -231,7 +230,9 @@ impl InputValidationTester {
                         category: SecurityCategory::InputValidation,
                         description: "Function panicked on malicious input".to_string(),
                         trigger_input: format!("Pattern {}: {:?}", i, pattern),
-                        mitigation: Some("Add proper input validation and error handling".to_string()),
+                        mitigation: Some(
+                            "Add proper input validation and error handling".to_string(),
+                        ),
                     });
                 }
             }
@@ -272,13 +273,13 @@ impl InputValidationTester {
 
         // Test boundary conditions
         let test_cases = vec![
-            (0, 0),                    // Zero-zero case
-            (0, 1),                    // Zero start
-            (1, 0),                    // Zero length
-            (usize::MAX, 1),           // Maximum start
-            (1, usize::MAX),           // Maximum length
-            (usize::MAX, usize::MAX),  // Maximum both
-            (usize::MAX - 1, 2),       // Overflow potential
+            (0, 0),                   // Zero-zero case
+            (0, 1),                   // Zero start
+            (1, 0),                   // Zero length
+            (usize::MAX, 1),          // Maximum start
+            (1, usize::MAX),          // Maximum length
+            (usize::MAX, usize::MAX), // Maximum both
+            (usize::MAX - 1, 2),      // Overflow potential
         ];
 
         for (start, length) in test_cases {
@@ -299,7 +300,9 @@ impl InputValidationTester {
                             category: SecurityCategory::IntegerOverflow,
                             description: "Integer overflow not detected".to_string(),
                             trigger_input: format!("start={}, length={}", start, length),
-                            mitigation: Some("Add overflow checks in bounds validation".to_string()),
+                            mitigation: Some(
+                                "Add overflow checks in bounds validation".to_string(),
+                            ),
                         });
                     }
                 }
@@ -375,9 +378,18 @@ impl InputValidationTester {
 
     /// Assess overall security level based on issues found
     fn assess_security_level(&self, issues: &[SecurityIssue]) -> SecurityLevel {
-        let critical_count = issues.iter().filter(|i| i.severity == SecuritySeverity::Critical).count();
-        let high_count = issues.iter().filter(|i| i.severity == SecuritySeverity::High).count();
-        let medium_count = issues.iter().filter(|i| i.severity == SecuritySeverity::Medium).count();
+        let critical_count = issues
+            .iter()
+            .filter(|i| i.severity == SecuritySeverity::Critical)
+            .count();
+        let high_count = issues
+            .iter()
+            .filter(|i| i.severity == SecuritySeverity::High)
+            .count();
+        let medium_count = issues
+            .iter()
+            .filter(|i| i.severity == SecuritySeverity::Medium)
+            .count();
 
         if critical_count > 0 {
             SecurityLevel::Insecure
@@ -438,17 +450,22 @@ impl MemorySafetyTester {
                 if let Ok(current_memory) = self.get_memory_usage() {
                     if let Ok(initial) = initial_memory {
                         let memory_growth = current_memory.saturating_sub(initial);
-                        
+
                         // If memory has grown significantly, it might indicate a leak
-                        if memory_growth > 10 * 1024 * 1024 { // 10MB threshold
+                        if memory_growth > 10 * 1024 * 1024 {
+                            // 10MB threshold
                             result.vulnerabilities_found += 1;
                             result.security_issues.push(SecurityIssue {
                                 severity: SecuritySeverity::Medium,
                                 category: SecurityCategory::MemorySafety,
-                                description: format!("Potential memory leak detected: {} MB growth", 
-                                                   memory_growth / (1024 * 1024)),
+                                description: format!(
+                                    "Potential memory leak detected: {} MB growth",
+                                    memory_growth / (1024 * 1024)
+                                ),
                                 trigger_input: format!("After {} iterations", i),
-                                mitigation: Some("Review memory management and cleanup".to_string()),
+                                mitigation: Some(
+                                    "Review memory management and cleanup".to_string(),
+                                ),
                             });
                             break; // Stop testing once leak is detected
                         }
@@ -471,15 +488,14 @@ impl MemorySafetyTester {
             tests_executed: 1,
             vulnerabilities_found: 0,
             duration: start_time.elapsed(),
-            security_issues: vec![
-                SecurityIssue {
-                    severity: SecuritySeverity::Info,
-                    category: SecurityCategory::MemorySafety,
-                    description: "Rust's ownership system prevents use-after-free vulnerabilities".to_string(),
-                    trigger_input: "N/A".to_string(),
-                    mitigation: Some("Continue using Rust's safe memory management".to_string()),
-                }
-            ],
+            security_issues: vec![SecurityIssue {
+                severity: SecuritySeverity::Info,
+                category: SecurityCategory::MemorySafety,
+                description: "Rust's ownership system prevents use-after-free vulnerabilities"
+                    .to_string(),
+                trigger_input: "N/A".to_string(),
+                mitigation: Some("Continue using Rust's safe memory management".to_string()),
+            }],
             security_level: SecurityLevel::Hardened,
         };
 
@@ -493,15 +509,17 @@ impl MemorySafetyTester {
             use std::fs;
             let status = fs::read_to_string("/proc/self/status")
                 .map_err(|e| CoreError::IoError(format!("Failed to read memory status: {}", e)))?;
-                
+
             for line in status.lines() {
                 if line.starts_with("VmRSS:") {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 2 {
-                        let kb: usize = parts[1].parse()
-                            .map_err(|e| CoreError::ValidationError(
-                                crate::error::ErrorContext::new(&format!("Failed to parse memory: {}", e))
-                            ))?;
+                        let kb: usize = parts[1].parse().map_err(|e| {
+                            CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                                "Failed to parse memory: {}",
+                                e
+                            )))
+                        })?;
                         return Ok(kb * 1024);
                     }
                 }
@@ -514,9 +532,18 @@ impl MemorySafetyTester {
 
     /// Assess security level
     fn assess_security_level(&self, issues: &[SecurityIssue]) -> SecurityLevel {
-        let critical_count = issues.iter().filter(|i| i.severity == SecuritySeverity::Critical).count();
-        let high_count = issues.iter().filter(|i| i.severity == SecuritySeverity::High).count();
-        let medium_count = issues.iter().filter(|i| i.severity == SecuritySeverity::Medium).count();
+        let critical_count = issues
+            .iter()
+            .filter(|i| i.severity == SecuritySeverity::Critical)
+            .count();
+        let high_count = issues
+            .iter()
+            .filter(|i| i.severity == SecuritySeverity::High)
+            .count();
+        let medium_count = issues
+            .iter()
+            .filter(|i| i.severity == SecuritySeverity::Medium)
+            .count();
 
         if critical_count > 0 {
             SecurityLevel::Insecure
@@ -546,17 +573,17 @@ impl SecurityTestUtils {
         // Input validation tests
         suite.add_test("malicious_input_validation", |_runner| {
             let tester = InputValidationTester::new(security_config.clone());
-            
+
             let result = tester.test_malicious_inputs(|input| {
                 // Test a simple validation function
                 if input.len() > 1000 {
-                    Err(CoreError::ValidationError(
-                        crate::error::ErrorContext::new("Input too large")
-                    ))
+                    Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                        "Input too large",
+                    )))
                 } else if input.is_empty() {
-                    Err(CoreError::ValidationError(
-                        crate::error::ErrorContext::new("Input cannot be empty")
-                    ))
+                    Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                        "Input cannot be empty",
+                    )))
                 } else {
                     Ok(())
                 }
@@ -567,7 +594,10 @@ impl SecurityTestUtils {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.tests_executed,
-                    format!("Critical security vulnerabilities found: {}", result.vulnerabilities_found),
+                    format!(
+                        "Critical security vulnerabilities found: {}",
+                        result.vulnerabilities_found
+                    ),
                 ));
             }
 
@@ -577,29 +607,34 @@ impl SecurityTestUtils {
         // Bounds checking tests
         suite.add_test("bounds_checking", |_runner| {
             let tester = InputValidationTester::new(security_config.clone());
-            
+
             let result = tester.test_bounds_checking(|start, length| {
                 // Test bounds checking function
-                let end = start.checked_add(length)
-                    .ok_or_else(|| CoreError::ValidationError(
-                        crate::error::ErrorContext::new("Integer overflow in bounds calculation")
-                    ))?;
-                
-                if end > 1000 {
-                    Err(CoreError::ValidationError(
-                        crate::error::ErrorContext::new("Bounds exceed maximum allowed")
+                let end = start.checked_add(length).ok_or_else(|| {
+                    CoreError::ValidationError(crate::error::ErrorContext::new(
+                        "Integer overflow in bounds calculation",
                     ))
+                })?;
+
+                if end > 1000 {
+                    Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                        "Bounds exceed maximum allowed",
+                    )))
                 } else {
                     Ok(())
                 }
             })?;
 
-            if result.security_level == SecurityLevel::Insecure || 
-               result.security_level == SecurityLevel::Vulnerable {
+            if result.security_level == SecurityLevel::Insecure
+                || result.security_level == SecurityLevel::Vulnerable
+            {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.tests_executed,
-                    format!("Bounds checking vulnerabilities found: {}", result.vulnerabilities_found),
+                    format!(
+                        "Bounds checking vulnerabilities found: {}",
+                        result.vulnerabilities_found
+                    ),
                 ));
             }
 
@@ -609,7 +644,7 @@ impl SecurityTestUtils {
         // Memory safety tests
         suite.add_test("memory_safety", |_runner| {
             let tester = MemorySafetyTester::new(security_config.clone());
-            
+
             let result = tester.test_memory_leaks(|| {
                 // Test function that should not leak memory
                 let _data = vec![0u8; 1000];
@@ -620,7 +655,10 @@ impl SecurityTestUtils {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.tests_executed,
-                    format!("Memory safety issues found: {}", result.vulnerabilities_found),
+                    format!(
+                        "Memory safety issues found: {}",
+                        result.vulnerabilities_found
+                    ),
                 ));
             }
 
@@ -631,7 +669,7 @@ impl SecurityTestUtils {
         suite.add_test("use_after_free", |_runner| {
             let tester = MemorySafetyTester::new(security_config.clone());
             let result = tester.test_use_after_free()?;
-            
+
             // This should always pass in Rust
             Ok(TestResult::success(result.duration, result.tests_executed))
         });
@@ -667,11 +705,11 @@ mod tests {
     #[test]
     fn test_security_level_assessment() {
         let tester = InputValidationTester::new(SecurityTestConfig::default());
-        
+
         // Test with no issues
         let level = tester.assess_security_level(&[]);
         assert_eq!(level, SecurityLevel::Hardened);
-        
+
         // Test with critical issue
         let critical_issue = SecurityIssue {
             severity: SecuritySeverity::Critical,
@@ -686,11 +724,10 @@ mod tests {
 
     #[test]
     fn test_malicious_pattern_generation() {
-        let tester = InputValidationTester::new(
-            SecurityTestConfig::default().with_malicious_patterns(10)
-        );
+        let tester =
+            InputValidationTester::new(SecurityTestConfig::default().with_malicious_patterns(10));
         let patterns = tester.generate_malicious_patterns();
-        
+
         assert_eq!(patterns.len(), 10);
         assert!(patterns.iter().any(|p| p.is_empty())); // Should include empty pattern
     }

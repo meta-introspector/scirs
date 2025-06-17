@@ -59,13 +59,13 @@ impl CpuInfo {
     pub fn detect() -> CoreResult<Self> {
         #[cfg(target_os = "linux")]
         return Self::detect_linux();
-        
+
         #[cfg(target_os = "windows")]
         return Self::detect_windows();
-        
+
         #[cfg(target_os = "macos")]
         return Self::detect_macos();
-        
+
         #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
         return Ok(Self::default());
     }
@@ -74,7 +74,10 @@ impl CpuInfo {
     #[cfg(target_os = "linux")]
     fn detect_linux() -> CoreResult<Self> {
         let cpuinfo = fs::read_to_string("/proc/cpuinfo").map_err(|e| {
-            CoreError::IoError(crate::error::ErrorContext::new(&format!("Failed to read /proc/cpuinfo: {}", e)))
+            CoreError::IoError(crate::error::ErrorContext::new(&format!(
+                "Failed to read /proc/cpuinfo: {}",
+                e
+            )))
         })?;
 
         let mut model = "Unknown CPU".to_string();
@@ -98,7 +101,11 @@ impl CpuInfo {
                 logical_cores += 1;
             } else if line.starts_with("flags") {
                 if let Some(value) = line.split(':').nth(1) {
-                    flags = value.trim().split_whitespace().map(|s| s.to_string()).collect();
+                    flags = value
+                        .trim()
+                        .split_whitespace()
+                        .map(|s| s.to_string())
+                        .collect();
                 }
             }
         }
@@ -172,24 +179,27 @@ impl CpuInfo {
         if size_str.ends_with('K') || size_str.ends_with('k') {
             let num_str = &size_str[..size_str.len() - 1];
             let size = num_str.parse::<usize>().map_err(|e| {
-                CoreError::ValidationError(
-                    crate::error::ErrorContext::new(&format!("Failed to parse cache size: {}", e))
-                )
+                CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                    "Failed to parse cache size: {}",
+                    e
+                )))
             })?;
             Ok(size)
         } else if size_str.ends_with('M') || size_str.ends_with('m') {
             let num_str = &size_str[..size_str.len() - 1];
             let size = num_str.parse::<usize>().map_err(|e| {
-                CoreError::ValidationError(
-                    crate::error::ErrorContext::new(&format!("Failed to parse cache size: {}", e))
-                )
+                CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                    "Failed to parse cache size: {}",
+                    e
+                )))
             })? * 1024;
             Ok(size)
         } else {
             let size = size_str.parse::<usize>().map_err(|e| {
-                CoreError::ValidationError(
-                    crate::error::ErrorContext::new(&format!("Failed to parse cache size: {}", e))
-                )
+                CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                    "Failed to parse cache size: {}",
+                    e
+                )))
             })?;
             Ok(size)
         }
@@ -227,13 +237,17 @@ impl CpuInfo {
         let mut max_freq = 2.0;
 
         // Try to read from cpufreq
-        if let Ok(content) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/base_frequency") {
+        if let Ok(content) =
+            fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/base_frequency")
+        {
             if let Ok(freq_khz) = content.trim().parse::<f64>() {
                 base_freq = freq_khz / 1_000_000.0; // Convert kHz to GHz
             }
         }
 
-        if let Ok(content) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq") {
+        if let Ok(content) =
+            fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        {
             if let Ok(freq_khz) = content.trim().parse::<f64>() {
                 max_freq = freq_khz / 1_000_000.0; // Convert kHz to GHz
             }
@@ -250,7 +264,7 @@ impl CpuInfo {
         let logical_cores = std::thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(1);
-        
+
         let physical_cores = logical_cores / 2; // Rough estimate
 
         Ok(Self {
@@ -277,7 +291,7 @@ impl CpuInfo {
         let logical_cores = std::thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(1);
-        
+
         let physical_cores = logical_cores; // Apple Silicon doesn't have hyperthreading
 
         Ok(Self {
@@ -332,7 +346,9 @@ impl CpuInfo {
 
     /// Check if CPU supports specific instruction set
     pub fn supports_instruction_set(&self, instruction_set: &str) -> bool {
-        self.features.iter().any(|f| f.eq_ignore_ascii_case(instruction_set))
+        self.features
+            .iter()
+            .any(|f| f.eq_ignore_ascii_case(instruction_set))
     }
 }
 
@@ -353,7 +369,7 @@ impl SimdCapabilities {
     /// Detect SIMD capabilities from CPU flags
     pub fn from_flags(flags: &[String]) -> Self {
         let mut capabilities = Self::default();
-        
+
         for flag in flags {
             match flag.as_str() {
                 "sse4_2" => capabilities.sse4_2 = true,
@@ -363,7 +379,7 @@ impl SimdCapabilities {
                 _ => {}
             }
         }
-        
+
         capabilities
     }
 
@@ -467,17 +483,22 @@ impl CpuArchitecture {
     pub fn detect() -> Self {
         #[cfg(target_arch = "x86_64")]
         return CpuArchitecture::X86_64;
-        
+
         #[cfg(target_arch = "aarch64")]
         return CpuArchitecture::AArch64;
-        
+
         #[cfg(target_arch = "x86")]
         return CpuArchitecture::X86;
-        
+
         #[cfg(target_arch = "arm")]
         return CpuArchitecture::Arm;
-        
-        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "x86", target_arch = "arm")))]
+
+        #[cfg(not(any(
+            target_arch = "x86_64",
+            target_arch = "aarch64",
+            target_arch = "x86",
+            target_arch = "arm"
+        )))]
         return CpuArchitecture::Unknown;
     }
 
@@ -504,7 +525,7 @@ mod tests {
     fn test_cpu_detection() {
         let cpu_info = CpuInfo::detect();
         assert!(cpu_info.is_ok());
-        
+
         let cpu = cpu_info.unwrap();
         assert!(cpu.logical_cores > 0);
         assert!(cpu.physical_cores > 0);
@@ -515,7 +536,7 @@ mod tests {
     fn test_simd_detection() {
         let simd = SimdCapabilities::detect();
         let best = simd.best_available();
-        
+
         // Should at least detect some capability
         assert_ne!(best, SimdInstructionSet::None);
     }
@@ -524,7 +545,7 @@ mod tests {
     fn test_architecture_detection() {
         let arch = CpuArchitecture::detect();
         assert_ne!(arch, CpuArchitecture::Unknown);
-        
+
         // Test pointer size
         assert!(arch.pointer_size() > 0);
         assert_eq!(arch.pointer_size(), std::mem::size_of::<usize>());
@@ -540,10 +561,10 @@ mod tests {
     #[test]
     fn test_optimal_parameters() {
         let cpu = CpuInfo::default();
-        
+
         let thread_count = cpu.optimal_thread_count();
         assert!(thread_count > 0);
-        
+
         let chunk_size = cpu.optimal_chunk_size();
         assert!(chunk_size >= 4096);
     }

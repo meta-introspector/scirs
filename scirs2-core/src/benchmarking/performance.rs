@@ -3,8 +3,8 @@
 //! This module provides specific benchmarking tools for measuring and validating
 //! performance characteristics of SciRS2 Core functions and algorithms.
 
-use crate::error::{CoreError, CoreResult};
 use crate::benchmarking::{BenchmarkConfig, BenchmarkResult, BenchmarkRunner, BenchmarkSuite};
+use crate::error::{CoreError, CoreResult};
 use std::time::Duration;
 
 /// Performance benchmark categories
@@ -72,7 +72,7 @@ impl PerformanceTarget {
     /// Check if benchmark result meets this target
     pub fn is_met_by(&self, result: &BenchmarkResult, input_scale: f64) -> bool {
         let scaled_target_time = Duration::from_nanos(
-            (self.target_time.as_nanos() as f64 * input_scale.powf(self.scaling_factor)) as u64
+            (self.target_time.as_nanos() as f64 * input_scale.powf(self.scaling_factor)) as u64,
         );
 
         // Check execution time
@@ -116,14 +116,21 @@ pub struct PerformanceBenchmarkResult {
 
 impl PerformanceBenchmarkResult {
     /// Create a new performance benchmark result
-    pub fn new(benchmark_result: BenchmarkResult, target: PerformanceTarget, input_scale: f64) -> Self {
+    pub fn new(
+        benchmark_result: BenchmarkResult,
+        target: PerformanceTarget,
+        input_scale: f64,
+    ) -> Self {
         let target_met = target.is_met_by(&benchmark_result, input_scale);
-        
+
         let scaled_target_time = Duration::from_nanos(
-            (target.target_time.as_nanos() as f64 * input_scale.powf(target.scaling_factor)) as u64
+            (target.target_time.as_nanos() as f64 * input_scale.powf(target.scaling_factor)) as u64,
         );
-        
-        let performance_ratio = benchmark_result.statistics.mean_execution_time.as_secs_f64()
+
+        let performance_ratio = benchmark_result
+            .statistics
+            .mean_execution_time
+            .as_secs_f64()
             / scaled_target_time.as_secs_f64();
 
         Self {
@@ -191,7 +198,11 @@ impl PerformanceBenchmarker {
         F: FnMut() -> CoreResult<T>,
     {
         let benchmark_result = self.runner.run(name, benchmark_fn)?;
-        Ok(PerformanceBenchmarkResult::new(benchmark_result, target, input_scale))
+        Ok(PerformanceBenchmarkResult::new(
+            benchmark_result,
+            target,
+            input_scale,
+        ))
     }
 
     /// Run computational performance benchmarks
@@ -204,10 +215,9 @@ impl PerformanceBenchmarker {
     where
         F: FnMut() -> CoreResult<T>,
     {
-        let target = PerformanceTarget::new(
-            BenchmarkCategory::Computation,
-            Duration::from_millis(100),
-        ).with_scaling_factor(expected_complexity);
+        let target =
+            PerformanceTarget::new(BenchmarkCategory::Computation, Duration::from_millis(100))
+                .with_scaling_factor(expected_complexity);
 
         self.run_with_target(name, target, 1.0, computation_fn)
     }
@@ -245,23 +255,19 @@ impl PerformanceBenchmarker {
         F: Fn(usize) -> CoreResult<T> + Clone,
     {
         let mut results = Vec::new();
-        let base_target = PerformanceTarget::new(
-            BenchmarkCategory::Algorithmic,
-            Duration::from_millis(10),
-        ).with_scaling_factor(expected_complexity);
+        let base_target =
+            PerformanceTarget::new(BenchmarkCategory::Algorithmic, Duration::from_millis(10))
+                .with_scaling_factor(expected_complexity);
 
         for size in input_sizes {
             let size_name = format!("{}(n={})", name, size);
             let mut algorithm_clone = algorithm_fn.clone();
-            
+
             let benchmark_result = self.runner.run(&size_name, || algorithm_clone(size))?;
             let scale = size as f64 / input_sizes[0] as f64;
-            let performance_result = PerformanceBenchmarkResult::new(
-                benchmark_result,
-                base_target.clone(),
-                scale,
-            );
-            
+            let performance_result =
+                PerformanceBenchmarkResult::new(benchmark_result, base_target.clone(), scale);
+
             results.push(performance_result);
         }
 
@@ -282,10 +288,8 @@ impl PerformanceBenchmarker {
         G: FnMut() -> CoreResult<T>,
     {
         // Benchmark SIMD version
-        let simd_target = PerformanceTarget::new(
-            BenchmarkCategory::Simd,
-            Duration::from_micros(100),
-        );
+        let simd_target =
+            PerformanceTarget::new(BenchmarkCategory::Simd, Duration::from_micros(100));
         let simd_result = self.run_with_target(
             &format!("{}_simd", name),
             simd_target,
@@ -294,10 +298,8 @@ impl PerformanceBenchmarker {
         )?;
 
         // Benchmark scalar version
-        let scalar_target = PerformanceTarget::new(
-            BenchmarkCategory::Computation,
-            Duration::from_millis(1),
-        );
+        let scalar_target =
+            PerformanceTarget::new(BenchmarkCategory::Computation, Duration::from_millis(1));
         let scalar_result = self.run_with_target(
             &format!("{}_scalar", name),
             scalar_target,
@@ -306,8 +308,16 @@ impl PerformanceBenchmarker {
         )?;
 
         // Calculate speedup
-        let speedup = scalar_result.benchmark_result.statistics.mean_execution_time.as_secs_f64()
-            / simd_result.benchmark_result.statistics.mean_execution_time.as_secs_f64();
+        let speedup = scalar_result
+            .benchmark_result
+            .statistics
+            .mean_execution_time
+            .as_secs_f64()
+            / simd_result
+                .benchmark_result
+                .statistics
+                .mean_execution_time
+                .as_secs_f64();
 
         Ok((simd_result, scalar_result, speedup))
     }
@@ -326,10 +336,8 @@ impl PerformanceBenchmarker {
         G: FnMut() -> CoreResult<T>,
     {
         // Benchmark parallel version
-        let parallel_target = PerformanceTarget::new(
-            BenchmarkCategory::Parallel,
-            Duration::from_millis(100),
-        );
+        let parallel_target =
+            PerformanceTarget::new(BenchmarkCategory::Parallel, Duration::from_millis(100));
         let parallel_result = self.run_with_target(
             &format!("{}_parallel", name),
             parallel_target,
@@ -338,10 +346,8 @@ impl PerformanceBenchmarker {
         )?;
 
         // Benchmark sequential version
-        let sequential_target = PerformanceTarget::new(
-            BenchmarkCategory::Computation,
-            Duration::from_millis(500),
-        );
+        let sequential_target =
+            PerformanceTarget::new(BenchmarkCategory::Computation, Duration::from_millis(500));
         let sequential_result = self.run_with_target(
             &format!("{}_sequential", name),
             sequential_target,
@@ -351,8 +357,16 @@ impl PerformanceBenchmarker {
 
         // Calculate efficiency
         let theoretical_speedup = thread_count as f64;
-        let actual_speedup = sequential_result.benchmark_result.statistics.mean_execution_time.as_secs_f64()
-            / parallel_result.benchmark_result.statistics.mean_execution_time.as_secs_f64();
+        let actual_speedup = sequential_result
+            .benchmark_result
+            .statistics
+            .mean_execution_time
+            .as_secs_f64()
+            / parallel_result
+                .benchmark_result
+                .statistics
+                .mean_execution_time
+                .as_secs_f64();
         let efficiency = actual_speedup / theoretical_speedup;
 
         Ok((parallel_result, sequential_result, efficiency))
@@ -366,7 +380,7 @@ impl StandardBenchmarks {
     /// Create a computational benchmark suite
     pub fn create_computation_suite(config: BenchmarkConfig) -> BenchmarkSuite {
         let mut suite = BenchmarkSuite::new("computation_performance", config);
-        
+
         // Basic arithmetic operations
         suite.add_benchmark(|runner| {
             runner.run("arithmetic_operations", || {
@@ -392,13 +406,13 @@ impl StandardBenchmarks {
         suite.add_benchmark(|runner| {
             runner.run("matrix_multiplication", || {
                 let size = 100;
-                let a: Vec<Vec<f64>> = (0..size).map(|i| {
-                    (0..size).map(|j| (i * j) as f64).collect()
-                }).collect();
-                let b: Vec<Vec<f64>> = (0..size).map(|i| {
-                    (0..size).map(|j| (i + j) as f64).collect()
-                }).collect();
-                
+                let a: Vec<Vec<f64>> = (0..size)
+                    .map(|i| (0..size).map(|j| (i * j) as f64).collect())
+                    .collect();
+                let b: Vec<Vec<f64>> = (0..size)
+                    .map(|i| (0..size).map(|j| (i + j) as f64).collect())
+                    .collect();
+
                 let mut c = vec![vec![0.0; size]; size];
                 for i in 0..size {
                     for j in 0..size {
@@ -407,7 +421,7 @@ impl StandardBenchmarks {
                         }
                     }
                 }
-                
+
                 Ok(c[0][0])
             })
         });
@@ -464,23 +478,26 @@ impl StandardBenchmarks {
                 "file_io",
                 || {
                     use tempfile::NamedTempFile;
-                    let temp_file = NamedTempFile::new()
-                        .map_err(|e| CoreError::IoError(format!("Failed to create temp file: {}", e)))?;
+                    let temp_file = NamedTempFile::new().map_err(|e| {
+                        CoreError::IoError(format!("Failed to create temp file: {}", e))
+                    })?;
                     Ok(temp_file)
                 },
                 |temp_file| {
                     use std::io::Write;
                     let data = vec![42u8; 10000];
-                    temp_file.write_all(&data)
+                    temp_file
+                        .write_all(&data)
                         .map_err(|e| CoreError::IoError(format!("Failed to write: {}", e)))?;
-                    temp_file.flush()
+                    temp_file
+                        .flush()
                         .map_err(|e| CoreError::IoError(format!("Failed to flush: {}", e)))?;
                     Ok(data.len())
                 },
                 |temp_file| {
                     drop(temp_file);
                     Ok(())
-                }
+                },
             )
         });
 
@@ -526,13 +543,11 @@ mod tests {
 
     #[test]
     fn test_performance_target() {
-        let target = PerformanceTarget::new(
-            BenchmarkCategory::Computation,
-            Duration::from_millis(100),
-        )
-        .with_throughput(1000.0)
-        .with_memory(1024)
-        .with_scaling_factor(2.0);
+        let target =
+            PerformanceTarget::new(BenchmarkCategory::Computation, Duration::from_millis(100))
+                .with_throughput(1000.0)
+                .with_memory(1024)
+                .with_scaling_factor(2.0);
 
         assert_eq!(target.category, BenchmarkCategory::Computation);
         assert_eq!(target.target_time, Duration::from_millis(100));
@@ -545,15 +560,15 @@ mod tests {
     fn test_performance_grade() {
         let config = BenchmarkConfig::default();
         let mut result = crate::benchmarking::BenchmarkResult::new("test".to_string(), config);
-        
+
         // Add some measurements
-        result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(Duration::from_millis(50)));
+        result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(
+            Duration::from_millis(50),
+        ));
         result.finalize().unwrap();
 
-        let target = PerformanceTarget::new(
-            BenchmarkCategory::Computation,
-            Duration::from_millis(100),
-        );
+        let target =
+            PerformanceTarget::new(BenchmarkCategory::Computation, Duration::from_millis(100));
 
         let perf_result = PerformanceBenchmarkResult::new(result, target, 1.0);
         assert_eq!(perf_result.performance_grade(), PerformanceGrade::Good);
@@ -566,14 +581,16 @@ mod tests {
             .with_measurement_iterations(5);
         let benchmarker = PerformanceBenchmarker::new(config);
 
-        let result = benchmarker.benchmark_computation(
-            "test_computation",
-            || {
-                std::thread::sleep(Duration::from_micros(100));
-                Ok(42)
-            },
-            1.0,
-        ).unwrap();
+        let result = benchmarker
+            .benchmark_computation(
+                "test_computation",
+                || {
+                    std::thread::sleep(Duration::from_micros(100));
+                    Ok(42)
+                },
+                1.0,
+            )
+            .unwrap();
 
         assert!(result.benchmark_result.statistics.mean_execution_time > Duration::from_micros(50));
         assert_eq!(result.target.category, BenchmarkCategory::Computation);

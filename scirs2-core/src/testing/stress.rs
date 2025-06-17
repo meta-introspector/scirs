@@ -11,8 +11,8 @@
 use crate::error::{CoreError, CoreResult};
 use crate::testing::{TestConfig, TestResult, TestRunner};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 use std::thread;
+use std::time::{Duration, Instant};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -40,7 +40,9 @@ impl Default for StressTestConfig {
     fn default() -> Self {
         Self {
             max_memory: 1024 * 1024 * 1024, // 1GB
-            thread_count: std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4),
+            thread_count: std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(4),
             duration: Duration::from_secs(60),
             memory_step: 1024 * 1024, // 1MB
             cpu_intensity: 1000000,
@@ -210,20 +212,26 @@ impl MemoryStressTester {
 
         while current_memory < self.config.max_memory {
             // Allocate a chunk of memory
-            let chunk_size = self.config.memory_step.min(self.config.max_memory - current_memory);
-            
+            let chunk_size = self
+                .config
+                .memory_step
+                .min(self.config.max_memory - current_memory);
+
             match self.allocate_chunk(chunk_size) {
                 Ok(chunk) => {
                     allocations.push(chunk);
                     current_memory += chunk_size;
-                    
+
                     // Update peak memory
                     if let Ok(memory) = self.get_memory_usage() {
                         result.peak_memory = result.peak_memory.max(memory - initial_memory);
                     }
                 }
                 Err(e) => {
-                    result = result.with_error(format!("Allocation failed at {} bytes: {:?}", current_memory, e));
+                    result = result.with_error(format!(
+                        "Allocation failed at {} bytes: {:?}",
+                        current_memory, e
+                    ));
                     break;
                 }
             }
@@ -302,7 +310,7 @@ impl MemoryStressTester {
         chunk.try_reserve(size).map_err(|e| {
             CoreError::MemoryError(format!("Failed to allocate {} bytes: {}", size, e))
         })?;
-        
+
         // Fill with data to ensure actual allocation
         chunk.resize(size, 42);
         Ok(chunk)
@@ -315,15 +323,17 @@ impl MemoryStressTester {
             use std::fs;
             let status = fs::read_to_string("/proc/self/status")
                 .map_err(|e| CoreError::IoError(format!("Failed to read memory status: {}", e)))?;
-                
+
             for line in status.lines() {
                 if line.starts_with("VmRSS:") {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 2 {
-                        let kb: usize = parts[1].parse()
-                            .map_err(|e| CoreError::ValidationError(
-                                crate::error::ErrorContext::new(&format!("Failed to parse memory: {}", e))
-                            ))?;
+                        let kb: usize = parts[1].parse().map_err(|e| {
+                            CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                                "Failed to parse memory: {}",
+                                e
+                            )))
+                        })?;
                         return Ok(kb * 1024);
                     }
                 }
@@ -374,7 +384,7 @@ impl CpuStressTester {
     pub fn test_concurrent_cpu_workload(&self) -> CoreResult<StressTestResult> {
         let start_time = Instant::now();
         let mut result = StressTestResult::new("concurrent_cpu_workload".to_string());
-        
+
         let config = Arc::new(self.config.clone());
         let results = Arc::new(std::sync::Mutex::new(Vec::new()));
 
@@ -388,33 +398,31 @@ impl CpuStressTester {
             let handle = thread::spawn(move || {
                 let mut operations = 0;
                 while start_time.elapsed() < config.duration {
-                    if let Ok(ops) = Self::cpu_intensive_computation_static(config.cpu_intensity / 10) {
+                    if let Ok(ops) =
+                        Self::cpu_intensive_computation_static(config.cpu_intensity / 10)
+                    {
                         operations += ops;
                     }
                 }
-                
+
                 if let Ok(mut results) = results.lock() {
                     results.push((thread_id, operations));
                 }
             });
-            
+
             handles.push(handle);
         }
 
         // Wait for all threads to complete
         for handle in handles {
             handle.join().map_err(|_| {
-                CoreError::ComputationError(
-                    crate::error::ErrorContext::new("Thread join failed")
-                )
+                CoreError::ComputationError(crate::error::ErrorContext::new("Thread join failed"))
             })?;
         }
 
         // Collect results
         let results_guard = results.lock().map_err(|_| {
-            CoreError::ComputationError(
-                crate::error::ErrorContext::new("Failed to lock results")
-            )
+            CoreError::ComputationError(crate::error::ErrorContext::new("Failed to lock results"))
         })?;
 
         let total_operations: usize = results_guard.iter().map(|(_, ops)| ops).sum();
@@ -451,7 +459,7 @@ impl CpuStressTester {
         // Ensure the computation isn't optimized away
         if sum == 0 {
             return Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new("Unexpected computation result")
+                crate::error::ErrorContext::new("Unexpected computation result"),
             ));
         }
 
@@ -474,7 +482,7 @@ impl ConcurrencyStressTester {
     pub fn test_shared_resource_contention(&self) -> CoreResult<StressTestResult> {
         let start_time = Instant::now();
         let mut result = StressTestResult::new("shared_resource_contention".to_string());
-        
+
         let shared_counter = Arc::new(std::sync::Mutex::new(0u64));
         let config = Arc::new(self.config.clone());
         let results = Arc::new(std::sync::Mutex::new(Vec::new()));
@@ -494,39 +502,35 @@ impl ConcurrencyStressTester {
                     if let Ok(mut counter) = counter.lock() {
                         *counter += 1;
                         operations += 1;
-                        
+
                         // Simulate some work while holding the lock
                         for _ in 0..100 {
                             *counter = counter.wrapping_add(1).wrapping_sub(1);
                         }
                     }
-                    
+
                     // Brief yield to allow other threads to run
                     thread::yield_now();
                 }
-                
+
                 if let Ok(mut results) = results.lock() {
                     results.push((thread_id, operations));
                 }
             });
-            
+
             handles.push(handle);
         }
 
         // Wait for all threads to complete
         for handle in handles {
             handle.join().map_err(|_| {
-                CoreError::ComputationError(
-                    crate::error::ErrorContext::new("Thread join failed")
-                )
+                CoreError::ComputationError(crate::error::ErrorContext::new("Thread join failed"))
             })?;
         }
 
         // Collect results
         let results_guard = results.lock().map_err(|_| {
-            CoreError::ComputationError(
-                crate::error::ErrorContext::new("Failed to lock results")
-            )
+            CoreError::ComputationError(crate::error::ErrorContext::new("Failed to lock results"))
         })?;
 
         let total_operations: usize = results_guard.iter().map(|(_, ops)| ops).sum();
@@ -535,9 +539,7 @@ impl ConcurrencyStressTester {
 
         // Check final counter value
         let final_counter = *shared_counter.lock().map_err(|_| {
-            CoreError::ComputationError(
-                crate::error::ErrorContext::new("Failed to lock counter")
-            )
+            CoreError::ComputationError(crate::error::ErrorContext::new("Failed to lock counter"))
         })?;
 
         result = result
@@ -555,7 +557,7 @@ impl ConcurrencyStressTester {
     pub fn test_lock_free_performance(&self) -> CoreResult<StressTestResult> {
         let start_time = Instant::now();
         let mut result = StressTestResult::new("lock_free_performance".to_string());
-        
+
         let atomic_counter = Arc::new(std::sync::atomic::AtomicU64::new(0));
         let config = Arc::new(self.config.clone());
         let results = Arc::new(std::sync::Mutex::new(Vec::new()));
@@ -574,36 +576,32 @@ impl ConcurrencyStressTester {
                     // Perform atomic operations
                     counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                     operations += 1;
-                    
+
                     // Perform some additional atomic operations
                     let _old_value = counter.load(std::sync::atomic::Ordering::Relaxed);
                     counter.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
                     counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                     operations += 2;
                 }
-                
+
                 if let Ok(mut results) = results.lock() {
                     results.push((thread_id, operations));
                 }
             });
-            
+
             handles.push(handle);
         }
 
         // Wait for all threads to complete
         for handle in handles {
             handle.join().map_err(|_| {
-                CoreError::ComputationError(
-                    crate::error::ErrorContext::new("Thread join failed")
-                )
+                CoreError::ComputationError(crate::error::ErrorContext::new("Thread join failed"))
             })?;
         }
 
         // Collect results
         let results_guard = results.lock().map_err(|_| {
-            CoreError::ComputationError(
-                crate::error::ErrorContext::new("Failed to lock results")
-            )
+            CoreError::ComputationError(crate::error::ErrorContext::new("Failed to lock results"))
         })?;
 
         let total_operations: usize = results_guard.iter().map(|(_, ops)| ops).sum();
@@ -639,7 +637,7 @@ impl StressTestUtils {
         suite.add_test("memory_progressive_allocation", |_runner| {
             let tester = MemoryStressTester::new(stress_config.clone());
             let result = tester.test_progressive_allocation()?;
-            
+
             if result.error.is_some() {
                 return Ok(TestResult::failure(
                     result.duration,
@@ -647,15 +645,17 @@ impl StressTestUtils {
                     result.error.unwrap(),
                 ));
             }
-            
-            Ok(TestResult::success(result.duration, result.total_operations)
-                .with_memory_usage(result.peak_memory))
+
+            Ok(
+                TestResult::success(result.duration, result.total_operations)
+                    .with_memory_usage(result.peak_memory),
+            )
         });
 
         suite.add_test("memory_fragmented_allocation", |_runner| {
             let tester = MemoryStressTester::new(stress_config.clone());
             let result = tester.test_fragmented_allocation()?;
-            
+
             if result.error.is_some() {
                 return Ok(TestResult::failure(
                     result.duration,
@@ -663,16 +663,18 @@ impl StressTestUtils {
                     result.error.unwrap(),
                 ));
             }
-            
-            Ok(TestResult::success(result.duration, result.total_operations)
-                .with_memory_usage(result.peak_memory))
+
+            Ok(
+                TestResult::success(result.duration, result.total_operations)
+                    .with_memory_usage(result.peak_memory),
+            )
         });
 
         // CPU stress tests
         suite.add_test("cpu_intensive_workload", |_runner| {
             let tester = CpuStressTester::new(stress_config.clone());
             let result = tester.test_cpu_intensive_workload()?;
-            
+
             if result.error.is_some() {
                 return Ok(TestResult::failure(
                     result.duration,
@@ -680,14 +682,17 @@ impl StressTestUtils {
                     result.error.unwrap(),
                 ));
             }
-            
-            Ok(TestResult::success(result.duration, result.total_operations))
+
+            Ok(TestResult::success(
+                result.duration,
+                result.total_operations,
+            ))
         });
 
         suite.add_test("concurrent_cpu_workload", |_runner| {
             let tester = CpuStressTester::new(stress_config.clone());
             let result = tester.test_concurrent_cpu_workload()?;
-            
+
             if result.error.is_some() {
                 return Ok(TestResult::failure(
                     result.duration,
@@ -695,15 +700,18 @@ impl StressTestUtils {
                     result.error.unwrap(),
                 ));
             }
-            
-            Ok(TestResult::success(result.duration, result.total_operations))
+
+            Ok(TestResult::success(
+                result.duration,
+                result.total_operations,
+            ))
         });
 
         // Concurrency stress tests
         suite.add_test("shared_resource_contention", |_runner| {
             let tester = ConcurrencyStressTester::new(stress_config.clone());
             let result = tester.test_shared_resource_contention()?;
-            
+
             if result.error.is_some() {
                 return Ok(TestResult::failure(
                     result.duration,
@@ -711,14 +719,17 @@ impl StressTestUtils {
                     result.error.unwrap(),
                 ));
             }
-            
-            Ok(TestResult::success(result.duration, result.total_operations))
+
+            Ok(TestResult::success(
+                result.duration,
+                result.total_operations,
+            ))
         });
 
         suite.add_test("lock_free_performance", |_runner| {
             let tester = ConcurrencyStressTester::new(stress_config.clone());
             let result = tester.test_lock_free_performance()?;
-            
+
             if result.error.is_some() {
                 return Ok(TestResult::failure(
                     result.duration,
@@ -726,8 +737,11 @@ impl StressTestUtils {
                     result.error.unwrap(),
                 ));
             }
-            
-            Ok(TestResult::success(result.duration, result.total_operations))
+
+            Ok(TestResult::success(
+                result.duration,
+                result.total_operations,
+            ))
         });
 
         suite
@@ -745,7 +759,7 @@ mod tests {
             .with_thread_count(8)
             .with_duration(Duration::from_secs(30))
             .with_cpu_intensity(500000);
-            
+
         assert_eq!(config.max_memory, 512 * 1024 * 1024);
         assert_eq!(config.thread_count, 8);
         assert_eq!(config.duration, Duration::from_secs(30));
@@ -757,9 +771,9 @@ mod tests {
         let config = StressTestConfig::default()
             .with_max_memory(1024 * 1024) // 1MB for test
             .with_duration(Duration::from_millis(100));
-            
+
         let tester = MemoryStressTester::new(config);
-        
+
         // This should complete without error
         let result = tester.test_progressive_allocation();
         assert!(result.is_ok());
@@ -770,13 +784,13 @@ mod tests {
         let config = StressTestConfig::default()
             .with_cpu_intensity(1000)
             .with_duration(Duration::from_millis(100));
-            
+
         let tester = CpuStressTester::new(config);
-        
+
         // This should complete without error
         let result = tester.test_cpu_intensive_workload();
         assert!(result.is_ok());
-        
+
         let result = result.unwrap();
         assert!(result.total_operations > 0);
     }
@@ -786,13 +800,13 @@ mod tests {
         let config = StressTestConfig::default()
             .with_thread_count(2)
             .with_duration(Duration::from_millis(100));
-            
+
         let tester = ConcurrencyStressTester::new(config);
-        
+
         // This should complete without error
         let result = tester.test_shared_resource_contention();
         assert!(result.is_ok());
-        
+
         let result = result.unwrap();
         assert!(result.total_operations > 0);
     }

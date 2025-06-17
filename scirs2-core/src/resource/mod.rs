@@ -10,11 +10,11 @@
 //! - Dynamic optimization parameter adjustment
 
 pub mod cpu;
-pub mod memory;
 pub mod gpu;
+pub mod memory;
 pub mod network;
-pub mod storage;
 pub mod optimization;
+pub mod storage;
 
 use crate::error::{CoreError, CoreResult};
 // Collections are used in the SystemResources struct
@@ -45,9 +45,13 @@ impl SystemResources {
         let gpu = gpu::GpuInfo::detect().ok();
         let network = network::NetworkInfo::detect()?;
         let storage = storage::StorageInfo::detect()?;
-        
+
         let optimization_params = optimization::OptimizationParams::generate(
-            &cpu, &memory, gpu.as_ref(), &network, &storage
+            &cpu,
+            &memory,
+            gpu.as_ref(),
+            &network,
+            &storage,
         )?;
 
         Ok(Self {
@@ -94,10 +98,14 @@ impl SystemResources {
     pub fn performance_tier(&self) -> PerformanceTier {
         let cpu_score = self.cpu.performance_score();
         let memory_score = self.memory.performance_score();
-        let gpu_score = self.gpu.as_ref().map(|g| g.performance_score()).unwrap_or(0.0);
-        
+        let gpu_score = self
+            .gpu
+            .as_ref()
+            .map(|g| g.performance_score())
+            .unwrap_or(0.0);
+
         let combined_score = (cpu_score + memory_score + gpu_score) / 3.0;
-        
+
         if combined_score >= 0.8 {
             PerformanceTier::High
         } else if combined_score >= 0.5 {
@@ -110,55 +118,92 @@ impl SystemResources {
     /// Generate a system summary report
     pub fn summary_report(&self) -> String {
         let mut report = String::new();
-        
+
         report.push_str("# System Resource Summary\n\n");
-        
+
         // CPU information
         report.push_str("## CPU\n");
         report.push_str(&format!("- Model: {}\n", self.cpu.model));
-        report.push_str(&format!("- Cores: {} physical, {} logical\n", 
-                                self.cpu.physical_cores, self.cpu.logical_cores));
-        report.push_str(&format!("- Base frequency: {:.2} GHz\n", 
-                                self.cpu.base_frequency_ghz));
-        report.push_str(&format!("- Cache L1: {} KB, L2: {} KB, L3: {} KB\n",
-                                self.cpu.cache_l1_kb, self.cpu.cache_l2_kb, self.cpu.cache_l3_kb));
-        
+        report.push_str(&format!(
+            "- Cores: {} physical, {} logical\n",
+            self.cpu.physical_cores, self.cpu.logical_cores
+        ));
+        report.push_str(&format!(
+            "- Base frequency: {:.2} GHz\n",
+            self.cpu.base_frequency_ghz
+        ));
+        report.push_str(&format!(
+            "- Cache L1: {} KB, L2: {} KB, L3: {} KB\n",
+            self.cpu.cache_l1_kb, self.cpu.cache_l2_kb, self.cpu.cache_l3_kb
+        ));
+
         // SIMD capabilities
         report.push_str("- SIMD support:");
-        if self.cpu.simd_capabilities.sse4_2 { report.push_str(" SSE4.2"); }
-        if self.cpu.simd_capabilities.avx2 { report.push_str(" AVX2"); }
-        if self.cpu.simd_capabilities.avx512 { report.push_str(" AVX512"); }
-        if self.cpu.simd_capabilities.neon { report.push_str(" NEON"); }
+        if self.cpu.simd_capabilities.sse4_2 {
+            report.push_str(" SSE4.2");
+        }
+        if self.cpu.simd_capabilities.avx2 {
+            report.push_str(" AVX2");
+        }
+        if self.cpu.simd_capabilities.avx512 {
+            report.push_str(" AVX512");
+        }
+        if self.cpu.simd_capabilities.neon {
+            report.push_str(" NEON");
+        }
         report.push('\n');
-        
+
         // Memory information
         report.push_str("\n## Memory\n");
-        report.push_str(&format!("- Total: {:.2} GB\n", 
-                                self.memory.total_memory as f64 / (1024.0 * 1024.0 * 1024.0)));
-        report.push_str(&format!("- Available: {:.2} GB\n", 
-                                self.memory.available_memory as f64 / (1024.0 * 1024.0 * 1024.0)));
-        report.push_str(&format!("- Page size: {} KB\n", self.memory.page_size / 1024));
-        
+        report.push_str(&format!(
+            "- Total: {:.2} GB\n",
+            self.memory.total_memory as f64 / (1024.0 * 1024.0 * 1024.0)
+        ));
+        report.push_str(&format!(
+            "- Available: {:.2} GB\n",
+            self.memory.available_memory as f64 / (1024.0 * 1024.0 * 1024.0)
+        ));
+        report.push_str(&format!(
+            "- Page size: {} KB\n",
+            self.memory.page_size / 1024
+        ));
+
         // GPU information
         if let Some(ref gpu) = self.gpu {
             report.push_str("\n## GPU\n");
             report.push_str(&format!("- Model: {}\n", gpu.name));
-            report.push_str(&format!("- Memory: {:.2} GB\n", 
-                                    gpu.memory_total as f64 / (1024.0 * 1024.0 * 1024.0)));
+            report.push_str(&format!(
+                "- Memory: {:.2} GB\n",
+                gpu.memory_total as f64 / (1024.0 * 1024.0 * 1024.0)
+            ));
             report.push_str(&format!("- Compute units: {}\n", gpu.compute_units));
         }
-        
+
         // Optimization recommendations
         report.push_str("\n## Optimization Recommendations\n");
-        report.push_str(&format!("- Thread count: {}\n", self.optimization_params.thread_count));
-        report.push_str(&format!("- Chunk size: {} KB\n", 
-                                self.optimization_params.chunk_size / 1024));
-        report.push_str(&format!("- SIMD enabled: {}\n", self.optimization_params.enable_simd));
-        report.push_str(&format!("- GPU enabled: {}\n", self.optimization_params.enable_gpu));
-        
+        report.push_str(&format!(
+            "- Thread count: {}\n",
+            self.optimization_params.thread_count
+        ));
+        report.push_str(&format!(
+            "- Chunk size: {} KB\n",
+            self.optimization_params.chunk_size / 1024
+        ));
+        report.push_str(&format!(
+            "- SIMD enabled: {}\n",
+            self.optimization_params.enable_simd
+        ));
+        report.push_str(&format!(
+            "- GPU enabled: {}\n",
+            self.optimization_params.enable_gpu
+        ));
+
         // Performance tier
-        report.push_str(&format!("\n## Performance Tier: {:?}\n", self.performance_tier()));
-        
+        report.push_str(&format!(
+            "\n## Performance Tier: {:?}\n",
+            self.performance_tier()
+        ));
+
         report
     }
 }
@@ -338,7 +383,11 @@ impl ResourceDiscovery {
         };
 
         let optimization_params = optimization::OptimizationParams::generate(
-            &cpu, &memory, gpu.as_ref(), &network, &storage
+            &cpu,
+            &memory,
+            gpu.as_ref(),
+            &network,
+            &storage,
         )?;
 
         Ok(SystemResources {
@@ -358,7 +407,7 @@ impl ResourceDiscovery {
             Ok(())
         } else {
             Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new("Failed to clear cache")
+                crate::error::ErrorContext::new("Failed to clear cache"),
             ))
         }
     }
@@ -373,14 +422,14 @@ impl ResourceDiscovery {
             }
         } else {
             Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new("Failed to read cache status")
+                crate::error::ErrorContext::new("Failed to read cache status"),
             ))
         }
     }
 }
 
 /// Global resource discovery instance
-static GLOBAL_RESOURCE_DISCOVERY: std::sync::LazyLock<ResourceDiscovery> = 
+static GLOBAL_RESOURCE_DISCOVERY: std::sync::LazyLock<ResourceDiscovery> =
     std::sync::LazyLock::new(|| ResourceDiscovery::default());
 
 /// Get the global resource discovery instance
@@ -442,7 +491,7 @@ impl ResourceMonitor {
     /// Create a new resource monitor
     pub fn new(config: DiscoveryConfig, monitoring_interval: Duration) -> Self {
         let discovery = ResourceDiscovery::new(config);
-        
+
         Self {
             discovery,
             monitoring_interval,
@@ -463,17 +512,17 @@ impl ResourceMonitor {
 
         if should_update {
             let resources = self.discovery.discover_fresh()?;
-            
+
             // Update cached parameters
             if let Ok(mut params) = self.adaptive_params.lock() {
                 *params = resources.optimization_params.clone();
             }
-            
+
             // Update timestamp
             if let Ok(mut last_update) = self.last_update.lock() {
                 *last_update = std::time::Instant::now();
             }
-            
+
             Ok(resources.optimization_params)
         } else {
             // Return cached parameters
@@ -481,7 +530,7 @@ impl ResourceMonitor {
                 Ok(params.clone())
             } else {
                 Err(CoreError::ComputationError(
-                    crate::error::ErrorContext::new("Failed to read adaptive parameters")
+                    crate::error::ErrorContext::new("Failed to read adaptive parameters"),
                 ))
             }
         }
@@ -493,7 +542,7 @@ impl ResourceMonitor {
             Ok(params.clone())
         } else {
             Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new("Failed to read current parameters")
+                crate::error::ErrorContext::new("Failed to read current parameters"),
             ))
         }
     }
@@ -527,7 +576,7 @@ mod tests {
     fn test_resource_discovery() {
         let config = DiscoveryConfig::new().detect_essential();
         let discovery = ResourceDiscovery::new(config);
-        
+
         // This should work on any system
         let resources = discovery.discover();
         assert!(resources.is_ok());
@@ -549,10 +598,10 @@ mod tests {
     fn test_resource_monitor() {
         let config = DiscoveryConfig::new().detect_essential();
         let monitor = ResourceMonitor::new(config, Duration::from_secs(1));
-        
+
         let params = monitor.update_optimization_params();
         assert!(params.is_ok());
-        
+
         let current = monitor.current_params();
         assert!(current.is_ok());
     }

@@ -11,8 +11,8 @@
 //! - Distributivity: a ⊗ (b ⊕ c) = (a ⊗ b) ⊕ (a ⊗ c)
 
 use crate::error::{CoreError, CoreResult};
-use crate::testing::{TestConfig, TestResult, TestRunner};
 use crate::numeric::{RealNumber, ScientificNumber};
+use crate::testing::{TestConfig, TestResult, TestRunner};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
@@ -23,10 +23,10 @@ use crate::random::Rng;
 pub trait MathematicalProperty<T> {
     /// Name of the property
     fn name(&self) -> &str;
-    
+
     /// Test the property with given inputs
     fn test(&self, inputs: &[T]) -> CoreResult<bool>;
-    
+
     /// Generate appropriate test inputs for this property
     fn generate_inputs(&self, generator: &mut dyn PropertyGenerator<T>) -> CoreResult<Vec<T>>;
 }
@@ -35,10 +35,10 @@ pub trait MathematicalProperty<T> {
 pub trait PropertyGenerator<T> {
     /// Generate a random value
     fn generate(&mut self) -> T;
-    
+
     /// Generate a value within a specific range
     fn generate_range(&mut self, min: T, max: T) -> T;
-    
+
     /// Generate multiple related values for testing relationships
     fn generate_related(&mut self, count: usize) -> Vec<T>;
 }
@@ -183,7 +183,7 @@ impl PropertyTestEngine {
         for case_num in 0..self.config.test_cases {
             // Generate inputs for this property
             let inputs = property.generate_inputs(generator)?;
-            
+
             // Test the property
             match property.test(&inputs) {
                 Ok(true) => {
@@ -242,12 +242,12 @@ impl PropertyTestEngine {
         T: Debug + Clone,
     {
         let mut results = Vec::new();
-        
+
         for property in properties {
             let result = self.test_property(property, generator)?;
             results.push(result);
         }
-        
+
         Ok(results)
     }
 }
@@ -322,7 +322,10 @@ where
 {
     /// Create a new associativity property test
     pub fn new(operation: F, tolerance: f64) -> Self {
-        Self { operation, tolerance }
+        Self {
+            operation,
+            tolerance,
+        }
     }
 }
 
@@ -336,9 +339,9 @@ where
 
     fn test(&self, inputs: &[f64]) -> CoreResult<bool> {
         if inputs.len() != 3 {
-            return Err(CoreError::ValidationError(
-                crate::error::ErrorContext::new("Associativity test requires exactly 3 inputs")
-            ));
+            return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                "Associativity test requires exactly 3 inputs",
+            )));
         }
 
         let a = inputs[0];
@@ -375,7 +378,10 @@ where
 {
     /// Create a new commutativity property test
     pub fn new(operation: F, tolerance: f64) -> Self {
-        Self { operation, tolerance }
+        Self {
+            operation,
+            tolerance,
+        }
     }
 }
 
@@ -389,9 +395,9 @@ where
 
     fn test(&self, inputs: &[f64]) -> CoreResult<bool> {
         if inputs.len() != 2 {
-            return Err(CoreError::ValidationError(
-                crate::error::ErrorContext::new("Commutativity test requires exactly 2 inputs")
-            ));
+            return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                "Commutativity test requires exactly 2 inputs",
+            )));
         }
 
         let a = inputs[0];
@@ -442,9 +448,9 @@ where
 
     fn test(&self, inputs: &[f64]) -> CoreResult<bool> {
         if inputs.len() != 1 {
-            return Err(CoreError::ValidationError(
-                crate::error::ErrorContext::new("Identity test requires exactly 1 input")
-            ));
+            return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                "Identity test requires exactly 1 input",
+            )));
         }
 
         let a = inputs[0];
@@ -478,7 +484,10 @@ where
 {
     /// Create a new idempotency property test
     pub fn new(function: F, tolerance: f64) -> Self {
-        Self { function, tolerance }
+        Self {
+            function,
+            tolerance,
+        }
     }
 }
 
@@ -492,9 +501,9 @@ where
 
     fn test(&self, inputs: &[f64]) -> CoreResult<bool> {
         if inputs.len() != 1 {
-            return Err(CoreError::ValidationError(
-                crate::error::ErrorContext::new("Idempotency test requires exactly 1 input")
-            ));
+            return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                "Idempotency test requires exactly 1 input",
+            )));
         }
 
         let x = inputs[0];
@@ -556,9 +565,9 @@ where
 
     fn test(&self, inputs: &[f64]) -> CoreResult<bool> {
         if inputs.len() != 2 {
-            return Err(CoreError::ValidationError(
-                crate::error::ErrorContext::new("Monotonicity test requires exactly 2 inputs")
-            ));
+            return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                "Monotonicity test requires exactly 2 inputs",
+            )));
         }
 
         let x = inputs[0];
@@ -627,10 +636,8 @@ impl PropertyTestUtils {
             )));
         }
 
-        let property_refs: Vec<&dyn MathematicalProperty<f64>> = properties
-            .iter()
-            .map(|p| p.as_ref())
-            .collect();
+        let property_refs: Vec<&dyn MathematicalProperty<f64>> =
+            properties.iter().map(|p| p.as_ref()).collect();
 
         engine.test_properties(property_refs, &mut generator)
     }
@@ -666,10 +673,8 @@ impl PropertyTestUtils {
             }
         }
 
-        let property_refs: Vec<&dyn MathematicalProperty<f64>> = properties
-            .iter()
-            .map(|p| p.as_ref())
-            .collect();
+        let property_refs: Vec<&dyn MathematicalProperty<f64>> =
+            properties.iter().map(|p| p.as_ref()).collect();
 
         engine.test_properties(property_refs, &mut generator)
     }
@@ -735,14 +740,14 @@ impl PropertyTestUtils {
             let prop_config = PropertyTestConfig::default().with_test_cases(100);
             let results = Self::test_function_properties(
                 |x| Ok(x * x),
-                false,                // not idempotent
-                Some(true),           // monotonically increasing for x >= 0
+                false,      // not idempotent
+                Some(true), // monotonically increasing for x >= 0
                 prop_config,
             )?;
 
             // Note: monotonicity will fail for square function over all reals
             // This is expected and demonstrates the framework working correctly
-            
+
             Ok(TestResult::success(Duration::from_millis(100), 100))
         });
 
@@ -758,7 +763,7 @@ mod tests {
     fn test_associativity_property() {
         let property = AssociativityProperty::new(|a, b| Ok(a + b), 1e-10);
         let inputs = vec![1.0, 2.0, 3.0];
-        
+
         let result = property.test(&inputs).unwrap();
         assert!(result); // Addition is associative
     }
@@ -767,7 +772,7 @@ mod tests {
     fn test_commutativity_property() {
         let property = CommutativityProperty::new(|a, b| Ok(a + b), 1e-10);
         let inputs = vec![1.0, 2.0];
-        
+
         let result = property.test(&inputs).unwrap();
         assert!(result); // Addition is commutative
     }
@@ -776,7 +781,7 @@ mod tests {
     fn test_identity_property() {
         let property = IdentityProperty::new(|a, b| Ok(a + b), 0.0, 1e-10);
         let inputs = vec![5.0];
-        
+
         let result = property.test(&inputs).unwrap();
         assert!(result); // 0 is the additive identity
     }
@@ -785,7 +790,7 @@ mod tests {
     fn test_idempotency_property() {
         let property = IdempotencyProperty::new(|x| Ok(x.abs()), 1e-10);
         let inputs = vec![5.0];
-        
+
         let result = property.test(&inputs).unwrap();
         assert!(result); // abs(abs(x)) = abs(x)
     }
@@ -794,7 +799,7 @@ mod tests {
     fn test_monotonicity_property() {
         let property = MonotonicityProperty::increasing(|x| Ok(x * x));
         let inputs = vec![2.0, 3.0]; // Both positive, so x^2 is increasing
-        
+
         let result = property.test(&inputs).unwrap();
         assert!(result);
     }
@@ -802,12 +807,12 @@ mod tests {
     #[test]
     fn test_float_generator() {
         let mut generator = FloatGenerator::new(-10.0, 10.0);
-        
+
         for _ in 0..100 {
             let value = generator.generate();
             assert!(value >= -10.0 && value <= 10.0);
         }
-        
+
         let related = generator.generate_related(5);
         assert_eq!(related.len(), 5);
     }

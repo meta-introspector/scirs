@@ -10,9 +10,6 @@
 
 pub mod performance;
 pub mod regression;
-pub mod comparative;
-pub mod statistical;
-pub mod monitoring;
 
 use crate::error::{CoreError, CoreResult};
 use std::collections::HashMap;
@@ -208,21 +205,20 @@ impl BenchmarkResult {
     /// Finalize the benchmark and compute statistics
     pub fn finalize(&mut self) -> CoreResult<()> {
         if self.measurements.is_empty() {
-            return Err(CoreError::ValidationError(
-                crate::error::ErrorContext::new("No measurements collected")
-            ));
+            return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                "No measurements collected",
+            )));
         }
 
         self.statistics = BenchmarkStatistics::from_measurements(&self.measurements)?;
-        
+
         // Check quality criteria
         self.quality_criteria_met = self.statistics.coefficient_of_variation <= self.config.max_cv;
-        
+
         if !self.quality_criteria_met {
             self.warnings.push(format!(
                 "High coefficient of variation: {:.3} > {:.3}",
-                self.statistics.coefficient_of_variation,
-                self.config.max_cv
+                self.statistics.coefficient_of_variation, self.config.max_cv
             ));
         }
 
@@ -274,39 +270,42 @@ impl BenchmarkStatistics {
     /// Compute statistics from measurements
     pub fn from_measurements(measurements: &[BenchmarkMeasurement]) -> CoreResult<Self> {
         if measurements.is_empty() {
-            return Err(CoreError::ValidationError(
-                crate::error::ErrorContext::new("Cannot compute statistics from empty measurements")
-            ));
+            return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                "Cannot compute statistics from empty measurements",
+            )));
         }
 
         // Extract execution times
-        let mut execution_times: Vec<Duration> = measurements
-            .iter()
-            .map(|m| m.execution_time)
-            .collect();
+        let mut execution_times: Vec<Duration> =
+            measurements.iter().map(|m| m.execution_time).collect();
         execution_times.sort();
 
         // Compute execution time statistics
-        let mean_nanos = execution_times.iter()
+        let mean_nanos = execution_times
+            .iter()
             .map(|d| d.as_nanos() as f64)
-            .sum::<f64>() / execution_times.len() as f64;
+            .sum::<f64>()
+            / execution_times.len() as f64;
         let mean_execution_time = Duration::from_nanos(mean_nanos as u64);
 
         let median_execution_time = if execution_times.len() % 2 == 0 {
             let mid = execution_times.len() / 2;
             Duration::from_nanos(
-                ((execution_times[mid - 1].as_nanos() + execution_times[mid].as_nanos()) / 2) as u64
+                ((execution_times[mid - 1].as_nanos() + execution_times[mid].as_nanos()) / 2)
+                    as u64,
             )
         } else {
             execution_times[execution_times.len() / 2]
         };
 
-        let variance = execution_times.iter()
+        let variance = execution_times
+            .iter()
             .map(|d| {
                 let diff = d.as_nanos() as f64 - mean_nanos;
                 diff * diff
             })
-            .sum::<f64>() / execution_times.len() as f64;
+            .sum::<f64>()
+            / execution_times.len() as f64;
         let std_dev_execution_time = Duration::from_nanos(variance.sqrt() as u64);
 
         let min_execution_time = execution_times[0];
@@ -328,15 +327,19 @@ impl BenchmarkStatistics {
         );
 
         // Memory statistics
-        let mean_memory = measurements.iter()
+        let mean_memory = measurements
+            .iter()
             .map(|m| m.memory_usage as f64)
-            .sum::<f64>() / measurements.len() as f64;
-        let memory_variance = measurements.iter()
+            .sum::<f64>()
+            / measurements.len() as f64;
+        let memory_variance = measurements
+            .iter()
             .map(|m| {
                 let diff = m.memory_usage as f64 - mean_memory;
                 diff * diff
             })
-            .sum::<f64>() / measurements.len() as f64;
+            .sum::<f64>()
+            / measurements.len() as f64;
 
         Ok(BenchmarkStatistics {
             mean_execution_time,
@@ -358,7 +361,11 @@ impl BenchmarkStatistics {
     }
 
     /// Get execution time percentile
-    pub fn execution_time_percentile(&self, measurements: &[BenchmarkMeasurement], percentile: f64) -> Duration {
+    pub fn execution_time_percentile(
+        &self,
+        measurements: &[BenchmarkMeasurement],
+        percentile: f64,
+    ) -> Duration {
         if measurements.is_empty() {
             return Duration::from_secs(0);
         }
@@ -399,9 +406,9 @@ impl BenchmarkRunner {
         let measurement_start = Instant::now();
         let mut iteration_count = 0;
 
-        while iteration_count < self.config.measurement_iterations &&
-              measurement_start.elapsed() < self.config.measurement_time {
-            
+        while iteration_count < self.config.measurement_iterations
+            && measurement_start.elapsed() < self.config.measurement_time
+        {
             let memory_before = if self.config.enable_memory_tracking {
                 self.get_memory_usage().unwrap_or(0)
             } else {
@@ -420,8 +427,9 @@ impl BenchmarkRunner {
 
             let memory_usage = memory_after.saturating_sub(memory_before);
 
-            result.add_measurement(BenchmarkMeasurement::new(execution_time)
-                .with_memory_usage(memory_usage));
+            result.add_measurement(
+                BenchmarkMeasurement::new(execution_time).with_memory_usage(memory_usage),
+            );
 
             iteration_count += 1;
         }
@@ -433,7 +441,13 @@ impl BenchmarkRunner {
     }
 
     /// Run a benchmark with setup and teardown
-    pub fn run_with_setup<F, G, H, T, S>(&self, name: &str, mut setup: F, mut benchmark_fn: G, mut teardown: H) -> CoreResult<BenchmarkResult>
+    pub fn run_with_setup<F, G, H, T, S>(
+        &self,
+        name: &str,
+        mut setup: F,
+        mut benchmark_fn: G,
+        mut teardown: H,
+    ) -> CoreResult<BenchmarkResult>
     where
         F: FnMut() -> CoreResult<S>,
         G: FnMut(&mut S) -> CoreResult<T>,
@@ -453,11 +467,11 @@ impl BenchmarkRunner {
         let measurement_start = Instant::now();
         let mut iteration_count = 0;
 
-        while iteration_count < self.config.measurement_iterations &&
-              measurement_start.elapsed() < self.config.measurement_time {
-            
+        while iteration_count < self.config.measurement_iterations
+            && measurement_start.elapsed() < self.config.measurement_time
+        {
             let mut state = setup()?;
-            
+
             let memory_before = if self.config.enable_memory_tracking {
                 self.get_memory_usage().unwrap_or(0)
             } else {
@@ -478,8 +492,9 @@ impl BenchmarkRunner {
 
             let memory_usage = memory_after.saturating_sub(memory_before);
 
-            result.add_measurement(BenchmarkMeasurement::new(execution_time)
-                .with_memory_usage(memory_usage));
+            result.add_measurement(
+                BenchmarkMeasurement::new(execution_time).with_memory_usage(memory_usage),
+            );
 
             iteration_count += 1;
         }
@@ -491,7 +506,12 @@ impl BenchmarkRunner {
     }
 
     /// Run a parameterized benchmark
-    pub fn run_parameterized<F, T, P>(&self, name: &str, parameters: Vec<P>, mut benchmark_fn: F) -> CoreResult<Vec<(P, BenchmarkResult)>>
+    pub fn run_parameterized<F, T, P>(
+        &self,
+        name: &str,
+        parameters: Vec<P>,
+        mut benchmark_fn: F,
+    ) -> CoreResult<Vec<(P, BenchmarkResult)>>
     where
         F: FnMut(&P) -> CoreResult<T>,
         P: Clone + std::fmt::Debug,
@@ -501,7 +521,7 @@ impl BenchmarkRunner {
         for param in parameters {
             let param_name = format!("{}({:?})", name, param);
             let param_clone = param.clone();
-            
+
             let result = self.run(&param_name, || benchmark_fn(&param_clone))?;
             results.push((param, result));
         }
@@ -516,15 +536,17 @@ impl BenchmarkRunner {
             use std::fs;
             let status = fs::read_to_string("/proc/self/status")
                 .map_err(|e| CoreError::IoError(format!("Failed to read memory status: {}", e)))?;
-                
+
             for line in status.lines() {
                 if line.starts_with("VmRSS:") {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 2 {
-                        let kb: usize = parts[1].parse()
-                            .map_err(|e| CoreError::ValidationError(
-                                crate::error::ErrorContext::new(&format!("Failed to parse memory: {}", e))
-                            ))?;
+                        let kb: usize = parts[1].parse().map_err(|e| {
+                            CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                                "Failed to parse memory: {}",
+                                e
+                            )))
+                        })?;
                         return Ok(kb * 1024);
                     }
                 }
@@ -570,13 +592,15 @@ impl BenchmarkSuite {
 
         for (i, benchmark) in self.benchmarks.iter().enumerate() {
             println!("Running benchmark {}/{}", i + 1, self.benchmarks.len());
-            
+
             match benchmark(&runner) {
                 Ok(result) => {
-                    println!("  {} completed: {:.3}ms ± {:.3}ms", 
-                             result.name,
-                             result.statistics.mean_execution_time.as_millis(),
-                             result.statistics.std_dev_execution_time.as_millis());
+                    println!(
+                        "  {} completed: {:.3}ms ± {:.3}ms",
+                        result.name,
+                        result.statistics.mean_execution_time.as_millis(),
+                        result.statistics.std_dev_execution_time.as_millis()
+                    );
                     results.push(result);
                 }
                 Err(e) => {
@@ -598,20 +622,30 @@ impl BenchmarkSuite {
         println!("----------------------------------------");
 
         for result in results {
-            let quality_indicator = if result.quality_criteria_met { "✓" } else { "⚠" };
-            println!("{} {}: {:.3}ms (CV: {:.2}%)",
-                     quality_indicator,
-                     result.name,
-                     result.statistics.mean_execution_time.as_millis(),
-                     result.statistics.coefficient_of_variation * 100.0);
-            
+            let quality_indicator = if result.quality_criteria_met {
+                "✓"
+            } else {
+                "⚠"
+            };
+            println!(
+                "{} {}: {:.3}ms (CV: {:.2}%)",
+                quality_indicator,
+                result.name,
+                result.statistics.mean_execution_time.as_millis(),
+                result.statistics.coefficient_of_variation * 100.0
+            );
+
             for warning in &result.warnings {
                 println!("    Warning: {}", warning);
             }
         }
 
         let reliable_count = results.iter().filter(|r| r.quality_criteria_met).count();
-        println!("\nReliable benchmarks: {}/{}", reliable_count, results.len());
+        println!(
+            "\nReliable benchmarks: {}/{}",
+            reliable_count,
+            results.len()
+        );
     }
 }
 
@@ -654,7 +688,7 @@ mod tests {
         ];
 
         let stats = BenchmarkStatistics::from_measurements(&measurements).unwrap();
-        
+
         assert_eq!(stats.sample_count, 4);
         assert!(stats.mean_execution_time > Duration::from_millis(95));
         assert!(stats.mean_execution_time < Duration::from_millis(110));
@@ -668,11 +702,13 @@ mod tests {
             .with_measurement_iterations(5);
         let runner = BenchmarkRunner::new(config);
 
-        let result = runner.run("test_benchmark", || {
-            // Simulate some work
-            std::thread::sleep(Duration::from_micros(100));
-            Ok(())
-        }).unwrap();
+        let result = runner
+            .run("test_benchmark", || {
+                // Simulate some work
+                std::thread::sleep(Duration::from_micros(100));
+                Ok(())
+            })
+            .unwrap();
 
         assert_eq!(result.name, "test_benchmark");
         assert_eq!(result.measurements.len(), 5);

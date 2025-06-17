@@ -3,8 +3,8 @@
 //! This module provides automated regression testing to detect performance
 //! degradation over time and across different versions of the codebase.
 
-use crate::error::{CoreError, CoreResult};
 use crate::benchmarking::{BenchmarkConfig, BenchmarkResult, BenchmarkRunner};
+use crate::error::{CoreError, CoreResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -190,10 +190,10 @@ impl RegressionDetector {
     /// Analyze a benchmark result for regressions
     pub fn analyze_regression(&self, result: &BenchmarkResult) -> CoreResult<RegressionAnalysis> {
         let current_result = HistoricalResult::from_benchmark_result(result);
-        
+
         // Load historical results
         let historical_results = self.load_historical_results(&result.name)?;
-        
+
         if historical_results.len() < self.config.min_historical_samples {
             return Ok(RegressionAnalysis {
                 benchmark_name: result.name.clone(),
@@ -210,22 +210,20 @@ impl RegressionDetector {
 
         // Calculate baseline from historical results
         let baseline = self.calculate_baseline(&historical_results)?;
-        
+
         // Detect regression
-        let performance_ratio = current_result.mean_execution_time_nanos as f64 
+        let performance_ratio = current_result.mean_execution_time_nanos as f64
             / baseline.mean_execution_time_nanos as f64;
-        
+
         let regression_detected = performance_ratio > self.config.regression_threshold;
-        
+
         // Calculate statistical significance
-        let statistical_significance = self.calculate_statistical_significance(
-            &current_result,
-            &historical_results,
-        )?;
-        
+        let statistical_significance =
+            self.calculate_statistical_significance(&current_result, &historical_results)?;
+
         // Analyze trend
         let trend = self.analyze_trend(&historical_results)?;
-        
+
         // Calculate confidence based on sample size and variance
         let confidence = self.calculate_confidence(&historical_results, &current_result)?;
 
@@ -248,88 +246,87 @@ impl RegressionDetector {
         results: &[BenchmarkResult],
     ) -> CoreResult<Vec<RegressionAnalysis>> {
         let mut analyses = Vec::new();
-        
+
         for result in results {
             let analysis = self.analyze_regression(result)?;
             analyses.push(analysis);
         }
-        
+
         Ok(analyses)
     }
 
     /// Store a benchmark result for future regression analysis
     pub fn store_result(&self, result: &BenchmarkResult) -> CoreResult<()> {
         let historical_result = HistoricalResult::from_benchmark_result(result);
-        
+
         // Ensure results directory exists
         fs::create_dir_all(&self.config.results_directory).map_err(|e| {
             CoreError::IoError(format!("Failed to create results directory: {}", e))
         })?;
-        
+
         // Load existing results
         let mut historical_results = self.load_historical_results(&result.name)?;
-        
+
         // Add new result
         historical_results.push(historical_result);
-        
+
         // Sort by timestamp
         historical_results.sort_by_key(|r| r.timestamp);
-        
+
         // Limit history size (keep last 1000 results)
         if historical_results.len() > 1000 {
             historical_results.drain(0..historical_results.len() - 1000);
         }
-        
+
         // Save results
         let file_path = self.get_results_file_path(&result.name);
-        let serialized = serde_json::to_string_pretty(&historical_results).map_err(|e| {
-            CoreError::IoError(format!("Failed to serialize results: {}", e))
-        })?;
-        
-        fs::write(&file_path, serialized).map_err(|e| {
-            CoreError::IoError(format!("Failed to write results file: {}", e))
-        })?;
-        
+        let serialized = serde_json::to_string_pretty(&historical_results)
+            .map_err(|e| CoreError::IoError(format!("Failed to serialize results: {}", e)))?;
+
+        fs::write(&file_path, serialized)
+            .map_err(|e| CoreError::IoError(format!("Failed to write results file: {}", e)))?;
+
         Ok(())
     }
 
     /// Load historical results for a benchmark
     fn load_historical_results(&self, benchmark_name: &str) -> CoreResult<Vec<HistoricalResult>> {
         let file_path = self.get_results_file_path(benchmark_name);
-        
+
         if !file_path.exists() {
             return Ok(Vec::new());
         }
-        
-        let content = fs::read_to_string(&file_path).map_err(|e| {
-            CoreError::IoError(format!("Failed to read results file: {}", e))
-        })?;
-        
-        let results: Vec<HistoricalResult> = serde_json::from_str(&content).map_err(|e| {
-            CoreError::IoError(format!("Failed to parse results file: {}", e))
-        })?;
-        
+
+        let content = fs::read_to_string(&file_path)
+            .map_err(|e| CoreError::IoError(format!("Failed to read results file: {}", e)))?;
+
+        let results: Vec<HistoricalResult> = serde_json::from_str(&content)
+            .map_err(|e| CoreError::IoError(format!("Failed to parse results file: {}", e)))?;
+
         Ok(results)
     }
 
     /// Calculate baseline performance from historical results
-    fn calculate_baseline(&self, historical_results: &[HistoricalResult]) -> CoreResult<HistoricalResult> {
+    fn calculate_baseline(
+        &self,
+        historical_results: &[HistoricalResult],
+    ) -> CoreResult<HistoricalResult> {
         if historical_results.is_empty() {
-            return Err(CoreError::ValidationError(
-                crate::error::ErrorContext::new("No historical results for baseline calculation")
-            ));
+            return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                "No historical results for baseline calculation",
+            )));
         }
 
         // Use the median of recent results as baseline
         let recent_count = (historical_results.len() / 3).max(self.config.min_historical_samples);
         let recent_results = &historical_results[historical_results.len() - recent_count..];
-        
+
         let mut execution_times: Vec<u64> = recent_results
             .iter()
             .map(|r| r.mean_execution_time_nanos)
             .collect();
         execution_times.sort();
-        
+
         let median_time = if execution_times.len() % 2 == 0 {
             let mid = execution_times.len() / 2;
             (execution_times[mid - 1] + execution_times[mid]) / 2
@@ -340,7 +337,7 @@ impl RegressionDetector {
         // Create a synthetic baseline result
         let mut baseline = recent_results[recent_results.len() / 2].clone();
         baseline.mean_execution_time_nanos = median_time;
-        
+
         Ok(baseline)
     }
 
@@ -359,18 +356,20 @@ impl RegressionDetector {
             .iter()
             .map(|r| r.mean_execution_time_nanos as f64)
             .collect();
-        
+
         let historical_mean = historical_times.iter().sum::<f64>() / historical_times.len() as f64;
         let historical_variance = historical_times
             .iter()
             .map(|&x| (x - historical_mean).powi(2))
-            .sum::<f64>() / (historical_times.len() - 1) as f64;
+            .sum::<f64>()
+            / (historical_times.len() - 1) as f64;
         let historical_std = historical_variance.sqrt();
 
         // Calculate z-score
         let current_time = current.mean_execution_time_nanos as f64;
-        let z_score = (current_time - historical_mean) / (historical_std / (historical.len() as f64).sqrt());
-        
+        let z_score =
+            (current_time - historical_mean) / (historical_std / (historical.len() as f64).sqrt());
+
         // Convert to p-value (simplified normal distribution approximation)
         let p_value = if z_score > 0.0 {
             0.5 * (1.0 - erf(z_score / std::f64::consts::SQRT_2))
@@ -382,7 +381,10 @@ impl RegressionDetector {
     }
 
     /// Analyze performance trend over time
-    fn analyze_trend(&self, historical_results: &[HistoricalResult]) -> CoreResult<PerformanceTrend> {
+    fn analyze_trend(
+        &self,
+        historical_results: &[HistoricalResult],
+    ) -> CoreResult<PerformanceTrend> {
         if historical_results.len() < 5 {
             return Ok(PerformanceTrend::Unknown);
         }
@@ -399,13 +401,15 @@ impl RegressionDetector {
             .enumerate()
             .map(|(i, r)| i as f64 * r.mean_execution_time_nanos as f64)
             .sum();
-        let sum_x_sq: f64 = (0..historical_results.len()).map(|i| (i as f64).powi(2)).sum();
+        let sum_x_sq: f64 = (0..historical_results.len())
+            .map(|i| (i as f64).powi(2))
+            .sum();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x_sq - sum_x.powi(2));
-        
+
         // Classify trend based on slope
         let relative_slope = slope / (sum_y / n); // Normalize by mean
-        
+
         if relative_slope > 0.01 {
             Ok(PerformanceTrend::Degrading)
         } else if relative_slope < -0.01 {
@@ -427,14 +431,16 @@ impl RegressionDetector {
         } else {
             (0.1 / current.coefficient_of_variation).min(1.0)
         };
-        
+
         Ok(sample_size_factor * variance_factor)
     }
 
     /// Get the file path for storing results
     fn get_results_file_path(&self, benchmark_name: &str) -> PathBuf {
         let safe_name = benchmark_name.replace(|c: char| !c.is_alphanumeric(), "_");
-        self.config.results_directory.join(format!("{}.json", safe_name))
+        self.config
+            .results_directory
+            .join(format!("{}.json", safe_name))
     }
 }
 
@@ -472,16 +478,19 @@ impl RegressionTestUtils {
     /// Generate a regression report
     pub fn generate_report(analyses: &[RegressionAnalysis]) -> String {
         let mut report = String::new();
-        
+
         report.push_str("# Performance Regression Report\n\n");
-        
+
         let regressions: Vec<_> = analyses.iter().filter(|a| a.regression_detected).collect();
-        
+
         if regressions.is_empty() {
             report.push_str("✅ No performance regressions detected.\n\n");
         } else {
-            report.push_str(&format!("⚠️ {} performance regression(s) detected:\n\n", regressions.len()));
-            
+            report.push_str(&format!(
+                "⚠️ {} performance regression(s) detected:\n\n",
+                regressions.len()
+            ));
+
             for regression in regressions {
                 report.push_str(&format!(
                     "- **{}**: {:.1}% slower (ratio: {:.3}, confidence: {:.0}%)\n",
@@ -498,15 +507,24 @@ impl RegressionTestUtils {
         report.push_str("## Summary\n\n");
         report.push_str(&format!("- Total benchmarks: {}\n", analyses.len()));
         report.push_str(&format!("- Regressions detected: {}\n", regressions.len()));
-        
-        let improving = analyses.iter().filter(|a| a.trend == PerformanceTrend::Improving).count();
-        let stable = analyses.iter().filter(|a| a.trend == PerformanceTrend::Stable).count();
-        let degrading = analyses.iter().filter(|a| a.trend == PerformanceTrend::Degrading).count();
-        
+
+        let improving = analyses
+            .iter()
+            .filter(|a| a.trend == PerformanceTrend::Improving)
+            .count();
+        let stable = analyses
+            .iter()
+            .filter(|a| a.trend == PerformanceTrend::Stable)
+            .count();
+        let degrading = analyses
+            .iter()
+            .filter(|a| a.trend == PerformanceTrend::Degrading)
+            .count();
+
         report.push_str(&format!("- Improving trends: {}\n", improving));
         report.push_str(&format!("- Stable trends: {}\n", stable));
         report.push_str(&format!("- Degrading trends: {}\n", degrading));
-        
+
         report
     }
 }
@@ -553,11 +571,13 @@ mod tests {
     fn test_historical_result() {
         let benchmark_config = BenchmarkConfig::default();
         let mut result = BenchmarkResult::new("test_benchmark".to_string(), benchmark_config);
-        result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(Duration::from_millis(100)));
+        result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(
+            Duration::from_millis(100),
+        ));
         result.finalize().unwrap();
 
         let historical = HistoricalResult::from_benchmark_result(&result);
-        
+
         assert_eq!(historical.benchmark_name, "test_benchmark");
         assert!(historical.mean_execution_time_nanos > 0);
         assert_eq!(historical.sample_count, 1);
@@ -571,17 +591,19 @@ mod tests {
             .with_min_historical_samples(1);
 
         let detector = RegressionDetector::new(config);
-        
+
         // Create a test benchmark result
         let benchmark_config = BenchmarkConfig::default();
         let mut result = BenchmarkResult::new("test_regression".to_string(), benchmark_config);
-        result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(Duration::from_millis(100)));
+        result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(
+            Duration::from_millis(100),
+        ));
         result.finalize().unwrap();
 
         // Store and analyze
         detector.store_result(&result).unwrap();
         let analysis = detector.analyze_regression(&result).unwrap();
-        
+
         assert_eq!(analysis.benchmark_name, "test_regression");
         assert!(!analysis.regression_detected); // First result can't be a regression
     }

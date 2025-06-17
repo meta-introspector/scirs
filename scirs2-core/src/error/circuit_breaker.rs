@@ -724,7 +724,6 @@ pub fn list_circuit_breakers() -> CoreResult<Vec<CircuitBreakerStatus>> {
 }
 
 /// Convenience macros
-
 /// Execute with circuit breaker protection
 #[macro_export]
 macro_rules! with_circuit_breaker {

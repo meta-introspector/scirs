@@ -3,8 +3,10 @@
 //! This module generates optimal parameters for various operations
 //! based on detected system resources.
 
+use super::{
+    cpu::CpuInfo, gpu::GpuInfo, memory::MemoryInfo, network::NetworkInfo, storage::StorageInfo,
+};
 use crate::error::CoreResult;
-use super::{cpu::CpuInfo, memory::MemoryInfo, gpu::GpuInfo, network::NetworkInfo, storage::StorageInfo};
 
 /// Optimization parameters for system operations
 #[derive(Debug, Clone)]
@@ -32,7 +34,9 @@ pub struct OptimizationParams {
 impl Default for OptimizationParams {
     fn default() -> Self {
         Self {
-            thread_count: std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4),
+            thread_count: std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(4),
             chunk_size: 64 * 1024, // 64KB default
             enable_simd: false,
             enable_gpu: false,
@@ -60,7 +64,7 @@ impl OptimizationParams {
         let enable_gpu = Self::should_enable_gpu(gpu);
         let enable_prefetch = Self::should_enable_prefetch(memory, storage);
         let numa_aware = memory.numa_nodes > 1;
-        
+
         let cache_params = CacheParams::from_cpu(cpu);
         let io_params = IoParams::from_resources(network, storage);
         let gpu_params = gpu.map(GpuParams::from_gpu);
@@ -81,21 +85,21 @@ impl OptimizationParams {
     /// Calculate optimal thread count
     fn calculate_optimal_thread_count(cpu: &CpuInfo, memory: &MemoryInfo) -> usize {
         let base_threads = cpu.physical_cores;
-        
+
         // Add hyperthreading benefit for certain workloads
         let ht_benefit = if cpu.logical_cores > cpu.physical_cores {
             (cpu.logical_cores - cpu.physical_cores) / 2
         } else {
             0
         };
-        
+
         // Consider memory pressure
         let memory_factor = if memory.is_under_pressure() {
             0.75 // Reduce threads under memory pressure
         } else {
             1.0
         };
-        
+
         let optimal = ((base_threads + ht_benefit) as f64 * memory_factor) as usize;
         optimal.max(1).min(cpu.logical_cores)
     }
@@ -108,16 +112,17 @@ impl OptimizationParams {
     ) -> usize {
         // Base on CPU cache size
         let cache_based = cpu.cache_l3_kb * 1024 / 4; // Use 1/4 of L3 cache
-        
+
         // Base on memory bandwidth
         let memory_based = memory.optimal_chunk_size();
-        
+
         // Base on storage characteristics
         let storage_based = storage.optimal_io_size;
-        
+
         // Take the geometric mean to balance all factors
-        let geometric_mean = ((cache_based as f64 * memory_based as f64 * storage_based as f64).powf(1.0 / 3.0)) as usize;
-        
+        let geometric_mean = ((cache_based as f64 * memory_based as f64 * storage_based as f64)
+            .powf(1.0 / 3.0)) as usize;
+
         // Ensure it's a reasonable size (between 4KB and 64MB)
         geometric_mean.max(4 * 1024).min(64 * 1024 * 1024)
     }
@@ -156,7 +161,9 @@ impl OptimizationParams {
             WorkloadType::CpuIntensive => {
                 // Maximize CPU utilization
                 self.thread_count = self.thread_count.max(
-                    std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4)
+                    std::thread::available_parallelism()
+                        .map(|n| n.get())
+                        .unwrap_or(4),
                 );
                 self.chunk_size = self.chunk_size.max(1024 * 1024); // Larger chunks
             }
@@ -209,10 +216,10 @@ impl CacheParams {
     pub fn from_cpu(cpu: &CpuInfo) -> Self {
         let cache_line_size = 64; // Most modern CPUs use 64-byte cache lines
         let alignment = cache_line_size;
-        
+
         // Prefetch distance based on cache size
         let prefetch_distance = (cpu.cache_l1_kb * 1024 / 16).max(64).min(1024);
-        
+
         // Tile size based on L1 cache
         let tile_size = (cpu.cache_l1_kb * 1024 / 8).max(64).min(4096);
 
@@ -288,7 +295,7 @@ impl GpuParams {
         let workgroup_count = (gpu.compute_units * 4).min(65535); // 4 workgroups per compute unit, capped
         let shared_memory_size = 16 * 1024; // 16KB default shared memory
         let use_unified_memory = gpu.features.unified_memory;
-        
+
         let transfer_strategy = if gpu.memory_bandwidth_gbps > 500.0 {
             GpuTransferStrategy::HighBandwidth
         } else if use_unified_memory {
@@ -426,7 +433,7 @@ mod tests {
     #[test]
     fn test_scaling_factor() {
         let params = OptimizationParams::default();
-        
+
         assert_eq!(params.scaling_factor(1024), 1.0); // Small problem
         assert!(params.scaling_factor(1024 * 1024 * 4) > 1.0); // Larger problem
     }

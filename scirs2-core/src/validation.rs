@@ -879,3 +879,7 @@ mod tests {
 
 // Production-level validation with comprehensive security and performance features
 pub mod production;
+
+/// Comprehensive data validation system with schema validation and constraint enforcement
+#[cfg(feature = "data_validation")]
+pub mod data;

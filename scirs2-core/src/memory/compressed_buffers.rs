@@ -3,10 +3,10 @@
 //! This module provides compressed memory buffer implementations for memory-constrained environments.
 //! It supports various compression algorithms optimized for scientific data patterns.
 
-use crate::error::ScirsError;
+use crate::error::CoreError;
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use lz4::{Decoder as Lz4Decoder, EncoderBuilder as Lz4EncoderBuilder};
-use ndarray::{Array, ArrayBase, Data, Dimension, Ix1, Ix2};
+use ndarray::{Array, ArrayBase, Data, Dimension};
 use std::io::Result as IoResult;
 use std::io::{Read, Write};
 use std::marker::PhantomData;
@@ -172,7 +172,7 @@ where
         array: &ArrayBase<S, D>,
         algorithm: CompressionAlgorithm,
         level: CompressionLevel,
-    ) -> Result<Self, ScirsError>
+    ) -> Result<Self, CoreError>
     where
         S: Data<Elem = T>,
     {
@@ -185,7 +185,7 @@ where
         };
 
         let buffer = CompressedBuffer::new(&data, algorithm, level)
-            .map_err(|e| ScirsError::CompressionError(e.to_string()))?;
+            .map_err(|e| CoreError::CompressionError(e.to_string()))?;
 
         Ok(Self {
             buffer,
@@ -195,14 +195,14 @@ where
     }
 
     /// Decompress and reconstruct the original array
-    pub fn to_array(&self) -> Result<Array<T, D>, ScirsError> {
+    pub fn to_array(&self) -> Result<Array<T, D>, CoreError> {
         let data = self
             .buffer
             .decompress()
-            .map_err(|e| ScirsError::CompressionError(e.to_string()))?;
+            .map_err(|e| CoreError::CompressionError(e.to_string()))?;
 
         Array::from_shape_vec(self.shape.clone(), data)
-            .map_err(|e| ScirsError::InvalidShape(e.to_string()))
+            .map_err(|e| CoreError::InvalidShape(e.to_string()))
     }
 
     /// Get the compression ratio

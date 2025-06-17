@@ -913,7 +913,7 @@ mod tests {
 
     #[test]
     fn test_test_results() {
-        let mut results = TestResults::new();
+        let mut results: TestResults<f64> = TestResults::new();
         assert_eq!(results.test_results.len(), 0);
 
         results.clear();
@@ -938,7 +938,8 @@ mod tests {
 
     #[test]
     fn test_scenario_creation() {
-        let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0], vec![3]);
+        let graph = crate::Graph::<f32>::new();
+        let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0], vec![3], &graph);
         let scenario = create_test_scenario(
             "test_scenario".to_string(),
             "A test scenario".to_string(),

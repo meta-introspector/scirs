@@ -625,7 +625,7 @@ mod tests {
 
     #[test]
     fn test_stability_report() {
-        let report = StabilityReport::new();
+        let report: StabilityReport<f64> = StabilityReport::new();
         assert!(matches!(report.overall_grade, StabilityGrade::Unknown));
     }
 

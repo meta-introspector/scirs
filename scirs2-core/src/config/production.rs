@@ -142,7 +142,6 @@ pub trait ConfigValidator: Send + Sync {
 }
 
 /// Built-in validators
-
 /// Validates positive integers
 pub struct PositiveIntValidator;
 
@@ -772,7 +771,6 @@ pub fn global_config() -> &'static ProductionConfig {
 }
 
 /// Configuration convenience macros
-
 /// Get a configuration value with type conversion
 #[macro_export]
 macro_rules! config_get {

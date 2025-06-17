@@ -738,10 +738,10 @@ mod tests {
 
     #[test]
     fn test_learning_rate_scheduler() {
-        let mut scheduler = StepLRScheduler::<f32>::new(0.1, 5, 0.5);
+        let mut scheduler = StepLRScheduler::new(0.1, 5, 0.5);
         let mut optimizer = SGDOptimizer::<f32>::new(0.1, 0.0);
 
-        assert_eq!(scheduler.get_lr(), 0.1);
+        assert_eq!(scheduler.get_lr(), 0.1f64);
 
         // Step 5 times
         for _ in 0..5 {
@@ -757,7 +757,7 @@ mod tests {
         let mut scheduler = CosineAnnealingLRScheduler::new(0.1, 10, 0.0);
         let mut optimizer = SGDOptimizer::<f32>::new(0.1, 0.0);
 
-        let initial_lr = scheduler.get_lr();
+        let initial_lr: f64 = scheduler.get_lr();
 
         // Step halfway
         for _ in 0..5 {

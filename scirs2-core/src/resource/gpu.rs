@@ -41,34 +41,34 @@ impl GpuInfo {
             if let Ok(gpu) = Self::detect_cuda() {
                 return Ok(gpu);
             }
-            
+
             if let Ok(gpu) = Self::detect_opencl() {
                 return Ok(gpu);
             }
-            
+
             if let Ok(gpu) = Self::detect_vulkan() {
                 return Ok(gpu);
             }
         }
-        
+
         // Try platform-specific detection
         #[cfg(target_os = "linux")]
         if let Ok(gpu) = Self::detect_linux() {
             return Ok(gpu);
         }
-        
+
         #[cfg(target_os = "windows")]
         if let Ok(gpu) = Self::detect_windows() {
             return Ok(gpu);
         }
-        
+
         #[cfg(target_os = "macos")]
         if let Ok(gpu) = Self::detect_macos() {
             return Ok(gpu);
         }
-        
+
         Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("No GPU detected")
+            crate::error::ErrorContext::new("No GPU detected"),
         ))
     }
 
@@ -78,7 +78,7 @@ impl GpuInfo {
         // In a real implementation, this would use CUDA runtime API
         // For now, return a placeholder
         Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("CUDA detection not implemented")
+            crate::error::ErrorContext::new("CUDA detection not implemented"),
         ))
     }
 
@@ -87,7 +87,7 @@ impl GpuInfo {
     fn detect_opencl() -> CoreResult<Self> {
         // In a real implementation, this would use OpenCL API
         Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("OpenCL detection not implemented")
+            crate::error::ErrorContext::new("OpenCL detection not implemented"),
         ))
     }
 
@@ -96,7 +96,7 @@ impl GpuInfo {
     fn detect_vulkan() -> CoreResult<Self> {
         // In a real implementation, this would use Vulkan API
         Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("Vulkan detection not implemented")
+            crate::error::ErrorContext::new("Vulkan detection not implemented"),
         ))
     }
 
@@ -104,7 +104,7 @@ impl GpuInfo {
     #[cfg(target_os = "linux")]
     fn detect_linux() -> CoreResult<Self> {
         use std::fs;
-        
+
         // Try to detect via /sys/class/drm
         if let Ok(entries) = fs::read_dir("/sys/class/drm") {
             for entry in entries.flatten() {
@@ -117,7 +117,7 @@ impl GpuInfo {
                             if let Ok(device) = fs::read_to_string(device_path.join("device")) {
                                 let vendor_id = vendor.trim();
                                 let device_id = device.trim();
-                                
+
                                 return Ok(Self::create_from_pci_ids(vendor_id, device_id));
                             }
                         }
@@ -125,9 +125,9 @@ impl GpuInfo {
                 }
             }
         }
-        
+
         Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("No GPU detected on Linux")
+            crate::error::ErrorContext::new("No GPU detected on Linux"),
         ))
     }
 
@@ -136,7 +136,7 @@ impl GpuInfo {
     fn detect_windows() -> CoreResult<Self> {
         // In a real implementation, this would use DXGI or WMI
         Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("Windows GPU detection not implemented")
+            crate::error::ErrorContext::new("Windows GPU detection not implemented"),
         ))
     }
 
@@ -171,9 +171,9 @@ impl GpuInfo {
                 },
             });
         }
-        
+
         Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("macOS GPU detection not implemented")
+            crate::error::ErrorContext::new("macOS GPU detection not implemented"),
         ))
     }
 
@@ -239,8 +239,7 @@ impl GpuInfo {
 
     /// Check if suitable for machine learning
     pub fn is_ml_capable(&self) -> bool {
-        self.is_compute_capable() &&
-        (self.features.tensor_cores || self.features.half_precision)
+        self.is_compute_capable() && (self.features.tensor_cores || self.features.half_precision)
     }
 }
 
@@ -344,15 +343,15 @@ impl MultiGpuInfo {
     /// Detect all available GPUs
     pub fn detect() -> CoreResult<Self> {
         let mut gpus = Vec::new();
-        
+
         // Try to detect multiple GPUs
         // This is simplified - real implementation would enumerate all devices
         if let Ok(gpu) = GpuInfo::detect() {
             gpus.push(gpu);
         }
-        
+
         let total_memory = gpus.iter().map(|gpu| gpu.memory_total).sum();
-        
+
         Ok(Self {
             gpus,
             total_memory,
@@ -366,7 +365,11 @@ impl MultiGpuInfo {
         self.gpus
             .iter()
             .filter(|gpu| gpu.is_compute_capable())
-            .max_by(|a, b| a.performance_score().partial_cmp(&b.performance_score()).unwrap())
+            .max_by(|a, b| {
+                a.performance_score()
+                    .partial_cmp(&b.performance_score())
+                    .unwrap()
+            })
     }
 
     /// Get total compute capability
@@ -414,7 +417,7 @@ mod tests {
             tensor_cores: true,
             ..Default::default()
         };
-        
+
         assert!(features.unified_memory);
         assert!(features.tensor_cores);
         assert!(!features.ray_tracing);
@@ -461,7 +464,7 @@ impl Default for GpuInfo {
         Self {
             name: "Default GPU".to_string(),
             vendor: GpuVendor::Unknown,
-            memory_total: 4 * 1024 * 1024 * 1024, // 4GB
+            memory_total: 4 * 1024 * 1024 * 1024,     // 4GB
             memory_available: 3 * 1024 * 1024 * 1024, // 3GB
             memory_bandwidth_gbps: 200.0,
             compute_units: 512,

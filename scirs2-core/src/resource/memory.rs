@@ -30,7 +30,7 @@ pub struct MemoryInfo {
 impl Default for MemoryInfo {
     fn default() -> Self {
         Self {
-            total_memory: 8 * 1024 * 1024 * 1024, // 8GB default
+            total_memory: 8 * 1024 * 1024 * 1024,     // 8GB default
             available_memory: 4 * 1024 * 1024 * 1024, // 4GB default
             page_size: 4096,
             bandwidth_gbps: 20.0,
@@ -47,13 +47,13 @@ impl MemoryInfo {
     pub fn detect() -> CoreResult<Self> {
         #[cfg(target_os = "linux")]
         return Self::detect_linux();
-        
+
         #[cfg(target_os = "windows")]
         return Self::detect_windows();
-        
+
         #[cfg(target_os = "macos")]
         return Self::detect_macos();
-        
+
         #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
         return Ok(Self::default());
     }
@@ -62,7 +62,10 @@ impl MemoryInfo {
     #[cfg(target_os = "linux")]
     fn detect_linux() -> CoreResult<Self> {
         let meminfo = fs::read_to_string("/proc/meminfo").map_err(|e| {
-            CoreError::IoError(crate::error::ErrorContext::new(&format!("Failed to read /proc/meminfo: {}", e)))
+            CoreError::IoError(crate::error::ErrorContext::new(&format!(
+                "Failed to read /proc/meminfo: {}",
+                e
+            )))
         })?;
 
         let mut total_memory = 8 * 1024 * 1024 * 1024; // Default 8GB
@@ -137,18 +140,14 @@ impl MemoryInfo {
             if let Ok(entries) = fs::read_dir("/sys/devices/system/node") {
                 let node_count = entries
                     .filter_map(|entry| entry.ok())
-                    .filter(|entry| {
-                        entry.file_name()
-                            .to_string_lossy()
-                            .starts_with("node")
-                    })
+                    .filter(|entry| entry.file_name().to_string_lossy().starts_with("node"))
                     .count();
                 if node_count > 0 {
                     return node_count;
                 }
             }
         }
-        
+
         1 // Default to single NUMA node
     }
 
@@ -159,7 +158,7 @@ impl MemoryInfo {
         // 1. Read from hardware databases
         // 2. Run memory benchmarks
         // 3. Query system information APIs
-        
+
         #[cfg(target_os = "linux")]
         {
             // Try to estimate based on memory type
@@ -170,7 +169,7 @@ impl MemoryInfo {
                 }
             }
         }
-        
+
         20.0 // Default estimation
     }
 
@@ -206,7 +205,7 @@ impl MemoryInfo {
                 }
             }
         }
-        
+
         MemoryPressure::Low
     }
 
@@ -227,7 +226,8 @@ impl MemoryInfo {
 
     /// Calculate performance score (0.0 to 1.0)
     pub fn performance_score(&self) -> f64 {
-        let capacity_score = (self.total_memory as f64 / (64.0 * 1024.0 * 1024.0 * 1024.0)).min(1.0); // Normalize to 64GB
+        let capacity_score =
+            (self.total_memory as f64 / (64.0 * 1024.0 * 1024.0 * 1024.0)).min(1.0); // Normalize to 64GB
         let bandwidth_score = (self.bandwidth_gbps / 100.0).min(1.0); // Normalize to 100 GB/s
         let latency_score = (200.0 / self.latency_ns).min(1.0); // Lower latency is better
         let availability_score = self.available_memory as f64 / self.total_memory as f64;
@@ -244,16 +244,16 @@ impl MemoryInfo {
         } else if available_mb > 256 {
             16 // 16MB for systems with >256MB available
         } else {
-            4  // 4MB for smaller systems
+            4 // 4MB for smaller systems
         };
-        
+
         (chunk_mb * 1024 * 1024).max(self.page_size * 16) // At least 16 pages
     }
 
     /// Check if memory pressure is high
     pub fn is_under_pressure(&self) -> bool {
-        matches!(self.pressure, MemoryPressure::High) ||
-        (self.available_memory * 100 / self.total_memory) < 10 // Less than 10% available
+        matches!(self.pressure, MemoryPressure::High)
+            || (self.available_memory * 100 / self.total_memory) < 10 // Less than 10% available
     }
 
     /// Get recommended memory allocation strategy
@@ -331,7 +331,7 @@ mod tests {
     fn test_memory_detection() {
         let memory_info = MemoryInfo::detect();
         assert!(memory_info.is_ok());
-        
+
         let memory = memory_info.unwrap();
         assert!(memory.total_memory > 0);
         assert!(memory.available_memory > 0);
@@ -360,7 +360,7 @@ mod tests {
             free: 512 * 1024 * 1024,   // 512MB
             used: 512 * 1024 * 1024,   // 512MB
         };
-        
+
         assert!(swap.is_swap_active());
         assert_eq!(swap.usage_percentage(), 50.0);
     }
@@ -368,11 +368,14 @@ mod tests {
     #[test]
     fn test_allocation_strategy() {
         let mut memory = MemoryInfo::default();
-        
+
         // Test conservative strategy under pressure
         memory.available_memory = memory.total_memory / 20; // 5% available
-        assert_eq!(memory.allocation_strategy(), AllocationStrategy::Conservative);
-        
+        assert_eq!(
+            memory.allocation_strategy(),
+            AllocationStrategy::Conservative
+        );
+
         // Test NUMA-aware strategy
         memory.numa_nodes = 2;
         memory.available_memory = memory.total_memory / 2; // 50% available

@@ -430,36 +430,42 @@ mod tests {
 
     #[test]
     fn test_metadata_extraction() {
-        let converter = TensorConverter::new();
-        let tensor = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2]);
+        crate::run(|g| {
+            let converter = TensorConverter::new();
+            let tensor = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
 
-        let metadata = converter.extract_metadata(&tensor).unwrap();
-        assert_eq!(metadata.shape, vec![2, 2]);
-        assert!(metadata.dtype.contains("f32"));
-        assert_eq!(metadata.memory_layout, MemoryLayout::RowMajor);
-        assert!(!metadata.requires_grad);
-        assert_eq!(metadata.device, DeviceInfo::CPU);
+            let metadata = converter.extract_metadata(&tensor).unwrap();
+            assert_eq!(metadata.shape, vec![2, 2]);
+            assert!(metadata.dtype.contains("f32"));
+            assert_eq!(metadata.memory_layout, MemoryLayout::RowMajor);
+            assert!(!metadata.requires_grad);
+            assert_eq!(metadata.device, DeviceInfo::CPU);
+        });
     }
 
     #[test]
     fn test_precision_conversion() {
-        let converter = TensorConverter::new();
-        let tensor_f32 = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2]);
+        crate::run(|g| {
+            let converter = TensorConverter::new();
+            let tensor_f32 = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
 
-        let tensor_f64: Tensor<f64> = converter.convert_precision(&tensor_f32).unwrap();
-        assert_eq!(tensor_f64.shape(), tensor_f32.shape());
-        assert_eq!(tensor_f64.data()[0], 1.0f64);
+            let tensor_f64: Tensor<f64> = converter.convert_precision(&tensor_f32, g).unwrap();
+            assert_eq!(tensor_f64.shape(), tensor_f32.shape());
+            assert_eq!(tensor_f64.data()[0], 1.0f64);
+        });
     }
 
     #[test]
     fn test_tensor_view() {
-        let tensor = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2]);
-        let converter = TensorConverter::new();
+        crate::run(|g| {
+            let tensor = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
+            let converter = TensorConverter::new();
 
-        let view = converter.create_view(&tensor).unwrap();
-        assert_eq!(view.shape, vec![2, 2]);
-        assert_eq!(view.get(&[0, 0]).unwrap(), 1.0f32);
-        assert_eq!(view.get(&[1, 1]).unwrap(), 4.0f32);
+            let view = converter.create_view(&tensor).unwrap();
+            assert_eq!(view.shape, vec![2, 2]);
+            assert_eq!(view.get(&[0, 0]).unwrap(), 1.0f32);
+            assert_eq!(view.get(&[1, 1]).unwrap(), 4.0f32);
+        });
     }
 
     #[test]
@@ -478,14 +484,16 @@ mod tests {
 
     #[test]
     fn test_global_converter() {
-        let tensor = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2]);
+        crate::run(|g| {
+            let tensor = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
 
-        // Test conversion to JSON format
-        let json_data = convert_tensor_to(&tensor, "json").unwrap();
-        assert!(!json_data.is_empty());
+            // Test conversion to JSON format
+            let json_data = convert_tensor_to(&tensor, "json").unwrap();
+            assert!(!json_data.is_empty());
 
-        // Test precision conversion
-        let tensor_f64: Tensor<f64> = convert_tensor_precision(&tensor).unwrap();
-        assert_eq!(tensor_f64.shape(), tensor.shape());
+            // Test precision conversion
+            let tensor_f64: Tensor<f64> = convert_tensor_precision(&tensor).unwrap();
+            assert_eq!(tensor_f64.shape(), tensor.shape());
+        });
     }
 }

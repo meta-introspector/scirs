@@ -869,6 +869,13 @@ pub enum NumericalStability {
     HighlyUnstable,
 }
 
+impl<'a, F: Float> LinalgResult<'a, F> {
+    /// Convert result back to autograd tensor
+    pub fn to_autograd_tensor(&self) -> Result<Tensor<'a, F>, IntegrationError> {
+        Ok(self.primary_output.clone())
+    }
+}
+
 /// Implement SciRS2Integration for LinalgResult
 impl<'a, F: Float> SciRS2Integration for LinalgResult<'a, F> {
     fn module_name() -> &'static str {

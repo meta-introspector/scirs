@@ -654,7 +654,7 @@ mod tests {
 
     #[test]
     fn test_gradient_check_result() {
-        let mut result = GradientCheckResult::new();
+        let mut result: GradientCheckResult<f64> = GradientCheckResult::new();
         assert!(!result.overall_passed);
         assert_eq!(result.point_results.len(), 0);
 

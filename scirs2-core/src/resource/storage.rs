@@ -25,7 +25,7 @@ impl Default for StorageInfo {
             devices: vec![StorageDevice::default()],
             optimal_io_size: 64 * 1024, // 64KB
             queue_depth: 32,
-            capacity: 500 * 1024 * 1024 * 1024, // 500GB
+            capacity: 500 * 1024 * 1024 * 1024,  // 500GB
             available: 250 * 1024 * 1024 * 1024, // 250GB
         }
     }
@@ -74,7 +74,7 @@ impl Default for StorageDevice {
             is_ssd: true,
             supports_async: true,
             capacity: 500 * 1024 * 1024 * 1024, // 500GB
-            optimal_io_size: 64 * 1024, // 64KB
+            optimal_io_size: 64 * 1024,         // 64KB
         }
     }
 }

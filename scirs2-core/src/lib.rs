@@ -114,6 +114,10 @@ pub mod units;
 pub mod utils;
 pub mod validation;
 
+// Production-level features for enterprise deployments
+pub mod observability;
+pub mod versioning;
+
 // Benchmarking module
 #[cfg(feature = "benchmarking")]
 pub mod benchmarking;
@@ -137,6 +141,12 @@ pub use crate::memory::{
     format_memory_report, generate_memory_report, global_buffer_pool, track_allocation,
     track_deallocation, track_resize, BufferPool, ChunkProcessor, ChunkProcessor2D,
     GlobalBufferPool, ZeroCopyView,
+};
+
+#[cfg(feature = "leak_detection")]
+pub use crate::memory::{
+    LeakCheckGuard, LeakDetectionConfig, LeakDetector, LeakReport, LeakType, MemoryCheckpoint,
+    MemoryLeak, ProfilerTool,
 };
 
 #[cfg(feature = "memory_efficient")]
@@ -211,16 +221,14 @@ pub use crate::profiling::{profiling_memory_tracker, Profiler, Timer};
 #[cfg(feature = "random")]
 pub use crate::random::*;
 pub use crate::resource::{
-    get_system_resources, get_recommended_thread_count, get_recommended_chunk_size,
-    is_simd_supported, is_gpu_available, get_total_memory, get_available_memory,
-    get_performance_tier, SystemResources, PerformanceTier, DiscoveryConfig, ResourceDiscovery
+    get_available_memory, get_performance_tier, get_recommended_chunk_size,
+    get_recommended_thread_count, get_system_resources, get_total_memory, is_gpu_available,
+    is_simd_supported, DiscoveryConfig, PerformanceTier, ResourceDiscovery, SystemResources,
 };
 #[cfg(feature = "simd")]
 pub use crate::simd::*;
 #[cfg(feature = "testing")]
-pub use crate::testing::{
-    TestConfig, TestResult, TestRunner, TestSuite
-};
+pub use crate::testing::{TestConfig, TestResult, TestRunner, TestSuite};
 #[cfg(feature = "types")]
 pub use crate::types::{convert, ComplexConversionError, ComplexExt, ComplexOps};
 pub use crate::units::{
@@ -233,11 +241,25 @@ pub use crate::validation::{
     check_array_finite, check_finite, check_in_bounds, check_positive, check_shape,
 };
 
+#[cfg(feature = "data_validation")]
+pub use crate::validation::data::{
+    Constraint, DataType, EmailValidationRule, FieldDefinition, UrlValidationRule,
+    ValidationConfig, ValidationError, ValidationResult, ValidationRule, ValidationSchema,
+    Validator,
+};
+
+// Production-level feature re-exports
+pub use crate::observability::{audit, tracing};
+pub use crate::versioning::{
+    compatibility, deprecation, migration, negotiation, semantic, ApiVersion, CompatibilityLevel,
+    StabilityLevel, SupportStatus, Version, VersionManager,
+};
+
 // Benchmarking re-exports
 #[cfg(feature = "benchmarking")]
 pub use crate::benchmarking::{
-    BenchmarkConfig, BenchmarkResult, BenchmarkRunner, BenchmarkSuite,
-    BenchmarkMeasurement, BenchmarkStatistics
+    BenchmarkConfig, BenchmarkMeasurement, BenchmarkResult, BenchmarkRunner, BenchmarkStatistics,
+    BenchmarkSuite,
 };
 
 /// SciRS2 core version information

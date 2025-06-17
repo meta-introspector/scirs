@@ -8,8 +8,8 @@
 //! - Input validation fuzzing
 
 use crate::error::{CoreError, CoreResult};
-use crate::testing::{TestConfig, TestResult, TestRunner};
 use crate::numeric::RealNumber;
+use crate::testing::{TestConfig, TestResult, TestRunner};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
@@ -20,10 +20,10 @@ use crate::random::Rng;
 pub trait FuzzingGenerator<T> {
     /// Generate a random input value
     fn generate(&mut self) -> T;
-    
+
     /// Generate an edge case input
     fn generate_edge_case(&mut self) -> T;
-    
+
     /// Generate a boundary condition input
     fn generate_boundary(&mut self) -> T;
 }
@@ -230,9 +230,9 @@ impl FuzzingEngine {
     {
         // This is a placeholder - in practice, we would need type-specific
         // generator implementations
-        Err(CoreError::ValidationError(
-            crate::error::ErrorContext::new("Generator creation not yet implemented for this type")
-        ))
+        Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+            "Generator creation not yet implemented for this type",
+        )))
     }
 }
 
@@ -296,12 +296,12 @@ impl FuzzingGenerator<f64> for FloatFuzzingGenerator {
                 1.0,
                 -1.0,
             ];
-            
+
             let valid_edges: Vec<f64> = edge_cases
                 .into_iter()
                 .filter(|&x| x >= self.min_value && x <= self.max_value && x.is_finite())
                 .collect();
-            
+
             if valid_edges.is_empty() {
                 self.generate()
             } else {
@@ -365,15 +365,17 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
         let size = self.rng.gen_range(self.min_size..=self.max_size);
         #[cfg(not(feature = "random"))]
         let size = (self.min_size + self.max_size) / 2;
-        
-        (0..size).map(|_| self.element_generator.generate()).collect()
+
+        (0..size)
+            .map(|_| self.element_generator.generate())
+            .collect()
     }
 
     fn generate_edge_case(&mut self) -> Vec<f64> {
         #[cfg(feature = "random")]
         {
             match self.rng.gen_range(0..4) {
-                0 => vec![], // Empty vector
+                0 => vec![],                                            // Empty vector
                 1 => vec![self.element_generator.generate_edge_case()], // Single element
                 2 => {
                     // All same values
@@ -384,7 +386,9 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
                 _ => {
                     // Mixed edge cases
                     let size = self.rng.gen_range(2..=10);
-                    (0..size).map(|_| self.element_generator.generate_edge_case()).collect()
+                    (0..size)
+                        .map(|_| self.element_generator.generate_edge_case())
+                        .collect()
                 }
             }
         }
@@ -401,12 +405,16 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
                 0 => {
                     // Minimum size
                     let size = self.min_size;
-                    (0..size).map(|_| self.element_generator.generate_boundary()).collect()
+                    (0..size)
+                        .map(|_| self.element_generator.generate_boundary())
+                        .collect()
                 }
                 1 => {
                     // Maximum size
                     let size = self.max_size;
-                    (0..size).map(|_| self.element_generator.generate_boundary()).collect()
+                    (0..size)
+                        .map(|_| self.element_generator.generate_boundary())
+                        .collect()
                 }
                 _ => {
                     // Size near boundaries
@@ -415,7 +423,9 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
                     } else {
                         self.max_size + 1
                     };
-                    (0..size).map(|_| self.element_generator.generate_boundary()).collect()
+                    (0..size)
+                        .map(|_| self.element_generator.generate_boundary())
+                        .collect()
                 }
             }
         }
@@ -442,10 +452,8 @@ impl FuzzingUtils {
     {
         let mut engine = FuzzingEngine::new(config);
         let mut generator = FloatFuzzingGenerator::new(min_value, max_value);
-        
-        engine.fuzz_function(|input: &f64| {
-            function(*input).map(|_| ())
-        })
+
+        engine.fuzz_function(|input: &f64| function(*input).map(|_| ()))
     }
 
     /// Fuzz a vector function
@@ -462,16 +470,14 @@ impl FuzzingUtils {
     {
         let mut engine = FuzzingEngine::new(config);
         let mut generator = VectorFuzzingGenerator::new(min_size, max_size, min_value, max_value);
-        
-        engine.fuzz_function(|input: &Vec<f64>| {
-            function(input).map(|_| ())
-        })
+
+        engine.fuzz_function(|input: &Vec<f64>| function(input).map(|_| ()))
     }
 
     /// Create a comprehensive fuzzing test suite
     pub fn create_fuzzing_suite(name: &str, config: TestConfig) -> crate::testing::TestSuite {
         let mut suite = crate::testing::TestSuite::new(name, config);
-        
+
         // Add standard fuzzing tests
         suite.add_test("numeric_edge_cases", |runner| {
             let fuzzing_config = FuzzingConfig::default().with_edge_cases(100);
@@ -480,16 +486,16 @@ impl FuzzingUtils {
                     if x.is_finite() && x != 0.0 {
                         Ok(1.0 / x)
                     } else {
-                        Err(CoreError::DomainError(
-                            crate::error::ErrorContext::new("Division by zero or infinite input")
-                        ))
+                        Err(CoreError::DomainError(crate::error::ErrorContext::new(
+                            "Division by zero or infinite input",
+                        )))
                     }
                 },
                 fuzzing_config,
                 -1000.0,
                 1000.0,
             )?;
-            
+
             if result.failed_cases > 0 {
                 return Ok(TestResult::failure(
                     result.duration,
@@ -497,18 +503,18 @@ impl FuzzingUtils {
                     format!("Fuzzing found {} failures", result.failed_cases),
                 ));
             }
-            
+
             Ok(TestResult::success(result.duration, result.total_cases))
         });
-        
+
         suite.add_test("vector_boundary_conditions", |runner| {
             let fuzzing_config = FuzzingConfig::default().with_boundary_cases(50);
             let result = Self::fuzz_vector_function(
                 |v| {
                     if v.is_empty() {
-                        Err(CoreError::ValidationError(
-                            crate::error::ErrorContext::new("Empty vector not allowed")
-                        ))
+                        Err(CoreError::ValidationError(crate::error::ErrorContext::new(
+                            "Empty vector not allowed",
+                        )))
                     } else {
                         Ok(v.iter().map(|&x| x * 2.0).collect())
                     }
@@ -519,7 +525,7 @@ impl FuzzingUtils {
                 -100.0,
                 100.0,
             )?;
-            
+
             if result.failed_cases > 0 {
                 return Ok(TestResult::failure(
                     result.duration,
@@ -527,10 +533,10 @@ impl FuzzingUtils {
                     format!("Vector fuzzing found {} failures", result.failed_cases),
                 ));
             }
-            
+
             Ok(TestResult::success(result.duration, result.total_cases))
         });
-        
+
         suite
     }
 }
@@ -542,17 +548,17 @@ mod tests {
     #[test]
     fn test_float_fuzzing_generator() {
         let mut generator = FloatFuzzingGenerator::new(-10.0, 10.0);
-        
+
         // Test normal generation
         for _ in 0..100 {
             let value = generator.generate();
             assert!(value >= -10.0 && value <= 10.0);
         }
-        
+
         // Test edge case generation
         let edge_case = generator.generate_edge_case();
         assert!(edge_case.is_finite());
-        
+
         // Test boundary generation
         let boundary = generator.generate_boundary();
         assert!(boundary.is_finite());
@@ -561,18 +567,18 @@ mod tests {
     #[test]
     fn test_vector_fuzzing_generator() {
         let mut generator = VectorFuzzingGenerator::new(1, 10, -5.0, 5.0);
-        
+
         // Test normal generation
         let vector = generator.generate();
         assert!(vector.len() >= 1 && vector.len() <= 10);
         for &value in &vector {
             assert!(value >= -5.0 && value <= 5.0);
         }
-        
+
         // Test edge case generation
         let edge_vector = generator.generate_edge_case();
         // Edge cases might generate empty vectors or vectors with special values
-        
+
         // Test boundary generation
         let boundary_vector = generator.generate_boundary();
         // Boundary cases test size limits
@@ -586,7 +592,7 @@ mod tests {
             .with_boundary_cases(25)
             .with_max_input_size(5000)
             .with_seed(12345);
-            
+
         assert_eq!(config.random_cases, 500);
         assert_eq!(config.edge_cases, 50);
         assert_eq!(config.boundary_cases, 25);

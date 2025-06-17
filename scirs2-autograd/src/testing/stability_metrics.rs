@@ -810,7 +810,7 @@ mod tests {
             StabilityClassification::NumericallyStable
         );
         assert_ne!(
-            StabilityClassification::Stable,
+            StabilityClassification::NumericallyStable,
             StabilityClassification::Unstable
         );
     }
