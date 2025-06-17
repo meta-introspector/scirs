@@ -137,21 +137,27 @@ impl AdvancedThreadPool {
 
         let current_size = self.workers.len();
 
-        if new_size > current_size {
-            // Add new workers
-            for id in current_size..new_size {
-                let worker = WorkStealingWorker::new(
-                    id,
-                    Arc::clone(&self.global_queue),
-                    Arc::clone(&self.running),
-                    Arc::clone(&self.stats),
-                    self.config.clone(),
-                );
-                self.workers.push(worker);
+        match new_size.cmp(&current_size) {
+            std::cmp::Ordering::Greater => {
+                // Add new workers
+                for id in current_size..new_size {
+                    let worker = WorkStealingWorker::new(
+                        id,
+                        Arc::clone(&self.global_queue),
+                        Arc::clone(&self.running),
+                        Arc::clone(&self.stats),
+                        self.config.clone(),
+                    );
+                    self.workers.push(worker);
+                }
             }
-        } else if new_size < current_size {
-            // Remove workers (simplified - in practice would need graceful shutdown)
-            self.workers.truncate(new_size);
+            std::cmp::Ordering::Less => {
+                // Remove workers (simplified - in practice would need graceful shutdown)
+                self.workers.truncate(new_size);
+            }
+            std::cmp::Ordering::Equal => {
+                // No change needed
+            }
         }
 
         self.config.num_threads = new_size;

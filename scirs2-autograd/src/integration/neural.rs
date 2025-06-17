@@ -112,7 +112,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         })?;
 
         // Simplified convolution (placeholder)
-        Ok(input.clone())
+        Ok(*input)
     }
 
     fn forward_batch_norm<'b>(
@@ -125,7 +125,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         }
 
         // Apply normalization (placeholder)
-        Ok(input.clone())
+        Ok(*input)
     }
 
     fn forward_dropout<'b>(
@@ -134,15 +134,15 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
     ) -> Result<Tensor<'b, F>, IntegrationError> {
         if self.config.training {
             // Apply dropout (placeholder)
-            Ok(input.clone())
+            Ok(*input)
         } else {
-            Ok(input.clone())
+            Ok(*input)
         }
     }
 
     fn forward_relu<'b>(&self, input: &Tensor<'b, F>) -> Result<Tensor<'b, F>, IntegrationError> {
         // Apply ReLU activation (placeholder)
-        Ok(input.clone())
+        Ok(*input)
     }
 
     fn forward_softmax<'b>(
@@ -150,7 +150,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         input: &Tensor<'b, F>,
     ) -> Result<Tensor<'b, F>, IntegrationError> {
         // Apply softmax activation (placeholder)
-        Ok(input.clone())
+        Ok(*input)
     }
 
     fn forward_lstm<'b>(
@@ -158,7 +158,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         input: &Tensor<'b, F>,
     ) -> Result<Tensor<'b, F>, IntegrationError> {
         // LSTM forward pass with state management (placeholder)
-        Ok(input.clone())
+        Ok(*input)
     }
 
     fn forward_attention<'b>(
@@ -166,7 +166,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         input: &Tensor<'b, F>,
     ) -> Result<Tensor<'b, F>, IntegrationError> {
         // Attention mechanism (placeholder)
-        Ok(input.clone())
+        Ok(*input)
     }
 
     fn forward_custom<'b>(
@@ -175,7 +175,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         _name: &str,
     ) -> Result<Tensor<'b, F>, IntegrationError> {
         // Custom layer implementation (placeholder)
-        Ok(input.clone())
+        Ok(*input)
     }
 
     // Parameter initialization methods
@@ -222,10 +222,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         Ok(())
     }
 
-    fn update_batch_norm_stats<'b>(
-        &mut self,
-        _input: &Tensor<'b, F>,
-    ) -> Result<(), IntegrationError> {
+    fn update_batch_norm_stats(&mut self, _input: &Tensor<'_, F>) -> Result<(), IntegrationError> {
         // Update running mean and variance (placeholder)
         Ok(())
     }
@@ -388,7 +385,7 @@ impl<'a, F: Float> AutogradNetworkBuilder<'a, F> {
     }
 }
 
-impl<'a, F: Float> Default for AutogradNetworkBuilder<'a, F> {
+impl<F: Float> Default for AutogradNetworkBuilder<'_, F> {
     fn default() -> Self {
         Self::new()
     }
@@ -406,7 +403,7 @@ pub struct AutogradNetwork<'a, F: Float> {
 impl<'a, F: Float> AutogradNetwork<'a, F> {
     /// Forward pass through the entire network
     pub fn forward(&mut self, input: &Tensor<'a, F>) -> Result<Tensor<'a, F>, IntegrationError> {
-        let mut current_input = input.clone();
+        let mut current_input = *input;
 
         for layer in &mut self.layers {
             current_input = layer.forward(&current_input)?;
@@ -417,24 +414,18 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
 
     /// Get all trainable parameters
     pub fn parameters(&self) -> Vec<&Tensor<'a, F>> {
-        let mut params = Vec::new();
-        for layer in &self.layers {
-            for tensor in layer.parameters.values() {
-                params.push(tensor);
-            }
-        }
-        params
+        self.layers
+            .iter()
+            .flat_map(|layer| layer.parameters.values())
+            .collect()
     }
 
     /// Get mutable trainable parameters
     pub fn parameters_mut(&mut self) -> Vec<&mut Tensor<'a, F>> {
-        let mut params = Vec::new();
-        for layer in &mut self.layers {
-            for tensor in layer.parameters.values_mut() {
-                params.push(tensor);
-            }
-        }
-        params
+        self.layers
+            .iter_mut()
+            .flat_map(|layer| layer.parameters.values_mut())
+            .collect()
     }
 
     /// Set training mode
@@ -460,7 +451,7 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
         for (layer_idx, layer) in self.layers.iter().enumerate() {
             for (param_name, tensor) in &layer.parameters {
                 let key = format!("layer_{}_{}", layer_idx, param_name);
-                data = data.add_tensor(key, tensor.clone());
+                data = data.add_tensor(key, *tensor);
             }
         }
 
@@ -532,7 +523,7 @@ impl Default for TrainingConfig {
 }
 
 /// Implement SciRS2Integration for AutogradNetwork
-impl<'a, F: Float> SciRS2Integration for AutogradNetwork<'a, F> {
+impl<F: Float> SciRS2Integration for AutogradNetwork<'_, F> {
     fn module_name() -> &'static str {
         "scirs2-neural"
     }
@@ -570,8 +561,8 @@ pub fn create_simple_network<'a, F: Float>(
 }
 
 /// Convert neural network to computation graph
-pub fn network_to_graph<'a, F: Float>(
-    _network: &AutogradNetwork<'a, F>,
+pub fn network_to_graph<F: Float>(
+    _network: &AutogradNetwork<'_, F>,
 ) -> Result<Graph<F>, IntegrationError> {
     // Create computation graph from network
     // Graph creation is handled by the run function, not directly accessible

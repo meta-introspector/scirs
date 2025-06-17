@@ -85,7 +85,7 @@ impl<'a, F: Float> OptimizerState<'a, F> {
     }
 }
 
-impl<'a, F: Float> Default for OptimizerState<'a, F> {
+impl<F: Float> Default for OptimizerState<'_, F> {
     fn default() -> Self {
         Self::new()
     }
@@ -108,7 +108,7 @@ pub struct ParameterState<'a, F: Float> {
     pub extra_state: HashMap<String, Tensor<'a, F>>,
 }
 
-impl<'a, F: Float> ParameterState<'a, F> {
+impl<F: Float> ParameterState<'_, F> {
     /// Create new parameter state
     pub fn new() -> Self {
         Self {
@@ -125,7 +125,7 @@ impl<'a, F: Float> ParameterState<'a, F> {
     // Buffers would be initialized when first needed during optimization
 }
 
-impl<'a, F: Float> Default for ParameterState<'a, F> {
+impl<F: Float> Default for ParameterState<'_, F> {
     fn default() -> Self {
         Self::new()
     }
@@ -256,7 +256,7 @@ pub struct SGDOptimizer<'a, F: Float> {
     parameter_groups: Vec<ParameterGroup<F>>,
 }
 
-impl<'a, F: Float> SGDOptimizer<'a, F> {
+impl<F: Float> SGDOptimizer<'_, F> {
     /// Create new SGD optimizer
     pub fn new(learning_rate: f64, momentum: f64) -> Self {
         let config = OptimizerConfig {
@@ -279,7 +279,7 @@ impl<'a, F: Float> SGDOptimizer<'a, F> {
     }
 }
 
-impl<'a, F: Float> AutogradOptimizer<F> for SGDOptimizer<'a, F> {
+impl<F: Float> AutogradOptimizer<F> for SGDOptimizer<'_, F> {
     fn name(&self) -> &str {
         "SGD"
     }
@@ -403,7 +403,7 @@ pub struct AdamOptimizer<'a, F: Float> {
     parameter_groups: Vec<ParameterGroup<F>>,
 }
 
-impl<'a, F: Float> AdamOptimizer<'a, F> {
+impl<F: Float> AdamOptimizer<'_, F> {
     /// Create new Adam optimizer
     pub fn new(learning_rate: f64, beta1: f64, beta2: f64, eps: f64) -> Self {
         let config = OptimizerConfig {
@@ -427,7 +427,7 @@ impl<'a, F: Float> AdamOptimizer<'a, F> {
     }
 }
 
-impl<'a, F: Float> AutogradOptimizer<F> for AdamOptimizer<'a, F> {
+impl<F: Float> AutogradOptimizer<F> for AdamOptimizer<'_, F> {
     fn name(&self) -> &str {
         "Adam"
     }
@@ -639,7 +639,7 @@ impl OptimizerFactory {
 }
 
 /// Implement SciRS2Integration for optimizer state
-impl<'a, F: Float> SciRS2Integration for OptimizerState<'a, F> {
+impl<F: Float> SciRS2Integration for OptimizerState<'_, F> {
     fn module_name() -> &'static str {
         "scirs2-optim"
     }
@@ -741,7 +741,10 @@ mod tests {
         let mut scheduler = StepLRScheduler::new(0.1, 5, 0.5);
         let mut optimizer = SGDOptimizer::<f64>::new(0.1, 0.0);
 
-        assert_eq!(<StepLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler), 0.1f64);
+        assert_eq!(
+            <StepLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler),
+            0.1f64
+        );
 
         // Step 5 times
         for _ in 0..5 {
@@ -757,14 +760,16 @@ mod tests {
         let mut scheduler = CosineAnnealingLRScheduler::new(0.1, 10, 0.0);
         let mut optimizer = SGDOptimizer::<f64>::new(0.1, 0.0);
 
-        let initial_lr: f64 = <CosineAnnealingLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler);
+        let initial_lr: f64 =
+            <CosineAnnealingLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler);
 
         // Step halfway
         for _ in 0..5 {
             scheduler.step(&mut optimizer);
         }
 
-        let halfway_lr = <CosineAnnealingLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler);
+        let halfway_lr =
+            <CosineAnnealingLRScheduler as LearningRateScheduler<f64>>::get_lr(&scheduler);
         assert!(halfway_lr < initial_lr);
     }
 

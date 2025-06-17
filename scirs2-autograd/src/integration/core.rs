@@ -161,7 +161,7 @@ impl Parameter {
     }
 
     /// Get parameter as float array
-    pub fn as_float_array(&self) -> Option<&Vec<f64>> {
+    pub fn as_float_array(&self) -> Option<&[f64]> {
         match self {
             Parameter::FloatArray(val) => Some(val),
             _ => None,

@@ -349,8 +349,10 @@ struct AllocationInfo {
     /// Call stack at allocation
     call_stack: Option<CallStack>,
     /// Thread ID
+    #[allow(dead_code)]
     thread_id: u64,
     /// Allocation ID
+    #[allow(dead_code)]
     id: u64,
 }
 

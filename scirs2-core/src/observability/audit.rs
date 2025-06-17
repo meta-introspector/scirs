@@ -1367,8 +1367,10 @@ impl AuditLogger {
 
         let events = self.search_events(start_date, end_date, None, None)?;
 
-        let mut stats = AuditStatistics::default();
-        stats.total_events = events.len();
+        let mut stats = AuditStatistics {
+            total_events: events.len(),
+            ..Default::default()
+        };
 
         for event in events {
             match event.category {

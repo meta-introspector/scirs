@@ -3,8 +3,7 @@
 //! This module provides functionality to export flame graphs as interactive SVG files
 //! that can be viewed in web browsers with zoom, search, and tooltip functionality.
 
-use super::advanced::{FlameGraphNode, PerformanceStats};
-use std::collections::HashMap;
+use super::advanced::FlameGraphNode;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::time::Duration;

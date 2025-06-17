@@ -56,7 +56,7 @@ pub struct Tensor<'graph, F: Float> {
     pub(crate) graph: &'graph Graph<F>,
 }
 
-impl<'graph, F: Float> std::fmt::Debug for Tensor<'graph, F> {
+impl<F: Float> std::fmt::Debug for Tensor<'_, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Tensor")
             .field("id", &self.id)
@@ -66,7 +66,7 @@ impl<'graph, F: Float> std::fmt::Debug for Tensor<'graph, F> {
     }
 }
 
-impl<'graph, F: Float> PartialEq for Tensor<'graph, F> {
+impl<F: Float> PartialEq for Tensor<'_, F> {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id && std::ptr::eq(self.graph, other.graph)
     }

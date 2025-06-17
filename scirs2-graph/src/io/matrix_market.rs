@@ -271,26 +271,31 @@ where
             )));
         }
 
-        let row: usize = parts[0].parse().map_err(|_| {
-            GraphError::Other(format!("Failed to parse row index: {}", parts[0]))
-        })?;
+        let row: usize = parts[0]
+            .parse()
+            .map_err(|_| GraphError::Other(format!("Failed to parse row index: {}", parts[0])))?;
         let col: usize = parts[1].parse().map_err(|_| {
             GraphError::Other(format!("Failed to parse column index: {}", parts[1]))
         })?;
 
         // Convert to 0-indexed and create nodes
         let source_node = N::from_str(&(row - 1).to_string()).map_err(|_| {
-            GraphError::Other(format!("Failed to create source node from index: {}", row - 1))
+            GraphError::Other(format!(
+                "Failed to create source node from index: {}",
+                row - 1
+            ))
         })?;
         let target_node = N::from_str(&(col - 1).to_string()).map_err(|_| {
-            GraphError::Other(format!("Failed to create target node from index: {}", col - 1))
+            GraphError::Other(format!(
+                "Failed to create target node from index: {}",
+                col - 1
+            ))
         })?;
 
         // Parse weight if available and requested
         let weight = if header.has_values() && weighted && parts.len() > 2 {
-            E::from_str(parts[2]).map_err(|_| {
-                GraphError::Other(format!("Failed to parse weight: {}", parts[2]))
-            })?
+            E::from_str(parts[2])
+                .map_err(|_| GraphError::Other(format!("Failed to parse weight: {}", parts[2])))?
         } else {
             E::default()
         };
@@ -403,26 +408,31 @@ where
             )));
         }
 
-        let row: usize = parts[0].parse().map_err(|_| {
-            GraphError::Other(format!("Failed to parse row index: {}", parts[0]))
-        })?;
+        let row: usize = parts[0]
+            .parse()
+            .map_err(|_| GraphError::Other(format!("Failed to parse row index: {}", parts[0])))?;
         let col: usize = parts[1].parse().map_err(|_| {
             GraphError::Other(format!("Failed to parse column index: {}", parts[1]))
         })?;
 
         // Convert to 0-indexed and create nodes
         let source_node = N::from_str(&(row - 1).to_string()).map_err(|_| {
-            GraphError::Other(format!("Failed to create source node from index: {}", row - 1))
+            GraphError::Other(format!(
+                "Failed to create source node from index: {}",
+                row - 1
+            ))
         })?;
         let target_node = N::from_str(&(col - 1).to_string()).map_err(|_| {
-            GraphError::Other(format!("Failed to create target node from index: {}", col - 1))
+            GraphError::Other(format!(
+                "Failed to create target node from index: {}",
+                col - 1
+            ))
         })?;
 
         // Parse weight if available and requested
         let weight = if header.has_values() && weighted && parts.len() > 2 {
-            E::from_str(parts[2]).map_err(|_| {
-                GraphError::Other(format!("Failed to parse weight: {}", parts[2]))
-            })?
+            E::from_str(parts[2])
+                .map_err(|_| GraphError::Other(format!("Failed to parse weight: {}", parts[2])))?
         } else {
             E::default()
         };
@@ -597,14 +607,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_parse_header_line() {
         let header = "%%MatrixMarket matrix coordinate real general";
-        let (object, format, field, symmetry) = MatrixMarketHeader::parse_header_line(header).unwrap();
-        
+        let (object, format, field, symmetry) =
+            MatrixMarketHeader::parse_header_line(header).unwrap();
+
         assert_eq!(object, "matrix");
         assert_eq!(format, "coordinate");
         assert_eq!(field, "real");
@@ -615,7 +626,7 @@ mod tests {
     fn test_parse_size_line() {
         let size_line = "10 10 20";
         let (rows, cols, nnz) = MatrixMarketHeader::parse_size_line(size_line).unwrap();
-        
+
         assert_eq!(rows, 10);
         assert_eq!(cols, 10);
         assert_eq!(nnz, 20);
@@ -624,7 +635,11 @@ mod tests {
     #[test]
     fn test_read_pattern_matrix_market() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "%%MatrixMarket matrix coordinate pattern general").unwrap();
+        writeln!(
+            temp_file,
+            "%%MatrixMarket matrix coordinate pattern general"
+        )
+        .unwrap();
         writeln!(temp_file, "% Test pattern matrix").unwrap();
         writeln!(temp_file, "3 3 3").unwrap();
         writeln!(temp_file, "1 2").unwrap();
@@ -633,7 +648,7 @@ mod tests {
         temp_file.flush().unwrap();
 
         let graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), false).unwrap();
-        
+
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3);
     }
@@ -649,7 +664,7 @@ mod tests {
         temp_file.flush().unwrap();
 
         let graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), true).unwrap();
-        
+
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3);
     }
@@ -664,7 +679,7 @@ mod tests {
         temp_file.flush().unwrap();
 
         let graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), true).unwrap();
-        
+
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 4); // 2 original + 2 symmetric
     }
@@ -679,8 +694,9 @@ mod tests {
         writeln!(temp_file, "3 1 0.5").unwrap();
         temp_file.flush().unwrap();
 
-        let graph: DiGraph<i32, f64> = read_matrix_market_format_digraph(temp_file.path(), true).unwrap();
-        
+        let graph: DiGraph<i32, f64> =
+            read_matrix_market_format_digraph(temp_file.path(), true).unwrap();
+
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3);
     }
@@ -693,9 +709,10 @@ mod tests {
 
         let temp_file = NamedTempFile::new().unwrap();
         write_matrix_market_format(&original_graph, temp_file.path(), true).unwrap();
-        
-        let read_graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), true).unwrap();
-        
+
+        let read_graph: Graph<i32, f64> =
+            read_matrix_market_format(temp_file.path(), true).unwrap();
+
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
     }

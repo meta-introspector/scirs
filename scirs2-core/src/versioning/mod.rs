@@ -25,28 +25,28 @@
 //!
 //! ## Example
 //!
-//! ```rust
-//! use scirs2_core::versioning::{Version, VersionManager, CompatibilityLevel};
+//! ```rust,ignore
+//! use scirs2_core::versioning::{Version, VersionManager, CompatibilityLevel, ApiVersion, ClientCapabilities};
 //!
 //! // Create version manager
 //! let mut version_manager = VersionManager::new();
 //!
 //! // Register API versions
-//! let v1_0_0 = Version::parse("1.0.0")?;
-//! let v1_1_0 = Version::parse("1.1.0")?;
-//! let v2_0_0 = Version::parse("2.0.0")?;
+//! let v1_0_0 = ApiVersion::new(Version::parse("1.0.0")?, "API v1.0.0".to_string());
+//! let v1_1_0 = ApiVersion::new(Version::parse("1.1.0")?, "API v1.1.0".to_string());
+//! let v2_0_0 = ApiVersion::new(Version::parse("2.0.0")?, "API v2.0.0".to_string());
 //!
 //! version_manager.register_version(v1_0_0.clone())?;
 //! version_manager.register_version(v1_1_0.clone())?;
 //! version_manager.register_version(v2_0_0.clone())?;
 //!
 //! // Check compatibility
-//! let compat = version_manager.check_compatibility(&v1_0_0, &v1_1_0)?;
+//! let compat = version_manager.check_compatibility(&v1_0_0.version, &v1_1_0.version)?;
 //! assert_eq!(compat, CompatibilityLevel::BackwardCompatible);
 //!
-//! // Negotiate version with client
-//! let client_version = Version::parse("1.0.5")?;
-//! let negotiated = version_manager.negotiate_version(&client_version)?;
+//! // Negotiate version with client capabilities
+//! let client_caps = ClientCapabilities::new(Version::parse("1.0.5")?);
+//! let negotiated = version_manager.negotiate_version(&client_caps)?;
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 

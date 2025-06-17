@@ -119,14 +119,14 @@ impl ParallelElementWise {
     #[allow(dead_code)]
     fn calculate_chunk_size(total_size: usize, config: &ParallelConfig) -> usize {
         if let Some(num_chunks) = config.num_chunks {
-            (total_size + num_chunks - 1) / num_chunks
+            total_size.div_ceil(num_chunks)
         } else {
             // Use number of available threads
             let num_threads = std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(4);
 
-            let chunk_size = (total_size + num_threads - 1) / num_threads;
+            let chunk_size = total_size.div_ceil(num_threads);
             chunk_size.max(config.preferred_chunk_size / num_threads)
         }
     }
@@ -312,7 +312,7 @@ impl ParallelMatrix {
                 for j in 0..n {
                     let mut sum = F::zero();
                     for k_idx in 0..k {
-                        sum = sum + left[[i, k_idx]] * right[[k_idx, j]];
+                        sum += left[[i, k_idx]] * right[[k_idx, j]];
                     }
                     result[[i, j]] = sum;
                 }
@@ -336,8 +336,8 @@ impl ParallelMatrix {
 
                     // Compute block multiplication
                     Self::multiply_block(
-                        &left,
-                        &right,
+                        left,
+                        right,
                         &mut result,
                         i_start,
                         i_end,
@@ -382,9 +382,9 @@ impl ParallelMatrix {
             for j in j_start..j_end {
                 let mut sum = F::zero();
                 for k in k_start..k_end {
-                    sum = sum + left[[i, k]] * right[[k, j]];
+                    sum += left[[i, k]] * right[[k, j]];
                 }
-                result[[i, j]] = result[[i, j]] + sum;
+                result[[i, j]] += sum;
             }
         }
     }
@@ -459,7 +459,7 @@ impl ParallelConvolution {
 
             for j in 0..kernel_len {
                 if i >= j && (i - j) < input_len {
-                    sum = sum + input[i - j] * kernel[j];
+                    sum += input[i - j] * kernel[j];
                 }
             }
 
@@ -485,7 +485,7 @@ impl ParallelConvolution {
 
             for j in 0..kernel_len {
                 if i >= j && (i - j) < input_len {
-                    sum = sum + input[i - j] * kernel[j];
+                    sum += input[i - j] * kernel[j];
                 }
             }
 

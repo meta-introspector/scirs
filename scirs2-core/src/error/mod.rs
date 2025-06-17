@@ -269,9 +269,21 @@ mod tests {
 
     #[test]
     fn test_circuit_breaker() {
-        let breaker = CircuitBreaker::new("test_breaker".to_string());
+        use crate::error::circuit_breaker::{CircuitBreakerConfig, CircuitState};
+        use std::time::Duration;
 
-        // First failure should work
+        // Configure circuit breaker with low threshold for testing
+        let config = CircuitBreakerConfig {
+            failure_threshold: 1,
+            failure_window: Duration::from_secs(60),
+            recovery_timeout: Duration::from_secs(30),
+            success_threshold: 1,
+            max_half_open_requests: 1,
+            minimum_request_threshold: 1,
+        };
+        let breaker = CircuitBreaker::with_config("test_breaker".to_string(), config);
+
+        // First failure should work and trigger circuit opening
         let result: std::result::Result<(), _> =
             breaker.execute(|| Err(CoreError::ComputationError(error_context!("Test failure"))));
         assert!(result.is_err());
@@ -282,6 +294,7 @@ mod tests {
 
         let status = breaker.status().unwrap();
         assert_eq!(status.failure_count, 1);
+        assert_eq!(status.state, CircuitState::Open);
     }
 
     #[test]

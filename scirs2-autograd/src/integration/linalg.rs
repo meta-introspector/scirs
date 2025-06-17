@@ -9,6 +9,9 @@ use crate::tensor::Tensor;
 use crate::Float;
 use std::collections::HashMap;
 
+/// Type alias for complex linear algebra decomposition result
+type TensorTriple<'a, F> = Result<(Tensor<'a, F>, Tensor<'a, F>, Tensor<'a, F>), IntegrationError>;
+
 /// Linear algebra operation context for autograd integration
 #[derive(Debug, Clone)]
 pub struct LinalgContext<'a, F: Float> {
@@ -404,10 +407,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         Ok(Tensor::from_vec(result_data, vec![m, n], a.graph()))
     }
 
-    fn compute_svd(
-        &self,
-        input: &Tensor<'a, F>,
-    ) -> Result<(Tensor<'a, F>, Tensor<'a, F>, Tensor<'a, F>), IntegrationError> {
+    fn compute_svd(&self, input: &Tensor<'a, F>) -> TensorTriple<'a, F> {
         let shape = input.shape();
         if shape.len() != 2 {
             return Err(IntegrationError::TensorConversion(
@@ -455,10 +455,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         Ok((q, r))
     }
 
-    fn compute_lu(
-        &self,
-        input: &Tensor<'a, F>,
-    ) -> Result<(Tensor<'a, F>, Tensor<'a, F>, Tensor<'a, F>), IntegrationError> {
+    fn compute_lu(&self, input: &Tensor<'a, F>) -> TensorTriple<'a, F> {
         let shape = input.shape();
         if shape.len() != 2 || shape[0] != shape[1] {
             return Err(IntegrationError::TensorConversion(

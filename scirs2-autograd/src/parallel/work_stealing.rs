@@ -221,7 +221,7 @@ impl<T> WorkStealingArray<T> {
     fn get(&self, index: usize) -> T {
         let pos = index & self.mask;
         unsafe {
-            let ptr = self.data.as_ptr().add(pos) as *const std::mem::MaybeUninit<T>;
+            let ptr = self.data.as_ptr().add(pos);
             ptr::read(ptr).assume_init()
         }
     }

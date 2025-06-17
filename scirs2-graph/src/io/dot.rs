@@ -236,11 +236,7 @@ where
 ///
 /// * `Ok(())` - If the graph was written successfully
 /// * `Err(GraphError)` - If there was an error writing the file
-pub fn write_dot_format<N, E, Ix, P>(
-    graph: &Graph<N, E, Ix>,
-    path: P,
-    weighted: bool,
-) -> Result<()>
+pub fn write_dot_format<N, E, Ix, P>(graph: &Graph<N, E, Ix>, path: P, weighted: bool) -> Result<()>
 where
     N: Node + std::fmt::Debug + std::fmt::Display + Clone,
     E: EdgeWeight
@@ -583,17 +579,16 @@ where
     // Look for weight=value pattern
     if let Some(weight_start) = attributes.find("weight=") {
         let weight_part = &attributes[weight_start + 7..]; // Skip "weight="
-        
+
         // Find end of weight value (space, comma, or closing bracket)
         let weight_end = weight_part
             .find(&[' ', ',', ']'][..])
             .unwrap_or(weight_part.len());
-        
+
         let weight_str = &weight_part[..weight_end];
-        
-        return E::from_str(weight_str).map_err(|_| {
-            GraphError::Other(format!("Failed to parse weight: {}", weight_str))
-        });
+
+        return E::from_str(weight_str)
+            .map_err(|_| GraphError::Other(format!("Failed to parse weight: {}", weight_str)));
     }
 
     Ok(E::default())
@@ -602,8 +597,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_read_undirected_dot() {
@@ -615,7 +610,7 @@ mod tests {
         temp_file.flush().unwrap();
 
         let graph: Graph<i32, f64> = read_dot_format(temp_file.path(), false).unwrap();
-        
+
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
     }
@@ -630,7 +625,7 @@ mod tests {
         temp_file.flush().unwrap();
 
         let graph: DiGraph<i32, f64> = read_dot_format_digraph(temp_file.path(), false).unwrap();
-        
+
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
     }
@@ -645,7 +640,7 @@ mod tests {
         temp_file.flush().unwrap();
 
         let graph: Graph<i32, f64> = read_dot_format(temp_file.path(), true).unwrap();
-        
+
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
     }
@@ -658,9 +653,9 @@ mod tests {
 
         let temp_file = NamedTempFile::new().unwrap();
         write_dot_format(&original_graph, temp_file.path(), true).unwrap();
-        
+
         let read_graph: Graph<i32, f64> = read_dot_format(temp_file.path(), true).unwrap();
-        
+
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
     }
@@ -673,9 +668,10 @@ mod tests {
 
         let temp_file = NamedTempFile::new().unwrap();
         write_dot_format_digraph(&original_graph, temp_file.path(), true).unwrap();
-        
-        let read_graph: DiGraph<i32, f64> = read_dot_format_digraph(temp_file.path(), true).unwrap();
-        
+
+        let read_graph: DiGraph<i32, f64> =
+            read_dot_format_digraph(temp_file.path(), true).unwrap();
+
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
     }

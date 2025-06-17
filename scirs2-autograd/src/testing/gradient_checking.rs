@@ -88,8 +88,8 @@ impl<F: Float> GradientChecker<F> {
             for _i in 0..self.config.num_test_points {
                 // Create a simplified point result to avoid lifetime issues
                 let point_result = SinglePointResult {
-                    analytical_gradient: analytical_gradient.clone(),
-                    numerical_gradient: analytical_gradient.clone(), // Placeholder
+                    analytical_gradient: *analytical_gradient,
+                    numerical_gradient: *analytical_gradient, // Placeholder
                     comparison: GradientComparison::default(),
                     second_order_check: None,
                 };
@@ -126,7 +126,7 @@ impl<F: Float> GradientChecker<F> {
         let comparison = self.compare_gradients(analytical_gradient, &numerical_gradient)?;
 
         let mut result = SinglePointResult {
-            analytical_gradient: analytical_gradient.clone(),
+            analytical_gradient: *analytical_gradient,
             numerical_gradient,
             comparison,
             second_order_check: None,
@@ -238,7 +238,7 @@ impl<F: Float> GradientChecker<F> {
         let _perturbation_scale = F::from(1e-6).unwrap();
 
         // Simplified - would generate actual random perturbations
-        let perturbed = input.clone();
+        let perturbed = *input;
 
         // Use seed to make perturbations deterministic but varied
         let _scale_factor = F::from((seed as f64 * 0.1_f64).sin()).unwrap();
@@ -258,7 +258,7 @@ impl<F: Float> GradientChecker<F> {
     {
         // This would typically involve running the automatic differentiation
         // For now, return a placeholder
-        Ok(input.clone())
+        Ok(*input)
     }
 
     /// Print detailed comparison information
@@ -311,7 +311,7 @@ pub struct GradientCheckResult<'a, F: Float> {
     pub summary_statistics: SummaryStatistics,
 }
 
-impl<'a, F: Float> GradientCheckResult<'a, F> {
+impl<F: Float> GradientCheckResult<'_, F> {
     fn new() -> Self {
         Self {
             point_results: Vec::new(),
@@ -454,6 +454,12 @@ pub struct VectorFunctionChecker<F: Float> {
     base_checker: GradientChecker<F>,
 }
 
+impl<F: Float> Default for VectorFunctionChecker<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<F: Float> VectorFunctionChecker<F> {
     pub fn new() -> Self {
         Self {
@@ -518,6 +524,12 @@ pub struct ParameterGradientChecker<F: Float> {
     base_checker: GradientChecker<F>,
 }
 
+impl<F: Float> Default for ParameterGradientChecker<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<F: Float> ParameterGradientChecker<F> {
     pub fn new() -> Self {
         Self {
@@ -538,7 +550,7 @@ impl<F: Float> ParameterGradientChecker<F> {
     {
         let mut parameter_results = HashMap::new();
 
-        for (param_name, _param_tensor) in parameters {
+        for param_name in parameters.keys() {
             if let Some(_analytical_grad) = analytical_gradients.get(param_name) {
                 // Skip individual parameter checking to avoid Clone requirement
                 // Instead, create a basic result structure
@@ -565,7 +577,7 @@ pub struct ParameterCheckResult<'a, F: Float> {
     pub overall_passed: bool,
 }
 
-impl<'a, F: Float> ParameterCheckResult<'a, F> {
+impl<F: Float> ParameterCheckResult<'_, F> {
     pub fn print_summary(&self) {
         println!("Parameter Gradient Check Summary:");
         println!("  Overall Passed: {}", self.overall_passed);

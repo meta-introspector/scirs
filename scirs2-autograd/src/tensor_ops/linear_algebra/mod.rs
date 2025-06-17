@@ -295,7 +295,7 @@ where
 ///    assert_eq!(result[[0, 1]], 0.0);
 /// });
 /// ```
-pub fn eye<'graph, F: Float>(size: usize, graph: &'graph impl AsGraph<F>) -> Tensor<'graph, F> {
+pub fn eye<F: Float>(size: usize, graph: &impl AsGraph<F>) -> Tensor<'_, F> {
     Tensor::builder(graph).build(crate::tensor_ops::linalg_ops::EyeOp { size })
 }
 
@@ -356,8 +356,8 @@ where
         .append_input(x.as_ref(), false)
         .build(crate::tensor_ops::decomposition_ops::QROp);
 
-    let q = crate::tensor_ops::nth_tensor(&qr_result, 0);
-    let r = crate::tensor_ops::nth_tensor(&qr_result, 1);
+    let q = crate::tensor_ops::nth_tensor(qr_result, 0);
+    let r = crate::tensor_ops::nth_tensor(qr_result, 1);
     (q, r)
 }
 
@@ -391,9 +391,9 @@ where
         .append_input(x.as_ref(), false)
         .build(crate::tensor_ops::decomposition_ops::SVDOp);
 
-    let u = crate::tensor_ops::nth_tensor(&svd_result, 0);
-    let s = crate::tensor_ops::nth_tensor(&svd_result, 1);
-    let vt = crate::tensor_ops::nth_tensor(&svd_result, 2);
+    let u = crate::tensor_ops::nth_tensor(svd_result, 0);
+    let s = crate::tensor_ops::nth_tensor(svd_result, 1);
+    let vt = crate::tensor_ops::nth_tensor(svd_result, 2);
     (u, s, vt)
 }
 
@@ -453,8 +453,8 @@ where
         .append_input(x.as_ref(), false)
         .build(crate::tensor_ops::eigen_ops::EigenOp);
 
-    let w = crate::tensor_ops::nth_tensor(&eigen_result, 0);
-    let v = crate::tensor_ops::nth_tensor(&eigen_result, 1);
+    let w = crate::tensor_ops::nth_tensor(eigen_result, 0);
+    let v = crate::tensor_ops::nth_tensor(eigen_result, 1);
     (w, v)
 }
 

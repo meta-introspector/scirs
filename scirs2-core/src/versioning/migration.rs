@@ -307,7 +307,7 @@ impl MigrationManager {
             }
 
             // Find all versions reachable from current
-            for ((from, to), _) in &self.migration_templates {
+            for (from, to) in self.migration_templates.keys() {
                 if *from == current && !visited.contains(to) {
                     visited.insert(to.clone());
                     parent.insert(to.clone(), current.clone());

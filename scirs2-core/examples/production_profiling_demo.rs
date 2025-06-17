@@ -3,9 +3,7 @@
 //! This example demonstrates the comprehensive production profiling system
 //! for real-workload analysis and bottleneck identification in enterprise environments.
 
-use scirs2_core::profiling::production::{
-    ProductionProfiler, ProfileConfig, WorkloadType,
-};
+use scirs2_core::profiling::production::{ProductionProfiler, ProfileConfig, WorkloadType};
 use scirs2_core::CoreResult;
 use std::thread;
 use std::time::Duration;
@@ -62,10 +60,22 @@ fn demo_configuration_examples() -> CoreResult<()> {
         .with_regression_detection(true);
 
     println!("🏭 Production Environment:");
-    println!("  - Sampling Rate: {:.3}%", production_config.sampling_rate * 100.0);
-    println!("  - Memory Limit: {} MB", production_config.max_memory_usage / (1024 * 1024));
-    println!("  - Detailed Call Stacks: {}", production_config.detailed_call_stacks);
-    println!("  - Confidence Level: {:.1}%", production_config.confidence_level * 100.0);
+    println!(
+        "  - Sampling Rate: {:.3}%",
+        production_config.sampling_rate * 100.0
+    );
+    println!(
+        "  - Memory Limit: {} MB",
+        production_config.max_memory_usage / (1024 * 1024)
+    );
+    println!(
+        "  - Detailed Call Stacks: {}",
+        production_config.detailed_call_stacks
+    );
+    println!(
+        "  - Confidence Level: {:.1}%",
+        production_config.confidence_level * 100.0
+    );
 
     // Development environment - detailed tracking
     let dev_config = ProfileConfig::development()
@@ -74,10 +84,22 @@ fn demo_configuration_examples() -> CoreResult<()> {
         .with_regression_detection(true);
 
     println!("\n🔧 Development Environment:");
-    println!("  - Sampling Rate: {:.1}%", dev_config.sampling_rate * 100.0);
-    println!("  - Memory Limit: {} MB", dev_config.max_memory_usage / (1024 * 1024));
-    println!("  - Detailed Call Stacks: {}", dev_config.detailed_call_stacks);
-    println!("  - Bottleneck Threshold: {:.1}ms", dev_config.bottleneck_threshold_ms);
+    println!(
+        "  - Sampling Rate: {:.1}%",
+        dev_config.sampling_rate * 100.0
+    );
+    println!(
+        "  - Memory Limit: {} MB",
+        dev_config.max_memory_usage / (1024 * 1024)
+    );
+    println!(
+        "  - Detailed Call Stacks: {}",
+        dev_config.detailed_call_stacks
+    );
+    println!(
+        "  - Bottleneck Threshold: {:.1}ms",
+        dev_config.bottleneck_threshold_ms
+    );
 
     // Staging environment - balanced approach
     let staging_config = ProfileConfig::default()
@@ -86,8 +108,14 @@ fn demo_configuration_examples() -> CoreResult<()> {
         .with_regression_detection(true);
 
     println!("\n🎭 Staging Environment:");
-    println!("  - Sampling Rate: {:.1}%", staging_config.sampling_rate * 100.0);
-    println!("  - Regression Threshold: {:.1}%", staging_config.regression_threshold_percent);
+    println!(
+        "  - Sampling Rate: {:.1}%",
+        staging_config.sampling_rate * 100.0
+    );
+    println!(
+        "  - Regression Threshold: {:.1}%",
+        staging_config.regression_threshold_percent
+    );
     println!("  - Min Sample Size: {}", staging_config.min_sample_size);
 
     Ok(())
@@ -107,7 +135,8 @@ fn demo_basic_workload_analysis() -> CoreResult<()> {
     // Simulate matrix operations
     simulate_matrix_operations();
 
-    let report = profiler.finish_workload_analysis_by_id("matrix_operations", WorkloadType::ComputeIntensive)?;
+    let report = profiler
+        .finish_workload_analysis_by_id("matrix_operations", WorkloadType::ComputeIntensive)?;
 
     println!("📊 Analysis Results:");
     println!("  - Workload ID: {}", report.workload_id);
@@ -117,23 +146,51 @@ fn demo_basic_workload_analysis() -> CoreResult<()> {
     println!("  - Analysis Quality: {}/100", report.analysis_quality);
 
     println!("\n📈 Performance Statistics:");
-    println!("  - Mean Time: {:.2}ms", report.statistics.mean_time.as_millis());
-    println!("  - Median Time: {:.2}ms", report.statistics.median_time.as_millis());
-    println!("  - 95th Percentile: {:.2}ms", report.statistics.p95_time.as_millis());
-    println!("  - 99th Percentile: {:.2}ms", report.statistics.p99_time.as_millis());
-    println!("  - Coefficient of Variation: {:.3}", report.statistics.coefficient_of_variation);
+    println!(
+        "  - Mean Time: {:.2}ms",
+        report.statistics.mean_time.as_millis()
+    );
+    println!(
+        "  - Median Time: {:.2}ms",
+        report.statistics.median_time.as_millis()
+    );
+    println!(
+        "  - 95th Percentile: {:.2}ms",
+        report.statistics.p95_time.as_millis()
+    );
+    println!(
+        "  - 99th Percentile: {:.2}ms",
+        report.statistics.p99_time.as_millis()
+    );
+    println!(
+        "  - Coefficient of Variation: {:.3}",
+        report.statistics.coefficient_of_variation
+    );
 
     println!("\n🔋 Resource Utilization:");
-    println!("  - CPU Usage: {:.1}%", report.resource_utilization.cpu_percent);
-    println!("  - Memory Usage: {:.1} MB", report.resource_utilization.memory_bytes as f64 / (1024.0 * 1024.0));
-    println!("  - Thread Count: {}", report.resource_utilization.thread_count);
+    println!(
+        "  - CPU Usage: {:.1}%",
+        report.resource_utilization.cpu_percent
+    );
+    println!(
+        "  - Memory Usage: {:.1} MB",
+        report.resource_utilization.memory_bytes as f64 / (1024.0 * 1024.0)
+    );
+    println!(
+        "  - Thread Count: {}",
+        report.resource_utilization.thread_count
+    );
 
     if report.has_bottlenecks() {
         println!("\n🔍 Identified Bottlenecks: {}", report.bottlenecks.len());
         for (i, bottleneck) in report.bottlenecks().iter().take(3).enumerate() {
-            println!("  {}. {} - {:.1}% impact ({:.2}ms avg)", 
-                     i + 1, bottleneck.function, bottleneck.impact_percentage, 
-                     bottleneck.average_time.as_millis());
+            println!(
+                "  {}. {} - {:.1}% impact ({:.2}ms avg)",
+                i + 1,
+                bottleneck.function,
+                bottleneck.impact_percentage,
+                bottleneck.average_time.as_millis()
+            );
         }
     }
 
@@ -161,10 +218,13 @@ fn demo_enterprise_features() -> CoreResult<()> {
     ];
 
     for (workload_name, workload_type) in &workload_types {
-        println!("📊 Analyzing {} workload ({})...", workload_name, workload_type);
-        
+        println!(
+            "📊 Analyzing {} workload ({})...",
+            workload_name, workload_type
+        );
+
         profiler.start_workload_analysis(workload_name, *workload_type)?;
-        
+
         // Simulate different types of work
         match workload_type {
             WorkloadType::ComputeIntensive => simulate_compute_work(),
@@ -176,14 +236,16 @@ fn demo_enterprise_features() -> CoreResult<()> {
         }
 
         let report = profiler.finish_workload_analysis_by_id(workload_name, *workload_type)?;
-        
-        println!("  ✅ Completed - Quality: {}/100, Samples: {}", 
-                 report.analysis_quality, report.total_samples);
-        
+
+        println!(
+            "  ✅ Completed - Quality: {}/100, Samples: {}",
+            report.analysis_quality, report.total_samples
+        );
+
         if report.has_bottlenecks() {
             println!("    🔍 {} bottlenecks identified", report.bottlenecks.len());
         }
-        
+
         if report.has_regressions() {
             println!("    ⚠️  {} regressions detected", report.regressions.len());
         }
@@ -193,8 +255,9 @@ fn demo_enterprise_features() -> CoreResult<()> {
     // Use the last report for executive summary demo
     profiler.start_workload_analysis("executive_demo", WorkloadType::Mixed)?;
     simulate_mixed_work();
-    let final_report = profiler.finish_workload_analysis_by_id("executive_demo", WorkloadType::Mixed)?;
-    
+    let final_report =
+        profiler.finish_workload_analysis_by_id("executive_demo", WorkloadType::Mixed)?;
+
     println!("{}", final_report.executive_summary());
 
     Ok(())
@@ -204,8 +267,7 @@ fn demo_bottleneck_identification() -> CoreResult<()> {
     println!("🔍 Bottleneck Identification Demo");
     println!("---------------------------------");
 
-    let config = ProfileConfig::development()
-        .with_bottleneck_detection(true);
+    let config = ProfileConfig::development().with_bottleneck_detection(true);
 
     let mut profiler = ProductionProfiler::new(config)?;
 
@@ -215,7 +277,8 @@ fn demo_bottleneck_identification() -> CoreResult<()> {
     // Simulate work with bottlenecks
     simulate_bottleneck_workload();
 
-    let report = profiler.finish_workload_analysis_by_id("bottleneck_demo", WorkloadType::ComputeIntensive)?;
+    let report = profiler
+        .finish_workload_analysis_by_id("bottleneck_demo", WorkloadType::ComputeIntensive)?;
 
     if report.has_bottlenecks() {
         println!("\n🚨 Bottleneck Analysis Results:");
@@ -224,12 +287,18 @@ fn demo_bottleneck_identification() -> CoreResult<()> {
         for (i, bottleneck) in report.bottlenecks().iter().enumerate() {
             println!("\n  🔍 Bottleneck #{}", i + 1);
             println!("    - Function: {}", bottleneck.function);
-            println!("    - Impact: {:.1}% of total execution time", bottleneck.impact_percentage);
-            println!("    - Average Time: {:.2}ms", bottleneck.average_time.as_millis());
+            println!(
+                "    - Impact: {:.1}% of total execution time",
+                bottleneck.impact_percentage
+            );
+            println!(
+                "    - Average Time: {:.2}ms",
+                bottleneck.average_time.as_millis()
+            );
             println!("    - Sample Count: {}", bottleneck.sample_count);
             println!("    - Confidence: {:.1}%", bottleneck.confidence * 100.0);
             println!("    - Severity: {}/10", bottleneck.severity);
-            
+
             if !bottleneck.optimizations.is_empty() {
                 println!("    - Optimization Suggestions:");
                 for suggestion in &bottleneck.optimizations {
@@ -248,8 +317,7 @@ fn demo_regression_detection() -> CoreResult<()> {
     println!("📈 Performance Regression Detection Demo");
     println!("---------------------------------------");
 
-    let config = ProfileConfig::development()
-        .with_regression_detection(true);
+    let config = ProfileConfig::development().with_regression_detection(true);
 
     let mut profiler = ProductionProfiler::new(config)?;
 
@@ -266,17 +334,21 @@ fn demo_regression_detection() -> CoreResult<()> {
     // Simulate a performance regression
     println!("\n🔍 Analyzing current performance (simulating regression)...");
     profiler.start_workload_analysis("regression_test", WorkloadType::ComputeIntensive)?;
-    
+
     // Simulate slower performance
     thread::sleep(Duration::from_millis(120)); // Simulate 20% performance regression
-    
-    let report = profiler.finish_workload_analysis_by_id("regression_test", WorkloadType::ComputeIntensive)?;
+
+    let report = profiler
+        .finish_workload_analysis_by_id("regression_test", WorkloadType::ComputeIntensive)?;
 
     if report.has_regressions() {
         println!("\n⚠️  Performance Regression Detected!");
         for regression in report.significant_regressions() {
             println!("  - Operation: {}", regression.operation);
-            println!("  - Baseline: {:.2}ms", regression.baseline_time.as_millis());
+            println!(
+                "  - Baseline: {:.2}ms",
+                regression.baseline_time.as_millis()
+            );
             println!("  - Current: {:.2}ms", regression.current_time.as_millis());
             println!("  - Change: {:+.1}% slower", regression.change_percent);
             println!("  - Significance: {:.1}%", regression.significance * 100.0);
@@ -298,12 +370,21 @@ fn demo_resource_monitoring() -> CoreResult<()> {
 
     println!("📊 Current Resource Utilization:");
     let resource_usage = profiler.get_resource_utilization()?;
-    
+
     println!("  - CPU Usage: {:.1}%", resource_usage.cpu_percent);
-    println!("  - Memory Usage: {:.1} MB", resource_usage.memory_bytes as f64 / (1024.0 * 1024.0));
+    println!(
+        "  - Memory Usage: {:.1} MB",
+        resource_usage.memory_bytes as f64 / (1024.0 * 1024.0)
+    );
     println!("  - Active Threads: {}", resource_usage.thread_count);
-    println!("  - I/O Operations/sec: {:.1}", resource_usage.io_ops_per_sec);
-    println!("  - Network Throughput: {:.1} KB/s", resource_usage.network_bytes_per_sec / 1024.0);
+    println!(
+        "  - I/O Operations/sec: {:.1}",
+        resource_usage.io_ops_per_sec
+    );
+    println!(
+        "  - Network Throughput: {:.1} KB/s",
+        resource_usage.network_bytes_per_sec / 1024.0
+    );
 
     println!("\n📤 Data Export Capabilities:");
     let export_data = profiler.export_data("resource_demo")?;
@@ -357,20 +438,20 @@ fn simulate_mixed_work() {
 
 fn simulate_bottleneck_workload() {
     // Simulate a workload with clear bottlenecks
-    
+
     // Fast operation
     for _ in 0..100 {
         let _result = 2 + 2;
     }
-    
+
     // Bottleneck operation (simulated slow function)
     thread::sleep(Duration::from_millis(50));
-    
+
     // Another fast operation
     for _ in 0..50 {
         let _result = 3 * 3;
     }
-    
+
     // Medium bottleneck
     thread::sleep(Duration::from_millis(20));
 }

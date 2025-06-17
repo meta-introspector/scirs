@@ -31,23 +31,38 @@ impl<F: Float> NumericalAnalyzer<F> {
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
     {
-        let mut analysis = ConditionNumberAnalysis::default();
-
         // Compute Jacobian matrix numerically
         let jacobian = self.compute_jacobian(&function, input)?;
 
         // Analyze different types of condition numbers
-        analysis.spectral_condition_number = self.compute_spectral_condition_number(&jacobian)?;
-        analysis.frobenius_condition_number = self.compute_frobenius_condition_number(&jacobian)?;
-        analysis.one_norm_condition_number = self.compute_one_norm_condition_number(&jacobian)?;
-        analysis.infinity_norm_condition_number =
+        let spectral_condition_number = self.compute_spectral_condition_number(&jacobian)?;
+        let frobenius_condition_number = self.compute_frobenius_condition_number(&jacobian)?;
+        let one_norm_condition_number = self.compute_one_norm_condition_number(&jacobian)?;
+        let infinity_norm_condition_number =
             self.compute_infinity_norm_condition_number(&jacobian)?;
 
-        // Assess overall conditioning
-        analysis.conditioning_assessment = self.assess_conditioning(&analysis);
+        // Create partial analysis for assessment
+        let partial_analysis = ConditionNumberAnalysis {
+            spectral_condition_number,
+            frobenius_condition_number,
+            one_norm_condition_number,
+            infinity_norm_condition_number,
+            conditioning_assessment: ConditioningAssessment::default(),
+            singular_value_analysis: SingularValueAnalysis::default(),
+        };
 
-        // Analyze singular values for additional insights
-        analysis.singular_value_analysis = self.analyze_singular_values(&jacobian)?;
+        // Assess overall conditioning and analyze singular values
+        let conditioning_assessment = self.assess_conditioning(&partial_analysis);
+        let singular_value_analysis = self.analyze_singular_values(&jacobian)?;
+
+        let analysis = ConditionNumberAnalysis {
+            spectral_condition_number,
+            frobenius_condition_number,
+            one_norm_condition_number,
+            infinity_norm_condition_number,
+            conditioning_assessment,
+            singular_value_analysis,
+        };
 
         Ok(analysis)
     }
@@ -62,41 +77,24 @@ impl<F: Float> NumericalAnalyzer<F> {
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
-        // Create temporary tensors for analysis initialization
-        let graph = input.graph();
-        let shape = input.shape();
-        let temp_data = vec![F::zero(); shape.iter().product()];
-        let temp_tensor = Tensor::from_vec(temp_data, shape, graph);
-
-        let mut analysis = ErrorPropagationAnalysis {
-            linear_error_bound: 0.0,
-            monte_carlo_analysis: MonteCarloErrorAnalysis {
-                num_samples: 0,
-                output_mean: temp_tensor.clone(),
-                output_std: temp_tensor.clone(),
-                confidence_interval_95: (temp_tensor.clone(), temp_tensor),
-            },
-            first_order_error: 0.0,
-            amplification_factors: Vec::new(),
-        };
-
         // Compute sensitivity matrix (Jacobian)
         let sensitivity_matrix = self.compute_jacobian(&function, input)?;
 
-        // Linear error propagation analysis
-        analysis.linear_error_bound =
+        // Compute all analysis components
+        let linear_error_bound =
             self.compute_linear_error_bound(&sensitivity_matrix, input_uncertainty)?;
-
-        // Monte Carlo error propagation
-        analysis.monte_carlo_analysis =
+        let monte_carlo_analysis =
             self.monte_carlo_error_propagation(&function, input, input_uncertainty)?;
-
-        // First-order error analysis
-        analysis.first_order_error =
+        let first_order_error =
             self.first_order_error_analysis(&sensitivity_matrix, input_uncertainty)?;
+        let amplification_factors = self.compute_amplification_factors(&sensitivity_matrix)?;
 
-        // Analyze error amplification factors
-        analysis.amplification_factors = self.compute_amplification_factors(&sensitivity_matrix)?;
+        let analysis = ErrorPropagationAnalysis {
+            linear_error_bound,
+            monte_carlo_analysis,
+            first_order_error,
+            amplification_factors,
+        };
 
         Ok(analysis)
     }
@@ -110,25 +108,30 @@ impl<F: Float> NumericalAnalyzer<F> {
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
     {
-        let mut analysis = StabilityAnalysis::default();
-
         // Test stability under various perturbation magnitudes
         let perturbation_magnitudes = [1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2];
+        let mut perturbation_tests = Vec::new();
 
         for &magnitude in &perturbation_magnitudes {
             let stability_test = self.test_stability_at_magnitude(&function, input, magnitude)?;
-            analysis.perturbation_tests.push(stability_test);
+            perturbation_tests.push(stability_test);
         }
 
         // Analyze convergence properties
-        analysis.convergence_analysis = self.analyze_convergence(&analysis.perturbation_tests)?;
+        let convergence_analysis = self.analyze_convergence(&perturbation_tests)?;
 
         // Compute stability margins
-        analysis.stability_margins =
-            self.compute_stability_margins(&analysis.perturbation_tests)?;
+        let stability_margins = self.compute_stability_margins(&perturbation_tests)?;
 
         // Check for pathological behavior
-        analysis.pathological_cases = self.detect_pathological_cases(&function, input)?;
+        let pathological_cases = self.detect_pathological_cases(&function, input)?;
+
+        let analysis = StabilityAnalysis {
+            perturbation_tests,
+            convergence_analysis,
+            stability_margins,
+            pathological_cases,
+        };
 
         Ok(analysis)
     }
@@ -142,21 +145,24 @@ impl<F: Float> NumericalAnalyzer<F> {
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
     {
-        let mut analysis = RoundoffErrorAnalysis::default();
-
         // Estimate machine epsilon effects
-        analysis.machine_epsilon_effects =
-            self.analyze_machine_epsilon_effects(&function, input)?;
+        let machine_epsilon_effects = self.analyze_machine_epsilon_effects(&function, input)?;
 
         // Analyze catastrophic cancellation potential
-        analysis.cancellation_analysis =
-            self.analyze_catastrophic_cancellation(&function, input)?;
+        let cancellation_analysis = self.analyze_catastrophic_cancellation(&function, input)?;
 
         // Estimate total roundoff error
-        analysis.total_roundoff_bound = self.estimate_total_roundoff_error(&function, input)?;
+        let total_roundoff_bound = self.estimate_total_roundoff_error(&function, input)?;
 
         // Test different precision levels if available
-        analysis.precision_sensitivity = self.analyze_precision_sensitivity(&function, input)?;
+        let precision_sensitivity = self.analyze_precision_sensitivity(&function, input)?;
+
+        let analysis = RoundoffErrorAnalysis {
+            machine_epsilon_effects,
+            cancellation_analysis,
+            total_roundoff_bound,
+            precision_sensitivity,
+        };
 
         Ok(analysis)
     }
@@ -180,7 +186,7 @@ impl<F: Float> NumericalAnalyzer<F> {
 
         for i in 0..input_size {
             // Create perturbed input
-            let perturbed_input = input.clone();
+            let perturbed_input = *input;
             // Simplified - would actually perturb the i-th component
 
             let perturbed_output = function(&perturbed_input)?;
@@ -347,28 +353,30 @@ impl<F: Float> NumericalAnalyzer<F> {
     ) -> Result<SingularValueAnalysis, StabilityError> {
         let singular_values = self.compute_singular_values(matrix)?;
 
-        let mut analysis = SingularValueAnalysis {
-            singular_values: singular_values.clone(),
-            rank_estimate: 0,
-            numerical_rank: 0,
-            rank_deficiency_indicator: 0.0,
-        };
+        let (numerical_rank, rank_estimate, rank_deficiency_indicator) =
+            if !singular_values.is_empty() {
+                let max_sv = singular_values.iter().fold(0.0f64, |a, &b| a.max(b));
+                let tolerance = max_sv * 1e-15; // Machine epsilon relative tolerance
 
-        if !singular_values.is_empty() {
-            let max_sv = singular_values.iter().fold(0.0f64, |a, &b| a.max(b));
-            let tolerance = max_sv * 1e-15; // Machine epsilon relative tolerance
-
-            analysis.numerical_rank = singular_values.iter().filter(|&&sv| sv > tolerance).count();
-
-            analysis.rank_estimate = singular_values.len();
-
-            analysis.rank_deficiency_indicator = if max_sv > 0.0 {
-                let min_sv = singular_values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-                min_sv / max_sv
+                let numerical_rank = singular_values.iter().filter(|&&sv| sv > tolerance).count();
+                let rank_estimate = singular_values.len();
+                let rank_deficiency_indicator = if max_sv > 0.0 {
+                    let min_sv = singular_values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+                    min_sv / max_sv
+                } else {
+                    0.0
+                };
+                (numerical_rank, rank_estimate, rank_deficiency_indicator)
             } else {
-                0.0
+                (0, 0, 0.0)
             };
-        }
+
+        let analysis = SingularValueAnalysis {
+            singular_values,
+            rank_estimate,
+            numerical_rank,
+            rank_deficiency_indicator,
+        };
 
         Ok(analysis)
     }
@@ -643,7 +651,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         _uncertainty: &Tensor<F>,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Simplified - would generate actual random perturbation
-        let perturbed = input.clone();
+        let perturbed = *input;
         Ok(perturbed)
     }
 
@@ -673,7 +681,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         }
 
         // Simplified - would compute actual mean
-        Ok(tensors[0].clone())
+        Ok(tensors[0])
     }
 
     fn compute_std_tensor<'a>(
@@ -693,8 +701,8 @@ impl<F: Float> NumericalAnalyzer<F> {
         _confidence: f64,
     ) -> Result<(Tensor<'a, F>, Tensor<'a, F>), StabilityError> {
         // Simplified - would compute actual confidence interval
-        let lower = _tensors[0].clone();
-        let upper = _tensors[0].clone();
+        let lower = _tensors[0];
+        let upper = _tensors[0];
         Ok((lower, upper))
     }
 
@@ -775,18 +783,13 @@ pub struct ConditionNumberAnalysis {
 }
 
 /// Assessment of numerical conditioning
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum ConditioningAssessment {
+    #[default]
     WellConditioned,
     ModeratelyConditioned,
     IllConditioned,
     SeverelyIllConditioned,
-}
-
-impl Default for ConditioningAssessment {
-    fn default() -> Self {
-        ConditioningAssessment::WellConditioned
-    }
 }
 
 /// Analysis of singular values
@@ -816,7 +819,7 @@ pub struct MonteCarloErrorAnalysis<'a, F: Float> {
     pub confidence_interval_95: (Tensor<'a, F>, Tensor<'a, F>),
 }
 
-impl<'a, F: Float> MonteCarloErrorAnalysis<'a, F> {
+impl<F: Float> MonteCarloErrorAnalysis<'_, F> {
     pub fn empty() -> Self {
         // Note: Cannot create tensors without graph context
         // This would need to be initialized properly with a context
@@ -942,9 +945,9 @@ where
         linear_error_bound: 0.0,
         monte_carlo_analysis: MonteCarloErrorAnalysis {
             num_samples: 0,
-            output_mean: temp_tensor.clone(),
-            output_std: temp_tensor.clone(),
-            confidence_interval_95: (temp_tensor.clone(), temp_tensor),
+            output_mean: temp_tensor,
+            output_std: temp_tensor,
+            confidence_interval_95: (temp_tensor, temp_tensor),
         },
         first_order_error: 0.0,
         amplification_factors: Vec::new(),

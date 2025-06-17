@@ -5,8 +5,7 @@
 
 use crate::error::{CoreError, CoreResult};
 use crate::profiling::hardware_counters::{CounterType, CounterValue, HardwareCounterManager};
-use crate::profiling::system_monitor::{SystemMetrics, SystemMonitor};
-use rand::Rng;
+use crate::profiling::system_monitor::{SystemMetrics, SystemMonitor, SystemMonitorError};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -39,7 +38,13 @@ pub enum ContinuousMonitoringError {
 
 impl From<ContinuousMonitoringError> for CoreError {
     fn from(err: ContinuousMonitoringError) -> Self {
-        CoreError::ComputationError(err.to_string())
+        CoreError::ComputationError(crate::error::ErrorContext::new(err.to_string()))
+    }
+}
+
+impl From<SystemMonitorError> for CoreError {
+    fn from(err: SystemMonitorError) -> Self {
+        CoreError::ComputationError(crate::error::ErrorContext::new(err.to_string()))
     }
 }
 
@@ -383,11 +388,13 @@ impl ContinuousPerformanceMonitor {
 
     /// Start continuous monitoring
     pub fn start(&mut self) -> CoreResult<()> {
-        let mut running = self.running.lock().unwrap();
-        if *running {
-            return Ok(()); // Already running
+        {
+            let mut running = self.running.lock().unwrap();
+            if *running {
+                return Ok(()); // Already running
+            }
+            *running = true;
         }
-        *running = true;
 
         // Initialize monitors based on configuration
         if self.config.monitor_system {
@@ -578,11 +585,7 @@ impl ContinuousPerformanceMonitor {
                     now,
                 ) {
                     let alert = PerformanceAlert {
-                        id: format!(
-                            "cpu_{}_{}",
-                            now.elapsed().as_secs(),
-                            rand::thread_rng().gen::<u32>()
-                        ),
+                        id: format!("cpu_{}_{}", now.elapsed().as_secs(), rand::random::<u32>()),
                         alert_type: AlertType::HighCpuUsage,
                         severity: if sys_metrics.cpu_usage > alert_config.cpu_threshold * 1.2 {
                             AlertSeverity::Critical
@@ -621,7 +624,7 @@ impl ContinuousPerformanceMonitor {
                             id: format!(
                                 "mem_{}_{}",
                                 now.elapsed().as_secs(),
-                                rand::thread_rng().gen::<u32>()
+                                rand::random::<u32>()
                             ),
                             alert_type: AlertType::HighMemoryUsage,
                             severity: if memory_usage_percent > alert_config.memory_threshold * 1.1
@@ -659,11 +662,7 @@ impl ContinuousPerformanceMonitor {
                 now,
             ) {
                 let alert = PerformanceAlert {
-                    id: format!(
-                        "resp_{}_{}",
-                        now.elapsed().as_secs(),
-                        rand::thread_rng().gen::<u32>()
-                    ),
+                    id: format!("resp_{}_{}", now.elapsed().as_secs(), rand::random::<u32>()),
                     alert_type: AlertType::HighResponseTime,
                     severity: AlertSeverity::Warning,
                     message: format!("High response time: {:.1}ms", app_metrics.avg_response_time),
@@ -811,7 +810,7 @@ impl ContinuousPerformanceMonitor {
         trend_analysis: &Arc<RwLock<HashMap<String, TrendAnalysis>>>,
         recommendations: &Arc<RwLock<Vec<OptimizationRecommendation>>>,
     ) {
-        let history = metrics_history.read().unwrap();
+        let _history = metrics_history.read().unwrap();
         let trends = trend_analysis.read().unwrap();
         let mut new_recommendations = Vec::new();
 
@@ -866,7 +865,8 @@ impl ContinuousPerformanceMonitor {
 
         // Remove old recommendations (keep last 10)
         if recs.len() > 10 {
-            recs.drain(0..recs.len() - 10);
+            let len = recs.len();
+            recs.drain(0..len - 10);
         }
     }
 

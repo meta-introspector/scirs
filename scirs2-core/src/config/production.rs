@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use std::env;
 use std::fmt;
 use std::fs;
-use std::str::FromStr;
 use std::path::Path;
+use std::str::FromStr;
 use std::sync::RwLock;
 use std::time::SystemTime;
 
@@ -813,13 +813,16 @@ mod tests {
     fn test_environment_parsing() {
         assert_eq!(
             Environment::from_str("development"),
-            Environment::Development
+            Ok(Environment::Development)
         );
-        assert_eq!(Environment::from_str("dev"), Environment::Development);
-        assert_eq!(Environment::from_str("production"), Environment::Production);
+        assert_eq!(Environment::from_str("dev"), Ok(Environment::Development));
+        assert_eq!(
+            Environment::from_str("production"),
+            Ok(Environment::Production)
+        );
         assert_eq!(
             Environment::from_str("custom"),
-            Environment::Custom("custom".to_string())
+            Ok(Environment::Custom("custom".to_string()))
         );
     }
 

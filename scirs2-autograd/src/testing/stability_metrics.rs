@@ -31,7 +31,7 @@ impl<F: Float> StabilityMetrics<F> {
         perturbation_magnitude: f64,
     ) -> Result<ForwardStabilityMetrics, StabilityError>
     where
-        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let mut metrics = ForwardStabilityMetrics::default();
 
@@ -88,7 +88,7 @@ impl<F: Float> StabilityMetrics<F> {
         target_output: &Tensor<F>,
     ) -> Result<BackwardStabilityMetrics, StabilityError>
     where
-        Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let mut metrics = BackwardStabilityMetrics::default();
 
@@ -248,7 +248,7 @@ impl<F: Float> StabilityMetrics<F> {
         let original_output = function(parameters)?;
 
         // Compute sensitivity for each parameter
-        for (param_name, _param_tensor) in parameters {
+        for param_name in parameters.keys() {
             let sensitivity = self.compute_single_parameter_sensitivity(
                 &function,
                 parameters,
@@ -291,13 +291,13 @@ impl<F: Float> StabilityMetrics<F> {
     }
 
     /// Compute gradient stability metrics
-    pub fn compute_gradient_stability<'a, GradFunc>(
+    pub fn compute_gradient_stability<GradFunc>(
         &self,
         gradient_function: GradFunc,
-        input: &'a Tensor<'a, F>,
+        input: &Tensor<F>,
     ) -> Result<GradientStabilityMetrics, StabilityError>
     where
-        GradFunc: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
+        GradFunc: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let mut metrics = GradientStabilityMetrics::default();
 
@@ -353,7 +353,7 @@ impl<F: Float> StabilityMetrics<F> {
         _magnitude: f64,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create random perturbation with specified magnitude
-        let perturbed = input.clone();
+        let perturbed = *input;
         // Simplified - would add actual random noise
         Ok(perturbed)
     }
@@ -703,49 +703,34 @@ pub struct GradientStabilityMetrics {
 }
 
 /// Stability grades
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub enum StabilityGrade {
     Excellent,
     Good,
+    #[default]
     Fair,
     Poor,
     Unstable,
 }
 
-impl Default for StabilityGrade {
-    fn default() -> Self {
-        StabilityGrade::Fair
-    }
-}
-
 /// Stability classifications
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum StabilityClassification {
     NumericallyStable,
     WeaklyStable,
     MarginallyStable,
     Unstable,
+    #[default]
     Unknown,
 }
 
-impl Default for StabilityClassification {
-    fn default() -> Self {
-        StabilityClassification::Unknown
-    }
-}
-
 /// Spectral stability assessments
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum SpectralStabilityAssessment {
+    #[default]
     Stable,
     MarginallyStable,
     Unstable,
-}
-
-impl Default for SpectralStabilityAssessment {
-    fn default() -> Self {
-        SpectralStabilityAssessment::Stable
-    }
 }
 
 /// Public API functions

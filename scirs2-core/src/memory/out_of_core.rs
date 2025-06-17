@@ -43,7 +43,7 @@ pub enum OutOfCoreError {
 
 impl From<OutOfCoreError> for CoreError {
     fn from(err: OutOfCoreError) -> Self {
-        CoreError::ComputationError(err.to_string())
+        CoreError::ComputationError(crate::error::ErrorContext::new(err.to_string()))
     }
 }
 
@@ -191,7 +191,7 @@ pub struct ChunkCache<T> {
 
 impl<T> ChunkCache<T>
 where
-    T: Clone + Default + 'static,
+    T: Clone + Default + 'static + Send + Sync,
 {
     /// Create a new chunk cache
     pub fn new(config: OutOfCoreConfig) -> Self {
@@ -241,7 +241,7 @@ where
             *current_memory += chunk_size;
         }
 
-        track_allocation("OutOfCoreCache", chunk_size);
+        track_allocation("OutOfCoreCache", chunk_size, 0);
         Ok(())
     }
 
@@ -258,7 +258,7 @@ where
             access_order.retain(|id| id != chunk_id);
             *current_memory = current_memory.saturating_sub(chunk_size);
 
-            track_deallocation("OutOfCoreCache", chunk_size);
+            track_deallocation("OutOfCoreCache", chunk_size, 0);
             Some(chunk)
         } else {
             None
@@ -312,7 +312,7 @@ where
         let access_order = self.access_order.lock().unwrap();
         let metadata_map = self.metadata.read().unwrap();
 
-        let candidates = match self.config.cache_policy {
+        let candidates: Vec<ChunkId> = match self.config.cache_policy {
             CachePolicy::Lru => {
                 // Evict least recently used (front of queue)
                 access_order.iter().take(count).cloned().collect()
@@ -507,7 +507,7 @@ pub struct OutOfCoreArray<T> {
 
 impl<T> OutOfCoreArray<T>
 where
-    T: Clone + Default + 'static,
+    T: Clone + Default + 'static + Send + Sync,
 {
     /// Create a new out-of-core array
     pub fn new(
@@ -544,6 +544,7 @@ where
     }
 
     /// Calculate chunk coordinates for a given index
+    #[allow(dead_code)]
     fn calculate_chunk_coords(&self, indices: &[usize]) -> CoreResult<Vec<usize>> {
         if indices.len() != self.shape.len() {
             return Err(OutOfCoreError::InvalidChunkSize(format!(
@@ -728,7 +729,7 @@ pub struct RegionView<'a, T> {
 
 impl<'a, T> RegionView<'a, T>
 where
-    T: Clone + Default + 'static,
+    T: Clone + Default + 'static + Send + Sync,
 {
     /// Create a new region view
     fn new(array: &'a OutOfCoreArray<T>, ranges: &[(usize, usize)]) -> CoreResult<Self> {
@@ -871,7 +872,7 @@ impl OutOfCoreManager {
         config: Option<OutOfCoreConfig>,
     ) -> CoreResult<Arc<OutOfCoreArray<T>>>
     where
-        T: Clone + Default + 'static,
+        T: Clone + Default + 'static + Send + Sync,
     {
         let storage_backends = self.storage_backends.read().unwrap();
         let storage = if let Some(name) = storage_name {
@@ -902,7 +903,7 @@ impl OutOfCoreManager {
     /// Get an existing array
     pub fn get_array<T>(&self, array_id: &str) -> Option<Arc<OutOfCoreArray<T>>>
     where
-        T: Clone + Default + 'static,
+        T: Clone + Default + 'static + Send + Sync,
     {
         let arrays = self.arrays.read().unwrap();
         arrays
@@ -974,7 +975,7 @@ pub mod utils {
         shape: Vec<usize>,
     ) -> CoreResult<Arc<OutOfCoreArray<T>>>
     where
-        T: Clone + Default + 'static,
+        T: Clone + Default + 'static + Send + Sync,
     {
         let manager = global_manager();
         manager.create_array(array_id, shape, None, None)
@@ -987,7 +988,7 @@ pub mod utils {
         chunk_processor: F,
     ) -> CoreResult<()>
     where
-        T: Clone + Default + 'static,
+        T: Clone + Default + 'static + Send + Sync,
         F: FnMut(&Array<T, IxDyn>, &[usize]) -> CoreResult<()>,
     {
         // Create storage backend for the data file
@@ -1015,7 +1016,7 @@ pub mod utils {
         chunk_shape: Vec<usize>,
     ) -> CoreResult<Arc<OutOfCoreArray<T>>>
     where
-        T: Clone + Default + 'static,
+        T: Clone + Default + 'static + Send + Sync,
     {
         let config = OutOfCoreConfig {
             chunk_shape,

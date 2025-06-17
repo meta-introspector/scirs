@@ -6,7 +6,7 @@
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 use std::time::{Duration, Instant};
 
 /// Performance characteristics of a function
@@ -414,10 +414,8 @@ impl PerformanceHintRegistry {
             if let (Some(expected), Some(stats)) =
                 (hints.expected_duration.as_ref(), stats.as_ref())
             {
-                if !stats.matches_expected(expected) {
-                    if stats.average_duration > expected.max {
-                        recommendations.push(OptimizationRecommendation::ProfileAndOptimize);
-                    }
+                if !stats.matches_expected(expected) && stats.average_duration > expected.max {
+                    recommendations.push(OptimizationRecommendation::ProfileAndOptimize);
                 }
             }
         }

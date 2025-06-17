@@ -554,7 +554,7 @@ impl CompatibilityRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::versioning::{ApiVersionBuilder, StabilityLevel, SupportStatus};
+    use crate::versioning::ApiVersionBuilder;
 
     #[test]
     fn test_compatibility_levels() {

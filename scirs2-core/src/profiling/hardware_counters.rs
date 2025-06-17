@@ -6,7 +6,7 @@
 use crate::error::{CoreError, CoreResult};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use thiserror::Error;
 
 /// Error types for hardware performance counters
@@ -35,7 +35,7 @@ pub enum HardwareCounterError {
 
 impl From<HardwareCounterError> for CoreError {
     fn from(err: HardwareCounterError) -> Self {
-        CoreError::ComputationError(err.to_string())
+        CoreError::ComputationError(crate::error::ErrorContext::new(err.to_string()))
     }
 }
 
@@ -292,7 +292,7 @@ impl PerformanceCounter for LinuxPerfCounter {
     }
 
     fn start_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
-        if let Some((event_type, config)) = self.counter_to_perf_config(counter_type) {
+        if let Some((_event_type, _config)) = self.counter_to_perf_config(counter_type) {
             // In a real implementation, we would:
             // 1. Create perf_event_attr structure
             // 2. Call perf_event_open syscall

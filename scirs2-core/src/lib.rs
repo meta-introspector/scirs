@@ -243,7 +243,7 @@ pub use crate::validation::{
 
 #[cfg(feature = "data_validation")]
 pub use crate::validation::data::{
-    Constraint, DataType, EmailValidationRule, FieldDefinition, UrlValidationRule,
+    Constraint, DataType, FieldDefinition,
     ValidationConfig, ValidationError, ValidationResult, ValidationRule, ValidationSchema,
     Validator,
 };

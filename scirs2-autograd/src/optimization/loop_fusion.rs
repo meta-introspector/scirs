@@ -10,6 +10,12 @@ use ndarray::{Array, IxDyn, Zip};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
+/// Type alias for kernel function
+type KernelFunction<F> =
+    Box<dyn Fn(&[&Array<F, IxDyn>]) -> Result<Array<F, IxDyn>, OpError> + Send + Sync>;
+/// Type alias for kernel compilation result
+type KernelResult<F> = Result<KernelFunction<F>, OpError>;
+
 /// Types of operations that can be fused
 #[derive(Debug, Clone, PartialEq)]
 pub enum FusableOperation<F: Float> {
@@ -72,6 +78,12 @@ pub struct FusionChain<F: Float> {
     output_shape: Vec<usize>,
     /// Estimated performance benefit
     performance_benefit: f64,
+}
+
+impl<F: Float> Default for FusionChain<F> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<F: Float> FusionChain<F> {
@@ -145,6 +157,12 @@ pub struct LoopFusionOptimizer<F: Float> {
     fusion_mapping: HashMap<TensorID, usize>,
     /// Performance statistics
     stats: FusionStats<F>,
+}
+
+impl<F: Float> Default for LoopFusionOptimizer<F> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<F: Float> LoopFusionOptimizer<F> {
@@ -297,7 +315,7 @@ pub struct FusedKernel<F: Float> {
     /// The fusion chain this kernel implements
     chain: FusionChain<F>,
     /// Compiled kernel function
-    kernel_func: Box<dyn Fn(&[&Array<F, IxDyn>]) -> Result<Array<F, IxDyn>, OpError> + Send + Sync>,
+    kernel_func: KernelFunction<F>,
 }
 
 impl<F: Float> FusedKernel<F> {
@@ -309,12 +327,7 @@ impl<F: Float> FusedKernel<F> {
     }
 
     /// Compile the fusion chain into an executable kernel
-    fn compile_kernel(
-        chain: &FusionChain<F>,
-    ) -> Result<
-        Box<dyn Fn(&[&Array<F, IxDyn>]) -> Result<Array<F, IxDyn>, OpError> + Send + Sync>,
-        OpError,
-    > {
+    fn compile_kernel(chain: &FusionChain<F>) -> KernelResult<F> {
         let operations = chain.operations.clone();
         let _output_shape = chain.output_shape.clone();
 
@@ -472,6 +485,12 @@ pub struct LoopFusionManager<F: Float> {
     kernels: Vec<FusedKernel<F>>,
     /// Configuration
     config: FusionConfig,
+}
+
+impl<F: Float> Default for LoopFusionManager<F> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<F: Float> LoopFusionManager<F> {

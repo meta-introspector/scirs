@@ -266,7 +266,7 @@ impl Drop for MemoryTracker {
 
 /// Timing entry for the profiler
 #[derive(Debug, Clone)]
-struct TimingEntry {
+pub struct TimingEntry {
     /// Number of calls
     calls: usize,
     /// Total duration
@@ -322,7 +322,7 @@ impl TimingEntry {
 
 /// Memory tracking entry for the profiler
 #[derive(Debug, Clone)]
-struct MemoryEntry {
+pub struct MemoryEntry {
     /// Number of allocations
     allocations: usize,
     /// Total memory delta (can be negative for memory releases)
@@ -692,6 +692,16 @@ pub mod performance_hints;
 /// Production profiling with real-workload analysis and bottleneck identification
 #[path = "profiling/production.rs"]
 pub mod production;
+
+#[path = "profiling/adaptive.rs"]
+pub mod adaptive;
+/// Performance dashboards with real-time visualization and historical trends
+#[path = "profiling/dashboards.rs"]
+pub mod dashboards;
+
+/// Test coverage analysis with comprehensive tracking and reporting
+#[path = "profiling/coverage.rs"]
+pub mod coverage;
 
 /// Advanced profiling capabilities for Alpha 6
 pub mod advanced {
@@ -1976,7 +1986,7 @@ pub mod comprehensive {
 
             let mut bottleneck_reports = Vec::new();
             if self.config.enable_bottleneck_detection {
-                let detector =
+                let mut detector =
                     advanced::BottleneckDetector::new(advanced::BottleneckConfig::default());
                 bottleneck_reports = detector.analyze(&self.app_profiler.lock().unwrap());
             }

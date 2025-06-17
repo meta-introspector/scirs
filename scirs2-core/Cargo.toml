@@ -376,3 +376,28 @@ name = "leak_detection_demo"
 path = "examples/leak_detection_demo.rs"
 required-features = ["leak_detection"]
 
+[[example]]
+name = "adaptive_optimization_test"
+path = "examples/adaptive_optimization_test.rs"
+required-features = ["profiling"]
+
+[[example]]
+name = "coverage_analysis_demo"
+path = "examples/coverage_analysis_demo.rs"
+required-features = ["profiling"]
+
+[[example]]
+name = "production_profiling_demo"
+path = "examples/production_profiling_demo.rs"
+required-features = ["profiling"]
+
+[[example]]
+name = "adaptive_optimization_demo"
+path = "examples/adaptive_optimization_demo.rs"
+required-features = ["profiling"]
+
+[[example]]
+name = "performance_dashboards_demo"
+path = "examples/performance_dashboards_demo.rs"
+required-features = ["profiling"]
+

@@ -163,7 +163,7 @@ fn main() -> CoreResult<()> {
 
     // Version negotiation example
     println!("\n🤝 Version Negotiation:");
-    use scirs2_core::versioning::negotiation::{ClientRequirementsBuilder, NegotiationStrategy};
+    use scirs2_core::versioning::negotiation::ClientRequirementsBuilder;
 
     let client_capabilities =
         ClientRequirementsBuilder::new("scientific_client", Version::parse("1.0.0")?)
@@ -177,7 +177,7 @@ fn main() -> CoreResult<()> {
             .prefer_feature("statistics")
             .build();
 
-    let supported_versions: Vec<&Version> = version_manager
+    let _supported_versions: Vec<&Version> = version_manager
         .get_supported_versions()
         .into_iter()
         .map(|v| &v.version)

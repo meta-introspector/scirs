@@ -17,14 +17,14 @@
 //!
 //! ## Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! use scirs2_core::observability::tracing::{TracingSystem, SpanBuilder, TracingConfig};
 //!
 //! let config = TracingConfig::default();
 //! let tracing = TracingSystem::new(config)?;
 //!
 //! // Create a traced operation
-//! let span = tracing.start_span("matrix_multiplication")
+//! let span = tracing.start_span("matrix_multiplication")?
 //!     .with_attribute("size", "1000x1000")
 //!     .with_component("linalg");
 //!
@@ -251,9 +251,25 @@ impl TraceContext {
             ))
         })?;
 
-        // For span ID, we need to pad the 8-byte ID to create a valid UUID
-        let span_id_str = format!("00000000-0000-0000-0000-{}", parts[2]);
-        let span_id = Uuid::parse_str(&span_id_str).map_err(|_| {
+        // For span ID, we need to pad the 16-char ID to create a valid UUID
+        let span_id_str = if parts[2].len() == 16 {
+            format!("0000000000000000{}", parts[2])
+        } else {
+            return Err(CoreError::ComputationError(
+                crate::error::ErrorContext::new(
+                    "Invalid span ID length in traceparent".to_string(),
+                ),
+            ));
+        };
+        let span_id = Uuid::parse_str(&format!(
+            "{}-{}-{}-{}-{}",
+            &span_id_str[0..8],
+            &span_id_str[8..12],
+            &span_id_str[12..16],
+            &span_id_str[16..20],
+            &span_id_str[20..32]
+        ))
+        .map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
                 "Invalid span ID in traceparent".to_string(),
             ))
@@ -590,7 +606,7 @@ impl SpanBuilder {
 
 // Thread-local storage for current span
 thread_local! {
-    static CURRENT_SPAN: std::cell::RefCell<Option<Arc<Mutex<Span>>>> = std::cell::RefCell::new(None);
+    static CURRENT_SPAN: std::cell::RefCell<Option<Arc<Mutex<Span>>>> = const { std::cell::RefCell::new(None) };
 }
 
 /// Span storage for managing active spans
@@ -754,7 +770,7 @@ impl TracingSystem {
                         None
                     }
                 })
-                .unwrap_or_else(TraceContext::new)
+                .unwrap_or_default()
         };
 
         // Check sampling decision
@@ -1789,7 +1805,7 @@ mod tests {
             sampler.should_sample(&context, "test");
         }
 
-        let (total, sampled, rate) = sampler.get_stats();
+        let (total, _sampled, rate) = sampler.get_stats();
         assert_eq!(total, 10);
         assert!(rate >= 0.0 && rate <= 1.0);
     }

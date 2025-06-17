@@ -1,341 +1,190 @@
 # scirs2-core TODO
 
-This module provides core functionality and utilities that are used across other scirs2 modules.
+Core utilities and foundation for the SciRS2 scientific computing library in Rust.
 
-## Current Status
+## 🔧 Current Issues & Quick Fixes
 
-- [x] Set up module structure
-- [x] Error handling
-  - [x] Core error types
-  - [x] Error conversion traits
-- [x] Constants
-  - [x] Mathematical constants
-  - [x] Physical constants
-- [x] Utility functions
-  - [x] Array manipulation
-  - [x] Type conversion helpers
-  - [x] Common math operations
+### High Priority - Bug Fixes
+- [ ] Fix remaining doc test compilation errors in tracing and versioning modules
+- [x] ✅ **FIXED**: Resolve module resolution error with `data.rs` vs `data/mod.rs` conflict
+- [ ] Address any clippy warnings in new validation data module structure
+- [ ] Fix ignored tests in array protocol and serialization modules
+- [ ] Update API documentation for recently refactored validation modules
 
-## Recent Additions (Advanced Features)
+### Medium Priority - Maintenance
+- [ ] Standardize error handling patterns across all modules
+- [ ] Review and update dependency versions in workspace
+- [ ] Add missing unit tests for edge cases in validation system
+- [ ] Improve code coverage in GPU and memory management modules
+- [ ] Update examples to use latest API patterns
 
-- [x] ndarray Extensions (NumPy/SciPy compatibility)
-  - [x] Advanced indexing operations (boolean and fancy indexing)
-  - [x] Comprehensive statistical functions (mean, median, variance, etc.)
-  - [x] Dimension-agnostic implementations (works with both 1D and 2D arrays)
-  - [x] Histogram, quantile, and binning functions
-  - [x] Correlation and covariance calculations
-  - [x] Matrix utilities (diag, eye, hankel, toeplitz, etc.)
-  - [x] Array manipulation (meshgrid, unique, argmin/argmax, gradient)
-  - [x] Robust error handling and edge cases
+## 🚀 Current Development Focus (Alpha 6)
 
-- [x] GPU Acceleration
-  - [x] Backend abstraction layer (CUDA, WebGPU, Metal, OpenCL)
-  - [x] Memory management for GPU buffers
-  - [x] Computation primitives
-  - [x] Integration with memory management and caching
-- [x] Memory Management
-  - [x] Chunk-based processing for large datasets
-  - [x] Buffer pool for efficient memory reuse
-  - [x] Zero-copy transformations
-  - [x] Memory usage tracking
-- [x] Logging and Diagnostics
-  - [x] Structured logging with levels and context fields
-  - [x] Progress tracking for long-running operations
-  - [x] Log handlers and formatters
-- [x] Profiling
-  - [x] Function-level timing instrumentation
-  - [x] Memory allocation tracking
-  - [x] Hierarchical profiling
-  - [x] Performance report generation
-- [x] Random Number Generation
-  - [x] Consistent interface for different distributions
-  - [x] Distribution-independent sampling
-  - [x] Seedable generators for reproducibility
-  - [x] Optimized array-based sampling
-- [x] Type Conversions
-  - [x] Robust numeric conversions with bounds checking
-  - [x] Complex number interoperability
-  - [x] Conversion strategies (exact, clamped, rounded)
-  - [x] Error handling for failed conversions
+### Data Validation System Enhancement
+- [x] ✅ **COMPLETED**: Modular data validation architecture with separate concerns
+- [ ] Complete implementation of all constraint types (Pattern, Custom, etc.)
+- [ ] Add JSON Schema integration for complex validation rules
+- [ ] Implement validation rule composition and chaining
+- [ ] Add validation performance benchmarks and optimization
+- [ ] Create validation DSL for complex business rules
 
-## Alpha 6 Preparation Tasks
-
-- [x] Advanced Error Handling Enhancements
-  - [x] Extend diagnostic engine with more environment analysis capabilities
-  - [x] Add pattern recognition for more error scenarios (9 comprehensive error patterns)
-  - [x] Implement domain-specific error recovery strategies
-  - [x] Create error handling tutorials and best practices documentation
-- [x] Performance and Memory Optimizations
-  - [x] Optimize memory allocation patterns based on benchmarking results
-  - [x] Enhance SIMD operation coverage (Alpha 6 enhanced vectorization)
-  - [x] Improve parallel processing efficiency with better load balancing
-  - [x] Implement adaptive chunking strategies for memory-mapped operations
-- [x] API Consistency and Documentation
-  - [x] Standardize function signatures across core utilities
-  - [x] Create comprehensive usage examples for all major features
-  - [x] Document integration patterns for combining advanced features
-  - [x] Enhance type system documentation and conversion guidelines
-
-## Completed Tasks (Alpha 5)
-
-- [x] Enhance error handling
-  - [x] More specific error types
-  - [x] Better error messages
-  - [x] Error context and chaining
-  - [x] Advanced recovery strategies and circuit breaker patterns
-  - [x] Async error handling with timeout and progress tracking
-  - [x] Advanced diagnostics engine with environment analysis
-- [x] Add more utility functions
-  - [x] Data validation
-  - [x] I/O helpers
-  - [x] Pretty printing and formatting
-- [x] Improve type system
-  - [x] Generic numeric traits
-  - [x] Better handling of different numeric types
-  - [x] Type conversion utilities
-- [x] Configuration system
-  - [x] Global configuration options
-  - [x] Thread-local settings
-  - [x] Environment variable integration
-- [x] Performance optimizations
-  - [x] Caching and memoization with TTL (Time-To-Live) support
-  - [x] Created foundation for SIMD operations (feature-gated)
-  - [x] Created foundation for parallel processing (feature-gated)
-  - [x] Memory-efficient algorithms with chunk-wise operations
-- [x] Add more examples and documentation
-  - [x] Usage guidelines for other modules
-  - [x] Best practices for error handling
-  - [x] Integration guide for advanced features
-
-## SciPy Port Compatibility Tasks
-
-- [x] **Advanced ndarray Operations**
-  - [x] Comprehensive reshape, transpose, and view operations
-  - [x] Enhanced indexing capabilities (boolean, fancy indexing)
-  - [x] Complete set of array manipulation functions (meshgrid, unique, argmin/argmax, gradient, etc.)
-  - [x] Matrix creation utilities (eye, diag, block_diag, etc.)
-  - [x] Statistical functions (mean, median, variance, percentile, histogram, etc.)
-  - [x] Memory layout optimizations (C/F order support)
-
-- [x] **Universal Functions Framework**
-  - [x] Type-generic vectorized operations system
-  - [x] Auto-vectorization with SIMD support via traits
-  - [x] Generic ufunc system for custom operations
-  - [x] Broadcasting support for mixed-shape operations
-
-- [x] **Scientific Data Structures**
-  - [x] Masked arrays for handling missing data
-  - [x] Record arrays for heterogeneous data
-  - [x] Memory-efficient view system
-  - [x] Specialized containers for scientific data types
-
-## Array Protocol and Interoperability
-
-- [x] Implement array protocol similar to NumPy's `__array_function__`
-  - [x] Support for working with distributed arrays
-  - [x] Support for GPU arrays through protocol delegation
-  - [x] Enable seamless integration with third-party array implementations
-- [x] JIT compilation integration
-  - [x] Create abstraction layer over available JIT engines
-  - [x] Provide compilation hints for optimizing performance-critical code
-  - [x] Support specialized code paths for different hardware configurations
-
-## Enhancements for Parallel Processing
-
-- [x] Basic parallel processing support for memory-mapped arrays
-  - [x] Parallel chunk processing with Rayon
-  - [x] Thread-safe mutations of memory-mapped data
-  - [x] Feature-gated parallel implementation
-- [x] Advanced parallel processing capabilities
-  - [x] Further optimize parallel chunk processing with better load balancing
-  - [x] Implement custom partitioning strategies for different data distributions
-  - [x] Add work-stealing scheduler for more efficient thread utilization
-  - [x] Support for nested parallelism with controlled resource usage
-  - [x] Add `workers` parameter to parallelizable functions
-  - [x] Support for dynamic thread pool sizing based on workload
-- [ ] Distributed computing support
-  - [ ] Building on the memory-mapped chunking capabilities for distributed processing
-  - [ ] Support for multi-node computation
-  - [ ] Resource management across compute clusters
-  - [ ] Network-aware task distribution
-
-## Enhancements for GPU Acceleration
-
-- [x] Add support for AMD ROCm backend
-- [x] Implement specialized kernels for common mathematical operations
-- [x] Create GPU-optimized versions of key algorithms (e.g., matrix operations, FFT)
-- [x] Implement asynchronous execution and event-based synchronization
-- [x] Add tensor core acceleration for supported hardware
-- [x] Create benchmarking suite comparing CPU vs. GPU performance
-- [x] Add support for automatic kernel tuning to optimize for different GPU architectures
-- [x] Implement heterogeneous computing capabilities (using both CPU and GPU)
-
-## Enhancements for Memory Management
-
-- [x] Implement memory metrics system for tracking and analyzing memory usage
-  - [x] Event-based tracking for allocations, deallocations, and resizes
-  - [x] Component-level memory usage statistics
-  - [x] Memory usage reporting with text and JSON output
-  - [x] Memory snapshots for point-in-time analysis
-  - [x] Memory leak detection through snapshot comparison
-  - [x] Thread-safe global tracking system
-  - [x] Visualization capabilities for memory changes
-  - [x] Fix mutex poisoning issues in snapshot test cases
-- [x] Add memory mapping capabilities for extremely large datasets
-  - [x] Memory-mapped array implementation with lazy loading
-  - [x] Chunk-wise processing of memory-mapped data
-  - [x] Iterator-based access to memory-mapped chunks
-  - [x] Parallel processing support for memory-mapped arrays
-- [x] Further enhance memory-mapped arrays
-  - [x] Optimized slicing and indexing operations for memory-mapped arrays
-  - [x] Implement adaptive chunking strategies based on workload patterns
-  - [x] Add more zero-copy operations for memory-mapped arrays
-  - [x] Support for transparent compression/decompression of memory-mapped data
-- [x] Implement cross-device memory management (CPU/GPU/TPU)
-- [x] Add support for out-of-core processing for datasets larger than memory
-- [x] Create streaming data processors for continuous data flows
-- [x] Add compressed memory buffers for memory-constrained environments
-- [x] Implement smart prefetching for predictable access patterns
-  - [x] Pattern detection for sequential access
-  - [x] Pattern detection for strided access
-  - [x] Automatic prefetching based on access history
-  - [x] Background thread for asynchronous prefetching
-  - [x] Integration with block cache system
-  - [x] Advanced prefetching with reinforcement learning
-  - [x] Complex pattern recognition for scientific computing
-  - [x] Resource-aware prefetching to adapt to system load
-  - [x] Cross-file prefetching for correlated datasets
-- [ ] Create specialized containers for scientific data types
-- [x] Create zero-copy interface for data exchange between library components
-
-## Enhancements for Logging and Diagnostics
-
-- [x] Add distributed logging for multi-node computations
-- [x] Implement log aggregation and analysis tools
-- [ ] Create visualization tools for progress tracking
-- [ ] Add context propagation across async boundaries
-- [ ] Implement adaptive logging based on execution patterns
-- [ ] Create specialized loggers for different scientific domains
-- [x] Add structured logging with tagging for machine-readable outputs
-- [x] Implement smart rate limiting for high-frequency log events
-
-## Enhancements for Profiling
-
-- [x] Add system-level resource monitoring (CPU, memory, network)
-- [x] Implement flame graph generation for performance visualization  
-- [x] Create differential profiling to compare algorithm versions
-- [x] Add hardware performance counter integration
-- [x] Implement automated bottleneck detection
-- [x] Create profiling report export to various formats
-- [x] Add continuous performance monitoring for long-running processes
-- [x] Implement function-level performance hinting system
-
-## Enhancements for Random Number Generation
-
-- [x] Add support for more specialized distributions
-- [x] Implement GPU-accelerated random number generation
-- [x] Add quasi-Monte Carlo sequence generators
-  - [x] Sobol sequences
-  - [x] Halton sequences
-  - [x] Latin hypercube sampling
-- [x] Create cryptographically secure RNG option
-- [x] Implement variance reduction techniques
-- [x] Add importance sampling methods
-- [x] Add support for reproducible parallel random generation
-- [x] Implement thread-local RNG pools for performance
-
-## Enhancements for Type Conversions
-
-- [x] Add automated precision tracking for numerical computations
-- [x] Implement dynamic type dispatch for heterogeneous collections
-- [x] Create specialized numeric types for scientific domains
-- [ ] Add symbolic computation interface
-- [x] Implement unit conversion system
-- [ ] Add dimensional analysis for physical quantities
-- [ ] Support for quantized numeric types for memory efficiency
-- [ ] Add improved zero-copy conversion between compatible types
-
-## Long-term Goals
-
-- [x] Comprehensive foundation for all scirs2 modules
-- [x] Consistent API design across the library
-- [x] Minimal dependencies for core functionality
-- [x] Efficient memory management
-- [x] Thread-safety and concurrency support
-- [x] Comprehensive testing infrastructure
-- [ ] API stability and backward compatibility guarantees
-- [ ] Complete feature parity with SciPy/NumPy for core functionality
-
-## Production-Level Enhancement Requirements
-
-### Security & Robustness
-- [x] **Input Validation & Sanitization**: Comprehensive validation for all public APIs
-- [x] **Memory Safety Hardening**: Bounds checking, overflow protection, safe arithmetic
-- [x] **Security Audit**: Vulnerability scanning, dependency auditing, secure coding practices
-- [x] **Fuzzing Tests**: Property-based testing, stress testing, edge case discovery
-- [x] **Error Recovery**: Circuit breakers, retry logic, graceful degradation
-- [x] **Resource Limits**: Memory limits, computation timeouts, resource cleanup
-
-### Performance & Scalability
-- [x] **Comprehensive Benchmarking**: Performance regression testing, optimization validation
-- [ ] **Production Profiling**: Real-workload analysis, bottleneck identification
-- [ ] **Adaptive Optimization**: Runtime performance tuning, workload-aware optimization
-- [ ] **Concurrent Access**: Thread-safe operations, lock-free algorithms where possible
-- [x] **Large-Scale Testing**: Multi-GB dataset testing, stress testing, memory pressure testing
-- [x] **Hardware Optimization**: CPU feature detection, NUMA awareness, cache-friendly algorithms
-
-### Observability & Monitoring
-- [x] **Metrics Collection**: Performance metrics, resource usage, error rates
-- [x] **Health Checks**: System health monitoring, dependency checks, self-diagnostics
-- [x] **Distributed Tracing**: Request tracing across components, performance attribution
-- [x] **Alerting System**: Threshold-based alerts, anomaly detection, escalation policies
-- [ ] **Performance Dashboards**: Real-time performance visualization, historical trends
-- [x] **Audit Logging**: Security events, data access logging, compliance tracking
-
-### Configuration & Environment
-- [x] **Environment-Specific Config**: Development, staging, production configurations
-- [x] **Configuration Validation**: Schema validation, constraint checking, environment verification
-- [x] **Hot Configuration Reload**: Runtime configuration updates without restart
-- [x] **Feature Flags**: Runtime feature toggles, A/B testing, gradual rollouts
-- [x] **Resource Discovery**: Automatic hardware detection, optimization parameter tuning
-- [ ] **Deployment Validation**: Post-deployment verification, smoke tests, rollback triggers
+### Production Readiness
+- [ ] **Security Audit**: Complete security review of all public APIs
+- [ ] **Performance Optimization**: Profile and optimize hot paths
+- [ ] **Error Recovery**: Enhance circuit breaker patterns and retry logic
+- [ ] **Documentation**: Complete API documentation with examples
+- [ ] **Testing**: Achieve 95%+ test coverage across all modules
 
 ### API Stability & Compatibility
-- [x] **API Versioning**: Semantic versioning, backward compatibility guarantees
-- [x] **Deprecation Policy**: Graceful deprecation, migration guides, timeline management
-- [x] **Breaking Change Management**: Impact analysis, migration tooling, communication
-- [x] **Integration Testing**: Cross-module compatibility, regression testing
-- [ ] **Documentation Completeness**: API docs, examples, troubleshooting guides
-- [ ] **SDK Stability**: Public API freeze, ABI compatibility, library versioning
+- [ ] **Breaking Change Management**: Document and minimize API changes
+- [ ] **Version Migration**: Create migration guides for API updates
+- [ ] **Backward Compatibility**: Ensure older versions remain functional
+- [ ] **Integration Testing**: Test with all dependent modules
 
-### Testing & Quality Assurance
-- [ ] **Test Coverage Analysis**: Code coverage, branch coverage, integration coverage
-- [x] **Property-Based Testing**: QuickCheck-style testing, invariant verification
-- [x] **Integration Test Suite**: End-to-end testing, cross-component testing
-- [x] **Performance Regression Testing**: Automated performance validation, benchmark tracking
-- [ ] **Cross-Platform Testing**: Multi-OS testing, architecture validation
-- [x] **Memory Leak Detection**: Valgrind integration, memory profiling, leak testing
+## 📋 Feature Development Roadmap
 
-### Data Management & Persistence
-- [x] **Data Validation**: Schema validation, constraint enforcement, data integrity
-- [ ] **Backup & Recovery**: Data backup strategies, recovery procedures, disaster recovery
-- [ ] **Data Migration**: Version migration tools, data format evolution, compatibility
-- [ ] **Compression Optimization**: Algorithm selection, compression ratio optimization
-- [ ] **Caching Strategies**: Cache invalidation, cache warming, cache coherency
-- [ ] **Storage Optimization**: Disk layout optimization, I/O pattern optimization
+### Short Term (Next 2-4 weeks)
+1. **Complete Validation System**
+   - [ ] Finish constraint implementations (Pattern, Custom, Temporal)
+   - [ ] Add comprehensive validation examples
+   - [ ] Performance optimization for large-scale validation
 
-## General Future Enhancements
+2. **Memory Management Enhancements**
+   - [ ] Implement cross-device memory management (CPU/GPU/TPU)
+   - [ ] Add memory leak detection and automated cleanup
+   - [ ] Optimize memory allocation patterns for scientific workloads
 
-- [x] Fuzzing tests for robustness verification (moved to Production-Level)
-- [x] Extended benchmarking suite for performance tracking (moved to Production-Level)
-- [ ] Additional numeric trait implementations for specialized number types
-- [x] Cross-platform validation for all core features (moved to Production-Level)
-- [ ] More complex caching strategies for specific use cases
-- [ ] Pre-built configuration profiles for different scientific domains
-- [ ] Hardware-specific optimizations discovery and application
-- [ ] Adaptive algorithm selection based on input characteristics
-- [ ] Integration with domain-specific hardware accelerators
-- [ ] Cloud computing support and distributed processing
-- [ ] Self-tuning algorithms that adapt to the execution environment
-- [x] Comprehensive error handling with recovery strategies (moved to Production-Level)
-- [ ] Automated documentation generation and validation
+3. **Error Handling Improvements**
+   - [ ] Standardize error context across all modules
+   - [ ] Add structured error reporting with machine-readable format
+   - [ ] Implement error aggregation for batch operations
+
+### Medium Term (1-2 months)
+1. **Distributed Computing Support**
+   - [ ] Multi-node computation framework
+   - [ ] Network-aware task distribution
+   - [ ] Resource management across compute clusters
+
+2. **Advanced GPU Acceleration**
+   - [ ] Tensor core acceleration for supported hardware
+   - [ ] Automatic kernel tuning for different GPU architectures
+   - [ ] Heterogeneous computing (CPU+GPU hybrid processing)
+
+3. **Scientific Data Structures**
+   - [ ] Enhanced masked arrays with statistical operations
+   - [ ] Sparse matrix optimizations
+   - [ ] Time series data structures with temporal indexing
+
+### Long Term (3-6 months)
+1. **JIT Compilation Integration**
+   - [ ] LLVM-based JIT compiler integration
+   - [ ] Runtime optimization based on data characteristics
+   - [ ] Domain-specific language for scientific computing
+
+2. **Cloud Computing Support**
+   - [ ] Cloud storage integration (S3, GCS, Azure)
+   - [ ] Serverless computing support
+   - [ ] Auto-scaling for variable workloads
+
+3. **Advanced Analytics**
+   - [ ] Statistical computing primitives
+   - [ ] Machine learning pipeline integration
+   - [ ] Real-time data processing capabilities
+
+## 🧪 Testing & Quality Assurance
+
+### Current Test Status
+- ✅ **Unit Tests**: 316 passing, 2 ignored
+- ✅ **Doc Tests**: 92 passing, 6 ignored  
+- ✅ **Integration Tests**: 6 passing, 3 ignored
+- ✅ **Build Status**: Clean build with no warnings
+
+### Testing Priorities
+- [ ] **Property-Based Testing**: Add QuickCheck-style tests for mathematical properties
+- [ ] **Stress Testing**: Large dataset processing and memory pressure tests
+- [ ] **Cross-Platform Testing**: Validate on Windows, macOS, Linux, and WASM
+- [ ] **Performance Regression Testing**: Automated benchmark tracking
+- [ ] **Security Testing**: Fuzzing and vulnerability scanning
+
+## 📚 Documentation & Examples
+
+### High Priority Documentation
+- [ ] **Migration Guide**: Update guides for validation module changes
+- [ ] **Best Practices**: Performance optimization patterns
+- [ ] **Integration Examples**: Real-world usage with other scirs2 modules
+- [ ] **Troubleshooting Guide**: Common issues and solutions
+
+### Examples Needed
+- [ ] Scientific computing workflows end-to-end
+- [ ] GPU acceleration setup and usage
+- [ ] Memory-efficient processing for large datasets
+- [ ] Distributed computing examples
+- [ ] Error handling and recovery patterns
+
+## 🔮 Future Enhancements
+
+### Research & Experimental Features
+- [ ] **Quantum Computing Integration**: Basic quantum circuit simulation
+- [ ] **WebAssembly Support**: Browser-based scientific computing
+- [ ] **Edge Computing**: Optimizations for resource-constrained devices
+- [ ] **Federated Learning**: Distributed model training framework
+
+### API Evolution
+- [ ] **Const Generics**: Leverage advanced const generic features
+- [ ] **async/await**: Async scientific computing primitives
+- [ ] **no_std Support**: Embedded and kernel-space computing
+- [ ] **SIMD Improvements**: Auto-vectorization and advanced SIMD patterns
+
+## ⚠️ Known Issues & Limitations
+
+### Current Limitations
+- Some array protocol operations not fully implemented (marked as ignored tests)
+- GPU memory management limited to basic allocation/deallocation
+- Distributed computing only supports thread-based parallelism
+- JIT compilation interface incomplete
+- Memory mapping limited to read-only operations
+
+### Planned Fixes
+- GPU operations require proper backend selection and configuration
+- Memory metrics may have performance overhead in tight loops
+- Some validation constraints need regex feature for pattern matching
+- Profiling tools need integration with external monitoring systems
+
+## 🎯 Success Metrics
+
+### Release Criteria (Alpha 6)
+- [ ] Zero build warnings across all feature combinations
+- [ ] 95%+ test coverage for core modules
+- [ ] Complete API documentation with examples
+- [ ] Performance benchmarks meet SciPy baseline
+- [ ] Security audit completed with no critical issues
+
+### Performance Targets
+- [ ] Memory usage within 10% of NumPy for equivalent operations
+- [ ] SIMD operations provide 2-4x speedup over scalar equivalents
+- [ ] GPU operations show significant speedup for large arrays (>10k elements)
+- [ ] Parallel processing scales linearly up to available cores
+
+---
+
+## 📝 Development Notes
+
+### Recent Changes
+- **2024-06-17**: Fixed module resolution conflict in validation/data module
+- **2024-06-17**: Updated doc tests to resolve compilation errors
+- **2024-06-17**: Reorganized TODO.md for better actionability and clarity
+
+### Next Actions for Contributors
+1. Pick an item from "Current Issues & Quick Fixes" for immediate impact
+2. Review "Feature Development Roadmap" for larger contributions
+3. Check ignored tests - many are good candidates for implementation
+4. Update documentation when implementing new features
+
+### Contributing Guidelines
+- All new features must include comprehensive tests
+- Performance-sensitive code should include benchmarks
+- Breaking changes require RFC and migration path
+- Documentation updates are required for all API changes
+
+**Last Updated**: 2024-06-17  
+**Status**: Active Development - Alpha 6 Phase

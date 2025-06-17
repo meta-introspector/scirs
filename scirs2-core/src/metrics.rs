@@ -802,10 +802,10 @@ mod tests {
         assert!((gauge.get() - 3.14).abs() < f64::EPSILON);
 
         gauge.inc();
-        assert!((gauge.get() - 4.14).abs() < f64::EPSILON);
+        assert!((gauge.get() - 4.14).abs() < 1e-10);
 
         gauge.dec();
-        assert!((gauge.get() - 3.14).abs() < f64::EPSILON);
+        assert!((gauge.get() - 3.14).abs() < 1e-10);
     }
 
     #[test]

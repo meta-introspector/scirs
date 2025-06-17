@@ -286,7 +286,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         // or other numerical analysis techniques
 
         let mut best_step = F::from(self.config.step_size).unwrap();
-        let mut best_error = F::from(std::f64::INFINITY).unwrap();
+        let mut best_error = F::from(f64::INFINITY).unwrap();
 
         // Test several step sizes
         let step_candidates = [
@@ -484,7 +484,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         _delta: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with a single component perturbed
-        let perturbed = input.clone();
+        let perturbed = *input;
         // Simplified - would actually perturb the specific index
         Ok(perturbed)
     }
@@ -499,13 +499,13 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         _delta_j: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with two components perturbed
-        let perturbed = input.clone();
+        let perturbed = *input;
         // Simplified - would actually perturb the specific indices
         Ok(perturbed)
     }
 
     #[allow(dead_code)]
-    fn extract_scalar<'a>(&self, _tensor: &Tensor<'a, F>) -> Result<F, StabilityError> {
+    fn extract_scalar(&self, _tensor: &Tensor<'_, F>) -> Result<F, StabilityError> {
         // Extract a scalar value from the tensor (assumes output is scalar)
         // Simplified implementation
         Ok(F::from(1.0).unwrap())
@@ -531,7 +531,7 @@ impl<'a, F: Float> PerturbedInputIterator<'a, F> {
     fn new(input: &Tensor<'a, F>, step: F) -> Self {
         let max_index = input.shape().iter().product();
         Self {
-            input: input.clone(),
+            input: *input,
             step,
             current_index: 0,
             max_index,
@@ -548,7 +548,7 @@ impl<'a, F: Float> Iterator for PerturbedInputIterator<'a, F> {
         }
 
         // Create perturbed input
-        let perturbed = self.input.clone();
+        let perturbed = self.input;
         // Simplified - would actually perturb the current index
 
         self.current_index += 1;
@@ -569,7 +569,7 @@ impl<'a, F: Float> CentralPerturbedInputIterator<'a, F> {
     fn new(input: &Tensor<'a, F>, step: F) -> Self {
         let max_index = input.shape().iter().product();
         Self {
-            input: input.clone(),
+            input: *input,
             step,
             current_index: 0,
             max_index,
@@ -586,8 +586,8 @@ impl<'a, F: Float> Iterator for CentralPerturbedInputIterator<'a, F> {
         }
 
         // Create both positive and negative perturbations
-        let input_plus = self.input.clone();
-        let input_minus = self.input.clone();
+        let input_plus = self.input;
+        let input_minus = self.input;
         // Simplified - would actually perturb the current index
 
         self.current_index += 1;

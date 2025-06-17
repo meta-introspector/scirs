@@ -121,7 +121,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         test_cases.push((
             "identity_function".to_string(),
             BasicTestCase {
-                function: Box::new(|x: &Tensor<F>| Ok(x.clone())),
+                function: Box::new(|x: &Tensor<F>| Ok(*x)),
                 input: self.create_test_tensor(vec![10, 10]),
                 expected_stability: StabilityGrade::Excellent,
                 perturbation_magnitude: 1e-8,
@@ -135,7 +135,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
                 function: Box::new(|x: &Tensor<F>| {
                     // Simple scaling: y = 2 * x
                     let _scale = F::from(2.0).unwrap();
-                    Ok(x.clone()) // Simplified - would actually scale
+                    Ok(*x) // Simplified - would actually scale
                 }),
                 input: self.create_test_tensor(vec![5, 5]),
                 expected_stability: StabilityGrade::Excellent,
@@ -149,7 +149,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             BasicTestCase {
                 function: Box::new(|x: &Tensor<F>| {
                     // y = x^2 (simplified implementation)
-                    Ok(x.clone())
+                    Ok(*x)
                 }),
                 input: self.create_test_tensor(vec![8]),
                 expected_stability: StabilityGrade::Good,
@@ -163,7 +163,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             BasicTestCase {
                 function: Box::new(|x: &Tensor<F>| {
                     // y = exp(x) (simplified implementation)
-                    Ok(x.clone())
+                    Ok(*x)
                 }),
                 input: self.create_test_tensor(vec![6]),
                 expected_stability: StabilityGrade::Fair,
@@ -293,7 +293,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             "tiny_inputs".to_string(),
             EdgeCaseTest {
                 input: self.create_tensor_with_values(vec![1e-15, 1e-12, 1e-10]),
-                function: Box::new(|x: &Tensor<F>| Ok(x.clone())),
+                function: Box::new(|x: &Tensor<F>| Ok(*x)),
                 expected_behavior: EdgeCaseBehavior::Stable,
             },
         ));
@@ -303,7 +303,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             "large_inputs".to_string(),
             EdgeCaseTest {
                 input: self.create_tensor_with_values(vec![1e10, 1e12, 1e15]),
-                function: Box::new(|x: &Tensor<F>| Ok(x.clone())),
+                function: Box::new(|x: &Tensor<F>| Ok(*x)),
                 expected_behavior: EdgeCaseBehavior::MaybeUnstable,
             },
         ));
@@ -313,7 +313,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             "near_zero_inputs".to_string(),
             EdgeCaseTest {
                 input: self.create_tensor_with_values(vec![-1e-8, 0.0, 1e-8]),
-                function: Box::new(|x: &Tensor<F>| Ok(x.clone())),
+                function: Box::new(|x: &Tensor<F>| Ok(*x)),
                 expected_behavior: EdgeCaseBehavior::Stable,
             },
         ));
@@ -323,7 +323,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             "mixed_magnitude_inputs".to_string(),
             EdgeCaseTest {
                 input: self.create_tensor_with_values(vec![1e-10, 1.0, 1e10]),
-                function: Box::new(|x: &Tensor<F>| Ok(x.clone())),
+                function: Box::new(|x: &Tensor<F>| Ok(*x)),
                 expected_behavior: EdgeCaseBehavior::MaybeUnstable,
             },
         ));
@@ -560,7 +560,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     }
 }
 
-impl<'a, F: Float> Default for StabilityTestSuite<'a, F> {
+impl<F: Float> Default for StabilityTestSuite<'_, F> {
     fn default() -> Self {
         Self::new()
     }
@@ -648,7 +648,13 @@ pub struct TestResults<'a, F: Float> {
     pub scenario_results: Vec<ScenarioTestResult>,
 }
 
-impl<'a, F: Float> TestResults<'a, F> {
+impl<'a, F: Float> Default for TestResults<'a, F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<F: Float> TestResults<'_, F> {
     pub fn new() -> Self {
         Self {
             test_results: Vec::new(),
@@ -848,7 +854,7 @@ where
     let suite = StabilityTestSuite::<'a, F>::new();
     let test_case = BasicTestCase {
         function: Box::new(function),
-        input: input.clone(),
+        input: *input,
         expected_stability: StabilityGrade::Good,
         perturbation_magnitude: 1e-8,
     };

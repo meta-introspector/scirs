@@ -355,6 +355,12 @@ pub struct StabilityReport<F: Float> {
     pub overall_grade: StabilityGrade,
 }
 
+impl<F: Float> Default for StabilityReport<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<F: Float> StabilityReport<F> {
     pub fn new() -> Self {
         Self {
