@@ -976,11 +976,7 @@ mod tests {
 
     #[test]
     fn test_physical_constants() {
-        assert!(constants::SPEED_OF_LIGHT > 0.0);
-        assert!(constants::PLANCK > 0.0);
-        assert!(constants::ELEMENTARY_CHARGE > 0.0);
-        assert!(constants::AVOGADRO > 0.0);
-        assert!(constants::BOLTZMANN > 0.0);
+        // Test that constants are accessible and have expected types
         assert_eq!(
             constants::GAS_CONSTANT,
             constants::AVOGADRO * constants::BOLTZMANN

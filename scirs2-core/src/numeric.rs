@@ -1,4 +1,4 @@
-//! Numeric traits and utilities for SciRS2
+//! Numeric traits and utilities for ``SciRS2``
 //!
 //! This module provides traits and utilities for working with numeric types
 //! in scientific computing contexts.
@@ -212,7 +212,7 @@ impl ScientificNumber for f32 {
     }
 
     fn from_f64(value: f64) -> Option<Self> {
-        if value.is_finite() && value <= f32::MAX as f64 && value >= f32::MIN as f64 {
+        if value.is_finite() && value <= Self::MAX as f64 && value >= Self::MIN as f64 {
             Some(value as f32)
         } else {
             None
@@ -223,7 +223,7 @@ impl ScientificNumber for f32 {
 // Implement RealNumber for f32
 impl RealNumber for f32 {
     fn epsilon() -> Self {
-        f32::EPSILON
+        Self::EPSILON
     }
 
     fn exp(self) -> Self {
@@ -292,7 +292,7 @@ impl RealNumber for f32 {
 
     fn factorial(self) -> Self {
         if self < 0.0 {
-            return f32::NAN;
+            return Self::NAN;
         }
 
         // Use Stirling's approximation for non-integers or large values
@@ -345,7 +345,7 @@ impl ScientificNumber for f64 {
 // Implement RealNumber for f64
 impl RealNumber for f64 {
     fn epsilon() -> Self {
-        f64::EPSILON
+        Self::EPSILON
     }
 
     fn exp(self) -> Self {
@@ -414,12 +414,12 @@ impl RealNumber for f64 {
 
     fn factorial(self) -> Self {
         if self < 0.0 {
-            return f64::NAN;
+            return Self::NAN;
         }
 
         // Use Stirling's approximation for non-integers or large values
         if self != self.trunc() || self > 170.0 {
-            const SQRT_TWO_PI: f64 = 2.5066282746310002;
+            const SQRT_TWO_PI: f64 = 2.506_628_274_631_000_2;
             return SQRT_TWO_PI * self.powf(self + 0.5) * (-self).exp();
         }
 

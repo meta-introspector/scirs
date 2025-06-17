@@ -338,7 +338,7 @@ mod tests {
     fn test_performance_score() {
         let memory = MemoryInfo::default();
         let score = memory.performance_score();
-        assert!(score >= 0.0 && score <= 1.0);
+        assert!((0.0..=1.0).contains(&score));
     }
 
     #[test]

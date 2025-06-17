@@ -393,6 +393,24 @@ pub enum MultiGpuConfig {
     Independent,
 }
 
+impl Default for GpuInfo {
+    fn default() -> Self {
+        Self {
+            name: "Default GPU".to_string(),
+            vendor: GpuVendor::Unknown,
+            memory_total: 4 * 1024 * 1024 * 1024,     // 4GB
+            memory_available: 3 * 1024 * 1024 * 1024, // 3GB
+            memory_bandwidth_gbps: 200.0,
+            compute_units: 512,
+            base_clock_mhz: 1000,
+            memory_clock_mhz: 4000,
+            compute_capability: ComputeCapability::Unknown,
+            features: GpuFeatures::default(),
+            performance: GpuPerformance::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -456,23 +474,5 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(amd_gpu.optimal_workgroup_size(), 64);
-    }
-}
-
-impl Default for GpuInfo {
-    fn default() -> Self {
-        Self {
-            name: "Default GPU".to_string(),
-            vendor: GpuVendor::Unknown,
-            memory_total: 4 * 1024 * 1024 * 1024,     // 4GB
-            memory_available: 3 * 1024 * 1024 * 1024, // 3GB
-            memory_bandwidth_gbps: 200.0,
-            compute_units: 512,
-            base_clock_mhz: 1000,
-            memory_clock_mhz: 4000,
-            compute_capability: ComputeCapability::Unknown,
-            features: GpuFeatures::default(),
-            performance: GpuPerformance::default(),
-        }
     }
 }

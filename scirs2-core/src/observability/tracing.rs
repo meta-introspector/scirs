@@ -1,7 +1,7 @@
 //! # Distributed Tracing System
 //!
 //! Production-grade distributed tracing system with OpenTelemetry integration
-//! for SciRS2 Core. Provides request tracing across components, performance
+//! for `SciRS2` Core. Provides request tracing across components, performance
 //! attribution, and comprehensive span management for regulated environments.
 //!
 //! ## Features
@@ -1807,7 +1807,7 @@ mod tests {
 
         let (total, _sampled, rate) = sampler.get_stats();
         assert_eq!(total, 10);
-        assert!(rate >= 0.0 && rate <= 1.0);
+        assert!((0.0..=1.0).contains(&rate));
     }
 
     #[test]
