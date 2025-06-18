@@ -789,7 +789,7 @@ impl SIMDOperations {
 
     /// Apply GELU activation using SIMD operations
     pub fn simd_gelu_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
-        _input.mapv(|x| 0.5 * x * (1.0 + (x * 0.7978845608 * (1.0 + 0.044715 * x * x)).tanh()))
+        _input.mapv(|x| 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh()))
     }
 
     /// Apply Swish activation using SIMD operations

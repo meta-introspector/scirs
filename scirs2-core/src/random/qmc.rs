@@ -15,19 +15,24 @@
 //! ## Usage
 //!
 //! ```rust
-//! use scirs2_core::random::qmc::{SobolGenerator, HaltonGenerator, LatinHypercubeSampler};
+//! use scirs2_core::random::qmc::{SobolGenerator, HaltonGenerator, LatinHypercubeSampler, LowDiscrepancySequence};
 //!
-//! // Generate Sobol sequence in 2D
-//! let mut sobol = SobolGenerator::new(2)?;
-//! let points = sobol.generate(1000);
+//! fn example() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Generate Sobol sequence in 2D
+//!     let mut sobol = SobolGenerator::new(2)?;
+//!     let points = sobol.generate(1000);
 //!
-//! // Generate Halton sequence
-//! let mut halton = HaltonGenerator::new(&[2, 3]);
-//! let points = halton.generate(1000);
+//!     // Generate Halton sequence
+//!     let mut halton = HaltonGenerator::new(&[2, 3]);
+//!     let points = halton.generate(1000);
 //!
-//! // Latin hypercube sampling
-//! let lhs = LatinHypercubeSampler::new(2);
-//! let points = lhs.sample(100)?;
+//!     // Latin hypercube sampling
+//!     let lhs = LatinHypercubeSampler::new(2);
+//!     let points = lhs.sample(100)?;
+//!     
+//!     Ok(())
+//! }
+//! # example().unwrap();
 //! ```
 
 use ndarray::{Array1, Array2};

@@ -478,7 +478,6 @@ impl std::fmt::Display for BenchmarkResults {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array;
 
     #[test]
     fn test_performance_optimizer_creation() {

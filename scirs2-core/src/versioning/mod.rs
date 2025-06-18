@@ -25,16 +25,23 @@
 //!
 //! ## Example
 //!
-//! ```rust,ignore
-//! use scirs2_core::versioning::{Version, VersionManager, CompatibilityLevel, ApiVersion, ClientCapabilities};
+//! ```rust
+//! use scirs2_core::versioning::{Version, VersionManager, CompatibilityLevel, ApiVersionBuilder, ClientCapabilities};
 //!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create version manager
 //! let mut version_manager = VersionManager::new();
 //!
-//! // Register API versions
-//! let v1_0_0 = ApiVersion::new(Version::parse("1.0.0")?, "API v1.0.0".to_string());
-//! let v1_1_0 = ApiVersion::new(Version::parse("1.1.0")?, "API v1.1.0".to_string());
-//! let v2_0_0 = ApiVersion::new(Version::parse("2.0.0")?, "API v2.0.0".to_string());
+//! // Register API versions using the builder pattern
+//! let v1_0_0 = ApiVersionBuilder::new(Version::parse("1.0.0")?)
+//!     .new_feature("Initial API release")
+//!     .build()?;
+//! let v1_1_0 = ApiVersionBuilder::new(Version::parse("1.1.0")?)
+//!     .new_feature("Added new computation methods")
+//!     .build()?;
+//! let v2_0_0 = ApiVersionBuilder::new(Version::parse("2.0.0")?)
+//!     .breaking_change("Changed function signatures")
+//!     .build()?;
 //!
 //! version_manager.register_version(v1_0_0.clone())?;
 //! version_manager.register_version(v1_1_0.clone())?;
@@ -45,9 +52,11 @@
 //! assert_eq!(compat, CompatibilityLevel::BackwardCompatible);
 //!
 //! // Negotiate version with client capabilities
-//! let client_caps = ClientCapabilities::new(Version::parse("1.0.5")?);
+//! let client_caps = ClientCapabilities::new("test_client".to_string(), Version::parse("1.0.5")?);
 //! let negotiated = version_manager.negotiate_version(&client_caps)?;
-//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! assert!(negotiated.negotiated_version.major() >= 1);
+//! # Ok(())
+//! # }
 //! ```
 
 pub mod compatibility;

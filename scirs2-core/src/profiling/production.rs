@@ -24,7 +24,7 @@
 //!
 //! // Configure production profiler
 //! let config = ProfileConfig::production()
-//!     .with_sampling_rate(0.01) // 1% sampling for minimal overhead
+//!     .with_sampling_rate(1.0) // 100% sampling for doctest reliability
 //!     .with_bottleneck_detection(true)
 //!     .with_regression_detection(true);
 //!
@@ -34,6 +34,16 @@
 //! profiler.start_workload_analysis("matrix_operations", WorkloadType::ComputeIntensive)?;
 //!
 //! // Your production code here
+//! fn expensive_matrix_computation() -> f64 {
+//!     // Example expensive computation
+//!     let mut result = 0.0;
+//!     for i in 0..1000 {
+//!         for j in 0..1000 {
+//!             result += (i * j) as f64 / (i + j + 1) as f64;
+//!         }
+//!     }
+//!     result
+//! }
 //! let result = expensive_matrix_computation();
 //!
 //! let report = profiler.finish_workload_analysis()?;

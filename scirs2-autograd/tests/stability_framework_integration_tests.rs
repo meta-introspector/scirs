@@ -78,7 +78,11 @@ fn test_custom_stability_config() {
 fn test_function_stability_analysis() {
     // Test identity function - should be excellent stability
     let input = create_test_tensor(vec![5, 5]);
-    let identity_function = |x: &Tensor<f32>| Ok(x.clone());
+    let identity_function = |x: &Tensor<f32>| {
+        // Create a new tensor with the same data and shape as input
+        let data = x.eval(&x.graph()).unwrap().iter().cloned().collect::<Vec<_>>();
+        Ok(Tensor::from_vec(data, x.shape(), &x.graph()))
+    };
 
     let result = test_function_stability(identity_function, &input, "identity_test");
     assert!(result.is_ok());
@@ -393,13 +397,13 @@ fn test_mixed_precision_scenarios() {
 
 // Helper functions
 
-fn create_test_tensor(shape: Vec<usize>) -> Tensor<f32> {
+fn create_test_tensor(shape: Vec<usize>) -> Tensor<'static, f32> {
     let size = shape.iter().product();
     let data: Vec<f32> = (0..size).map(|i| (i as f32) * 0.1).collect();
     Tensor::from_vec(data, shape)
 }
 
-fn create_uncertainty_tensor(shape: Vec<usize>, magnitude: f64) -> Tensor<f32> {
+fn create_uncertainty_tensor(shape: Vec<usize>, magnitude: f64) -> Tensor<'static, f32> {
     let size = shape.iter().product();
     let uncertainty_value = magnitude as f32;
     let data = vec![uncertainty_value; size];
@@ -407,7 +411,7 @@ fn create_uncertainty_tensor(shape: Vec<usize>, magnitude: f64) -> Tensor<f32> {
 }
 
 fn create_test_scenarios(
-) -> Vec<scirs2_autograd::testing::stability_test_framework::TestScenario<f32>> {
+) -> Vec<scirs2_autograd::testing::stability_test_framework::TestScenario<'static, f32>> {
     let mut scenarios = Vec::new();
 
     // Scenario 1: Linear transformation

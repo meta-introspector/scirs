@@ -338,11 +338,7 @@ where
                         });
                     }
 
-                    let result = Self::new(
-                        new_chunks,
-                        self.shape.clone(),
-                        self.config.clone(),
-                    );
+                    let result = Self::new(new_chunks, self.shape.clone(), self.config.clone());
 
                     return Ok(Box::new(result));
                 }
@@ -376,11 +372,7 @@ where
                         });
                     }
 
-                    let result = Self::new(
-                        new_chunks,
-                        self.shape.clone(),
-                        self.config.clone(),
-                    );
+                    let result = Self::new(new_chunks, self.shape.clone(), self.config.clone());
 
                     return Ok(Box::new(result));
                 }
@@ -539,13 +531,19 @@ where
         let mut info = HashMap::new();
         info.insert("type".to_string(), "distributed_ndarray".to_string());
         info.insert("chunks".to_string(), self.chunks.len().to_string());
-        info.insert("shape".to_string(), format!("{shape:?}", shape = self.shape));
+        info.insert(
+            "shape".to_string(),
+            format!("{shape:?}", shape = self.shape),
+        );
         info.insert("id".to_string(), self.id.clone());
         info.insert(
             "strategy".to_string(),
             format!("{strategy:?}", strategy = self.config.strategy),
         );
-        info.insert("backend".to_string(), format!("{backend:?}", backend = self.config.backend));
+        info.insert(
+            "backend".to_string(),
+            format!("{backend:?}", backend = self.config.backend),
+        );
         info
     }
 

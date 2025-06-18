@@ -31,6 +31,10 @@
 //! let checkpoint = detector.create_checkpoint("matrix_operations")?;
 //!
 //! // Perform operations that might leak memory
+//! fn perform_matrix_calculations() {
+//!     // Example computation that could potentially leak memory
+//!     let _matrix: Vec<Vec<f64>> = (0..100).map(|i| vec![i as f64; 100]).collect();
+//! }
 //! perform_matrix_calculations();
 //!
 //! // Check for leaks

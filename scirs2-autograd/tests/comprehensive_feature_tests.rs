@@ -19,7 +19,7 @@ mod advanced_indexing_tests {
 
     #[test]
     fn test_boolean_mask_basic() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
@@ -44,7 +44,7 @@ mod advanced_indexing_tests {
 
     #[test]
     fn test_take_operation() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data: [10, 20, 30, 40, 50]
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[5]), vec![10.0, 20.0, 30.0, 40.0, 50.0]).unwrap(),
@@ -67,14 +67,14 @@ mod advanced_indexing_tests {
             // Should contain [10.0, 30.0, 50.0, 20.0]
             let expected = vec![10.0, 30.0, 50.0, 20.0];
             for (i, &expected_val) in expected.iter().enumerate() {
-                assert!((result_array[i] - expected_val).abs() < 1e-6);
+                assert!((result_array[i] - expected_val).abs() < 1e-6_f32);
             }
         });
     }
 
     #[test]
     fn test_where_operation() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test tensors
             let condition = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 0.0, 1.0, 0.0]).unwrap(),
@@ -98,14 +98,14 @@ mod advanced_indexing_tests {
             let result_array = result.eval(ctx).unwrap();
             let expected = vec![1.0, 20.0, 3.0, 40.0];
             for (i, &expected_val) in expected.iter().enumerate() {
-                assert!((result_array[i] - expected_val).abs() < 1e-6);
+                assert!((result_array[i] - expected_val).abs() < 1e-6_f32);
             }
         });
     }
 
     #[test]
     fn test_scatter_operation() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create indices and updates
             let indices = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 1.0]).unwrap(),
@@ -126,7 +126,7 @@ mod advanced_indexing_tests {
 
             let expected = vec![10.0, 20.0, 30.0, 0.0, 0.0];
             for (i, &expected_val) in expected.iter().enumerate() {
-                assert!((result_array[i] - expected_val).abs() < 1e-6);
+                assert!((result_array[i] - expected_val).abs() < 1e-6_f32);
             }
         });
     }
@@ -187,7 +187,7 @@ mod broadcasting_tests {
 
     #[test]
     fn test_broadcast_operations() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 1]), vec![1.0, 2.0]).unwrap(),
                 ctx,
@@ -261,7 +261,7 @@ mod memory_optimization_tests {
         T::enable_memory_tracking();
 
         // Perform some operations that would be tracked
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::ones(
                 &T::convert_to_tensor(
                     Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
@@ -294,7 +294,7 @@ mod memory_optimization_tests {
         T::MemoryOptimizer::start_session();
 
         // Perform some operations
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::efficient_zeros(&[10, 10], ctx);
             let b = T::efficient_ones(&[10, 10], ctx);
             let _result = T::inplace_mul(&a, &b);
@@ -308,7 +308,7 @@ mod memory_optimization_tests {
 
     #[test]
     fn test_inplace_operations() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
                 ctx,
@@ -374,7 +374,7 @@ mod efficient_operations_tests {
 
     #[test]
     fn test_efficient_reshape_operations() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create a 2x3 matrix
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
@@ -392,7 +392,7 @@ mod efficient_operations_tests {
 
     #[test]
     fn test_efficient_slice_operations() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create a 4x4 matrix
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[4, 4]), (0..16).map(|x| x as f64).collect()).unwrap(),
@@ -415,7 +415,7 @@ mod efficient_operations_tests {
 
     #[test]
     fn test_efficient_concat_operations() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test tensors
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
@@ -457,7 +457,7 @@ mod property_tests {
 
     #[test]
     fn test_addition_commutativity() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a + b = b + a
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
@@ -476,14 +476,14 @@ mod property_tests {
             let ba_array = ba.eval(ctx).unwrap();
 
             for i in 0..3 {
-                assert!((ab_array[i] - ba_array[i]).abs() < 1e-10);
+                assert!((ab_array[i] - ba_array[i]).abs() < 1e-10_f32);
             }
         });
     }
 
     #[test]
     fn test_multiplication_associativity() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that (a * b) * c = a * (b * c)
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
@@ -507,14 +507,14 @@ mod property_tests {
             let a_bc_array = a_bc.eval(ctx).unwrap();
 
             for i in 0..2 {
-                assert!((ab_c_array[i] - a_bc_array[i]).abs() < 1e-10);
+                assert!((ab_c_array[i] - a_bc_array[i]).abs() < 1e-10_f32);
             }
         });
     }
 
     #[test]
     fn test_distributive_property() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a * (b + c) = a * b + a * c
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
@@ -538,14 +538,14 @@ mod property_tests {
             let right_array = right.eval(ctx).unwrap();
 
             for i in 0..2 {
-                assert!((left_array[i] - right_array[i]).abs() < 1e-10);
+                assert!((left_array[i] - right_array[i]).abs() < 1e-10_f32);
             }
         });
     }
 
     #[test]
     fn test_additive_identity() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a + 0 = a
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
@@ -562,14 +562,14 @@ mod property_tests {
             let a_array = a.eval(ctx).unwrap();
 
             for i in 0..3 {
-                assert!((result_array[i] - a_array[i]).abs() < 1e-10);
+                assert!((result_array[i] - a_array[i]).abs() < 1e-10_f32);
             }
         });
     }
 
     #[test]
     fn test_multiplicative_identity() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a * 1 = a
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
@@ -586,7 +586,7 @@ mod property_tests {
             let a_array = a.eval(ctx).unwrap();
 
             for i in 0..3 {
-                assert!((result_array[i] - a_array[i]).abs() < 1e-10);
+                assert!((result_array[i] - a_array[i]).abs() < 1e-10_f32);
             }
         });
     }
@@ -599,7 +599,7 @@ mod numerical_stability_tests {
 
     #[test]
     fn test_large_number_stability() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test operations with large numbers
             let large_val = 1e10_f64;
             let a = T::convert_to_tensor(
@@ -624,7 +624,7 @@ mod numerical_stability_tests {
 
     #[test]
     fn test_small_number_stability() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test operations with very small numbers
             let small_val = 1e-10_f64;
             let a = T::convert_to_tensor(
@@ -644,7 +644,7 @@ mod numerical_stability_tests {
 
     #[test]
     fn test_zero_division_handling() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
                 ctx,
@@ -667,7 +667,7 @@ mod numerical_stability_tests {
 
     #[test]
     fn test_gradient_numerical_stability() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test gradient computation with challenging inputs
             let x = T::variable(
                 Array::from_shape_vec(IxDyn(&[2]), vec![1e-8_f64, 1e8_f64]).unwrap(),
@@ -692,7 +692,7 @@ mod numerical_stability_tests {
 
     #[test]
     fn test_broadcasting_numerical_stability() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test broadcasting with mixed scales
             let large = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[1, 3]), vec![1e6, 2e6, 3e6]).unwrap(),
@@ -710,6 +710,7 @@ mod numerical_stability_tests {
 
             // All results should be finite
             for &val in result_array.iter() {
+                let val: f32 = val;
                 assert!(val.is_finite());
                 assert!(!val.is_nan());
             }
@@ -728,7 +729,7 @@ mod integration_tests {
 
     #[test]
     fn test_memory_optimized_neural_network_layer() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Start memory optimization
             T::MemoryOptimizer::start_session();
 
@@ -763,7 +764,7 @@ mod integration_tests {
 
     #[test]
     fn test_advanced_indexing_with_broadcasting() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[4, 5]), (0..20).map(|x| x as f64).collect()).unwrap(),
@@ -797,7 +798,7 @@ mod integration_tests {
 
     #[test]
     fn test_efficient_operations_with_gradients() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create variable tensors
             let x = T::variable(
                 Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
@@ -827,6 +828,7 @@ mod integration_tests {
 
             // All gradient values should be finite
             for &g in grad_array.iter() {
+                let g: f32 = g;
                 assert!(g.is_finite());
             }
         });
@@ -840,7 +842,7 @@ mod stress_tests {
 
     #[test]
     fn test_large_tensor_broadcasting() {
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create moderately large tensors to test broadcasting performance
             let large_a = T::efficient_ones(&[100, 1], ctx);
             let large_b = T::efficient_ones(&[1, 100], ctx);
@@ -854,7 +856,8 @@ mod stress_tests {
 
             // Check that all values are 1.0 (1 * 1 = 1)
             for &val in result_array.iter().take(100) {
-                assert!((val - 1.0).abs() < 1e-6);
+                let val: f32 = val;
+                assert!((val - 1.0_f32).abs() < 1e-6_f32);
             }
         });
     }
@@ -865,7 +868,7 @@ mod stress_tests {
         T::set_memory_pool_enabled(true);
         T::enable_memory_tracking();
 
-        ag::run(|ctx| {
+        ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Perform many operations that would benefit from memory pooling
             for i in 0..10 {
                 let size = 100 + i * 10;

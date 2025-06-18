@@ -877,7 +877,6 @@ impl LogFileManager {
     /// # Errors
     ///
     /// Returns an error if hash chain verification fails.
-    #[must_use]
     pub fn verify_hash_chain(&self) -> Result<bool, CoreError> {
         if !self.config.enable_hash_chain {
             return Ok(true); // No verification needed
@@ -1631,7 +1630,6 @@ impl AuditLogger {
     /// # Errors
     ///
     /// Returns an error if integrity verification fails.
-    #[must_use]
     pub fn verify_integrity(&self) -> Result<bool, CoreError> {
         let file_manager = self.file_manager.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(

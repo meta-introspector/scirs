@@ -133,19 +133,32 @@ mod tests {
         let metadata = PackageMetadata {
             name: "test_model".to_string(),
             version: "1.0.0".to_string(),
-            authors: vec!["Test Author".to_string()],
-            description: Some("Test model".to_string()),
-            keywords: vec!["neural".to_string()],
-            homepage: None,
-            repository: None,
-            license: Some("MIT".to_string()),
+            author: "Test Author".to_string(),
+            description: "Test model".to_string(),
+            license: "MIT".to_string(),
+            platforms: vec!["linux-x86_64".to_string()],
+            dependencies: std::collections::HashMap::new(),
+            input_specs: vec![],
+            output_specs: vec![],
+            runtime_requirements: crate::serving::RuntimeRequirements {
+                min_memory_mb: 256,
+                cpu_requirements: crate::serving::CpuRequirements {
+                    min_cores: 1,
+                    instruction_sets: vec![],
+                    min_frequency_mhz: None,
+                },
+                gpu_requirements: None,
+                system_dependencies: vec![],
+            },
+            timestamp: "2024-01-01T00:00:00Z".to_string(),
+            checksum: "test_checksum".to_string(),
         };
 
         // Create a simple sequential model for testing
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add(Dense::new(10, 5, &mut rng));
-        model.add(Dense::new(5, 2, &mut rng));
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(5, 2, None, &mut rng).unwrap());
 
         let generator =
             BindingGenerator::new(model, config, metadata, temp_dir.path().to_path_buf());
@@ -161,17 +174,30 @@ mod tests {
         let metadata = PackageMetadata {
             name: "test_model".to_string(),
             version: "1.0.0".to_string(),
-            authors: vec!["Test Author".to_string()],
-            description: Some("Test model".to_string()),
-            keywords: vec!["neural".to_string()],
-            homepage: None,
-            repository: None,
-            license: Some("MIT".to_string()),
+            author: "Test Author".to_string(),
+            description: "Test model".to_string(),
+            license: "MIT".to_string(),
+            platforms: vec!["linux-x86_64".to_string()],
+            dependencies: std::collections::HashMap::new(),
+            input_specs: vec![],
+            output_specs: vec![],
+            runtime_requirements: crate::serving::RuntimeRequirements {
+                min_memory_mb: 256,
+                cpu_requirements: crate::serving::CpuRequirements {
+                    min_cores: 1,
+                    instruction_sets: vec![],
+                    min_frequency_mhz: None,
+                },
+                gpu_requirements: None,
+                system_dependencies: vec![],
+            },
+            timestamp: "2024-01-01T00:00:00Z".to_string(),
+            checksum: "test_checksum".to_string(),
         };
 
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add(Dense::new(10, 5, &mut rng));
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
 
         let generator =
             BindingGenerator::new(model, config, metadata, temp_dir.path().to_path_buf());

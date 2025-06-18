@@ -488,14 +488,14 @@ struct NeuralErrorMapping;
 
 impl ErrorMapping for NeuralErrorMapping {
     fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
-        let error_str = source_error.to_string();
+        let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("tensor") || error_str.contains("shape") {
-            IntegrationError::TensorConversion(format!("Neural module tensor error: {}", error_str))
+            IntegrationError::TensorConversion(format!("Neural module tensor error: {}", source_error))
         } else if error_str.contains("gradient") {
-            IntegrationError::ApiBoundary(format!("Neural module gradient error: {}", error_str))
+            IntegrationError::ApiBoundary(format!("Neural module gradient error: {}", source_error))
         } else {
-            IntegrationError::ModuleCompatibility(format!("Neural module error: {}", error_str))
+            IntegrationError::ModuleCompatibility(format!("Neural module error: {}", source_error))
         }
     }
 }
@@ -505,19 +505,19 @@ struct OptimErrorMapping;
 
 impl ErrorMapping for OptimErrorMapping {
     fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
-        let error_str = source_error.to_string();
+        let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("parameter") || error_str.contains("optimizer") {
             IntegrationError::ConfigMismatch(format!(
                 "Optimizer configuration error: {}",
-                error_str
+                source_error
             ))
         } else if error_str.contains("learning_rate") {
-            IntegrationError::ConfigMismatch(format!("Learning rate error: {}", error_str))
+            IntegrationError::ConfigMismatch(format!("Learning rate error: {}", source_error))
         } else {
             IntegrationError::ModuleCompatibility(format!(
                 "Optimization module error: {}",
-                error_str
+                source_error
             ))
         }
     }
@@ -528,16 +528,16 @@ struct LinalgErrorMapping;
 
 impl ErrorMapping for LinalgErrorMapping {
     fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
-        let error_str = source_error.to_string();
+        let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("matrix") || error_str.contains("dimension") {
-            IntegrationError::TensorConversion(format!("Matrix dimension error: {}", error_str))
+            IntegrationError::TensorConversion(format!("Matrix dimension error: {}", source_error))
         } else if error_str.contains("singular") || error_str.contains("decomposition") {
-            IntegrationError::ApiBoundary(format!("Linear algebra operation error: {}", error_str))
+            IntegrationError::ApiBoundary(format!("Linear algebra operation error: {}", source_error))
         } else {
             IntegrationError::ModuleCompatibility(format!(
                 "Linear algebra module error: {}",
-                error_str
+                source_error
             ))
         }
     }
@@ -548,14 +548,14 @@ struct CoreErrorMapping;
 
 impl ErrorMapping for CoreErrorMapping {
     fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
-        let error_str = source_error.to_string();
+        let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("config") {
-            IntegrationError::ConfigMismatch(format!("Core configuration error: {}", error_str))
+            IntegrationError::ConfigMismatch(format!("Core configuration error: {}", source_error))
         } else if error_str.contains("type") || error_str.contains("conversion") {
-            IntegrationError::TensorConversion(format!("Core type conversion error: {}", error_str))
+            IntegrationError::TensorConversion(format!("Core type conversion error: {}", source_error))
         } else {
-            IntegrationError::ModuleCompatibility(format!("Core module error: {}", error_str))
+            IntegrationError::ModuleCompatibility(format!("Core module error: {}", source_error))
         }
     }
 }

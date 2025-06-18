@@ -21,7 +21,6 @@ use crate::error::CoreResult;
 ///
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be opened.
-#[must_use]
 pub fn open_file<P: AsRef<Path>>(path: P) -> CoreResult<BufReader<File>> {
     let file = File::open(path.as_ref())?;
     Ok(BufReader::new(file))
@@ -40,7 +39,6 @@ pub fn open_file<P: AsRef<Path>>(path: P) -> CoreResult<BufReader<File>> {
 ///
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be opened.
-#[must_use]
 pub fn create_file<P: AsRef<Path>>(path: P) -> CoreResult<BufWriter<File>> {
     let file = File::create(path.as_ref())?;
     Ok(BufWriter::new(file))
@@ -59,7 +57,6 @@ pub fn create_file<P: AsRef<Path>>(path: P) -> CoreResult<BufWriter<File>> {
 ///
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be read.
-#[must_use]
 pub fn read_to_string<P: AsRef<Path>>(path: P) -> CoreResult<String> {
     let mut file = open_file(path)?;
     let mut contents = String::new();
@@ -80,7 +77,6 @@ pub fn read_to_string<P: AsRef<Path>>(path: P) -> CoreResult<String> {
 ///
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be read.
-#[must_use]
 pub fn read_to_bytes<P: AsRef<Path>>(path: P) -> CoreResult<Vec<u8>> {
     let mut file = open_file(path)?;
     let mut contents = Vec::new();
@@ -208,7 +204,6 @@ pub fn create_directory<P: AsRef<Path>>(path: P) -> CoreResult<()> {
 ///
 /// # Errors
 /// Returns `CoreError::IoError` if the file size could not be determined.
-#[must_use]
 pub fn file_size<P: AsRef<Path>>(path: P) -> CoreResult<u64> {
     let metadata = std::fs::metadata(path.as_ref())?;
     Ok(metadata.len())

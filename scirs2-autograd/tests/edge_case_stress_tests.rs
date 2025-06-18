@@ -12,12 +12,13 @@
 use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
 use scirs2_autograd::optimization::{
-    GraphOptimizer, MemoryOptimizationConfig, MemoryOptimizer, OptimizationLevel,
+    memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
+    GraphOptimizer, OptimizationLevel,
 };
 use scirs2_autograd::parallel::{
     init_thread_pool_with_config,
-    parallel_ops::{ParallelElementWise, ParallelMatrix, ParallelReduction},
-    ParallelConfig, ThreadPoolConfig,
+    parallel_ops::{ParallelConfig, ParallelElementWise, ParallelMatrix, ParallelReduction},
+    ThreadPoolConfig,
 };
 use scirs2_autograd::tensor_ops as T;
 use scirs2_autograd::visualization::{GraphVisualizer, OutputFormat, VisualizationConfig};
@@ -56,7 +57,7 @@ fn test_visualization_extreme_graphs() {
             show_values: false,
         };
 
-        let visualizer = GraphVisualizer::<f32>::with_config(config);
+        let _visualizer = GraphVisualizer::<f32>::with_config(config);
 
         // Verify the deep graph still evaluates correctly
         let result = current.eval(ctx).unwrap();
@@ -76,7 +77,7 @@ fn test_optimization_pathological_cases() {
         let mut chain =
             T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
 
-        for i in 0..500 {
+        for _i in 0..500 {
             let constant = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[1]), vec![0.001]).unwrap(),
                 ctx,
@@ -91,7 +92,7 @@ fn test_optimization_pathological_cases() {
             OptimizationLevel::Standard,
             OptimizationLevel::Aggressive,
         ] {
-            let optimizer = GraphOptimizer::<f32>::with_level(level);
+            let _optimizer = GraphOptimizer::<f32>::with_level(level);
 
             // Verify optimization doesn't break computation
             let result = chain.eval(ctx).unwrap();
@@ -221,7 +222,7 @@ fn test_custom_activations_extreme_inputs() {
         );
 
         // Test with edge values
-        let edge_values = T::convert_to_tensor(
+        let _edge_values = T::convert_to_tensor(
             Array::from_shape_vec(
                 IxDyn(&[6]),
                 vec![
@@ -407,7 +408,7 @@ fn test_memory_optimization_stress() {
 
         // Create a computation chain that would normally consume lots of memory
         let mut current = large_tensor;
-        let checkpoints = Vec::new();
+        let _checkpoints: Vec<String> = Vec::new();
 
         for i in 0..10 {
             // Apply expensive operations
@@ -427,7 +428,7 @@ fn test_memory_optimization_stress() {
 
         // Test memory pooling with many temporary allocations
         let mut temporary_results = Vec::new();
-        for i in 0..50 {
+        for _i in 0..50 {
             let temp = T::efficient_ones(&[100, 100], ctx);
             let processed = T::cached_op(&temp, "square");
             temporary_results.push(processed);
@@ -470,7 +471,7 @@ fn test_memory_optimization_stress() {
     ];
 
     for (i, config) in stress_configs.iter().enumerate() {
-        let optimizer = MemoryOptimizer::<f32>::with_config(config.clone());
+        let _optimizer = MemoryOptimizer::<f32>::with_config(config.clone());
         println!(
             "✅ Memory optimization config {} created successfully",
             i + 1
@@ -491,7 +492,7 @@ fn test_parallel_operations_numerical_stability() {
 
     // Test parallel reduction with cancellation-prone values
     let cancellation_test = Array::from_shape_vec(
-        (1000,).into_dyn(),
+        IxDyn(&[1000]),
         (0..1000)
             .map(|i| if i % 2 == 0 { 1e10 } else { -1e10 })
             .collect::<Vec<f32>>(),
@@ -507,7 +508,7 @@ fn test_parallel_operations_numerical_stability() {
 
     // Test parallel operations with denormalized numbers
     let denormal_values = Array::from_shape_vec(
-        (1000,).into_dyn(),
+        IxDyn(&[1000]),
         (0..1000)
             .map(|i| f32::MIN_POSITIVE * (i as f32 + 1.0) * 1e-10)
             .collect::<Vec<f32>>(),
@@ -522,7 +523,7 @@ fn test_parallel_operations_numerical_stability() {
 
     // Test parallel matrix multiplication with ill-conditioned matrices
     let ill_conditioned_a = Array::from_shape_vec(
-        (100, 100).into_dyn(),
+        IxDyn(&[100, 100]),
         (0..10000)
             .map(|i| {
                 let row = i / 100;
@@ -540,7 +541,7 @@ fn test_parallel_operations_numerical_stability() {
     .unwrap();
 
     let identity = Array::from_shape_vec(
-        (100, 100).into_dyn(),
+        IxDyn(&[100, 100]),
         (0..10000)
             .map(|i| if i / 100 == i % 100 { 1.0 } else { 0.0 })
             .collect::<Vec<f32>>(),
@@ -563,13 +564,13 @@ fn test_parallel_operations_numerical_stability() {
 
     // Test parallel element-wise operations with extreme ranges
     let small_values = Array::from_shape_vec(
-        (1000,).into_dyn(),
+        IxDyn(&[1000]),
         (0..1000).map(|_| f32::EPSILON).collect::<Vec<f32>>(),
     )
     .unwrap();
 
     let large_values = Array::from_shape_vec(
-        (1000,).into_dyn(),
+        IxDyn(&[1000]),
         (0..1000).map(|_| 1e20).collect::<Vec<f32>>(),
     )
     .unwrap();
@@ -649,7 +650,7 @@ fn test_graph_enhancements_edge_cases() {
         let initial_stats = T::get_gc_stats();
 
         // Create many temporary computations
-        for i in 0..100 {
+        for _i in 0..100 {
             let temp = T::efficient_ones(&[100], ctx);
             let processed = T::simd_mul(&temp, &temp);
             let _ = processed.eval(ctx); // Force evaluation then drop
@@ -793,14 +794,14 @@ fn test_numerical_precision_stability() {
 
         // Create values that sum to exactly zero but test floating point precision
         let balanced_values = Array::from_shape_vec(
-            (1000,).into_dyn(),
+            IxDyn(&[1000]),
             (0..1000)
                 .map(|i| if i < 500 { 1.0 / 500.0 } else { -1.0 / 500.0 })
                 .collect(),
         )
         .unwrap();
 
-        let parallel_sum = ParallelReduction::sum(&balanced_values, &config).unwrap();
+        let parallel_sum: f32 = ParallelReduction::sum(&balanced_values, &config).unwrap();
         assert!(
             parallel_sum.abs() < 1e-6,
             "Parallel sum lost precision: {:.2e}",

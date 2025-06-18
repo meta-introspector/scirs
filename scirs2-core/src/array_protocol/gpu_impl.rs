@@ -306,8 +306,9 @@ where
                     if TypeId::of::<T>() == TypeId::of::<f64>()
                         && TypeId::of::<D>() == TypeId::of::<ndarray::Ix2>()
                     {
-                        let self_f64 =
-                            unsafe { &*std::ptr::from_ref(self).cast::<GPUNdarray<f64, ndarray::Ix2>>() };
+                        let self_f64 = unsafe {
+                            &*std::ptr::from_ref(self).cast::<GPUNdarray<f64, ndarray::Ix2>>()
+                        };
                         let other_f64 = unsafe {
                             &*std::ptr::from_ref(other).cast::<GPUNdarray<f64, ndarray::Ix2>>()
                         };
@@ -408,7 +409,10 @@ where
     #[must_use]
     fn device_info(&self) -> HashMap<String, String> {
         let mut info = HashMap::new();
-        info.insert("backend".to_string(), format!("{backend:?}", backend = self.config.backend));
+        info.insert(
+            "backend".to_string(),
+            format!("{backend:?}", backend = self.config.backend),
+        );
         info.insert("device_id".to_string(), self.config.device_id.to_string());
         info.insert("on_gpu".to_string(), self.on_gpu.to_string());
         info.insert("id".to_string(), self.id.clone());

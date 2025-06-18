@@ -17,25 +17,29 @@
 //!
 //! ## Example
 //!
-//! ```rust,ignore
+//! ```rust
 //! use scirs2_core::observability::tracing::{TracingSystem, SpanBuilder, TracingConfig};
 //!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let config = TracingConfig::default();
 //! let tracing = TracingSystem::new(config)?;
 //!
-//! // Create a traced operation
-//! let span = tracing.start_span("matrix_multiplication")?
+//! // Create a traced operation using SpanBuilder
+//! let span = SpanBuilder::new("matrix_multiplication")
 //!     .with_attribute("size", "1000x1000")
-//!     .with_component("linalg");
+//!     .with_component("linalg")
+//!     .start(&tracing)?;
 //!
 //! // Perform operation with automatic performance tracking
 //! let result = span.in_span(|| {
 //!     // Your computation here
 //!     42
 //! });
+//! assert_eq!(result, 42);
 //!
-//! // Span automatically ends and reports metrics
-//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! // Span automatically ends and reports metrics when dropped
+//! # Ok(())
+//! # }
 //! ```
 
 use crate::error::CoreError;
@@ -546,7 +550,6 @@ impl ActiveSpan {
     /// # Errors
     ///
     /// Returns an error if the span lock cannot be acquired.
-    #[must_use]
     pub fn context(&self) -> Result<TraceContext, CoreError> {
         let span = self.span.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -977,7 +980,6 @@ impl TracingSystem {
     /// # Errors
     ///
     /// Returns an error if the metrics lock cannot be acquired.
-    #[must_use]
     pub fn get_metrics(&self) -> Result<TracingMetrics, CoreError> {
         let metrics = self.metrics.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(

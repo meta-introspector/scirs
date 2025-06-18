@@ -278,41 +278,96 @@ pub mod alpha6_api {
         //! All ``SciRS2`` Core functions follow these standardized patterns:
         //!
         //! ## Error Handling Pattern
-        //! ```ignore
-        //! pub fn operation<T>(input: T, params: OperationParams) -> CoreResult<OutputType>
+        //! ```rust
+        //! use scirs2_core::{CoreResult, CoreError, ErrorContext};
+        //!
+        //! fn example_operation<T>(input: T, scale: f64) -> CoreResult<f64>
         //! where
-        //!     T: InputTraits
+        //!     T: Into<f64>
+        //! {
+        //!     let value = input.into();
+        //!     if scale.is_finite() && scale > 0.0 {
+        //!         Ok(value * scale)
+        //!     } else {
+        //!         Err(CoreError::ValueError(ErrorContext::new("Scale must be positive and finite")))
+        //!     }
+        //! }
+        //!
+        //! # let result = example_operation(5.0, 2.0);
+        //! # assert!(result.is_ok());
         //! ```
         //!
         //! ## Configuration Pattern
-        //! ```ignore
-        //! pub struct OperationConfig {
-        //!     pub param1: Type1,
-        //!     pub param2: Type2,
-        //!     // ... other parameters
+        //! ```rust
+        //! #[derive(Debug, Clone)]
+        //! pub struct ComputationConfig {
+        //!     pub tolerance: f64,
+        //!     pub max_iterations: usize,
+        //!     pub parallel: bool,
         //! }
         //!
-        //! impl Default for OperationConfig { /* sensible defaults */ }
+        //! impl Default for ComputationConfig {
+        //!     fn default() -> Self {
+        //!         Self {
+        //!             tolerance: 1e-10,
+        //!             max_iterations: 1000,
+        //!             parallel: true,
+        //!         }
+        //!     }
+        //! }
         //!
-        //! impl OperationConfig {
+        //! impl ComputationConfig {
         //!     pub fn new() -> Self { Self::default() }
-        //!     pub fn with_param1(mut self, value: Type1) -> Self { self.param1 = value; self }
-        //!     // ... other builder methods
+        //!     pub fn with_tolerance(mut self, value: f64) -> Self { self.tolerance = value; self }
+        //!     pub fn with_max_iterations(mut self, value: usize) -> Self { self.max_iterations = value; self }
+        //!     pub fn with_parallel(mut self, value: bool) -> Self { self.parallel = value; self }
         //! }
+        //!
+        //! # let config = ComputationConfig::new().with_tolerance(1e-8).with_parallel(false);
+        //! # assert_eq!(config.tolerance, 1e-8);
         //! ```
         //!
         //! ## Resource Management Pattern
-        //! ```ignore
+        //! ```rust
+        //! use std::sync::{Arc, Mutex};
+        //!
+        //! #[derive(Debug, Clone)]
+        //! pub struct ResourceConfig {
+        //!     max_memory_mb: usize,
+        //!     enable_caching: bool,
+        //! }
+        //!
+        //! impl Default for ResourceConfig {
+        //!     fn default() -> Self {
+        //!         Self {
+        //!             max_memory_mb: 1024,
+        //!             enable_caching: true,
+        //!         }
+        //!     }
+        //! }
+        //!
         //! pub struct ResourceManager<T> {
-        //!     inner: T,
+        //!     inner: Arc<Mutex<T>>,
         //!     config: ResourceConfig,
         //! }
         //!
         //! impl<T> ResourceManager<T> {
-        //!     pub fn new(resource: T, config: ResourceConfig) -> Self { /* */ }
-        //!     pub fn with_default_config(resource: T) -> Self { /* */ }
-        //!     pub fn configure(&mut self, config: ResourceConfig) -> &mut Self { /* */ }
+        //!     pub fn new(resource: T, config: ResourceConfig) -> Self {
+        //!         Self {
+        //!             inner: Arc::new(Mutex::new(resource)),
+        //!             config,
+        //!         }
+        //!     }
+        //!     pub fn with_default_config(resource: T) -> Self {
+        //!         Self::new(resource, ResourceConfig::default())
+        //!     }
+        //!     pub fn configure(&mut self, config: ResourceConfig) -> &mut Self {
+        //!         self.config = config;
+        //!         self
+        //!     }
         //! }
+        //!
+        //! # let manager = ResourceManager::with_default_config(vec![1, 2, 3]);
         //! ```
 
         use crate::error::CoreResult;
@@ -367,7 +422,7 @@ pub mod alpha6_api {
         ///
         /// ```
         /// # #[cfg(feature = "simd")]
-        /// use scirs2_core::{simd_add_auto, simd_capabilities::detect_simd_capabilities};
+        /// use scirs2_core::simd::simd_add_f32;
         /// use ndarray::arr1;
         ///
         /// # #[cfg(feature = "simd")]
@@ -375,13 +430,9 @@ pub mod alpha6_api {
         ///     let a = arr1(&[1.0f32, 2.0, 3.0, 4.0]);
         ///     let b = arr1(&[5.0f32, 6.0, 7.0, 8.0]);
         ///     
-        ///     // Automatically selects best SIMD implementation
-        ///     let result = simd_add_auto(&a.view(), &b.view());
+        ///     // SIMD implementation for f32 arrays
+        ///     let result = simd_add_f32(&a.view(), &b.view());
         ///     println!("SIMD result: {:?}", result);
-        ///     
-        ///     // Check SIMD capabilities
-        ///     let caps = detect_simd_capabilities();
-        ///     println!("SIMD capabilities: {:?}", caps);
         /// }
         /// ```
         pub const fn simd_operations() {}
@@ -594,7 +645,9 @@ pub mod alpha6_api {
         ///         F: FnOnce() -> CoreResult<T>,
         ///     {
         ///         # #[cfg(feature = "profiling")]
-        ///         let _timer = self.profiler.as_ref().map(|p| p.start_timer(&self.name));
+        ///         let timer = Timer::new(self.name.clone());
+        ///         # #[cfg(feature = "profiling")]
+        ///         let _timer_guard = timer.start();
         ///         
         ///         let result = operation()?;
         ///         

@@ -45,6 +45,10 @@
 //! optimizer.start_optimization()?;
 //!
 //! // Your code here - optimizer automatically tunes performance
+//! fn compute_intensive_operation() -> Vec<f64> {
+//!     // Example compute-intensive operation
+//!     (0..10000).map(|i| (i as f64).sin() * (i as f64).cos()).collect()
+//! }
 //! let result = compute_intensive_operation();
 //!
 //! // Get optimization recommendations

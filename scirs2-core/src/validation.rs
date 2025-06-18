@@ -25,7 +25,6 @@ use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if the value is outside the specified bounds.
-#[must_use]
 pub fn check_in_bounds<T, S>(value: T, min: T, max: T, name: S) -> CoreResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy,
@@ -58,7 +57,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if the value is not positive.
-#[must_use]
 pub fn check_positive<T, S>(value: T, name: S) -> CoreResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy + Zero,
@@ -88,7 +86,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if the value is negative.
-#[must_use]
 pub fn check_non_negative<T, S>(value: T, name: S) -> CoreResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy + Zero,
@@ -118,7 +115,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if the value is not finite.
-#[must_use]
 pub fn check_finite<T, S>(value: T, name: S) -> CoreResult<T>
 where
     T: Float + std::fmt::Display + Copy,
@@ -148,7 +144,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if any value in the array is not finite.
-#[must_use]
 pub fn check_array_finite<S, A, D>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -186,7 +181,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the array does not have the expected shape.
-#[must_use]
 pub fn check_shape<S, D, A>(
     array: &ArrayBase<S, D>,
     expected_shape: &[usize],
@@ -225,7 +219,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the array is not 1D.
-#[must_use]
 pub fn check_1d<S, D, A>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -256,7 +249,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the array is not 2D.
-#[must_use]
 pub fn check_2d<S, D, A>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -289,7 +281,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the arrays have different shapes.
-#[must_use]
 pub fn check_same_shape<S1, S2, D1, D2, A, B>(
     a: &ArrayBase<S1, D1>,
     a_name: A,
@@ -336,7 +327,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the matrix is not square.
-#[must_use]
 pub fn check_square<S, D, A>(matrix: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -373,7 +363,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if the probability is not between 0 and 1.
-#[must_use]
 pub fn check_probability<T, S>(p: T, name: S) -> CoreResult<T>
 where
     T: Float + std::fmt::Display + Copy,
@@ -407,7 +396,6 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if any value is not a valid probability.
-#[must_use]
 pub fn check_probabilities<S, D, A>(probs: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -442,7 +430,6 @@ where
 ///
 /// * `Ok(())` if the probabilities sum to 1 (within tolerance)
 /// * `Err(CoreError::ValueError)` if the sum is not 1 (within tolerance)
-#[must_use]
 pub fn check_probabilities_sum_to_one<S, D, A>(
     probs: &ArrayBase<S, D>,
     name: A,
@@ -485,7 +472,6 @@ where
 ///
 /// * `Ok(())` if the array is not empty
 /// * `Err(CoreError::ValueError)` if the array is empty
-#[must_use]
 pub fn check_not_empty<S, D, A>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
@@ -513,7 +499,6 @@ where
 ///
 /// * `Ok(())` if the array has sufficient samples
 /// * `Err(CoreError::ValueError)` if the array has too few samples
-#[must_use]
 pub fn check_min_samples<S, D, A>(
     array: &ArrayBase<S, D>,
     min_samples: usize,
@@ -555,7 +540,6 @@ pub mod clustering {
     ///
     /// * `Ok(())` if n_clusters is valid
     /// * `Err(CoreError::ValueError)` if n_clusters is invalid
-    #[must_use]
     pub fn check_n_clusters_bounds<S, D>(
         data: &ArrayBase<S, D>,
         n_clusters: usize,
@@ -603,7 +587,6 @@ pub mod clustering {
     ///
     /// * `Ok(())` if data is valid
     /// * `Err(CoreError)` if data validation fails
-    #[must_use]
     pub fn validate_clustering_data<S, D>(
         data: &ArrayBase<S, D>,
         _operation: &str,
@@ -651,7 +634,6 @@ pub mod parameters {
     ///
     /// * `Ok(())` if parameters are valid
     /// * `Err(CoreError::ValueError)` if parameters are invalid
-    #[must_use]
     pub fn check_iteration_params<T>(
         max_iter: usize,
         tolerance: T,
@@ -687,7 +669,6 @@ pub mod parameters {
     ///
     /// * `Ok(value)` if value is in [0, 1]
     /// * `Err(CoreError::ValueError)` if value is out of range
-    #[must_use]
     pub fn check_unit_interval<T>(value: T, name: &str, operation: &str) -> CoreResult<T>
     where
         T: Float + std::fmt::Display + Copy,
@@ -715,7 +696,6 @@ pub mod parameters {
     ///
     /// * `Ok(bandwidth)` if bandwidth is valid
     /// * `Err(CoreError::ValueError)` if bandwidth is invalid
-    #[must_use]
     pub fn check_bandwidth<T>(bandwidth: T, operation: &str) -> CoreResult<T>
     where
         T: Float + std::fmt::Display + Copy,

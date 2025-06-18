@@ -133,7 +133,7 @@ pub mod error;
 pub mod evaluation;
 mod gradient;
 pub mod gradient_clipping;
-pub(crate) mod graph;
+pub mod graph;
 pub mod hooks;
 pub mod integration;
 pub mod ndarray_ext;

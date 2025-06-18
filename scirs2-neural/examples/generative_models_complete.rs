@@ -233,7 +233,9 @@ impl VAEEncoder {
         // Flatten features
         let batch_size = features.shape()[0];
         let feature_dim = features.len() / batch_size;
-        let flattened = features.to_shape(IxDyn(&[batch_size, feature_dim]))?.to_owned();
+        let flattened = features
+            .to_shape(IxDyn(&[batch_size, feature_dim]))?
+            .to_owned();
 
         // Get mean and log variance
         let mean = self.mean_head.forward(&flattened)?;
@@ -538,7 +540,9 @@ impl GANGenerator {
         // Reshape to image format
         let batch_size = output.shape()[0];
         let (height, width) = self.config.input_size;
-        let reshaped = output.to_shape(IxDyn(&[batch_size, 1, height, width]))?.to_owned();
+        let reshaped = output
+            .to_shape(IxDyn(&[batch_size, 1, height, width]))?
+            .to_owned();
 
         Ok(reshaped)
     }

@@ -12,7 +12,6 @@ pub use crate::utils::feature_engineering::StatsExt;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::array;
 
     #[test]

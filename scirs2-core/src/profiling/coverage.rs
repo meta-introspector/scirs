@@ -40,11 +40,15 @@
 //! analyzer.start_collection()?;
 //!
 //! // Run your tests here...
+//! fn run_test_suite() {
+//!     // Example test function that would run the actual test suite
+//!     println!("Running test suite...");
+//! }
 //! run_test_suite();
 //!
 //! // Stop collection and generate report
 //! let report = analyzer.stop_and_generate_report()?;
-//! println!("Overall coverage: {:.2}%", report.overall_coverage_percentage);
+//! println!("Overall coverage: {:.2}%", report.overall_coverage_percentage());
 //!
 //! // Check if coverage meets thresholds
 //! if report.meets_quality_gates() {

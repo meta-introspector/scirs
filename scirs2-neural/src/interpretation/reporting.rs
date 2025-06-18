@@ -97,19 +97,9 @@ where
 
     // Gather additional interpretation data
     let counterfactual_explanations =
-        if let Some(_cf_generator) = interpreter.counterfactual_generator() {
-            // Would generate counterfactuals here
-            Some(vec![input.clone()])
-        } else {
-            None
-        };
+        interpreter.counterfactual_generator().map(|_cf_generator| vec![input.clone()]);
 
-    let lime_explanations = if let Some(_lime_explainer) = interpreter.lime_explainer() {
-        // Would generate LIME explanations here
-        Some(input.clone())
-    } else {
-        None
-    };
+    let lime_explanations = interpreter.lime_explainer().map(|_lime_explainer| input.clone());
 
     // Collect concept activations
     let mut concept_activations = HashMap::new();

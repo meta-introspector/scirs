@@ -15,8 +15,10 @@ pub type MaxIndicesCache3D = Arc<RwLock<Option<Array<(usize, usize, usize), IxDy
 
 /// Padding mode for convolutional layers
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default)]
 pub enum PaddingMode {
     /// No padding (will reduce spatial dimensions)
+    #[default]
     Valid,
     /// Padding to preserve spatial dimensions
     Same,
@@ -24,11 +26,6 @@ pub enum PaddingMode {
     Custom(usize),
 }
 
-impl Default for PaddingMode {
-    fn default() -> Self {
-        PaddingMode::Valid
-    }
-}
 
 impl PaddingMode {
     /// Calculate padding values for a given kernel size and dilation

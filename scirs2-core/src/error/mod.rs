@@ -72,29 +72,30 @@
 //!
 //! ### Async Error Handling
 //!
-//! ```rust,ignore
-//! // This example requires the "async" feature
-//! use scirs2_core::error::async_handling::{AsyncRetryExecutor, with_timeout};
-//! use scirs2_core::error::recovery::RecoveryStrategy;
+//! ```rust
+//! use scirs2_core::error::recovery::{RecoveryStrategy, RetryExecutor};
 //! use std::time::Duration;
 //!
-//! async fn example() {
-//!     // With timeout
-//!     let result = with_timeout(
-//!         async { Ok::<i32, scirs2_core::error::CoreError>(42) },
-//!         Duration::from_secs(10)
-//!     ).await;
-//!     
-//!     // With retry
-//!     let executor = AsyncRetryExecutor::new(
-//!         RecoveryStrategy::LinearBackoff {
-//!             max_attempts: 3,
-//!             delay: Duration::from_millis(500),
-//!         }
-//!     );
-//!     
-//!     let result = executor.execute(|| async { Ok::<i32, scirs2_core::error::CoreError>(42) }).await;
-//! }
+//! // Synchronous retry example
+//! let executor = RetryExecutor::new(
+//!     RecoveryStrategy::LinearBackoff {
+//!         max_attempts: 3,
+//!         delay: Duration::from_millis(100),
+//!     }
+//! );
+//!
+//! let mut counter = 0;
+//! let retry_result = executor.execute(|| {
+//!     counter += 1;
+//!     if counter < 3 {
+//!         Err(scirs2_core::error::CoreError::ComputationError(
+//!             scirs2_core::error::ErrorContext::new("Temporary failure".to_string())
+//!         ))
+//!     } else {
+//!         Ok::<i32, scirs2_core::error::CoreError>(123)
+//!     }
+//! });
+//! assert!(retry_result.is_ok());
 //! ```
 //!
 //! ### Error Diagnostics

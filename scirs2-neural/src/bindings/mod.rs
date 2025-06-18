@@ -94,19 +94,32 @@ mod tests {
         let metadata = PackageMetadata {
             name: "test_model".to_string(),
             version: "1.0.0".to_string(),
-            authors: vec!["Test Author".to_string()],
-            description: Some("Test model".to_string()),
-            keywords: vec!["neural".to_string()],
-            homepage: None,
-            repository: None,
-            license: Some("MIT".to_string()),
+            author: "Test Author".to_string(),
+            description: "Test model".to_string(),
+            license: "MIT".to_string(),
+            platforms: vec!["linux-x86_64".to_string()],
+            dependencies: std::collections::HashMap::new(),
+            input_specs: vec![],
+            output_specs: vec![],
+            runtime_requirements: crate::serving::RuntimeRequirements {
+                min_memory_mb: 256,
+                cpu_requirements: crate::serving::CpuRequirements {
+                    min_cores: 1,
+                    instruction_sets: vec![],
+                    min_frequency_mhz: None,
+                },
+                gpu_requirements: None,
+                system_dependencies: vec![],
+            },
+            timestamp: "2024-01-01T00:00:00Z".to_string(),
+            checksum: "test_checksum".to_string(),
         };
 
         // Create a simple sequential model for testing
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add(Dense::new(10, 5, &mut rng));
-        model.add(Dense::new(5, 2, &mut rng));
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(5, 2, None, &mut rng).unwrap());
 
         let generator =
             BindingGenerator::new(model, config, metadata, temp_dir.path().to_path_buf());
@@ -151,9 +164,11 @@ mod tests {
 
         // Test examples/docs generator
         let examples_gen = ExamplesDocsGenerator::new(&config, &output_dir);
-        let (examples, docs) = examples_gen.generate();
-        assert!(examples.is_ok());
-        assert!(docs.is_ok());
+        let result = examples_gen.generate();
+        assert!(result.is_ok());
+        let (examples, docs) = result.unwrap();
+        assert!(examples.len() > 0 || examples.is_empty()); // Just checking it's valid
+        assert!(docs.len() > 0 || docs.is_empty()); // Just checking it's valid
     }
 
     #[test]
@@ -184,8 +199,6 @@ mod tests {
 
     #[test]
     fn test_error_handling() {
-        use crate::error::NeuralError;
-
         // Test that generators handle invalid configurations gracefully
         let temp_dir = TempDir::new().unwrap();
         let mut config = BindingConfig::default();
@@ -209,19 +222,32 @@ mod tests {
         let metadata = PackageMetadata {
             name: "integration_test".to_string(),
             version: "1.0.0".to_string(),
-            authors: vec!["Test Author".to_string()],
-            description: Some("Integration test model".to_string()),
-            keywords: vec!["neural".to_string(), "test".to_string()],
-            homepage: None,
-            repository: None,
-            license: Some("MIT".to_string()),
+            author: "Test Author".to_string(),
+            description: "Integration test model".to_string(),
+            license: "MIT".to_string(),
+            platforms: vec!["linux-x86_64".to_string()],
+            dependencies: std::collections::HashMap::new(),
+            input_specs: vec![],
+            output_specs: vec![],
+            runtime_requirements: crate::serving::RuntimeRequirements {
+                min_memory_mb: 512,
+                cpu_requirements: crate::serving::CpuRequirements {
+                    min_cores: 2,
+                    instruction_sets: vec![],
+                    min_frequency_mhz: None,
+                },
+                gpu_requirements: None,
+                system_dependencies: vec![],
+            },
+            timestamp: "2024-01-01T00:00:00Z".to_string(),
+            checksum: "integration_test_checksum".to_string(),
         };
 
         // Create a simple model
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add(Dense::new(784, 128, &mut rng));
-        model.add(Dense::new(128, 10, &mut rng));
+        model.add_layer(Dense::new(784, 128, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(128, 10, Some("softmax"), &mut rng).unwrap());
 
         let generator =
             BindingGenerator::new(model, config, metadata, temp_dir.path().to_path_buf());

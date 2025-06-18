@@ -383,7 +383,7 @@ mod tests {
     fn test_activation_visualizer_creation() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add(Dense::new(10, 5, &mut rng));
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
 
         let config = VisualizationConfig::default();
         let visualizer = ActivationVisualizer::new(model, config);
@@ -492,7 +492,7 @@ mod tests {
     fn test_cache_operations() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add(Dense::new(10, 5, &mut rng));
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
 
         let config = VisualizationConfig::default();
         let mut visualizer = ActivationVisualizer::new(model, config);

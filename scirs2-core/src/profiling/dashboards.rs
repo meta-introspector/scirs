@@ -28,7 +28,7 @@
 //! let config = DashboardConfig::default()
 //!     .with_title("Production System Performance")
 //!     .with_refresh_interval(std::time::Duration::from_secs(30))
-//!     .with_retention_period(std::time::Duration::from_days(30));
+//!     .with_retention_period(std::time::Duration::from_secs(30 * 24 * 60 * 60));
 //!
 //! let mut dashboard = PerformanceDashboard::new(config)?;
 //!

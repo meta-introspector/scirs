@@ -26,8 +26,8 @@
 //! // Create a simple model
 //! let mut rng = rand::rngs::StdRng::seed_from_u64(42);
 //! let mut model = Sequential::<f32>::new();
-//! model.add(Dense::new(784, 128, &mut rng));
-//! model.add(Dense::new(128, 10, &mut rng));
+//! model.add_layer(Dense::new(784, 128, Some("relu"), &mut rng).unwrap());
+//! model.add_layer(Dense::new(128, 10, Some("softmax"), &mut rng).unwrap());
 //!
 //! // Configure visualization
 //! let config = VisualizationConfig::default();
@@ -302,7 +302,7 @@ mod tests {
     fn test_visualization_suite_creation() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = crate::models::sequential::Sequential::<f32>::new();
-        model.add(Dense::new(10, 5, &mut rng));
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
 
         let config = VisualizationConfig::default();
         let _suite = VisualizationSuite::new(model, config);
@@ -352,7 +352,7 @@ mod tests {
         // Test that type aliases compile correctly
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = crate::models::sequential::Sequential::<f32>::new();
-        model.add(Dense::new(10, 5, &mut rng));
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
 
         let config = VisualizationConfig::default();
 
@@ -367,7 +367,7 @@ mod tests {
     fn test_suite_operations() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(42);
         let mut model = crate::models::sequential::Sequential::<f32>::new();
-        model.add(Dense::new(10, 5, &mut rng));
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
 
         let config = VisualizationConfig::default();
         let mut suite = VisualizationSuite::new(model, config.clone());

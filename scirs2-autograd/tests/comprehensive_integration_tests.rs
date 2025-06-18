@@ -10,9 +10,10 @@
 use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
 use scirs2_autograd::optimization::{
-    GraphOptimizer, MemoryOptimizationConfig, MemoryOptimizer, OptimizationLevel,
+    GraphOptimizer, OptimizationLevel,
+    memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
 };
-use scirs2_autograd::parallel::{init_thread_pool_with_config, ParallelConfig, ThreadPoolConfig};
+use scirs2_autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
 use scirs2_autograd::tensor_ops as T;
 use scirs2_autograd::visualization::{GraphVisualizer, OutputFormat, VisualizationConfig};
 
@@ -94,7 +95,7 @@ fn test_comprehensive_graph_optimization() {
     ];
 
     for level in optimization_levels {
-        let optimizer = GraphOptimizer::<f32>::with_level(level);
+        let _optimizer = GraphOptimizer::<f32>::with_level(level);
 
         // In a real scenario, we would apply optimizations to actual graphs
         // For this test, we verify the optimizer can be created and configured
@@ -145,7 +146,7 @@ fn test_comprehensive_graph_visualization() {
             show_values: false,
         };
 
-        let visualizer = GraphVisualizer::<f32>::with_config(config);
+        let _visualizer = GraphVisualizer::<f32>::with_config(config);
 
         // Test that visualizer can be created with each format
         // In practice, this would generate actual visualizations
@@ -510,14 +511,14 @@ fn test_realistic_ml_workflow_integration() {
 
         // Step 3: Loss computation with parallel operations
         let logits = final_output;
-        let targets = T::efficient_zeros(&[batch_size], ctx);
+        let _targets = T::efficient_zeros(&[batch_size], ctx);
 
         // Simplified softmax + cross-entropy
         let max_logits = T::reduce_max(&logits, &[1], true);
         let shifted_logits = T::broadcast_sub(&logits, &max_logits);
         let exp_logits = T::exp(&shifted_logits);
         let sum_exp = T::reduce_sum(&exp_logits, &[1], true);
-        let log_sum_exp = T::log(&sum_exp);
+        let log_sum_exp = T::ln(&sum_exp);
         let max_logits_squeezed = T::squeeze(&max_logits, &[1]);
         let log_sum_exp_squeezed = T::squeeze(&log_sum_exp, &[1]);
         let logsumexp = &max_logits_squeezed + &log_sum_exp_squeezed;

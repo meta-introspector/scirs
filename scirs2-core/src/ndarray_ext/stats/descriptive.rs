@@ -173,8 +173,7 @@ where
 
                     let median_value = if column_values.len() % 2 == 0 {
                         let mid = column_values.len() / 2;
-                        (column_values[mid - 1] + column_values[mid])
-                            / T::from_f64(2.0).unwrap()
+                        (column_values[mid - 1] + column_values[mid]) / T::from_f64(2.0).unwrap()
                     } else {
                         column_values[column_values.len() / 2]
                     };
@@ -332,9 +331,7 @@ where
                 let means = mean_2d(array, Some(ax))?;
 
                 if rows <= ddof {
-                    return Err(
-                        "Not enough data points for variance calculation with given ddof",
-                    );
+                    return Err("Not enough data points for variance calculation with given ddof");
                 }
 
                 let mut result = Array::<T, Ix1>::zeros(cols);
@@ -357,9 +354,7 @@ where
                 let means = mean_2d(array, Some(ax))?;
 
                 if cols <= ddof {
-                    return Err(
-                        "Not enough data points for variance calculation with given ddof",
-                    );
+                    return Err("Not enough data points for variance calculation with given ddof");
                 }
 
                 let mut result = Array::<T, Ix1>::zeros(rows);
