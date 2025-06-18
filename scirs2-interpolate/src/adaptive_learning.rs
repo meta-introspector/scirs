@@ -22,12 +22,12 @@
 //! use scirs2_interpolate::multiscale::MultiscaleBSpline;
 //!
 //! // Create sample data
-//! let x = Array1::linspace(0.0, 10.0, 20);
-//! let y = x.mapv(|x| x.sin() + 0.1 * (5.0 * x).sin());
+//! let x = Array1::linspace(0.0_f64, 10.0_f64, 20);
+//! let y = x.mapv(|x| x.sin() + 0.1_f64 * (5.0_f64 * x).sin());
 //!
 //! // Create an initial interpolation model
 //! let spline = MultiscaleBSpline::new(
-//!     &x.view(), &y.view(), 10, 3, 5, 0.01,
+//!     &x.view(), &y.view(), 10, 3, 5, 0.01_f64,
 //!     scirs2_interpolate::ExtrapolateMode::Extrapolate
 //! ).unwrap();
 //!

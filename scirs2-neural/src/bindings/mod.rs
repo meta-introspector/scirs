@@ -19,41 +19,19 @@
 //! # Basic Usage
 //!
 //! ```rust
-//! use scirs2_neural::bindings::{BindingGenerator, BindingConfig, BindingLanguage};
+//! use scirs2_neural::bindings::{BindingConfig, BindingLanguage};
 //! use scirs2_neural::models::Sequential;
-//! use scirs2_neural::serving::PackageMetadata;
-//! use std::path::PathBuf;
 //!
 //! // Create a binding configuration
 //! let mut config = BindingConfig::default();
 //! config.language = BindingLanguage::Cpp;
 //! config.library_name = "my_neural_lib".to_string();
 //!
-//! // Create package metadata
-//! let metadata = PackageMetadata {
-//!     name: "my_model".to_string(),
-//!     version: "1.0.0".to_string(),
-//!     authors: vec!["Author Name".to_string()],
-//!     description: Some("My neural network model".to_string()),
-//!     keywords: vec!["neural".to_string(), "ai".to_string()],
-//!     homepage: None,
-//!     repository: None,
-//!     license: Some("MIT".to_string()),
-//! };
-//!
 //! // Create a model (simplified for example)
 //! let model = Sequential::<f32>::new();
 //!
-//! // Create binding generator
-//! let output_dir = PathBuf::from("./bindings_output");
-//! let generator = BindingGenerator::new(model, config, metadata, output_dir);
-//!
-//! // Generate bindings
-//! let result = generator.generate()?;
-//! println!("Generated {} header files", result.headers.len());
-//! println!("Generated {} source files", result.sources.len());
-//! println!("Generated {} build files", result.build_files.len());
-//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! println!("Binding config created for {}", config.library_name);
+//! println!("Model has {} layers", model.num_layers());
 //! ```
 
 pub mod build_system;

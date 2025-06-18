@@ -148,13 +148,10 @@ pub use deconvolution::{
     DeconvolutionConfig, DeconvolutionMethod,
 };
 pub use filter::{
-    allpass_filter, analyze_filter, bessel, bilinear_transform, butter,
-    butter_bandpass_bandstop, cheby1, cheby2, check_filter_stability, comb_filter,
-    ellip, filtfilt, firwin, lfilter,
-    matched_filter, matched_filter_detect,
-    minimum_phase, notch_filter, peak_filter, prewarp_frequency,
-    remez,
-    FilterAnalysis, FilterStability,
+    allpass_filter, analyze_filter, bessel, bilinear_transform, butter, butter_bandpass_bandstop,
+    cheby1, cheby2, check_filter_stability, comb_filter, ellip, filtfilt, firwin, lfilter,
+    matched_filter, matched_filter_detect, minimum_phase, notch_filter, peak_filter,
+    prewarp_frequency, remez, FilterAnalysis, FilterStability,
 };
 pub use filter_banks::{
     CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
@@ -169,15 +166,22 @@ pub use hr_spectral::{
     HrSpectralResult,
 };
 pub use interpolate::{
-    auto_interpolate, cubic_hermite_interpolate, cubic_spline_interpolate,
-    gaussian_process_interpolate, interpolate, interpolate_2d, kriging_interpolate,
-    linear_interpolate, minimum_energy_interpolate, nearest_neighbor_interpolate,
-    spectral::{
-        sinc_interpolate, spectral_interpolate,
-    },
-    rbf_functions, rbf_interpolate,
+    auto_interpolate,
+    cubic_hermite_interpolate,
+    cubic_spline_interpolate,
+    gaussian_process_interpolate,
+    interpolate,
+    interpolate_2d,
+    kriging_interpolate,
+    linear_interpolate,
+    minimum_energy_interpolate,
+    nearest_neighbor_interpolate,
+    rbf_functions,
+    rbf_interpolate,
+    spectral::{sinc_interpolate, spectral_interpolate},
     // resampling functions temporarily removed due to module restructuring
-    variogram_models, InterpolationConfig,
+    variogram_models,
+    InterpolationConfig,
     InterpolationMethod,
 };
 pub use kalman::{

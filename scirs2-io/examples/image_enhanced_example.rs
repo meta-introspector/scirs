@@ -10,8 +10,8 @@
 use ndarray::Array3;
 use scirs2_io::image::enhanced::{
     batch_convert_with_compression, create_image_pyramid, save_high_quality, save_lossless,
-    CompressionOptions, CompressionQuality, EnhancedImageProcessor,
-    InterpolationMethod, PyramidConfig,
+    CompressionOptions, CompressionQuality, EnhancedImageProcessor, InterpolationMethod,
+    PyramidConfig,
 };
 use scirs2_io::image::{save_image, ColorMode, ImageData, ImageFormat, ImageMetadata};
 use std::time::Instant;

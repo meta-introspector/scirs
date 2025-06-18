@@ -1,5 +1,5 @@
 use scirs2_datasets::loaders;
-use scirs2_datasets::utils::{Dataset, train_test_split};
+use scirs2_datasets::utils::{train_test_split, Dataset};
 use std::env;
 use std::path::Path;
 

@@ -1,5 +1,6 @@
 use scirs2_datasets::{
-    make_blobs, make_classification, make_regression, make_time_series, utils::normalize, utils::train_test_split,
+    make_blobs, make_classification, make_regression, make_time_series, utils::normalize,
+    utils::train_test_split,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

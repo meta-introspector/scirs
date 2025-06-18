@@ -428,7 +428,7 @@ impl SystemMonitor {
             Ok(0.0)
         } else {
             let usage = 100.0 - (idle_diff as f64 / total_diff as f64) * 100.0;
-            Ok(usage.max(0.0).min(100.0))
+            Ok(usage.clamp(0.0, 100.0))
         }
     }
 

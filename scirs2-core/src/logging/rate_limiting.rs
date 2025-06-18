@@ -565,11 +565,6 @@ impl SmartRateLimiter {
         }
     }
 
-    /// Create with default configuration
-    pub fn default() -> Self {
-        Self::new(RateLimiterConfig::default())
-    }
-
     /// Check if an event should be allowed
     pub fn should_allow(&self, event: &LogEvent) -> CoreResult<RateLimitDecision> {
         // Update statistics
@@ -687,6 +682,12 @@ impl SmartRateLimiter {
     /// Get current configuration
     pub const fn get_config(&self) -> &RateLimiterConfig {
         &self.config
+    }
+}
+
+impl Default for SmartRateLimiter {
+    fn default() -> Self {
+        Self::new(RateLimiterConfig::default())
     }
 }
 

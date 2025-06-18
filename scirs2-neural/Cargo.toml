@@ -68,9 +68,9 @@ rayon = ["dep:rayon"]  # Parallel processing support
 # linalg = ["dep:scirs2-linalg"] 
 # optimize = ["dep:scirs2-optimize"]
 optim = [] # Empty feature for compatibility with existing code
-openblas = ["ndarray-linalg/openblas-system"]
-netlib = ["ndarray-linalg/netlib-system"]
-intel-mkl = ["ndarray-linalg/intel-mkl-system"]
+openblas = ["scirs2-core/openblas"]
+netlib = ["scirs2-core/netlib"]
+intel-mkl = ["scirs2-core/intel-mkl"]
 # Integration with other modules
 metrics_integration = ["dep:scirs2-metrics"]
 

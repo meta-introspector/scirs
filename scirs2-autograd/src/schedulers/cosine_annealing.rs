@@ -158,8 +158,8 @@ impl<F: Float> CosineAnnealingLR<F> {
             let mut cycle_length = self.t_max;
 
             // Find which cycle we're currently in
-            while remaining_steps > cycle_length {
-                remaining_steps -= cycle_length + 1; // +1 for the restart step
+            while remaining_steps >= cycle_length {
+                remaining_steps -= cycle_length;
                 cycle += 1;
                 cycle_length *= self.t_mult;
             }
@@ -209,8 +209,8 @@ impl<F: Float> CosineAnnealingLR<F> {
             return false;
         }
 
-        let (_, step_in_cycle, cycle_length) = self.get_cycle_info(step);
-        step_in_cycle == 0 && step > cycle_length
+        let (cycle, step_in_cycle, _) = self.get_cycle_info(step);
+        step_in_cycle == 0 && cycle > 0
     }
 
     /// Get the next restart step
@@ -265,14 +265,16 @@ mod tests {
         // At start, should be max learning rate
         assert!((scheduler.get_lr(0) - 1.0).abs() < 1e-6);
 
-        // At middle, should be min learning rate
-        assert!((scheduler.get_lr(50) - 0.0).abs() < 1e-6);
+        // At middle (step 50), should be minimum learning rate
+        // cos(π * 50/100) = cos(π/2) = 0, so lr = 0 + (1-0) * (1+0)/2 = 0.5
+        assert!((scheduler.get_lr(50) - 0.5).abs() < 1e-6);
 
-        // At end, should be max learning rate again
-        assert!((scheduler.get_lr(100) - 1.0).abs() < 1e-6);
+        // At end, should be min learning rate (cos(π) = -1)
+        // lr = 0 + (1-0) * (1+(-1))/2 = 0
+        assert!((scheduler.get_lr(100) - 0.0).abs() < 1e-6);
 
-        // Should cycle
-        assert!((scheduler.get_lr(150) - 0.0).abs() < 1e-6);
+        // Should cycle - middle of next cycle
+        assert!((scheduler.get_lr(151) - 0.5).abs() < 1e-6);
     }
 
     #[test]
@@ -282,25 +284,32 @@ mod tests {
         // At start, should be max learning rate
         assert!((scheduler.get_lr(0) - 1.0).abs() < 1e-6);
 
-        // At middle, should be min learning rate
-        assert!((scheduler.get_lr(50) - 0.1).abs() < 1e-6);
+        // At middle (step 50), cos(π/2) = 0, so lr = 0.1 + (1.0-0.1) * (1+0)/2 = 0.1 + 0.45 = 0.55
+        assert!((scheduler.get_lr(50) - 0.55).abs() < 1e-6);
 
-        // At end, should be max learning rate again
-        assert!((scheduler.get_lr(100) - 1.0).abs() < 1e-6);
+        // At end, should be min learning rate (cos(π) = -1)
+        // lr = 0.1 + (1.0-0.1) * (1+(-1))/2 = 0.1
+        assert!((scheduler.get_lr(100) - 0.1).abs() < 1e-6);
     }
 
     #[test]
     fn test_cosine_annealing_warm_restarts() {
         let scheduler = CosineAnnealingLR::with_warm_restarts(1.0f32, 0.0, 10, 2);
 
-        // First cycle: 0-10
+        // First cycle: 0-9 (10 steps total)
         assert!((scheduler.get_lr(0) - 1.0).abs() < 1e-6);
-        assert!((scheduler.get_lr(5) - 0.0).abs() < 1e-6);
+        // At middle of first cycle: cos(π * 5/10) = cos(π/2) = 0, so lr = 0 + (1-0) * (1+0)/2 = 0.5
+        assert!((scheduler.get_lr(5) - 0.5).abs() < 1e-6);
+        // Step 10 is the start of cycle 1 (restart), so it should be max again
         assert!((scheduler.get_lr(10) - 1.0).abs() < 1e-6);
 
-        // Second cycle should be longer (10 * 2 = 20): 11-30
-        // Start of second cycle should restart at max
-        assert!((scheduler.get_lr(11) - 1.0).abs() < 1e-6);
+        // Second cycle should be longer (10 * 2 = 20): 10-29
+        // Step 10 is already tested above as the start of cycle 1
+        // Let's test step 15 (middle of second cycle)
+        let lr_15 = scheduler.get_lr(15);
+        // Step 15 is step_in_cycle 5 in a 20-step cycle: cos(π * 5/20) = cos(π/4) ≈ 0.707
+        // lr = 0 + (1-0) * (1+0.707)/2 ≈ 0.854
+        assert!((lr_15 - 0.8535534).abs() < 1e-6);
     }
 
     #[test]
@@ -318,25 +327,25 @@ mod tests {
     fn test_cosine_annealing_cycle_info() {
         let scheduler = CosineAnnealingLR::with_warm_restarts(1.0f32, 0.0, 10, 2);
 
-        // First cycle
+        // First cycle (steps 0-9)
         assert_eq!(scheduler.get_cycle_info(0), (0, 0, 10));
         assert_eq!(scheduler.get_cycle_info(5), (0, 5, 10));
-        assert_eq!(scheduler.get_cycle_info(10), (0, 10, 10));
+        assert_eq!(scheduler.get_cycle_info(9), (0, 9, 10));
 
-        // Second cycle (length 20)
-        assert_eq!(scheduler.get_cycle_info(11), (1, 0, 20));
-        assert_eq!(scheduler.get_cycle_info(21), (1, 10, 20));
+        // Second cycle (steps 10-29, length 20)
+        assert_eq!(scheduler.get_cycle_info(10), (1, 0, 20));
+        assert_eq!(scheduler.get_cycle_info(15), (1, 5, 20));
+        assert_eq!(scheduler.get_cycle_info(25), (1, 15, 20));
     }
 
     #[test]
     fn test_cosine_annealing_restart_detection() {
         let scheduler = CosineAnnealingLR::with_warm_restarts(1.0f32, 0.0, 5, 1);
 
-        assert!(!scheduler.is_restart_step(0));
-        assert!(!scheduler.is_restart_step(3));
-        assert!(!scheduler.is_restart_step(5));
-        assert!(scheduler.is_restart_step(6)); // Start of second cycle
-        assert!(scheduler.is_restart_step(12)); // Start of third cycle
+        assert!(!scheduler.is_restart_step(0));  // Start of first cycle
+        assert!(!scheduler.is_restart_step(3));  // Middle of first cycle  
+        assert!(scheduler.is_restart_step(5));   // Start of second cycle
+        assert!(scheduler.is_restart_step(10));  // Start of third cycle (t_mult=1, so same length)
     }
 
     #[test]

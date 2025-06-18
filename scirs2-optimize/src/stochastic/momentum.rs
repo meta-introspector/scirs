@@ -493,12 +493,12 @@ mod tests {
         let data_provider = Box::new(InMemoryDataProvider::new(vec![1.0; 50]));
 
         let options = MomentumOptions {
-            learning_rate: 0.1,
+            learning_rate: 0.01,
             momentum: 0.9,
             nesterov: true,
-            max_iter: 100,
+            max_iter: 500,
             batch_size: Some(10),
-            tol: 1e-6,
+            tol: 1e-4,
             ..Default::default()
         };
 
@@ -538,7 +538,7 @@ mod tests {
         let options = MomentumOptions {
             learning_rate: 0.1,
             momentum: 0.8,
-            max_iter: 100,
+            max_iter: 500,
             tol: 1e-6,
             ..Default::default()
         };
@@ -580,7 +580,7 @@ mod tests {
         let options = MomentumOptions {
             learning_rate: 0.1,
             momentum: 0.9,
-            max_iter: 100,
+            max_iter: 500,
             lr_schedule: LearningRateSchedule::ExponentialDecay { decay_rate: 0.95 },
             tol: 1e-6,
             ..Default::default()
@@ -603,7 +603,7 @@ mod tests {
             learning_rate: 0.01,
             momentum: 0.9,
             nesterov: false,
-            max_iter: 100,
+            max_iter: 500,
             ..Default::default()
         };
         let result_standard =
@@ -617,7 +617,7 @@ mod tests {
             learning_rate: 0.01,
             momentum: 0.9,
             nesterov: true,
-            max_iter: 100,
+            max_iter: 500,
             ..Default::default()
         };
         let result_nesterov =

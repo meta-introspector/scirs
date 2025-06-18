@@ -34,7 +34,7 @@
 //! // Create activation functions
 //! let relu = ReLU::new();
 //! let sigmoid = Sigmoid::new();
-//! let softmax = Softmax::new();
+//! let softmax = Softmax::new(0); // Apply softmax along axis 0
 //!
 //! // Create input data
 //! let input = Array::from_vec(vec![-2.0, -1.0, 0.0, 1.0, 2.0])
@@ -152,7 +152,7 @@ pub trait Activation<F: Float> {
     /// let input = Array::from_vec(vec![0.0]).into_dyn();
     /// let output = sigmoid.forward(&input)?;
     /// // Sigmoid(0) = 0.5
-    /// assert!((output[ndarray::IxDyn(&[0])] - 0.5).abs() < 1e-6);
+    /// assert!((output[ndarray::IxDyn(&[0])] - 0.5f64).abs() < 1e-6);
     /// # Ok(())
     /// # }
     /// ```

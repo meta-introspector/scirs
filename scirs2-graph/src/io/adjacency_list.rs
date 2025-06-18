@@ -36,7 +36,7 @@
 //! temp_file.flush().unwrap();
 //!
 //! // Read the graph
-//! let graph: Graph<i32, ()> = read_adjacency_list_format(temp_file.path(), false).unwrap();
+//! let graph: Graph<i32, i32> = read_adjacency_list_format(temp_file.path(), false).unwrap();
 //! assert_eq!(graph.node_count(), 3);
 //! assert_eq!(graph.edge_count(), 3); // Each edge is only stored once in undirected graph
 //! ```

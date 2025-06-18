@@ -77,11 +77,13 @@
 //! ```rust
 //! use scirs2_datasets::{load_iris, Dataset};
 //!
-//! let mut iris = load_iris().unwrap();
+//! let iris = load_iris().unwrap();
 //!
-//! // Split into train and test sets
-//! let (train, test) = iris.train_test_split(0.2, Some(42)).unwrap();
-//! println!("Train: {} samples, Test: {} samples", train.n_samples(), test.n_samples());
+//! // Access dataset properties
+//! println!("Dataset: {} samples, {} features", iris.n_samples(), iris.n_features());
+//! if let Some(feature_names) = iris.feature_names() {
+//!     println!("Features: {:?}", feature_names);
+//! }
 //! ```
 
 #![warn(missing_docs)]

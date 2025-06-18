@@ -36,7 +36,6 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g)
-        .set_shape(&shape(x))
         .append_input(x.as_ref(), false)
         .build(activation_ops::Sigmoid)
 }
@@ -65,7 +64,6 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
         .build(crate::tensor_ops::math_ops::Tanh)
 }
 
@@ -93,7 +91,6 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g)
-        .set_shape(&shape(x))
         .append_input(x.as_ref(), false)
         .build(activation_ops::ReLU)
 }
@@ -153,7 +150,6 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g)
-        .set_shape(&shape(x))
         .append_input(x.as_ref(), false)
         .build(activation_ops::Elu { alpha })
 }
@@ -183,7 +179,6 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g)
-        .set_shape(&shape(x))
         .append_input(x.as_ref(), false)
         .build(activation_ops::Softplus)
 }
@@ -214,7 +209,6 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g)
-        .set_shape(&shape(x))
         .append_input(x.as_ref(), false)
         .build(activation_ops::Swish)
 }
@@ -245,7 +239,6 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g)
-        .set_shape(&shape(x))
         .append_input(x.as_ref(), false)
         .build(activation_ops::Gelu)
 }
@@ -276,7 +269,6 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g)
-        .set_shape(&shape(x))
         .append_input(x.as_ref(), false)
         .build(activation_ops::Mish)
 }
@@ -337,7 +329,6 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g)
-        .set_shape(&shape(x))
         .append_input(x.as_ref(), false)
         .build(xent_ops::LogSoftmax { axis })
 }
@@ -723,8 +714,8 @@ mod tests {
         crate::run(|g| {
             let x = convert_to_tensor(array![[1.0_f32, 2.0, 3.0]], g);
 
-            // Test softmax
-            let softmax_result = softmax(x, 1);
+            // Test softmax with 2D input (batch of 1)
+            let softmax_result = softmax(x, 1);  // Apply softmax along last axis
             let actual = softmax_result.eval(g).unwrap();
 
             // Check that probabilities sum to 1
@@ -735,10 +726,11 @@ mod tests {
             let log_softmax_result = log_softmax(x, 1);
             let log_actual = log_softmax_result.eval(g).unwrap();
 
-            // Log probabilities should be negative
-            assert!(log_actual[0] < 0.0);
-            assert!(log_actual[1] < 0.0);
-            assert!(log_actual[2] < 0.0);
+            // Log probabilities should be negative - access as 2D array
+            let log_slice = log_actual.index_axis(ndarray::Axis(0), 0);
+            assert!(log_slice[0] < 0.0);
+            assert!(log_slice[1] < 0.0);
+            assert!(log_slice[2] < 0.0);
         });
     }
 

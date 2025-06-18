@@ -159,7 +159,12 @@ impl SafetyTracker {
     }
 
     /// Track a memory deallocation
-    pub fn track_deallocation(&self, ptr: *mut u8, size: usize) {
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `ptr` is a valid pointer that was previously
+    /// allocated and is safe to dereference for writing zeros if configured.
+    pub unsafe fn track_deallocation(&self, ptr: *mut u8, size: usize) {
         self.current_usage.fetch_sub(size, Ordering::SeqCst);
 
         if let Ok(mut allocations) = self.allocations.lock() {
@@ -252,6 +257,12 @@ impl SafetyTracker {
             average_allocation_size: average_size,
             oldest_allocation_age: oldest_allocation,
         }
+    }
+}
+
+impl Default for SafetyTracker {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -507,17 +518,27 @@ impl SafeAllocator {
     }
 }
 
+impl Default for SafeAllocator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 unsafe impl GlobalAlloc for SafeAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         // Check if allocation is safe
-        if let Err(_) = self.tracker().check_allocation(layout.size()) {
+        if self.tracker().check_allocation(layout.size()).is_err() {
             return std::ptr::null_mut();
         }
 
         let ptr = self.inner.alloc(layout);
         if !ptr.is_null() {
             // Track the allocation
-            if let Err(_) = self.tracker().track_allocation(ptr, layout.size(), None) {
+            if self
+                .tracker()
+                .track_allocation(ptr, layout.size(), None)
+                .is_err()
+            {
                 // If tracking fails, deallocate and return null
                 self.inner.dealloc(ptr, layout);
                 return std::ptr::null_mut();
@@ -576,7 +597,9 @@ mod tests {
         assert_eq!(tracker.peak_usage(), 1024);
 
         // Test deallocation tracking
-        tracker.track_deallocation(ptr, 1024);
+        unsafe {
+            tracker.track_deallocation(ptr, 1024);
+        }
         assert_eq!(tracker.current_usage(), 0);
         assert_eq!(tracker.peak_usage(), 1024); // Peak should remain
     }

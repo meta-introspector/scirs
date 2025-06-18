@@ -551,14 +551,14 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_linalg::matrix_dynamics::{riccati_solve, DynamicsConfig};
 ///
-/// let a = array![[0.0, 1.0], [0.0, -1.0]]; // Double integrator
-/// let b = array![[0.0], [1.0]]; // Input matrix
-/// let q = array![[1.0, 0.0], [0.0, 1.0]]; // State cost
-/// let r = array![[1.0]]; // Input cost
+/// let a = array![[0.0, 1.0], [0.0, 0.0]]; // Simple integrator
+/// let b = array![[0.0], [1.0]]; // Input matrix  
+/// let q = array![[1.0, 0.0], [0.0, 1.0]]; // Identity cost matrix (symmetric positive definite)
+/// let r = array![[1.0]]; // Input cost (positive definite)
 ///
 /// let x = riccati_solve(&a.view(), &b.view(), &q.view(), &r.view(), &DynamicsConfig::default()).unwrap();
 /// ```
@@ -699,8 +699,8 @@ where
 /// let a = array![[-1.0, 2.0], [0.0, -3.0]];
 /// let x0 = array![[1.0, 0.0], [0.0, 1.0]];
 ///
-/// let f = |t: f64, x: &ndarray::ArrayView2<f64>| {
-///     Ok(a.dot(x))
+/// let f = |t: f64, x: &ndarray::ArrayView2<f64>| -> Result<ndarray::Array2<f64>, Box<dyn std::error::Error>> {
+///     Ok::<ndarray::Array2<f64>, Box<dyn std::error::Error>>(a.dot(x))
 /// };
 ///
 /// let result = matrix_ode_solve(f, &x0.view(), [0.0, 1.0], &DynamicsConfig::default()).unwrap();

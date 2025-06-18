@@ -221,8 +221,8 @@ mod tests {
     fn test_exponential_lr_decay_info() {
         let scheduler = ExponentialLR::new(1.0f32, 0.9);
 
-        assert_eq!(scheduler.decay_rate(), 0.9);
-        assert!((scheduler.decay_percentage() - 10.0).abs() < 1e-6);
+        assert!((scheduler.decay_rate() - 0.9).abs() < 1e-6);
+        assert!((scheduler.decay_percentage() - 10.0).abs() < 1e-5);
     }
 
     #[test]

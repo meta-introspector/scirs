@@ -96,10 +96,13 @@ where
     let basic_report = generate_basic_report(interpreter, input, None)?;
 
     // Gather additional interpretation data
-    let counterfactual_explanations =
-        interpreter.counterfactual_generator().map(|_cf_generator| vec![input.clone()]);
+    let counterfactual_explanations = interpreter
+        .counterfactual_generator()
+        .map(|_cf_generator| vec![input.clone()]);
 
-    let lime_explanations = interpreter.lime_explainer().map(|_lime_explainer| input.clone());
+    let lime_explanations = interpreter
+        .lime_explainer()
+        .map(|_lime_explainer| input.clone());
 
     // Collect concept activations
     let mut concept_activations = HashMap::new();

@@ -5,7 +5,7 @@
 //! methods, perturbation-based methods, and propagation-based methods.
 
 use crate::error::{NeuralError, Result};
-use ndarray::{Array, ArrayD, IxDyn, Dimension};
+use ndarray::{Array, ArrayD, Dimension, IxDyn};
 use num_traits::Float;
 use std::fmt::Debug;
 use std::iter::Sum;
@@ -497,9 +497,9 @@ where
         + Copy,
 {
     // Simplified resize that preserves attribution values
-    
+
     let mut result = Array::zeros(target_dim.clone());
-    
+
     // If converting from 2D to 3D, replicate across the first dimension
     let attr_ndim = attribution.ndim();
     let target_ndim = target_dim.ndim();
@@ -509,7 +509,7 @@ where
         let channels = target_slice[0];
         let height = target_slice[1];
         let width = target_slice[2];
-        
+
         // Replicate the 2D attribution across all channels
         for c in 0..channels {
             for h in 0..std::cmp::min(height, attribution.shape()[0]) {
@@ -522,7 +522,7 @@ where
         // For other cases, just return zeros (placeholder)
         result = Array::zeros(target_dim);
     }
-    
+
     Ok(result)
 }
 

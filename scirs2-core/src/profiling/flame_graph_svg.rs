@@ -240,7 +240,7 @@ impl SvgFlameGraphGenerator {
 
         // Add JavaScript interactivity if enabled
         if self.config.interactive {
-            svg.push_str(&self.generate_javascript());
+            svg.push_str(self.generate_javascript());
         }
 
         svg.push_str("</svg>");
@@ -257,7 +257,7 @@ impl SvgFlameGraphGenerator {
         y: f64,
         height: f64,
         total_time: f64,
-        depth: usize,
+        _depth: usize,
     ) {
         if width < self.config.min_width {
             return;
@@ -317,7 +317,7 @@ impl SvgFlameGraphGenerator {
                     y + height + 1.0,
                     height,
                     total_time,
-                    depth + 1,
+                    _depth + 1,
                 );
             }
 
@@ -451,28 +451,30 @@ impl EnhancedFlameGraph {
 
     /// Export as multi-panel SVG with system metrics
     pub fn export_enhanced_svg(&self, path: &str) -> Result<(), std::io::Error> {
-        let mut config = SvgFlameGraphConfig::default();
-        config.height = 800; // Increased height for multiple panels
-        config.title = "Enhanced Performance Profile".to_string();
+        let config = SvgFlameGraphConfig {
+            height: 800,
+            title: "Enhanced Performance Profile".to_string(),
+            ..Default::default()
+        };
 
         let generator = SvgFlameGraphGenerator::new(config);
         let mut svg = String::new();
 
         // SVG header with increased height
-        svg.push_str(&format!(
+        svg.push_str(
             r#"<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <style><![CDATA[
-    .func_g:hover {{ stroke:black; stroke-width:0.5; cursor:pointer; }}
-    .func_text {{ font-family:Verdana, sans-serif; font-size:12px; fill:rgb(0,0,0); }}
-    .chart_line {{ stroke:blue; stroke-width:2; fill:none; }}
-    .chart_area {{ fill:lightblue; opacity:0.3; }}
+    .func_g:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+    .func_text { font-family:Verdana, sans-serif; font-size:12px; fill:rgb(0,0,0); }
+    .chart_line { stroke:blue; stroke-width:2; fill:none; }
+    .chart_area { fill:lightblue; opacity:0.3; }
   ]]></style>
 </defs>
 <rect x="0" y="0" width="1200" height="800" fill="white"/>
-"#
-        ));
+"#,
+        );
 
         // Title
         svg.push_str(r#"<text x="600" y="24" class="func_text" style="font-size:18px; font-weight:bold; text-anchor:middle;">Enhanced Performance Profile</text>

@@ -16,18 +16,14 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_integrate::scheduling::{WorkStealingPool, Task, TaskResult};
+//! use scirs2_integrate::scheduling::{WorkStealingPool, Task};
 //!
 //! // Create work-stealing pool with 4 threads
 //! let pool = WorkStealingPool::new(4);
 //!
-//! // Submit adaptive integration tasks
-//! let tasks = vec![
-//!     Task::new(|| adaptive_integrate_region(0.0, 0.5)),
-//!     Task::new(|| adaptive_integrate_region(0.5, 1.0)),
-//! ];
-//!
-//! let results = pool.execute_all(tasks);
+//! // Submit a simple task
+//! let task = Task::new(|| 0.5 * 0.5); // Simple computation
+//! pool.submit(task);
 //! ```
 
 use crate::common::IntegrateFloat;

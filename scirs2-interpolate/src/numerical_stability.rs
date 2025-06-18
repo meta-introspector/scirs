@@ -25,7 +25,7 @@
 //! use scirs2_interpolate::numerical_stability::{assess_matrix_condition, StabilityLevel};
 //!
 //! // Assess the condition of a matrix
-//! let matrix = Array2::eye(3);
+//! let matrix = Array2::<f64>::eye(3);
 //! let report = assess_matrix_condition(&matrix.view()).unwrap();
 //!
 //! match report.stability_level {

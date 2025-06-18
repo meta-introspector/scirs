@@ -28,8 +28,8 @@
 //! // Create high-dimensional data (100 dimensions)
 //! let n_points = 1000;
 //! let n_dims = 100;
-//! let points = Array2::zeros((n_points, n_dims));
-//! let values = Array1::zeros(n_points);
+//! let points = Array2::<f64>::zeros((n_points, n_dims));
+//! let values = Array1::<f64>::zeros(n_points);
 //!
 //! // Create interpolator with dimension reduction
 //! let interpolator = HighDimensionalInterpolator::builder()
@@ -567,17 +567,12 @@ where
     ///
     /// ```rust
     /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
-    /// use ndarray::{Array1, Array2};
     ///
-    /// // Create sample high-dimensional data
-    /// let n_points = 50;
-    /// let n_dims = 20;
-    /// let points = Array2::zeros((n_points, n_dims));
-    /// let values = Array1::zeros(n_points);
-    ///
-    /// let interpolator = HighDimensionalInterpolator::<f64>::builder()
-    ///     .build(&points.view(), &values.view())
-    ///     .unwrap();
+    /// // Create a builder for high-dimensional interpolation
+    /// let builder = HighDimensionalInterpolator::<f64>::builder();
+    /// 
+    /// // The builder can be configured with various options before building
+    /// println!("Builder created successfully");
     /// ```
     pub fn builder() -> HighDimensionalInterpolatorBuilder<F> {
         HighDimensionalInterpolatorBuilder::new()

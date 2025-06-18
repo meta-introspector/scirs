@@ -49,7 +49,7 @@
 //! let mut rng = SmallRng::seed_from_u64(42);
 //!
 //! // Create a dense layer: 784 inputs -> 128 outputs with ReLU activation
-//! let dense = Dense::new(784, 128, Some("relu"), &mut rng)?;
+//! let dense = Dense::<f64>::new(784, 128, Some("relu"), &mut rng)?;
 //!
 //! // Create input batch (batch_size=2, features=784)
 //! let input = Array::zeros((2, 784)).into_dyn();
@@ -67,7 +67,8 @@
 //! ## Building a Sequential Model
 //!
 //! ```rust
-//! use scirs2_neural::layers::{Layer, Sequential, Dense, Dropout};
+//! use scirs2_neural::layers::{Layer, Dense, Dropout};
+//! use scirs2_neural::models::{Sequential, Model};
 //! use ndarray::Array;
 //! use rand::rngs::SmallRng;
 //! use rand::SeedableRng;
@@ -77,11 +78,11 @@
 //! let mut model: Sequential<f32> = Sequential::new();
 //!
 //! // Build a multi-layer network
-//! model.add(Dense::new(784, 512, Some("relu"), &mut rng)?);
-//! model.add(Dropout::new(0.2));
-//! model.add(Dense::new(512, 256, Some("relu"), &mut rng)?);
-//! model.add(Dropout::new(0.2));
-//! model.add(Dense::new(256, 10, Some("softmax"), &mut rng)?);
+//! model.add_layer(Dense::<f32>::new(784, 512, Some("relu"), &mut rng)?);
+//! model.add_layer(Dropout::<f32>::new(0.2, &mut rng)?);
+//! model.add_layer(Dense::<f32>::new(512, 256, Some("relu"), &mut rng)?);
+//! model.add_layer(Dropout::<f32>::new(0.2, &mut rng)?);
+//! model.add_layer(Dense::<f32>::new(256, 10, Some("softmax"), &mut rng)?);
 //!
 //! // Input: batch of MNIST-like images (batch_size=32, flattened=784)
 //! let input = Array::zeros((32, 784)).into_dyn();
@@ -90,8 +91,9 @@
 //! let output = model.forward(&input)?;
 //! assert_eq!(output.shape(), &[32, 10]); // 10-class predictions
 //!
-//! println!("Model has {} layers", model.len());
-//! println!("Total parameters: {}", model.parameter_count());
+//! println!("Model has {} layers", model.num_layers());
+//! let total_params: usize = model.layers().iter().map(|l| l.parameter_count()).sum();
+//! println!("Total parameters: {}", total_params);
 //! # Ok(())
 //! # }
 //! ```
@@ -108,8 +110,8 @@
 //! let mut rng = SmallRng::seed_from_u64(42);
 //!
 //! // Create conv layer: 3 input channels -> 32 output channels, 3x3 kernel
-//! let conv = Conv2D::new(3, 32, 3, 1, PaddingMode::Same, &mut rng)?;
-//! let pool = MaxPool2D::new(2, 2)?; // 2x2 max pooling
+//! let conv = Conv2D::<f64>::new(3, 32, (3, 3), (1, 1), PaddingMode::Same, &mut rng)?;
+//! let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), None)?; // 2x2 max pooling
 //!
 //! // Input: batch of RGB images (batch=4, channels=3, height=32, width=32)
 //! let input = Array::zeros((4, 3, 32, 32)).into_dyn();
@@ -129,10 +131,13 @@
 //! ```rust
 //! use scirs2_neural::layers::{Layer, Dropout, BatchNorm};
 //! use ndarray::Array;
+//! use rand::rngs::SmallRng;
+//! use rand::SeedableRng;
 //!
 //! # fn example() -> scirs2_neural::error::Result<()> {
-//! let mut dropout = Dropout::new(0.5);
-//! let mut batchnorm = BatchNorm::new(128, 1e-5, 0.1)?;
+//! let mut rng = SmallRng::seed_from_u64(42);
+//! let dropout = Dropout::<f64>::new(0.5, &mut rng)?;
+//! let mut batchnorm = BatchNorm::<f64>::new(128, 0.9, 1e-5, &mut rng)?;
 //!
 //! let input = Array::ones((10, 128)).into_dyn();
 //!
@@ -141,8 +146,7 @@
 //! let train_output = dropout.forward(&input)?;
 //! // Some outputs will be zero due to dropout
 //!
-//! // Switch to evaluation mode
-//! dropout.set_training(false);
+//! // Switch to evaluation mode (dropout is immutable in this example)
 //! batchnorm.set_training(false);
 //!
 //! let eval_output = dropout.forward(&input)?;
@@ -229,7 +233,7 @@ use std::fmt::Debug;
 ///
 /// # fn example() -> scirs2_neural::error::Result<()> {
 /// let mut rng = SmallRng::seed_from_u64(42);
-/// let mut layer = Dense::new(10, 5, None, &mut rng)?;
+/// let mut layer = Dense::<f64>::new(10, 5, None, &mut rng)?;
 ///
 /// let input = Array::zeros((2, 10)).into_dyn();
 /// let output = layer.forward(&input)?;
@@ -265,7 +269,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand> {
     ///
     /// # fn example() -> scirs2_neural::error::Result<()> {
     /// let mut rng = SmallRng::seed_from_u64(42);
-    /// let layer = Dense::new(3, 2, Some("relu"), &mut rng)?;
+    /// let layer = Dense::<f64>::new(3, 2, Some("relu"), &mut rng)?;
     ///
     /// let input = Array::from_shape_vec((1, 3), vec![1.0, 2.0, 3.0])?.into_dyn();
     /// let output = layer.forward(&input)?;
@@ -298,7 +302,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand> {
     ///
     /// # fn example() -> scirs2_neural::error::Result<()> {
     /// let mut rng = SmallRng::seed_from_u64(42);
-    /// let layer = Dense::new(3, 2, None, &mut rng)?;
+    /// let layer = Dense::<f64>::new(3, 2, None, &mut rng)?;
     ///
     /// let input = Array::zeros((1, 3)).into_dyn();
     /// let grad_output = Array::ones((1, 2)).into_dyn();
@@ -333,7 +337,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand> {
     ///
     /// # fn example() -> scirs2_neural::error::Result<()> {
     /// let mut rng = SmallRng::seed_from_u64(42);
-    /// let mut layer = Dense::new(3, 2, None, &mut rng)?;
+    /// let mut layer = Dense::<f64>::new(3, 2, None, &mut rng)?;
     ///
     /// // Simulate forward/backward pass
     /// let input = Array::zeros((1, 3)).into_dyn();
@@ -374,7 +378,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand> {
     ///
     /// # fn example() -> scirs2_neural::error::Result<()> {
     /// let mut rng = SmallRng::seed_from_u64(42);
-    /// let layer = Dense::new(3, 2, None, &mut rng)?;
+    /// let layer = Dense::<f64>::new(3, 2, None, &mut rng)?;
     ///
     /// let params = layer.params();
     /// // Dense layer has weights and biases
@@ -550,11 +554,11 @@ pub enum LayerConfig {
 /// let mut model: Sequential<f32> = Sequential::new();
 ///
 /// // Build a 3-layer classifier for MNIST (28x28 = 784 inputs, 10 classes)
-/// model.add(Dense::new(784, 128, Some("relu"), &mut rng)?);
-/// model.add(Dropout::new(0.3));
-/// model.add(Dense::new(128, 64, Some("relu"), &mut rng)?);
-/// model.add(Dropout::new(0.3));
-/// model.add(Dense::new(64, 10, Some("softmax"), &mut rng)?);
+/// model.add_layer(Dense::<f32>::new(784, 128, Some("relu"), &mut rng)?);
+/// model.add_layer(Dropout::new(0.3));
+/// model.add_layer(Dense::new(128, 64, Some("relu"), &mut rng)?);
+/// model.add_layer(Dropout::new(0.3));
+/// model.add_layer(Dense::<f32>::new(64, 10, Some("softmax"), &mut rng)?);
 ///
 /// // Process a batch of images
 /// let batch = Array::zeros((32, 784)).into_dyn(); // 32 samples
@@ -572,7 +576,8 @@ pub enum LayerConfig {
 /// ## CNN for Image Recognition
 ///
 /// ```rust
-/// use scirs2_neural::layers::{Sequential, Conv2D, MaxPool2D, Dense, Dropout, Layer, PaddingMode};
+/// use scirs2_neural::layers::{Conv2D, MaxPool2D, Dense, Dropout, Layer, PaddingMode};
+/// use scirs2_neural::models::Sequential;
 /// use ndarray::Array;
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;
@@ -582,16 +587,16 @@ pub enum LayerConfig {
 /// let mut cnn: Sequential<f32> = Sequential::new();
 ///
 /// // Convolutional feature extractor
-/// cnn.add(Conv2D::new(3, 32, 3, 1, PaddingMode::Same, &mut rng)?); // 3->32 channels
-/// cnn.add(MaxPool2D::new(2, 2)?); // Downsample 2x
-/// cnn.add(Conv2D::new(32, 64, 3, 1, PaddingMode::Same, &mut rng)?); // 32->64 channels  
-/// cnn.add(MaxPool2D::new(2, 2)?); // Downsample 2x
+/// cnn.add_layer(Conv2D::new(3, 32, 3, 1, PaddingMode::Same, &mut rng)?); // 3->32 channels
+/// cnn.add_layer(MaxPool2D::new(2, 2)?); // Downsample 2x
+/// cnn.add_layer(Conv2D::new(32, 64, 3, 1, PaddingMode::Same, &mut rng)?); // 32->64 channels  
+/// cnn.add_layer(MaxPool2D::new(2, 2)?); // Downsample 2x
 ///
 /// // Classifier head (would need reshape layer in practice)
-/// // cnn.add(Flatten::new()); // Would flatten to 1D
-/// // cnn.add(Dense::new(64*8*8, 128, Some("relu"), &mut rng)?);
-/// // cnn.add(Dropout::new(0.5));
-/// // cnn.add(Dense::new(128, 10, None, &mut rng)?);
+/// // cnn.add_layer(Flatten::new()); // Would flatten to 1D
+/// // cnn.add_layer(Dense::new(64*8*8, 128, Some("relu"), &mut rng)?);
+/// // cnn.add_layer(Dropout::new(0.5));
+/// // cnn.add_layer(Dense::new(128, 10, None, &mut rng)?);
 ///
 /// // Input: batch of 32x32 RGB images
 /// let images = Array::zeros((16, 3, 32, 32)).into_dyn();
@@ -604,7 +609,8 @@ pub enum LayerConfig {
 /// ## Training and Evaluation Modes
 ///
 /// ```rust
-/// use scirs2_neural::layers::{Sequential, Dense, Dropout, Layer};
+/// use scirs2_neural::layers::{Dense, Dropout, Layer};
+/// use scirs2_neural::models::Sequential;
 /// use ndarray::Array;
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;
@@ -612,9 +618,9 @@ pub enum LayerConfig {
 /// # fn example() -> scirs2_neural::error::Result<()> {
 /// let mut rng = SmallRng::seed_from_u64(42);
 /// let mut model: Sequential<f32> = Sequential::new();
-/// model.add(Dense::new(10, 5, Some("relu"), &mut rng)?);
-/// model.add(Dropout::new(0.5)); // 50% dropout
-/// model.add(Dense::new(5, 1, None, &mut rng)?);
+/// model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng)?);
+/// model.add_layer(Dropout::new(0.5)); // 50% dropout
+/// model.add_layer(Dense::<f32>::new(5, 1, None, &mut rng)?);
 ///
 /// let input = Array::ones((4, 10)).into_dyn();
 ///

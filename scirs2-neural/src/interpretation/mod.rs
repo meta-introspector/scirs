@@ -203,17 +203,20 @@ mod tests {
         // Cache data for different layers
         let input_grad = Array::from_shape_fn((3, 32, 32), |(c, h, w)| {
             0.05 + 0.1 * ((c + h * 2 + w) as f64 % 11.0) / 11.0
-        }).into_dyn();
+        })
+        .into_dyn();
         interpreter.cache_gradients("input_gradient".to_string(), input_grad);
 
         // Create varied cached data to ensure non-zero variance in attribution methods
         // Use same spatial dimensions as input to avoid resize issues
         let conv5_activations = Array::from_shape_fn((8, 32, 32), |(c, h, w)| {
             0.3 + 0.4 * ((c + h + w) as f64 % 10.0) / 10.0
-        }).into_dyn();
+        })
+        .into_dyn();
         let conv5_gradients = Array::from_shape_fn((8, 32, 32), |(c, h, w)| {
             0.1 + 0.3 * ((c * 2 + h + w) as f64 % 7.0) / 7.0
-        }).into_dyn();
+        })
+        .into_dyn();
         interpreter.cache_activations("conv5".to_string(), conv5_activations);
         interpreter.cache_gradients("conv5".to_string(), conv5_gradients);
 

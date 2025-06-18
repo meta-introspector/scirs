@@ -742,7 +742,7 @@ pub enum CollectionState {
 }
 
 /// Performance tracker for coverage collection
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct PerformanceTracker {
     /// Memory usage before collection
     baseline_memory: u64,
@@ -750,16 +750,6 @@ struct PerformanceTracker {
     execution_timer: Option<Instant>,
     /// Instrumentation point count
     instrumentation_count: u32,
-}
-
-impl Default for PerformanceTracker {
-    fn default() -> Self {
-        Self {
-            baseline_memory: 0,
-            execution_timer: None,
-            instrumentation_count: 0,
-        }
-    }
 }
 
 impl CoverageAnalyzer {

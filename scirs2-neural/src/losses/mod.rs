@@ -212,7 +212,7 @@ pub trait Loss<F: Float + Debug> {
     ///
     /// let loss = mse.forward(&predictions, &targets)?;
     /// // MSE = mean((predictions - targets)^2) = mean([0.25, 0.04]) = 0.145
-    /// assert!((loss - 0.145).abs() < 1e-6);
+    /// assert!((loss - 0.145f64).abs() < 1e-6);
     /// # Ok(())
     /// # }
     /// ```

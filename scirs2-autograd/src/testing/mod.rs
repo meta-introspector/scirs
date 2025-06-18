@@ -662,9 +662,9 @@ mod tests {
             sensitivity_ratio: 1.5,
         };
 
-        assert_eq!(
-            test.sensitivity_ratio,
-            test.output_change / test.perturbation_magnitude
+        let calculated_ratio = test.output_change / test.perturbation_magnitude;
+        assert!(
+            (test.sensitivity_ratio - calculated_ratio).abs() < 1e-14
         );
     }
 }

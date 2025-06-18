@@ -433,6 +433,12 @@ impl PerformanceHintRegistry {
     }
 }
 
+impl Default for PerformanceHintRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Optimization recommendations based on performance analysis
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OptimizationRecommendation {

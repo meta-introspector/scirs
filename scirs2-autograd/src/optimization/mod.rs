@@ -669,17 +669,17 @@ impl<F: Float> ConstantFolder<F> {
             _phantom: std::marker::PhantomData,
         }
     }
-    
+
     /// Check if a tensor is constant
     pub fn is_constant(&self, _tensor_id: TensorID) -> bool {
         false
     }
-    
+
     /// Get the constant value of a tensor if it's constant
     pub fn get_constant_value(&self, _tensor_id: TensorID) -> Option<F> {
         None
     }
-    
+
     /// Clear the constant cache
     pub fn clear_cache(&mut self) {
         // No-op for stub
@@ -704,7 +704,7 @@ impl<F: Float> ExpressionSimplifier<F> {
             _phantom: std::marker::PhantomData,
         }
     }
-    
+
     /// Clear the simplifier cache
     pub fn clear_cache(&mut self) {
         // No-op for stub

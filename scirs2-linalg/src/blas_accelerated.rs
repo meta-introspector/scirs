@@ -399,7 +399,7 @@ where
 /// use scirs2_linalg::blas_accelerated::inv;
 ///
 /// let a = array![[4.0_f64, 7.0], [2.0, 6.0]];
-/// let a_inv = inv(&a.view(), None).unwrap();
+/// let a_inv = inv(&a.view()).unwrap();
 /// // Check that A * A^-1 is approximately identity
 /// let identity = a.dot(&a_inv);
 /// assert!((identity[[0, 0]] - 1.0).abs() < 1e-10);

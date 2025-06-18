@@ -143,18 +143,11 @@ pub mod netcdf;
 /// # Examples
 ///
 /// ```rust,no_run
-/// use scirs2_io::network::{NetworkClient, download_file};
-/// use scirs2_io::network::cloud::{CloudProvider, S3Config};
-///
-/// // Download a file from HTTP
-/// download_file("https://example.com/data.csv", "local_data.csv").await?;
-///
-/// // Upload to cloud storage
-/// let s3_config = S3Config::new("my-bucket", "us-east-1", "access-key", "secret-key");
-/// let provider = CloudProvider::S3(s3_config);
-/// let client = NetworkClient::new().with_cloud_provider(provider);
-/// client.upload_to_cloud("local_file.dat", "remote/path/file.dat").await?;
-/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// use scirs2_io::network::NetworkClient;
+/// 
+/// // Create a network client for downloading files
+/// let client = NetworkClient::new();
+/// println!("Network client created for file operations");
 /// ```
 pub mod network;
 /// Data serialization utilities
@@ -183,12 +176,12 @@ pub mod serialize;
 ///
 /// // Create a sparse matrix from a dense array
 /// let dense = Array2::from_shape_vec((3, 3), vec![
-///     1.0, 0.0, 2.0,
-///     0.0, 3.0, 0.0,
-///     4.0, 0.0, 5.0
+///     1.0_f64, 0.0_f64, 2.0_f64,
+///     0.0_f64, 3.0_f64, 0.0_f64,
+///     4.0_f64, 0.0_f64, 5.0_f64
 /// ]).unwrap();
 ///
-/// let mut sparse = SparseMatrix::from_dense_2d(&dense, 0.0)?;
+/// let mut sparse = SparseMatrix::from_dense_2d(&dense, 0.0_f64)?;
 /// println!("Sparse matrix: {} non-zeros", sparse.nnz());
 ///
 /// // Convert to different formats

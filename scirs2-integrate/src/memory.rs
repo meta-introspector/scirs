@@ -14,14 +14,14 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_integrate::memory::{MemoryPool, CacheFriendlyMatrix, BlockingStrategy};
+//! use scirs2_integrate::memory::{MemoryPool, CacheFriendlyMatrix, BlockingStrategy, MatrixLayout};
 //!
 //! // Use memory pool for frequent allocations
-//! let mut pool = MemoryPool::new(1024);
+//! let mut pool = MemoryPool::<f64>::new(1024);
 //! let buffer = pool.allocate(100);
 //!
 //! // Cache-friendly matrix operations
-//! let matrix = CacheFriendlyMatrix::new(100, 100);
+//! let matrix = CacheFriendlyMatrix::<f64>::new(100, 100, MatrixLayout::RowMajor);
 //! let blocking = BlockingStrategy::new(64); // 64x64 blocks
 //! ```
 

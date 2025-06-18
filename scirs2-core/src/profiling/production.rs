@@ -59,6 +59,7 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult};
+use rand::{rngs::SmallRng, SeedableRng};
 // Define types for this module
 pub type ProfilerResult<T> = Result<T, Box<dyn std::error::Error>>;
 
@@ -153,7 +154,7 @@ impl ProfileConfig {
 
     /// Set sampling rate
     pub fn with_sampling_rate(mut self, rate: f64) -> Self {
-        self.sampling_rate = rate.max(0.0).min(1.0);
+        self.sampling_rate = rate.clamp(0.0, 1.0);
         self
     }
 
@@ -403,7 +404,7 @@ pub struct ProductionProfiler {
     /// Resource usage tracker
     resource_tracker: Arc<Mutex<ResourceUsageTracker>>,
     /// Random number generator for sampling
-    sampler: Arc<Mutex<rand::rngs::ThreadRng>>,
+    sampler: Arc<Mutex<SmallRng>>,
 }
 
 /// Resource usage tracking
@@ -521,7 +522,7 @@ impl ProductionProfiler {
             active_sessions: Arc::new(RwLock::new(HashMap::new())),
             performance_history: Arc::new(Mutex::new(HashMap::new())),
             resource_tracker: Arc::new(Mutex::new(ResourceUsageTracker::new())),
-            sampler: Arc::new(Mutex::new(rand::rng())),
+            sampler: Arc::new(Mutex::new(SmallRng::from_rng(&mut rand::rng()))),
         })
     }
 
@@ -563,7 +564,7 @@ impl ProductionProfiler {
                     "Failed to read active sessions",
                 ))
             })?;
-            sessions.keys().next().map(|k| k.clone())
+            sessions.keys().next().cloned()
         };
 
         let session_id = session_id.ok_or_else(|| {

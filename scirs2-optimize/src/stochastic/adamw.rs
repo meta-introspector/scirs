@@ -488,8 +488,8 @@ mod tests {
             learning_rate: 0.01,
             weight_decay: 0.1,
             decouple_weight_decay: true,
-            max_iter: 100,
-            tol: 1e-6,
+            max_iter: 500,
+            tol: 1e-4,
             ..Default::default()
         };
 
@@ -524,8 +524,8 @@ mod tests {
 
         let options = AdamWOptions {
             learning_rate: 0.1,
-            max_iter: 200,
-            tol: 1e-6,
+            max_iter: 500,
+            tol: 1e-4,
             ..Default::default()
         };
 

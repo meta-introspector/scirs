@@ -942,7 +942,7 @@ impl<'a> LeakCheckGuard<'a> {
     }
 }
 
-impl<'a> Drop for LeakCheckGuard<'a> {
+impl Drop for LeakCheckGuard<'_> {
     fn drop(&mut self) {
         if self.check_on_drop {
             if let Ok(report) = self.detector.check_leaks(&self.checkpoint) {

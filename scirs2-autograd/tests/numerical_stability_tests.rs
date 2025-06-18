@@ -30,7 +30,7 @@ fn test_arithmetic_stability() {
         let small_val = 1e-10;
 
         let a = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::<f32, _>::from_shape_vec(
                 IxDyn(&[4]),
                 vec![large_val, -large_val, small_val, -small_val],
             )
@@ -38,7 +38,7 @@ fn test_arithmetic_stability() {
             ctx,
         );
         let b = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::<f32, _>::from_shape_vec(
                 IxDyn(&[4]),
                 vec![large_val, large_val, small_val, small_val],
             )
@@ -65,11 +65,11 @@ fn test_arithmetic_stability() {
 
         // Division with small denominators
         let small_denom = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[3]), vec![1e-20, 1.0, 1e20]).unwrap(),
+            Array::<f32, _>::from_shape_vec(IxDyn(&[3]), vec![1e-20, 1.0, 1e20]).unwrap(),
             ctx,
         );
         let numerator = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 1.0, 1.0]).unwrap(),
+            Array::<f32, _>::from_shape_vec(IxDyn(&[3]), vec![1.0, 1.0, 1.0]).unwrap(),
             ctx,
         );
 
@@ -93,8 +93,8 @@ fn test_matrix_operation_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test with ill-conditioned matrices
         let ill_conditioned = T::convert_to_tensor(
-            Array::from_shape_vec(
-                (3, 3).into_dyn(),
+            Array::<f32, _>::from_shape_vec(
+                (3, 3).into(),
                 vec![1.0, 1.0, 1.0, 1.0, 1.0 + 1e-7, 1.0, 1.0, 1.0, 1.0 + 1e-7],
             )
             .unwrap(),
@@ -102,7 +102,7 @@ fn test_matrix_operation_stability() {
         );
 
         let vector = T::convert_to_tensor(
-            Array::from_shape_vec((3, 1).into_dyn(), vec![1.0, 2.0, 3.0]).unwrap(),
+            Array::<f32, _>::from_shape_vec((3, 1).into(), vec![1.0, 2.0, 3.0]).unwrap(),
             ctx,
         );
 
@@ -114,7 +114,7 @@ fn test_matrix_operation_stability() {
         assert!(matmul_output.iter().all(|&x| x.is_finite()));
 
         // Test near-singular matrix determinant
-        let det_result = T::det(&ill_conditioned);
+        let det_result = T::linear_algebra::determinant(&ill_conditioned);
         let det_output = det_result.eval(ctx).unwrap();
 
         // Determinant should be very small but finite
@@ -123,7 +123,7 @@ fn test_matrix_operation_stability() {
 
         // Test matrix inverse for well-conditioned matrix
         let well_conditioned = T::convert_to_tensor(
-            Array::from_shape_vec((2, 2).into_dyn(), vec![2.0, 1.0, 1.0, 2.0]).unwrap(),
+            Array::<f32, _>::from_shape_vec((2, 2).into(), vec![2.0, 1.0, 1.0, 2.0]).unwrap(),
             ctx,
         );
 
@@ -153,7 +153,7 @@ fn test_activation_function_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test with extreme input values
         let extreme_inputs = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::<f32, _>::from_shape_vec(
                 IxDyn(&[8]),
                 vec![-100.0, -10.0, -1.0, -0.1, 0.1, 1.0, 10.0, 100.0],
             )
@@ -218,8 +218,8 @@ fn test_reduction_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test sum with values that could cause cancellation
         let cancellation_prone = T::convert_to_tensor(
-            Array::from_shape_vec(
-                (1000,).into_dyn(),
+            Array::<f32, _>::from_shape_vec(
+                (1000,).into(),
                 (0..1000)
                     .map(|i| if i % 2 == 0 { 1e-3 } else { -1e-3 })
                     .collect(),
@@ -236,7 +236,7 @@ fn test_reduction_stability() {
 
         // Test mean with extreme values
         let extreme_values = T::convert_to_tensor(
-            Array::from_shape_vec((6,).into_dyn(), vec![1e-20, 1e-10, 1.0, 1e10, 1e20, 1e30])
+            Array::<f32, _>::from_shape_vec((6,).into(), vec![1e-20, 1e-10, 1.0, 1e10, 1e20, 1e30])
                 .unwrap(),
             ctx,
         );
@@ -249,8 +249,8 @@ fn test_reduction_stability() {
 
         // Test max/min with NaN handling
         let with_special_values = T::convert_to_tensor(
-            Array::from_shape_vec(
-                (5,).into_dyn(),
+            Array::<f32, _>::from_shape_vec(
+                (5,).into(),
                 vec![-f32::INFINITY, -1.0, 0.0, 1.0, f32::INFINITY],
             )
             .unwrap(),
@@ -269,8 +269,8 @@ fn test_reduction_stability() {
 
         // Test variance stability
         let variance_test = T::convert_to_tensor(
-            Array::from_shape_vec(
-                (100,).into_dyn(),
+            Array::<f32, _>::from_shape_vec(
+                (100,).into(),
                 (0..100).map(|i| 1.0 + (i as f32) * 1e-6).collect(),
             )
             .unwrap(),
@@ -295,7 +295,7 @@ fn test_gradient_numerical_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test gradients with extreme input values
         let x = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[3]), vec![1e-10, 1.0, 1e10]).unwrap(),
+            Array::<f32, _>::from_shape_vec(IxDyn(&[3]), vec![1e-10, 1.0, 1e10]).unwrap(),
             ctx,
         );
 
@@ -336,11 +336,11 @@ fn test_gradient_numerical_stability() {
 
         // Test gradient of matrix operations
         let matrix = T::convert_to_tensor(
-            Array::from_shape_vec((2, 2).into_dyn(), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+            Array::<f32, _>::from_shape_vec((2, 2).into(), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
             ctx,
         );
 
-        let det = T::det(&matrix);
+        let det = T::linear_algebra::determinant(&matrix);
         let grad_det = T::grad(&[det], &[&matrix]);
 
         let grad_det_output = grad_det[0].eval(ctx).unwrap();
@@ -365,19 +365,27 @@ fn test_optimization_numerical_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Create a computation with optimization opportunities
         let x = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[10]), (0..10).map(|i| i as f32 * 0.1).collect()).unwrap(),
+            Array::<f32, _>::from_shape_vec(
+                IxDyn(&[10]),
+                (0..10).map(|i| i as f32 * 0.1).collect(),
+            )
+            .unwrap(),
             ctx,
         );
 
         // Create expression with constant folding opportunities
-        let const1 =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![0.0]).unwrap(), ctx);
-        let const2 =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+        let const1 = T::convert_to_tensor(
+            Array::<f32, _>::from_shape_vec(IxDyn(&[1]), vec![0.0]).unwrap(),
+            ctx,
+        );
+        let const2 = T::convert_to_tensor(
+            Array::<f32, _>::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(),
+            ctx,
+        );
 
         // Expression: x + 0 * (large_constant) + 1 * x
         let large_constant = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[10]), vec![1e10; 10]).unwrap(),
+            Array::<f32, _>::from_shape_vec(IxDyn(&[10]), vec![1e10; 10]).unwrap(),
             ctx,
         );
 
@@ -449,8 +457,8 @@ fn test_parallel_operation_stability() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Test parallel reduction stability
             let large_array = T::convert_to_tensor(
-                Array::from_shape_vec(
-                    (10000,).into_dyn(),
+                Array::<f32, _>::from_shape_vec(
+                    (10000,).into(),
                     (0..10000).map(|i| (i as f32).sin() * 1e-3).collect(),
                 )
                 .unwrap(),
@@ -479,16 +487,16 @@ fn test_parallel_operation_stability() {
 
             // Test parallel matrix multiplication
             let matrix_a = T::convert_to_tensor(
-                Array::from_shape_vec(
-                    (100, 100).into_dyn(),
+                Array::<f32, _>::from_shape_vec(
+                    (100, 100).into(),
                     (0..10000).map(|i| (i as f32 % 10.0) * 0.1).collect(),
                 )
                 .unwrap(),
                 ctx,
             );
             let matrix_b = T::convert_to_tensor(
-                Array::from_shape_vec(
-                    (100, 100).into_dyn(),
+                Array::<f32, _>::from_shape_vec(
+                    (100, 100).into(),
                     (0..10000).map(|i| ((i + 1) as f32 % 10.0) * 0.1).collect(),
                 )
                 .unwrap(),
@@ -538,7 +546,7 @@ fn test_tracing_numerical_stability() {
     };
     configure_tracing(tracing_config).unwrap();
 
-    let session_id = start_trace_session("stability_test").unwrap();
+    let _session_id = start_trace_session("stability_test").unwrap();
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Perform computations that should be traced
@@ -617,7 +625,7 @@ fn test_memory_optimization_stability() {
         // Test in-place operations
         let base_tensor = T::efficient_ones(&[1000], ctx);
         let addend = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[1000]), vec![0.5; 1000]).unwrap(),
+            Array::<f32, _>::from_shape_vec(IxDyn(&[1000]), vec![0.5; 1000]).unwrap(),
             ctx,
         );
 

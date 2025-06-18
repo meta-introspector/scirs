@@ -16,17 +16,11 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::network::{NetworkClient, download_file, upload_file};
-//! use scirs2_io::network::cloud::{CloudProvider, S3Config};
+//! use scirs2_io::network::NetworkClient;
 //!
-//! // Download a file from HTTP
-//! download_file("https://example.com/data.csv", "local_data.csv").await?;
-//!
-//! // Upload to cloud storage
-//! let s3_config = S3Config::new("my-bucket", "us-east-1", "access-key", "secret-key");
-//! let provider = CloudProvider::S3(s3_config);
-//! let client = NetworkClient::new().with_cloud_provider(provider);
-//! client.upload_to_cloud("local_file.dat", "remote/path/file.dat").await?;
+//! // Create a network client
+//! let client = NetworkClient::new();
+//! println!("Network client created for file operations");
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 

@@ -99,6 +99,11 @@ impl<F: Float> FusionChain<F> {
 
     /// Add an operation to the chain
     pub fn add_operation(&mut self, op: FusableOperation<F>, input_shape: Vec<usize>) {
+        // For the first operation, set output shape before estimating benefit
+        if self.output_shape.is_empty() {
+            self.output_shape = input_shape.clone();
+        }
+        
         // Estimate performance benefit before moving op
         self.performance_benefit += self.estimate_benefit(&op);
 
@@ -634,8 +639,9 @@ mod tests {
         let mut chain = FusionChain::<f32>::new();
         assert!(chain.is_empty());
 
-        chain.add_operation(FusableOperation::Add, vec![100]);
-        chain.add_operation(FusableOperation::UnaryFunc(UnaryFunction::ReLU), vec![100]);
+        // Use larger tensors to ensure fusion is worthwhile (>1000 benefit)
+        chain.add_operation(FusableOperation::Add, vec![10000]);
+        chain.add_operation(FusableOperation::UnaryFunc(UnaryFunction::ReLU), vec![10000]);
 
         assert_eq!(chain.len(), 2);
         assert!(chain.is_worthwhile());
@@ -673,19 +679,11 @@ mod tests {
         let scalar = 2.0f32;
 
         assert_eq!(
-            FusedKernel::<f32>::apply_scalar_operation(
-                value,
-                scalar,
-                &BinaryFunction::AddScalar
-            ),
+            FusedKernel::<f32>::apply_scalar_operation(value, scalar, &BinaryFunction::AddScalar),
             5.0
         );
         assert_eq!(
-            FusedKernel::<f32>::apply_scalar_operation(
-                value,
-                scalar,
-                &BinaryFunction::MulScalar
-            ),
+            FusedKernel::<f32>::apply_scalar_operation(value, scalar, &BinaryFunction::MulScalar),
             6.0
         );
         assert_eq!(

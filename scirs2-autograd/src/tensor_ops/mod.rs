@@ -819,11 +819,15 @@ where
     let original_shape = arr.shape().to_vec();
     let arr = arr.into_dyn();
 
-    // Create the tensor without explicitly setting shape
-    let tensor = Tensor::builder(graph).build(const_gen_ops::ConvertToTensor { arr });
+    // Create the tensor with explicitly set known shape
+    let shape_isize: Vec<isize> = original_shape.iter().map(|&s| s as isize).collect();
+    let tensor = Tensor::builder(graph)
+        .set_known_shape(&shape_isize)
+        .set_differentiable(false)
+        .build(const_gen_ops::ConvertToTensor { arr });
 
     // Manually handle shape for debug purposes
-    if let Some(ctx) = graph.context_ref() {
+    if let Some(ctx) = crate::graph::AsGraph::context_ref(graph) {
         if let Ok(eval_result) = tensor.eval(ctx) {
             if eval_result.shape() != original_shape.as_slice() {
                 // For debugging only, doesn't affect the actual tensor shape
@@ -853,17 +857,9 @@ where
 ///    ```
 pub fn scalar<F: Float>(val: F, graph: &impl AsGraph<F>) -> Tensor<F> {
     let op = const_gen_ops::Scalar { val };
-    // Convert scalar shape to ndarray with the correct type
-    let scalar_shape_vec = crate::ndarray_ext::scalar_shape();
-    let scalar_shape_arr = ndarray::Array::<F, _>::from(
-        scalar_shape_vec
-            .iter()
-            .map(|&s| F::from(s).unwrap())
-            .collect::<Vec<F>>(),
-    )
-    .into_dyn();
+    // For scalars, use set_known_shape with empty shape (scalar)
     Tensor::builder(graph)
-        .set_shape(&convert_to_tensor(scalar_shape_arr, graph))
+        .set_known_shape(&[])
         .build(op)
 }
 
@@ -1190,7 +1186,7 @@ where
     let tensor = Tensor::builder(graph).build(const_gen_ops::ConvertToTensor { arr: arr_dyn });
 
     // Debug the created tensor
-    if let Some(ctx) = graph.context_ref() {
+    if let Some(ctx) = crate::graph::AsGraph::context_ref(graph) {
         if let Ok(eval_result) = tensor.eval(ctx) {
             println!("Created tensor with shape: {:?}", eval_result.shape());
             if eval_result.shape() != orig_shape.as_slice() {

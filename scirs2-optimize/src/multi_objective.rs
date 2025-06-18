@@ -640,16 +640,16 @@ impl NSGAII {
                 .map(|sol| (sol.objectives[0], sol.objectives[1]))
                 .collect();
 
-            // Sort by first objective
-            points.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal));
+            // Sort by first objective in descending order for hypervolume calculation
+            points.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(Ordering::Equal));
 
             let mut volume = 0.0;
-            let mut prev_x = reference_point[0];
+            let mut prev_y = reference_point[1];
 
             for &(x, y) in &points {
                 if x < reference_point[0] && y < reference_point[1] {
-                    volume += (prev_x - x) * (reference_point[1] - y);
-                    prev_x = x;
+                    volume += (reference_point[0] - x) * (prev_y - y);
+                    prev_y = y;
                 }
             }
 
@@ -1701,9 +1701,9 @@ mod tests {
             metadata: HashMap::new(),
         };
 
-        // sol3 dominates both sol1 and sol2
+        // sol3 dominates sol1 but not sol2
         assert_eq!(optimizer.compare_dominance(&sol3, &sol1), Ordering::Less);
-        assert_eq!(optimizer.compare_dominance(&sol3, &sol2), Ordering::Less);
+        assert_eq!(optimizer.compare_dominance(&sol3, &sol2), Ordering::Equal);
 
         // sol1 and sol2 are non-dominated with respect to each other
         assert_eq!(optimizer.compare_dominance(&sol1, &sol2), Ordering::Equal);

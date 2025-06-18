@@ -281,10 +281,10 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_linalg::basic::trace;
+/// use scirs2_linalg::basic_trace;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let tr = trace(&a.view()).unwrap();
+/// let tr = basic_trace(&a.view()).unwrap();
 /// assert!((tr - 5.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]

@@ -33,7 +33,7 @@ plotters = { workspace = true }
 
 [features]
 default = ["openblas"]
-# BLAS backends - these are mutually exclusive
-openblas = ["scirs2-core/openblas", "ndarray-linalg/openblas-system"]
-intel-mkl = ["scirs2-core/intel-mkl", "ndarray-linalg/intel-mkl-system"]
-netlib = ["scirs2-core/netlib", "ndarray-linalg/netlib-system"]
+# BLAS backends - these are mutually exclusive, managed through scirs2-core
+openblas = ["scirs2-core/openblas"]
+intel-mkl = ["scirs2-core/intel-mkl"]
+netlib = ["scirs2-core/netlib"]

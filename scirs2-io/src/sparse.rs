@@ -28,7 +28,7 @@
 //!     4.0, 0.0, 5.0
 //! ]).unwrap();
 //!
-//! let sparse = SparseMatrix::from_dense(&dense, 1e-10);
+//! let mut sparse = SparseMatrix::from_dense(&dense, 1e-10)?;
 //! println!("Sparse matrix: {} non-zeros", sparse.nnz());
 //!
 //! // Convert to different formats
@@ -36,7 +36,7 @@
 //! let csc = sparse.to_csc()?;
 //!
 //! // Save to file
-//! sparse.save("matrix.mtx")?;
+//! sparse.save_matrix_market("matrix.mtx")?;
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 

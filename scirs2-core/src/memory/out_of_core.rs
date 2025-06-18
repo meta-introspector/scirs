@@ -64,10 +64,12 @@ impl ChunkId {
             coordinates,
         }
     }
+}
 
-    /// Convert to string representation
-    pub fn to_string(&self) -> String {
-        format!(
+impl std::fmt::Display for ChunkId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
             "{}:{}",
             self.array_id,
             self.coordinates
@@ -425,6 +427,7 @@ impl FileStorageBackend {
             let file_path = self.base_path.join(format!("{}.dat", array_id));
             let file = OpenOptions::new()
                 .create(true)
+                .truncate(true)
                 .read(true)
                 .write(true)
                 .open(file_path)?;
@@ -663,7 +666,7 @@ where
             .shape
             .iter()
             .zip(self.config.chunk_shape.iter())
-            .map(|(&total, &chunk_size)| (total + chunk_size - 1) / chunk_size)
+            .map(|(&total, &chunk_size)| total.div_ceil(chunk_size))
             .collect();
 
         // Iterate through all possible chunk coordinates
@@ -882,8 +885,7 @@ impl OutOfCoreManager {
                 .clone()
         } else {
             // Use default file storage
-            let default_storage = Arc::new(FileStorageBackend::new("./out_of_core_data")?);
-            default_storage
+            Arc::new(FileStorageBackend::new("./out_of_core_data")?)
         };
 
         let config = config.unwrap_or_else(|| self.default_config.clone());
@@ -1043,7 +1045,7 @@ mod tests {
         let chunk_id = ChunkId::new("test_array".to_string(), vec![0, 1, 2]);
         assert_eq!(chunk_id.array_id, "test_array");
         assert_eq!(chunk_id.coordinates, vec![0, 1, 2]);
-        assert_eq!(chunk_id.to_string(), "test_array:0,1,2");
+        assert_eq!(format!("{}", chunk_id), "test_array:0,1,2");
     }
 
     #[test]

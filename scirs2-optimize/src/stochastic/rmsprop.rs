@@ -417,7 +417,7 @@ mod tests {
 
         let options = RMSPropOptions {
             learning_rate: 0.1,
-            max_iter: 100,
+            max_iter: 500,
             batch_size: Some(10),
             centered: true,
             tol: 1e-6,
@@ -459,7 +459,7 @@ mod tests {
 
         let options = RMSPropOptions {
             learning_rate: 0.1,
-            max_iter: 100,
+            max_iter: 500,
             batch_size: Some(10),
             tol: 1e-6,
             ..Default::default()
@@ -484,7 +484,7 @@ mod tests {
             let options = RMSPropOptions {
                 learning_rate: 0.1,
                 decay_rate,
-                max_iter: 100,
+                max_iter: 500,
                 tol: 1e-6,
                 ..Default::default()
             };

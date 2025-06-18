@@ -27,7 +27,7 @@
 //!     let points = halton.generate(1000);
 //!
 //!     // Latin hypercube sampling
-//!     let lhs = LatinHypercubeSampler::new(2);
+//!     let mut lhs = LatinHypercubeSampler::<rand::prelude::ThreadRng>::new(2);
 //!     let points = lhs.sample(100)?;
 //!     
 //!     Ok(())

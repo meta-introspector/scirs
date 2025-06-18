@@ -325,7 +325,7 @@ mod memory_optimization_tests {
 
             // Should be [5.0, 7.0, 9.0]
             for i in 0..3 {
-                assert!((add_array[i] - (i as f64 + 5.0)).abs() < 1e-6);
+                assert!((add_array[i] - (i as f32 + 5.0_f32)).abs() < 1e-6_f32);
             }
 
             let mul_result = T::inplace_mul(&a, &b);
@@ -395,7 +395,7 @@ mod efficient_operations_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create a 4x4 matrix
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4, 4]), (0..16).map(|x| x as f64).collect()).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4, 4]), (0..16).map(|x| x as f32).collect()).unwrap(),
                 ctx,
             );
 
@@ -601,7 +601,7 @@ mod numerical_stability_tests {
     fn test_large_number_stability() {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test operations with large numbers
-            let large_val = 1e10_f64;
+            let large_val = 1e10_f32;
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![large_val, large_val]).unwrap(),
                 ctx,
@@ -626,7 +626,7 @@ mod numerical_stability_tests {
     fn test_small_number_stability() {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test operations with very small numbers
-            let small_val = 1e-10_f64;
+            let small_val = 1e-10_f32;
             let a = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[2]), vec![small_val, small_val * 2.0]).unwrap(),
                 ctx,
@@ -670,12 +670,12 @@ mod numerical_stability_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test gradient computation with challenging inputs
             let x = T::variable(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1e-8_f64, 1e8_f64]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![1e-8_f32, 1e8_f32]).unwrap(),
                 ctx,
             );
 
             // Compute a function that might have numerical issues
-            let y = &x * &x + T::scalar(1e-10_f64, ctx);
+            let y = &x * &x + T::scalar(1e-10_f32, ctx);
             let loss = T::reduce_sum(&y, &[0], false);
 
             // Compute gradients
@@ -767,7 +767,7 @@ mod integration_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4, 5]), (0..20).map(|x| x as f64).collect()).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4, 5]), (0..20).map(|x| x as f32).collect()).unwrap(),
                 ctx,
             );
 

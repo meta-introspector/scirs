@@ -11,20 +11,14 @@
 use scirs2_io::network::cloud::{
     create_mock_metadata, validate_config, AzureConfig, CloudProvider, GcsConfig, S3Config,
 };
-use scirs2_io::network::http::{
-    calculate_speed, format_file_size, format_speed, HttpClient,
-};
+use scirs2_io::network::http::{calculate_speed, format_file_size, format_speed, HttpClient};
 use scirs2_io::network::streaming::{
-    copy_with_progress, ChunkedReader, ChunkedWriter, StreamConfig,
-    StreamProgress,
+    copy_with_progress, ChunkedReader, ChunkedWriter, StreamConfig, StreamProgress,
 };
 #[cfg(feature = "reqwest")]
+use scirs2_io::network::{batch_download, download_file, upload_file};
 use scirs2_io::network::{
-    batch_download, download_file, upload_file,
-};
-use scirs2_io::network::{
-    batch_upload_to_cloud, create_cloud_client,
-    NetworkClient, NetworkConfig,
+    batch_upload_to_cloud, create_cloud_client, NetworkClient, NetworkConfig,
 };
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -501,10 +495,7 @@ async fn demonstrate_batch_operations() -> Result<(), Box<dyn std::error::Error>
         .iter()
         .map(|(filename, _)| {
             let local_path = temp_dir.path().join(filename).to_string_lossy().to_string();
-            (
-                local_path,
-                format!("uploads/{}", filename),
-            )
+            (local_path, format!("uploads/{}", filename))
         })
         .collect();
 

@@ -22,8 +22,8 @@
 //! use scirs2_interpolate::adaptive_gp::{AdaptiveGaussianProcess, KernelType};
 //!
 //! // Create sample data with noise
-//! let x = Array1::linspace(0.0, 10.0, 20);
-//! let y = x.mapv(|x| x.sin() + 0.1 * (5.0 * x).cos()) + Array1::from_elem(20, 0.05);
+//! let x = Array1::linspace(0.0_f64, 10.0_f64, 20);
+//! let y = x.mapv(|x| x.sin() + 0.1_f64 * (5.0_f64 * x).cos()) + Array1::from_elem(20, 0.05_f64);
 //!
 //! // Create adaptive GP with automatic kernel selection
 //! let mut gp = AdaptiveGaussianProcess::new()
@@ -39,11 +39,11 @@
 //! gp.fit(&x.view(), &y.view()).unwrap();
 //!
 //! // Make predictions with uncertainty
-//! let x_new = Array1::linspace(0.0, 10.0, 100);
+//! let x_new = Array1::linspace(0.0_f64, 10.0_f64, 100);
 //! let (mean, variance) = gp.predict_with_uncertainty(&x_new.view()).unwrap();
 //!
 //! println!("Selected kernel: {:?}", gp.get_selected_kernel());
-//! println!("Predictive uncertainty: {:?}", variance.mapv(|v| v.sqrt()));
+//! println!("Predictive uncertainty: {:?}", variance.mapv(|v: f64| v.sqrt()));
 //! ```
 
 use crate::error::{InterpolateError, InterpolateResult};

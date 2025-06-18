@@ -457,6 +457,7 @@ fn test_machine_learning_workflow() {
 fn test_large_scale_optimization() {
     // Test with larger problem size to verify scalability
     struct LargeQuadratic {
+        #[allow(dead_code)]
         dimension: usize,
     }
 

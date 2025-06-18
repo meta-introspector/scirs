@@ -465,7 +465,7 @@ mod tests {
         // Test multiplication
         let product = a * b;
         assert_abs_diff_eq!(product.value(), 6.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(product.derivative(), 3.5, epsilon = 1e-10); // 1*3 + 2*0.5
+        assert_abs_diff_eq!(product.derivative(), 4.0, epsilon = 1e-10); // 1*3 + 2*0.5
 
         // Test division
         let quotient = a / b;

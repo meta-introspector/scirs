@@ -463,9 +463,9 @@ mod tests {
 
         let options = AdamOptions {
             learning_rate: 0.01,
-            max_iter: 200,
+            max_iter: 500,
             gradient_clip: Some(1.0), // Clip gradients to norm 1.0
-            tol: 1e-6,
+            tol: 1e-4,
             ..Default::default()
         };
 

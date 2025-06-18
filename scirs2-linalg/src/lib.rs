@@ -24,7 +24,7 @@
 //!
 //! // Compute determinant
 //! let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-//! let d = det(&a.view()).unwrap();
+//! let d = det(&a.view(), None).unwrap();
 //! assert!((d - (-2.0)).abs() < 1e-10);
 //!
 //! // Compute inverse
@@ -40,10 +40,10 @@
 //! let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 //!
 //! // LU decomposition
-//! let (p, l, u) = lu(&a.view()).unwrap();
+//! let (p, l, u) = lu(&a.view(), None).unwrap();
 //!
 //! // QR decomposition
-//! let (q, r) = qr(&a.view()).unwrap();
+//! let (q, r) = qr(&a.view(), None).unwrap();
 //! ```
 //!
 //! Iterative solvers:
@@ -67,7 +67,7 @@
 //!
 //! // Compute matrix exponential
 //! let a = array![[0.0_f64, 1.0], [-1.0, 0.0]]; // Rotation matrix
-//! let exp_a = expm(&a.view()).unwrap();
+//! let exp_a = expm(&a.view(), None).unwrap();
 //! ```
 //!
 //! Accelerated operations using native BLAS/LAPACK:
@@ -180,7 +180,7 @@ pub mod accelerated {
 // accelerated実装は既にpubモジュールとして公開されているので、ここでの再エクスポートは不要
 
 // Re-exports for user convenience
-pub use self::basic::{det, inv, matrix_power};
+pub use self::basic::{det, inv, matrix_power, trace as basic_trace};
 pub use self::eigen_specialized::{
     banded_eigen, banded_eigh, banded_eigvalsh, circulant_eigenvalues, largest_k_eigh,
     partial_eigen, smallest_k_eigh, tridiagonal_eigen, tridiagonal_eigh, tridiagonal_eigvalsh,
@@ -193,7 +193,7 @@ pub use self::complex::enhanced_ops::{
 };
 pub use self::complex::{complex_inverse, complex_matmul, hermitian_transpose};
 // Main decomposition functions with workers parameter
-pub use self::decomposition::{cholesky, lu, qr, svd};
+pub use self::decomposition::{cholesky, lu, qr, schur, svd};
 // Backward compatibility versions (deprecated)
 pub use self::decomposition::{cholesky_default, lu_default, qr_default, svd_default};
 // Backward compatibility versions for basic functions (deprecated)

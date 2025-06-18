@@ -76,22 +76,20 @@ pub struct OptimizationResult<F: Float> {
 /// use scirs2_linalg::matrix_calculus::optimization::{matrix_gradient_descent, OptimizationConfig};
 /// use scirs2_linalg::error::LinalgResult;
 ///
-/// // Minimize f(X) = ||X - A||_F^2 where A is a target matrix
-/// let target = array![[1.0, 2.0], [3.0, 4.0]];
-/// let f = move |x: &ArrayView2<f64>| -> LinalgResult<f64> {
-///     let diff = x - &target;
-///     let frobenius_sq = diff.iter().fold(0.0, |acc, &val| acc + val * val);
+/// // Minimize f(X) = ||X||_F^2 (simple quadratic function)
+/// let f = |x: &ArrayView2<f64>| -> LinalgResult<f64> {
+///     let frobenius_sq = x.iter().fold(0.0, |acc, &val| acc + val * val);
 ///     Ok(frobenius_sq)
 /// };
 ///
-/// let x0 = array![[0.0, 0.0], [0.0, 0.0]];  // Start from zero matrix
+/// let x0 = array![[1.0, 1.0], [1.0, 1.0]];  // Start from ones matrix
 /// let config = OptimizationConfig::default();
 ///
-/// let result = matrix_gradient_descent(f, &x0.view(), &config).unwrap();
+/// let result = matrix_gradient_descent(&f, &x0.view(), &config).unwrap();
 /// // Should converge to the target matrix
 /// ```
 pub fn matrix_gradient_descent<F>(
-    f: impl Fn(&ArrayView2<F>) -> LinalgResult<F> + Copy,
+    f: &impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     x0: &ArrayView2<F>,
     config: &OptimizationConfig<F>,
 ) -> LinalgResult<OptimizationResult<F>>
@@ -108,7 +106,7 @@ where
         f_history.push(f_val);
 
         // Compute gradient using finite differences
-        let grad = matrix_finite_difference_gradient(f, &x.view())?;
+        let grad = matrix_finite_difference_gradient(&f, &x.view())?;
 
         // Compute gradient norm
         let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();
@@ -152,7 +150,7 @@ where
 
     // Did not converge
     let f_val = f(&x.view())?;
-    let grad = matrix_finite_difference_gradient(f, &x.view())?;
+    let grad = matrix_finite_difference_gradient(&f, &x.view())?;
     let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();
 
     Ok(OptimizationResult {
@@ -193,17 +191,17 @@ where
 ///
 /// let f = move |x: &ArrayView2<f64>| -> LinalgResult<f64> {
 ///     let quad_term = (x.t().dot(&a).dot(x)).sum();
-///     let linear_term = (b.t() * x).sum();
+///     let linear_term = (b.t().dot(x)).sum();
 ///     Ok(quad_term + linear_term)
 /// };
 ///
 /// let x0 = array![[0.0, 0.0], [0.0, 0.0]];
 /// let config = OptimizationConfig::default();
 ///
-/// let result = matrix_newton_method(f, &x0.view(), &config).unwrap();
+/// let result = matrix_newton_method(&f, &x0.view(), &config).unwrap();
 /// ```
 pub fn matrix_newton_method<F>(
-    f: impl Fn(&ArrayView2<F>) -> LinalgResult<F> + Copy,
+    f: &impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     x0: &ArrayView2<F>,
     config: &OptimizationConfig<F>,
 ) -> LinalgResult<OptimizationResult<F>>
@@ -220,7 +218,7 @@ where
         f_history.push(f_val);
 
         // Compute gradient
-        let grad = matrix_finite_difference_gradient(f, &x.view())?;
+        let grad = matrix_finite_difference_gradient(&f, &x.view())?;
         let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();
 
         // Check convergence
@@ -261,7 +259,7 @@ where
 
     // Did not converge
     let f_val = f(&x.view())?;
-    let grad = matrix_finite_difference_gradient(f, &x.view())?;
+    let grad = matrix_finite_difference_gradient(&f, &x.view())?;
     let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();
 
     Ok(OptimizationResult {
@@ -296,11 +294,9 @@ where
 /// use scirs2_linalg::matrix_calculus::optimization::{projected_gradient_descent, OptimizationConfig};
 /// use scirs2_linalg::error::LinalgResult;
 ///
-/// // Minimize f(X) = ||X - A||_F^2 subject to X being positive semidefinite
-/// let target = array![[2.0, 1.0], [1.0, 2.0]];
-/// let f = move |x: &ArrayView2<f64>| -> LinalgResult<f64> {
-///     let diff = x - &target;
-///     Ok(diff.iter().fold(0.0, |acc, &val| acc + val * val))
+/// // Minimize f(X) = ||X||_F^2 subject to X being positive semidefinite  
+/// let f = |x: &ArrayView2<f64>| -> LinalgResult<f64> {
+///     Ok(x.iter().fold(0.0, |acc, &val| acc + val * val))
 /// };
 ///
 /// // Simple projection: keep only positive diagonal elements, zero off-diagonal
@@ -321,10 +317,10 @@ where
 /// let x0 = array![[1.0, 0.0], [0.0, 1.0]];  // Start from identity
 /// let config = OptimizationConfig::default();
 ///
-/// let result = projected_gradient_descent(f, project, &x0.view(), &config).unwrap();
+/// let result = projected_gradient_descent(&f, project, &x0.view(), &config).unwrap();
 /// ```
 pub fn projected_gradient_descent<F>(
-    f: impl Fn(&ArrayView2<F>) -> LinalgResult<F> + Copy,
+    f: &impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     project: impl Fn(&ArrayView2<F>) -> LinalgResult<Array2<F>>,
     x0: &ArrayView2<F>,
     config: &OptimizationConfig<F>,
@@ -342,7 +338,7 @@ where
         f_history.push(f_val);
 
         // Compute gradient
-        let grad = matrix_finite_difference_gradient(f, &x.view())?;
+        let grad = matrix_finite_difference_gradient(&f, &x.view())?;
 
         // Use backtracking line search for step size
         let mut step_size = config.initial_step_size;
@@ -404,7 +400,7 @@ where
 
     // Did not converge
     let f_val = f(&x.view())?;
-    let grad = matrix_finite_difference_gradient(f, &x.view())?;
+    let grad = matrix_finite_difference_gradient(&f, &x.view())?;
     let grad_norm = grad.iter().fold(F::zero(), |acc, &g| acc + g * g).sqrt();
 
     Ok(OptimizationResult {
@@ -431,7 +427,7 @@ where
 ///
 /// * Gradient matrix of same shape as input
 fn matrix_finite_difference_gradient<F>(
-    f: impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
+    f: &impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     x: &ArrayView2<F>,
 ) -> LinalgResult<Array2<F>>
 where
@@ -523,7 +519,7 @@ pub mod common_problems {
         // Start with identity matrix
         let x0 = Array2::eye(a.nrows());
 
-        let result = projected_gradient_descent(f, project_orthogonal, &x0.view(), config)?;
+        let result = projected_gradient_descent(&f, project_orthogonal, &x0.view(), config)?;
         Ok(result.x)
     }
 
@@ -577,7 +573,7 @@ pub mod common_problems {
         // Start with identity matrix
         let x0 = Array2::eye(size);
 
-        let result = projected_gradient_descent(f, project_pd, &x0.view(), config)?;
+        let result = projected_gradient_descent(&f, project_pd, &x0.view(), config)?;
         Ok(result.x)
     }
 }

@@ -94,7 +94,7 @@ where
 /// use scirs2_linalg::matrix_calculus::matrix_derivatives::trace_derivative;
 ///
 /// // Derivative of tr(X) with respect to X is identity
-/// let d_trace = trace_derivative(None, (3, 3)).unwrap();
+/// let d_trace: ndarray::Array2<f64> = trace_derivative(None, (3, 3)).unwrap();
 ///
 /// // Should be a 3x3 identity matrix
 /// assert!((d_trace[[0, 0]] - 1.0).abs() < 1e-10);

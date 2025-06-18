@@ -531,7 +531,7 @@ impl ContinuousPerformanceMonitor {
     fn collect_metrics_snapshot(
         system_monitor: &Option<Arc<Mutex<SystemMonitor>>>,
         hardware_manager: &Option<Arc<Mutex<HardwareCounterManager>>>,
-        _app_provider: Option<&Box<dyn ApplicationMetricsProvider + Send + Sync>>,
+        _app_provider: Option<&(dyn ApplicationMetricsProvider + Send + Sync)>,
     ) -> MetricsSnapshot {
         let timestamp = Instant::now();
 
@@ -1025,7 +1025,7 @@ impl SimpleApplicationMetricsProvider {
         F: FnOnce(&mut ApplicationMetrics),
     {
         let mut metrics = self.metrics.lock().unwrap();
-        updater(&mut *metrics);
+        updater(&mut metrics);
     }
 }
 

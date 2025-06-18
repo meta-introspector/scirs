@@ -201,8 +201,12 @@ typedef struct {
         let mut api = String::new();
 
         api.push_str("// Model management functions\n");
-        api.push_str("scirs2_error_t scirs2_model_load(const char* model_path, scirs2_model_t* model);\n");
-        api.push_str("scirs2_error_t scirs2_model_save(scirs2_model_t model, const char* model_path);\n");
+        api.push_str(
+            "scirs2_error_t scirs2_model_load(const char* model_path, scirs2_model_t* model);\n",
+        );
+        api.push_str(
+            "scirs2_error_t scirs2_model_save(scirs2_model_t model, const char* model_path);\n",
+        );
         api.push_str("void scirs2_model_free(scirs2_model_t model);\n\n");
 
         api.push_str("// Tensor management functions\n");

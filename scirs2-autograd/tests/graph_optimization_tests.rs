@@ -6,9 +6,8 @@
 use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
 use scirs2_autograd::optimization::{
-    ConstantFolder, ExpressionSimplifier,
     memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
-    GraphOptimizer, OptimizationConfig, OptimizationLevel,
+    ConstantFolder, ExpressionSimplifier, GraphOptimizer, OptimizationConfig, OptimizationLevel,
 };
 use scirs2_autograd::tensor_ops as T;
 use scirs2_autograd::visualization::{
@@ -297,9 +296,7 @@ mod integration_tests {
 
     #[test]
     fn test_pattern_matching_and_simplification() {
-        use scirs2_autograd::optimization::{
-            SimplificationPattern,
-        };
+        use scirs2_autograd::optimization::SimplificationPattern;
 
         // Test simplification patterns
         let pattern = SimplificationPattern::AddZero;

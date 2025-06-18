@@ -45,15 +45,16 @@
 //!     shuffle: true,
 //!     verbose: 1,
 //!     validation: Some(ValidationSettings {
-//!         split: 0.2,
-//!         frequency: 1,
-//!         metrics: vec!["accuracy".to_string(), "loss".to_string()],
+//!         enabled: true,
+//!         validation_split: 0.2,
+//!         batch_size: 32,
+//!         num_workers: 1,
 //!     }),
 //!     ..Default::default()
 //! };
 //!
 //! // Create trainer
-//! let trainer = Trainer::new(config);
+//! // let trainer = Trainer::new(model, optimizer, loss_fn, config);
 //!
 //! // Set up data, loss, optimizer, and callbacks
 //! // let train_loader = DataLoader::new(...);
@@ -76,7 +77,11 @@
 //!     batch_size: 8,  // Smaller effective batch size
 //!     gradient_accumulation: Some(GradientAccumulationConfig {
 //!         accumulation_steps: 4,  // Accumulate over 4 steps (effective batch size: 32)
-//!         sync_gradients: true,
+//!         clip_gradients: true,
+//!         average_gradients: true,
+//!         zero_gradients_after_update: true,
+//!         max_gradient_norm: Some(1.0),
+//!         log_gradient_stats: false,
 //!     }),
 //!     ..Default::default()
 //! };
@@ -89,12 +94,11 @@
 //!
 //! let config = TrainingConfig {
 //!     mixed_precision: Some(MixedPrecisionConfig {
-//!         enabled: true,
-//!         loss_scale: 1024.0,
 //!         dynamic_loss_scaling: true,
-//!         growth_factor: 2.0,
-//!         backoff_factor: 0.5,
-//!         growth_interval: 2000,
+//!         initial_loss_scale: 1024.0,
+//!         scale_factor: 2.0,
+//!         scale_window: 2000,
+//!         ..Default::default()
 //!     }),
 //!     ..Default::default()
 //! };
@@ -153,7 +157,11 @@ use std::fmt::Debug;
 ///     batch_size: 8,  // Small batch due to memory constraints
 ///     gradient_accumulation: Some(GradientAccumulationConfig {
 ///         accumulation_steps: 8,  // Effective batch size: 64
-///         sync_gradients: true,
+///         clip_gradients: true,
+///         average_gradients: true,
+///         zero_gradients_after_update: true,
+///         max_gradient_norm: Some(1.0),
+///         log_gradient_stats: false,
 ///     }),
 ///     ..Default::default()
 /// };

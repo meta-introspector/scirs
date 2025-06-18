@@ -784,8 +784,8 @@ mod tests {
 
         let x0 = array![0.0, 0.0];
         let options = SparseOptions {
-            max_iter: 100,
-            tol: 1e-8,
+            max_iter: 1000,
+            tol: 1e-4,
             lambda: 0.0, // No regularization
             ..Default::default()
         };

@@ -21,16 +21,13 @@
 //! use scirs2_interpolate::timeseries::{
 //!     TimeSeriesInterpolator, TemporalPattern, SeasonalityType
 //! };
-//! use chrono::{DateTime, Utc, Duration};
 //!
-//! // Create timestamp array (daily data for 30 days)
-//! let timestamps: Vec<DateTime<Utc>> = (0..30)
-//!     .map(|i| Utc::now() + Duration::days(i))
-//!     .collect();
+//! // Create timestamp array (30 time points)
+//! let timestamps = Array1::linspace(0.0_f64, 30.0_f64, 30);
 //!
 //! // Create sample data with trend and noise
 //! let values = Array1::from_vec((0..30)
-//!     .map(|i| (i as f64) * 0.1 + (i as f64 * 0.2).sin())
+//!     .map(|i| (i as f64) * 0.1_f64 + (i as f64 * 0.2_f64).sin())
 //!     .collect());
 //!
 //! // Create time series interpolator
@@ -40,16 +37,13 @@
 //!     .with_missing_data_strategy("interpolate");
 //!
 //! // Fit the interpolator
-//! interpolator.fit(&timestamps, &values.view()).unwrap();
+//! interpolator.fit(&timestamps.view(), &values.view()).unwrap();
 //!
 //! // Generate missing timestamps to interpolate
-//! let missing_timestamps: Vec<DateTime<Utc>> = (0..30)
-//!     .step_by(2)
-//!     .map(|i| Utc::now() + Duration::hours(i * 12))
-//!     .collect();
+//! let missing_timestamps = Array1::linspace(0.5_f64, 29.5_f64, 15);
 //!
 //! // Interpolate missing values
-//! let interpolated = interpolator.interpolate(&missing_timestamps).unwrap();
+//! let interpolated = interpolator.interpolate(&missing_timestamps.view()).unwrap();
 //! ```
 
 use crate::advanced::rbf::{RBFInterpolator, RBFKernel};

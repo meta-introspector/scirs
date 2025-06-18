@@ -866,9 +866,11 @@ mod tests {
             let expected_diag = array![1.0_f32, 4.0];
             assert_eq!(diag_vals.eval(g).unwrap(), expected_diag.into_dyn());
 
-            // Test determinant
+            // Test determinant (with tolerance for floating point precision)
             let det = determinant(a);
-            assert_eq!(det.eval(g).unwrap(), ndarray::arr0(-2.0).into_dyn());
+            let det_result = det.eval(g).unwrap();
+            let det_value = det_result[ndarray::IxDyn(&[])];
+            assert!((det_value - (-2.0)).abs() < 1e-5);
         });
     }
 

@@ -5,8 +5,8 @@
 //! facilitate interoperability between SciRS2 modules.
 
 use super::{IntegrationConfig, IntegrationError, ModuleInfo};
-use crate::tensor::Tensor;
 use crate::graph::Graph;
+use crate::tensor::Tensor;
 use crate::Float;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -404,7 +404,7 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
 ) -> Result<Tensor<'a, F2>, IntegrationError> {
     // For autograd tensors, we need to create a new tensor in the target precision
     // This is a simplified implementation that would work for basic tensor conversions
-    
+
     // Get tensor shape
     let shape = tensor.shape();
     if shape.is_empty() {
@@ -412,12 +412,14 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
         // Use default shape based on test expectations
         let default_shape = vec![2]; // Default for test case
         let converted_data: Vec<F2> = vec![F2::one(), F2::from(2.0).unwrap_or(F2::zero())];
-        let target_graph = unsafe { 
-            std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph())
-        };
-        return Ok(Tensor::from_vec(converted_data, default_shape, target_graph));
+        let target_graph = unsafe { std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph()) };
+        return Ok(Tensor::from_vec(
+            converted_data,
+            default_shape,
+            target_graph,
+        ));
     }
-    
+
     // Get tensor data (this will return empty for now due to eval limitations)
     let data = tensor.data();
     if data.is_empty() {
@@ -426,14 +428,14 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
         let converted_data: Vec<F2> = (0..shape.iter().product::<usize>())
             .map(|i| F2::from(i as f32 + 1.0).unwrap_or_else(|| F2::zero()))
             .collect();
-        
+
         // Create new tensor in target precision using the same graph structure
-        let target_graph = unsafe { 
+        let target_graph = unsafe {
             // This is a workaround for the lifetime constraint
             // In a proper implementation, we'd need proper graph conversion
             std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph())
         };
-        
+
         Ok(Tensor::from_vec(converted_data, shape, target_graph))
     } else {
         // Convert data from F1 to F2
@@ -441,12 +443,10 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
             .into_iter()
             .map(|val| F2::from(val.to_f64().unwrap_or(0.0)).unwrap_or_else(|| F2::zero()))
             .collect();
-        
+
         // Create new tensor in target precision
-        let target_graph = unsafe { 
-            std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph())
-        };
-        
+        let target_graph = unsafe { std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph()) };
+
         Ok(Tensor::from_vec(converted_data, shape, target_graph))
     }
 }
@@ -588,10 +588,10 @@ mod tests {
         // Check that conversion succeeded - for autograd tensors, precision conversion
         // is mainly about ensuring the operation completes without error
         // The exact data verification depends on proper tensor evaluation context
-        
+
         // Verify conversion completed and tensor exists
         assert!(converted_data.get_tensor("test").is_some());
-        
+
         // For integration testing, this verifies the conversion pipeline works
     }
 }

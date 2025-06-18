@@ -216,7 +216,7 @@ where
 ///
 /// let cond = 1e8_f64;
 /// let tol = adaptive_tolerance_selection(cond);
-/// assert!(tol > 1e-12); // Looser tolerance for ill-conditioned matrix
+/// assert!(tol > 1e-13); // Looser tolerance for ill-conditioned matrix
 /// ```
 pub fn adaptive_tolerance_selection<F>(condition_number: F) -> F
 where

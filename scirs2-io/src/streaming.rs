@@ -27,8 +27,9 @@
 //! let reader = ChunkedReader::new("large_data.csv", config)?;
 //!
 //! for (chunk_id, chunk_data) in reader.enumerate() {
-//!     println!("Processing chunk {}: {} bytes", chunk_id, chunk_data.len());
-//!     // Process chunk_data without loading entire file
+//!     let data = chunk_data?;
+//!     println!("Processing chunk {}: {} bytes", chunk_id, data.len());
+//!     // Process data without loading entire file
 //! }
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```

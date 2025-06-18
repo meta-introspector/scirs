@@ -491,7 +491,10 @@ impl ErrorMapping for NeuralErrorMapping {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("tensor") || error_str.contains("shape") {
-            IntegrationError::TensorConversion(format!("Neural module tensor error: {}", source_error))
+            IntegrationError::TensorConversion(format!(
+                "Neural module tensor error: {}",
+                source_error
+            ))
         } else if error_str.contains("gradient") {
             IntegrationError::ApiBoundary(format!("Neural module gradient error: {}", source_error))
         } else {
@@ -533,7 +536,10 @@ impl ErrorMapping for LinalgErrorMapping {
         if error_str.contains("matrix") || error_str.contains("dimension") {
             IntegrationError::TensorConversion(format!("Matrix dimension error: {}", source_error))
         } else if error_str.contains("singular") || error_str.contains("decomposition") {
-            IntegrationError::ApiBoundary(format!("Linear algebra operation error: {}", source_error))
+            IntegrationError::ApiBoundary(format!(
+                "Linear algebra operation error: {}",
+                source_error
+            ))
         } else {
             IntegrationError::ModuleCompatibility(format!(
                 "Linear algebra module error: {}",
@@ -553,7 +559,10 @@ impl ErrorMapping for CoreErrorMapping {
         if error_str.contains("config") {
             IntegrationError::ConfigMismatch(format!("Core configuration error: {}", source_error))
         } else if error_str.contains("type") || error_str.contains("conversion") {
-            IntegrationError::TensorConversion(format!("Core type conversion error: {}", source_error))
+            IntegrationError::TensorConversion(format!(
+                "Core type conversion error: {}",
+                source_error
+            ))
         } else {
             IntegrationError::ModuleCompatibility(format!("Core module error: {}", source_error))
         }

@@ -483,7 +483,7 @@ pub fn create_ultra_scale_optimizer(
     };
 
     // Use disk storage for very large problems
-    let use_disk = problem_size > 1_000_000 || available_memory_mb < 512;
+    let use_disk = problem_size >= 1_000_000 || available_memory_mb < 512;
 
     // More refinement passes for larger problems
     let refinement_passes = if problem_size > 10_000_000 {

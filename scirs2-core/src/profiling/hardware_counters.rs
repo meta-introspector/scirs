@@ -673,9 +673,7 @@ impl HardwareCounterManager {
         // Store in history
         let mut history = self.counter_history.write().unwrap();
         for value in &values {
-            let counter_history = history
-                .entry(value.counter_type.clone())
-                .or_insert_with(Vec::new);
+            let counter_history = history.entry(value.counter_type.clone()).or_default();
 
             counter_history.push(value.clone());
 

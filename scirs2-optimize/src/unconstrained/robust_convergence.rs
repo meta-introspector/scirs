@@ -149,7 +149,7 @@ impl RobustConvergenceState {
                 recent_gradients: VecDeque::with_capacity(options.progress_window),
                 progress_rate: 0.0,
             },
-            start_time: None,
+            start_time: Some(std::time::Instant::now()),
             noise_state: NoiseRobustState {
                 function_window: VecDeque::with_capacity(options.noise_window),
                 gradient_window: VecDeque::with_capacity(options.noise_window),
@@ -747,12 +747,13 @@ mod tests {
         options.min_criteria_count = 2;
         options.adaptive_tolerance.initial_ftol = 1e-6;
         options.adaptive_tolerance.initial_gtol = 1e-4;
+        options.adaptive_tolerance.initial_xtol = 1e-3;
 
         let mut state = RobustConvergenceState::new(options, 5);
 
-        // Only satisfy one criterion
+        // Only satisfy one criterion (function tolerance)
         let result = state
-            .update_and_check_convergence(1e-8, 1e-2, 1e-6, 10, None)
+            .update_and_check_convergence(1e-8, 1e-1, 1e-2, 10, None)
             .unwrap();
 
         // Should not converge with only one criterion met

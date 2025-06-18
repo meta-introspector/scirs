@@ -10,8 +10,8 @@
 use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
 use scirs2_autograd::optimization::{
-    GraphOptimizer, OptimizationLevel,
     memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
+    GraphOptimizer, OptimizationLevel,
 };
 use scirs2_autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
 use scirs2_autograd::tensor_ops as T;

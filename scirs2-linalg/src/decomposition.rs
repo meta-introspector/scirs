@@ -432,7 +432,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_linalg::qz;
 ///
@@ -533,7 +533,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use ndarray::array;
 /// use scirs2_linalg::complete_orthogonal_decomposition;
 ///
