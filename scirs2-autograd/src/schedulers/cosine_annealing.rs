@@ -342,10 +342,10 @@ mod tests {
     fn test_cosine_annealing_restart_detection() {
         let scheduler = CosineAnnealingLR::with_warm_restarts(1.0f32, 0.0, 5, 1);
 
-        assert!(!scheduler.is_restart_step(0));  // Start of first cycle
-        assert!(!scheduler.is_restart_step(3));  // Middle of first cycle  
-        assert!(scheduler.is_restart_step(5));   // Start of second cycle
-        assert!(scheduler.is_restart_step(10));  // Start of third cycle (t_mult=1, so same length)
+        assert!(!scheduler.is_restart_step(0)); // Start of first cycle
+        assert!(!scheduler.is_restart_step(3)); // Middle of first cycle
+        assert!(scheduler.is_restart_step(5)); // Start of second cycle
+        assert!(scheduler.is_restart_step(10)); // Start of third cycle (t_mult=1, so same length)
     }
 
     #[test]

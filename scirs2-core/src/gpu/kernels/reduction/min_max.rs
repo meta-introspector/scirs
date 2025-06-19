@@ -25,12 +25,13 @@ impl MinKernel {
             backend_metadata: HashMap::new(),
         };
 
-        let (cuda_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
+        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
 
         Self {
             base: BaseKernel::new(
                 "min_reduce",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -40,7 +41,7 @@ impl MinKernel {
     }
 
     /// Get kernel sources for different backends
-    fn get_kernel_sources() -> (String, String, String, String) {
+    fn get_kernel_sources() -> (String, String, String, String, String) {
         // CUDA kernel
         let cuda_source = r#"
 extern "C" __global__ void min_reduce(
@@ -230,7 +231,10 @@ __kernel void min_reduce(
 "#
         .to_string();
 
-        (cuda_source, wgpu_source, metal_source, opencl_source)
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
+        (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
     }
 }
 
@@ -279,12 +283,13 @@ impl MaxKernel {
             backend_metadata: HashMap::new(),
         };
 
-        let (cuda_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
+        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
 
         Self {
             base: BaseKernel::new(
                 "max_reduce",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -294,7 +299,7 @@ impl MaxKernel {
     }
 
     /// Get kernel sources for different backends
-    fn get_kernel_sources() -> (String, String, String, String) {
+    fn get_kernel_sources() -> (String, String, String, String, String) {
         // CUDA kernel
         let cuda_source = r#"
 extern "C" __global__ void max_reduce(
@@ -484,7 +489,10 @@ __kernel void max_reduce(
 "#
         .to_string();
 
-        (cuda_source, wgpu_source, metal_source, opencl_source)
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
+        (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
     }
 }
 

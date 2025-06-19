@@ -99,14 +99,10 @@ impl EnhancedMatFile {
             MatType::UInt64(array) => array.len() * 8,
             MatType::Logical(array) => array.len(),
             MatType::Char(string) => string.len() * 2, // UTF-16
-            MatType::Cell(cells) => cells
-                .iter()
-                .map(Self::estimate_mat_type_size)
-                .sum(),
-            MatType::Struct(structure) => structure
-                .values()
-                .map(Self::estimate_mat_type_size)
-                .sum(),
+            MatType::Cell(cells) => cells.iter().map(Self::estimate_mat_type_size).sum(),
+            MatType::Struct(structure) => {
+                structure.values().map(Self::estimate_mat_type_size).sum()
+            }
         }
     }
 

@@ -858,9 +858,7 @@ where
 pub fn scalar<F: Float>(val: F, graph: &impl AsGraph<F>) -> Tensor<F> {
     let op = const_gen_ops::Scalar { val };
     // For scalars, use set_known_shape with empty shape (scalar)
-    Tensor::builder(graph)
-        .set_known_shape(&[])
-        .build(op)
+    Tensor::builder(graph).set_known_shape(&[]).build(op)
 }
 
 /// Outputs values sampled from the normal distribution.

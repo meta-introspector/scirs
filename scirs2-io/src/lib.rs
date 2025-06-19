@@ -144,7 +144,7 @@ pub mod netcdf;
 ///
 /// ```rust,no_run
 /// use scirs2_io::network::NetworkClient;
-/// 
+///
 /// // Create a network client for downloading files
 /// let client = NetworkClient::new();
 /// println!("Network client created for file operations");

@@ -1,10 +1,9 @@
 use super::validation;
-use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use ndarray::{
     Array, ArrayBase, ArrayView as NdArrayView, ArrayViewMut as NdArrayViewMut, Data, Dimension,
-    Ix1, Ix2, IxDyn, ViewRepr,
+    Ix1, Ix2,
 };
-use std::marker::PhantomData;
 
 /// A type alias for ndarray's ArrayView with additional functionality
 pub type ArrayView<'a, A, D> = NdArrayView<'a, A, D>;

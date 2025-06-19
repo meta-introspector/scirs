@@ -1446,7 +1446,6 @@ impl TraceExporter for HttpExporter {
 fn get_current_memory_usage() -> Result<u64, CoreError> {
     // This is a simplified implementation
     // In production, you'd use proper memory monitoring
-    use std::alloc::{GlobalAlloc, Layout, System};
 
     // For demonstration purposes, return 0
     // In reality, you'd integrate with memory profiling tools

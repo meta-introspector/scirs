@@ -1364,7 +1364,7 @@ mod tests {
 
         assert_eq!(result.transformed_data.nrows(), 10);
         assert!(result.n_components_selected > 0);
-        assert!(result.explained_variance.len() > 0);
+        assert!(!result.explained_variance.is_empty());
     }
 
     #[test]
@@ -1395,7 +1395,7 @@ mod tests {
         let result = apply_functional_pca(&functional_data, &config).unwrap();
 
         assert!(result.functional_components.nrows() > 0);
-        assert!(result.explained_variance.len() > 0);
+        assert!(!result.explained_variance.is_empty());
     }
 
     #[test]
@@ -1407,7 +1407,7 @@ mod tests {
         let config = DTWBarycenterConfig::default();
         let result = compute_dtw_barycenter(&time_series, &config).unwrap();
 
-        assert!(result.barycenter.len() > 0);
+        assert!(!result.barycenter.is_empty());
         assert_eq!(result.distances.len(), 2);
         assert!(result.iterations > 0);
     }

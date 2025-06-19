@@ -24,8 +24,6 @@ use std::fmt;
 use serde_json::Value as JsonValue;
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
-
 // For checksum validation
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};

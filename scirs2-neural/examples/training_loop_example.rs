@@ -108,14 +108,14 @@ fn main() -> Result<()> {
 
     // For this example, we'll just remove the ModelCheckpoint
     let mut callbacks: Vec<Box<dyn scirs2_neural::callbacks::Callback<f32>>> = vec![
-        Box::new(EarlyStopping::new(5, 0.001.into(), true)),
+        Box::new(EarlyStopping::new(5, 0.001, true)),
         // ModelCheckpoint removed for simplicity as it requires special handling
         Box::new(ReduceOnPlateau::new(
-            0.001.into(),
-            0.5.into(),
+            0.001,
+            0.5,
             3,
-            0.001.into(),
-            0.0001.into(),
+            0.001,
+            0.0001,
         )),
         Box::new(TensorBoardLogger::new(tensorboard_dir, true, 10)),
         // Add our visualization callback
@@ -215,7 +215,7 @@ fn main() -> Result<()> {
             let batch_loss = rand::random::<f32>() * (1.0 / (epoch as f32 + 1.0));
 
             // Update batch loss
-            context.batch_loss = Some(batch_loss.into());
+            context.batch_loss = Some(batch_loss);
 
             // Run callbacks after batch
             for callback in &mut callbacks {
@@ -229,7 +229,7 @@ fn main() -> Result<()> {
         // Compute epoch loss
         epoch_loss /= batch_count as f32;
         history.get_mut("train_loss").unwrap().push(epoch_loss);
-        context.epoch_loss = Some(epoch_loss.into());
+        context.epoch_loss = Some(epoch_loss);
 
         println!("Train loss: {:.6}", epoch_loss);
 
@@ -254,7 +254,7 @@ fn main() -> Result<()> {
         // Compute validation loss
         val_loss /= val_batch_count as f32;
         history.get_mut("val_loss").unwrap().push(val_loss);
-        context.val_loss = Some(val_loss.into());
+        context.val_loss = Some(val_loss);
 
         // Simulate accuracy metric
         let accuracy =
@@ -262,7 +262,7 @@ fn main() -> Result<()> {
         history.get_mut("accuracy").unwrap().push(accuracy);
 
         // Add accuracy to metrics
-        context.metrics = vec![accuracy.into()];
+        context.metrics = vec![accuracy];
 
         println!("Validation loss: {:.6}", val_loss);
         println!("Accuracy: {:.2}%", accuracy * 100.0);

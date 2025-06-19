@@ -251,6 +251,18 @@ pub struct DeviceMemoryManager {
     enable_caching: bool,
 }
 
+impl std::fmt::Debug for DeviceMemoryManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeviceMemoryManager")
+            .field("gpu_context", &"<gpu_context>")
+            .field("cache", &"<cache>")
+            .field("max_cache_size", &self.max_cache_size)
+            .field("current_cache_size", &self.current_cache_size.load(std::sync::atomic::Ordering::Relaxed))
+            .field("enable_caching", &self.enable_caching)
+            .finish()
+    }
+}
+
 impl DeviceMemoryManager {
     /// Create a new device memory manager
     pub fn new(enable_caching: bool, max_cache_size: usize) -> Result<Self, CoreError> {
@@ -301,10 +313,10 @@ impl DeviceMemoryManager {
     ) -> CoreResult<DeviceArray<T, D>>
     where
         T: GpuDataType,
-        S: RawData<Elem = T>,
+        S: RawData<Elem = T> + ndarray::Data,
         D: Dimension,
     {
-        let options = options.unwrap_or_default();
+        let _options = options.unwrap_or_default();
 
         // Check if the device is available
         if !self.is_device_available(device) {
@@ -419,12 +431,15 @@ impl DeviceMemoryManager {
         T: GpuDataType,
         D: Dimension,
     {
-        let options = options.unwrap_or_default();
+        let _options = options.unwrap_or_default();
 
         // For CPU arrays, just clone the data
         if device_array.device == DeviceType::Cpu {
             if let Some(cpu_array) = device_array.buffer.get_cpu_array() {
-                return Ok(cpu_array.clone());
+                let reshaped = cpu_array.clone().to_shape(device_array.shape.clone())
+                    .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?
+                    .to_owned();
+                return Ok(reshaped);
             }
         }
 
@@ -485,7 +500,11 @@ impl DeviceMemoryManager {
         // For transfers from CPU to another device, use transfer_to_device
         if device_array.device == DeviceType::Cpu {
             if let Some(cpu_array) = device_array.buffer.get_cpu_array() {
-                return self.transfer_to_device(&cpu_array, target_device, Some(options));
+                // Reshape the CPU array to match the expected dimension type
+                let cpu_clone = cpu_array.clone();
+                let reshaped = cpu_clone.to_shape(device_array.shape.clone())
+                    .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?;
+                return self.transfer_to_device(&reshaped.to_owned(), target_device, Some(options));
             }
         }
 
@@ -494,7 +513,7 @@ impl DeviceMemoryManager {
         // or copy through host memory if not
 
         // For now, we'll transfer through host memory
-        let host_array = self.transfer_to_host(device_array, Some(options))?;
+        let host_array = self.transfer_to_host(device_array, Some(options.clone()))?;
         self.transfer_to_device(&host_array, target_device, Some(options))
     }
 
@@ -590,7 +609,8 @@ impl DeviceMemoryManager {
         if let DeviceType::Gpu(_) = device_array.device {
             if let Some(ref context) = self.gpu_context {
                 // Get the kernel
-                let mut kernel = context.get_kernel(kernel_name)?;
+                let kernel = context.get_kernel(kernel_name)
+                    .map_err(|e| CoreError::ComputationError(ErrorContext::new(e.to_string())))?;
 
                 // Set the input buffer parameter
                 if let Some(gpu_buffer) = device_array.buffer.get_gpu_buffer() {
@@ -650,12 +670,21 @@ pub enum KernelParam {
 }
 
 /// Buffer location (CPU or GPU)
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 enum BufferLocation<T: GpuDataType> {
     /// CPU buffer
     Cpu(Arc<Array<T, IxDyn>>),
     /// GPU buffer
     Gpu(Arc<GpuBuffer<T>>),
+}
+
+impl<T: GpuDataType> std::fmt::Debug for BufferLocation<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BufferLocation::Cpu(_) => write!(f, "Cpu(Array)"),
+            BufferLocation::Gpu(_) => write!(f, "Gpu(GpuBuffer)"),
+        }
+    }
 }
 
 /// Buffer for cross-device operations
@@ -720,7 +749,7 @@ pub struct DeviceArray<T: GpuDataType, D: Dimension> {
 
 impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
     /// Create a new CPU array
-    fn new_cpu<S: RawData<Elem = T>>(array: ArrayBase<S, D>) -> Self {
+    fn new_cpu<S: RawData<Elem = T> + ndarray::Data>(array: ArrayBase<S, D>) -> Self {
         Self {
             buffer: DeviceBuffer::new_cpu(array.to_owned()),
             shape: array.raw_dim(),
@@ -807,6 +836,17 @@ pub struct DeviceMemoryPool {
     current_pool_size: std::sync::atomic::AtomicUsize,
 }
 
+impl std::fmt::Debug for DeviceMemoryPool {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeviceMemoryPool")
+            .field("device", &self.device)
+            .field("free_buffers", &"<free_buffers>")
+            .field("max_pool_size", &self.max_pool_size)
+            .field("current_pool_size", &self.current_pool_size.load(std::sync::atomic::Ordering::Relaxed))
+            .finish()
+    }
+}
+
 impl DeviceMemoryPool {
     /// Create a new device memory pool
     pub fn new(device: DeviceType, max_pool_size: usize) -> Self {
@@ -819,7 +859,7 @@ impl DeviceMemoryPool {
     }
 
     /// Allocate a buffer of the given size
-    pub fn allocate<T: GpuDataType>(&self, size: usize) -> CoreResult<DeviceBuffer<T>> {
+    pub fn allocate<T: GpuDataType + num_traits::Zero>(&self, size: usize) -> CoreResult<DeviceBuffer<T>> {
         // Check if we have a free buffer of the right size
         let mut free_buffers = self.free_buffers.lock().unwrap();
         if let Some(buffers) = free_buffers.get_mut(&size) {
@@ -950,7 +990,7 @@ impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
             ));
         }
 
-        let first = host_array[0];
+        let first = *host_array.iter().next().unwrap();
         let result = host_array.iter().skip(1).fold(first, |acc, &x| f(acc, x));
         Ok(result)
     }
@@ -1025,7 +1065,7 @@ impl CrossDeviceManager {
     ) -> CoreResult<DeviceArray<T, D>>
     where
         T: GpuDataType,
-        S: RawData<Elem = T>,
+        S: RawData<Elem = T> + ndarray::Data,
         D: Dimension,
     {
         // Check if the device is available
@@ -1124,7 +1164,7 @@ impl CrossDeviceManager {
     }
 
     /// Allocate memory on a device
-    pub fn allocate<T: GpuDataType>(
+    pub fn allocate<T: GpuDataType + num_traits::Zero>(
         &self,
         size: usize,
         device: DeviceType,
@@ -1202,7 +1242,7 @@ where
 impl<T, S, D> ToDevice<T, D> for ArrayBase<S, D>
 where
     T: GpuDataType,
-    S: RawData<Elem = T>,
+    S: RawData<Elem = T> + ndarray::Data,
     D: Dimension,
 {
     fn to_device(
@@ -1240,7 +1280,7 @@ where
 pub fn create_cpu_array<T, S, D>(array: &ArrayBase<S, D>) -> DeviceArray<T, D>
 where
     T: GpuDataType,
-    S: RawData<Elem = T>,
+    S: RawData<Elem = T> + ndarray::Data,
     D: Dimension,
 {
     DeviceArray::new_cpu(array.to_owned())
@@ -1253,7 +1293,7 @@ pub fn create_gpu_array<T, S, D>(
 ) -> CoreResult<DeviceArray<T, D>>
 where
     T: GpuDataType,
-    S: RawData<Elem = T>,
+    S: RawData<Elem = T> + ndarray::Data,
     D: Dimension,
 {
     // Find the first available GPU
@@ -1276,7 +1316,7 @@ pub fn to_best_device<T, S, D>(
 ) -> CoreResult<DeviceArray<T, D>>
 where
     T: GpuDataType,
-    S: RawData<Elem = T>,
+    S: RawData<Elem = T> + ndarray::Data,
     D: Dimension,
 {
     // Try to find a GPU first

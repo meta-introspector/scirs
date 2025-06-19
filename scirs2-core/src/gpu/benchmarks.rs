@@ -105,7 +105,7 @@ impl BenchmarkOperation {
 }
 
 /// Benchmark operation categories
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BenchmarkCategory {
     /// Linear algebra operations
     LinearAlgebra,
@@ -160,7 +160,7 @@ impl Default for BenchmarkConfig {
 }
 
 /// Problem size categories
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ProblemSize {
     /// Small problems (< 1K elements)
     Small,
@@ -199,7 +199,7 @@ impl ProblemSize {
 }
 
 /// Data types for benchmarking
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DataType {
     /// 32-bit floating point
     Float32,
@@ -599,7 +599,7 @@ impl BenchmarkSuite {
         speedups: &HashMap<GpuBackend, f64>,
     ) -> PlatformRecommendation {
         // Find best GPU speedup
-        let best_speedup = speedups.values().fold(0.0, |a, &b| a.max(b));
+        let best_speedup = speedups.values().fold(0.0f64, |a, &b| a.max(b));
         let best_backend = speedups
             .iter()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())

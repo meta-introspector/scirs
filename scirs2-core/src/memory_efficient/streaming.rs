@@ -8,14 +8,11 @@
 //! - Buffer management for smooth data flow
 //! - Fault tolerance with resume capabilities
 
-use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use crate::memory_efficient::chunked::{ChunkedArray, ChunkingStrategy};
-use crate::memory_efficient::prefetch::{AccessPattern, PrefetchConfig};
-#[cfg(feature = "parallel")]
-use crate::parallel;
-use ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
+use crate::memory_efficient::prefetch::PrefetchConfig;
+use ndarray::{ArrayBase, Dimension, OwnedRepr};
 use std::collections::{BTreeMap, VecDeque};
-use std::marker::PhantomData;
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
@@ -370,7 +367,10 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
                 match result {
                     Ok((g, timeout_result)) => {
-                        guard = g;
+                        #[allow(unused_assignments)]
+                        {
+                            guard = g;
+                        }
 
                         // Check if the timeout occurred
                         if timeout_result.timed_out() && self.data.is_empty() {
@@ -389,7 +389,10 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
                 }
             } else {
                 // No timeout, wait indefinitely
-                guard = self.condvar.wait(guard).unwrap();
+                #[allow(unused_assignments)]
+                {
+                    guard = self.condvar.wait(guard).unwrap();
+                }
             }
         }
 
@@ -582,7 +585,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                 StreamMode::Buffered => config.max_batch_size,
                 StreamMode::Adaptive => {
                     // Simple adaptive batch sizing based on processing time
-                    let mut stats_guard = stats.write().unwrap();
+                    let stats_guard = stats.read().unwrap();
                     let avg_time = stats_guard.avg_batch_time_ms;
 
                     if avg_time < 10.0 {
@@ -1430,7 +1433,7 @@ impl<I: Clone + Send + 'static, O: Clone + Send + 'static> Clone for StageWrappe
 }
 
 /// Extensions to the StreamProcessor to enable ndarray processing
-impl<A, D> StreamProcessor<ArrayBase<Vec<A>, D>, ArrayBase<Vec<A>, D>>
+impl<A, D> StreamProcessor<ArrayBase<OwnedRepr<A>, D>, ArrayBase<OwnedRepr<A>, D>>
 where
     A: Clone + Send + Default + 'static,
     D: Dimension + Clone + Send + 'static,
@@ -1438,7 +1441,7 @@ where
     /// Create a new array stream processor
     pub fn new_array<F>(config: StreamConfig, process_fn: F) -> Self
     where
-        F: Fn(Vec<ArrayBase<Vec<A>, D>>) -> Result<Vec<ArrayBase<Vec<A>, D>>, CoreError>
+        F: Fn(Vec<ArrayBase<OwnedRepr<A>, D>>) -> Result<Vec<ArrayBase<OwnedRepr<A>, D>>, CoreError>
             + Send
             + Sync
             + 'static,
@@ -1449,7 +1452,7 @@ where
     /// Process arrays chunk-wise
     pub fn chunk_wise<F>(config: StreamConfig, chunk_size: usize, process_fn: F) -> Self
     where
-        F: Fn(&ArrayBase<Vec<A>, D>) -> Result<ArrayBase<Vec<A>, D>, CoreError>
+        F: Fn(&ArrayBase<OwnedRepr<A>, D>) -> Result<ArrayBase<OwnedRepr<A>, D>, CoreError>
             + Send
             + Sync
             + Clone
@@ -1458,7 +1461,7 @@ where
         let chunking_strategy = ChunkingStrategy::Fixed(chunk_size);
 
         let process_fn_clone = process_fn.clone();
-        let chunks_fn = move |arrays: Vec<ArrayBase<Vec<A>, D>>| -> Result<Vec<ArrayBase<Vec<A>, D>>, CoreError> {
+        let chunks_fn = move |arrays: Vec<ArrayBase<OwnedRepr<A>, D>>| -> Result<Vec<ArrayBase<OwnedRepr<A>, D>>, CoreError> {
             let mut results = Vec::with_capacity(arrays.len());
 
             for array in arrays {
@@ -1487,7 +1490,7 @@ where
     #[cfg(feature = "parallel")]
     pub fn parallel<F>(config: StreamConfig, process_fn: F) -> Self
     where
-        F: Fn(&ArrayBase<Vec<A>, D>) -> Result<ArrayBase<Vec<A>, D>, CoreError>
+        F: Fn(&ArrayBase<OwnedRepr<A>, D>) -> Result<ArrayBase<OwnedRepr<A>, D>, CoreError>
             + Send
             + Sync
             + Clone
@@ -1497,7 +1500,7 @@ where
         let workers = config.workers.unwrap_or_else(|| num_cpus::get());
 
         let process_fn_clone = process_fn.clone();
-        let parallel_fn = move |arrays: Vec<ArrayBase<Vec<A>, D>>| -> Result<Vec<ArrayBase<Vec<A>, D>>, CoreError> {
+        let parallel_fn = move |arrays: Vec<ArrayBase<OwnedRepr<A>, D>>| -> Result<Vec<ArrayBase<OwnedRepr<A>, D>>, CoreError> {
             // Process arrays in parallel using rayon
             use rayon::prelude::*;
             let pool = rayon::ThreadPoolBuilder::new()

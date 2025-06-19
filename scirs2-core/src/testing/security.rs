@@ -10,7 +10,7 @@
 //! - Denial of service attack simulation
 
 use crate::error::{CoreError, CoreResult};
-use crate::testing::{TestConfig, TestResult, TestRunner};
+use crate::testing::{TestConfig, TestResult};
 use std::time::{Duration, Instant};
 
 /// Security test configuration
@@ -571,8 +571,9 @@ impl SecurityTestUtils {
             .with_max_input_size(1024);
 
         // Input validation tests
-        suite.add_test("malicious_input_validation", |_runner| {
-            let tester = InputValidationTester::new(security_config.clone());
+        let security_config_1 = security_config.clone();
+        suite.add_test("malicious_input_validation", move |_runner| {
+            let tester = InputValidationTester::new(security_config_1.clone());
 
             let result = tester.test_malicious_inputs(|input| {
                 // Test a simple validation function
@@ -605,8 +606,9 @@ impl SecurityTestUtils {
         });
 
         // Bounds checking tests
-        suite.add_test("bounds_checking", |_runner| {
-            let tester = InputValidationTester::new(security_config.clone());
+        let security_config_2 = security_config.clone();
+        suite.add_test("bounds_checking", move |_runner| {
+            let tester = InputValidationTester::new(security_config_2.clone());
 
             let result = tester.test_bounds_checking(|start, length| {
                 // Test bounds checking function
@@ -642,8 +644,9 @@ impl SecurityTestUtils {
         });
 
         // Memory safety tests
-        suite.add_test("memory_safety", |_runner| {
-            let tester = MemorySafetyTester::new(security_config.clone());
+        let security_config_3 = security_config.clone();
+        suite.add_test("memory_safety", move |_runner| {
+            let tester = MemorySafetyTester::new(security_config_3.clone());
 
             let result = tester.test_memory_leaks(|| {
                 // Test function that should not leak memory
@@ -666,8 +669,9 @@ impl SecurityTestUtils {
         });
 
         // Use-after-free test (informational for Rust)
-        suite.add_test("use_after_free", |_runner| {
-            let tester = MemorySafetyTester::new(security_config.clone());
+        let security_config_clone2 = security_config.clone();
+        suite.add_test("use_after_free", move |_runner| {
+            let tester = MemorySafetyTester::new(security_config_clone2.clone());
             let result = tester.test_use_after_free()?;
 
             // This should always pass in Rust

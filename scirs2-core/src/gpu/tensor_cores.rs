@@ -302,7 +302,7 @@ impl TensorCoreManager {
                     Some(TensorDataType::Float32)
                 }
             }
-            _ => self.capabilities.supported_types.first().copied(),
+            _ => self.capabilities.supported_types.first().cloned(),
         }
     }
 

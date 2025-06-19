@@ -34,12 +34,10 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use std::any::{Any, TypeId};
+use std::any::TypeId;
 use std::collections::HashMap;
 use std::fmt;
-use std::hash::{Hash, Hasher};
-use std::marker::PhantomData;
-use std::ptr::NonNull;
+use std::hash::Hash;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, RwLock, Weak};
 
@@ -221,12 +219,12 @@ where
     }
 
     /// Get metadata about this data
-    pub const fn metadata(&self) -> &DataMetadata {
+    pub fn metadata(&self) -> &DataMetadata {
         &self.inner.metadata
     }
 
     /// Get a reference to the data
-    pub const fn as_slice(&self) -> &[T] {
+    pub fn as_slice(&self) -> &[T] {
         &self.inner.data
     }
 
@@ -402,8 +400,6 @@ trait AnyZeroCopyData: Send + Sync {
     /// Get the metadata
     fn metadata(&self) -> &DataMetadata;
 
-    /// Try to downcast to a specific type
-    fn downcast_ref<T: 'static>(&self) -> Option<&ZeroCopyData<T>>;
 
     /// Clone the data as a boxed trait object
     fn clone_box(&self) -> Box<dyn AnyZeroCopyData>;
@@ -412,7 +408,7 @@ trait AnyZeroCopyData: Send + Sync {
     fn data_id(&self) -> DataId;
 }
 
-impl<T: Clone + 'static> AnyZeroCopyData for ZeroCopyData<T> {
+impl<T: Clone + 'static + Send + Sync> AnyZeroCopyData for ZeroCopyData<T> {
     fn type_id(&self) -> TypeId {
         TypeId::of::<T>()
     }
@@ -421,14 +417,6 @@ impl<T: Clone + 'static> AnyZeroCopyData for ZeroCopyData<T> {
         &self.inner.metadata
     }
 
-    fn downcast_ref<U: 'static>(&self) -> Option<&ZeroCopyData<U>> {
-        if TypeId::of::<T>() == TypeId::of::<U>() {
-            // Safety: We've verified the types match
-            unsafe { Some(&*(self as *const ZeroCopyData<T> as *const ZeroCopyData<U>)) }
-        } else {
-            None
-        }
-    }
 
     fn clone_box(&self) -> Box<dyn AnyZeroCopyData> {
         Box::new(self.clone())

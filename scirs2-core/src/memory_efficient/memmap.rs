@@ -10,7 +10,7 @@ use super::validation;
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use bincode::{deserialize, serialize};
 use memmap2::{Mmap, MmapMut, MmapOptions};
-use ndarray::{Array, ArrayBase, Data, Dimension};
+use ndarray::{Array, ArrayBase, Data, Dimension, IxDyn};
 use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
@@ -67,7 +67,7 @@ impl std::str::FromStr for AccessMode {
 #[derive(Debug)]
 pub struct MemoryMappedArray<A>
 where
-    A: Clone + Copy + 'static + Send + Sync,
+    A: Clone + Copy + 'static + Send + Sync + Send + Sync,
 {
     /// The shape of the array
     pub shape: Vec<usize>,
@@ -102,8 +102,13 @@ struct MemoryMappedHeader {
 
 impl<A> MemoryMappedArray<A>
 where
-    A: Clone + Copy + 'static + Send + Sync,
+    A: Clone + Copy + 'static + Send + Sync + Send + Sync,
 {
+    /// Open an existing memory-mapped array file
+    pub fn open(file_path: &Path, _shape: &[usize]) -> Result<Self, CoreError> {
+        open_mmap::<A, IxDyn>(file_path, AccessMode::ReadOnly, 0)
+    }
+
     /// Create a new memory-mapped array from an existing array
     ///
     /// # Arguments
@@ -600,7 +605,7 @@ where
 
 impl<A> Drop for MemoryMappedArray<A>
 where
-    A: Clone + Copy + 'static + Send + Sync,
+    A: Clone + Copy + 'static + Send + Sync + Send + Sync,
 {
     fn drop(&mut self) {
         // Flush any pending changes
@@ -616,7 +621,7 @@ where
 }
 
 /// Helper function to read the header from a file
-fn read_header<A: Clone + Copy + 'static>(
+fn read_header<A: Clone + Copy + 'static + Send + Sync>(
     file_path: &Path,
 ) -> Result<(MemoryMappedHeader, usize), CoreError> {
     // Open the file
@@ -667,7 +672,7 @@ pub fn open_mmap<A, D>(
     offset: usize,
 ) -> Result<MemoryMappedArray<A>, CoreError>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + Send + Sync + 'static,
     D: Dimension,
 {
     // Read the header to get shape and element info
@@ -711,7 +716,7 @@ pub fn create_mmap<A, S, D>(
     offset: usize,
 ) -> Result<MemoryMappedArray<A>, CoreError>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync + Send + Sync,
     S: Data<Elem = A>,
     D: Dimension,
 {
@@ -735,7 +740,7 @@ pub fn create_temp_mmap<A, S, D>(
     offset: usize,
 ) -> Result<MemoryMappedArray<A>, CoreError>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync + Send + Sync,
     S: Data<Elem = A>,
     D: Dimension,
 {

@@ -17,9 +17,8 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 /// Type alias for test function signature
-type TestFunction<F> = Box<
-    dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync,
->;
+type TestFunction<F> =
+    Box<dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync>;
 
 /// Type alias for basic test case collection
 type BasicTestCaseCollection<'a, F> = Vec<(String, BasicTestCase<'a, F>)>;
@@ -29,8 +28,6 @@ type EdgeCaseTestCollection<'a, F> = Vec<(String, EdgeCaseTest<'a, F>)>;
 
 /// Type alias for stability distribution mapping
 type StabilityDistribution = HashMap<StabilityGrade, usize>;
-
-
 
 /// Comprehensive stability test suite
 pub struct StabilityTestSuite<'a, F: Float> {
@@ -851,7 +848,10 @@ pub fn test_function_stability<'a, F: Float, Func>(
     name: &str,
 ) -> Result<StabilityTestResult, StabilityError>
 where
-    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync + 'static,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>
+        + Send
+        + Sync
+        + 'static,
 {
     let suite = StabilityTestSuite::<'a, F>::new();
     let test_case = BasicTestCase {
@@ -873,7 +873,10 @@ pub fn create_test_scenario<'a, F: Float, Func>(
     expected_grade: StabilityGrade,
 ) -> TestScenario<'a, F>
 where
-    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync + 'static,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>
+        + Send
+        + Sync
+        + 'static,
 {
     TestScenario {
         name,

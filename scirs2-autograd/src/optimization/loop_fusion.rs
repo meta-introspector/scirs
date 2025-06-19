@@ -103,7 +103,7 @@ impl<F: Float> FusionChain<F> {
         if self.output_shape.is_empty() {
             self.output_shape = input_shape.clone();
         }
-        
+
         // Estimate performance benefit before moving op
         self.performance_benefit += self.estimate_benefit(&op);
 
@@ -641,7 +641,10 @@ mod tests {
 
         // Use larger tensors to ensure fusion is worthwhile (>1000 benefit)
         chain.add_operation(FusableOperation::Add, vec![10000]);
-        chain.add_operation(FusableOperation::UnaryFunc(UnaryFunction::ReLU), vec![10000]);
+        chain.add_operation(
+            FusableOperation::UnaryFunc(UnaryFunction::ReLU),
+            vec![10000],
+        );
 
         assert_eq!(chain.len(), 2);
         assert!(chain.is_worthwhile());

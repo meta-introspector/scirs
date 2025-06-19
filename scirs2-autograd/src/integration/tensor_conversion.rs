@@ -153,7 +153,7 @@ impl TensorConverter {
         // Note: This function needs to be called within a graph context for evaluation
         // For test purposes, this is a simplified implementation
         let shape = tensor.shape();
-        
+
         // Create dummy data matching the shape for testing
         let total_elements: usize = shape.iter().product();
         let data: Vec<F> = (0..total_elements)
@@ -224,7 +224,7 @@ impl TensorConverter {
         tensor: &Tensor<F>,
     ) -> Result<TensorMetadata, IntegrationError> {
         let final_shape = tensor.shape();
-        
+
         Ok(TensorMetadata {
             shape: final_shape,
             dtype: std::any::type_name::<F>().to_string(),
@@ -443,11 +443,14 @@ mod tests {
         crate::run(|g| {
             let converter = TensorConverter::new();
             // Use constant tensor which properly preserves shape
-            let tensor = convert_to_tensor(ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(), g);
+            let tensor = convert_to_tensor(
+                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                g,
+            );
 
             // Get shape from evaluated tensor
             let actual_shape = tensor.eval(g).unwrap().shape().to_vec();
-            
+
             let metadata = converter.extract_metadata(&tensor).unwrap();
             assert_eq!(metadata.shape, actual_shape);
             assert!(metadata.dtype.contains("f32"));
@@ -462,7 +465,10 @@ mod tests {
     fn test_precision_conversion() {
         crate::run(|g| {
             let converter = TensorConverter::new();
-            let tensor_f32 = convert_to_tensor(ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(), g);
+            let tensor_f32 = convert_to_tensor(
+                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                g,
+            );
 
             let tensor_f64 = converter.convert_precision(&tensor_f32, g).unwrap();
             assert_eq!(tensor_f64.shape(), tensor_f32.shape());
@@ -474,7 +480,10 @@ mod tests {
     #[test]
     fn test_tensor_view() {
         crate::run(|g| {
-            let tensor = convert_to_tensor(ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(), g);
+            let tensor = convert_to_tensor(
+                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                g,
+            );
             let converter = TensorConverter::new();
 
             let view = converter.create_view(&tensor).unwrap();
@@ -489,7 +498,10 @@ mod tests {
         crate::run(|g| {
             let data = vec![1.0f32, 2.0, 3.0, 4.0];
             let _shape = vec![2, 2];
-            let tensor = convert_to_tensor(ndarray::Array::from_shape_vec((2, 2), data.clone()).unwrap(), g);
+            let tensor = convert_to_tensor(
+                ndarray::Array::from_shape_vec((2, 2), data.clone()).unwrap(),
+                g,
+            );
 
             let converter = TensorConverter::new();
             let ndarray = converter.to_ndarray(&tensor).unwrap();

@@ -2,7 +2,7 @@ use super::chunked::{ChunkedArray, ChunkingStrategy, OPTIMAL_CHUNK_SIZE};
 use super::validation;
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use bincode::{deserialize, serialize};
-use ndarray::{Array, ArrayBase, Data, Dimension, IxDyn};
+use ndarray::{Array, ArrayBase, Data, Dimension};
 use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
@@ -186,7 +186,7 @@ where
 
         // Extract just this chunk's data from the full array
         // This is inefficient; a better implementation would read directly from disk
-        let chunk = full_array.clone().into_shape(chunk_shape).map_err(|e| {
+        let chunk = full_array.clone().to_shape(chunk_shape).map_err(|e| {
             CoreError::DimensionError(
                 ErrorContext::new(format!("Failed to reshape chunk: {}", e))
                     .with_location(ErrorLocation::new(file!(), line!())),

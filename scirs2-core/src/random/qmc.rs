@@ -807,8 +807,8 @@ mod tests {
             sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
             // Should be well-distributed
-            for i in 0..10 {
-                assert!(sorted[i] >= 0.0 && sorted[i] <= 1.0);
+            for &value in sorted.iter().take(10) {
+                assert!((0.0..=1.0).contains(&value));
             }
         }
     }

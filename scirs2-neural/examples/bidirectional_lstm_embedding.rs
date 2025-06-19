@@ -317,7 +317,7 @@ struct Dropout {
 #[allow(dead_code)]
 impl Dropout {
     fn new(p: f32) -> Self {
-        assert!(p >= 0.0 && p < 1.0, "Dropout probability must be in [0, 1)");
+        assert!((0.0..1.0).contains(&p), "Dropout probability must be in [0, 1)");
 
         Dropout {
             p,
@@ -918,13 +918,11 @@ fn evaluate_model(model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: 
 
 // Example predictions
 fn example_predictions(model: &mut BiLSTMClassifier, word_to_idx: &HashMap<String, usize>) {
-    let examples = vec![
-        "this is a great movie with amazing performances",
+    let examples = ["this is a great movie with amazing performances",
         "the movie was okay but nothing really stood out",
         "absolutely terrible waste of time and money",
         "incredible cinematography and wonderful acting",
-        "somewhat bland but has a few good moments",
-    ];
+        "somewhat bland but has a few good moments"];
 
     // Tokenize examples
     let tokenized: Vec<Vec<String>> = examples

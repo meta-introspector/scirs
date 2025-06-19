@@ -141,7 +141,7 @@ where
             .level(std::cmp::min(level.into(), 12) as u32)
             .build(Vec::new())?;
         encoder.write_all(data)?;
-        encoder.finish().0
+        Ok(encoder.finish().0)
     }
 
     fn decompress_lz4(data: &[u8]) -> IoResult<Vec<u8>> {
@@ -159,7 +159,6 @@ where
 {
     buffer: CompressedBuffer<T>,
     shape: D,
-    strides: D,
 }
 
 impl<T, D> CompressedArray<T, D>
@@ -185,12 +184,11 @@ where
         };
 
         let buffer = CompressedBuffer::new(&data, algorithm, level)
-            .map_err(|e| CoreError::CompressionError(e.to_string()))?;
+            .map_err(|e| CoreError::CompressionError(crate::error::ErrorContext::new(e.to_string())))?;
 
         Ok(Self {
             buffer,
             shape: array.raw_dim(),
-            strides: array.strides().clone(),
         })
     }
 
@@ -199,10 +197,10 @@ where
         let data = self
             .buffer
             .decompress()
-            .map_err(|e| CoreError::CompressionError(e.to_string()))?;
+            .map_err(|e| CoreError::CompressionError(crate::error::ErrorContext::new(e.to_string())))?;
 
         Array::from_shape_vec(self.shape.clone(), data)
-            .map_err(|e| CoreError::InvalidShape(e.to_string()))
+            .map_err(|e| CoreError::InvalidShape(crate::error::ErrorContext::new(e.to_string())))
     }
 
     /// Get the compression ratio
@@ -439,7 +437,7 @@ mod tests {
         let data2: Vec<f32> = (0..1000).map(|i| i as f32).collect();
 
         let id1 = pool.add_buffer(&data1).expect("Failed to add buffer 1");
-        let id2 = pool.add_buffer(&data2).expect("Failed to add buffer 2");
+        let _id2 = pool.add_buffer(&data2).expect("Failed to add buffer 2");
 
         assert_eq!(pool.stats().buffer_count, 2);
         assert!(pool.total_compression_ratio() > 1.0);

@@ -7,7 +7,7 @@ use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 /// A type-erased value that can hold any type implementing the necessary traits
 pub struct DynamicValue {

@@ -25,12 +25,13 @@ impl MaxPoolKernel {
             backend_metadata: HashMap::new(),
         };
 
-        let (cuda_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
+        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
 
         Self {
             base: BaseKernel::new(
                 "max_pool2d",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -40,7 +41,7 @@ impl MaxPoolKernel {
     }
 
     /// Get kernel sources for different backends
-    fn get_kernel_sources() -> (String, String, String, String) {
+    fn get_kernel_sources() -> (String, String, String, String, String) {
         // CUDA kernel for max pooling
         let cuda_source = r#"
 extern "C" __global__ void max_pool2d(
@@ -248,7 +249,10 @@ __kernel void max_pool2d(
 "#
         .to_string();
 
-        (cuda_source, wgpu_source, metal_source, opencl_source)
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
+        (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
     }
 }
 
@@ -297,12 +301,13 @@ impl AvgPoolKernel {
             backend_metadata: HashMap::new(),
         };
 
-        let (cuda_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
+        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
 
         Self {
             base: BaseKernel::new(
                 "avg_pool2d",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -312,7 +317,7 @@ impl AvgPoolKernel {
     }
 
     /// Get kernel sources for different backends
-    fn get_kernel_sources() -> (String, String, String, String) {
+    fn get_kernel_sources() -> (String, String, String, String, String) {
         // CUDA kernel for average pooling
         let cuda_source = r#"
 extern "C" __global__ void avg_pool2d(
@@ -412,7 +417,10 @@ __kernel void avg_pool2d(/* parameters similar to max pooling */) {
 "#
         .to_string();
 
-        (cuda_source, wgpu_source, metal_source, opencl_source)
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
+        (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
     }
 }
 

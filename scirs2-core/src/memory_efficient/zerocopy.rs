@@ -7,9 +7,8 @@
 
 use super::chunked::ChunkingStrategy;
 use super::memmap::{AccessMode, MemoryMappedArray};
-use super::memmap_slice::MemoryMappedSlice;
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use ndarray::{self, Array, Zip};
+use ndarray;
 use std::ops::{Add, Div, Mul, Sub};
 
 /// Trait for zero-copy operations on memory-mapped arrays.
@@ -18,7 +17,7 @@ use std::ops::{Add, Div, Mul, Sub};
 /// without unnecessary memory allocations or copies. The operations are designed
 /// to work efficiently with large datasets by processing data in chunks and
 /// maintaining memory-mapping where possible.
-pub trait ZeroCopyOps<A: Clone + Copy + 'static> {
+pub trait ZeroCopyOps<A: Clone + Copy + 'static + Send + Sync> {
     /// Maps a function over each element of the array without loading the entire array.
     ///
     /// This is similar to the `map` function in functional programming, but implemented
@@ -207,7 +206,7 @@ pub trait ZeroCopyOps<A: Clone + Copy + 'static> {
         A: Add<Output = A> + Div<Output = A> + From<u8> + From<usize>;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync> ZeroCopyOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A> for MemoryMappedArray<A> {
     fn map_zero_copy<F>(&self, f: F) -> CoreResult<MemoryMappedArray<A>>
     where
         F: Fn(A) -> A + Send + Sync,
@@ -238,8 +237,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> ZeroCopyOps<A> for MemoryMappedArr
         {
             // Use rayon directly since process_chunks_parallel has trait bounds
             // that we can't satisfy here (Send + Sync)
-            use rayon::prelude::*;
-
+            
             let chunk_size = (self.size / rayon::current_num_threads()).max(1024);
 
             // Calculate the number of chunks
@@ -306,8 +304,6 @@ impl<A: Clone + Copy + 'static + Send + Sync> ZeroCopyOps<A> for MemoryMappedArr
     where
         F: Fn(A, A) -> A + Send + Sync,
     {
-        use super::memmap_chunks::MemoryMappedChunks;
-
         // Process the input array in chunks
         let chunk_size = 1024 * 1024; // 1M elements
         let _strategy = ChunkingStrategy::Fixed(chunk_size);
@@ -535,7 +531,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> ZeroCopyOps<A> for MemoryMappedArr
 ///
 /// This trait provides methods for performing broadcasting operations between
 /// memory-mapped arrays without unnecessary memory allocations or copies.
-pub trait BroadcastOps<A: Clone + Copy + 'static> {
+pub trait BroadcastOps<A: Clone + Copy + 'static + Send + Sync> {
     /// Broadcasts an operation between two arrays of compatible shapes.
     ///
     /// Follows the `NumPy` broadcasting rules:
@@ -567,7 +563,7 @@ pub trait BroadcastOps<A: Clone + Copy + 'static> {
         F: Fn(A, A) -> A + Send + Sync;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync> BroadcastOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> BroadcastOps<A> for MemoryMappedArray<A> {
     fn broadcast_op<F>(&self, other: &Self, f: F) -> CoreResult<MemoryMappedArray<A>>
     where
         F: Fn(A, A) -> A + Send + Sync,
@@ -666,7 +662,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BroadcastOps<A> for MemoryMappedAr
 /// This trait provides implementations of standard arithmetic operations
 /// (addition, subtraction, multiplication, division) for memory-mapped arrays
 /// using the zero-copy infrastructure.
-pub trait ArithmeticOps<A: Clone + Copy + 'static> {
+pub trait ArithmeticOps<A: Clone + Copy + 'static + Send + Sync> {
     /// Adds two arrays element-wise.
     ///
     /// # Arguments
@@ -720,7 +716,7 @@ pub trait ArithmeticOps<A: Clone + Copy + 'static> {
         A: Div<Output = A>;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync> ArithmeticOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ArithmeticOps<A> for MemoryMappedArray<A> {
     fn add(&self, other: &Self) -> CoreResult<MemoryMappedArray<A>>
     where
         A: Add<Output = A>,

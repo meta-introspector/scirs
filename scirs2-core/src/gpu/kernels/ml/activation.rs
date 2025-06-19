@@ -39,6 +39,9 @@ extern "C" __global__ void relu(
 "#
         .to_string();
 
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
         let wgpu_source = r#"
 struct Uniforms {
     n: u32,
@@ -94,6 +97,7 @@ __kernel void relu(
             base: BaseKernel::new(
                 "relu",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -163,6 +167,9 @@ extern "C" __global__ void sigmoid(
 "#
         .to_string();
 
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
         let wgpu_source = r#"
 struct Uniforms {
     n: u32,
@@ -218,6 +225,7 @@ __kernel void sigmoid(
             base: BaseKernel::new(
                 "sigmoid",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -287,6 +295,9 @@ extern "C" __global__ void tanh_activation(
 "#
         .to_string();
 
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
         let wgpu_source = r#"
 struct Uniforms {
     n: u32,
@@ -342,6 +353,7 @@ __kernel void tanh_activation(
             base: BaseKernel::new(
                 "tanh",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,

@@ -9,7 +9,7 @@ fn main() {
         // Test Frobenius norm gradient
         println!("\n=== Testing Frobenius Norm Gradient ===");
         let matrix = convert_to_tensor(array![[3.0, 4.0], [0.0, 0.0]].into_dyn(), ctx);
-        let norm = frobenius_norm(&matrix);
+        let norm = frobenius_norm(matrix);
 
         // Expected norm: sqrt(3^2 + 4^2) = 5.0
         let norm_result = norm.eval(ctx).unwrap();

@@ -671,4 +671,3 @@ pub struct FeatureExtractionOptions {
     /// EMD features configuration
     pub emd: EMDConfig,
 }
-

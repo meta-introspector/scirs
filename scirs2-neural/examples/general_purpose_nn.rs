@@ -231,7 +231,7 @@ impl NeuralNetwork {
         for i in 0..layer_sizes.len() - 1 {
             let input_size = layer_sizes[i];
             let output_size = layer_sizes[i + 1];
-            let activation = activations[i].clone();
+            let activation = activations[i];
 
             layers.push(Layer::new(input_size, output_size, activation, &mut rng));
         }
@@ -424,7 +424,7 @@ fn train_xor_network() -> Result<()> {
 
         let mut network = NeuralNetwork::new(
             &[2, 4, 1],
-            &[activation.clone(), ActivationFunction::Sigmoid],
+            &[*activation, ActivationFunction::Sigmoid],
             LossFunction::MSE,
             42, // Same seed for comparison
         );
@@ -450,7 +450,7 @@ fn train_xor_network() -> Result<()> {
         let mut network = NeuralNetwork::new(
             &[2, 4, 1],
             &[ActivationFunction::ReLU, ActivationFunction::Sigmoid],
-            loss_fn.clone(),
+            *loss_fn,
             42, // Same seed for comparison
         );
 

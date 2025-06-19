@@ -225,6 +225,26 @@ pub enum CoreError {
     /// Invalid shape error (array shape is invalid)
     #[error("Invalid shape: {0}")]
     InvalidShape(ErrorContext),
+
+    /// Device error (GPU/hardware device error)
+    #[error("Device error: {0}")]
+    DeviceError(ErrorContext),
+
+    /// Mutex error (mutex poisoning or lock error)
+    #[error("Mutex error: {0}")]
+    MutexError(ErrorContext),
+
+    /// Thread error (threading error)
+    #[error("Thread error: {0}")]
+    ThreadError(ErrorContext),
+
+    /// Stream error (streaming operation error)
+    #[error("Stream error: {0}")]
+    StreamError(ErrorContext),
+
+    /// End of stream error (stream ended unexpectedly)
+    #[error("End of stream: {0}")]
+    EndOfStream(ErrorContext),
 }
 
 /// Result type alias for core operations

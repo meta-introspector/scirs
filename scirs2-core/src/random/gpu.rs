@@ -5,7 +5,7 @@
 //! scientific computing applications.
 
 use crate::error::{CoreError, CoreResult};
-use crate::gpu::{GpuBuffer, GpuContext, GpuKernelHandle};
+use crate::gpu::{GpuContext, GpuKernelHandle};
 use ndarray::{Array, IxDyn};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -36,7 +36,7 @@ pub enum GpuRngError {
 
 impl From<GpuRngError> for CoreError {
     fn from(err: GpuRngError) -> Self {
-        CoreError::ComputationError(err.to_string())
+        CoreError::ComputationError(crate::error::ErrorContext::new(err.to_string()))
     }
 }
 
@@ -128,7 +128,7 @@ impl GpuRandomGenerator {
 
         let base_seed = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map_err(|e| CoreError::ComputationError(e.to_string()))?
+            .map_err(|e| CoreError::ComputationError(crate::error::ErrorContext::new(e.to_string())))?
             .as_nanos() as u64;
 
         let mut seeds = Vec::with_capacity(count);
@@ -155,10 +155,10 @@ impl GpuRandomGenerator {
                 self.compile_philox_kernels()?;
             }
             _ => {
-                return Err(CoreError::ComputationError(format!(
+                return Err(CoreError::ComputationError(crate::error::ErrorContext::new(format!(
                     "Generator type {:?} not yet implemented",
                     generator_type
-                )));
+                ))));
             }
         }
 
@@ -361,10 +361,10 @@ impl GpuRandomGenerator {
                 self.generate_normal(count, *mean, *std_dev)
             }
             GpuDistribution::Exponential { lambda } => self.generate_exponential(count, *lambda),
-            _ => Err(CoreError::ComputationError(format!(
+            _ => Err(CoreError::ComputationError(crate::error::ErrorContext::new(format!(
                 "Distribution {:?} not yet implemented",
                 distribution
-            ))),
+            )))),
         }
     }
 
@@ -373,7 +373,7 @@ impl GpuRandomGenerator {
         let kernel = self
             .kernels
             .get("uniform")
-            .ok_or_else(|| CoreError::ComputationError("Uniform kernel not found".to_string()))?;
+            .ok_or_else(|| CoreError::ComputationError(crate::error::ErrorContext::new("Uniform kernel not found".to_string())))?;
 
         // Create GPU buffers
         let state = self.state.lock().unwrap();
@@ -521,7 +521,7 @@ impl GpuRandomGenerator {
         let flat_result = self.generate(distribution, total_size)?;
 
         // Reshape to desired dimensions
-        let reshaped = flat_result.into_shape(shape)?;
+        let reshaped = flat_result.to_shape(shape)?;
         Ok(reshaped)
     }
 
@@ -612,7 +612,7 @@ impl GpuRngManager {
     ) -> CoreResult<Arc<GpuRandomGenerator>> {
         let device = device
             .or_else(|| self.default_device.clone())
-            .ok_or_else(|| CoreError::ComputationError("No GPU device available".to_string()))?;
+            .ok_or_else(|| CoreError::ComputationError(crate::error::ErrorContext::new("No GPU device available".to_string())))?;
 
         let generator = Arc::new(GpuRandomGenerator::new(device, generator_type)?);
         self.generators.insert(name.to_string(), generator.clone());

@@ -116,6 +116,26 @@ impl ChunkMetadata {
         }
     }
 
+    /// Create new chunk metadata with explicit element size
+    pub fn new_with_element_size(
+        id: ChunkId,
+        shape: Vec<usize>,
+        file_offset: u64,
+        element_size: usize,
+    ) -> Self {
+        let size_bytes = shape.iter().product::<usize>() * element_size;
+
+        Self {
+            id,
+            size_bytes,
+            shape,
+            file_offset,
+            last_accessed: Instant::now(),
+            access_count: 0,
+            is_dirty: false,
+        }
+    }
+
     /// Update access statistics
     pub fn touch(&mut self) {
         self.last_accessed = Instant::now();
@@ -1119,8 +1139,8 @@ mod tests {
     #[test]
     fn test_chunk_cache() {
         let config = OutOfCoreConfig {
-            max_cached_chunks: 2,
-            max_cache_memory: 1024,
+            max_cached_chunks: 3,   // Increase to allow both chunks
+            max_cache_memory: 2048, // Increase memory limit to allow both chunks (800 bytes each)
             ..Default::default()
         };
 
@@ -1141,6 +1161,52 @@ mod tests {
 
         assert!(cache.get(&chunk_id1).is_some());
         assert!(cache.get(&chunk_id2).is_some());
+
+        let stats = cache.get_statistics();
+        assert_eq!(stats.cached_chunks, 2);
+    }
+
+    #[test]
+    fn test_chunk_cache_eviction() {
+        let config = OutOfCoreConfig {
+            max_cached_chunks: 2,   // Only allow 2 chunks
+            max_cache_memory: 2048, // Plenty of memory
+            cache_policy: CachePolicy::Lru,
+            ..Default::default()
+        };
+
+        let cache = ChunkCache::<f64>::new(config);
+
+        let chunk_id1 = ChunkId::new("test".to_string(), vec![0, 0]);
+        let chunk_id2 = ChunkId::new("test".to_string(), vec![0, 1]);
+        let chunk_id3 = ChunkId::new("test".to_string(), vec![0, 2]);
+
+        let chunk1 = Array::<f64, IxDyn>::zeros(IxDyn(&[10, 10]));
+        let chunk2 = Array::<f64, IxDyn>::zeros(IxDyn(&[10, 10]));
+        let chunk3 = Array::<f64, IxDyn>::zeros(IxDyn(&[10, 10]));
+
+        let metadata1 = ChunkMetadata::new(chunk_id1.clone(), vec![10, 10], 0);
+        let metadata2 = ChunkMetadata::new(chunk_id2.clone(), vec![10, 10], 100);
+        let metadata3 = ChunkMetadata::new(chunk_id3.clone(), vec![10, 10], 200);
+
+        // Add first two chunks
+        assert!(cache.put(chunk_id1.clone(), chunk1, metadata1).is_ok());
+        assert!(cache.put(chunk_id2.clone(), chunk2, metadata2).is_ok());
+
+        // Both should be accessible
+        assert!(cache.get(&chunk_id1).is_some());
+        assert!(cache.get(&chunk_id2).is_some());
+
+        let stats = cache.get_statistics();
+        assert_eq!(stats.cached_chunks, 2);
+
+        // Add third chunk, which should evict the first one (LRU)
+        assert!(cache.put(chunk_id3.clone(), chunk3, metadata3).is_ok());
+
+        // First chunk should be evicted, others should be present
+        assert!(cache.get(&chunk_id1).is_none());
+        assert!(cache.get(&chunk_id2).is_some());
+        assert!(cache.get(&chunk_id3).is_some());
 
         let stats = cache.get_statistics();
         assert_eq!(stats.cached_chunks, 2);

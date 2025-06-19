@@ -1324,7 +1324,7 @@ mod tests {
 
         // Coherence values should be between 0 and 1
         for &coh in result.coherence.iter() {
-            assert!(coh >= 0.0 && coh <= 1.0);
+            assert!((0.0..=1.0).contains(&coh));
         }
     }
 }

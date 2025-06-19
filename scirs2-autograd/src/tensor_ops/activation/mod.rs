@@ -715,7 +715,7 @@ mod tests {
             let x = convert_to_tensor(array![[1.0_f32, 2.0, 3.0]], g);
 
             // Test softmax with 2D input (batch of 1)
-            let softmax_result = softmax(x, 1);  // Apply softmax along last axis
+            let softmax_result = softmax(x, 1); // Apply softmax along last axis
             let actual = softmax_result.eval(g).unwrap();
 
             // Check that probabilities sum to 1

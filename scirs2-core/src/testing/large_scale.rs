@@ -9,14 +9,14 @@
 //! - Scalability limit discovery
 
 use crate::error::{CoreError, CoreResult};
-use crate::testing::{TestConfig, TestResult, TestRunner};
+use crate::testing::{TestConfig, TestResult};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 use tempfile::{NamedTempFile, TempDir};
 
 #[cfg(feature = "memory_efficient")]
-use crate::memory_efficient::{create_temp_mmap, MemoryMappedArray};
+use crate::memory_efficient::MemoryMappedArray;
 
 /// Large-scale test configuration
 #[derive(Debug, Clone)]
@@ -298,8 +298,8 @@ impl LargeDatasetGenerator {
                 .map(|_| {
                     #[cfg(feature = "random")]
                     {
-                        if rng.gen_range(0.0..=1.0) < density {
-                            rng.gen_range(-1000.0..=1000.0)
+                        if rng.random_range(0.0..=1.0) < density {
+                            rng.random_range(-1000.0..=1000.0)
                         } else {
                             0.0
                         }
@@ -384,7 +384,7 @@ impl LargeScaleProcessor {
         }
 
         // Open file for reading
-        use std::io::{Read, Seek, SeekFrom};
+        use std::io::Read;
         let mut file = fs::File::open(dataset_path)
             .map_err(|e| CoreError::IoError(format!("Failed to open dataset file: {}", e)))?;
 
@@ -518,7 +518,7 @@ impl LargeScaleProcessor {
         &self,
         dataset_path: &Path,
     ) -> CoreResult<LargeScaleTestResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
         let mut result = LargeScaleTestResult::new("out_of_core_reduction".to_string());
 
         // Perform sum reduction as a test operation
@@ -605,12 +605,13 @@ impl LargeScaleTestUtils {
             .with_chunk_size(1024 * 1024)            // 1MB chunks
             .with_progress_reporting(false);
 
-        suite.add_test("chunked_dataset_processing", |_runner| {
-            let generator = LargeDatasetGenerator::new(large_config.clone())?;
-            let processor = LargeScaleProcessor::new(large_config.clone());
+        let large_config_1 = large_config.clone();
+        suite.add_test("chunked_dataset_processing", move |_runner| {
+            let generator = LargeDatasetGenerator::new(large_config_1.clone())?;
+            let processor = LargeScaleProcessor::new(large_config_1.clone());
 
             // Generate test dataset
-            let dataset_path = generator.generate_numeric_dataset(large_config.max_dataset_size)?;
+            let dataset_path = generator.generate_numeric_dataset(large_config_1.max_dataset_size)?;
 
             // Test chunked processing
             let result = processor.test_chunked_processing(&dataset_path, |chunk| {
@@ -634,13 +635,14 @@ impl LargeScaleTestUtils {
             ))
         });
 
-        suite.add_test("sparse_dataset_processing", |_runner| {
-            let generator = LargeDatasetGenerator::new(large_config.clone())?;
-            let processor = LargeScaleProcessor::new(large_config.clone());
+        let large_config_2 = large_config.clone();
+        suite.add_test("sparse_dataset_processing", move |_runner| {
+            let generator = LargeDatasetGenerator::new(large_config_2.clone())?;
+            let processor = LargeScaleProcessor::new(large_config_2.clone());
 
             // Generate sparse test dataset
             let dataset_path =
-                generator.generate_sparse_dataset(large_config.max_dataset_size, 0.1)?;
+                generator.generate_sparse_dataset(large_config_2.max_dataset_size, 0.1)?;
 
             // Test sparse processing
             let result = processor.test_chunked_processing(&dataset_path, |chunk| {
@@ -664,12 +666,13 @@ impl LargeScaleTestUtils {
             ))
         });
 
-        suite.add_test("out_of_core_reduction", |_runner| {
-            let generator = LargeDatasetGenerator::new(large_config.clone())?;
-            let processor = LargeScaleProcessor::new(large_config.clone());
+        let large_config_3 = large_config.clone();
+        suite.add_test("out_of_core_reduction", move |_runner| {
+            let generator = LargeDatasetGenerator::new(large_config_3.clone())?;
+            let processor = LargeScaleProcessor::new(large_config_3.clone());
 
             // Generate test dataset
-            let dataset_path = generator.generate_numeric_dataset(large_config.max_dataset_size)?;
+            let dataset_path = generator.generate_numeric_dataset(large_config_3.max_dataset_size)?;
 
             // Test out-of-core reduction
             let result = processor.test_out_of_core_reduction(&dataset_path)?;
@@ -691,12 +694,13 @@ impl LargeScaleTestUtils {
         });
 
         #[cfg(feature = "memory_efficient")]
-        suite.add_test("memory_mapped_processing", |_runner| {
-            let generator = LargeDatasetGenerator::new(large_config.clone())?;
-            let processor = LargeScaleProcessor::new(large_config.clone());
+        let large_config_4 = large_config.clone();
+        suite.add_test("memory_mapped_processing", move |_runner| {
+            let generator = LargeDatasetGenerator::new(large_config_4.clone())?;
+            let processor = LargeScaleProcessor::new(large_config_4.clone());
 
             // Generate test dataset
-            let dataset_path = generator.generate_numeric_dataset(large_config.max_dataset_size)?;
+            let dataset_path = generator.generate_numeric_dataset(large_config_4.max_dataset_size)?;
 
             // Test memory-mapped processing
             let result = processor.test_memory_mapped_processing(&dataset_path, |chunk| {
@@ -730,7 +734,6 @@ impl LargeScaleTestUtils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
 
     #[test]
     fn test_large_scale_config() {

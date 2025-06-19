@@ -570,7 +570,7 @@ where
     ///
     /// // Create a builder for high-dimensional interpolation
     /// let builder = HighDimensionalInterpolator::<f64>::builder();
-    /// 
+    ///
     /// // The builder can be configured with various options before building
     /// println!("Builder created successfully");
     /// ```

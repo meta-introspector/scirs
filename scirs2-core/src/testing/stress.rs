@@ -9,14 +9,12 @@
 //! - Performance degradation detection
 
 use crate::error::{CoreError, CoreResult};
-use crate::testing::{TestConfig, TestResult, TestRunner};
+use crate::testing::{TestConfig, TestResult};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
-
 /// Stress test configuration
 #[derive(Debug, Clone)]
 pub struct StressTestConfig {
@@ -634,8 +632,9 @@ impl StressTestUtils {
             .with_max_memory(64 * 1024 * 1024); // 64MB for tests
 
         // Memory stress tests
-        suite.add_test("memory_progressive_allocation", |_runner| {
-            let tester = MemoryStressTester::new(stress_config.clone());
+        let stress_config_clone1 = stress_config.clone();
+        suite.add_test("memory_progressive_allocation", move |_runner| {
+            let tester = MemoryStressTester::new(stress_config_clone1.clone());
             let result = tester.test_progressive_allocation()?;
 
             if result.error.is_some() {
@@ -652,8 +651,9 @@ impl StressTestUtils {
             )
         });
 
-        suite.add_test("memory_fragmented_allocation", |_runner| {
-            let tester = MemoryStressTester::new(stress_config.clone());
+        let stress_config_clone2 = stress_config.clone();
+        suite.add_test("memory_fragmented_allocation", move |_runner| {
+            let tester = MemoryStressTester::new(stress_config_clone2.clone());
             let result = tester.test_fragmented_allocation()?;
 
             if result.error.is_some() {

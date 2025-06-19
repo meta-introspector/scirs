@@ -140,7 +140,7 @@ pub struct AdaptiveChunkingResult {
 }
 
 /// Trait for adaptive chunking capabilities.
-pub trait AdaptiveChunking<A: Clone + Copy + 'static> {
+pub trait AdaptiveChunking<A: Clone + Copy + 'static + Send + Sync> {
     /// Calculate an optimal chunking strategy based on array characteristics.
     ///
     /// # Arguments
@@ -209,7 +209,7 @@ pub trait AdaptiveChunking<A: Clone + Copy + 'static> {
         A: Send + Sync;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync> AdaptiveChunking<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A> for MemoryMappedArray<A> {
     fn adaptive_chunking(
         &self,
         params: AdaptiveChunkingParams,
@@ -312,7 +312,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> AdaptiveChunking<A> for MemoryMapp
     }
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A> {
     /// Optimize chunking based on array dimensionality.
     fn optimize_for_dimensionality(
         &self,

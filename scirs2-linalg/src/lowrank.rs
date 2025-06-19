@@ -671,7 +671,6 @@ mod tests {
             }
             Err(_) => {
                 // SVD may fail due to numerical issues, which is acceptable for this test
-                return;
             }
         }
     }

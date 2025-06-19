@@ -11,13 +11,14 @@
 //! - Distributivity: a ⊗ (b ⊕ c) = (a ⊗ b) ⊕ (a ⊗ c)
 
 use crate::error::{CoreError, CoreResult};
-use crate::numeric::{RealNumber, ScientificNumber};
-use crate::testing::{TestConfig, TestResult, TestRunner};
+use crate::testing::{TestConfig, TestResult};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "random")]
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+#[cfg(feature = "random")]
+use rand::rngs::StdRng;
 
 /// Mathematical property that can be tested
 pub trait MathematicalProperty<T> {
@@ -143,7 +144,7 @@ pub struct PropertyFailure {
 pub struct PropertyTestEngine {
     config: PropertyTestConfig,
     #[cfg(feature = "random")]
-    rng: Rng,
+    rng: StdRng,
 }
 
 impl PropertyTestEngine {
@@ -151,9 +152,9 @@ impl PropertyTestEngine {
     pub fn new(config: PropertyTestConfig) -> Self {
         #[cfg(feature = "random")]
         let rng = if let Some(seed) = config.seed {
-            Rng::seed_from_u64(seed)
+            StdRng::seed_from_u64(seed)
         } else {
-            Rng::new()
+            StdRng::from_entropy()
         };
 
         Self {
@@ -255,7 +256,7 @@ impl PropertyTestEngine {
 /// Generator for floating-point numbers
 pub struct FloatGenerator {
     #[cfg(feature = "random")]
-    rng: Rng,
+    rng: StdRng,
     min_value: f64,
     max_value: f64,
 }
@@ -265,7 +266,7 @@ impl FloatGenerator {
     pub fn new(min_value: f64, max_value: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: Rng::new(),
+            rng: StdRng::from_entropy(),
             min_value,
             max_value,
         }
@@ -275,7 +276,7 @@ impl FloatGenerator {
     pub fn with_seed(min_value: f64, max_value: f64, seed: u64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: Rng::seed_from_u64(seed),
+            rng: StdRng::seed_from_u64(seed),
             min_value,
             max_value,
         }
@@ -286,7 +287,7 @@ impl PropertyGenerator<f64> for FloatGenerator {
     fn generate(&mut self) -> f64 {
         #[cfg(feature = "random")]
         {
-            self.rng.gen_range(self.min_value..=self.max_value)
+            self.rng.random_range(self.min_value..=self.max_value)
         }
         #[cfg(not(feature = "random"))]
         {
@@ -297,7 +298,7 @@ impl PropertyGenerator<f64> for FloatGenerator {
     fn generate_range(&mut self, min: f64, max: f64) -> f64 {
         #[cfg(feature = "random")]
         {
-            self.rng.gen_range(min..=max)
+            self.rng.random_range(min..=max)
         }
         #[cfg(not(feature = "random"))]
         {
@@ -738,7 +739,7 @@ impl PropertyTestUtils {
         // Test square function properties
         suite.add_test("square_function_properties", |_runner| {
             let prop_config = PropertyTestConfig::default().with_test_cases(100);
-            let results = Self::test_function_properties(
+            let _results = Self::test_function_properties(
                 |x| Ok(x * x),
                 false,      // not idempotent
                 Some(true), // monotonically increasing for x >= 0

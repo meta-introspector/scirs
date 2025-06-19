@@ -3,7 +3,7 @@
 //! This module provides automated regression testing to detect performance
 //! degradation over time and across different versions of the codebase.
 
-use crate::benchmarking::{BenchmarkConfig, BenchmarkResult, BenchmarkRunner};
+use crate::benchmarking::{BenchmarkResult, BenchmarkRunner};
 use crate::error::{CoreError, CoreResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -569,7 +569,7 @@ mod tests {
 
     #[test]
     fn test_historical_result() {
-        let benchmark_config = BenchmarkConfig::default();
+        let benchmark_config = crate::benchmarking::BenchmarkConfig::default();
         let mut result = BenchmarkResult::new("test_benchmark".to_string(), benchmark_config);
         result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(
             Duration::from_millis(100),
@@ -593,7 +593,7 @@ mod tests {
         let detector = RegressionDetector::new(config);
 
         // Create a test benchmark result
-        let benchmark_config = BenchmarkConfig::default();
+        let benchmark_config = crate::benchmarking::BenchmarkConfig::default();
         let mut result = BenchmarkResult::new("test_regression".to_string(), benchmark_config);
         result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(
             Duration::from_millis(100),

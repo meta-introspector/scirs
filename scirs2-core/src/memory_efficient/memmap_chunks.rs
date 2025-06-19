@@ -94,7 +94,7 @@ use rayon::prelude::*;
 /// This trait extends `MemoryMappedArray` with methods for processing large datasets
 /// in manageable chunks, which helps to control memory usage and enables working with
 /// arrays that might be too large to fit entirely in memory.
-pub trait MemoryMappedChunks<A: Clone + Copy + 'static> {
+pub trait MemoryMappedChunks<A: Clone + Copy + 'static + Send + Sync> {
     /// Get the number of chunks for the given chunking strategy.
     ///
     /// # Arguments
@@ -212,7 +212,7 @@ pub trait MemoryMappedChunks<A: Clone + Copy + 'static> {
 /// This trait is only available when the 'parallel' feature is enabled.
 /// It extends the `MemoryMappedChunks` trait with parallel processing capabilities.
 #[cfg(feature = "parallel")]
-pub trait MemoryMappedChunksParallel<A: Clone + Copy + 'static + Send + Sync>:
+pub trait MemoryMappedChunksParallel<A: Clone + Copy + 'static + Send + Sync + Send + Sync>:
     MemoryMappedChunks<A>
 {
     /// Process chunks in parallel and collect the results.
@@ -331,7 +331,7 @@ pub trait MemoryMappedChunksParallel<A: Clone + Copy + 'static + Send + Sync>:
 /// ```
 pub struct ChunkIter<'a, A>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync + Send + Sync,
 {
     /// Reference to the memory-mapped array
     array: &'a MemoryMappedArray<A>,
@@ -345,7 +345,7 @@ where
 
 impl<'a, A> Iterator for ChunkIter<'a, A>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync,
 {
     type Item = Array1<A>;
 
@@ -389,14 +389,14 @@ where
     }
 }
 
-impl<'a, A> ExactSizeIterator for ChunkIter<'a, A> where A: Clone + Copy + 'static {}
+impl<'a, A> ExactSizeIterator for ChunkIter<'a, A> where A: Clone + Copy + 'static + Send + Sync {}
 
 /// Extension trait for MemoryMappedArray to enable chunked iteration.
 ///
 /// This trait extends `MemoryMappedArray` with the ability to iterate over chunks
 /// of the array, which provides a convenient way to process large arrays sequentially
 /// in smaller, manageable pieces.
-pub trait MemoryMappedChunkIter<A: Clone + Copy + 'static> {
+pub trait MemoryMappedChunkIter<A: Clone + Copy + 'static + Send + Sync> {
     /// Create an iterator over chunks of the array (for 1D arrays only).
     ///
     /// This method returns an iterator that yields chunks of the array as
@@ -433,7 +433,7 @@ pub trait MemoryMappedChunkIter<A: Clone + Copy + 'static> {
     fn chunks(&self, strategy: ChunkingStrategy) -> ChunkIter<A>;
 }
 
-impl<A: Clone + Copy + 'static> MemoryMappedChunks<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A> for MemoryMappedArray<A> {
     fn chunk_count(&self, strategy: ChunkingStrategy) -> usize {
         match strategy {
             ChunkingStrategy::Fixed(size) => {
@@ -578,7 +578,7 @@ impl<A: Clone + Copy + 'static> MemoryMappedChunks<A> for MemoryMappedArray<A> {
 
 // Add the parallel methods directly to the existing implementation
 #[cfg(feature = "parallel")]
-impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedChunksParallel<A>
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksParallel<A>
     for MemoryMappedArray<A>
 {
     fn process_chunks_parallel<F, R>(&self, strategy: ChunkingStrategy, f: F) -> Vec<R>
@@ -717,7 +717,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedChunksParallel<A>
     }
 }
 
-impl<A: Clone + Copy + 'static> MemoryMappedChunkIter<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedChunkIter<A> for MemoryMappedArray<A> {
     fn chunks(&self, strategy: ChunkingStrategy) -> ChunkIter<A> {
         ChunkIter {
             array: self,

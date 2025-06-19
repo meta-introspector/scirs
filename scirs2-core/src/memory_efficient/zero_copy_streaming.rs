@@ -38,16 +38,11 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use crate::memory_efficient::streaming::{StreamConfig, StreamMode, StreamState};
-#[cfg(feature = "parallel")]
-use crate::parallel;
-use ndarray::{Array, ArrayBase, ArrayView, RawData};
+use crate::memory_efficient::streaming::StreamState;
 use std::alloc::{alloc_zeroed, dealloc, Layout};
-use std::collections::{HashMap, VecDeque};
-use std::marker::PhantomData;
 use std::ptr::NonNull;
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
-use std::sync::{Arc, Condvar, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 

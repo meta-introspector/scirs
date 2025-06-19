@@ -43,7 +43,7 @@ pub enum CrossDeviceError {
 
 impl From<CrossDeviceError> for CoreError {
     fn from(err: CrossDeviceError) -> Self {
-        CoreError::ComputationError(err.to_string())
+        CoreError::ComputationError(crate::error::ErrorContext::new(err.to_string()))
     }
 }
 
@@ -325,10 +325,11 @@ impl Device for GpuContextWrapper {
 
     fn allocate(&self, size: usize) -> CoreResult<usize> {
         // Use the GPU device's buffer allocation
-        let buffer = self.inner.create_buffer::<u8>(size)?;
+        let buffer = self.inner.create_buffer::<u8>(size);
         // In a real implementation, we'd extract the actual device pointer
-        // For now, we'll use a placeholder
-        Ok(buffer.as_ptr() as usize)
+        // For now, we'll use a placeholder based on buffer properties
+        let _buffer = buffer; // Store the buffer (in real implementation, we'd track this)
+        Ok(size) // Return the size as a placeholder ID
     }
 
     fn deallocate(&self, _address: usize) -> CoreResult<()> {
@@ -429,7 +430,7 @@ impl CrossDeviceMemoryManager {
 
     /// Allocate memory on a specific device
     pub fn allocate<T: 'static>(
-        &self,
+        self: &Arc<Self>,
         device_type: &DeviceType,
         count: usize,
     ) -> CoreResult<CrossDeviceBuffer<T>> {
@@ -458,12 +459,12 @@ impl CrossDeviceMemoryManager {
             device_type.clone(),
             address,
             count,
-            Arc::new(self),
+            self.clone(),
         ))
     }
 
     /// Allocate memory on the default device
-    pub fn allocate_default<T: 'static>(&self, count: usize) -> CoreResult<CrossDeviceBuffer<T>> {
+    pub fn allocate_default<T: 'static>(self: &Arc<Self>, count: usize) -> CoreResult<CrossDeviceBuffer<T>> {
         let default_device = self
             .get_default_device()
             .ok_or_else(|| CrossDeviceError::DeviceNotFound("No default device set".to_string()))?;
@@ -473,7 +474,7 @@ impl CrossDeviceMemoryManager {
 
     /// Transfer data between devices
     pub fn transfer<T: 'static + Copy>(
-        &self,
+        self: &Arc<Self>,
         src_buffer: &CrossDeviceBuffer<T>,
         dst_device: &DeviceType,
     ) -> CoreResult<CrossDeviceBuffer<T>> {
@@ -600,7 +601,7 @@ impl CrossDeviceMemoryManager {
     /// Internal method to remove allocation (called by CrossDeviceBuffer on drop)
     pub(crate) fn remove_allocation(&self, allocation_id: &str) {
         let mut allocations = self.allocations.write().unwrap();
-        if let Some(mut allocation) = allocations.get_mut(allocation_id) {
+        if let Some(allocation) = allocations.get_mut(allocation_id) {
             if allocation.remove_ref() == 0 {
                 allocations.remove(allocation_id);
             }

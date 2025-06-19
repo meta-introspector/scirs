@@ -15,7 +15,7 @@ pub mod kernels;
 pub mod tensor_cores;
 
 /// GPU backend type
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GpuBackend {
     /// NVIDIA CUDA backend
     Cuda,
@@ -152,6 +152,12 @@ impl GpuDataType for f32 {}
 impl GpuDataType for f64 {}
 impl GpuDataType for i32 {}
 impl GpuDataType for u32 {}
+impl GpuDataType for u8 {}
+impl GpuDataType for i8 {}
+impl GpuDataType for u16 {}
+impl GpuDataType for i16 {}
+impl GpuDataType for u64 {}
+impl GpuDataType for i64 {}
 
 /// GPU buffer
 pub struct GpuBuffer<T: GpuDataType> {
@@ -455,6 +461,20 @@ impl GpuContext {
         _metadata: &kernels::KernelMetadata,
     ) -> Result<GpuKernelHandle, GpuError> {
         self.execute(|compiler| compiler.compile(source))
+    }
+
+    /// Get available memory on the device
+    pub fn get_available_memory(&self) -> Option<usize> {
+        // In a real implementation, this would query the device
+        // For now, return a placeholder value
+        Some(1024 * 1024 * 1024) // 1GB
+    }
+
+    /// Get total memory on the device
+    pub fn get_total_memory(&self) -> Option<usize> {
+        // In a real implementation, this would query the device
+        // For now, return a placeholder value
+        Some(4 * 1024 * 1024 * 1024) // 4GB
     }
 }
 

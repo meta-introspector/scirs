@@ -4,12 +4,8 @@
 //! numerical analysis, stability metrics, and the comprehensive test framework.
 
 use scirs2_autograd::tensor::Tensor;
-use scirs2_autograd::testing::numerical_analysis::{
-    NumericalAnalyzer,
-};
-use scirs2_autograd::testing::stability_metrics::{
-    StabilityGrade, StabilityMetrics,
-};
+use scirs2_autograd::testing::numerical_analysis::NumericalAnalyzer;
+use scirs2_autograd::testing::stability_metrics::{StabilityGrade, StabilityMetrics};
 use scirs2_autograd::testing::stability_test_framework::{
     create_test_scenario, run_basic_stability_tests, run_comprehensive_stability_tests,
     run_stability_tests_with_config, test_function_stability, StabilityTestSuite, TestConfig,
@@ -329,7 +325,7 @@ fn test_different_function_types() {
             "Test not fully implemented".to_string(),
         ))
     };
-    
+
     let function_names = vec!["constant", "identity", "square"];
 
     for name in function_names {
@@ -356,7 +352,11 @@ fn test_large_tensor_stability() {
         ))
     };
 
-    let result = test_function_stability(move |x| identity_function(x), &large_input, "large_tensor_test");
+    let result = test_function_stability(
+        move |x| identity_function(x),
+        &large_input,
+        "large_tensor_test",
+    );
     assert!(result.is_ok());
 
     let test_result = result.unwrap();

@@ -43,13 +43,11 @@
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
-use std::sync::{Arc, Condvar, Mutex, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
-
 /// Task priority levels for the work-stealing scheduler
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TaskPriority {
@@ -255,7 +253,7 @@ where
 
 /// Task wrapper with priority and metadata
 struct PrioritizedTask {
-    task: Box<dyn WorkStealingTask<Output = Box<dyn std::any::Any + Send>>>,
+    task: Option<Box<dyn WorkStealingTask<Output = Box<dyn std::any::Any + Send>>>>,
     priority: TaskPriority,
     submitted_at: Instant,
     numa_hint: Option<usize>,
@@ -267,15 +265,16 @@ impl PrioritizedTask {
         T::Output: 'static,
     {
         Self {
-            task: Box::new(TaskWrapper::new(task)),
+            task: Some(Box::new(TaskWrapper::new(task))),
             priority,
             submitted_at: Instant::now(),
             numa_hint,
         }
     }
 
-    fn execute(self) -> Box<dyn std::any::Any + Send> {
-        self.task.execute()
+    fn execute(mut self) -> Box<dyn std::any::Any + Send> {
+        let task = self.task.take().expect("Task already executed");
+        task.execute()
     }
 }
 
@@ -661,10 +660,13 @@ impl WorkStealingScheduler {
         }
 
         // Set up worker cross-references for stealing
-        for i in 0..workers.len() {
-            for j in 0..workers.len() {
+        // First collect all local queue references
+        let local_queues: Vec<_> = workers.iter().map(|w| w.local_queue.clone()).collect();
+        
+        for (i, worker) in workers.iter_mut().enumerate() {
+            for (j, queue) in local_queues.iter().enumerate() {
                 if i != j {
-                    workers[i].add_other_worker(workers[j].local_queue.clone());
+                    worker.add_other_worker(queue.clone());
                 }
             }
         }
@@ -774,21 +776,26 @@ impl WorkStealingScheduler {
         T: WorkStealingTask,
         T::Output: 'static,
     {
-        let prioritized_task = PrioritizedTask::new(task, priority, numa_hint);
-
         // Try to submit to a specific worker's local queue if NUMA hint is provided
         if let Some(numa_node) = numa_hint {
             if numa_node < self.workers.len() {
                 if let Ok(mut local_queue) = self.workers[numa_node].local_queue.try_lock() {
-                    if local_queue.push(prioritized_task).is_ok() {
-                        self.update_submit_stats();
-                        return Ok(());
-                    }
+                    // If we can get the lock, use the local queue
+                    let prioritized_task = PrioritizedTask::new(task, priority, numa_hint);
+                    local_queue.push(prioritized_task).map_err(|_| {
+                        CoreError::StreamError(
+                            ErrorContext::new("Local task queue is full".to_string())
+                                .with_location(ErrorLocation::new(file!(), line!())),
+                        )
+                    })?;
+                    self.update_submit_stats();
+                    return Ok(());
                 }
             }
         }
 
         // Fall back to global queue
+        let prioritized_task = PrioritizedTask::new(task, priority, numa_hint);
         let mut global_queue = self.global_queue.lock().unwrap();
         global_queue.push(prioritized_task).map_err(|_| {
             CoreError::StreamError(

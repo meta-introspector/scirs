@@ -11,7 +11,7 @@ fn main() {
         println!("Input matrix A: {:?}", a.eval(ctx).unwrap());
 
         // Test Frobenius norm computation
-        let norm = T::frobenius_norm(&a);
+        let norm = T::frobenius_norm(a);
         let norm_result = norm.eval(ctx).unwrap();
         println!("Frobenius norm: {}", norm_result[[]]);
 

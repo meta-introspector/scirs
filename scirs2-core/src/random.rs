@@ -930,7 +930,7 @@ pub mod parallel {
             D: Distribution<T> + Copy + Send + Sync,
             T: Send,
         {
-            use rayon::prelude::*;
+            use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
             (0..count)
                 .into_par_iter()
@@ -1226,7 +1226,7 @@ mod tests {
 
         assert_eq!(points.len(), 10);
         assert!(points.iter().all(|p| p.len() == 2));
-        assert!(points.iter().flatten().all(|&x| x >= 0.0 && x < 1.0));
+        assert!(points.iter().flatten().all(|&x| (0.0..1.0).contains(&x)));
     }
 
     #[test]
@@ -1236,7 +1236,7 @@ mod tests {
 
         assert_eq!(points.len(), 10);
         assert!(points.iter().all(|p| p.len() == 2));
-        assert!(points.iter().flatten().all(|&x| x >= 0.0 && x < 1.0));
+        assert!(points.iter().flatten().all(|&x| (0.0..1.0).contains(&x)));
     }
 
     #[test]
@@ -1245,14 +1245,14 @@ mod tests {
         let samples = lhs.generate_samples(10);
 
         assert_eq!(samples.shape(), &[10, 2]);
-        assert!(samples.iter().all(|&x| x >= 0.0 && x < 1.0));
+        assert!(samples.iter().all(|&x| (0.0..1.0).contains(&x)));
     }
 
     #[test]
     fn test_secure_random() {
         let mut secure_rng = secure::SecureRandom::new();
         let value = secure_rng.random_f64();
-        assert!(value >= 0.0 && value < 1.0);
+        assert!((0.0..1.0).contains(&value));
 
         let bytes = secure_rng.random_bytes(32);
         assert_eq!(bytes.len(), 32);
@@ -1321,7 +1321,7 @@ mod tests {
         assert_eq!(samples.len(), 100);
         assert!(samples
             .iter()
-            .all(|&x| x >= 0.0 && x < 2.0 * std::f64::consts::PI));
+            .all(|&x| (0.0..2.0 * std::f64::consts::PI).contains(&x)));
     }
 
     #[test]
@@ -1330,7 +1330,7 @@ mod tests {
 
         let result = pool.with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).unwrap()));
 
-        assert!(result >= 0.0 && result < 1.0);
+        assert!((0.0..1.0).contains(&result));
     }
 
     #[test]

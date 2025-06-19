@@ -185,7 +185,7 @@ impl CompressedMemMapBuilder {
         path: impl AsRef<Path>,
     ) -> CoreResult<CompressedMemMappedArray<A>>
     where
-        A: Clone + Copy + 'static,
+        A: Clone + Copy + 'static + Send + Sync,
         S: RawData<Elem = A>,
         D: Dimension,
     {
@@ -338,7 +338,7 @@ impl CompressedMemMapBuilder {
         path: impl AsRef<Path>,
     ) -> CoreResult<CompressedMemMappedArray<A>>
     where
-        A: Clone + Copy + 'static,
+        A: Clone + Copy + 'static + Send + Sync,
     {
         // Create ndarray from raw data
         let array = Array::from_shape_vec(IxDyn(shape), data.to_vec())
@@ -354,7 +354,7 @@ impl CompressedMemMapBuilder {
 /// This struct provides a view into a compressed array stored on disk,
 /// with transparent decompression of blocks as they are accessed.
 #[derive(Debug, Clone)]
-pub struct CompressedMemMappedArray<A: Clone + Copy + 'static> {
+pub struct CompressedMemMappedArray<A: Clone + Copy + 'static + Send + Sync> {
     /// Path to the compressed file
     path: PathBuf,
 
@@ -368,7 +368,7 @@ pub struct CompressedMemMappedArray<A: Clone + Copy + 'static> {
     _phantom: std::marker::PhantomData<A>,
 }
 
-impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     /// Open a compressed memory-mapped array from a file.
     ///
     /// # Arguments
@@ -453,7 +453,7 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     }
 
     /// Get the shape of the array.
-    pub const fn shape(&self) -> &[usize] {
+    pub fn shape(&self) -> &[usize] {
         &self.metadata.shape
     }
 
@@ -468,8 +468,18 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     }
 
     /// Get the metadata for the compressed file.
-    pub const fn metadata(&self) -> &CompressedFileMetadata {
+    pub fn metadata(&self) -> &CompressedFileMetadata {
         &self.metadata
+    }
+
+    /// Get the block size.
+    pub fn block_size(&self) -> usize {
+        self.metadata.block_size
+    }
+
+    /// Get the number of blocks.
+    pub fn num_blocks(&self) -> usize {
+        self.metadata.num_blocks
     }
 
     /// Load a specific block into memory.
@@ -719,12 +729,12 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
         // Create iterators for the result indices
         let mut result_indices = vec![0; ranges.len()];
         let mut source_indices = Vec::with_capacity(ranges.len());
-        for (i, &(start, _)) in ranges.iter().enumerate() {
+        for (_i, &(start, _)) in ranges.iter().enumerate() {
             source_indices.push(start);
         }
 
         // Iterate through all elements in the result
-        for result_flat_idx in 0..result_size {
+        for _result_flat_idx in 0..result_size {
             // Calculate source flat index
             let mut source_flat_idx = 0;
             let mut stride = 1;
@@ -794,7 +804,8 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     /// A vector of results, one for each block
     pub fn process_blocks<F, R>(&self, f: F) -> CoreResult<Vec<R>>
     where
-        F: FnMut(&[A], usize) -> R,
+        F: Fn(&[A], usize) -> R + Send + Sync + 'static,
+        R: Send + 'static,
     {
         self.process_blocks_internal(f, false, None)
     }
@@ -811,7 +822,8 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     /// A vector of results, one for each block
     pub fn process_blocks_with_size<F, R>(&self, block_size: usize, f: F) -> CoreResult<Vec<R>>
     where
-        F: FnMut(&[A], usize) -> R,
+        F: Fn(&[A], usize) -> R + Send + Sync + 'static,
+        R: Send + 'static,
     {
         self.process_blocks_internal(f, false, Some(block_size))
     }
@@ -861,7 +873,7 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     #[cfg(not(feature = "parallel"))]
     fn process_blocks_internal<F, R>(
         &self,
-        mut f: F,
+        f: F,
         _parallel: bool,
         custom_block_size: Option<usize>,
     ) -> CoreResult<Vec<R>>
@@ -893,12 +905,12 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
     #[cfg(feature = "parallel")]
     fn process_blocks_internal<F, R>(
         &self,
-        mut f: F,
+        f: F,
         parallel: bool,
         custom_block_size: Option<usize>,
     ) -> CoreResult<Vec<R>>
     where
-        F: FnMut(&[A], usize) -> R + Send + Sync + 'static,
+        F: Fn(&[A], usize) -> R + Send + Sync + 'static,
         R: Send + 'static,
     {
         // Determine block layout
@@ -1014,7 +1026,7 @@ impl<A: Clone + Copy + 'static> CompressedMemMappedArray<A> {
 ///
 /// This struct provides a LRU (Least Recently Used) cache for decompressed blocks.
 #[derive(Debug)]
-struct BlockCache<A: Clone + Copy + 'static> {
+struct BlockCache<A: Clone + Copy + 'static + Send + Sync> {
     /// Maximum number of blocks to cache
     capacity: usize,
 
@@ -1027,7 +1039,7 @@ struct BlockCache<A: Clone + Copy + 'static> {
 
 /// A cached block with its timestamp.
 #[derive(Debug, Clone)]
-struct CachedBlock<A: Clone + Copy + 'static> {
+struct CachedBlock<A: Clone + Copy + 'static + Send + Sync> {
     /// The decompressed block data
     data: Vec<A>,
 
@@ -1035,7 +1047,7 @@ struct CachedBlock<A: Clone + Copy + 'static> {
     timestamp: Instant,
 }
 
-impl<A: Clone + Copy + 'static> BlockCache<A> {
+impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     /// Create a new block cache.
     ///
     /// # Arguments

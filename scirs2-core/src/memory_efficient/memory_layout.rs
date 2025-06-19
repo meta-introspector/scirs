@@ -784,7 +784,7 @@ impl ArrayCreation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{Array2, Ix2};
+    use ndarray::Array2;
 
     #[test]
     fn test_layout_order_parsing() {

@@ -701,10 +701,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
                         knowledge.transfer_score.to_f64().unwrap()
                     ),
                     confidence: knowledge.transfer_score,
-                    action: format!(
-                        "Use {:?} optimizer",
-                        knowledge.successful_strategy
-                    ),
+                    action: format!("Use {:?} optimizer", knowledge.successful_strategy),
                 });
             }
         }

@@ -1341,7 +1341,7 @@ mod tests {
         let signal = Array1::from_shape_fn(64, |i| (2.0 * PI * i as f64 / 8.0).sin());
         let psd = welch_psd(&signal.view(), 16, 0.5, WindowFunction::Hann).unwrap();
 
-        assert!(psd.len() > 0);
+        assert!(!psd.is_empty());
         assert!(psd.iter().all(|&x| x >= 0.0));
     }
 

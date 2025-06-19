@@ -62,9 +62,6 @@ use std::time::{Duration, Instant, SystemTime};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "observability_http")]
-use reqwest;
-
 /// Dashboard configuration
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

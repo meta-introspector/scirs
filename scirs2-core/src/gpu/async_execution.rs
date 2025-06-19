@@ -516,7 +516,9 @@ impl AsyncGpuManager {
         let mut rec_stack = std::collections::HashSet::new();
 
         for &dep_id in dependencies {
-            if !visited.contains(&dep_id) && has_cycle(dep_id, &events, &mut visited, &mut rec_stack) {
+            if !visited.contains(&dep_id)
+                && has_cycle(dep_id, &events, &mut visited, &mut rec_stack)
+            {
                 return Err(AsyncGpuError::DependencyCycle);
             }
         }

@@ -13,8 +13,8 @@ use tempfile::tempdir;
 
 /// Simulates loading a chunk of a large dataset
 fn load_data_chunk(chunk_idx: usize, chunk_size: usize, n_features: usize) -> Array2<f64> {
-    let mut rng = rand::thread_rng();
-    Array2::from_shape_fn((chunk_size, n_features), |_| rng.gen_range(0.0..100.0))
+    let mut rng = rand::rng();
+    Array2::from_shape_fn((chunk_size, n_features), |_| rng.random_range(0.0..100.0))
 }
 
 /// Normalizes data (center and scale)

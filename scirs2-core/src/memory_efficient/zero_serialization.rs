@@ -283,9 +283,9 @@ use std::mem;
 use std::path::{Path, PathBuf};
 use std::slice;
 
-use memmap2::{Mmap, MmapMut, MmapOptions};
+use memmap2::MmapOptions;
 use ndarray::{Array, Dimension};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use super::memmap::{AccessMode, MemoryMappedArray};
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
@@ -319,7 +319,7 @@ use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 /// - The type doesn't contain references, pointers, or other indirection
 /// - All fields are themselves zero-copy serializable
 /// - The type doesn't have any padding bytes with undefined values
-pub trait ZeroCopySerializable: Sized + Clone + Copy + 'static {
+pub trait ZeroCopySerializable: Sized + Clone + Copy + 'static + Send + Sync {
     /// Convert a byte slice to an instance of this type.
     ///
     /// # Safety
@@ -357,7 +357,6 @@ pub trait ZeroCopySerializable: Sized + Clone + Copy + 'static {
 }
 
 /// Implement ZeroCopySerializable for common numeric types
-
 /// Macro to implement ZeroCopySerializable for a primitive numeric type
 /// that has from_ne_bytes and to_ne_bytes methods
 macro_rules! impl_zerocopy_serializable {
@@ -402,30 +401,9 @@ impl_zerocopy_serializable!(f64, 8, "f64");
 #[cfg(all(not(feature = "float32"), not(feature = "float64")))]
 impl_zerocopy_serializable!(f64, 8, "f64");
 
-// Integer implementations - default 32-bit support
+// Integer implementations with non-overlapping feature flags
 
-// Basic i32 support
-#[cfg(any(
-    feature = "int32",
-    all(not(feature = "int64"), not(feature = "all_ints"))
-))]
-impl_zerocopy_serializable!(i32, 4, "i32");
-
-// Basic u32 support
-#[cfg(any(
-    feature = "uint32",
-    all(not(feature = "uint64"), not(feature = "all_ints"))
-))]
-impl_zerocopy_serializable!(u32, 4, "u32");
-
-// 64-bit integer types when explicitly requested
-#[cfg(feature = "int64")]
-impl_zerocopy_serializable!(i64, 8, "i64");
-
-#[cfg(feature = "uint64")]
-impl_zerocopy_serializable!(u64, 8, "u64");
-
-// All integer types when the 'all_ints' feature is enabled
+// When all_ints is enabled, implement all integer types
 #[cfg(feature = "all_ints")]
 impl_zerocopy_serializable!(i8, 1, "i8");
 
@@ -449,6 +427,38 @@ impl_zerocopy_serializable!(u32, 4, "u32");
 
 #[cfg(feature = "all_ints")]
 impl_zerocopy_serializable!(u64, 8, "u64");
+
+// When all_ints is NOT enabled, implement specific types based on feature flags
+#[cfg(all(not(feature = "all_ints"), feature = "int32"))]
+impl_zerocopy_serializable!(i32, 4, "i32");
+
+#[cfg(all(not(feature = "all_ints"), feature = "uint32"))]
+impl_zerocopy_serializable!(u32, 4, "u32");
+
+#[cfg(all(not(feature = "all_ints"), feature = "int64"))]
+impl_zerocopy_serializable!(i64, 8, "i64");
+
+#[cfg(all(not(feature = "all_ints"), feature = "uint64"))]
+impl_zerocopy_serializable!(u64, 8, "u64");
+
+// Default implementations when no specific integer features are enabled
+#[cfg(all(
+    not(feature = "all_ints"),
+    not(feature = "int32"),
+    not(feature = "uint32"),
+    not(feature = "int64"),
+    not(feature = "uint64")
+))]
+impl_zerocopy_serializable!(i32, 4, "i32");
+
+#[cfg(all(
+    not(feature = "all_ints"),
+    not(feature = "int32"),
+    not(feature = "uint32"),
+    not(feature = "int64"),
+    not(feature = "uint64")
+))]
+impl_zerocopy_serializable!(u32, 4, "u32");
 
 // This default implementation block is no longer needed as we have handled
 // the default cases directly in the conditional compilation flags above.
@@ -1095,8 +1105,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{Array, Array1, Array2, Array3, ArrayD, Dim, IxDyn};
-    use std::fs::File;
+    use ndarray::{Array, Array1, Array2, Array3, IxDyn};
     use tempfile::tempdir;
 
     // Example of a custom complex number type that implements ZeroCopySerializable
@@ -1429,7 +1438,7 @@ mod tests {
 
         // Also test reading as a flattened 1D array
         let loaded_flat = loaded.readonly_array::<ndarray::Ix1>().unwrap();
-        let data_flat = data.as_standard_layout().into_shape(data.len()).unwrap();
+        let data_flat = data.as_standard_layout().to_shape(data.len()).unwrap();
 
         for i in 0..data.len() {
             assert_eq!(loaded_flat[i], data_flat[i]);

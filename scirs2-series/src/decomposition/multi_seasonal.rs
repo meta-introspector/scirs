@@ -646,7 +646,7 @@ mod tests {
         let config = MultiSeasonalConfig::default();
 
         let periods = detect_seasonal_periods(&ts, &config).unwrap();
-        assert!(periods.contains(&4) || periods.len() >= 1);
+        assert!(periods.contains(&4) || !periods.is_empty());
     }
 
     #[test]

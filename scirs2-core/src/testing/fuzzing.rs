@@ -8,13 +8,14 @@
 //! - Input validation fuzzing
 
 use crate::error::{CoreError, CoreResult};
-use crate::numeric::RealNumber;
-use crate::testing::{TestConfig, TestResult, TestRunner};
+use crate::testing::{TestConfig, TestResult};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "random")]
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+#[cfg(feature = "random")]
+use rand::rngs::StdRng;
 
 /// Fuzzing input generator for different data types
 pub trait FuzzingGenerator<T> {
@@ -140,17 +141,17 @@ pub struct FuzzingFailure {
 pub struct FuzzingEngine {
     config: FuzzingConfig,
     #[cfg(feature = "random")]
-    rng: Rng,
+    rng: StdRng,
 }
 
 impl FuzzingEngine {
     /// Create a new fuzzing engine
     pub fn new(config: FuzzingConfig) -> Self {
         #[cfg(feature = "random")]
-        let rng = if let Some(seed) = config.seed {
-            Rng::seed_from_u64(seed)
+        let rng: Box<dyn Rng> = if let Some(seed) = config.seed {
+            Box::new(StdRng::seed_from_u64(seed))
         } else {
-            Rng::new()
+            StdRng::from_entropy()
         };
 
         Self {
@@ -239,7 +240,7 @@ impl FuzzingEngine {
 /// Floating-point number fuzzing generator
 pub struct FloatFuzzingGenerator {
     #[cfg(feature = "random")]
-    rng: Rng,
+    rng: StdRng,
     min_value: f64,
     max_value: f64,
 }
@@ -249,7 +250,7 @@ impl FloatFuzzingGenerator {
     pub fn new(min_value: f64, max_value: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: Rng::new(),
+            rng: StdRng::from_entropy(),
             min_value,
             max_value,
         }
@@ -259,7 +260,7 @@ impl FloatFuzzingGenerator {
     pub fn with_seed(min_value: f64, max_value: f64, seed: u64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: Rng::seed_from_u64(seed),
+            rng: Box::new(StdRng::seed_from_u64(seed)),
             min_value,
             max_value,
         }
@@ -270,7 +271,7 @@ impl FuzzingGenerator<f64> for FloatFuzzingGenerator {
     fn generate(&mut self) -> f64 {
         #[cfg(feature = "random")]
         {
-            self.rng.gen_range(self.min_value..=self.max_value)
+            self.rng.random_range(self.min_value..=self.max_value)
         }
         #[cfg(not(feature = "random"))]
         {
@@ -305,7 +306,7 @@ impl FuzzingGenerator<f64> for FloatFuzzingGenerator {
             if valid_edges.is_empty() {
                 self.generate()
             } else {
-                let index = self.rng.gen_range(0..valid_edges.len());
+                let index = self.rng.random_range(0..valid_edges.len());
                 valid_edges[index]
             }
         }
@@ -323,7 +324,7 @@ impl FuzzingGenerator<f64> for FloatFuzzingGenerator {
     fn generate_boundary(&mut self) -> f64 {
         #[cfg(feature = "random")]
         {
-            match self.rng.gen_range(0..4) {
+            match self.rng.random_range(0..4) {
                 0 => self.min_value,
                 1 => self.max_value,
                 2 => self.min_value + f64::EPSILON,
@@ -340,7 +341,7 @@ impl FuzzingGenerator<f64> for FloatFuzzingGenerator {
 /// Vector fuzzing generator
 pub struct VectorFuzzingGenerator {
     #[cfg(feature = "random")]
-    rng: Rng,
+    rng: StdRng,
     min_size: usize,
     max_size: usize,
     element_generator: FloatFuzzingGenerator,
@@ -351,7 +352,7 @@ impl VectorFuzzingGenerator {
     pub fn new(min_size: usize, max_size: usize, min_value: f64, max_value: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: Rng::new(),
+            rng: StdRng::from_entropy(),
             min_size,
             max_size,
             element_generator: FloatFuzzingGenerator::new(min_value, max_value),
@@ -362,7 +363,7 @@ impl VectorFuzzingGenerator {
 impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
     fn generate(&mut self) -> Vec<f64> {
         #[cfg(feature = "random")]
-        let size = self.rng.gen_range(self.min_size..=self.max_size);
+        let size = self.rng.random_range(self.min_size..=self.max_size);
         #[cfg(not(feature = "random"))]
         let size = (self.min_size + self.max_size) / 2;
 
@@ -374,18 +375,18 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
     fn generate_edge_case(&mut self) -> Vec<f64> {
         #[cfg(feature = "random")]
         {
-            match self.rng.gen_range(0..4) {
+            match self.rng.random_range(0..4) {
                 0 => vec![],                                            // Empty vector
                 1 => vec![self.element_generator.generate_edge_case()], // Single element
                 2 => {
                     // All same values
                     let value = self.element_generator.generate_edge_case();
-                    let size = self.rng.gen_range(2..=10);
+                    let size = self.rng.random_range(2..=10);
                     vec![value; size]
                 }
                 _ => {
                     // Mixed edge cases
-                    let size = self.rng.gen_range(2..=10);
+                    let size = self.rng.random_range(2..=10);
                     (0..size)
                         .map(|_| self.element_generator.generate_edge_case())
                         .collect()
@@ -401,7 +402,7 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
     fn generate_boundary(&mut self) -> Vec<f64> {
         #[cfg(feature = "random")]
         {
-            match self.rng.gen_range(0..3) {
+            match self.rng.random_range(0..3) {
                 0 => {
                     // Minimum size
                     let size = self.min_size;
@@ -479,7 +480,7 @@ impl FuzzingUtils {
         let mut suite = crate::testing::TestSuite::new(name, config);
 
         // Add standard fuzzing tests
-        suite.add_test("numeric_edge_cases", |runner| {
+        suite.add_test("numeric_edge_cases", |_runner| {
             let fuzzing_config = FuzzingConfig::default().with_edge_cases(100);
             let result = Self::fuzz_numeric_function(
                 |x| {
@@ -507,7 +508,7 @@ impl FuzzingUtils {
             Ok(TestResult::success(result.duration, result.total_cases))
         });
 
-        suite.add_test("vector_boundary_conditions", |runner| {
+        suite.add_test("vector_boundary_conditions", |_runner| {
             let fuzzing_config = FuzzingConfig::default().with_boundary_cases(50);
             let result = Self::fuzz_vector_function(
                 |v| {

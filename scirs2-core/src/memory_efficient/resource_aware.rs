@@ -8,14 +8,7 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-#[cfg(feature = "memory_compression")]
-use libc;
-
-#[cfg(feature = "memory_compression")]
-use num_cpus;
-
 use super::prefetch::{PrefetchConfig, PrefetchStats};
-use crate::error::{CoreError, ErrorContext};
 
 /// Default sampling interval for resource monitoring
 const DEFAULT_SAMPLING_INTERVAL: Duration = Duration::from_millis(500);
@@ -587,7 +580,7 @@ impl SystemInfo for DefaultSystemInfo {
         // Try to get IO stats if sysinfo is available
         #[cfg(feature = "sysinfo")]
         {
-            use sysinfo::{DiskExt, System, SystemExt};
+            use sysinfo::{System, SystemExt};
             let mut system = System::new_all();
             system.refresh_disks_list();
 
@@ -831,7 +824,6 @@ impl ResourceAwarePrefetchingConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::{AtomicUsize, Ordering};
 
     // Mock implementation of SystemInfo for testing
     struct MockSystemInfo {

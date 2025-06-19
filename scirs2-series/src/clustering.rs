@@ -1457,7 +1457,7 @@ mod tests {
         // Class 0: has a peak in the middle
         for i in 0..2 {
             for j in 0..20 {
-                if j >= 8 && j <= 12 {
+                if (8..=12).contains(&j) {
                     data[[i, j]] = 1.0; // Peak
                 } else {
                     data[[i, j]] = 0.0;

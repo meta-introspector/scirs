@@ -112,6 +112,9 @@ pub struct AdaptivePatternTracker {
 
     /// Patterns with dimension-aware context
     dimensional_patterns: HashMap<String, Vec<usize>>,
+
+    /// Step counter for deterministic exploration
+    exploration_step: usize,
 }
 
 impl AdaptivePatternTracker {
@@ -159,6 +162,7 @@ impl AdaptivePatternTracker {
             exploration_rate: EXPLORATION_RATE_INITIAL,
             dimensions: None,
             dimensional_patterns: HashMap::new(),
+            exploration_step: 0,
         }
     }
 
@@ -198,11 +202,14 @@ impl AdaptivePatternTracker {
 
     /// Select the next strategy to use.
     fn select_next_strategy(&mut self) {
+        // Increment exploration step
+        self.exploration_step += 1;
+        
         // Decay exploration rate
         self.exploration_rate *= EXPLORATION_RATE_DECAY;
 
         // Decide whether to explore or exploit
-        if self.exploring || rand::random::<f64>() < self.exploration_rate {
+        if self.exploring || (self.exploration_step % 100) < (self.exploration_rate * 100.0) as usize {
             // Exploration phase: try different strategies
             let available_strategies: Vec<PrefetchStrategy> =
                 self.strategy_performance.keys().copied().collect();
@@ -214,7 +221,7 @@ impl AdaptivePatternTracker {
                 .collect();
 
             if !candidates.is_empty() {
-                let idx = rand::random::<usize>() % candidates.len();
+                let idx = self.exploration_step % candidates.len();
                 self.current_strategy = candidates[idx];
             }
 
@@ -287,7 +294,7 @@ impl AdaptivePatternTracker {
                             );
 
                             // Occasionally switch to it for exploration
-                            if rand::random::<f64>() < 0.5 {
+                            if (self.exploration_step % 100) < 50 {
                                 self.current_strategy = seq_strategy;
                             }
                         }
@@ -324,7 +331,7 @@ impl AdaptivePatternTracker {
                         ..
                     } => {
                         // Already using strided strategy, maybe update the stride
-                        if current_stride != stride && rand::random::<f64>() < 0.7 {
+                        if current_stride != stride && (self.exploration_step % 100) < 70 {
                             self.current_strategy = strided_strategy;
                         }
                     }
@@ -338,13 +345,13 @@ impl AdaptivePatternTracker {
 
                         if let Some(strided_perf) = self.strategy_performance.get(&strided_strategy)
                         {
-                            if strided_perf.q_value > current_q * 1.1 || rand::random::<f64>() < 0.3
+                            if strided_perf.q_value > current_q * 1.1 || (self.exploration_step % 100) < 30
                             {
                                 self.current_strategy = strided_strategy;
                             }
                         } else {
                             // Occasionally switch to it for exploration
-                            if rand::random::<f64>() < 0.4 {
+                            if (self.exploration_step % 100) < 40 {
                                 self.current_strategy = strided_strategy;
                             }
                         }
@@ -381,7 +388,7 @@ impl AdaptivePatternTracker {
                             }
 
                             // Consider switching to this strategy
-                            if rand::random::<f64>() < 0.6 {
+                            if (self.exploration_step % 100) < 60 {
                                 self.current_strategy = strategy;
                             }
                         } else if pattern_name == "matrix_traversal_col_major" {
@@ -406,7 +413,7 @@ impl AdaptivePatternTracker {
                             }
 
                             // Consider switching to this strategy
-                            if rand::random::<f64>() < 0.6 {
+                            if (self.exploration_step % 100) < 60 {
                                 self.current_strategy = strategy;
                             }
                         }
@@ -434,7 +441,7 @@ impl AdaptivePatternTracker {
                     }
 
                     // Occasionally switch to pattern-based strategy
-                    if rand::random::<f64>() < 0.4 {
+                    if (self.exploration_step % 100) < 40 {
                         self.current_strategy = strategy;
                     }
                 }
@@ -459,7 +466,7 @@ impl AdaptivePatternTracker {
                     self.current_strategy = PrefetchStrategy::Aggressive;
                 } else {
                     // They're similar, choose randomly
-                    self.current_strategy = if rand::random::<f64>() < 0.5 {
+                    self.current_strategy = if (self.exploration_step % 100) < 50 {
                         PrefetchStrategy::Conservative
                     } else {
                         PrefetchStrategy::Aggressive

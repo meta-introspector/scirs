@@ -70,11 +70,7 @@ use uuid::Uuid;
 #[cfg(feature = "crypto")]
 use sha2::{Digest, Sha256};
 
-#[cfg(feature = "compression")]
-use flate2::{write::GzEncoder, Compression};
 
-#[cfg(feature = "async")]
-use tokio::sync::{Mutex as AsyncMutex, RwLock as AsyncRwLock};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

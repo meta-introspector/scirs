@@ -115,7 +115,7 @@ impl GemmKernel {
     /// Get kernel sources for the specified implementation
     fn get_sources_for_implementation(
         implementation: GemmImpl,
-    ) -> (String, String, String, String, String) {
+    ) -> (String, String, String, String, String, String) {
         let name = format!("gemm_{}", implementation);
 
         // In a real implementation, we would have different optimized kernel sources

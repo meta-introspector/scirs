@@ -25,12 +25,13 @@ impl SumKernel {
             backend_metadata: HashMap::new(),
         };
 
-        let (cuda_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
+        let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) = Self::get_kernel_sources();
 
         Self {
             base: BaseKernel::new(
                 "sum_reduce",
                 &cuda_source,
+                &rocm_source,
                 &wgpu_source,
                 &metal_source,
                 &opencl_source,
@@ -40,7 +41,7 @@ impl SumKernel {
     }
 
     /// Get kernel sources for different backends
-    fn get_kernel_sources() -> (String, String, String, String) {
+    fn get_kernel_sources() -> (String, String, String, String, String) {
         // CUDA kernel
         let cuda_source = r#"
 extern "C" __global__ void sum_reduce(
@@ -234,7 +235,10 @@ __kernel void sum_reduce(
 "#
         .to_string();
 
-        (cuda_source, wgpu_source, metal_source, opencl_source)
+        // ROCm (HIP) kernel - similar to CUDA
+        let rocm_source = cuda_source.clone();
+
+        (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
     }
 }
 

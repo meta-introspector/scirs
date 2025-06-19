@@ -562,8 +562,7 @@ where
 }
 
 /// Parse a node declaration (currently just validates the syntax)
-fn parse_node(_line: &str, _line_num: usize) -> Result<()>
-{
+fn parse_node(_line: &str, _line_num: usize) -> Result<()> {
     // For now, we don't need to explicitly add nodes since they'll be added
     // when edges are added. This function validates node syntax.
     Ok(())

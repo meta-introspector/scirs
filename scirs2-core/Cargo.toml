@@ -45,6 +45,7 @@ bytemuck = { workspace = true, optional = true }  # Zero-copy type casting
 
 # System monitoring for resource-aware prefetching
 libc = { workspace = true, optional = true }  # System calls for resource monitoring
+sysinfo = { workspace = true, optional = true }  # System information gathering
 
 # BLAS/LAPACK dependencies for linear algebra operations
 ndarray-linalg = { workspace = true, optional = true, default-features = false }  # LAPACK bindings for ndarray
@@ -92,7 +93,7 @@ uint64 = []   # Support for u64 in zero-copy operations
 all_ints = [] # Support for all integer types in zero-copy operations
 memory_compression = ["memory_efficient", "lz4", "zstd", "snap", "flate2", "bytemuck", "serde", "serde_json", "libc", "num_cpus"]  # Compressed memory-mapped arrays
 memory_metrics = ["memory_management", "serde", "serde_json"]  # Enhanced memory metrics tracking
-sysinfo = []  # System information gathering
+sysinfo = ["dep:sysinfo"]  # System information gathering
 serialization = ["serde", "serde_json"]  # Serialization support
 array = []  # Scientific array types (MaskedArray, RecordArray)
 memory_visualization = ["memory_metrics"]  # Memory usage visualization

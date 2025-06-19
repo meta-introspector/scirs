@@ -17,7 +17,7 @@ use std::ops::RangeBounds;
 /// accessed through the slice.
 pub struct MemoryMappedSlice<A, D>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync,
     D: Dimension,
 {
     /// The source memory-mapped array
@@ -32,7 +32,7 @@ where
 
 impl<A, D> MemoryMappedSlice<A, D>
 where
-    A: Clone + Copy + 'static,
+    A: Clone + Copy + 'static + Send + Sync,
     D: Dimension,
 {
     /// Creates a new slice from a memory-mapped array and slice information.
@@ -83,7 +83,7 @@ where
 }
 
 /// Extension trait for adding slicing functionality to MemoryMappedArray.
-pub trait MemoryMappedSlicing<A: Clone + Copy + 'static> {
+pub trait MemoryMappedSlicing<A: Clone + Copy + 'static + Send + Sync> {
     /// Creates a slice of the memory-mapped array using standard slice syntax.
     fn slice<I, E>(&self, _info: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
@@ -104,7 +104,7 @@ pub trait MemoryMappedSlicing<A: Clone + Copy + 'static> {
     ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>>;
 }
 
-impl<A: Clone + Copy + 'static> MemoryMappedSlicing<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryMappedArray<A> {
     fn slice<I, E>(&self, _info: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
         I: ndarray::SliceArg<E>,

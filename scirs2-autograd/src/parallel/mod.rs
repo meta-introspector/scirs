@@ -90,7 +90,7 @@ impl ThreadPool {
     pub fn with_config(config: ThreadPoolConfig) -> Self {
         let (sender, receiver) = channel();
         let receiver = Arc::new(Mutex::new(receiver));
-        
+
         // Initialize stats with proper worker_stats vector
         let mut stats_data = ThreadPoolStats::new();
         stats_data.worker_stats = (0..config.num_threads).map(WorkerStats::new).collect();
@@ -173,7 +173,10 @@ impl ThreadPool {
 
     /// Get thread pool statistics
     pub fn get_stats(&self) -> ThreadPoolStats {
-        self.stats.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).clone()
+        self.stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
     }
 
     /// Get current configuration
@@ -696,7 +699,7 @@ mod tests {
     fn test_global_thread_pool() {
         // Clean shutdown first in case of previous test failures
         let _ = shutdown_global_thread_pool();
-        
+
         // Initialize fresh thread pool
         init_thread_pool().unwrap();
         assert!(is_thread_pool_initialized());
