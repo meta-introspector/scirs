@@ -681,7 +681,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
             (10u64, 10u64) // Default for test compatibility
         };
 
-        let n = if b_shape.len() >= 1 {
+        let n = if !b_shape.is_empty() {
             b_shape[b_shape.len() - 1] as u64
         } else {
             // Default for autograd tensors
@@ -728,7 +728,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn estimate_lu_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let shape = input.shape();
-        let n = if shape.len() >= 1 {
+        let n = if !shape.is_empty() {
             shape[0] as u64
         } else {
             1u64
@@ -742,7 +742,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn estimate_cholesky_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let shape = input.shape();
-        let n = if shape.len() >= 1 {
+        let n = if !shape.is_empty() {
             shape[0] as u64
         } else {
             1u64
@@ -756,7 +756,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn estimate_eigenvalue_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let shape = input.shape();
-        let n = if shape.len() >= 1 {
+        let n = if !shape.is_empty() {
             shape[0] as u64
         } else {
             1u64
@@ -770,7 +770,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn estimate_inverse_cost(&self, input: &Tensor<F>) -> ComputationalCost {
         let shape = input.shape();
-        let n = if shape.len() >= 1 {
+        let n = if !shape.is_empty() {
             shape[0] as u64
         } else {
             1u64
@@ -784,7 +784,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     fn estimate_solve_cost(&self, a: &Tensor<F>, _b: &Tensor<F>) -> ComputationalCost {
         let shape = a.shape();
-        let n = if shape.len() >= 1 {
+        let n = if !shape.is_empty() {
             shape[0] as u64
         } else {
             1u64

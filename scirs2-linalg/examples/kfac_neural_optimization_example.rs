@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Training loop with K-FAC
     let mut kfac_losses = Vec::new();
-    let mut previous_loss = std::f64::INFINITY;
+    let mut previous_loss = f64::INFINITY;
 
     for epoch in 0..num_epochs {
         // Generate synthetic training batch (without bias - bias added in K-FAC function)

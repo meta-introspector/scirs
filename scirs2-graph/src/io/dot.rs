@@ -399,7 +399,7 @@ where
         parse_edge(line, edge_separator, graph, weighted, line_num)?;
     } else if !line.is_empty() && !line.starts_with('}') && !line.contains('[') {
         // Parse as node declaration (simple node without attributes)
-        parse_node::<N>(line, line_num)?;
+        parse_node(line, line_num)?;
     }
 
     Ok(())
@@ -429,7 +429,7 @@ where
         parse_digraph_edge(line, edge_separator, graph, weighted, line_num)?;
     } else if !line.is_empty() && !line.starts_with('}') && !line.contains('[') {
         // Parse as node declaration (simple node without attributes)
-        parse_node::<N>(line, line_num)?;
+        parse_node(line, line_num)?;
     }
 
     Ok(())
@@ -562,9 +562,7 @@ where
 }
 
 /// Parse a node declaration (currently just validates the syntax)
-fn parse_node<N>(_line: &str, _line_num: usize) -> Result<()>
-where
-    N: Node + std::fmt::Debug + FromStr + Clone,
+fn parse_node(_line: &str, _line_num: usize) -> Result<()>
 {
     // For now, we don't need to explicitly add nodes since they'll be added
     // when edges are added. This function validates node syntax.

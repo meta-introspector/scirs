@@ -259,12 +259,12 @@ impl PerformanceBenchmarker {
             PerformanceTarget::new(BenchmarkCategory::Algorithmic, Duration::from_millis(10))
                 .with_scaling_factor(expected_complexity);
 
-        for size in input_sizes {
+        for size in &input_sizes {
             let size_name = format!("{}(n={})", name, size);
-            let mut algorithm_clone = algorithm_fn.clone();
+            let algorithm_clone = algorithm_fn.clone();
 
-            let benchmark_result = self.runner.run(&size_name, || algorithm_clone(size))?;
-            let scale = size as f64 / input_sizes[0] as f64;
+            let benchmark_result = self.runner.run(&size_name, || algorithm_clone(*size))?;
+            let scale = *size as f64 / input_sizes[0] as f64;
             let performance_result =
                 PerformanceBenchmarkResult::new(benchmark_result, base_target.clone(), scale);
 
@@ -506,11 +506,11 @@ impl StandardBenchmarks {
 
     /// Create a comprehensive benchmark suite
     pub fn create_comprehensive_suite(config: BenchmarkConfig) -> BenchmarkSuite {
-        let mut suite = BenchmarkSuite::new("comprehensive_performance", config);
+        let mut suite = BenchmarkSuite::new("comprehensive_performance", config.clone());
 
         // Add computation benchmarks
         let comp_suite = Self::create_computation_suite(config.clone());
-        for i in 0..comp_suite.benchmarks.len() {
+        for _i in 0..comp_suite.benchmarks.len() {
             // Note: This is a simplified version - in practice you'd need to extract benchmarks
             suite.add_benchmark(|runner| {
                 runner.run("comprehensive_computation", || {

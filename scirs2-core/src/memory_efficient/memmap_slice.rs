@@ -8,7 +8,7 @@ use super::memmap::MemoryMappedArray;
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use ndarray::{ArrayBase, Dimension, SliceInfo, SliceInfoElem};
 use std::marker::PhantomData;
-use std::ops::{Range, RangeBounds};
+use std::ops::RangeBounds;
 
 /// A slice of a memory-mapped array that maintains memory-mapping.
 ///

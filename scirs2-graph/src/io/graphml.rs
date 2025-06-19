@@ -141,7 +141,7 @@ where
         match state {
             ParseState::SearchingGraph => {
                 if line.starts_with("<key ") {
-                    if let Some(key) = parse_key_definition(&line)? {
+                    if let Some(key) = parse_key_definition(line)? {
                         keys.insert(key.id.clone(), key);
                     }
                 } else if line.starts_with("<graph ") {
@@ -154,9 +154,9 @@ where
                     state = ParseState::Done;
                     break;
                 } else if line.starts_with("<node ") {
-                    parse_node_element(&line, &mut graph, line_num + 1)?;
+                    parse_node_element(line, &mut graph, line_num + 1)?;
                 } else if line.starts_with("<edge ") {
-                    parse_edge_element(&line, &mut graph, &keys, weighted, line_num + 1)?;
+                    parse_edge_element(line, &mut graph, &keys, weighted, line_num + 1)?;
                 }
             }
             ParseState::Done => break,
@@ -215,7 +215,7 @@ where
         match state {
             ParseState::SearchingGraph => {
                 if line.starts_with("<key ") {
-                    if let Some(key) = parse_key_definition(&line)? {
+                    if let Some(key) = parse_key_definition(line)? {
                         keys.insert(key.id.clone(), key);
                     }
                 } else if line.starts_with("<graph ") {
@@ -227,9 +227,9 @@ where
                     state = ParseState::Done;
                     break;
                 } else if line.starts_with("<node ") {
-                    parse_digraph_node_element(&line, &mut graph, line_num + 1)?;
+                    parse_digraph_node_element(line, &mut graph, line_num + 1)?;
                 } else if line.starts_with("<edge ") {
-                    parse_digraph_edge_element(&line, &mut graph, &keys, weighted, line_num + 1)?;
+                    parse_digraph_edge_element(line, &mut graph, &keys, weighted, line_num + 1)?;
                 }
             }
             ParseState::Done => break,

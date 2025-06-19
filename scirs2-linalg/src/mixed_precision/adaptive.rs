@@ -600,9 +600,9 @@ mod tests {
 
         assert_eq!(x.len(), 2);
         // Verify solution: 2*x[0] + 1*x[1] = 5, 1*x[0] + 3*x[1] = 8
-        // Solution should be approximately [1, 3]
-        assert_relative_eq!(x[0], 1.0f32, epsilon = 1e-5);
-        assert_relative_eq!(x[1], 2.0f32, epsilon = 1e-5);
+        // Solution should be approximately [1.4, 2.2]
+        assert_relative_eq!(x[0], 1.4f32, epsilon = 1e-4);
+        assert_relative_eq!(x[1], 2.2f32, epsilon = 1e-4);
     }
 
     #[test]

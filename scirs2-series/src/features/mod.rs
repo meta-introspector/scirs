@@ -18,7 +18,6 @@ pub mod window_based;
 pub use complexity::*;
 #[allow(ambiguous_glob_reexports)]
 pub use config::*;
-#[allow(ambiguous_glob_reexports)]
 // pub use frequency::*;
 #[allow(ambiguous_glob_reexports)]
 pub use statistical::*;

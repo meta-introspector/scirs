@@ -53,12 +53,12 @@ where
     let mid = (numtaps - 1) as f64 / 2.0;
     let mut h = vec![0.0; numtaps];
 
-    for i in 0..numtaps {
+    for (i, item) in h.iter_mut().enumerate() {
         let n = i as f64 - mid;
 
         if n == 0.0 {
             // At n=0, use L'Hôpital's rule result
-            h[i] = if pass_zero {
+            *item = if pass_zero {
                 wc / std::f64::consts::PI
             } else {
                 1.0 - wc / std::f64::consts::PI
@@ -66,7 +66,7 @@ where
         } else {
             // General case: sinc function
             let sinc_val = (wc * std::f64::consts::PI * n).sin() / (std::f64::consts::PI * n);
-            h[i] = if pass_zero {
+            *item = if pass_zero {
                 sinc_val
             } else {
                 // Highpass: subtract lowpass from delta function

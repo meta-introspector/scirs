@@ -62,8 +62,6 @@ pub use snapshot::{
 pub use reporter::ChartFormat;
 
 // Re-export snapshot visualization if feature is enabled
-#[cfg(feature = "memory_visualization")]
-pub use snapshot::SnapshotDiff;
 
 #[cfg(feature = "gpu")]
 pub use gpu::{setup_gpu_memory_tracking, TrackedGpuBuffer, TrackedGpuContext};

@@ -652,7 +652,7 @@ pub enum EdgeMethod {
 }
 
 /// Configuration for general feature extraction
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct FeatureExtractionOptions {
     /// Turning points configuration
     pub turning_points: TurningPointsConfig,
@@ -672,17 +672,3 @@ pub struct FeatureExtractionOptions {
     pub emd: EMDConfig,
 }
 
-impl Default for FeatureExtractionOptions {
-    fn default() -> Self {
-        Self {
-            turning_points: TurningPointsConfig::default(),
-            enhanced_periodogram: EnhancedPeriodogramConfig::default(),
-            entropy: EntropyConfig::default(),
-            spectral_analysis: SpectralAnalysisConfig::default(),
-            window: WindowConfig::default(),
-            expanded_statistical: ExpandedStatisticalConfig::default(),
-            wavelet: WaveletConfig::default(),
-            emd: EMDConfig::default(),
-        }
-    }
-}

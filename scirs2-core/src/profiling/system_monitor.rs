@@ -728,8 +728,10 @@ mod tests {
         let config = AlertConfig::default();
         let mut alerter = SystemAlerter::new(config);
 
-        let mut metrics = SystemMetrics::default();
-        metrics.cpu_usage = 90.0; // Above threshold
+        let metrics = SystemMetrics {
+            cpu_usage: 90.0, // Above threshold
+            ..Default::default()
+        };
 
         let alerts = alerter.check_alerts(&metrics);
         assert!(!alerts.is_empty());
@@ -745,9 +747,11 @@ mod tests {
         {
             let mut history = monitor.metrics_history.lock().unwrap();
             for i in 0..10 {
-                let mut metrics = SystemMetrics::default();
-                metrics.cpu_usage = i as f64 * 10.0;
-                metrics.timestamp = Instant::now() - Duration::from_secs(i);
+                let metrics = SystemMetrics {
+                    cpu_usage: i as f64 * 10.0,
+                    timestamp: Instant::now() - Duration::from_secs(i),
+                    ..Default::default()
+                };
                 history.push_back(metrics);
             }
         }

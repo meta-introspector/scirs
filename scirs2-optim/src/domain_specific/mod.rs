@@ -659,7 +659,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
     ) {
         self.domain_performance
             .entry(domain)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(metrics);
     }
 
@@ -702,8 +702,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
                     ),
                     confidence: knowledge.transfer_score,
                     action: format!(
-                        "Use {} optimizer",
-                        format!("{:?}", knowledge.successful_strategy)
+                        "Use {:?} optimizer",
+                        knowledge.successful_strategy
                     ),
                 });
             }

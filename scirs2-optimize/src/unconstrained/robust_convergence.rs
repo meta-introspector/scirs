@@ -748,6 +748,11 @@ mod tests {
         options.adaptive_tolerance.initial_ftol = 1e-6;
         options.adaptive_tolerance.initial_gtol = 1e-4;
         options.adaptive_tolerance.initial_xtol = 1e-3;
+        // Disable other convergence criteria to test only basic tolerances
+        options.enable_early_stopping = false;
+        options.enable_progress_based = false;
+        options.enable_plateau_detection = false;
+        options.enable_noise_robust = false;
 
         let mut state = RobustConvergenceState::new(options, 5);
 

@@ -193,39 +193,33 @@ fn demonstrate_polynomial_interpolation() {
         }
     }
 
-    // Test Chebyshev interpolation with optimal nodes
-    println!("\n  Testing Chebyshev interpolation:");
-    let cheby_nodes = chebyshev_nodes(8, [0.0, 1.0]).unwrap();
-    let cheby_values: Vec<f64> = cheby_nodes
-        .iter()
-        .map(|&x| (2.0 * PI * x).sin() + 0.5 * (6.0 * PI * x).sin())
-        .collect();
-
-    match chebyshev_interpolate(&cheby_nodes, &cheby_values, &x_fine, Some([0.0, 1.0])) {
-        Ok(y_cheby) => {
-            let rmse = calculate_rmse(&y_true, &y_cheby);
-            let max_error = calculate_max_error(&y_true, &y_cheby);
-            println!("    Chebyshev interpolation:");
+    // Test Newton polynomial interpolation
+    println!("\n  Testing Newton polynomial interpolation:");
+    match newton_interpolate(&x_data, &y_data, &x_fine) {
+        Ok(y_newton) => {
+            let rmse = calculate_rmse(&y_true, &y_newton);
+            let max_error = calculate_max_error(&y_true, &y_newton);
+            println!("    Newton polynomial interpolation:");
             println!("      RMSE: {:.6}", rmse);
             println!("      Max error: {:.6}", max_error);
-            println!("      Using {} Chebyshev nodes", cheby_nodes.len());
+            println!("      Using {} data points", x_data.len());
         }
         Err(e) => {
-            println!("    Chebyshev interpolation failed: {:?}", e);
+            println!("    Newton interpolation failed: {:?}", e);
         }
     }
 
-    // Test piecewise polynomial interpolation
-    match piecewise_polynomial_interpolate(&x_data, &y_data, &x_fine, 3) {
-        Ok(y_piecewise) => {
-            let rmse = calculate_rmse(&y_true, &y_piecewise);
-            let max_error = calculate_max_error(&y_true, &y_piecewise);
-            println!("    Piecewise polynomial (degree 3):");
+    // Test Lagrange polynomial interpolation
+    match lagrange_interpolate(&x_data, &y_data, &x_fine) {
+        Ok(y_lagrange) => {
+            let rmse = calculate_rmse(&y_true, &y_lagrange);
+            let max_error = calculate_max_error(&y_true, &y_lagrange);
+            println!("    Lagrange polynomial interpolation:");
             println!("      RMSE: {:.6}", rmse);
             println!("      Max error: {:.6}", max_error);
         }
         Err(e) => {
-            println!("    Piecewise polynomial interpolation failed: {:?}", e);
+            println!("    Lagrange interpolation failed: {:?}", e);
         }
     }
 

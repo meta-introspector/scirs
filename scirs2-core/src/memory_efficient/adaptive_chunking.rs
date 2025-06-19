@@ -500,7 +500,6 @@ pub mod alpha6_enhancements {
     use super::*;
     use std::sync::atomic::AtomicUsize;
     use std::sync::Arc;
-    use std::time::Instant;
 
     /// Performance metrics collector for adaptive optimization
     #[derive(Debug, Clone)]

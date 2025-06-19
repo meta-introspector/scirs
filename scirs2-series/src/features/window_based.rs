@@ -737,7 +737,7 @@ where
     }
 
     // Cross-scale consistency
-    let correlations = vec![
+    let correlations = [
         small_medium_correlation,
         medium_large_correlation,
         small_large_correlation,

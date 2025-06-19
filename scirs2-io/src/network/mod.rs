@@ -221,15 +221,13 @@ impl NetworkClient {
                 let mut total_size = 0u64;
                 let mut file_count = 0u64;
 
-                for entry in std::fs::read_dir(cache_path)
-                    .map_err(|e| IoError::FileError(format!("Failed to read cache dir: {}", e)))?
+                for entry in (std::fs::read_dir(cache_path)
+                    .map_err(|e| IoError::FileError(format!("Failed to read cache dir: {}", e)))?).flatten()
                 {
-                    if let Ok(entry) = entry {
-                        if let Ok(metadata) = entry.metadata() {
-                            if metadata.is_file() {
-                                total_size += metadata.len();
-                                file_count += 1;
-                            }
+                    if let Ok(metadata) = entry.metadata() {
+                        if metadata.is_file() {
+                            total_size += metadata.len();
+                            file_count += 1;
                         }
                     }
                 }

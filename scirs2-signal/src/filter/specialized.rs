@@ -111,7 +111,7 @@ pub fn comb_filter(
         ));
     }
 
-    if feedforward_gain < 0.0 || feedforward_gain > 1.0 {
+    if !(0.0..=1.0).contains(&feedforward_gain) {
         return Err(SignalError::ValueError(
             "Feedforward gain must be between 0 and 1".to_string(),
         ));
@@ -159,7 +159,7 @@ pub fn comb_filter(
 pub fn allpass_filter(pole_frequency: f64, pole_radius: f64) -> SignalResult<FilterCoefficients> {
     validate_cutoff_frequency(pole_frequency)?;
 
-    if pole_radius < 0.0 || pole_radius >= 1.0 {
+    if !(0.0..1.0).contains(&pole_radius) {
         return Err(SignalError::ValueError(
             "Pole radius must be between 0 and 1".to_string(),
         ));
@@ -202,7 +202,7 @@ pub fn allpass_second_order(
 ) -> SignalResult<FilterCoefficients> {
     validate_cutoff_frequency(pole_frequency)?;
 
-    if pole_radius < 0.0 || pole_radius >= 1.0 {
+    if !(0.0..1.0).contains(&pole_radius) {
         return Err(SignalError::ValueError(
             "Pole radius must be between 0 and 1".to_string(),
         ));
@@ -263,17 +263,17 @@ pub fn hilbert_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
     let mut h = vec![0.0; num_taps];
     let center = num_taps / 2;
 
-    for i in 0..num_taps {
+    for (i, item) in h.iter_mut().enumerate() {
         if i == center {
-            h[i] = 0.0; // Central coefficient is always zero
+            *item = 0.0; // Central coefficient is always zero
         } else {
             let n = i as i32 - center as i32;
             if n % 2 != 0 {
                 // Odd indices get non-zero values
-                h[i] = 2.0 / (std::f64::consts::PI * n as f64);
+                *item = 2.0 / (std::f64::consts::PI * n as f64);
             } else {
                 // Even indices (except center) are zero
-                h[i] = 0.0;
+                *item = 0.0;
             }
         }
     }
@@ -326,12 +326,12 @@ pub fn differentiator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
     let mut h = vec![0.0; num_taps];
     let center = num_taps / 2;
 
-    for i in 0..num_taps {
+    for (i, item) in h.iter_mut().enumerate() {
         if i == center {
-            h[i] = 0.0; // Central coefficient is always zero
+            *item = 0.0; // Central coefficient is always zero
         } else {
             let n = i as i32 - center as i32;
-            h[i] = (-1.0_f64).powi(n + 1) / n as f64;
+            *item = (-1.0_f64).powi(n + 1) / n as f64;
         }
     }
 
@@ -422,15 +422,15 @@ pub fn fractional_delay_filter(delay: f64, num_taps: usize) -> SignalResult<Vec<
     let center = (num_taps - 1) as f64 / 2.0;
 
     // Use sinc interpolation for fractional delay
-    for i in 0..num_taps {
+    for (i, item) in h.iter_mut().enumerate() {
         let n = i as f64 - center;
         let shifted_n = n - delay;
 
         if shifted_n.abs() < 1e-10 {
-            h[i] = 1.0; // sinc(0) = 1
+            *item = 1.0; // sinc(0) = 1
         } else {
             let arg = std::f64::consts::PI * shifted_n;
-            h[i] = arg.sin() / arg;
+            *item = arg.sin() / arg;
         }
     }
 

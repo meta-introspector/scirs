@@ -46,6 +46,9 @@ use rand::SeedableRng;
 use rand_distr::{Distribution, Uniform};
 use std::cell::RefCell;
 
+// Re-export traits for external use
+pub use rand::Rng;
+
 /// Wrapper around the rand crate's RNG for a consistent interface
 #[derive(Debug)]
 pub struct Random<R: Rng + ?Sized = rand::rngs::ThreadRng> {

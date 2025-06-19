@@ -5,11 +5,9 @@
 //! access patterns and performance metrics.
 
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use super::prefetch::{AccessPattern, AccessPatternTracker, PrefetchConfig, PrefetchStats};
-use crate::error::CoreResult;
 
 /// Maximum number of strategies to try during exploration phase
 const MAX_EXPLORATION_STRATEGIES: usize = 5;

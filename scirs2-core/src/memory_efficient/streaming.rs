@@ -13,7 +13,7 @@ use crate::memory_efficient::chunked::{ChunkedArray, ChunkingStrategy};
 use crate::memory_efficient::prefetch::{AccessPattern, PrefetchConfig};
 #[cfg(feature = "parallel")]
 use crate::parallel;
-use ndarray::{Array, ArrayBase, Dimension, Ix1, Ix2, IxDyn, RawData};
+use ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
 use std::collections::{BTreeMap, VecDeque};
 use std::marker::PhantomData;
 use std::sync::{Arc, Condvar, Mutex, RwLock};

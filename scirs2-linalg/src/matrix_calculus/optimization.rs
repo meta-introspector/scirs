@@ -599,7 +599,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = matrix_gradient_descent(objective, &x0.view(), &config).unwrap();
+        let result = matrix_gradient_descent(&objective, &x0.view(), &config).unwrap();
 
         // Should converge to the zero matrix (global minimum of ||X||_F^2)
         assert!(result.converged);
@@ -633,7 +633,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = projected_gradient_descent(objective, project, &x0.view(), &config).unwrap();
+        let result = projected_gradient_descent(&objective, &project, &x0.view(), &config).unwrap();
 
         // Should converge to zero diagonal matrix
         assert!(result.converged);

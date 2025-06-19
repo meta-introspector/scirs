@@ -7,10 +7,9 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, RwLock, Weak};
+use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 
-use super::prefetch::{PrefetchConfig, PrefetchStats};
 use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// Default correlation threshold for considering files related

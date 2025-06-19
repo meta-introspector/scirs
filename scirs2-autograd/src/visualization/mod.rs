@@ -256,7 +256,7 @@ impl<F: Float> GraphVisualizer<F> {
     fn traverse_graph(
         &self,
         _graph: &Graph<F>,
-        _tensor_ids: &mut Vec<TensorID>,
+        _tensor_ids: &mut [TensorID],
         _visited: &mut HashSet<TensorID>,
     ) -> Result<(), VisualizationError> {
         // This is a simplified traversal - in a real implementation,
@@ -421,17 +421,16 @@ impl<F: Float> GraphDebugger<F> {
         &self,
         _graph: &Graph<F>,
     ) -> Result<Vec<String>, VisualizationError> {
-        let mut suggestions = Vec::new();
-
         // Look for optimization opportunities:
         // - Common subexpressions
         // - Constant folding opportunities
         // - Redundant operations
         // - Memory optimization opportunities
 
-        suggestions
-            .push("Consider enabling gradient checkpointing for memory efficiency".to_string());
-        suggestions.push("Look for opportunities to fuse element-wise operations".to_string());
+        let suggestions = vec![
+            "Consider enabling gradient checkpointing for memory efficiency".to_string(),
+            "Look for opportunities to fuse element-wise operations".to_string(),
+        ];
 
         Ok(suggestions)
     }

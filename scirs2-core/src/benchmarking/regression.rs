@@ -491,7 +491,7 @@ impl RegressionTestUtils {
                 regressions.len()
             ));
 
-            for regression in regressions {
+            for regression in &regressions {
                 report.push_str(&format!(
                     "- **{}**: {:.1}% slower (ratio: {:.3}, confidence: {:.0}%)\n",
                     regression.benchmark_name,

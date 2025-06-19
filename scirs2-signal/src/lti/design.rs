@@ -598,14 +598,14 @@ pub fn divide_polynomials(dividend: &[f64], divisor: &[f64]) -> SignalResult<(Ve
 
     let divisor_lead = clean_divisor[0];
 
-    for i in 0..quotient.len() {
+    for item in &mut quotient {
         if remainder.len() < clean_divisor.len() {
             break;
         }
 
         // Calculate coefficient for this term
         let coeff = remainder[0] / divisor_lead;
-        quotient[i] = coeff;
+        *item = coeff;
 
         // Subtract divisor * coeff from remainder
         for (j, &div_coeff) in clean_divisor.iter().enumerate() {

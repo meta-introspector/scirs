@@ -78,34 +78,34 @@ impl EnhancedMatFile {
     /// Estimate the total size of variables
     fn estimate_size(&self, vars: &HashMap<String, MatType>) -> usize {
         let mut total_size = 0;
-        for (_, mat_type) in vars {
-            total_size += self.estimate_mat_type_size(mat_type);
+        for mat_type in vars.values() {
+            total_size += Self::estimate_mat_type_size(mat_type);
         }
         total_size
     }
 
     /// Estimate the size of a MatType
-    fn estimate_mat_type_size(&self, mat_type: &MatType) -> usize {
+    fn estimate_mat_type_size(mat_type: &MatType) -> usize {
         match mat_type {
             MatType::Double(array) => array.len() * 8,
             MatType::Single(array) => array.len() * 4,
-            MatType::Int8(array) => array.len() * 1,
-            MatType::UInt8(array) => array.len() * 1,
+            MatType::Int8(array) => array.len(),
+            MatType::UInt8(array) => array.len(),
             MatType::Int16(array) => array.len() * 2,
             MatType::UInt16(array) => array.len() * 2,
             MatType::Int32(array) => array.len() * 4,
             MatType::UInt32(array) => array.len() * 4,
             MatType::Int64(array) => array.len() * 8,
             MatType::UInt64(array) => array.len() * 8,
-            MatType::Logical(array) => array.len() * 1,
+            MatType::Logical(array) => array.len(),
             MatType::Char(string) => string.len() * 2, // UTF-16
             MatType::Cell(cells) => cells
                 .iter()
-                .map(|cell| self.estimate_mat_type_size(cell))
+                .map(Self::estimate_mat_type_size)
                 .sum(),
             MatType::Struct(structure) => structure
                 .values()
-                .map(|value| self.estimate_mat_type_size(value))
+                .map(Self::estimate_mat_type_size)
                 .sum(),
         }
     }
@@ -236,7 +236,6 @@ impl EnhancedMatFile {
 }
 
 /// Enhanced convenience functions
-
 /// Write variables to a MAT file with automatic format selection
 pub fn write_mat_enhanced<P: AsRef<Path>>(
     path: P,
@@ -295,7 +294,7 @@ mod tests {
         let array = Array1::from(vec![1.0, 2.0, 3.0, 4.0]).into_dyn();
         let mat_type = MatType::Double(array);
 
-        let size = enhanced.estimate_mat_type_size(&mat_type);
+        let size = EnhancedMatFile::estimate_mat_type_size(&mat_type);
         assert_eq!(size, 4 * 8); // 4 elements * 8 bytes each
     }
 

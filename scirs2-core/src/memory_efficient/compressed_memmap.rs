@@ -14,15 +14,12 @@ use ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
 #[cfg(feature = "memory_compression")]
 use lz4::{Decoder, EncoderBuilder};
 
-#[cfg(feature = "memory_compression")]
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
-use tempfile::NamedTempFile;
 
 /// Metadata for a compressed memory-mapped file
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

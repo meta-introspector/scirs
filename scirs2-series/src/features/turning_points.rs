@@ -558,7 +558,7 @@ where
     // Calculate standard deviation of all directional changes
     let all_magnitudes: Vec<F> = upward_magnitudes
         .into_iter()
-        .chain(downward_magnitudes.into_iter())
+        .chain(downward_magnitudes)
         .collect();
 
     let directional_change_std = if all_magnitudes.len() > 1 {
@@ -739,7 +739,7 @@ where
     // Extrema asymmetry (skewness of combined peak and valley distributions)
     let all_extrema: Vec<F> = peak_amplitudes
         .into_iter()
-        .chain(valley_amplitudes.into_iter())
+        .chain(valley_amplitudes)
         .collect();
 
     let extrema_asymmetry = if all_extrema.len() > 2 {
@@ -1290,7 +1290,7 @@ where
         // Simple heuristic: double peaks have similar spacing
         if spacing1 > 0 && spacing2 > 0 {
             let ratio = spacing1 as f64 / spacing2 as f64;
-            if ratio >= 0.5 && ratio <= 2.0 {
+            if (0.5..=2.0).contains(&ratio) {
                 count += 1;
             }
         }
@@ -1311,7 +1311,7 @@ where
         // Simple heuristic: double bottoms have similar spacing
         if spacing1 > 0 && spacing2 > 0 {
             let ratio = spacing1 as f64 / spacing2 as f64;
-            if ratio >= 0.5 && ratio <= 2.0 {
+            if (0.5..=2.0).contains(&ratio) {
                 count += 1;
             }
         }

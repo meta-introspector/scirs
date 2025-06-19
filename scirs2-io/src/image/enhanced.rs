@@ -422,7 +422,7 @@ impl EnhancedImageProcessor {
                     let blur = blurred.data[[y, x, c]] as f32;
                     let difference = original - blur;
                     let sharpened = original + amount * difference;
-                    sharpened_data[[y, x, c]] = sharpened.max(0.0).min(255.0) as u8;
+                    sharpened_data[[y, x, c]] = sharpened.clamp(0.0, 255.0) as u8;
                 }
             }
         }
@@ -481,10 +481,8 @@ impl ImagePyramid {
 
         for level in 0..self.num_levels() {
             if let Some(level_image) = self.get_level(level) {
-                let width_diff =
-                    (level_image.metadata.width as i32 - target_width as i32).abs() as u32;
-                let height_diff =
-                    (level_image.metadata.height as i32 - target_height as i32).abs() as u32;
+                let width_diff = level_image.metadata.width.abs_diff(target_width);
+                let height_diff = level_image.metadata.height.abs_diff(target_height);
                 let total_diff = width_diff + height_diff;
 
                 if total_diff < best_diff {
@@ -505,7 +503,6 @@ impl ImagePyramid {
 }
 
 /// Convenience functions for enhanced image operations
-
 /// Create an image pyramid with default configuration
 pub fn create_image_pyramid(image: &ImageData) -> Result<ImagePyramid> {
     let processor = EnhancedImageProcessor::new();

@@ -671,8 +671,9 @@ impl StressTestUtils {
         });
 
         // CPU stress tests
-        suite.add_test("cpu_intensive_workload", |_runner| {
-            let tester = CpuStressTester::new(stress_config.clone());
+        let stress_config_clone = stress_config.clone();
+        suite.add_test("cpu_intensive_workload", move |_runner| {
+            let tester = CpuStressTester::new(stress_config_clone.clone());
             let result = tester.test_cpu_intensive_workload()?;
 
             if result.error.is_some() {
@@ -689,8 +690,9 @@ impl StressTestUtils {
             ))
         });
 
-        suite.add_test("concurrent_cpu_workload", |_runner| {
-            let tester = CpuStressTester::new(stress_config.clone());
+        let stress_config_clone2 = stress_config.clone();
+        suite.add_test("concurrent_cpu_workload", move |_runner| {
+            let tester = CpuStressTester::new(stress_config_clone2.clone());
             let result = tester.test_concurrent_cpu_workload()?;
 
             if result.error.is_some() {
@@ -708,8 +710,9 @@ impl StressTestUtils {
         });
 
         // Concurrency stress tests
-        suite.add_test("shared_resource_contention", |_runner| {
-            let tester = ConcurrencyStressTester::new(stress_config.clone());
+        let stress_config_clone3 = stress_config.clone();
+        suite.add_test("shared_resource_contention", move |_runner| {
+            let tester = ConcurrencyStressTester::new(stress_config_clone3.clone());
             let result = tester.test_shared_resource_contention()?;
 
             if result.error.is_some() {
@@ -726,8 +729,9 @@ impl StressTestUtils {
             ))
         });
 
-        suite.add_test("lock_free_performance", |_runner| {
-            let tester = ConcurrencyStressTester::new(stress_config.clone());
+        let stress_config_clone4 = stress_config.clone();
+        suite.add_test("lock_free_performance", move |_runner| {
+            let tester = ConcurrencyStressTester::new(stress_config_clone4.clone());
             let result = tester.test_lock_free_performance()?;
 
             if result.error.is_some() {

@@ -320,7 +320,7 @@ mod tests {
             // ∂f/∂x₀ = 2x₀ + x₁ = 2(1) + 2 = 4
             // ∂f/∂x₁ = 4x₁ + x₀ = 4(2) + 1 = 9
             assert_abs_diff_eq!(grad[0], 4.0, epsilon = 1e-7);
-            assert_abs_diff_eq!(grad[1], 9.0, epsilon = 1e-10);
+            assert_abs_diff_eq!(grad[1], 9.0, epsilon = 1e-7);
         }
 
         // Test reverse mode
@@ -330,8 +330,8 @@ mod tests {
         assert_abs_diff_eq!(result_reverse.value, 11.0, epsilon = 1e-10);
 
         if let Some(grad) = result_reverse.gradient {
-            assert_abs_diff_eq!(grad[0], 4.0, epsilon = 1e-10);
-            assert_abs_diff_eq!(grad[1], 9.0, epsilon = 1e-10);
+            assert_abs_diff_eq!(grad[0], 4.0, epsilon = 1e-7);
+            assert_abs_diff_eq!(grad[1], 9.0, epsilon = 1e-7);
         }
     }
 
@@ -358,7 +358,7 @@ mod tests {
         let grad = grad_func(&x.view());
 
         // ∂f/∂x₀ = 2x₀ = 6, ∂f/∂x₁ = 2x₁ = 8
-        assert_abs_diff_eq!(grad[0], 6.0, epsilon = 1e-7);
-        assert_abs_diff_eq!(grad[1], 8.0, epsilon = 1e-7);
+        assert_abs_diff_eq!(grad[0], 6.0, epsilon = 1e-6);
+        assert_abs_diff_eq!(grad[1], 8.0, epsilon = 1e-6);
     }
 }

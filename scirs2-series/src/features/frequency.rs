@@ -932,7 +932,7 @@ where
         / F::from_usize(n).unwrap();
 
     // For demonstration, create a simple spectrum based on autocorrelation
-    for k in 0..periodogram.len() {
+    for (k, item) in periodogram.iter_mut().enumerate() {
         let mut power = F::zero();
         let freq = F::from(k).unwrap() / F::from(n).unwrap()
             * F::from(2.0 * std::f64::consts::PI).unwrap();
@@ -953,7 +953,7 @@ where
             }
         }
 
-        periodogram[k] = power.abs() / variance;
+        *item = power.abs() / variance;
     }
 
     Ok(periodogram)

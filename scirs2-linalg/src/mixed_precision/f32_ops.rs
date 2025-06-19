@@ -379,8 +379,8 @@ mod tests {
         let result = mixed_precision_matvec_f32::<f32, f32, f32, f64>(&a.view(), &x.view());
         assert!(result.is_err());
 
-        let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
-        let b = array![[1.0f32, 2.0f32, 3.0f32], [4.0f32, 5.0f32, 6.0f32]]; // Wrong size
+        let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]]; // 2x2
+        let b = array![[1.0f32, 2.0f32, 3.0f32]]; // 1x3 - incompatible with 2x2
 
         let result = mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view());
         assert!(result.is_err());

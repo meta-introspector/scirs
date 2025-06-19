@@ -16,6 +16,22 @@ use crate::Float;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+/// Type alias for test function signature
+type TestFunction<F> = Box<
+    dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync,
+>;
+
+/// Type alias for basic test case collection
+type BasicTestCaseCollection<'a, F> = Vec<(String, BasicTestCase<'a, F>)>;
+
+/// Type alias for edge case test collection  
+type EdgeCaseTestCollection<'a, F> = Vec<(String, EdgeCaseTest<'a, F>)>;
+
+/// Type alias for stability distribution mapping
+type StabilityDistribution = HashMap<StabilityGrade, usize>;
+
+
+
 /// Comprehensive stability test suite
 pub struct StabilityTestSuite<'a, F: Float> {
     /// Test configuration
@@ -98,7 +114,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     /// Run basic stability tests
     fn run_basic_stability_tests(&mut self) -> Result<(), StabilityError> {
         let test_cases = self.generate_basic_test_cases();
-        let mut results = Vec::new();
+        let mut results: Vec<(String, StabilityTestResult)> = Vec::new();
 
         for (name, test_case) in test_cases {
             let result = self.run_single_stability_test(&name, test_case)?;
@@ -114,7 +130,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     }
 
     /// Generate basic test cases
-    fn generate_basic_test_cases(&self) -> Vec<(String, BasicTestCase<F>)> {
+    fn generate_basic_test_cases(&self) -> BasicTestCaseCollection<'_, F> {
         let mut test_cases = Vec::new();
 
         // Identity function test
@@ -271,7 +287,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     /// Run edge case tests
     fn run_edge_case_tests(&mut self) -> Result<(), StabilityError> {
         let edge_cases = self.generate_edge_cases();
-        let mut results = Vec::new();
+        let mut results: Vec<EdgeCaseTestResult> = Vec::new();
 
         for (name, edge_case) in edge_cases {
             let result = self.run_edge_case_test(&name, edge_case)?;
@@ -285,50 +301,45 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     }
 
     /// Generate edge case test scenarios
-    fn generate_edge_cases(&self) -> Vec<(String, EdgeCaseTest<F>)> {
-        let mut edge_cases = Vec::new();
-
-        // Very small inputs
-        edge_cases.push((
-            "tiny_inputs".to_string(),
-            EdgeCaseTest {
-                input: self.create_tensor_with_values(vec![1e-15, 1e-12, 1e-10]),
-                function: Box::new(|x: &Tensor<F>| Ok(*x)),
-                expected_behavior: EdgeCaseBehavior::Stable,
-            },
-        ));
-
-        // Very large inputs
-        edge_cases.push((
-            "large_inputs".to_string(),
-            EdgeCaseTest {
-                input: self.create_tensor_with_values(vec![1e10, 1e12, 1e15]),
-                function: Box::new(|x: &Tensor<F>| Ok(*x)),
-                expected_behavior: EdgeCaseBehavior::MaybeUnstable,
-            },
-        ));
-
-        // Inputs near zero
-        edge_cases.push((
-            "near_zero_inputs".to_string(),
-            EdgeCaseTest {
-                input: self.create_tensor_with_values(vec![-1e-8, 0.0, 1e-8]),
-                function: Box::new(|x: &Tensor<F>| Ok(*x)),
-                expected_behavior: EdgeCaseBehavior::Stable,
-            },
-        ));
-
-        // Mixed magnitude inputs
-        edge_cases.push((
-            "mixed_magnitude_inputs".to_string(),
-            EdgeCaseTest {
-                input: self.create_tensor_with_values(vec![1e-10, 1.0, 1e10]),
-                function: Box::new(|x: &Tensor<F>| Ok(*x)),
-                expected_behavior: EdgeCaseBehavior::MaybeUnstable,
-            },
-        ));
-
-        edge_cases
+    fn generate_edge_cases(&self) -> EdgeCaseTestCollection<'_, F> {
+        vec![
+            // Very small inputs
+            (
+                "tiny_inputs".to_string(),
+                EdgeCaseTest {
+                    input: self.create_tensor_with_values(vec![1e-15, 1e-12, 1e-10]),
+                    function: Box::new(|x: &Tensor<F>| Ok(*x)),
+                    expected_behavior: EdgeCaseBehavior::Stable,
+                },
+            ),
+            // Very large inputs
+            (
+                "large_inputs".to_string(),
+                EdgeCaseTest {
+                    input: self.create_tensor_with_values(vec![1e10, 1e12, 1e15]),
+                    function: Box::new(|x: &Tensor<F>| Ok(*x)),
+                    expected_behavior: EdgeCaseBehavior::MaybeUnstable,
+                },
+            ),
+            // Inputs near zero
+            (
+                "near_zero_inputs".to_string(),
+                EdgeCaseTest {
+                    input: self.create_tensor_with_values(vec![-1e-8, 0.0, 1e-8]),
+                    function: Box::new(|x: &Tensor<F>| Ok(*x)),
+                    expected_behavior: EdgeCaseBehavior::Stable,
+                },
+            ),
+            // Mixed magnitude inputs
+            (
+                "mixed_magnitude_inputs".to_string(),
+                EdgeCaseTest {
+                    input: self.create_tensor_with_values(vec![1e-10, 1.0, 1e10]),
+                    function: Box::new(|x: &Tensor<F>| Ok(*x)),
+                    expected_behavior: EdgeCaseBehavior::MaybeUnstable,
+                },
+            ),
+        ]
     }
 
     /// Run precision sensitivity tests
@@ -479,7 +490,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         }
     }
 
-    fn calculate_stability_distribution(&self) -> HashMap<StabilityGrade, usize> {
+    fn calculate_stability_distribution(&self) -> StabilityDistribution {
         let mut distribution = HashMap::new();
 
         for result in &self.results.test_results {
@@ -596,9 +607,7 @@ impl Default for TestConfig {
 
 /// Basic test case structure
 pub struct BasicTestCase<'a, F: Float> {
-    pub function: Box<
-        dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync,
-    >,
+    pub function: TestFunction<F>,
     pub input: Tensor<'a, F>,
     pub expected_stability: StabilityGrade,
     pub perturbation_magnitude: f64,
@@ -607,9 +616,7 @@ pub struct BasicTestCase<'a, F: Float> {
 /// Edge case test structure
 pub struct EdgeCaseTest<'a, F: Float> {
     pub input: Tensor<'a, F>,
-    pub function: Box<
-        dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync,
-    >,
+    pub function: TestFunction<F>,
     pub expected_behavior: EdgeCaseBehavior,
 }
 
@@ -617,9 +624,7 @@ pub struct EdgeCaseTest<'a, F: Float> {
 pub struct TestScenario<'a, F: Float> {
     pub name: String,
     pub description: String,
-    pub function: Box<
-        dyn for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync,
-    >,
+    pub function: TestFunction<F>,
     pub input: Tensor<'a, F>,
     pub expected_grade: StabilityGrade,
     pub perturbation_magnitude: f64,
@@ -648,7 +653,7 @@ pub struct TestResults<'a, F: Float> {
     pub scenario_results: Vec<ScenarioTestResult>,
 }
 
-impl<'a, F: Float> Default for TestResults<'a, F> {
+impl<F: Float> Default for TestResults<'_, F> {
     fn default() -> Self {
         Self::new()
     }
@@ -744,7 +749,7 @@ pub struct TestSummary {
     pub passed_tests: usize,
     pub failed_tests: usize,
     pub total_duration: Duration,
-    pub stability_distribution: HashMap<StabilityGrade, usize>,
+    pub stability_distribution: StabilityDistribution,
     pub performance_summary: PerformanceSummary,
     pub recommendations: Vec<String>,
 }
@@ -812,21 +817,21 @@ pub struct PerformanceSummary {
 
 /// Public API functions
 /// Run a comprehensive stability test suite
-pub fn run_comprehensive_stability_tests<'a, F: Float>() -> Result<TestSummary, StabilityError> {
-    let mut suite = StabilityTestSuite::<'a, F>::new();
+pub fn run_comprehensive_stability_tests<F: Float>() -> Result<TestSummary, StabilityError> {
+    let mut suite = StabilityTestSuite::<'_, F>::new();
     suite.run_all_tests()
 }
 
 /// Run stability tests with custom configuration
-pub fn run_stability_tests_with_config<'a, F: Float>(
+pub fn run_stability_tests_with_config<F: Float>(
     config: TestConfig,
 ) -> Result<TestSummary, StabilityError> {
-    let mut suite = StabilityTestSuite::<'a, F>::with_config(config);
+    let mut suite = StabilityTestSuite::<'_, F>::with_config(config);
     suite.run_all_tests()
 }
 
 /// Run basic stability tests only
-pub fn run_basic_stability_tests<'a, F: Float>() -> Result<TestSummary, StabilityError> {
+pub fn run_basic_stability_tests<F: Float>() -> Result<TestSummary, StabilityError> {
     let config = TestConfig {
         run_basic_tests: true,
         run_advanced_tests: false,
@@ -846,10 +851,7 @@ pub fn test_function_stability<'a, F: Float, Func>(
     name: &str,
 ) -> Result<StabilityTestResult, StabilityError>
 where
-    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>
-        + Send
-        + Sync
-        + 'static,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync + 'static,
 {
     let suite = StabilityTestSuite::<'a, F>::new();
     let test_case = BasicTestCase {
@@ -871,10 +873,7 @@ pub fn create_test_scenario<'a, F: Float, Func>(
     expected_grade: StabilityGrade,
 ) -> TestScenario<'a, F>
 where
-    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>
-        + Send
-        + Sync
-        + 'static,
+    Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + Send + Sync + 'static,
 {
     TestScenario {
         name,

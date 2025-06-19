@@ -602,13 +602,13 @@ fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
     for _iter in 0..max_iterations {
         let mut converged = true;
 
-        for i in 0..n {
-            let z = estimates[i];
+        for estimate in estimates.iter_mut().take(n) {
+            let z = *estimate;
             let (p_val, p_prime) = evaluate_polynomial_and_derivative(&trimmed_coeffs, z);
 
             if p_prime.norm() > tolerance {
                 let correction = p_val / p_prime;
-                estimates[i] = z - correction;
+                *estimate = z - correction;
 
                 if correction.norm() > tolerance {
                     converged = false;

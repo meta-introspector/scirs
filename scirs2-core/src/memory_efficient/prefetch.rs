@@ -11,13 +11,12 @@
 //! - Adaptive prefetching based on historical access patterns
 //! - Integration with the block cache system to manage prefetched blocks
 
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::{Arc, Mutex, RwLock};
+use std::collections::{HashSet, VecDeque};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "memory_compression")]
 use super::compressed_memmap::CompressedMemMappedArray;
-use super::memmap::MemoryMappedArray;
 use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// Types of access patterns that can be detected and prefetched.

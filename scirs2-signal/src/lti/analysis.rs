@@ -20,7 +20,7 @@ use crate::error::{SignalError, SignalResult};
 ///
 /// * `system` - The LTI system to analyze
 /// * `w` - Optional frequency points at which to evaluate the response.
-///         If None, generates logarithmically spaced frequencies from 0.01 to 100 rad/s
+///   If None, generates logarithmically spaced frequencies from 0.01 to 100 rad/s
 ///
 /// # Returns
 ///
@@ -769,6 +769,7 @@ fn matrix_multiply(a: &[Vec<f64>], b: &[Vec<f64>]) -> SignalResult<Vec<Vec<f64>>
 
     for i in 0..rows {
         for j in 0..cols {
+            #[allow(clippy::needless_range_loop)]
             for k in 0..inner {
                 result[i][j] += a[i][k] * b[k][j];
             }

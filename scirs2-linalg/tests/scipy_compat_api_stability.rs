@@ -382,7 +382,7 @@ mod api_contract_tests {
             for i in 0..l.nrows() {
                 for j in (i + 1)..l.ncols() {
                     assert!(
-                        (l[[i, j]] as f64).abs() < 1e-12,
+                        l[[i, j]].abs() < 1e-12_f64,
                         "Cholesky result not lower triangular"
                     );
                 }
@@ -395,27 +395,25 @@ mod api_contract_tests {
 
         // QR decomposition contract
         let qr_result = compat::qr(&general_matrix.view(), false, None, "full", false, true);
-        if let Ok((q_opt, r)) = qr_result {
-            if let Some(q) = q_opt {
-                // Q should be orthogonal
-                let qtq = q.t().dot(&q);
-                let identity = Array2::eye(q.ncols());
-                assert!(arrays_consistent(&qtq, &identity, 1e-10));
+        if let Ok((Some(q), r)) = qr_result {
+            // Q should be orthogonal
+            let qtq = q.t().dot(&q);
+            let identity = Array2::eye(q.ncols());
+            assert!(arrays_consistent(&qtq, &identity, 1e-10));
 
-                // R should be upper triangular
-                for i in 1..r.nrows() {
-                    for j in 0..i.min(r.ncols()) {
-                        assert!(
-                            (r[[i, j]]).abs() < 1e-10,
-                            "QR R matrix not upper triangular"
-                        );
-                    }
+            // R should be upper triangular
+            for i in 1..r.nrows() {
+                for j in 0..i.min(r.ncols()) {
+                    assert!(
+                        (r[[i, j]]).abs() < 1e-10,
+                        "QR R matrix not upper triangular"
+                    );
                 }
-
-                // Q * R should reconstruct the original matrix
-                let reconstructed = q.dot(&r);
-                assert!(arrays_consistent(&reconstructed, &general_matrix, 1e-10));
             }
+
+            // Q * R should reconstruct the original matrix
+            let reconstructed = q.dot(&r);
+            assert!(arrays_consistent(&reconstructed, &general_matrix, 1e-10));
         }
 
         // SVD decomposition contract
@@ -981,7 +979,7 @@ mod version_compatibility_tests {
         assert!(l.shape()[0] > 0);
         assert!(u.shape()[0] > 0);
         assert!(r.shape()[0] > 0);
-        assert!(eigenvals.len() > 0);
+        assert!(!eigenvals.is_empty());
 
         if let Some(q) = q_opt {
             assert!(q.shape()[0] > 0);

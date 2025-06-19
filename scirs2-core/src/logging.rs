@@ -1262,7 +1262,7 @@ mod distributed_tests {
         logger.warn_adaptive("Test message 2");
 
         let entries = logger.get_aggregated_logs();
-        assert!(entries.len() >= 1); // At least one message should go through
+        assert!(!entries.is_empty()); // At least one message should go through
 
         let stats = logger.get_aggregation_stats();
         assert!(stats.total_entries >= 1);

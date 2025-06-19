@@ -88,7 +88,7 @@ fn main() {
     println!("--------------------");
 
     // FIR comb filter for echo enhancement
-    let (b_comb_fir, _a_comb_fir) = comb_filter(20, 0.5, "feed_forward").unwrap();
+    let (b_comb_fir, _a_comb_fir) = comb_filter(20, 0.0, 0.5).unwrap();
     println!("FIR comb filter (20-sample delay, 0.5 gain):");
     println!("  Numerator length: {}", b_comb_fir.len());
     println!(
@@ -97,7 +97,7 @@ fn main() {
     );
 
     // IIR comb filter for echo removal
-    let (_b_comb_iir, a_comb_iir) = comb_filter(15, -0.7, "feed_back").unwrap();
+    let (_b_comb_iir, a_comb_iir) = comb_filter(15, -0.7, 1.0).unwrap();
     println!("IIR comb filter (15-sample delay, -0.7 gain):");
     println!("  Denominator length: {}", a_comb_iir.len());
     println!(
@@ -126,13 +126,13 @@ fn main() {
     println!("----------------------------------------");
 
     // First-order allpass
-    let (b_ap1, a_ap1) = allpass_filter(1, 0.25, None).unwrap();
+    let (b_ap1, a_ap1) = allpass_filter(0.25, 0.9).unwrap();
     println!("1st-order allpass filter (0.25 normalized freq):");
     println!("  Numerator:   {:?}", format_coeffs(&b_ap1));
     println!("  Denominator: {:?}", format_coeffs(&a_ap1));
 
     // Second-order allpass
-    let (b_ap2, a_ap2) = allpass_filter(2, 0.3, Some(2.0)).unwrap();
+    let (b_ap2, a_ap2) = allpass_filter(0.3, 0.8).unwrap();
     println!("2nd-order allpass filter (0.3 normalized freq, Q=2):");
     println!("  Numerator:   {:?}", format_coeffs(&b_ap2));
     println!("  Denominator: {:?}", format_coeffs(&a_ap2));

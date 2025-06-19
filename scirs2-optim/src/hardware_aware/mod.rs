@@ -524,7 +524,7 @@ impl<
     ) -> Result<()> {
         // Optimize batch size for cache efficiency
         let cache_friendly_batch_size = (cache_size / 4) / self.current_state.parameters.len(); // Rough estimate
-        self.config.batch_size = cache_friendly_batch_size.min(512).max(16);
+        self.config.batch_size = cache_friendly_batch_size.clamp(16, 512);
 
         // Configure parallelization based on cores
         self.config.parallelization = ParallelizationStrategy::DataParallel {
@@ -679,7 +679,7 @@ impl<
         quantization_support: QuantizationSupport,
     ) -> Result<()> {
         // Small batch sizes for memory constraints
-        let edge_batch_size = (memory_limit / (4 * 1024 * 1024)).min(32).max(1); // Very conservative
+        let edge_batch_size = (memory_limit / (4 * 1024 * 1024)).clamp(1, 32); // Very conservative
         self.config.batch_size = edge_batch_size;
 
         // Single-threaded for power efficiency
@@ -971,6 +971,12 @@ impl<
     }
 }
 
+impl<A: Float> Default for PerformanceProfiler<A> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<A: Float> PerformanceProfiler<A> {
     /// Create a new performance profiler
     pub fn new() -> Self {
@@ -981,6 +987,12 @@ impl<A: Float> PerformanceProfiler<A> {
             energy_consumption: Vec::new(),
             throughput: Vec::new(),
         }
+    }
+}
+
+impl<A: Float> Default for ResourceMonitor<A> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -996,6 +1008,12 @@ impl<A: Float> ResourceMonitor<A> {
             temperature: A::zero(),
             network_utilization: None,
         }
+    }
+}
+
+impl<A: Float> Default for AdaptiveTuner<A> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

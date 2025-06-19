@@ -5,7 +5,7 @@
 //! This helps ensure that the prefetching system improves rather than hinders performance.
 
 use std::collections::VecDeque;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "memory_compression")]
@@ -15,7 +15,7 @@ use libc;
 use num_cpus;
 
 use super::prefetch::{PrefetchConfig, PrefetchStats};
-use crate::error::{CoreError, CoreResult, ErrorContext};
+use crate::error::{CoreError, ErrorContext};
 
 /// Default sampling interval for resource monitoring
 const DEFAULT_SAMPLING_INTERVAL: Duration = Duration::from_millis(500);

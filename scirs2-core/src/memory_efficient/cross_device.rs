@@ -11,13 +11,13 @@
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 #[cfg(feature = "gpu")]
-use crate::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuDataType, GpuError};
-use ndarray::{Array, ArrayBase, Dimension, Ix1, Ix2, IxDyn, RawData, RawDataClone};
+use crate::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuDataType};
+use ndarray::{Array, ArrayBase, Dimension, IxDyn, RawData};
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 
 /// Device types supported by the cross-device memory management
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

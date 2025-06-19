@@ -36,7 +36,7 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use ndarray::{Array, ArrayBase, Data, Dimension, Ix, IxDyn, RawData, ShapeBuilder};
+use ndarray::{Array, ArrayBase, Data, Dimension, RawData};
 use std::mem;
 
 /// Memory layout order following `NumPy` conventions

@@ -14,7 +14,7 @@ use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "random")]
-use crate::random::Rng;
+use rand::Rng;
 
 /// Fuzzing input generator for different data types
 pub trait FuzzingGenerator<T> {
@@ -576,11 +576,11 @@ mod tests {
         }
 
         // Test edge case generation
-        let edge_vector = generator.generate_edge_case();
+        let _edge_vector = generator.generate_edge_case();
         // Edge cases might generate empty vectors or vectors with special values
 
         // Test boundary generation
-        let boundary_vector = generator.generate_boundary();
+        let _boundary_vector = generator.generate_boundary();
         // Boundary cases test size limits
     }
 

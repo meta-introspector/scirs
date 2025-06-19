@@ -286,7 +286,7 @@ impl LargeDatasetGenerator {
         let mut bytes_written = 0;
 
         #[cfg(feature = "random")]
-        let mut rng = crate::random::Rng::new();
+        let mut rng = rand::rng();
 
         while bytes_written < size {
             let remaining = size - bytes_written;

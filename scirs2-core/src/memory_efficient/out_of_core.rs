@@ -1,11 +1,11 @@
 use super::chunked::{ChunkedArray, ChunkingStrategy, OPTIMAL_CHUNK_SIZE};
 use super::validation;
-use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use bincode::{deserialize, serialize};
-use ndarray::{Array, ArrayBase, Data, Dimension, Ix1, Ix2, IxDyn, ShapeBuilder};
+use ndarray::{Array, ArrayBase, Data, Dimension, IxDyn};
 use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{Read, Write};
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;

@@ -357,7 +357,7 @@ where
         node_neighbors
             .entry(source.clone())
             .or_insert_with(Vec::new)
-            .push((target.clone(), weight.clone()));
+            .push((target.clone(), *weight));
     }
 
     // Write adjacency list for each node
@@ -440,7 +440,7 @@ where
         node_neighbors
             .entry(source.clone())
             .or_insert_with(Vec::new)
-            .push((target.clone(), weight.clone()));
+            .push((target.clone(), *weight));
     }
 
     // Write adjacency list for each node

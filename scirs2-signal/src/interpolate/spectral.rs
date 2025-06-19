@@ -386,7 +386,6 @@ pub fn auto_interpolate(
     }
 }
 
-/// High-quality resampling and signal processing utilities
 pub mod resampling {
     //! Advanced resampling utilities for signal interpolation and sample rate conversion
     //!
@@ -566,7 +565,6 @@ pub mod resampling {
     // This is a simplified version focusing on the core functionality
 }
 
-/// Polynomial interpolation and curve fitting utilities
 pub mod polynomial {
     //! Polynomial interpolation methods and utilities
     //!

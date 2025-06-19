@@ -602,17 +602,15 @@ impl TypeRegistry {
         }
     }
 
-    /// Get operations for a type
-    pub fn get_operations<T: Any>(
-        &self,
-    ) -> CoreResult<Option<&Box<dyn TypeOperations + Send + Sync>>> {
+    /// Check if operations are registered for a type
+    pub fn has_operations<T: Any>(&self) -> CoreResult<bool> {
         let type_id = TypeId::of::<T>();
 
         let operations = self.operations.read().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire read lock"))
         })?;
 
-        Ok(operations.get(&type_id))
+        Ok(operations.contains_key(&type_id))
     }
 }
 

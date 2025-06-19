@@ -36,9 +36,6 @@ use scirs2_interpolate::{
         make_natural_neighbor_interpolator, InterpolationMethod as VoronoiInterpolationMethod,
     },
     CovarianceFunction,
-    // Fast Kriging imports
-    FastKrigingBuilder,
-    FastKrigingMethod,
 };
 use std::time::Instant;
 

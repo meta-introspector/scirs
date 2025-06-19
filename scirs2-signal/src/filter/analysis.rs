@@ -314,7 +314,7 @@ pub fn frequency_response(
     let mut phase = Vec::with_capacity(frequencies.len());
 
     for &freq in frequencies {
-        if freq < 0.0 || freq > 1.0 {
+        if !(0.0..=1.0).contains(&freq) {
             return Err(SignalError::ValueError(
                 "Frequencies must be normalized between 0 and 1".to_string(),
             ));

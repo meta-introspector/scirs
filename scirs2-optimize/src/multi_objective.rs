@@ -647,7 +647,7 @@ impl NSGAII {
             let mut prev_y = reference_point[1];
 
             for &(x, y) in &points {
-                if x < reference_point[0] && y < reference_point[1] {
+                if x < reference_point[0] && y < reference_point[1] && y < prev_y {
                     volume += (reference_point[0] - x) * (prev_y - y);
                     prev_y = y;
                 }
@@ -1731,7 +1731,7 @@ mod tests {
         let config = MultiObjectiveConfig::default();
         let optimizer = NSGAII::new(1, 2, Some(config));
 
-        // Create a simple Pareto front
+        // Create a proper Pareto front (non-dominated points with decreasing y when x increases)
         let population = vec![
             MultiObjectiveSolution {
                 variables: array![0.0],

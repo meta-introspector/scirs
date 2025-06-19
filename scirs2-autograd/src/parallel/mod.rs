@@ -93,7 +93,7 @@ impl ThreadPool {
         
         // Initialize stats with proper worker_stats vector
         let mut stats_data = ThreadPoolStats::new();
-        stats_data.worker_stats = (0..config.num_threads).map(|id| WorkerStats::new(id)).collect();
+        stats_data.worker_stats = (0..config.num_threads).map(WorkerStats::new).collect();
         let stats = Arc::new(Mutex::new(stats_data));
 
         let mut workers = Vec::with_capacity(config.num_threads);

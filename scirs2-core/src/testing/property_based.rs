@@ -17,7 +17,7 @@ use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "random")]
-use crate::random::Rng;
+use rand::Rng;
 
 /// Mathematical property that can be tested
 pub trait MathematicalProperty<T> {

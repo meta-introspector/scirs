@@ -763,7 +763,7 @@ mod tests {
             let point = sobol.next_point();
             assert_eq!(point.len(), 2);
             for coord in point {
-                assert!(coord >= 0.0 && coord < 1.0);
+                assert!((0.0..1.0).contains(&coord));
             }
         }
     }
@@ -781,7 +781,7 @@ mod tests {
         for i in 0..50 {
             for j in 0..2 {
                 let val = points[[i, j]];
-                assert!(val >= 0.0 && val < 1.0);
+                assert!((0.0..1.0).contains(&val));
             }
         }
     }
@@ -825,7 +825,7 @@ mod tests {
         for i in 0..20 {
             for j in 0..2 {
                 let val = points[[i, j]];
-                assert!(val >= 0.0 && val < 1.0);
+                assert!((0.0..1.0).contains(&val));
             }
         }
     }

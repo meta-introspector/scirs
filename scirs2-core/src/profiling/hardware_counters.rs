@@ -990,10 +990,12 @@ mod tests {
 
     #[test]
     fn test_derived_metrics() {
-        let mut metrics = DerivedMetrics::default();
-        metrics.instructions_per_cycle = 2.5;
-        metrics.cache_hit_rate = 0.95;
-        metrics.branch_prediction_accuracy = 0.98;
+        let metrics = DerivedMetrics {
+            instructions_per_cycle: 2.5,
+            cache_hit_rate: 0.95,
+            branch_prediction_accuracy: 0.98,
+            ..Default::default()
+        };
 
         assert_eq!(metrics.instructions_per_cycle, 2.5);
         assert_eq!(metrics.cache_hit_rate, 0.95);
@@ -1044,9 +1046,8 @@ mod tests {
     #[test]
     fn test_utils_functions() {
         // Test that utility functions don't panic
-        let available = utils::counters_available();
-        // On most platforms, this will be false in test environment
-        assert!(!available || available);
+        let _available = utils::counters_available();
+        // Function should complete without panicking - no assertion needed
 
         // Test starting monitoring (may fail on unsupported platforms)
         let result = utils::start_basic_cpu_monitoring("test");

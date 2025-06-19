@@ -794,7 +794,7 @@ mod tests {
 
     #[test]
     fn test_gpu_rng_manager() {
-        let mut manager = GpuRngManager::new();
+        let manager = GpuRngManager::new();
 
         // Test initial state
         assert_eq!(manager.list_generators().len(), 0);

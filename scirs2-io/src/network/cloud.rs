@@ -488,7 +488,6 @@ impl CloudProvider {
 }
 
 /// Cloud storage utility functions
-
 /// Create a mock file metadata for testing
 pub fn create_mock_metadata(name: &str, size: u64) -> FileMetadata {
     FileMetadata {

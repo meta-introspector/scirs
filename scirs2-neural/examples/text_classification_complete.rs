@@ -741,7 +741,7 @@ mod tests {
 
     #[test]
     fn test_metrics_calculation() {
-        let predictions = Array::from_shape_vec(
+        let predictions = Array2::from_shape_vec(
             (2, 3),
             vec![
                 0.1, 0.8, 0.1, // Class 1
@@ -751,7 +751,7 @@ mod tests {
         .unwrap()
         .into_dyn();
 
-        let targets = Array::from_shape_vec(
+        let targets = Array2::from_shape_vec(
             (2, 3),
             vec![
                 0.0, 1.0, 0.0, // Class 1

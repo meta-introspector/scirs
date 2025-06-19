@@ -107,15 +107,8 @@ where
         // Get batch data
         let batch_data = data_provider.get_batch(&batch_indices);
 
-        // For Nesterov momentum, evaluate gradient at the "look-ahead" point
-        let eval_point = if options.nesterov {
-            &x + &velocity * options.momentum
-        } else {
-            x.clone()
-        };
-
-        // Compute gradient on batch
-        let mut gradient = grad_func.compute_gradient(&eval_point.view(), &batch_data);
+        // Compute gradient on batch at current point
+        let mut gradient = grad_func.compute_gradient(&x.view(), &batch_data);
         _grad_evals += 1;
 
         // Apply gradient clipping if specified
@@ -135,8 +128,8 @@ where
         // Update parameters
         if options.nesterov {
             // Nesterov accelerated gradient: x = x - lr * (momentum * v + grad)
-            let nesterov_update = &velocity * options.momentum + &gradient;
-            x = &x - &nesterov_update * current_lr;
+            // Use standard Nesterov formulation to avoid double-counting momentum
+            x = &x - (&velocity + &gradient * options.momentum) * current_lr;
         } else {
             // Classical momentum: x = x - lr * v
             x = &x - &velocity * current_lr;
