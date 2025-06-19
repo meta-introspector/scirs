@@ -13,9 +13,9 @@ use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "random")]
-use rand::{Rng, SeedableRng};
-#[cfg(feature = "random")]
 use rand::rngs::StdRng;
+#[cfg(feature = "random")]
+use rand::{Rng, SeedableRng};
 
 /// Fuzzing input generator for different data types
 pub trait FuzzingGenerator<T> {

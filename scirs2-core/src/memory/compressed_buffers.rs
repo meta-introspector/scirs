@@ -183,8 +183,9 @@ where
             array.iter().cloned().collect()
         };
 
-        let buffer = CompressedBuffer::new(&data, algorithm, level)
-            .map_err(|e| CoreError::CompressionError(crate::error::ErrorContext::new(e.to_string())))?;
+        let buffer = CompressedBuffer::new(&data, algorithm, level).map_err(|e| {
+            CoreError::CompressionError(crate::error::ErrorContext::new(e.to_string()))
+        })?;
 
         Ok(Self {
             buffer,
@@ -194,10 +195,9 @@ where
 
     /// Decompress and reconstruct the original array
     pub fn to_array(&self) -> Result<Array<T, D>, CoreError> {
-        let data = self
-            .buffer
-            .decompress()
-            .map_err(|e| CoreError::CompressionError(crate::error::ErrorContext::new(e.to_string())))?;
+        let data = self.buffer.decompress().map_err(|e| {
+            CoreError::CompressionError(crate::error::ErrorContext::new(e.to_string()))
+        })?;
 
         Array::from_shape_vec(self.shape.clone(), data)
             .map_err(|e| CoreError::InvalidShape(crate::error::ErrorContext::new(e.to_string())))

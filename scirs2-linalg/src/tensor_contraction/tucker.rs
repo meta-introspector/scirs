@@ -258,8 +258,8 @@ where
                     }
 
                     // Ensure at least one singular value is kept
-                    count.max(1)
-                })
+                    Ok(count.max(1))
+                }).map_err(|e| LinalgError::ComputationError(format!("Parallel computation failed: {}", e)))?
             }
             (Some(r), Some(eps)) => {
                 // Combine both criteria: truncate by epsilon but don't exceed max ranks
@@ -287,8 +287,8 @@ where
                     }
 
                     // Apply max rank constraint and ensure at least one singular value is kept
-                    count.max(1).min(max_rank)
-                })
+                    Ok(count.max(1).min(max_rank))
+                }).map_err(|e| LinalgError::ComputationError(format!("Parallel computation failed: {}", e)))?
             }
             (None, None) => unreachable!("This case is handled above"),
         };
@@ -299,8 +299,8 @@ where
             parallel::parallel_map(&zipped_data, |(factor, &rank)| {
                 let rank = rank.min(factor.shape()[1]);
                 let (u, _, _) = svd_truncated(factor, rank).expect("SVD of factor matrix failed");
-                u
-            });
+                Ok(u)
+            }).map_err(|e| LinalgError::ComputationError(format!("Parallel computation failed: {}", e)))?;
 
         // Compute the corresponding core tensor
         let mut compressed_core = self.core.clone();
@@ -450,7 +450,7 @@ pub fn tucker_als<A, D>(
     tolerance: A,
 ) -> LinalgResult<Tucker<A>>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static,
+    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
     D: Dimension,
 {
     use super::mode_n_product;
@@ -484,7 +484,7 @@ where
 
             // Compute the new factor matrix using least squares
             let tensor_result = tensor_unfolded.dot(&khatri_rao_product);
-            let (u, _, _) = svd(&tensor_result.view(), false)?;
+            let (u, _, _) = svd(&tensor_result.view(), false, None)?;
 
             // Update the factor matrix for this mode
             let new_factor = u.slice(ndarray::s![.., ..ranks[mode]]).to_owned();

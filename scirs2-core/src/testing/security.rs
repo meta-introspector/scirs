@@ -9,7 +9,7 @@
 //! - Memory safety verification
 //! - Denial of service attack simulation
 
-use crate::error::{CoreError, CoreResult};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use crate::testing::{TestConfig, TestResult};
 use std::time::{Duration, Instant};
 
@@ -507,8 +507,12 @@ impl MemorySafetyTester {
         #[cfg(target_os = "linux")]
         {
             use std::fs;
-            let status = fs::read_to_string("/proc/self/status")
-                .map_err(|e| CoreError::IoError(format!("Failed to read memory status: {}", e)))?;
+            let status = fs::read_to_string("/proc/self/status").map_err(|e| {
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to read memory status: {}",
+                    e
+                )))
+            })?;
 
             for line in status.lines() {
                 if line.starts_with("VmRSS:") {

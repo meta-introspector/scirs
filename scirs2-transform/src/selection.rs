@@ -325,10 +325,10 @@ mod tests {
 
         let mask = selector.get_support_mask().unwrap();
         assert_eq!(mask.len(), 4);
-        assert_eq!(mask[0], false); // Feature 0 is constant
-        assert_eq!(mask[1], true); // Feature 1 has variance
-        assert_eq!(mask[2], false); // Feature 2 is constant
-        assert_eq!(mask[3], true); // Feature 3 has variance
+        assert!(!mask[0]); // Feature 0 is constant
+        assert!(mask[1]); // Feature 1 has variance
+        assert!(!mask[2]); // Feature 2 is constant
+        assert!(mask[3]); // Feature 3 has variance
 
         assert_eq!(selector.n_features_selected().unwrap(), 2);
     }

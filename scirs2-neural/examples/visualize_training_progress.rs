@@ -115,7 +115,7 @@ fn main() -> Result<()> {
     let mut scheduler = StepDecay::new(
         0.01, // Initial learning rate
         0.5,  // Decay factor
-        30,          // Step size
+        30,   // Step size
         ScheduleMethod::Epoch,
         1e-4, // Min learning rate
     );

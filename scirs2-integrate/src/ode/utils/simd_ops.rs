@@ -515,7 +515,7 @@ fn simd_norm_l2_f32_impl(x: &ArrayView1<f32>) -> f32 {
                 x_slice[i + 7],
             ];
             let x_vec = f32x8::new(x_arr);
-            sum_vec = sum_vec + x_vec * x_vec;
+            sum_vec += x_vec * x_vec;
             i += chunk_size;
         }
 
@@ -549,7 +549,7 @@ fn simd_norm_l2_f64_impl(x: &ArrayView1<f64>) -> f64 {
         while i + chunk_size <= n {
             let x_arr = [x_slice[i], x_slice[i + 1], x_slice[i + 2], x_slice[i + 3]];
             let x_vec = f64x4::new(x_arr);
-            sum_vec = sum_vec + x_vec * x_vec;
+            sum_vec += x_vec * x_vec;
             i += chunk_size;
         }
 

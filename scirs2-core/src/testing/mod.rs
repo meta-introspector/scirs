@@ -21,7 +21,7 @@ pub mod property_based;
 pub mod security;
 pub mod stress;
 
-use crate::error::{CoreError, CoreResult};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::time::{Duration, Instant};
 
 /// Test execution configuration
@@ -279,8 +279,12 @@ impl TestRunner {
     fn get_memory_usage(&self) -> CoreResult<usize> {
         use std::fs;
 
-        let status = fs::read_to_string("/proc/self/status")
-            .map_err(|e| CoreError::IoError(format!("Failed to read /proc/self/status: {}", e)))?;
+        let status = fs::read_to_string("/proc/self/status").map_err(|e| {
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to read /proc/self/status: {}",
+                e
+            )))
+        })?;
 
         for line in status.lines() {
             if line.starts_with("VmRSS:") {

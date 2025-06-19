@@ -285,7 +285,7 @@ mod tests {
 
     #[test]
     fn test_size_estimation() {
-        let enhanced = EnhancedMatFile::new(MatFileConfig::default());
+        let _enhanced = EnhancedMatFile::new(MatFileConfig::default());
 
         let array = Array1::from(vec![1.0, 2.0, 3.0, 4.0]).into_dyn();
         let mat_type = MatType::Double(array);

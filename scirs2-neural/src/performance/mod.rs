@@ -85,6 +85,7 @@ use std::sync::Arc;
 /// and parallel processing to provide optimal performance for neural network operations.
 pub struct PerformanceOptimizer {
     #[cfg(feature = "simd")]
+    #[allow(dead_code)]
     simd_ops: SIMDOperations,
 
     #[cfg(feature = "memory_efficient")]

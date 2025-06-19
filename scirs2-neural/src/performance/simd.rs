@@ -5,7 +5,7 @@
 //! performance improvements. All functions are feature-gated with "simd" feature.
 
 use crate::error::{NeuralError, Result};
-use ndarray::{ArrayD, ArrayView, ArrayViewMut, IxDyn};
+use ndarray::{Array, ArrayD, ArrayView, ArrayViewMut, IxDyn};
 #[allow(unused_imports)]
 use num_traits::Float;
 
@@ -167,7 +167,7 @@ impl SIMDOperations {
             Self::simd_gelu_f32_slice(slice);
         } else {
             result.mapv_inplace(|x| {
-                0.5 * x * (1.0 + (x * 0.7978845608 * (1.0 + 0.044715 * x * x)).tanh())
+                0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh())
             });
         }
         result
@@ -179,7 +179,7 @@ impl SIMDOperations {
         let chunk_size = 8;
         let half = f32x8::splat(0.5);
         let one = f32x8::splat(1.0);
-        let coeff1 = f32x8::splat(0.7978845608); // sqrt(2/π)
+        let coeff1 = f32x8::splat(0.797_884_6); // sqrt(2/π)
         let coeff2 = f32x8::splat(0.044715);
 
         while i + chunk_size <= slice.len() {
@@ -210,7 +210,7 @@ impl SIMDOperations {
         // Process remaining elements
         for val in &mut slice[i..] {
             let x = *val;
-            *val = 0.5 * x * (1.0 + (x * 0.7978845608 * (1.0 + 0.044715 * x * x)).tanh());
+            *val = 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh());
         }
     }
 
@@ -428,7 +428,7 @@ impl SIMDOperations {
             let clamped_pred = pred_vec.max(eps_vec).min(one_minus_eps);
             let log_pred = clamped_pred.ln();
             let loss_chunk = -(target_vec * log_pred);
-            loss_vec = loss_vec + loss_chunk;
+            loss_vec += loss_chunk;
 
             i += chunk_size;
         }
@@ -473,15 +473,16 @@ impl SIMDOperations {
             for j in 0..n {
                 let mut sum = 0.0f32;
 
-                // SIMD-accelerated dot product
-                if let (Some(a_row), Some(b_col)) = (
-                    a.row(i).as_slice(),
-                    // For column access, we need to extract values manually
-                    None::<&[f32]>, // b column access is complex for SIMD
-                ) {
-                    if let Some(a_slice) = a_row {
-                        sum = Self::simd_dot_product_f32(a_slice, &Self::extract_column(b, j));
-                    }
+                // SIMD-accelerated dot product  
+                let a_row_view = a.slice(ndarray::s![i, ..]);
+                let a_row_slice = if a.is_standard_layout() {
+                    a_row_view.as_slice()
+                } else {
+                    None
+                };
+                
+                if let Some(a_row) = a_row_slice {
+                    sum = Self::simd_dot_product_f32(a_row, &Self::extract_column(b, j));
                 } else {
                     // Fallback to standard computation
                     for l in 0..k {
@@ -538,7 +539,7 @@ impl SIMDOperations {
             let a_vec = f32x8::new(a_vals);
             let b_vec = f32x8::new(b_vals);
             let product = a_vec * b_vec;
-            sum_vec = sum_vec + product;
+            sum_vec += product;
 
             i += chunk_size;
         }
@@ -727,7 +728,7 @@ impl SIMDOperations {
             // Calculate which channel this element belongs to
             let flat_idx = idx;
             let total_spatial = input.len() / (input.shape()[0] * channels);
-            let spatial_idx = flat_idx % total_spatial;
+            let _spatial_idx = flat_idx % total_spatial;
             let channel_batch_idx = flat_idx / total_spatial;
             let channel = channel_batch_idx % channels;
 

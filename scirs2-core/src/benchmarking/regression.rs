@@ -4,7 +4,7 @@
 //! degradation over time and across different versions of the codebase.
 
 use crate::benchmarking::{BenchmarkResult, BenchmarkRunner};
-use crate::error::{CoreError, CoreResult};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -261,7 +261,10 @@ impl RegressionDetector {
 
         // Ensure results directory exists
         fs::create_dir_all(&self.config.results_directory).map_err(|e| {
-            CoreError::IoError(format!("Failed to create results directory: {}", e))
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to create results directory: {}",
+                e
+            )))
         })?;
 
         // Load existing results
@@ -280,11 +283,19 @@ impl RegressionDetector {
 
         // Save results
         let file_path = self.get_results_file_path(&result.name);
-        let serialized = serde_json::to_string_pretty(&historical_results)
-            .map_err(|e| CoreError::IoError(format!("Failed to serialize results: {}", e)))?;
+        let serialized = serde_json::to_string_pretty(&historical_results).map_err(|e| {
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to serialize results: {}",
+                e
+            )))
+        })?;
 
-        fs::write(&file_path, serialized)
-            .map_err(|e| CoreError::IoError(format!("Failed to write results file: {}", e)))?;
+        fs::write(&file_path, serialized).map_err(|e| {
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to write results file: {}",
+                e
+            )))
+        })?;
 
         Ok(())
     }
@@ -297,11 +308,19 @@ impl RegressionDetector {
             return Ok(Vec::new());
         }
 
-        let content = fs::read_to_string(&file_path)
-            .map_err(|e| CoreError::IoError(format!("Failed to read results file: {}", e)))?;
+        let content = fs::read_to_string(&file_path).map_err(|e| {
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to read results file: {}",
+                e
+            )))
+        })?;
 
-        let results: Vec<HistoricalResult> = serde_json::from_str(&content)
-            .map_err(|e| CoreError::IoError(format!("Failed to parse results file: {}", e)))?;
+        let results: Vec<HistoricalResult> = serde_json::from_str(&content).map_err(|e| {
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to parse results file: {}",
+                e
+            )))
+        })?;
 
         Ok(results)
     }

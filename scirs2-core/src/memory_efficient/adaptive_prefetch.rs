@@ -204,12 +204,14 @@ impl AdaptivePatternTracker {
     fn select_next_strategy(&mut self) {
         // Increment exploration step
         self.exploration_step += 1;
-        
+
         // Decay exploration rate
         self.exploration_rate *= EXPLORATION_RATE_DECAY;
 
         // Decide whether to explore or exploit
-        if self.exploring || (self.exploration_step % 100) < (self.exploration_rate * 100.0) as usize {
+        if self.exploring
+            || (self.exploration_step % 100) < (self.exploration_rate * 100.0) as usize
+        {
             // Exploration phase: try different strategies
             let available_strategies: Vec<PrefetchStrategy> =
                 self.strategy_performance.keys().copied().collect();
@@ -345,7 +347,8 @@ impl AdaptivePatternTracker {
 
                         if let Some(strided_perf) = self.strategy_performance.get(&strided_strategy)
                         {
-                            if strided_perf.q_value > current_q * 1.1 || (self.exploration_step % 100) < 30
+                            if strided_perf.q_value > current_q * 1.1
+                                || (self.exploration_step % 100) < 30
                             {
                                 self.current_strategy = strided_strategy;
                             }

@@ -3,10 +3,10 @@
 //! This module provides functionality for Canonical Polyadic decomposition (also known as
 //! CANDECOMP/PARAFAC), which decomposes a tensor into a sum of rank-one tensors.
 
+use crate::decomposition::svd;
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array, Array1, Array2, ArrayD, ArrayView, Dimension};
+use ndarray::{Array1, Array2, ArrayD, ArrayView, Dimension};
 use num_traits::{Float, NumAssign, Zero};
-use scirs2_core::parallel;
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -170,8 +170,8 @@ where
                 }
 
                 // Add to the result
-                let mut result_idx = ndarray::IxDyn(idx.as_slice());
-                result[&mut result_idx] += value;
+                let result_idx = ndarray::IxDyn(idx.as_slice());
+                result[&result_idx] += value;
             }
         }
 
@@ -323,10 +323,9 @@ pub fn cp_als<A, D>(
     normalize: bool,
 ) -> LinalgResult<CanonicalPolyadic<A>>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static,
+    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
     D: Dimension,
 {
-    use crate::decomposition::svd;
 
     // Validate inputs
     if rank == 0 {
@@ -554,11 +553,10 @@ where
 // Computes the Moore-Penrose pseudoinverse using SVD
 fn pseudo_inverse<A>(matrix: &Array2<A>) -> LinalgResult<Array2<A>>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
+    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
 {
-    use crate::decomposition::svd;
 
-    let (u, s, vt) = svd(&matrix.view(), false)?;
+    let (u, s, vt) = svd(&matrix.view(), false, None)?;
 
     // Compute the pseudoinverse of the singular values
     let mut s_inv = Array2::zeros((s.len(), s.len()));

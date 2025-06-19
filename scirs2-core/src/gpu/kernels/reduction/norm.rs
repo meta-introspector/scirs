@@ -265,7 +265,13 @@ __kernel void norm_l2(
                 // ROCm (HIP) kernel - similar to CUDA
                 let rocm_source = cuda_source.clone();
 
-                (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source)
+                (
+                    cuda_source,
+                    rocm_source,
+                    wgpu_source,
+                    metal_source,
+                    opencl_source,
+                )
             }
             // For brevity, we'll just sketch the structure for L1 and Inf norms
             // In a real implementation, these would be fully implemented

@@ -4,7 +4,7 @@ use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use scirs2_linalg::{basic, decomposition, eigen, norm, solve};
+use scirs2_linalg::{decomposition, det, eigen, inv, norm, solve};
 use serde::{Deserialize, Serialize};
 use std::f64;
 use std::fs;
@@ -119,7 +119,7 @@ fn test_solve_accuracy(matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -
 
 /// Test numerical accuracy of matrix inversion
 fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
-    match basic::inv(matrix) {
+    match inv(matrix, None) {
         Ok(inv_matrix) => {
             let product = matrix.dot(&inv_matrix);
             let identity = Array2::eye(matrix.nrows());
@@ -359,7 +359,7 @@ fn bench_edge_cases(c: &mut Criterion) {
     group.bench_function("tiny_matrix_det", |b| {
         b.iter(|| {
             let start = std::time::Instant::now();
-            let result = basic::det(&tiny_matrix.view());
+            let result = det(&tiny_matrix.view(), None);
             let elapsed = start.elapsed().as_nanos() as u64;
 
             let success = result.is_ok();
@@ -383,7 +383,7 @@ fn bench_edge_cases(c: &mut Criterion) {
     group.bench_function("large_matrix_det", |b| {
         b.iter(|| {
             let start = std::time::Instant::now();
-            let result = basic::det(&large_matrix.view());
+            let result = det(&large_matrix.view(), None);
             let elapsed = start.elapsed().as_nanos() as u64;
 
             let success = result.is_ok() && result.unwrap().is_finite();

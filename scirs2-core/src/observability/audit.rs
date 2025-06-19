@@ -70,8 +70,6 @@ use uuid::Uuid;
 #[cfg(feature = "crypto")]
 use sha2::{Digest, Sha256};
 
-
-
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 

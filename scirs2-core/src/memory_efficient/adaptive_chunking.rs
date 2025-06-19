@@ -209,7 +209,9 @@ pub trait AdaptiveChunking<A: Clone + Copy + 'static + Send + Sync> {
         A: Send + Sync;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A>
+    for MemoryMappedArray<A>
+{
     fn adaptive_chunking(
         &self,
         params: AdaptiveChunkingParams,

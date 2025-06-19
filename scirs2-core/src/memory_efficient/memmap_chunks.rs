@@ -433,7 +433,9 @@ pub trait MemoryMappedChunkIter<A: Clone + Copy + 'static + Send + Sync> {
     fn chunks(&self, strategy: ChunkingStrategy) -> ChunkIter<A>;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A>
+    for MemoryMappedArray<A>
+{
     fn chunk_count(&self, strategy: ChunkingStrategy) -> usize {
         match strategy {
             ChunkingStrategy::Fixed(size) => {

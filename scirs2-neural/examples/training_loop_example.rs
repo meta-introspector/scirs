@@ -110,13 +110,7 @@ fn main() -> Result<()> {
     let mut callbacks: Vec<Box<dyn scirs2_neural::callbacks::Callback<f32>>> = vec![
         Box::new(EarlyStopping::new(5, 0.001, true)),
         // ModelCheckpoint removed for simplicity as it requires special handling
-        Box::new(ReduceOnPlateau::new(
-            0.001,
-            0.5,
-            3,
-            0.001,
-            0.0001,
-        )),
+        Box::new(ReduceOnPlateau::new(0.001, 0.5, 3, 0.001, 0.0001)),
         Box::new(TensorBoardLogger::new(tensorboard_dir, true, 10)),
         // Add our visualization callback
         Box::new(

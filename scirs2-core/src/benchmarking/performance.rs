@@ -4,7 +4,7 @@
 //! performance characteristics of `SciRS2` Core functions and algorithms.
 
 use crate::benchmarking::{BenchmarkConfig, BenchmarkResult, BenchmarkRunner, BenchmarkSuite};
-use crate::error::{CoreError, CoreResult};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::time::Duration;
 
 /// Performance benchmark categories
@@ -479,19 +479,22 @@ impl StandardBenchmarks {
                 || {
                     use tempfile::NamedTempFile;
                     let temp_file = NamedTempFile::new().map_err(|e| {
-                        CoreError::IoError(format!("Failed to create temp file: {}", e))
+                        CoreError::IoError(ErrorContext::new(format!(
+                            "Failed to create temp file: {}",
+                            e
+                        )))
                     })?;
                     Ok(temp_file)
                 },
                 |temp_file| {
                     use std::io::Write;
                     let data = vec![42u8; 10000];
-                    temp_file
-                        .write_all(&data)
-                        .map_err(|e| CoreError::IoError(format!("Failed to write: {}", e)))?;
-                    temp_file
-                        .flush()
-                        .map_err(|e| CoreError::IoError(format!("Failed to flush: {}", e)))?;
+                    temp_file.write_all(&data).map_err(|e| {
+                        CoreError::IoError(ErrorContext::new(format!("Failed to write: {}", e)))
+                    })?;
+                    temp_file.flush().map_err(|e| {
+                        CoreError::IoError(ErrorContext::new(format!("Failed to flush: {}", e)))
+                    })?;
                     Ok(data.len())
                 },
                 |temp_file| {

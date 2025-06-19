@@ -306,7 +306,7 @@ mod tests {
         writeln!(temp_file, "1 2").unwrap();
         writeln!(temp_file, "2 3").unwrap();
         writeln!(temp_file, "3 1").unwrap();
-        writeln!(temp_file, "").unwrap(); // Empty line
+        writeln!(temp_file).unwrap(); // Empty line
         temp_file.flush().unwrap();
 
         let graph: Graph<i32, f64> = read_edge_list_format(temp_file.path(), false).unwrap();

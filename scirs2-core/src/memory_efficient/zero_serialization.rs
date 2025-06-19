@@ -596,7 +596,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
 
         // Serialize header
         let header_bytes = bincode::serialize(&header).map_err(|e| {
-            CoreError::SerializationError(
+            CoreError::ValidationError(
                 ErrorContext::new(format!("Failed to serialize header: {}", e))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
@@ -607,22 +607,20 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
             .create(true)
             .write(true)
             .truncate(true)
-            .open(path)
-            .map_err(CoreError::IoError)?;
+            .open(path)?;
 
         // Write header length (for easier reading later)
         let header_len = header_bytes.len() as u64;
-        file.write_all(&header_len.to_ne_bytes())
-            .map_err(CoreError::IoError)?;
+        file.write_all(&header_len.to_ne_bytes())?;
 
         // Write header
-        file.write_all(&header_bytes).map_err(CoreError::IoError)?;
+        file.write_all(&header_bytes)?;
 
         // Get array bytes
         let array_bytes = self.as_bytes_slice()?;
 
         // Write array data
-        file.write_all(array_bytes).map_err(CoreError::IoError)?;
+        file.write_all(array_bytes)?;
 
         Ok(())
     }
@@ -649,7 +647,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
 
         // Deserialize header
         let header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
-            CoreError::SerializationError(
+            CoreError::ValidationError(
                 ErrorContext::new(format!("Failed to deserialize header: {}", e))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
@@ -768,33 +766,11 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
     }
 
     fn as_bytes_slice(&self) -> CoreResult<&[u8]> {
-        match (&self.mmap_view, &self.mmap_view_mut) {
-            (Some(view), _) => {
-                // Read-only view
-                Ok(view)
-            }
-            (_, Some(view)) => {
-                // Mutable view
-                Ok(view)
-            }
-            _ => Err(CoreError::ValidationError(
-                ErrorContext::new("Memory map is not initialized".to_string())
-                    .with_location(ErrorLocation::new(file!(), line!())),
-            )),
-        }
+        self.as_bytes()
     }
 
     fn as_bytes_slice_mut(&mut self) -> CoreResult<&mut [u8]> {
-        match &mut self.mmap_view_mut {
-            Some(view) => {
-                // Mutable view
-                Ok(view)
-            }
-            _ => Err(CoreError::ValidationError(
-                ErrorContext::new("Mutable memory map is not initialized".to_string())
-                    .with_location(ErrorLocation::new(file!(), line!())),
-            )),
-        }
+        self.as_bytes_mut()
     }
 }
 
@@ -938,7 +914,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
 
         // Deserialize header
         let header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
-            CoreError::SerializationError(
+            CoreError::ValidationError(
                 ErrorContext::new(format!("Failed to deserialize header: {}", e))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
@@ -1052,7 +1028,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
 
         // Deserialize header
         let mut header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
-            CoreError::SerializationError(
+            CoreError::ValidationError(
                 ErrorContext::new(format!("Failed to deserialize header: {}", e))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
@@ -1063,7 +1039,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
 
         // Serialize updated header
         let new_header_bytes = bincode::serialize(&header).map_err(|e| {
-            CoreError::SerializationError(
+            CoreError::ValidationError(
                 ErrorContext::new(format!("Failed to serialize header: {}", e))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )

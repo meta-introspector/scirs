@@ -915,8 +915,8 @@ mod tests {
 
         // Check that weights are in [0, 1] range
         for edge in edges {
-            let weight: f64 = edge.weight.into();
-            assert!(weight >= 0.0 && weight <= 1.0);
+            let weight = edge.weight;
+            assert!((0.0..=1.0).contains(&weight));
         }
     }
 

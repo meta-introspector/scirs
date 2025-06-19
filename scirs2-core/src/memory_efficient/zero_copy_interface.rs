@@ -34,7 +34,7 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use std::any::TypeId;
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt;
 use std::hash::Hash;
@@ -335,7 +335,10 @@ pub struct ZeroCopyView<T> {
     len: usize,
 }
 
-impl<T> ZeroCopyView<T> {
+impl<T> ZeroCopyView<T>
+where
+    T: Clone + 'static,
+{
     fn new(data: ZeroCopyData<T>, start: usize, len: usize) -> Self {
         Self { data, start, len }
     }
@@ -393,22 +396,24 @@ impl<T> Clone for ZeroCopyView<T> {
 }
 
 /// Type-erased zero-copy data for storage in collections
-trait AnyZeroCopyData: Send + Sync {
+trait AnyZeroCopyData: Send + Sync + std::fmt::Debug + Any {
     /// Get the type ID of the contained data
     fn type_id(&self) -> TypeId;
 
     /// Get the metadata
     fn metadata(&self) -> &DataMetadata;
 
-
     /// Clone the data as a boxed trait object
     fn clone_box(&self) -> Box<dyn AnyZeroCopyData>;
 
     /// Get the data ID
     fn data_id(&self) -> DataId;
+
+    /// Get as Any for downcasting
+    fn as_any(&self) -> &dyn Any;
 }
 
-impl<T: Clone + 'static + Send + Sync> AnyZeroCopyData for ZeroCopyData<T> {
+impl<T: Clone + 'static + Send + Sync + std::fmt::Debug> AnyZeroCopyData for ZeroCopyData<T> {
     fn type_id(&self) -> TypeId {
         TypeId::of::<T>()
     }
@@ -417,13 +422,16 @@ impl<T: Clone + 'static + Send + Sync> AnyZeroCopyData for ZeroCopyData<T> {
         &self.inner.metadata
     }
 
-
     fn clone_box(&self) -> Box<dyn AnyZeroCopyData> {
         Box::new(self.clone())
     }
 
     fn data_id(&self) -> DataId {
         self.id
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -477,7 +485,7 @@ impl ZeroCopyInterface {
     }
 
     /// Register data with a name
-    pub fn register_data<T: Clone + 'static>(
+    pub fn register_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
         &self,
         name: &str,
         data: ZeroCopyData<T>,
@@ -523,11 +531,14 @@ impl ZeroCopyInterface {
     }
 
     /// Get data by name
-    pub fn get_data<T: Clone + 'static>(&self, name: &str) -> CoreResult<ZeroCopyData<T>> {
+    pub fn get_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
+        &self,
+        name: &str,
+    ) -> CoreResult<ZeroCopyData<T>> {
         let named = self.named_data.read().unwrap();
 
         if let Some(any_data) = named.get(name) {
-            if let Some(typed_data) = any_data.downcast_ref::<T>() {
+            if let Some(typed_data) = any_data.as_any().downcast_ref::<ZeroCopyData<T>>() {
                 self.update_exchange_stats(true);
                 Ok(typed_data.clone())
             } else {
@@ -552,11 +563,11 @@ impl ZeroCopyInterface {
     }
 
     /// Get data by ID
-    pub fn get_data_by_id<T: Clone + 'static>(&self, id: DataId) -> CoreResult<ZeroCopyData<T>> {
+    pub fn get_data_by_id<T: Clone + 'static + Send + Sync + std::fmt::Debug>(&self, id: DataId) -> CoreResult<ZeroCopyData<T>> {
         let id_map = self.id_data.read().unwrap();
 
         if let Some(any_data) = id_map.get(&id) {
-            if let Some(typed_data) = any_data.downcast_ref::<T>() {
+            if let Some(typed_data) = any_data.as_any().downcast_ref::<ZeroCopyData<T>>() {
                 self.update_exchange_stats(true);
                 Ok(typed_data.clone())
             } else {
@@ -581,14 +592,14 @@ impl ZeroCopyInterface {
     }
 
     /// Get all data of a specific type
-    pub fn get_data_by_type<T: Clone + 'static>(&self) -> Vec<ZeroCopyData<T>> {
+    pub fn get_data_by_type<T: Clone + 'static + Send + Sync + std::fmt::Debug>(&self) -> Vec<ZeroCopyData<T>> {
         let type_map = self.type_data.read().unwrap();
         let type_id = TypeId::of::<T>();
 
         if let Some(data_vec) = type_map.get(&type_id) {
             data_vec
                 .iter()
-                .filter_map(|any_data| any_data.downcast_ref::<T>())
+                .filter_map(|any_data| any_data.as_any().downcast_ref::<ZeroCopyData<T>>())
                 .cloned()
                 .collect()
         } else {
@@ -597,7 +608,7 @@ impl ZeroCopyInterface {
     }
 
     /// Borrow data by name (creates a view)
-    pub fn borrow_data<T: Clone + 'static>(&self, name: &str) -> CoreResult<ZeroCopyView<T>> {
+    pub fn borrow_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(&self, name: &str) -> CoreResult<ZeroCopyView<T>> {
         let data = self.get_data::<T>(name)?;
         let view = data.view(0, data.len())?;
 
@@ -761,7 +772,7 @@ pub fn create_global_data_registry() -> &'static ZeroCopyInterface {
 }
 
 /// Register data globally by name
-pub fn register_global_data<T: Clone + 'static>(
+pub fn register_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
     name: &str,
     data: ZeroCopyData<T>,
 ) -> CoreResult<()> {
@@ -769,12 +780,12 @@ pub fn register_global_data<T: Clone + 'static>(
 }
 
 /// Get data globally by name
-pub fn get_global_data<T: Clone + 'static>(name: &str) -> CoreResult<ZeroCopyData<T>> {
+pub fn get_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(name: &str) -> CoreResult<ZeroCopyData<T>> {
     global_interface().get_data(name)
 }
 
 /// Create zero-copy data from a vector
-pub fn create_zero_copy_data<T: Clone + 'static>(data: Vec<T>) -> CoreResult<ZeroCopyData<T>> {
+pub fn create_zero_copy_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(data: Vec<T>) -> CoreResult<ZeroCopyData<T>> {
     ZeroCopyData::new(data)
 }
 

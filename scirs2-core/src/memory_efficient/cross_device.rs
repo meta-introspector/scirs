@@ -257,7 +257,12 @@ impl std::fmt::Debug for DeviceMemoryManager {
             .field("gpu_context", &"<gpu_context>")
             .field("cache", &"<cache>")
             .field("max_cache_size", &self.max_cache_size)
-            .field("current_cache_size", &self.current_cache_size.load(std::sync::atomic::Ordering::Relaxed))
+            .field(
+                "current_cache_size",
+                &self
+                    .current_cache_size
+                    .load(std::sync::atomic::Ordering::Relaxed),
+            )
             .field("enable_caching", &self.enable_caching)
             .finish()
     }
@@ -436,7 +441,9 @@ impl DeviceMemoryManager {
         // For CPU arrays, just clone the data
         if device_array.device == DeviceType::Cpu {
             if let Some(cpu_array) = device_array.buffer.get_cpu_array() {
-                let reshaped = cpu_array.clone().to_shape(device_array.shape.clone())
+                let reshaped = cpu_array
+                    .clone()
+                    .to_shape(device_array.shape.clone())
                     .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?
                     .to_owned();
                 return Ok(reshaped);
@@ -502,7 +509,8 @@ impl DeviceMemoryManager {
             if let Some(cpu_array) = device_array.buffer.get_cpu_array() {
                 // Reshape the CPU array to match the expected dimension type
                 let cpu_clone = cpu_array.clone();
-                let reshaped = cpu_clone.to_shape(device_array.shape.clone())
+                let reshaped = cpu_clone
+                    .to_shape(device_array.shape.clone())
                     .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?;
                 return self.transfer_to_device(&reshaped.to_owned(), target_device, Some(options));
             }
@@ -609,7 +617,8 @@ impl DeviceMemoryManager {
         if let DeviceType::Gpu(_) = device_array.device {
             if let Some(ref context) = self.gpu_context {
                 // Get the kernel
-                let kernel = context.get_kernel(kernel_name)
+                let kernel = context
+                    .get_kernel(kernel_name)
                     .map_err(|e| CoreError::ComputationError(ErrorContext::new(e.to_string())))?;
 
                 // Set the input buffer parameter
@@ -842,7 +851,12 @@ impl std::fmt::Debug for DeviceMemoryPool {
             .field("device", &self.device)
             .field("free_buffers", &"<free_buffers>")
             .field("max_pool_size", &self.max_pool_size)
-            .field("current_pool_size", &self.current_pool_size.load(std::sync::atomic::Ordering::Relaxed))
+            .field(
+                "current_pool_size",
+                &self
+                    .current_pool_size
+                    .load(std::sync::atomic::Ordering::Relaxed),
+            )
             .finish()
     }
 }
@@ -859,7 +873,10 @@ impl DeviceMemoryPool {
     }
 
     /// Allocate a buffer of the given size
-    pub fn allocate<T: GpuDataType + num_traits::Zero>(&self, size: usize) -> CoreResult<DeviceBuffer<T>> {
+    pub fn allocate<T: GpuDataType + num_traits::Zero>(
+        &self,
+        size: usize,
+    ) -> CoreResult<DeviceBuffer<T>> {
         // Check if we have a free buffer of the right size
         let mut free_buffers = self.free_buffers.lock().unwrap();
         if let Some(buffers) = free_buffers.get_mut(&size) {

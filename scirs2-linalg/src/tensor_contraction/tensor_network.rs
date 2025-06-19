@@ -5,7 +5,7 @@
 //! connected by shared indices.
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array, ArrayD, ArrayView, Dimension, IxDyn};
+use ndarray::{ArrayD, Dimension, IxDyn};
 use num_traits::{Float, NumAssign, Zero};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
@@ -28,7 +28,7 @@ where
 
 impl<A> TensorNode<A>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static,
+    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static,
 {
     /// Creates a new tensor node.
     ///
@@ -135,7 +135,7 @@ where
         }
 
         // Permute the data
-        let permuted_data = self.data.clone().permuted_axes(&permutation);
+        let permuted_data = self.data.clone().permuted_axes(permutation.as_slice());
 
         // Create the new tensor node
         TensorNode::new(permuted_data, new_order.to_vec())
@@ -276,7 +276,7 @@ where
                     result_idx.push(i);
                 }
 
-                result_data[&result_idx] = self.data[&self_idx] * other.data[&other_idx];
+                result_data[result_idx.as_slice()] = self.data[&self_idx] * other.data[&other_idx];
             }
         }
 
@@ -383,7 +383,7 @@ where
                 self_idx[pos2] = k;
 
                 // Add to the sum
-                sum += self.data[&self_idx];
+                sum += self.data[self_idx.as_slice()];
             }
 
             // Store the result
@@ -437,7 +437,7 @@ where
 
         // Reshape the data to add the dummy dimension
         let mut new_data = self.data.clone();
-        new_data = new_data.into_shape(new_shape).map_err(|e| {
+        new_data = new_data.into_shape_with_order(new_shape).map_err(|e| {
             LinalgError::ComputationError(format!("Failed to reshape tensor: {}", e))
         })?;
 
@@ -501,7 +501,7 @@ where
 
 impl<A> TensorNetwork<A>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + 'static,
+    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static,
 {
     /// Creates a new tensor network.
     ///

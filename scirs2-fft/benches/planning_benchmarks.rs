@@ -237,7 +237,9 @@ fn bench_cache_sizes(c: &mut Criterion) {
                     for _ in 0..repetitions {
                         for (size, signal) in sizes.iter().zip(signals.iter()) {
                             let mut output = vec![Complex64::default(); *size];
-                            let plan = planner.plan_fft(&[size], true, Default::default()).unwrap();
+                            let plan = planner
+                                .plan_fft(&[*size], true, Default::default())
+                                .unwrap();
                             let executor = FftPlanExecutor::new(plan);
                             executor
                                 .execute(black_box(signal), black_box(&mut output))

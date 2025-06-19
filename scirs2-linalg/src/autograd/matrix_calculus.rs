@@ -3,8 +3,7 @@
 //! This module provides differentiable matrix calculus operations like
 //! gradients, Jacobians, and Hessians that integrate with the autograd system.
 
-use ndarray::{Array2, Array3, ArrayView2};
-use num_traits::{Float, NumAssign, One, Zero};
+use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
 use crate::error::{LinalgError, LinalgResult};

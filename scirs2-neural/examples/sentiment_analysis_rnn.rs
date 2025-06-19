@@ -416,9 +416,7 @@ impl RecurrentClassifier for LSTMClassifier {
 
         // Calculate cross-entropy loss
         let mut total_loss = 0.0;
-        for (output_row, target_row) in
-            output.outer_iter().zip(targets.outer_iter())
-        {
+        for (output_row, target_row) in output.outer_iter().zip(targets.outer_iter()) {
             for (j, &target) in target_row.iter().enumerate() {
                 if j < self.output_size && target > 0.0 {
                     total_loss -= output_row[j].ln() * target;
@@ -948,9 +946,7 @@ impl RecurrentClassifier for GRUClassifier {
 
         // Calculate cross-entropy loss
         let mut total_loss = 0.0;
-        for (output_row, target_row) in
-            output.outer_iter().zip(targets.outer_iter())
-        {
+        for (output_row, target_row) in output.outer_iter().zip(targets.outer_iter()) {
             for (j, &target) in target_row.iter().enumerate() {
                 if j < self.output_size && target > 0.0 {
                     total_loss -= output_row[j].ln() * target;
@@ -1293,8 +1289,10 @@ fn sentiment_analysis_example() {
     // Test with some new examples
     println!("\nTesting with new examples:");
 
-    let test_examples = ["wonderful movie amazing experience",
-        "horrible acting terrible script"];
+    let test_examples = [
+        "wonderful movie amazing experience",
+        "horrible acting terrible script",
+    ];
 
     // Create vocabulary map from the training data
     let mut vocab = HashMap::new();

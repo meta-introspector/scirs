@@ -52,8 +52,6 @@
 //! - Support for complex-valued matrices
 //! - Specialized operations for structured matrices
 
-#![cfg(feature = "autograd")]
-
 use scirs2_autograd as ag;
 
 pub use ag::tensor_ops;
@@ -63,13 +61,13 @@ pub use ag::{Context, Float, Tensor};
 /// Placeholder for future batch operations module
 /// Will include: batch_matmul, batch_inv, batch_det, etc.
 pub mod batch {
-    //! Batch matrix operations (coming soon)
+    // Batch matrix operations (coming soon)
 }
 
 /// Placeholder for future factorizations module
 /// Will include: lu, qr, svd, cholesky with automatic differentiation
 pub mod factorizations {
-    //! Matrix factorizations with gradients (coming soon)
+    // Matrix factorizations with gradients (coming soon)
 }
 
 /// Matrix calculus operations with automatic differentiation support

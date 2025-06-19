@@ -801,14 +801,14 @@ impl<A: Clone + Copy + Send + Sync + 'static> DatasetPrefetcher for MemoryMapped
         // but ensures the memory is mapped
 
         // Ensure the array is readable
-        let _array = self.array.readonly_array()?;
+        let _array = self.array.as_array::<ndarray::IxDyn>()?;
 
         Ok(())
     }
 
     fn prefetch_all(&self) -> CoreResult<()> {
         // For memory-mapped arrays, just ensure the file is mapped
-        let _array = self.array.readonly_array()?;
+        let _array = self.array.as_array::<ndarray::IxDyn>()?;
 
         Ok(())
     }
@@ -836,7 +836,7 @@ impl<A: Clone + Copy + Send + Sync + 'static> CompressedArrayPrefetchExt<A>
         &self,
         dataset_id: DatasetId,
     ) -> CoreResult<Arc<CompressedArrayPrefetcher<A>>> {
-        let array = Arc::new(self.clone());
+        let array = Arc::new((*self).clone());
         let prefetcher = Arc::new(CompressedArrayPrefetcher::new(dataset_id.clone(), array));
 
         CrossFilePrefetchRegistry::global().register_dataset(dataset_id, prefetcher.clone())?;
@@ -863,7 +863,7 @@ impl<A: Clone + Copy + Send + Sync + 'static> MemoryMappedArrayPrefetchExt<A>
         dataset_id: DatasetId,
         chunk_size: usize,
     ) -> CoreResult<Arc<MemoryMappedArrayPrefetcher<A>>> {
-        let array = Arc::new(self.clone());
+        let array = Arc::new((*self).clone());
         let prefetcher = Arc::new(MemoryMappedArrayPrefetcher::new(
             dataset_id.clone(),
             array,

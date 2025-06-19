@@ -8,7 +8,7 @@
 //! - Distributed computation simulation
 //! - Scalability limit discovery
 
-use crate::error::{CoreError, CoreResult};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use crate::testing::{TestConfig, TestResult};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -202,7 +202,10 @@ impl LargeDatasetGenerator {
     pub fn new(config: LargeScaleTestConfig) -> CoreResult<Self> {
         let temp_dir = if config.temp_dir.is_none() {
             Some(TempDir::new().map_err(|e| {
-                CoreError::IoError(format!("Failed to create temp directory: {}", e))
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to create temp directory: {}",
+                    e
+                )))
             })?)
         } else {
             None
@@ -221,8 +224,12 @@ impl LargeDatasetGenerator {
         }
 
         // Generate data in chunks to avoid memory pressure
-        let mut file = fs::File::create(&temp_path)
-            .map_err(|e| CoreError::IoError(format!("Failed to create dataset file: {}", e)))?;
+        let mut file = fs::File::create(&temp_path).map_err(|e| {
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to create dataset file: {}",
+                e
+            )))
+        })?;
 
         use std::io::Write;
         let chunk_size = self.config.chunk_size.min(size);
@@ -246,8 +253,9 @@ impl LargeDatasetGenerator {
                     chunk_data.len() * std::mem::size_of::<f64>(),
                 )
             };
-            file.write_all(bytes)
-                .map_err(|e| CoreError::IoError(format!("Failed to write chunk: {}", e)))?;
+            file.write_all(bytes).map_err(|e| {
+                CoreError::IoError(ErrorContext::new(format!("Failed to write chunk: {}", e)))
+            })?;
 
             bytes_written += current_chunk_size;
 
@@ -277,7 +285,10 @@ impl LargeDatasetGenerator {
         }
 
         let mut file = fs::File::create(&temp_path).map_err(|e| {
-            CoreError::IoError(format!("Failed to create sparse dataset file: {}", e))
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to create sparse dataset file: {}",
+                e
+            )))
         })?;
 
         use std::io::Write;
@@ -325,8 +336,12 @@ impl LargeDatasetGenerator {
                     chunk_data.len() * std::mem::size_of::<f64>(),
                 )
             };
-            file.write_all(bytes)
-                .map_err(|e| CoreError::IoError(format!("Failed to write sparse chunk: {}", e)))?;
+            file.write_all(bytes).map_err(|e| {
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to write sparse chunk: {}",
+                    e
+                )))
+            })?;
 
             bytes_written += current_chunk_size;
         }
@@ -341,8 +356,12 @@ impl LargeDatasetGenerator {
         } else if let Some(ref temp_dir) = self.temp_dir {
             Ok(temp_dir.path().join(filename))
         } else {
-            let temp_file = NamedTempFile::new()
-                .map_err(|e| CoreError::IoError(format!("Failed to create temp file: {}", e)))?;
+            let temp_file = NamedTempFile::new().map_err(|e| {
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to create temp file: {}",
+                    e
+                )))
+            })?;
             Ok(temp_file.into_temp_path().to_path_buf())
         }
     }
@@ -373,7 +392,12 @@ impl LargeScaleProcessor {
 
         // Get file size
         let file_size = fs::metadata(dataset_path)
-            .map_err(|e| CoreError::IoError(format!("Failed to get file metadata: {}", e)))?
+            .map_err(|e| {
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to get file metadata: {}",
+                    e
+                )))
+            })?
             .len() as usize;
 
         if self.config.progress_reporting {
@@ -385,8 +409,12 @@ impl LargeScaleProcessor {
 
         // Open file for reading
         use std::io::Read;
-        let mut file = fs::File::open(dataset_path)
-            .map_err(|e| CoreError::IoError(format!("Failed to open dataset file: {}", e)))?;
+        let mut file = fs::File::open(dataset_path).map_err(|e| {
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to open dataset file: {}",
+                e
+            )))
+        })?;
 
         let mut bytes_processed = 0;
         let mut chunks_processed = 0;
@@ -401,8 +429,9 @@ impl LargeScaleProcessor {
 
             // Read chunk
             let mut buffer = vec![0u8; current_chunk_size];
-            file.read_exact(&mut buffer)
-                .map_err(|e| CoreError::IoError(format!("Failed to read chunk: {}", e)))?;
+            file.read_exact(&mut buffer).map_err(|e| {
+                CoreError::IoError(ErrorContext::new(format!("Failed to read chunk: {}", e)))
+            })?;
 
             // Convert bytes to f64 slice
             let chunk_data = unsafe {
@@ -459,7 +488,12 @@ impl LargeScaleProcessor {
 
         // Get file size
         let file_size = fs::metadata(dataset_path)
-            .map_err(|e| CoreError::IoError(format!("Failed to get file metadata: {}", e)))?
+            .map_err(|e| {
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to get file metadata: {}",
+                    e
+                )))
+            })?
             .len() as usize;
 
         let num_elements = file_size / std::mem::size_of::<f64>();
@@ -469,8 +503,13 @@ impl LargeScaleProcessor {
         }
 
         // Create memory-mapped array
-        let mmap_array = MemoryMappedArray::<f64>::open(dataset_path, &[num_elements])
-            .map_err(|e| CoreError::IoError(format!("Failed to create memory map: {:?}", e)))?;
+        let mmap_array =
+            MemoryMappedArray::<f64>::open(dataset_path, &[num_elements]).map_err(|e| {
+                CoreError::IoError(ErrorContext::new(format!(
+                    "Failed to create memory map: {:?}",
+                    e
+                )))
+            })?;
 
         // Process in chunks using memory-mapped data
         let chunk_size = self.config.chunk_size / std::mem::size_of::<f64>();
@@ -557,7 +596,10 @@ impl LargeScaleProcessor {
     fn verify_reduction_result(&self, dataset_path: &Path) -> CoreResult<f64> {
         // Simple verification: compute sum using smaller chunks
         let mut file = fs::File::open(dataset_path).map_err(|e| {
-            CoreError::IoError(format!("Failed to open dataset for verification: {}", e))
+            CoreError::IoError(ErrorContext::new(format!(
+                "Failed to open dataset for verification: {}",
+                e
+            )))
         })?;
 
         use std::io::Read;
@@ -576,10 +618,10 @@ impl LargeScaleProcessor {
                     sum += data.iter().sum::<f64>();
                 }
                 Err(e) => {
-                    return Err(CoreError::IoError(format!(
+                    return Err(CoreError::IoError(ErrorContext::new(format!(
                         "Verification read failed: {}",
                         e
-                    )))
+                    ))))
                 }
             }
         }
@@ -611,7 +653,8 @@ impl LargeScaleTestUtils {
             let processor = LargeScaleProcessor::new(large_config_1.clone());
 
             // Generate test dataset
-            let dataset_path = generator.generate_numeric_dataset(large_config_1.max_dataset_size)?;
+            let dataset_path =
+                generator.generate_numeric_dataset(large_config_1.max_dataset_size)?;
 
             // Test chunked processing
             let result = processor.test_chunked_processing(&dataset_path, |chunk| {
@@ -672,7 +715,8 @@ impl LargeScaleTestUtils {
             let processor = LargeScaleProcessor::new(large_config_3.clone());
 
             // Generate test dataset
-            let dataset_path = generator.generate_numeric_dataset(large_config_3.max_dataset_size)?;
+            let dataset_path =
+                generator.generate_numeric_dataset(large_config_3.max_dataset_size)?;
 
             // Test out-of-core reduction
             let result = processor.test_out_of_core_reduction(&dataset_path)?;
@@ -700,7 +744,8 @@ impl LargeScaleTestUtils {
             let processor = LargeScaleProcessor::new(large_config_4.clone());
 
             // Generate test dataset
-            let dataset_path = generator.generate_numeric_dataset(large_config_4.max_dataset_size)?;
+            let dataset_path =
+                generator.generate_numeric_dataset(large_config_4.max_dataset_size)?;
 
             // Test memory-mapped processing
             let result = processor.test_memory_mapped_processing(&dataset_path, |chunk| {

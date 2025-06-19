@@ -206,7 +206,9 @@ pub trait ZeroCopyOps<A: Clone + Copy + 'static + Send + Sync> {
         A: Add<Output = A> + Div<Output = A> + From<u8> + From<usize>;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
+    for MemoryMappedArray<A>
+{
     fn map_zero_copy<F>(&self, f: F) -> CoreResult<MemoryMappedArray<A>>
     where
         F: Fn(A) -> A + Send + Sync,
@@ -237,7 +239,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A> for M
         {
             // Use rayon directly since process_chunks_parallel has trait bounds
             // that we can't satisfy here (Send + Sync)
-            
+
             let chunk_size = (self.size / rayon::current_num_threads()).max(1024);
 
             // Calculate the number of chunks
@@ -563,7 +565,9 @@ pub trait BroadcastOps<A: Clone + Copy + 'static + Send + Sync> {
         F: Fn(A, A) -> A + Send + Sync;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> BroadcastOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> BroadcastOps<A>
+    for MemoryMappedArray<A>
+{
     fn broadcast_op<F>(&self, other: &Self, f: F) -> CoreResult<MemoryMappedArray<A>>
     where
         F: Fn(A, A) -> A + Send + Sync,
@@ -716,7 +720,9 @@ pub trait ArithmeticOps<A: Clone + Copy + 'static + Send + Sync> {
         A: Div<Output = A>;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ArithmeticOps<A> for MemoryMappedArray<A> {
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ArithmeticOps<A>
+    for MemoryMappedArray<A>
+{
     fn add(&self, other: &Self) -> CoreResult<MemoryMappedArray<A>>
     where
         A: Add<Output = A>,

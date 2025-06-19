@@ -127,7 +127,7 @@ impl PrefetchConfigBuilder {
 }
 
 /// Trait for tracking and predicting access patterns.
-pub trait AccessPatternTracker {
+pub trait AccessPatternTracker: std::fmt::Debug {
     /// Record an access to a block.
     fn record_access(&mut self, block_idx: usize);
 
@@ -811,7 +811,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     pub fn get(&self, indices: &[usize]) -> CoreResult<A> {
         // Calculate block index from the access
         let flat_index = self.calculate_flat_index(indices)?;
-        let block_idx = flat_index / self.metadata.block_size;
+        let block_idx = flat_index / self.metadata().block_size;
 
         // Record the access
         if self.prefetching_enabled {
@@ -842,21 +842,21 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     /// Calculate the flat index from multidimensional indices.
     fn calculate_flat_index(&self, indices: &[usize]) -> CoreResult<usize> {
         // Check that the indices are valid
-        if indices.len() != self.metadata.shape.len() {
+        if indices.len() != self.metadata().shape.len() {
             return Err(CoreError::DimensionError(ErrorContext::new(format!(
                 "Expected {} indices, got {}",
-                self.metadata.shape.len(),
+                self.metadata().shape.len(),
                 indices.len()
             ))));
         }
 
         for (i, &idx) in indices.iter().enumerate() {
-            if idx >= self.metadata.shape[i] {
+            if idx >= self.metadata().shape[i] {
                 return Err(CoreError::IndexError(ErrorContext::new(format!(
                     "Index {} out of bounds for dimension {} (max {})",
                     idx,
                     i,
-                    self.metadata.shape[i] - 1
+                    self.metadata().shape[i] - 1
                 ))));
             }
         }
@@ -867,7 +867,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
         for i in (0..indices.len()).rev() {
             flat_index += indices[i] * stride;
             if i > 0 {
-                stride *= self.metadata.shape[i];
+                stride *= self.metadata().shape[i];
             }
         }
 
@@ -915,10 +915,10 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     /// Calculate which blocks will be accessed for a slice operation.
     fn calculate_blocks_for_slice(&self, ranges: &[(usize, usize)]) -> CoreResult<HashSet<usize>> {
         // Check that the ranges are valid
-        if ranges.len() != self.metadata.shape.len() {
+        if ranges.len() != self.metadata().shape.len() {
             return Err(CoreError::DimensionError(ErrorContext::new(format!(
                 "Expected {} ranges, got {}",
-                self.metadata.shape.len(),
+                self.metadata().shape.len(),
                 ranges.len()
             ))));
         }
@@ -932,29 +932,32 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
                     i, start, end
                 ))));
             }
-            if end > self.metadata.shape[i] {
+            if end > self.metadata().shape[i] {
                 return Err(CoreError::IndexError(ErrorContext::new(format!(
                     "Range {}..{} out of bounds for dimension {} (max {})",
-                    start, end, i, self.metadata.shape[i]
+                    start,
+                    end,
+                    i,
+                    self.metadata().shape[i]
                 ))));
             }
             result_shape.push(end - start);
         }
 
         // Calculate the strides for each dimension
-        let mut strides = Vec::with_capacity(self.metadata.shape.len());
+        let mut strides = Vec::with_capacity(self.metadata().shape.len());
         let mut stride = 1;
-        for i in (0..self.metadata.shape.len()).rev() {
+        for i in (0..self.metadata().shape.len()).rev() {
             strides.push(stride);
             if i > 0 {
-                stride *= self.metadata.shape[i];
+                stride *= self.metadata().shape[i];
             }
         }
         strides.reverse();
 
         // Calculate the blocks that will be accessed
         let mut blocks = HashSet::new();
-        let block_size = self.metadata.block_size;
+        let block_size = self.metadata().block_size;
 
         // Calculate the corners of the hypercube
         let mut corners = Vec::with_capacity(1 << ranges.len());

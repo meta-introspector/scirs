@@ -471,12 +471,11 @@ mod tests {
         let result = minimize_sr1(rosenbrock, x0, &options).unwrap();
 
         // SR1 can be less stable than BFGS, so we check that reasonable progress was made
-        let function_value: f64 = result.fun.into();
+        let function_value = result.fun;
 
         // Either converged to solution or made significant progress toward optimum
         if (result.x[0] - 1.0).abs() < 1e-1 && (result.x[1] - 1.0).abs() < 1e-1 {
-            // Successfully converged to optimum
-            assert!(true);
+            // Successfully converged to optimum - no assertion needed
         } else {
             // Should at least significantly improve from initial value (~101)
             assert!(

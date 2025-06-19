@@ -4,7 +4,7 @@
 //! using CUDA, OpenCL, and other GPU compute backends for high-performance
 //! scientific computing applications.
 
-use crate::error::{CoreError, CoreResult};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use crate::gpu::{GpuContext, GpuKernelHandle};
 use ndarray::{Array, IxDyn};
 use std::collections::HashMap;
@@ -128,7 +128,9 @@ impl GpuRandomGenerator {
 
         let base_seed = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map_err(|e| CoreError::ComputationError(crate::error::ErrorContext::new(e.to_string())))?
+            .map_err(|e| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(e.to_string()))
+            })?
             .as_nanos() as u64;
 
         let mut seeds = Vec::with_capacity(count);
@@ -155,10 +157,12 @@ impl GpuRandomGenerator {
                 self.compile_philox_kernels()?;
             }
             _ => {
-                return Err(CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Generator type {:?} not yet implemented",
-                    generator_type
-                ))));
+                return Err(CoreError::ComputationError(
+                    crate::error::ErrorContext::new(format!(
+                        "Generator type {:?} not yet implemented",
+                        generator_type
+                    )),
+                ));
             }
         }
 
@@ -361,19 +365,22 @@ impl GpuRandomGenerator {
                 self.generate_normal(count, *mean, *std_dev)
             }
             GpuDistribution::Exponential { lambda } => self.generate_exponential(count, *lambda),
-            _ => Err(CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Distribution {:?} not yet implemented",
-                distribution
-            )))),
+            _ => Err(CoreError::ComputationError(
+                crate::error::ErrorContext::new(format!(
+                    "Distribution {:?} not yet implemented",
+                    distribution
+                )),
+            )),
         }
     }
 
     /// Generate uniform random numbers [0, 1)
     pub fn generate_uniform(&self, count: usize) -> CoreResult<Array<f32, IxDyn>> {
-        let kernel = self
-            .kernels
-            .get("uniform")
-            .ok_or_else(|| CoreError::ComputationError(crate::error::ErrorContext::new("Uniform kernel not found".to_string())))?;
+        let kernel = self.kernels.get("uniform").ok_or_else(|| {
+            CoreError::ComputationError(crate::error::ErrorContext::new(
+                "Uniform kernel not found".to_string(),
+            ))
+        })?;
 
         // Create GPU buffers
         let state = self.state.lock().unwrap();
@@ -474,7 +481,8 @@ impl GpuRandomGenerator {
             .map(|&u| -(-u.ln()) / lambda)
             .collect();
 
-        Ok(Array::from_shape_vec(IxDyn(&[count]), exponential_samples)?)
+        Ok(Array::from_shape_vec(IxDyn(&[count]), exponential_samples)
+            .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?)
     }
 
     /// Box-Muller transformation for normal distribution
@@ -508,7 +516,8 @@ impl GpuRandomGenerator {
         }
 
         normal_samples.truncate(len);
-        Ok(Array::from_shape_vec(IxDyn(&[len]), normal_samples)?)
+        Ok(Array::from_shape_vec(IxDyn(&[len]), normal_samples)
+            .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?)
     }
 
     /// Generate random array with specified shape
@@ -612,7 +621,11 @@ impl GpuRngManager {
     ) -> CoreResult<Arc<GpuRandomGenerator>> {
         let device = device
             .or_else(|| self.default_device.clone())
-            .ok_or_else(|| CoreError::ComputationError(crate::error::ErrorContext::new("No GPU device available".to_string())))?;
+            .ok_or_else(|| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(
+                    "No GPU device available".to_string(),
+                ))
+            })?;
 
         let generator = Arc::new(GpuRandomGenerator::new(device, generator_type)?);
         self.generators.insert(name.to_string(), generator.clone());

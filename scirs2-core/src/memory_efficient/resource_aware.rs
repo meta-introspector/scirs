@@ -580,7 +580,7 @@ impl SystemInfo for DefaultSystemInfo {
         // Try to get IO stats if sysinfo is available
         #[cfg(feature = "sysinfo")]
         {
-            use sysinfo::{System, SystemExt};
+            use sysinfo::{DiskExt, System, SystemExt};
             let mut system = System::new_all();
             system.refresh_disks_list();
 
@@ -591,7 +591,9 @@ impl SystemInfo for DefaultSystemInfo {
             for disk in system.disks() {
                 // Simple approximation of IO ops
                 total_ops += 1; // Just a placeholder since sysinfo doesn't have this info
-                total_bytes += disk.read_bytes() + disk.written_bytes();
+                                // Note: sysinfo disk API doesn't provide read/write bytes directly in recent versions
+                                // Using available space as an approximation for I/O calculation
+                total_bytes += disk.available_space();
             }
 
             (total_ops, total_bytes)

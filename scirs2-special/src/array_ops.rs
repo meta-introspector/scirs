@@ -556,8 +556,9 @@ pub mod vectorized {
                 let data: Vec<f64> = input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::gamma::gamma(x)).collect();
                 let result_array = Array::from_vec(result)
-                    .into_shape(input.dim())
-                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?;
+                    .to_shape(input.dim())
+                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
+                    .into_owned();
                 return Ok(GammaResult::Immediate(result_array));
             }
         }
@@ -609,8 +610,9 @@ pub mod vectorized {
                 let data: Vec<f64> = input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::erf::erf(x)).collect();
                 return Ok(Array::from_vec(result)
-                    .into_shape(input.dim())
-                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?);
+                    .to_shape(input.dim())
+                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
+                    .into_owned());
             }
         }
 
@@ -635,8 +637,9 @@ pub mod vectorized {
                     .map(|&x| crate::combinatorial::factorial(x).unwrap_or(f64::NAN))
                     .collect();
                 return Ok(Array::from_vec(result)
-                    .into_shape(input.dim())
-                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?);
+                    .to_shape(input.dim())
+                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
+                    .into_owned());
             }
         }
 
@@ -756,8 +759,9 @@ pub mod vectorized {
             let data: Vec<T> = input.iter().cloned().collect();
             let processed: Vec<T> = data.into_par_iter().map(operation).collect();
             let result = Array::from_vec(processed)
-                .into_shape(input.dim())
-                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?;
+                .to_shape(input.dim())
+                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
+                .into_owned();
             return Ok(result);
         }
 

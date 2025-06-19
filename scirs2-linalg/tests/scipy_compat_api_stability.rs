@@ -382,7 +382,7 @@ mod api_contract_tests {
             for i in 0..l.nrows() {
                 for j in (i + 1)..l.ncols() {
                     assert!(
-                        l[[i, j]].abs() < 1e-12_f64,
+                        (l[[i, j]] as f64).abs() < 1e-12f64,
                         "Cholesky result not lower triangular"
                     );
                 }

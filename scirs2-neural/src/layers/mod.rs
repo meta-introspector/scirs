@@ -423,8 +423,10 @@ pub trait Layer<F: Float + Debug + ScalarOperand> {
     ///
     /// ```rust
     /// use scirs2_neural::layers::{Layer, Dropout};
+    /// use rand::thread_rng;
     ///
-    /// let mut dropout = Dropout::new(0.5);
+    /// let mut rng = thread_rng();
+    /// let mut dropout = Dropout::new(0.5, &mut rng).unwrap();
     /// assert!(dropout.is_training()); // Default is training mode
     ///
     /// dropout.set_training(false); // Switch to evaluation
@@ -544,7 +546,8 @@ pub enum LayerConfig {
 /// ## Building a Classifier
 ///
 /// ```rust
-/// use scirs2_neural::layers::{Sequential, Dense, Dropout, Layer};
+/// use scirs2_neural::layers::{Dense, Dropout, Layer};
+/// use scirs2_neural::models::{Sequential, Model};
 /// use ndarray::Array;
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;
@@ -555,9 +558,9 @@ pub enum LayerConfig {
 ///
 /// // Build a 3-layer classifier for MNIST (28x28 = 784 inputs, 10 classes)
 /// model.add_layer(Dense::<f32>::new(784, 128, Some("relu"), &mut rng)?);
-/// model.add_layer(Dropout::new(0.3));
+/// model.add_layer(Dropout::new(0.3, &mut rng)?);
 /// model.add_layer(Dense::new(128, 64, Some("relu"), &mut rng)?);
-/// model.add_layer(Dropout::new(0.3));
+/// model.add_layer(Dropout::new(0.3, &mut rng)?);
 /// model.add_layer(Dense::<f32>::new(64, 10, Some("softmax"), &mut rng)?);
 ///
 /// // Process a batch of images

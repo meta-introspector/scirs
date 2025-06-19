@@ -68,7 +68,7 @@ impl Default for TaskPriority {
 }
 
 /// NUMA node information for work-stealing optimization
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NumaNode {
     /// Node ID
     pub id: usize,
@@ -78,6 +78,19 @@ pub struct NumaNode {
     pub memory_size: usize,
     /// Current memory usage (bytes)
     pub memory_used: AtomicUsize,
+}
+
+impl Clone for NumaNode {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            cpu_cores: self.cpu_cores.clone(),
+            memory_size: self.memory_size,
+            memory_used: AtomicUsize::new(
+                self.memory_used.load(std::sync::atomic::Ordering::Relaxed),
+            ),
+        }
+    }
 }
 
 impl NumaNode {
@@ -253,10 +266,21 @@ where
 
 /// Task wrapper with priority and metadata
 struct PrioritizedTask {
-    task: Option<Box<dyn WorkStealingTask<Output = Box<dyn std::any::Any + Send>>>>,
+    task: Option<Box<dyn FnOnce() -> Box<dyn std::any::Any + Send> + Send>>,
     priority: TaskPriority,
     submitted_at: Instant,
     numa_hint: Option<usize>,
+}
+
+impl std::fmt::Debug for PrioritizedTask {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PrioritizedTask")
+            .field("priority", &self.priority)
+            .field("submitted_at", &self.submitted_at)
+            .field("numa_hint", &self.numa_hint)
+            .field("task", &self.task.is_some())
+            .finish()
+    }
 }
 
 impl PrioritizedTask {
@@ -265,7 +289,7 @@ impl PrioritizedTask {
         T::Output: 'static,
     {
         Self {
-            task: Some(Box::new(TaskWrapper::new(task))),
+            task: Some(Box::new(move || Box::new(task.execute()))),
             priority,
             submitted_at: Instant::now(),
             numa_hint,
@@ -274,38 +298,7 @@ impl PrioritizedTask {
 
     fn execute(mut self) -> Box<dyn std::any::Any + Send> {
         let task = self.task.take().expect("Task already executed");
-        task.execute()
-    }
-}
-
-/// Wrapper to type-erase task outputs
-struct TaskWrapper<T: WorkStealingTask> {
-    task: Option<T>,
-}
-
-impl<T: WorkStealingTask> TaskWrapper<T> {
-    fn new(task: T) -> Self {
-        Self { task: Some(task) }
-    }
-}
-
-impl<T: WorkStealingTask> WorkStealingTask for TaskWrapper<T>
-where
-    T::Output: 'static,
-{
-    type Output = Box<dyn std::any::Any + Send>;
-
-    fn execute(mut self) -> Self::Output {
-        let task = self.task.take().expect("Task already executed");
-        Box::new(task.execute())
-    }
-
-    fn estimated_duration(&self) -> Option<Duration> {
-        self.task.as_ref()?.estimated_duration()
-    }
-
-    fn estimated_memory(&self) -> Option<usize> {
-        self.task.as_ref()?.estimated_memory()
+        task()
     }
 }
 
@@ -662,7 +655,7 @@ impl WorkStealingScheduler {
         // Set up worker cross-references for stealing
         // First collect all local queue references
         let local_queues: Vec<_> = workers.iter().map(|w| w.local_queue.clone()).collect();
-        
+
         for (i, worker) in workers.iter_mut().enumerate() {
             for (j, queue) in local_queues.iter().enumerate() {
                 if i != j {

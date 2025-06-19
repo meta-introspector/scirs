@@ -621,6 +621,25 @@ where
     }))
 }
 
+/// Estimate memory usage for optimization algorithm
+#[allow(dead_code)]
+fn estimate_memory_usage(n_vars: usize, max_history: usize) -> usize {
+    // Estimate memory for L-BFGS-style algorithms
+    let vector_size = n_vars * std::mem::size_of::<f64>();
+    let matrix_size = n_vars * n_vars * std::mem::size_of::<f64>();
+
+    // Current point, gradient, direction
+    let basic_vectors = 3 * vector_size;
+
+    // History vectors (s and y vectors)
+    let history_vectors = 2 * max_history * vector_size;
+
+    // Temporary matrices and vectors
+    let temp_memory = 2 * matrix_size + 5 * vector_size;
+
+    basic_vectors + history_vectors + temp_memory
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -676,23 +695,4 @@ mod tests {
         let estimated_large = estimate_memory_usage(n_vars * 2, max_history);
         assert!(estimated_large > estimated);
     }
-}
-
-/// Estimate memory usage for optimization algorithm
-#[allow(dead_code)]
-fn estimate_memory_usage(n_vars: usize, max_history: usize) -> usize {
-    // Estimate memory for L-BFGS-style algorithms
-    let vector_size = n_vars * std::mem::size_of::<f64>();
-    let matrix_size = n_vars * n_vars * std::mem::size_of::<f64>();
-
-    // Current point, gradient, direction
-    let basic_vectors = 3 * vector_size;
-
-    // History vectors (s and y vectors)
-    let history_vectors = 2 * max_history * vector_size;
-
-    // Temporary matrices and vectors
-    let temp_memory = 2 * matrix_size + 5 * vector_size;
-
-    basic_vectors + history_vectors + temp_memory
 }

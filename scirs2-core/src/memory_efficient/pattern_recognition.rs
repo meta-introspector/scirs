@@ -14,7 +14,7 @@ use std::time::Instant;
 use super::prefetch::AccessPattern;
 
 /// The different types of complex patterns that can be recognized.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ComplexPattern {
     /// Standard row-major traversal
     RowMajor,
@@ -905,19 +905,19 @@ pub mod pattern_utils {
                     let col = current_idx % cols;
 
                     // Calculate block coordinates
-                    let block_row = row / block_height;
-                    let block_col = col / block_width;
+                    let block_row = row / *block_height;
+                    let block_col = col / *block_width;
 
                     // Calculate position within block
-                    let block_row_offset = row % block_height;
-                    let block_col_offset = col % block_width;
+                    let block_row_offset = row % *block_height;
+                    let block_col_offset = col % *block_width;
 
                     // Predict next positions within the block (row-major within block)
                     let mut result = Vec::with_capacity(prefetch_count);
                     let mut remaining = prefetch_count;
 
                     // First, complete the current row in the block
-                    for i in 1..=(block_width - block_col_offset).min(remaining) {
+                    for i in 1..=std::cmp::min(*block_width - block_col_offset, remaining) {
                         result.push(current_idx + i);
                         remaining -= 1;
                     }
@@ -925,9 +925,9 @@ pub mod pattern_utils {
                     // Then, continue with subsequent rows in the block
                     let mut next_row = block_row_offset + 1;
                     while remaining > 0 && next_row < *block_height {
-                        for col_offset in 0..block_width.min(remaining) {
-                            let idx = (block_row * block_height + next_row) * cols
-                                + block_col * block_width
+                        for col_offset in 0..std::cmp::min(*block_width, remaining) {
+                            let idx = (block_row * *block_height + next_row) * cols
+                                + block_col * *block_width
                                 + col_offset;
                             result.push(idx);
                             remaining -= 1;
@@ -937,13 +937,13 @@ pub mod pattern_utils {
 
                     // If still remaining, move to next block
                     if remaining > 0 {
-                        let next_block_row = if block_col + 1 < cols / block_width {
+                        let next_block_row = if block_col + 1 < cols / *block_width {
                             block_row // Same row, next column
                         } else {
                             block_row + 1 // Next row, first column
                         };
 
-                        let next_block_col = if block_col + 1 < cols / block_width {
+                        let next_block_col = if block_col + 1 < cols / *block_width {
                             block_col + 1 // Next column
                         } else {
                             0 // First column
@@ -951,10 +951,10 @@ pub mod pattern_utils {
 
                         // Add first few elements of next block
                         for i in 0..remaining {
-                            let row_offset = i / block_width;
-                            let col_offset = i % block_width;
-                            let idx = (next_block_row * block_height + row_offset) * cols
-                                + next_block_col * block_width
+                            let row_offset = i / *block_width;
+                            let col_offset = i % *block_width;
+                            let idx = (next_block_row * *block_height + row_offset) * cols
+                                + next_block_col * *block_width
                                 + col_offset;
                             result.push(idx);
                         }
