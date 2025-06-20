@@ -1,8 +1,7 @@
 use ndarray::{Array, Array2, Axis};
-use rand::distributions::{Distribution, Standard};
 use rand::Rng;
-use scirs2_core::array::{mask_array, masked_invalid, ArrayError, MaskedArray};
-use scirs2_core::error::ScirsError;
+use scirs2_core::array::{mask_array, masked_invalid, MaskedArray};
+use scirs2_core::error::CoreError;
 use scirs2_core::memory_efficient::{
     chunk_wise_binary_op, chunk_wise_op, chunk_wise_reduce, create_disk_array, evaluate,
     load_chunks, ChunkedArray, ChunkingStrategy, LazyArray, OutOfCoreArray,

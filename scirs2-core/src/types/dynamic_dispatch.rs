@@ -457,7 +457,10 @@ pub trait DynamicDispatchable: Any + Send + Sync {
     }
 
     /// Create type information for this type
-    fn type_info() -> TypeInfo {
+    fn type_info() -> TypeInfo
+    where
+        Self: Sized,
+    {
         TypeInfo {
             type_id: TypeId::of::<Self>(),
             type_name: Self::type_name().to_string(),

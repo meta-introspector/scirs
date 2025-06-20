@@ -632,18 +632,16 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         let path = path.as_ref();
 
         // Open file
-        let mut file = File::open(path).map_err(CoreError::IoError)?;
+        let mut file = File::open(path)?;
 
         // Read header length
         let mut header_len_bytes = [0u8; 8]; // u64
-        file.read_exact(&mut header_len_bytes)
-            .map_err(CoreError::IoError)?;
+        file.read_exact(&mut header_len_bytes)?;
         let header_len = u64::from_ne_bytes(header_len_bytes) as usize;
 
         // Read header
         let mut header_bytes = vec![0u8; header_len];
-        file.read_exact(&mut header_bytes)
-            .map_err(CoreError::IoError)?;
+        file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
         let header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
@@ -684,13 +682,8 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         match mode {
             AccessMode::ReadOnly => {
                 // Create read-only memory map
-                let file = File::open(path).map_err(CoreError::IoError)?;
-                let mmap = unsafe {
-                    MmapOptions::new()
-                        .offset(data_offset as u64)
-                        .map(&file)
-                        .map_err(CoreError::IoError)?
-                };
+                let file = File::open(path)?;
+                let mmap = unsafe { MmapOptions::new().offset(data_offset as u64).map(&file)? };
 
                 // Create MemoryMappedArray
                 Ok(MemoryMappedArray {
@@ -707,17 +700,12 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
             }
             AccessMode::ReadWrite => {
                 // Create read-write memory map
-                let file = OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .open(path)
-                    .map_err(CoreError::IoError)?;
+                let file = OpenOptions::new().read(true).write(true).open(path)?;
 
                 let mmap = unsafe {
                     MmapOptions::new()
                         .offset(data_offset as u64)
-                        .map_mut(&file)
-                        .map_err(CoreError::IoError)?
+                        .map_mut(&file)?
                 };
 
                 // Create MemoryMappedArray
@@ -735,12 +723,11 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
             }
             AccessMode::CopyOnWrite => {
                 // Create copy-on-write memory map
-                let file = File::open(path).map_err(CoreError::IoError)?;
+                let file = File::open(path)?;
                 let mmap = unsafe {
                     MmapOptions::new()
                         .offset(data_offset as u64)
-                        .map_copy(&file)
-                        .map_err(CoreError::IoError)?
+                        .map_copy(&file)?
                 };
 
                 // Create MemoryMappedArray
@@ -899,18 +886,16 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         let path = file_path.as_ref();
 
         // Open file
-        let mut file = File::open(path).map_err(CoreError::IoError)?;
+        let mut file = File::open(path)?;
 
         // Read header length
         let mut header_len_bytes = [0u8; 8]; // u64
-        file.read_exact(&mut header_len_bytes)
-            .map_err(CoreError::IoError)?;
+        file.read_exact(&mut header_len_bytes)?;
         let header_len = u64::from_ne_bytes(header_len_bytes) as usize;
 
         // Read header
         let mut header_bytes = vec![0u8; header_len];
-        file.read_exact(&mut header_bytes)
-            .map_err(CoreError::IoError)?;
+        file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
         let header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
@@ -1009,22 +994,16 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         let path = file_path.as_ref();
 
         // Open file
-        let mut file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open(path)
-            .map_err(CoreError::IoError)?;
+        let mut file = OpenOptions::new().read(true).write(true).open(path)?;
 
         // Read header length
         let mut header_len_bytes = [0u8; 8]; // u64
-        file.read_exact(&mut header_len_bytes)
-            .map_err(CoreError::IoError)?;
+        file.read_exact(&mut header_len_bytes)?;
         let header_len = u64::from_ne_bytes(header_len_bytes) as usize;
 
         // Read header
         let mut header_bytes = vec![0u8; header_len];
-        file.read_exact(&mut header_bytes)
-            .map_err(CoreError::IoError)?;
+        file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
         let mut header: ZeroCopyHeader = bincode::deserialize(&header_bytes).map_err(|e| {
@@ -1035,7 +1014,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         })?;
 
         // Update metadata
-        header.metadata = Some(metadata);
+        header.metadata = Some(metadata.clone());
 
         // Serialize updated header
         let new_header_bytes = bincode::serialize(&header).map_err(|e| {
@@ -1048,16 +1027,15 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         // If new header is same size or smaller, we can update in place
         if new_header_bytes.len() <= header_len {
             // Seek back to header start (after header length)
-            file.seek(SeekFrom::Start(8)).map_err(CoreError::IoError)?;
+            file.seek(SeekFrom::Start(8))?;
 
             // Write new header
-            file.write_all(&new_header_bytes)
-                .map_err(CoreError::IoError)?;
+            file.write_all(&new_header_bytes)?;
 
             // If new header is smaller, pad with zeros to maintain original size
             if new_header_bytes.len() < header_len {
                 let padding = vec![0u8; header_len - new_header_bytes.len()];
-                file.write_all(&padding).map_err(CoreError::IoError)?;
+                file.write_all(&padding)?;
             }
 
             Ok(())
@@ -1071,7 +1049,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
             array.save_zero_copy(&temp_path, Some(metadata))?;
 
             // Replace the original file with the temporary file
-            std::fs::rename(&temp_path, path).map_err(CoreError::IoError)?;
+            std::fs::rename(&temp_path, path)?;
 
             Ok(())
         }
@@ -1172,7 +1150,7 @@ mod tests {
                 .unwrap();
 
         // Verify save worked
-        assert_eq!(array.shape(), data.shape());
+        assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
@@ -1181,7 +1159,7 @@ mod tests {
                 .unwrap();
 
         // Verify load worked
-        assert_eq!(loaded.shape(), data.shape());
+        assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
@@ -1245,7 +1223,7 @@ mod tests {
             .unwrap();
 
         // Verify save worked
-        assert_eq!(array.shape(), data.shape());
+        assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
@@ -1253,7 +1231,7 @@ mod tests {
             MemoryMappedArray::<f64>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
 
         // Verify load worked
-        assert_eq!(loaded.shape(), data.shape());
+        assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
@@ -1282,7 +1260,7 @@ mod tests {
         let array = MemoryMappedArray::<f32>::save_array(&data, &file_path, None).unwrap();
 
         // Verify save worked
-        assert_eq!(array.shape(), data.shape());
+        assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
@@ -1290,7 +1268,7 @@ mod tests {
             MemoryMappedArray::<f32>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
 
         // Verify load worked
-        assert_eq!(loaded.shape(), data.shape());
+        assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
@@ -1326,7 +1304,7 @@ mod tests {
             MemoryMappedArray::<i32>::save_array(&data, &file_path, Some(metadata)).unwrap();
 
         // Verify save worked
-        assert_eq!(array.shape(), data.shape());
+        assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
@@ -1334,7 +1312,7 @@ mod tests {
             MemoryMappedArray::<i32>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
 
         // Verify load worked
-        assert_eq!(loaded.shape(), data.shape());
+        assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
@@ -1385,7 +1363,7 @@ mod tests {
             MemoryMappedArray::<f64>::save_array(&data, &file_path, Some(metadata)).unwrap();
 
         // Verify save worked
-        assert_eq!(array.shape(), data.shape());
+        assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
@@ -1393,7 +1371,7 @@ mod tests {
             MemoryMappedArray::<f64>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
 
         // Verify load worked
-        assert_eq!(loaded.shape(), data.shape());
+        assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
@@ -1414,7 +1392,8 @@ mod tests {
 
         // Also test reading as a flattened 1D array
         let loaded_flat = loaded.readonly_array::<ndarray::Ix1>().unwrap();
-        let data_flat = data.as_standard_layout().to_shape(data.len()).unwrap();
+        let data_standard = data.as_standard_layout();
+        let data_flat = data_standard.to_shape(data.len()).unwrap();
 
         for i in 0..data.len() {
             assert_eq!(loaded_flat[i], data_flat[i]);
@@ -1426,105 +1405,100 @@ mod tests {
         // Create a temporary directory
         let dir = tempdir().unwrap();
 
-        // Test different combinations of array types
-        let test_cases = vec![
-            ("u32_1d.bin", Array1::<u32>::linspace(0, 99, 100)),
-            (
-                "i64_2d.bin",
-                Array2::<i64>::from_shape_fn((5, 10), |(i, j)| (i * 10 + j) as i64),
-            ),
-            (
-                "f32_3d.bin",
-                Array3::<f32>::from_shape_fn((3, 4, 5), |(i, j, k)| (i * 20 + j * 5 + k) as f32),
-            ),
-        ];
-
-        for (filename, data) in test_cases {
-            // Save array
+        // Test u32 1D array
+        {
+            let filename = "u32_1d.bin";
             let file_path = dir.path().join(filename);
+            let data = Array1::<u32>::from_shape_fn(100, |i| i as u32);
             let metadata = serde_json::json!({
-                "array_type": filename.split('_').next().unwrap(),
+                "array_type": "u32",
                 "dimensions": data.ndim(),
                 "shape": data.shape().to_vec()
             });
 
-            match filename {
-                "u32_1d.bin" => {
-                    let typed_data = data.mapv(|v| v as u32);
-                    let array = MemoryMappedArray::<u32>::save_array(
-                        &typed_data,
-                        &file_path,
-                        Some(metadata.clone()),
-                    )
+            let array =
+                MemoryMappedArray::<u32>::save_array(&data, &file_path, Some(metadata.clone()))
                     .unwrap();
-                    assert_eq!(array.shape(), typed_data.shape());
+            assert_eq!(array.shape.as_slice(), data.shape());
 
-                    // Load and verify
-                    let loaded =
-                        MemoryMappedArray::<u32>::open_zero_copy(&file_path, AccessMode::ReadOnly)
-                            .unwrap();
-                    let loaded_array = loaded.readonly_array::<ndarray::Ix1>().unwrap();
+            // Load and verify
+            let loaded =
+                MemoryMappedArray::<u32>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
+            let loaded_array = loaded.readonly_array::<ndarray::Ix1>().unwrap();
 
-                    for i in 0..typed_data.len() {
-                        assert_eq!(loaded_array[i], typed_data[i]);
-                    }
-                }
-                "i64_2d.bin" => {
-                    let typed_data = data.mapv(|v| v as i64);
-                    let array = MemoryMappedArray::<i64>::save_array(
-                        &typed_data,
-                        &file_path,
-                        Some(metadata.clone()),
-                    )
-                    .unwrap();
-                    assert_eq!(array.shape(), typed_data.shape());
-
-                    // Load and verify
-                    let loaded =
-                        MemoryMappedArray::<i64>::open_zero_copy(&file_path, AccessMode::ReadOnly)
-                            .unwrap();
-                    let loaded_array = loaded.readonly_array::<ndarray::Ix2>().unwrap();
-
-                    for i in 0..typed_data.shape()[0] {
-                        for j in 0..typed_data.shape()[1] {
-                            assert_eq!(loaded_array[[i, j]], typed_data[[i, j]]);
-                        }
-                    }
-                }
-                "f32_3d.bin" => {
-                    let typed_data = data.mapv(|v| v as f32);
-                    let array = MemoryMappedArray::<f32>::save_array(
-                        &typed_data,
-                        &file_path,
-                        Some(metadata.clone()),
-                    )
-                    .unwrap();
-                    assert_eq!(array.shape(), typed_data.shape());
-
-                    // Load and verify
-                    let loaded =
-                        MemoryMappedArray::<f32>::open_zero_copy(&file_path, AccessMode::ReadOnly)
-                            .unwrap();
-                    let loaded_array = loaded.readonly_array::<ndarray::Ix3>().unwrap();
-
-                    for i in 0..typed_data.shape()[0] {
-                        for j in 0..typed_data.shape()[1] {
-                            for k in 0..typed_data.shape()[2] {
-                                assert_eq!(loaded_array[[i, j, k]], typed_data[[i, j, k]]);
-                            }
-                        }
-                    }
-                }
-                _ => unreachable!(),
+            for i in 0..data.len() {
+                assert_eq!(loaded_array[i], data[i]);
             }
 
             // Verify metadata was saved correctly
-            let loaded_metadata = match filename {
-                "u32_1d.bin" => MemoryMappedArray::<u32>::read_metadata(&file_path).unwrap(),
-                "i64_2d.bin" => MemoryMappedArray::<i64>::read_metadata(&file_path).unwrap(),
-                "f32_3d.bin" => MemoryMappedArray::<f32>::read_metadata(&file_path).unwrap(),
-                _ => unreachable!(),
-            };
+            let loaded_metadata = MemoryMappedArray::<u32>::read_metadata(&file_path).unwrap();
+            assert_eq!(loaded_metadata, metadata);
+        }
+
+        // Test i64 2D array
+        {
+            let filename = "i64_2d.bin";
+            let file_path = dir.path().join(filename);
+            let data = Array2::<i64>::from_shape_fn((5, 10), |(i, j)| (i * 10 + j) as i64);
+            let metadata = serde_json::json!({
+                "array_type": "i64",
+                "dimensions": data.ndim(),
+                "shape": data.shape().to_vec()
+            });
+
+            let array =
+                MemoryMappedArray::<i64>::save_array(&data, &file_path, Some(metadata.clone()))
+                    .unwrap();
+            assert_eq!(array.shape.as_slice(), data.shape());
+
+            // Load and verify
+            let loaded =
+                MemoryMappedArray::<i64>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
+            let loaded_array = loaded.readonly_array::<ndarray::Ix2>().unwrap();
+
+            for i in 0..data.shape()[0] {
+                for j in 0..data.shape()[1] {
+                    assert_eq!(loaded_array[[i, j]], data[[i, j]]);
+                }
+            }
+
+            // Verify metadata was saved correctly
+            let loaded_metadata = MemoryMappedArray::<i64>::read_metadata(&file_path).unwrap();
+            assert_eq!(loaded_metadata, metadata);
+        }
+
+        // Test f32 3D array
+        {
+            let filename = "f32_3d.bin";
+            let file_path = dir.path().join(filename);
+            let data =
+                Array3::<f32>::from_shape_fn((3, 4, 5), |(i, j, k)| (i * 20 + j * 5 + k) as f32);
+            let metadata = serde_json::json!({
+                "array_type": "f32",
+                "dimensions": data.ndim(),
+                "shape": data.shape().to_vec()
+            });
+
+            let array =
+                MemoryMappedArray::<f32>::save_array(&data, &file_path, Some(metadata.clone()))
+                    .unwrap();
+            assert_eq!(array.shape.as_slice(), data.shape());
+
+            // Load and verify
+            let loaded =
+                MemoryMappedArray::<f32>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
+            let loaded_array = loaded.readonly_array::<ndarray::Ix3>().unwrap();
+
+            for i in 0..data.shape()[0] {
+                for j in 0..data.shape()[1] {
+                    for k in 0..data.shape()[2] {
+                        assert_eq!(loaded_array[[i, j, k]], data[[i, j, k]]);
+                    }
+                }
+            }
+
+            // Verify metadata was saved correctly
+            let loaded_metadata = MemoryMappedArray::<f32>::read_metadata(&file_path).unwrap();
             assert_eq!(loaded_metadata, metadata);
         }
     }

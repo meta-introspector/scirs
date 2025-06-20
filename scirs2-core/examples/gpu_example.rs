@@ -41,7 +41,7 @@ fn run_gpu_example() -> Result<(), Box<dyn std::error::Error>> {
 
     // Execute a simple computation (add 1.0 to each element)
     println!("Executing computation on GPU...");
-    ctx.execute(|compiler| {
+    ctx.execute(|compiler| -> Result<(), Box<dyn std::error::Error>> {
         // This is a placeholder for a real kernel
         // In a real application, this would compile and run an actual GPU kernel
         let kernel = compiler.compile(

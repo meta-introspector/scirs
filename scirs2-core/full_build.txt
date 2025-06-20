@@ -1,0 +1,1156 @@
+   Compiling either v1.15.0
+   Compiling foldhash v0.1.5
+   Compiling futures-channel v0.3.31
+   Compiling tokio v1.45.1
+   Compiling serde_json v1.0.140
+   Compiling icu_normalizer v2.0.0
+   Compiling openssl v0.10.73
+   Compiling aho-corasick v1.1.3
+   Compiling hashbrown v0.15.4
+   Compiling rayon v1.10.0
+   Compiling futures-util v0.3.31
+   Compiling indexmap v2.9.0
+   Compiling gimli v0.31.1
+   Compiling ndarray v0.16.1
+   Compiling regalloc2 v0.11.2
+   Compiling idna_adapter v1.2.1
+   Compiling regex-automata v0.4.9
+   Compiling idna v1.0.3
+   Compiling serde_urlencoded v0.7.1
+   Compiling url v2.5.4
+   Compiling wasmtime-jit-icache-coherence v31.0.0
+   Compiling cached v0.48.1
+   Compiling sysinfo v0.29.11
+   Compiling cranelift-codegen v0.118.0
+   Compiling native-tls v0.2.14
+   Compiling tokio-util v0.7.15
+   Compiling tokio-native-tls v0.3.1
+   Compiling regex v1.10.6
+   Compiling ndarray-linalg v0.17.0
+   Compiling h2 v0.3.26
+   Compiling nom v7.1.3
+   Compiling strsim v0.11.1
+   Compiling toml_edit v0.22.27
+   Compiling libloading v0.7.4
+   Compiling jpeg-decoder v0.3.1
+   Compiling exr v1.73.0
+   Compiling tiff v0.9.1
+   Compiling ndarray-rand v0.15.0
+   Compiling darling_core v0.20.11
+   Compiling hyper v0.14.32
+   Compiling toml v0.8.23
+   Compiling arrayvec v0.7.6
+   Compiling pyo3-build-config v0.20.3
+   Compiling cexpr v0.6.0
+   Compiling image v0.24.9
+   Compiling utf8parse v0.2.2
+   Compiling anstyle-parse v0.2.7
+   Compiling bindgen v0.69.5
+   Compiling mime_guess v2.0.5
+   Compiling rinja_parser v0.3.5
+   Compiling hdf5-sys v0.8.1
+   Compiling bit-vec v0.6.3
+   Compiling hyper-tls v0.5.0
+   Compiling reqwest v0.11.27
+   Compiling is_terminal_polyfill v1.70.1
+   Compiling unicode-width v0.1.14
+   Compiling colorchoice v1.0.4
+   Compiling termcolor v1.4.1
+   Compiling anstyle-query v1.1.3
+   Compiling anstream v0.6.19
+   Compiling codespan-reporting v0.11.1
+   Compiling bit-set v0.5.3
+   Compiling futures-executor v0.3.31
+   Compiling gpu-descriptor-types v0.2.0
+   Compiling spirv v0.3.0+sdk-1.3.268.0
+   Compiling gpu-alloc-types v0.3.0
+   Compiling hexf-parse v0.2.1
+   Compiling unicode-xid v0.2.6
+   Compiling clap_builder v4.5.40
+   Compiling naga v0.20.0
+   Compiling darling_macro v0.20.11
+   Compiling rinja_derive v0.3.5
+   Compiling plotters-bitmap v0.3.7
+   Compiling darling v0.20.11
+   Compiling serde_with_macros v3.12.0
+   Compiling plotters v0.3.7
+   Compiling plotly_derive v0.12.1
+   Compiling gpu-alloc v0.6.0
+   Compiling gpu-descriptor v0.3.2
+   Compiling serde_with v3.12.0
+   Compiling futures v0.3.31
+   Compiling ash v0.37.3+1.3.251
+   Compiling cranelift-native v0.118.0
+   Compiling cranelift-module v0.118.0
+   Compiling cranelift-jit v0.118.0
+   Compiling cranelift-frontend v0.118.0
+   Compiling qhull-sys v0.4.0
+   Compiling scirs2-core v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-core)
+   Compiling rinja v0.3.5
+   Compiling portable-atomic v1.11.1
+   Compiling khronos-egl v6.0.0
+   Compiling itertools v0.10.5
+   Compiling onig_sys v69.9.1
+   Compiling wgpu-types v0.20.0
+   Compiling renderdoc-sys v1.1.0
+   Compiling glow v0.13.1
+   Compiling profiling v1.0.16
+   Compiling raw-window-handle v0.6.2
+   Compiling plotly v0.12.1
+   Compiling clap v4.5.40
+   Compiling wgpu-hal v0.21.1
+   Compiling pyo3-ffi v0.20.3
+   Compiling sprs v0.11.3
+   Compiling derive_builder_core v0.12.0
+   Compiling esaxx-rs v0.1.10
+   Compiling scirs2-metrics v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-metrics)
+   Compiling unicode-width v0.2.1
+   Compiling console v0.15.11
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling hdf5-types v0.8.1
+   Compiling wgpu-core v0.21.1
+   Compiling parking_lot_core v0.8.6
+   Compiling itertools v0.13.0
+   Compiling derive_builder_macro v0.12.0
+   Compiling itertools v0.7.11
+   Compiling itertools v0.11.0
+   Compiling ascii v1.1.0
+   Compiling number_prefix v0.4.0
+   Compiling scirs2-integrate v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-integrate)
+   Compiling static_assertions v1.1.0
+   Compiling base64 v0.13.1
+   Compiling macro_rules_attribute v0.2.2
+   Compiling spm_precompiled v0.1.4
+   Compiling blake3 v1.8.2
+   Compiling indicatif v0.17.11
+   Compiling rayon-cond v0.3.0
+   Compiling hdf5 v0.8.1
+   Compiling wgpu v0.20.1
+   Compiling pyo3-macros-backend v0.20.3
+   Compiling monostate v0.1.14
+   Compiling onig v6.5.1
+   Compiling ndarray v0.12.1
+   Compiling parking_lot v0.11.2
+   Compiling pyo3 v0.20.3
+   Compiling itertools v0.12.1
+   Compiling unicode-normalization-alignments v0.1.12
+   Compiling csv-core v0.1.12
+   Compiling scirs2-optim v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-optim)
+   Compiling unicode_categories v0.1.1
+   Compiling scirs2-neural v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-neural)
+   Compiling derive_builder v0.12.0
+   Compiling ureq v2.12.1
+   Compiling tokenizers v0.15.2
+   Compiling petgraph v0.6.5
+   Compiling csv v1.3.1
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+   --> scirs2-core/src/testing/large_scale.rs:315:32
+    |
+315 |                         if rng.gen_range(0.0..=1.0) < density {
+    |                                ^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `rand::Rng::gen_range`: Renamed to `random_range`
+   --> scirs2-core/src/testing/large_scale.rs:316:33
+    |
+316 | ...                   rng.gen_range(-1000.0..=1000.0)
+    |                           ^^^^^^^^^
+
+   Compiling criterion-plot v0.5.0
+   Compiling pyo3-macros v0.20.3
+   Compiling autograd v1.1.1
+   Compiling memoffset v0.9.1
+   Compiling ndarray-stats v0.5.1
+   Compiling ndarray-stats v0.6.0
+   Compiling qhull v0.4.0
+   Compiling netcdf3 v0.5.2
+   Compiling tinytemplate v1.2.1
+   Compiling unindent v0.2.4
+   Compiling scirs2-spatial v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-spatial)
+   Compiling criterion v0.5.1
+warning: unused variable: `num_elements_per_chunk`
+   --> scirs2-core/src/testing/large_scale.rs:239:13
+    |
+239 |         let num_elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
+    |             ^^^^^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_num_elements_per_chunk`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `num_elements_per_chunk`
+   --> scirs2-core/src/testing/large_scale.rs:299:13
+    |
+299 |         let num_elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
+    |             ^^^^^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_num_elements_per_chunk`
+
+warning: unused variable: `elements_per_chunk`
+   --> scirs2-core/src/testing/large_scale.rs:426:13
+    |
+426 |         let elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
+    |             ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_elements_per_chunk`
+
+warning: unused variable: `mmap_array`
+   --> scirs2-core/src/testing/large_scale.rs:509:13
+    |
+509 |         let mmap_array =
+    |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mmap_array`
+
+warning: field `inner` is never read
+   --> scirs2-core/src/error/async_handling.rs:125:5
+    |
+124 | pub struct AsyncCircuitBreaker {
+    |            ------------------- field in this struct
+125 |     inner: Arc<CircuitBreaker>,
+    |     ^^^^^
+    |
+    = note: `AsyncCircuitBreaker` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` on by default
+
+warning: field `timeout` is never read
+   --> scirs2-core/src/error/async_handling.rs:187:5
+    |
+185 | pub struct TimeoutWrapper<F> {
+    |            -------------- field in this struct
+186 |     future: F,
+187 |     timeout: Duration,
+    |     ^^^^^^^
+
+warning: methods `complete`, `fail`, and `cancel` are never used
+   --> scirs2-core/src/gpu/async_execution.rs:164:19
+    |
+73  | impl GpuEvent {
+    | ------------- methods in this implementation
+...
+164 |     pub(crate) fn complete(&self) {
+    |                   ^^^^^^^^
+...
+179 |     pub(crate) fn fail(&self) {
+    |                   ^^^^
+...
+184 |     pub(crate) fn cancel(&self) {
+    |                   ^^^^^^
+
+warning: fields `memory_size` and `warp_size` are never read
+   --> scirs2-core/src/gpu/auto_tuning.rs:276:5
+    |
+274 | struct DeviceInfo {
+    |        ---------- fields in this struct
+275 |     compute_capability: String,
+276 |     memory_size: usize,
+    |     ^^^^^^^^^^^
+...
+279 |     warp_size: usize,
+    |     ^^^^^^^^^
+    |
+    = note: `DeviceInfo` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `async_manager` is never read
+   --> scirs2-core/src/gpu/heterogeneous.rs:267:5
+    |
+264 | pub struct HeterogeneousScheduler {
+    |            ---------------------- field in this struct
+...
+267 |     async_manager: AsyncGpuManager,
+    |     ^^^^^^^^^^^^^
+
+warning: field `compression_level` is never read
+  --> scirs2-core/src/memory/compressed_buffers.rs:53:5
+   |
+50 | pub struct CompressedBuffer<T> {
+   |            ---------------- field in this struct
+...
+53 |     compression_level: CompressionLevel,
+   |     ^^^^^^^^^^^^^^^^^
+
+warning: fields `chunk_processing_times`, `memory_usage_per_chunk`, `throughput_mbps`, and `cpu_utilization` are never read
+   --> scirs2-core/src/memory_efficient/adaptive_chunking.rs:509:13
+    |
+508 |     pub struct ChunkingPerformanceMetrics {
+    |                -------------------------- fields in this struct
+509 |         pub chunk_processing_times: Vec<Duration>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+510 |         pub memory_usage_per_chunk: Vec<usize>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+511 |         pub throughput_mbps: Vec<f64>,
+    |             ^^^^^^^^^^^^^^^
+512 |         pub cpu_utilization: Vec<f64>,
+    |             ^^^^^^^^^^^^^^^
+    |
+    = note: `ChunkingPerformanceMetrics` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: struct `DynamicLoadBalancer` is never constructed
+   --> scirs2-core/src/memory_efficient/adaptive_chunking.rs:527:16
+    |
+527 |     pub struct DynamicLoadBalancer {
+    |                ^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new`, `calculate_chunk_distribution`, and `update_performance_metrics` are never used
+   --> scirs2-core/src/memory_efficient/adaptive_chunking.rs:535:16
+    |
+533 |     impl DynamicLoadBalancer {
+    |     ------------------------ associated items in this implementation
+534 |         /// Create a new load balancer for the specified number of workers
+535 |         pub fn new(num_workers: usize) -> Self {
+    |                ^^^
+...
+544 |         pub fn calculate_chunk_distribution(&self, total_work: usize) -> Vec<usize> {
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+565 |         pub fn update_performance_metrics(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `ChunkSizePredictor` is never constructed
+   --> scirs2-core/src/memory_efficient/adaptive_chunking.rs:584:16
+    |
+584 |     pub struct ChunkSizePredictor {
+    |                ^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new`, `predict_optimal_chunk_size`, `get_historical_prediction`, and `record_performance` are never used
+   --> scirs2-core/src/memory_efficient/adaptive_chunking.rs:590:16
+    |
+589 |     impl ChunkSizePredictor {
+    |     ----------------------- associated items in this implementation
+590 |         pub fn new() -> Self {
+    |                ^^^
+...
+598 |         pub fn predict_optimal_chunk_size(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+628 |         fn get_historical_prediction(&self, workload: WorkloadType) -> Option<usize> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+638 |         pub fn record_performance(
+    |                ^^^^^^^^^^^^^^^^^^
+
+warning: function `calculate_numa_aware_chunking` is never used
+   --> scirs2-core/src/memory_efficient/adaptive_chunking.rs:656:12
+    |
+656 |     pub fn calculate_numa_aware_chunking(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `align_to_cache_line` is never used
+   --> scirs2-core/src/memory_efficient/adaptive_chunking.rs:672:8
+    |
+672 |     fn align_to_cache_line(size: usize) -> usize {
+    |        ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `DISCOUNT_FACTOR` is never used
+  --> scirs2-core/src/memory_efficient/adaptive_prefetch.rs:20:7
+   |
+20 | const DISCOUNT_FACTOR: f64 = 0.9;
+   |       ^^^^^^^^^^^^^^^
+
+warning: methods `clear`, `len`, and `is_empty` are never used
+    --> scirs2-core/src/memory_efficient/compressed_memmap.rs:1158:8
+     |
+1050 | impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
+     | ----------------------------------------------------------- methods in this implementation
+...
+1158 |     fn clear(&self) {
+     |        ^^^^^
+...
+1164 |     fn len(&self) -> usize {
+     |        ^^^
+...
+1170 |     fn is_empty(&self) -> bool {
+     |        ^^^^^^^^
+
+warning: fields `device` and `handle` are never read
+   --> scirs2-core/src/memory_efficient/cross_device.rs:197:5
+    |
+195 | pub struct TransferEvent {
+    |            ------------- fields in this struct
+196 |     /// Device associated with the event
+197 |     device: DeviceType,
+    |     ^^^^^^
+198 |     /// Internal event handle (implementation-specific)
+199 |     handle: Arc<Mutex<Box<dyn std::any::Any + Send + Sync>>>,
+    |     ^^^^^^
+    |
+    = note: `TransferEvent` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: associated function `new` is never used
+   --> scirs2-core/src/memory_efficient/cross_device.rs:206:8
+    |
+204 | impl TransferEvent {
+    | ------------------ associated function in this implementation
+205 |     /// Create a new transfer event
+206 |     fn new(device: DeviceType, handle: Box<dyn std::any::Any + Send + Sync>) -> Self {
+    |        ^^^
+
+warning: field `dirty` is never read
+   --> scirs2-core/src/memory_efficient/cross_device.rs:237:5
+    |
+229 | struct CacheEntry<T: GpuDataType> {
+    |        ---------- field in this struct
+...
+237 |     dirty: bool,
+    |     ^^^^^
+
+warning: fields `device` and `handle` are never read
+   --> scirs2-core/src/memory_efficient/cross_device.rs:814:5
+    |
+812 | pub struct DeviceStream {
+    |            ------------ fields in this struct
+813 |     /// Device associated with the stream
+814 |     device: DeviceType,
+    |     ^^^^^^
+815 |     /// Internal stream handle (implementation-specific)
+816 |     handle: Arc<Mutex<Box<dyn std::any::Any + Send + Sync>>>,
+    |     ^^^^^^
+
+warning: fields `enable_caching` and `max_cache_size` are never read
+    --> scirs2-core/src/memory_efficient/cross_device.rs:1026:5
+     |
+1018 | pub struct CrossDeviceManager {
+     |            ------------------ fields in this struct
+...
+1026 |     enable_caching: bool,
+     |     ^^^^^^^^^^^^^^
+1027 |     /// Maximum cache size in bytes
+1028 |     max_cache_size: usize,
+     |     ^^^^^^^^^^^^^^
+     |
+     = note: `CrossDeviceManager` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: field `primary` is never read
+   --> scirs2-core/src/memory_efficient/cross_file_prefetch.rs:264:5
+    |
+262 | struct DatasetCorrelation {
+    |        ------------------ field in this struct
+263 |     /// Primary dataset
+264 |     primary: DatasetId,
+    |     ^^^^^^^
+    |
+    = note: `DatasetCorrelation` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `chunk_size` is never read
+   --> scirs2-core/src/memory_efficient/cross_file_prefetch.rs:775:5
+    |
+767 | pub struct MemoryMappedArrayPrefetcher<A: Clone + Copy + Send + Sync + 'static> {
+    |            --------------------------- field in this struct
+...
+775 |     chunk_size: usize,
+    |     ^^^^^^^^^^
+
+warning: method `register_for_cross_prefetch` is never used
+   --> scirs2-core/src/memory_efficient/cross_file_prefetch.rs:825:8
+    |
+823 | pub trait CompressedArrayPrefetchExt<A: Clone + Copy + Send + Sync + 'static> {
+    |           -------------------------- method in this trait
+824 |     /// Register with the cross-file prefetching system.
+825 |     fn register_for_cross_prefetch(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `register_for_cross_prefetch` is never used
+   --> scirs2-core/src/memory_efficient/cross_file_prefetch.rs:851:8
+    |
+849 | pub trait MemoryMappedArrayPrefetchExt<A: Clone + Copy + Send + Sync + 'static> {
+    |           ---------------------------- method in this trait
+850 |     /// Register with the cross-file prefetching system.
+851 |     fn register_for_cross_prefetch(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `TrackedArray` is never constructed
+   --> scirs2-core/src/memory_efficient/cross_file_prefetch.rs:880:12
+    |
+880 | pub struct TrackedArray<A: Clone + Copy + 'static + Send + Sync, T> {
+    |            ^^^^^^^^^^^^
+
+warning: associated items `new`, `inner`, `inner_mut`, `dataset_id`, and `record_access` are never used
+   --> scirs2-core/src/memory_efficient/cross_file_prefetch.rs:893:12
+    |
+891 | impl<A: Clone + Copy + 'static + Send + Sync, T> TrackedArray<A, T> {
+    | ------------------------------------------------------------------- associated items in this implementation
+892 |     /// Create a new tracked array.
+893 |     pub fn new(array: T, dataset_id: DatasetId) -> Self {
+    |            ^^^
+...
+902 |     pub const fn inner(&self) -> &T {
+    |                  ^^^^^
+...
+907 |     pub fn inner_mut(&mut self) -> &mut T {
+    |            ^^^^^^^^^
+...
+912 |     pub const fn dataset_id(&self) -> &DatasetId {
+    |                  ^^^^^^^^^^
+...
+917 |     fn record_access(
+    |        ^^^^^^^^^^^^^
+
+warning: method `get` is never used
+   --> scirs2-core/src/memory_efficient/cross_file_prefetch.rs:941:12
+    |
+937 | / impl<A: Clone + Copy + 'static + Send + Sync>
+938 | |     TrackedArray<A, super::compressed_memmap::CompressedMemMappedArray<A>>
+    | |__________________________________________________________________________- method in this implementation
+...
+941 |       pub fn get(&self, indices: &[usize]) -> CoreResult<A> {
+    |              ^^^
+
+warning: struct `PatternRecognizerFactory` is never constructed
+   --> scirs2-core/src/memory_efficient/pattern_recognition.rs:772:12
+    |
+772 | pub struct PatternRecognizerFactory;
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated functions `create` and `create_with_config` are never used
+   --> scirs2-core/src/memory_efficient/pattern_recognition.rs:776:12
+    |
+774 | impl PatternRecognizerFactory {
+    | ----------------------------- associated functions in this implementation
+775 |     /// Create a new pattern recognizer with default configuration.
+776 |     pub fn create() -> PatternRecognizer {
+    |            ^^^^^^
+...
+781 |     pub fn create_with_config(config: PatternRecognitionConfig) -> PatternRecognizer {
+    |            ^^^^^^^^^^^^^^^^^^
+
+warning: function `to_basic_pattern` is never used
+   --> scirs2-core/src/memory_efficient/pattern_recognition.rs:792:12
+    |
+792 |     pub fn to_basic_pattern(pattern: &ComplexPattern) -> AccessPattern {
+    |            ^^^^^^^^^^^^^^^^
+
+warning: function `get_prefetch_pattern` is never used
+   --> scirs2-core/src/memory_efficient/pattern_recognition.rs:810:12
+    |
+810 |     pub fn get_prefetch_pattern(
+    |            ^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `ResourceAwarePrefetchingConfig` is never constructed
+   --> scirs2-core/src/memory_efficient/resource_aware.rs:803:12
+    |
+803 | pub struct ResourceAwarePrefetchingConfig {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `ResourceAwarePrefetchingConfig` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: associated items `new` and `create_prefetcher` are never used
+   --> scirs2-core/src/memory_efficient/resource_aware.rs:813:12
+    |
+811 | impl ResourceAwarePrefetchingConfig {
+    | ----------------------------------- associated items in this implementation
+812 |     /// Create a new resource-aware prefetching configuration.
+813 |     pub fn new(base_config: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {
+    |            ^^^
+...
+821 |     pub fn create_prefetcher(&self) -> ResourceAwarePrefetcher {
+    |            ^^^^^^^^^^^^^^^^^
+
+warning: method `is_closed` is never used
+   --> scirs2-core/src/memory_efficient/streaming.rs:445:8
+    |
+278 | impl<T: Clone + Send + 'static> StreamBuffer<T> {
+    | ----------------------------------------------- method in this implementation
+...
+445 |     fn is_closed(&self) -> bool {
+    |        ^^^^^^^^^
+
+warning: field `stats` is never read
+   --> scirs2-core/src/memory_efficient/streaming.rs:981:5
+    |
+969 | pub struct Pipeline {
+    |            -------- field in this struct
+...
+981 |     stats: Arc<RwLock<PipelineStats>>,
+    |     ^^^^^
+
+warning: method `to_stream_error` is never used
+    --> scirs2-core/src/memory_efficient/streaming.rs:1569:8
+     |
+1567 | pub trait StreamError {
+     |           ----------- method in this trait
+1568 |     /// Convert to a stream error
+1569 |     fn to_stream_error(self, message: &str) -> CoreError;
+     |        ^^^^^^^^^^^^^^^
+
+warning: methods `is_empty` and `is_full` are never used
+   --> scirs2-core/src/memory_efficient/work_stealing.rs:364:8
+    |
+313 | impl PriorityTaskQueue {
+    | ---------------------- methods in this implementation
+...
+364 |     fn is_empty(&self) -> bool {
+    |        ^^^^^^^^
+...
+368 |     fn is_full(&self) -> bool {
+    |        ^^^^^^^
+
+warning: field `numa_node` is never read
+   --> scirs2-core/src/memory_efficient/work_stealing.rs:379:5
+    |
+374 | struct Worker {
+    |        ------ field in this struct
+...
+379 |     numa_node: Option<usize>,
+    |     ^^^^^^^^^
+
+warning: field `tasks_provided` is never read
+   --> scirs2-core/src/memory_efficient/work_stealing.rs:390:5
+    |
+387 | struct WorkerStats {
+    |        ----------- field in this struct
+...
+390 |     tasks_provided: AtomicU64,
+    |     ^^^^^^^^^^^^^^
+    |
+    = note: `WorkerStats` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: field `numa_nodes` is never read
+   --> scirs2-core/src/memory_efficient/work_stealing.rs:611:5
+    |
+603 | pub struct WorkStealingScheduler {
+    |            --------------------- field in this struct
+...
+611 |     numa_nodes: Vec<NumaNode>,
+    |     ^^^^^^^^^^
+
+warning: field `weak_refs` is never read
+   --> scirs2-core/src/memory_efficient/zero_copy_interface.rs:134:5
+    |
+126 | struct ZeroCopyDataInner<T> {
+    |        ----------------- field in this struct
+...
+134 |     weak_refs: Mutex<Vec<Weak<ZeroCopyDataInner<T>>>>,
+    |     ^^^^^^^^^
+    |
+    = note: `ZeroCopyDataInner` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: method `type_id` is never used
+   --> scirs2-core/src/memory_efficient/zero_copy_interface.rs:401:8
+    |
+399 | trait AnyZeroCopyData: Send + Sync + std::fmt::Debug + Any {
+    |       --------------- method in this trait
+400 |     /// Get the type ID of the contained data
+401 |     fn type_id(&self) -> TypeId;
+    |        ^^^^^^^
+
+warning: field `workers` is never read
+   --> scirs2-core/src/memory_efficient/zero_copy_streaming.rs:520:5
+    |
+518 | pub struct WorkStealingScheduler {
+    |            --------------------- field in this struct
+519 |     /// Worker threads
+520 |     workers: Vec<Worker>,
+    |     ^^^^^^^
+
+warning: field `id` is never read
+   --> scirs2-core/src/memory_efficient/zero_copy_streaming.rs:531:5
+    |
+529 | struct Worker {
+    |        ------ field in this struct
+530 |     /// Worker ID
+531 |     id: usize,
+    |     ^^
+
+warning: field `scheduler` is never read
+   --> scirs2-core/src/memory_efficient/zero_copy_streaming.rs:661:5
+    |
+651 | pub struct ZeroCopyStreamProcessor<T, U>
+    |            ----------------------- field in this struct
+...
+661 |     scheduler: Option<Arc<WorkStealingScheduler>>,
+    |     ^^^^^^^^^
+
+warning: field `rng` is never read
+   --> scirs2-core/src/testing/fuzzing.rs:144:5
+    |
+141 | pub struct FuzzingEngine {
+    |            ------------- field in this struct
+...
+144 |     rng: StdRng,
+    |     ^^^
+
+warning: field `rng` is never read
+   --> scirs2-core/src/testing/property_based.rs:147:5
+    |
+144 | pub struct PropertyTestEngine {
+    |            ------------------ field in this struct
+...
+147 |     rng: StdRng,
+    |     ^^^
+
+warning: field `config` is never read
+   --> scirs2-core/src/testing/security.rs:410:5
+    |
+409 | pub struct MemorySafetyTester {
+    |            ------------------ field in this struct
+410 |     config: SecurityTestConfig,
+    |     ^^^^^^
+
+warning: field `timeout` is never read
+    --> scirs2-core/src/observability/tracing.rs:1365:5
+     |
+1362 | pub struct HttpExporter {
+     |            ------------ field in this struct
+...
+1365 |     timeout: Duration,
+     |     ^^^^^^^
+
+warning: creating a shared reference to mutable static is discouraged
+   --> scirs2-core/src/memory_efficient/cross_file_prefetch.rs:623:18
+    |
+623 |         unsafe { INSTANCE.as_ref().unwrap() }
+    |                  ^^^^^^^^^^^^^^^^^ shared reference to mutable static
+    |
+    = note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2024/static-mut-references.html>
+    = note: shared references to mutable statics are dangerous; it's undefined behavior if the static is mutated or if a mutable reference is created for it while the shared reference lives
+    = note: `#[warn(static_mut_refs)]` on by default
+
+warning: unused return value of `Box::<T>::from_raw` that must be used
+   --> scirs2-core/src/memory_efficient/zero_copy_streaming.rs:353:34
+    |
+353 |                         unsafe { Box::from_raw(head) };
+    |                                  ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: call `drop(Box::from_raw(ptr))` if you intend to drop the `Box`
+    = note: `#[warn(unused_must_use)]` on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+353 |                         unsafe { let _ = Box::from_raw(head); };
+    |                                  +++++++                    +
+
+warning: unused return value of `Box::<T>::from_raw` that must be used
+   --> scirs2-core/src/memory_efficient/zero_copy_streaming.rs:385:22
+    |
+385 |             unsafe { Box::from_raw(head) };
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: call `drop(Box::from_raw(ptr))` if you intend to drop the `Box`
+help: use `let _ = ...` to ignore the resulting value
+    |
+385 |             unsafe { let _ = Box::from_raw(head); };
+    |                      +++++++                    +
+
+   Compiling scirs2-autograd v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-autograd)
+   Compiling scirs2-fft v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-fft)
+   Compiling scirs2-sparse v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-sparse)
+   Compiling scirs2-special v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-special)
+   Compiling scirs2-vision v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-vision)
+   Compiling scirs2-datasets v0.1.0-alpha.5 (/media/kitasan/Backup/scirs/scirs2-datasets)
+error[E0382]: use of moved value: `name`
+    --> scirs2-datasets/src/cache.rs:1144:22
+     |
+1141 |                         r.failures.push((name, last_error));
+     |                                          ---- value moved here
+...
+1144 |                     (name, success, downloaded_data)
+     |                      ^^^^ value used here after move
+     |
+     = note: move occurs because `name` has type `std::string::String`, which does not implement the `Copy` trait
+
+error[E0521]: borrowed data escapes outside of method
+    --> scirs2-datasets/src/cache.rs:1099:17
+     |
+1069 |       fn batch_download_parallel(&self, urls_and_names: &[(&str, &str)], result: &mut BatchResult) {
+     |                                                                          ------  - let's call the lifetime of this reference `'1`
+     |                                                                          |
+     |                                                                          `result` is a reference that is only valid in the method body
+...
+1099 | /                 thread::spawn(move || {
+1100 | |                     let mut success = false;
+1101 | |                     let mut last_error = String::new();
+1102 | |                     let mut downloaded_data = Vec::new();
+...    |
+1144 | |                     (name, success, downloaded_data)
+1145 | |                 })
+     | |                  ^
+     | |                  |
+     | |__________________`result` escapes the method body here
+     |                    argument requires that `'1` must outlive `'static`
+
+warning: unused import: `wgpu::util::DeviceExt`
+   --> scirs2-special/src/array_ops.rs:295:17
+    |
+295 |             use wgpu::util::DeviceExt;
+    |                 ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` on by default
+
+Some errors have detailed explanations: E0382, E0521.
+For more information about an error, try `rustc --explain E0382`.
+error: could not compile `scirs2-datasets` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+warning: use of deprecated method `ndarray::impl_methods::<impl ndarray::ArrayBase<S, D>>::into_shape`: Use `.into_shape_with_order()` or `.to_shape()`
+   --> scirs2-special/src/array_ops.rs:429:18
+    |
+429 |                 .into_shape(input.dim())
+    |                  ^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+error[E0597]: `input_cloned` does not live long enough
+   --> scirs2-special/src/array_ops.rs:540:70
+    |
+539 |                     let input_cloned = input.clone();
+    |                         ------------ binding `input_cloned` declared here
+540 |                     return Ok(GammaResult::Future(Box::pin(gamma_gpu(&input_cloned))));
+    |                                                   -------------------^^^^^^^^^^^^^--
+    |                                                   |                  |
+    |                                                   |                  borrowed value does not live long enough
+    |                                                   this usage requires that `input_cloned` is borrowed for `'static`
+541 |                 }
+    |                 - `input_cloned` dropped here while still borrowed
+
+For more information about this error, try `rustc --explain E0597`.
+warning: `scirs2-special` (lib) generated 2 warnings
+error: could not compile `scirs2-special` (lib) due to 1 previous error; 2 warnings emitted
+error[E0252]: the name `OnceLock` is defined multiple times
+  --> scirs2-fft/src/sparse_fft_gpu_memory.rs:22:5
+   |
+19 | use std::sync::OnceLock;
+   |     ------------------- previous import of the type `OnceLock` here
+...
+22 | use std::sync::OnceLock;
+   |     ^^^^^^^^^^^^^^^^^^^ `OnceLock` reimported here
+   |
+   = note: `OnceLock` must be defined only once in the type namespace of this module
+
+error[E0252]: the name `OnceLock` is defined multiple times
+  --> scirs2-fft/src/sparse_fft_gpu_memory.rs:25:5
+   |
+19 | use std::sync::OnceLock;
+   |     ------------------- previous import of the type `OnceLock` here
+...
+25 | use std::sync::OnceLock;
+   |     ^^^^^^^^^^^^^^^^^^^ `OnceLock` reimported here
+   |
+   = note: `OnceLock` must be defined only once in the type namespace of this module
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `cudarc`
+  --> scirs2-fft/src/sparse_fft_cuda_kernels.rs:20:5
+   |
+20 | use cudarc::driver::{CudaDevice, CudaFunction, LaunchAsync, LaunchConfig};
+   |     ^^^^^^ use of unresolved module or unlinked crate `cudarc`
+   |
+   = help: if you wanted to use a crate named `cudarc`, use `cargo add cudarc` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `cudarc`
+  --> scirs2-fft/src/sparse_fft_gpu_cuda.rs:20:5
+   |
+20 | use cudarc::driver::{CudaDevice, DevicePtr};
+   |     ^^^^^^ use of unresolved module or unlinked crate `cudarc`
+   |
+   = help: if you wanted to use a crate named `cudarc`, use `cargo add cudarc` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `cudarc`
+  --> scirs2-fft/src/sparse_fft_gpu_memory.rs:13:5
+   |
+13 | use cudarc::driver::{CudaDevice, DevicePtr, DriverError};
+   |     ^^^^^^ use of unresolved module or unlinked crate `cudarc`
+   |
+   = help: if you wanted to use a crate named `cudarc`, use `cargo add cudarc` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `hiprt`
+  --> scirs2-fft/src/sparse_fft_gpu_memory.rs:16:5
+   |
+16 | use hiprt::{hipDevice_t, hipDeviceptr_t, hipError_t};
+   |     ^^^^^ use of unresolved module or unlinked crate `hiprt`
+   |
+   = help: if you wanted to use a crate named `hiprt`, use `cargo add hiprt` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `hiprt`
+   --> scirs2-fft/src/sparse_fft_gpu_memory.rs:140:9
+    |
+140 |     use hiprt::*;
+    |         ^^^^^ use of unresolved module or unlinked crate `hiprt`
+    |
+    = help: if you wanted to use a crate named `hiprt`, use `cargo add hiprt` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `hiprt`
+   --> scirs2-fft/src/sparse_fft_gpu_memory.rs:322:37
+    |
+322 | ...                   use hiprt::*;
+    |                           ^^^^^ use of unresolved module or unlinked crate `hiprt`
+    |
+    = help: if you wanted to use a crate named `hiprt`, use `cargo add hiprt` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `hiprt`
+   --> scirs2-fft/src/sparse_fft_gpu_memory.rs:472:37
+    |
+472 | ...                   use hiprt::*;
+    |                           ^^^^^ use of unresolved module or unlinked crate `hiprt`
+    |
+    = help: if you wanted to use a crate named `hiprt`, use `cargo add hiprt` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `hiprt`
+   --> scirs2-fft/src/sparse_fft_gpu_memory.rs:575:37
+    |
+575 | ...                   use hiprt::*;
+    |                           ^^^^^ use of unresolved module or unlinked crate `hiprt`
+    |
+    = help: if you wanted to use a crate named `hiprt`, use `cargo add hiprt` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `hiprt`
+   --> scirs2-fft/src/sparse_fft_gpu_memory.rs:675:29
+    |
+675 |                         use hiprt::*;
+    |                             ^^^^^ use of unresolved module or unlinked crate `hiprt`
+    |
+    = help: if you wanted to use a crate named `hiprt`, use `cargo add hiprt` to add it to your `Cargo.toml`
+
+warning: unused import: `Array`
+ --> scirs2-fft/src/distributed.rs:9:18
+  |
+9 | use ndarray::{s, Array, ArrayBase, ArrayD, Data, Dimension, IxDyn};
+  |                  ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `std::sync::OnceLock`
+  --> scirs2-fft/src/sparse_fft_gpu_memory.rs:22:5
+   |
+22 | use std::sync::OnceLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::sync::OnceLock`
+  --> scirs2-fft/src/sparse_fft_gpu_memory.rs:25:5
+   |
+25 | use std::sync::OnceLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+error[E0433]: failed to resolve: unresolved import
+   --> scirs2-autograd/src/tensor_ops/binary_ops.rs:384:37
+    |
+384 |                         use crate::{ops::mkl_ffi::*, same_type};
+    |                                     ^^^
+    |                                     |
+    |                                     unresolved import
+    |                                     help: a similar path exists: `core::ops`
+...
+399 | impl_bin_op_forward!(add_forward, +, vsAdd, vdAdd, simd_add_f32, simd_add_f64);
+    | ------------------------------------------------------------------------------ in this macro invocation
+    |
+    = note: this error originates in the macro `impl_bin_op_forward` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0433]: failed to resolve: unresolved import
+   --> scirs2-autograd/src/tensor_ops/binary_ops.rs:384:37
+    |
+384 |                         use crate::{ops::mkl_ffi::*, same_type};
+    |                                     ^^^
+    |                                     |
+    |                                     unresolved import
+    |                                     help: a similar path exists: `core::ops`
+...
+400 | impl_bin_op_forward!(mul_forward, *, vsMul, vdMul, simd_mul_f32, simd_mul_f64);
+    | ------------------------------------------------------------------------------ in this macro invocation
+    |
+    = note: this error originates in the macro `impl_bin_op_forward` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0432]: unresolved import `crate::cblas_sys`
+ --> scirs2-autograd/src/tensor_ops/blas_ffi.rs:2:23
+  |
+2 | pub(crate) use crate::cblas_sys::*;
+  |                       ^^^^^^^^^ could not find `cblas_sys` in the crate root
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `cblas_sys`
+  --> scirs2-autograd/src/tensor_ops/conv_ops/mod.rs:21:5
+   |
+21 | use cblas_sys::{
+   |     ^^^^^^^^^ use of unresolved module or unlinked crate `cblas_sys`
+   |
+   = help: if you wanted to use a crate named `cblas_sys`, use `cargo add cblas_sys` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `cblas_sys`
+   --> scirs2-autograd/src/tensor_ops/dot_ops.rs:549:5
+    |
+549 | use cblas_sys::CBLAS_LAYOUT::CblasRowMajor;
+    |     ^^^^^^^^^ use of unresolved module or unlinked crate `cblas_sys`
+    |
+    = help: if you wanted to use a crate named `cblas_sys`, use `cargo add cblas_sys` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `cblas_sys`
+   --> scirs2-autograd/src/tensor_ops/dot_ops.rs:551:5
+    |
+551 | use cblas_sys::CBLAS_TRANSPOSE::{CblasNoTrans, CblasTrans};
+    |     ^^^^^^^^^ use of unresolved module or unlinked crate `cblas_sys`
+    |
+    = help: if you wanted to use a crate named `cblas_sys`, use `cargo add cblas_sys` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `crate::tensor_ops::blas_ffi::MklInt`
+   --> scirs2-autograd/src/tensor_ops/array_ops.rs:497:53
+    |
+497 |     use crate::tensor_ops::blas_ffi::{vdAdd, vsAdd, MklInt};
+    |                                                     ^^^^^^ no `MklInt` in `tensor_ops::blas_ffi`
+
+error[E0277]: the trait bound `[usize; 1]: NdIndex<D>` is not satisfied
+   --> scirs2-fft/src/distributed.rs:383:58
+    |
+383 |                 let val: Complex64 = NumCast::from(input[[i]]).unwrap_or(Complex64::new(0.0, 0.0));
+    |                                                          ^^^ the trait `NdIndex<D>` is not implemented for `[usize; 1]`
+    |
+    = note: required for `ArrayBase<S, D>` to implement `std::ops::Index<[usize; 1]>`
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+105 | impl DistributedFFT where [usize; 1]: NdIndex<D> {
+    |                     ++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `[usize; 2]: NdIndex<D>` is not satisfied
+   --> scirs2-fft/src/distributed.rs:391:45
+    |
+391 |                         NumCast::from(input[[i, j]]).unwrap_or(Complex64::new(0.0, 0.0));
+    |                                             ^^^^^^ the trait `NdIndex<D>` is not implemented for `[usize; 2]`
+    |
+    = note: required for `ArrayBase<S, D>` to implement `std::ops::Index<[usize; 2]>`
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+105 | impl DistributedFFT where [usize; 2]: NdIndex<D> {
+    |                     ++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `[usize; 3]: NdIndex<D>` is not satisfied
+   --> scirs2-fft/src/distributed.rs:401:49
+    |
+401 | ...                   NumCast::from(input[[i, j, k]]).unwrap_or(Complex64::new(0.0, 0.0));
+    |                                           ^^^^^^^^^ the trait `NdIndex<D>` is not implemented for `[usize; 3]`
+    |
+    = note: required for `ArrayBase<S, D>` to implement `std::ops::Index<[usize; 3]>`
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+105 | impl DistributedFFT where [usize; 3]: NdIndex<D> {
+    |                     ++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `[usize; 2]: NdIndex<D>` is not satisfied
+   --> scirs2-fft/src/distributed.rs:503:45
+    |
+503 |                         NumCast::from(input[[i, j]]).unwrap_or(Complex64::new(0.0, 0.0));
+    |                                             ^^^^^^ the trait `NdIndex<D>` is not implemented for `[usize; 2]`
+    |
+    = note: required for `ArrayBase<S, D>` to implement `std::ops::Index<[usize; 2]>`
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+105 | impl DistributedFFT where [usize; 2]: NdIndex<D> {
+    |                     ++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `[usize; 3]: NdIndex<D>` is not satisfied
+   --> scirs2-fft/src/distributed.rs:513:49
+    |
+513 | ...                   NumCast::from(input[[i, j, k]]).unwrap_or(Complex64::new(0.0, 0.0));
+    |                                           ^^^^^^^^^ the trait `NdIndex<D>` is not implemented for `[usize; 3]`
+    |
+    = note: required for `ArrayBase<S, D>` to implement `std::ops::Index<[usize; 3]>`
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+105 | impl DistributedFFT where [usize; 3]: NdIndex<D> {
+    |                     ++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `[usize; 3]: NdIndex<D>` is not satisfied
+   --> scirs2-fft/src/distributed.rs:625:49
+    |
+625 | ...                   NumCast::from(input[[i, j, k]]).unwrap_or(Complex64::new(0.0, 0.0));
+    |                                           ^^^^^^^^^ the trait `NdIndex<D>` is not implemented for `[usize; 3]`
+    |
+    = note: required for `ArrayBase<S, D>` to implement `std::ops::Index<[usize; 3]>`
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+105 | impl DistributedFFT where [usize; 3]: NdIndex<D> {
+    |                     ++++++++++++++++++++++++++++
+
+error[E0599]: no variant or associated item named `Performance` found for enum `OptimizationLevel` in the current scope
+   --> scirs2-fft/src/optimized_fft.rs:368:61
+    |
+21  | pub enum OptimizationLevel {
+    | -------------------------- variant or associated item `Performance` not found for this enum
+...
+368 |             OptimizationLevel::Maximum | OptimizationLevel::Performance => {
+    |                                                             ^^^^^^^^^^^ variant or associated item not found in `OptimizationLevel`
+
+error[E0277]: the trait bound `SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 1]>>: SliceArg<D>` is not satisfied
+   --> scirs2-fft/src/optimized_fft.rs:603:24
+    |
+603 |                 .slice(ndarray::s![i, ..cols])
+    |                  ----- ^^^^^^^^^^^^^^^^^^^^^^
+    |                  |     |
+    |                  |     the trait `SliceArg<D>` is not implemented for `SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 1]>>`
+    |                  |     this tail expression is of type `SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 1]>>`
+    |                  required by a bound introduced by this call
+    |
+note: required by a bound in `ndarray::impl_methods::<impl ArrayBase<S, D>>::slice`
+   --> /home/kitasan/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ndarray-0.16.1/src/impl_methods.rs:478:12
+    |
+476 |     pub fn slice<I>(&self, info: I) -> ArrayView<'_, A, I::OutDim>
+    |            ----- required by a bound in this associated function
+477 |     where
+478 |         I: SliceArg<D>,
+    |            ^^^^^^^^^^^ required by this bound in `ndarray::impl_methods::<impl ArrayBase<S, D>>::slice`
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+    |
+161 | impl OptimizedFFT where SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 1]>>: SliceArg<D> {
+    |                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+   --> scirs2-fft/src/optimized_fft.rs:634:12
+    |
+578 |     pub fn fft2<S, D>(&mut self, input: &ArrayBase<S, D>) -> FFTResult<Array<Complex64, D>>
+    |                    - expected this type parameter
+...
+634 |         Ok(output)
+    |         -- ^^^^^^ expected `ArrayBase<OwnedRepr<Complex<f64>>, D>`, found `ArrayBase<OwnedRepr<Complex<f64>>, ...>`
+    |         |
+    |         arguments to this enum variant are incorrect
+    |
+    = note: expected struct `ArrayBase<_, D>`
+               found struct `ArrayBase<_, Dim<[usize; 2]>>`
+help: the type constructed contains `ArrayBase<OwnedRepr<Complex<f64>>, Dim<[usize; 2]>>` due to the type of the argument passed
+   --> scirs2-fft/src/optimized_fft.rs:634:9
+    |
+634 |         Ok(output)
+    |         ^^^------^
+    |            |
+    |            this argument influences the type of `Ok`
+note: tuple variant defined here
+   --> /home/kitasan/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:532:5
+    |
+532 |     Ok(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |     ^^
+
+error[E0599]: no method named `get_device_ptr` found for struct `BufferDescriptor` in the current scope
+   --> scirs2-fft/src/sparse_fft_cuda_kernels.rs:150:57
+    |
+150 |             if let Some(device_ptr) = self.input_buffer.get_device_ptr() {
+    |                                                         ^^^^^^^^^^^^^^
+    |
+   ::: scirs2-fft/src/sparse_fft_gpu_memory.rs:89:1
+    |
+89  | pub struct BufferDescriptor {
+    | --------------------------- method `get_device_ptr` not found for this struct
+    |
+help: there is a method `get_hip_device_ptr` with a similar name
+    |
+150 -             if let Some(device_ptr) = self.input_buffer.get_device_ptr() {
+150 +             if let Some(device_ptr) = self.input_buffer.get_hip_device_ptr() {
+    |
+
+error[E0277]: cannot multiply `()` by `f64`
+   --> scirs2-fft/src/time_frequency.rs:247:59
+    |
+247 |             windowed_frame.push(Complex64::new(signal_val * window[i], 0.0));
+    |                                                           ^ no implementation for `() * f64`
+    |
+    = help: the trait `Mul<f64>` is not implemented for `()`
+
+error[E0277]: the trait bound `(): NumCast` is not satisfied
+   --> scirs2-fft/src/time_frequency.rs:244:30
+    |
+244 |             let signal_val = NumCast::from(signal[start + i])
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `NumCast` is not implemented for `()`
+    |
+    = help: the following other types implement trait `NumCast`:
+              Complex<T>
+              Wrapping<T>
+              f32
+              f64
+              i128
+              i16
+              i32
+              i64
+            and 8 others
+
+Some errors have detailed explanations: E0252, E0277, E0308, E0432, E0433, E0599.
+For more information about an error, try `rustc --explain E0252`.
+warning: `scirs2-fft` (lib) generated 3 warnings
+error: could not compile `scirs2-fft` (lib) due to 23 previous errors; 3 warnings emitted
+warning: `scirs2-core` (lib) generated 58 warnings
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `scirs2-autograd` (lib) due to 7 previous errors

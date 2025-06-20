@@ -35,7 +35,14 @@ use scirs2_interpolate::{
     voronoi::{
         make_natural_neighbor_interpolator, InterpolationMethod as VoronoiInterpolationMethod,
     },
+};
+
+#[cfg(feature = "linalg")]
+use scirs2_interpolate::{
+    // Fast Kriging methods
     CovarianceFunction,
+    FastKrigingBuilder,
+    FastKrigingMethod,
 };
 use std::time::Instant;
 

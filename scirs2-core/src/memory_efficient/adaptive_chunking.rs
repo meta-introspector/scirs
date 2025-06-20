@@ -505,6 +505,7 @@ pub mod alpha6_enhancements {
 
     /// Performance metrics collector for adaptive optimization
     #[derive(Debug, Clone)]
+    #[allow(dead_code)]
     pub struct ChunkingPerformanceMetrics {
         pub chunk_processing_times: Vec<Duration>,
         pub memory_usage_per_chunk: Vec<usize>,
@@ -524,6 +525,7 @@ pub mod alpha6_enhancements {
     }
 
     /// Alpha 6: Dynamic load balancer for heterogeneous computing environments
+    #[allow(dead_code)]
     pub struct DynamicLoadBalancer {
         worker_performance: Vec<f64>,         // Relative performance scores
         current_loads: Arc<Vec<AtomicUsize>>, // Current load per worker
@@ -581,6 +583,7 @@ pub mod alpha6_enhancements {
     }
 
     /// Alpha 6: Intelligent chunk size predictor using historical data
+    #[allow(dead_code)]
     pub struct ChunkSizePredictor {
         historical_metrics: Vec<ChunkingPerformanceMetrics>,
         workload_characteristics: Vec<(WorkloadType, usize)>, // (workload_type, optimal_chunk_size)
@@ -653,6 +656,7 @@ pub mod alpha6_enhancements {
     }
 
     /// Alpha 6: NUMA-aware chunking for large multi-socket systems
+    #[allow(dead_code)]
     pub fn calculate_numa_aware_chunking(
         data_size: usize,
         num_numa_nodes: usize,
@@ -669,6 +673,7 @@ pub mod alpha6_enhancements {
     }
 
     /// Align chunk size to cache line boundaries for better performance
+    #[allow(dead_code)]
     fn align_to_cache_line(size: usize) -> usize {
         const CACHE_LINE_SIZE: usize = 64; // Typical cache line size
         ((size / CACHE_LINE_SIZE) + 1) * CACHE_LINE_SIZE

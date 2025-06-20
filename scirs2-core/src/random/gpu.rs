@@ -94,7 +94,7 @@ pub struct GpuRandomGenerator {
 impl GpuRandomGenerator {
     /// Create a new GPU random number generator
     pub fn new(device: Arc<GpuContext>, generator_type: GpuGeneratorType) -> CoreResult<Self> {
-        let work_group_size = device.get_max_work_group_size().unwrap_or(256);
+        let work_group_size = 256; // Default work group size
 
         // Initialize seeds using system entropy
         let num_threads = work_group_size * 32; // Multiple work groups
@@ -197,11 +197,15 @@ impl GpuRandomGenerator {
         }
         "#;
 
-        let kernel = self.device.create_kernel(
-            "xorshift_uniform",
-            uniform_kernel_source,
-            "", // ROCm source (empty for now)
-        )?;
+        let kernel = self
+            .device
+            .execute(|compiler| compiler.compile(uniform_kernel_source))
+            .map_err(|e| {
+                CoreError::ComputationError(ErrorContext::new(format!(
+                    "GPU kernel compilation failed: {}",
+                    e
+                )))
+            })?;
         self.kernels.insert("uniform".to_string(), Arc::new(kernel));
 
         // Normal distribution using Box-Muller transform
@@ -246,11 +250,15 @@ impl GpuRandomGenerator {
         }
         "#;
 
-        let normal_kernel = self.device.create_kernel(
-            "xorshift_normal",
-            normal_kernel_source,
-            "", // ROCm source
-        )?;
+        let normal_kernel = self
+            .device
+            .execute(|compiler| compiler.compile(normal_kernel_source))
+            .map_err(|e| {
+                CoreError::ComputationError(ErrorContext::new(format!(
+                    "GPU kernel compilation failed: {}",
+                    e
+                )))
+            })?;
         self.kernels
             .insert("normal".to_string(), Arc::new(normal_kernel));
 
@@ -285,11 +293,15 @@ impl GpuRandomGenerator {
         }
         "#;
 
-        let kernel = self.device.create_kernel(
-            "lcg_uniform",
-            uniform_kernel_source,
-            "", // ROCm source
-        )?;
+        let kernel = self
+            .device
+            .execute(|compiler| compiler.compile(uniform_kernel_source))
+            .map_err(|e| {
+                CoreError::ComputationError(ErrorContext::new(format!(
+                    "GPU kernel compilation failed: {}",
+                    e
+                )))
+            })?;
         self.kernels.insert("uniform".to_string(), Arc::new(kernel));
 
         Ok(())
@@ -343,11 +355,15 @@ impl GpuRandomGenerator {
         }
         "#;
 
-        let kernel = self.device.create_kernel(
-            "philox_uniform",
-            uniform_kernel_source,
-            "", // ROCm source
-        )?;
+        let kernel = self
+            .device
+            .execute(|compiler| compiler.compile(uniform_kernel_source))
+            .map_err(|e| {
+                CoreError::ComputationError(ErrorContext::new(format!(
+                    "GPU kernel compilation failed: {}",
+                    e
+                )))
+            })?;
         self.kernels.insert("uniform".to_string(), Arc::new(kernel));
 
         Ok(())
@@ -376,38 +392,46 @@ impl GpuRandomGenerator {
 
     /// Generate uniform random numbers [0, 1)
     pub fn generate_uniform(&self, count: usize) -> CoreResult<Array<f32, IxDyn>> {
-        let kernel = self.kernels.get("uniform").ok_or_else(|| {
-            CoreError::ComputationError(crate::error::ErrorContext::new(
-                "Uniform kernel not found".to_string(),
-            ))
-        })?;
+        let kernel = self
+            .kernels
+            .get("uniform")
+            .ok_or_else(|| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(
+                    "Uniform kernel not found".to_string(),
+                ))
+            })
+            .map_err(|e| {
+                CoreError::ComputationError(ErrorContext::new(format!(
+                    "GPU kernel compilation failed: {}",
+                    e
+                )))
+            })?;
 
         // Create GPU buffers
         let state = self.state.lock().unwrap();
         let num_threads = state.seeds.len();
 
-        let seeds_buffer = self.device.create_buffer_from_slice(&state.seeds)?;
-        let counters_buffer = self.device.create_buffer_from_slice(&state.counters)?;
-        let output_buffer = self.device.create_buffer::<f32>(count)?;
+        let seeds_buffer = self.device.create_buffer_from_slice(&state.seeds);
+        let counters_buffer = self.device.create_buffer_from_slice(&state.counters);
+        let output_buffer = self.device.create_buffer::<f32>(count);
 
         drop(state); // Release lock
 
         // Set kernel arguments and execute
-        kernel.set_arg(0, &seeds_buffer)?;
-        kernel.set_arg(1, &counters_buffer)?;
-        kernel.set_arg(2, &output_buffer)?;
-        kernel.set_arg(3, &(count as u32))?;
+        kernel.set_buffer("seeds", &seeds_buffer);
+        kernel.set_buffer("counters", &counters_buffer);
+        kernel.set_buffer("output", &output_buffer);
+        kernel.set_u32("count", count as u32);
 
-        let global_size =
-            (count + self.work_group_size - 1) / self.work_group_size * self.work_group_size;
-        kernel.execute(&[global_size], &[self.work_group_size])?;
+        let num_work_groups = ((count + self.work_group_size - 1) / self.work_group_size) as u32;
+        kernel.dispatch([num_work_groups, 1, 1]);
 
         // Read results back to CPU
-        let results = output_buffer.read_to_vec()?;
+        let results = output_buffer.to_vec();
 
         // Update state
-        let updated_seeds = seeds_buffer.read_to_vec()?;
-        let updated_counters = counters_buffer.read_to_vec()?;
+        let updated_seeds = seeds_buffer.to_vec();
+        let updated_counters = counters_buffer.to_vec();
 
         {
             let mut state = self.state.lock().unwrap();
@@ -417,7 +441,14 @@ impl GpuRandomGenerator {
                 .copy_from_slice(&updated_counters[..num_threads.min(updated_counters.len())]);
         }
 
-        Ok(Array::from_shape_vec(IxDyn(&[count]), results)?)
+        Ok(
+            Array::from_shape_vec(IxDyn(&[count]), results).map_err(|e| {
+                CoreError::ShapeError(ErrorContext::new(format!(
+                    "Failed to create array from shape: {}",
+                    e
+                )))
+            })?,
+        )
     }
 
     /// Generate normal random numbers
@@ -432,28 +463,28 @@ impl GpuRandomGenerator {
             let state = self.state.lock().unwrap();
             let num_threads = state.seeds.len();
 
-            let seeds_buffer = self.device.create_buffer_from_slice(&state.seeds)?;
-            let counters_buffer = self.device.create_buffer_from_slice(&state.counters)?;
-            let output_buffer = self.device.create_buffer::<f32>(count)?;
+            let seeds_buffer = self.device.create_buffer_from_slice(&state.seeds);
+            let counters_buffer = self.device.create_buffer_from_slice(&state.counters);
+            let output_buffer = self.device.create_buffer::<f32>(count);
 
             drop(state);
 
-            kernel.set_arg(0, &seeds_buffer)?;
-            kernel.set_arg(1, &counters_buffer)?;
-            kernel.set_arg(2, &output_buffer)?;
-            kernel.set_arg(3, &(count as u32))?;
-            kernel.set_arg(4, &mean)?;
-            kernel.set_arg(5, &std_dev)?;
+            kernel.set_buffer("seeds", &seeds_buffer);
+            kernel.set_buffer("counters", &counters_buffer);
+            kernel.set_buffer("output", &output_buffer);
+            kernel.set_u32("count", count as u32);
+            kernel.set_f32("mean", mean);
+            kernel.set_f32("std_dev", std_dev);
 
-            let global_size = (count / 2 + self.work_group_size - 1) / self.work_group_size
-                * self.work_group_size;
-            kernel.execute(&[global_size], &[self.work_group_size])?;
+            let num_work_groups =
+                ((count / 2 + self.work_group_size - 1) / self.work_group_size) as u32;
+            kernel.dispatch([num_work_groups, 1, 1]);
 
-            let results = output_buffer.read_to_vec()?;
+            let results = output_buffer.to_vec();
 
             // Update state
-            let updated_seeds = seeds_buffer.read_to_vec()?;
-            let updated_counters = counters_buffer.read_to_vec()?;
+            let updated_seeds = seeds_buffer.to_vec();
+            let updated_counters = counters_buffer.to_vec();
 
             {
                 let mut state = self.state.lock().unwrap();
@@ -463,7 +494,14 @@ impl GpuRandomGenerator {
                     .copy_from_slice(&updated_counters[..num_threads.min(updated_counters.len())]);
             }
 
-            Ok(Array::from_shape_vec(IxDyn(&[count]), results)?)
+            Ok(
+                Array::from_shape_vec(IxDyn(&[count]), results).map_err(|e| {
+                    CoreError::ShapeError(ErrorContext::new(format!(
+                        "Failed to create array from shape: {}",
+                        e
+                    )))
+                })?,
+            )
         } else {
             // Fallback: generate uniform and transform using Box-Muller
             let uniform_samples = self.generate_uniform(count)?;
@@ -530,8 +568,10 @@ impl GpuRandomGenerator {
         let flat_result = self.generate(distribution, total_size)?;
 
         // Reshape to desired dimensions
-        let reshaped = flat_result.to_shape(shape)?;
-        Ok(reshaped)
+        let reshaped = flat_result.to_shape(shape).map_err(|e| {
+            CoreError::ShapeError(ErrorContext::new(format!("Failed to reshape array: {}", e)))
+        })?;
+        Ok(reshaped.to_owned())
     }
 
     /// Get generator statistics
@@ -625,6 +665,12 @@ impl GpuRngManager {
                 CoreError::ComputationError(crate::error::ErrorContext::new(
                     "No GPU device available".to_string(),
                 ))
+            })
+            .map_err(|e| {
+                CoreError::ComputationError(ErrorContext::new(format!(
+                    "GPU kernel compilation failed: {}",
+                    e
+                )))
             })?;
 
         let generator = Arc::new(GpuRandomGenerator::new(device, generator_type)?);

@@ -53,7 +53,7 @@
 //! use ndarray::Array;
 //!
 //! # fn example() -> scirs2_neural::error::Result<()> {
-//! let ce_loss = CrossEntropyLoss::new();
+//! let ce_loss = CrossEntropyLoss::default();
 //!
 //! // Logits (raw predictions) for 3-class classification
 //! let logits = Array::from_shape_vec((2, 3), vec![
@@ -84,8 +84,8 @@
 //! use ndarray::Array;
 //!
 //! # fn example() -> scirs2_neural::error::Result<()> {
-//! // Focal loss with alpha=0.25, gamma=2.0 (typical values)
-//! let focal_loss = FocalLoss::new(0.25, 2.0);
+//! // Focal loss with gamma=2.0, alpha=0.25 (typical values)
+//! let focal_loss = FocalLoss::new(2.0, Some(0.25), 1e-10);
 //!
 //! let predictions = Array::from_shape_vec((2, 2), vec![
 //!     0.9, 0.1,  // High confidence prediction

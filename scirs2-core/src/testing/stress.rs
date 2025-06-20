@@ -306,7 +306,10 @@ impl MemoryStressTester {
     fn allocate_chunk(&self, size: usize) -> CoreResult<Vec<u8>> {
         let mut chunk = Vec::new();
         chunk.try_reserve(size).map_err(|e| {
-            CoreError::MemoryError(format!("Failed to allocate {} bytes: {}", size, e))
+            CoreError::MemoryError(ErrorContext::new(format!(
+                "Failed to allocate {} bytes: {}",
+                size, e
+            )))
         })?;
 
         // Fill with data to ensure actual allocation

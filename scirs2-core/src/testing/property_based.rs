@@ -154,7 +154,7 @@ impl PropertyTestEngine {
         let rng = if let Some(seed) = config.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_entropy()
+            StdRng::from_seed(Default::default())
         };
 
         Self {
@@ -266,7 +266,7 @@ impl FloatGenerator {
     pub fn new(min_value: f64, max_value: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: StdRng::from_entropy(),
+            rng: StdRng::from_seed(Default::default()),
             min_value,
             max_value,
         }

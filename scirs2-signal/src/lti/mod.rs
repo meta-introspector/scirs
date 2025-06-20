@@ -14,11 +14,11 @@
 //! ## Creating Systems
 //!
 //! ```rust
-//! use scirs2_signal::lti::{design::tf, systems::TransferFunction};
+//! use scirs2_signal::lti::{design, systems::TransferFunction};
 //! use num_complex::Complex64;
 //!
 //! // Transfer function: H(s) = 1/(s+1)
-//! let sys1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
+//! let sys1 = design::tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
 //!
 //! // Zero-pole-gain: H(s) = 2(s+1)/(s+2)
 //! let sys2 = design::zpk(
@@ -37,7 +37,7 @@
 //! ## System Analysis
 //!
 //! ```rust
-//! use scirs2_signal::lti::{design::tf, analysis::{bode, analyze_controllability}};
+//! use scirs2_signal::lti::{design::{tf, ss}, analysis::{bode, analyze_controllability}};
 //!
 //! let sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
 //!
@@ -45,9 +45,10 @@
 //! let freqs = vec![0.1, 1.0, 10.0];
 //! let (w, mag, phase) = bode(&sys, Some(&freqs)).unwrap();
 //!
-//! // State-space analysis
-//! let ss = sys.to_ss().unwrap();
-//! let ctrl_analysis = analyze_controllability(&ss).unwrap();
+//! // State-space analysis using direct state-space creation
+//! // For H(s) = 1/(s+1), state-space form: dx/dt = -x + u, y = x
+//! let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();
+//! let ctrl_analysis = analyze_controllability(&ss_sys).unwrap();
 //! println!("System is controllable: {}", ctrl_analysis.is_controllable);
 //! ```
 //!

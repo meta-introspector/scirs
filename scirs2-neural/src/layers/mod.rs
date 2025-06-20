@@ -423,10 +423,11 @@ pub trait Layer<F: Float + Debug + ScalarOperand> {
     ///
     /// ```rust
     /// use scirs2_neural::layers::{Layer, Dropout};
-    /// use rand::thread_rng;
+    /// use rand::rngs::SmallRng;
+    /// use rand::SeedableRng;
     ///
-    /// let mut rng = thread_rng();
-    /// let mut dropout = Dropout::new(0.5, &mut rng).unwrap();
+    /// let mut rng = SmallRng::seed_from_u64(42);
+    /// let mut dropout = Dropout::<f32>::new(0.5, &mut rng).unwrap();
     /// assert!(dropout.is_training()); // Default is training mode
     ///
     /// dropout.set_training(false); // Switch to evaluation
@@ -569,9 +570,7 @@ pub enum LayerConfig {
 /// assert_eq!(predictions.shape(), &[32, 10]);
 ///
 /// println!("Model summary:");
-/// println!("- Layers: {}", model.len());
-/// println!("- Parameters: {}", model.parameter_count());
-/// println!("- Training: {}", model.is_training());
+/// println!("- Layers: {}", model.num_layers());
 /// # Ok(())
 /// # }
 /// ```
@@ -580,7 +579,7 @@ pub enum LayerConfig {
 ///
 /// ```rust
 /// use scirs2_neural::layers::{Conv2D, MaxPool2D, Dense, Dropout, Layer, PaddingMode};
-/// use scirs2_neural::models::Sequential;
+/// use scirs2_neural::models::{Sequential, Model};
 /// use ndarray::Array;
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;
@@ -590,15 +589,15 @@ pub enum LayerConfig {
 /// let mut cnn: Sequential<f32> = Sequential::new();
 ///
 /// // Convolutional feature extractor
-/// cnn.add_layer(Conv2D::new(3, 32, 3, 1, PaddingMode::Same, &mut rng)?); // 3->32 channels
-/// cnn.add_layer(MaxPool2D::new(2, 2)?); // Downsample 2x
-/// cnn.add_layer(Conv2D::new(32, 64, 3, 1, PaddingMode::Same, &mut rng)?); // 32->64 channels  
-/// cnn.add_layer(MaxPool2D::new(2, 2)?); // Downsample 2x
+/// cnn.add_layer(Conv2D::new(3, 32, (3, 3), (1, 1), PaddingMode::Same, &mut rng)?); // 3->32 channels
+/// cnn.add_layer(MaxPool2D::new((2, 2), (2, 2), None)?); // Downsample 2x
+/// cnn.add_layer(Conv2D::new(32, 64, (3, 3), (1, 1), PaddingMode::Same, &mut rng)?); // 32->64 channels  
+/// cnn.add_layer(MaxPool2D::new((2, 2), (2, 2), None)?); // Downsample 2x
 ///
 /// // Classifier head (would need reshape layer in practice)
 /// // cnn.add_layer(Flatten::new()); // Would flatten to 1D
 /// // cnn.add_layer(Dense::new(64*8*8, 128, Some("relu"), &mut rng)?);
-/// // cnn.add_layer(Dropout::new(0.5));
+/// // cnn.add_layer(Dropout::new(0.5, &mut rng)?);
 /// // cnn.add_layer(Dense::new(128, 10, None, &mut rng)?);
 ///
 /// // Input: batch of 32x32 RGB images
@@ -613,7 +612,7 @@ pub enum LayerConfig {
 ///
 /// ```rust
 /// use scirs2_neural::layers::{Dense, Dropout, Layer};
-/// use scirs2_neural::models::Sequential;
+/// use scirs2_neural::models::{Sequential, Model};
 /// use ndarray::Array;
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;
@@ -622,20 +621,14 @@ pub enum LayerConfig {
 /// let mut rng = SmallRng::seed_from_u64(42);
 /// let mut model: Sequential<f32> = Sequential::new();
 /// model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng)?);
-/// model.add_layer(Dropout::new(0.5)); // 50% dropout
+/// model.add_layer(Dropout::new(0.5, &mut rng)?); // 50% dropout
 /// model.add_layer(Dense::<f32>::new(5, 1, None, &mut rng)?);
 ///
 /// let input = Array::ones((4, 10)).into_dyn();
 ///
-/// // Training mode (dropout active)
-/// model.set_training(true);
-/// let train_output = model.forward(&input)?;
-/// println!("Training output: {:?}", train_output.shape());
-///
-/// // Evaluation mode (dropout disabled)
-/// model.set_training(false);
-/// let eval_output = model.forward(&input)?;
-/// println!("Evaluation output: {:?}", eval_output.shape());
+/// // Forward pass through the model
+/// let output = model.forward(&input)?;
+/// println!("Output shape: {:?}", output.shape());
 /// # Ok(())
 /// # }
 /// ```

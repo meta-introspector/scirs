@@ -264,6 +264,7 @@ pub enum ExecutionStrategy {
 pub struct HeterogeneousScheduler {
     available_devices: Vec<DeviceCharacteristics>,
     performance_history: Arc<Mutex<HashMap<String, Duration>>>,
+    #[allow(dead_code)]
     async_manager: AsyncGpuManager,
 }
 

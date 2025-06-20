@@ -781,7 +781,7 @@ mod tests {
         let result = mmap.map_zero_copy(|x| x * 2.0).unwrap();
 
         // Verify the result
-        let result_array = result.readonly_array().unwrap();
+        let result_array = result.readonly_array::<ndarray::Ix1>().unwrap();
         for i in 0..1000 {
             assert_eq!(result_array[i], (i as f64) * 2.0);
         }
@@ -842,7 +842,7 @@ mod tests {
         let result = mmap1.combine_zero_copy(&mmap2, |a, b| a + b).unwrap();
 
         // Verify the result (each element should be 3*i)
-        let result_array = result.readonly_array().unwrap();
+        let result_array = result.readonly_array::<ndarray::Ix1>().unwrap();
         for i in 0..1000 {
             assert_eq!(result_array[i], (i as f64) * 3.0);
         }
@@ -904,21 +904,21 @@ mod tests {
 
         // Test addition
         let add_result = mmap1.add(&mmap2).unwrap();
-        let add_array = add_result.readonly_array().unwrap();
+        let add_array = add_result.readonly_array::<ndarray::Ix1>().unwrap();
         for i in 0..100 {
             assert_eq!(add_array[i], (i as f64) + ((i + 5) as f64));
         }
 
         // Test subtraction
         let sub_result = mmap1.sub(&mmap2).unwrap();
-        let sub_array = sub_result.readonly_array().unwrap();
+        let sub_array = sub_result.readonly_array::<ndarray::Ix1>().unwrap();
         for i in 0..100 {
             assert_eq!(sub_array[i], (i as f64) - ((i + 5) as f64));
         }
 
         // Test multiplication
         let mul_result = mmap1.mul(&mmap2).unwrap();
-        let mul_array = mul_result.readonly_array().unwrap();
+        let mul_array = mul_result.readonly_array::<ndarray::Ix1>().unwrap();
         for i in 0..100 {
             assert_eq!(mul_array[i], (i as f64) * ((i + 5) as f64));
         }
@@ -927,7 +927,7 @@ mod tests {
         let div_result = mmap2
             .div(&mmap1.map_zero_copy(|x| x + 1.0).unwrap())
             .unwrap();
-        let div_array = div_result.readonly_array().unwrap();
+        let div_array = div_result.readonly_array::<ndarray::Ix1>().unwrap();
         for i in 0..100 {
             assert_eq!(div_array[i], ((i + 5) as f64) / ((i + 1) as f64));
         }
@@ -965,7 +965,7 @@ mod tests {
         let result = mmap1.broadcast_op(&mmap2, |a, b| a * b).unwrap();
 
         // Verify the result
-        let result_array = result.readonly_array().unwrap();
+        let result_array = result.readonly_array::<ndarray::Ix2>().unwrap();
         assert_eq!(result_array.shape(), &[3, 4]);
 
         for i in 0..3 {

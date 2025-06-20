@@ -148,10 +148,10 @@ impl FuzzingEngine {
     /// Create a new fuzzing engine
     pub fn new(config: FuzzingConfig) -> Self {
         #[cfg(feature = "random")]
-        let rng: Box<dyn Rng> = if let Some(seed) = config.seed {
-            Box::new(StdRng::seed_from_u64(seed))
+        let rng = if let Some(seed) = config.seed {
+            StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_entropy()
+            StdRng::from_seed(Default::default())
         };
 
         Self {
@@ -161,18 +161,20 @@ impl FuzzingEngine {
         }
     }
 
-    /// Run fuzzing tests on a function
-    pub fn fuzz_function<T, F>(&mut self, test_fn: F) -> CoreResult<FuzzingResult>
+    /// Run fuzzing tests on a function with a generator
+    pub fn fuzz_function_with_generator<T, F, G>(
+        &mut self,
+        test_fn: F,
+        mut generator: G,
+    ) -> CoreResult<FuzzingResult>
     where
-        T: FuzzingGenerator<T> + Debug + Clone,
+        T: Debug + Clone,
         F: Fn(&T) -> CoreResult<()>,
+        G: FuzzingGenerator<T>,
     {
         let start_time = Instant::now();
         let mut failures = Vec::new();
         let mut case_number = 0;
-
-        // Create a generator instance
-        let mut generator = self.create_generator::<T>()?;
 
         // Test random cases
         for _ in 0..self.config.random_cases {
@@ -223,18 +225,6 @@ impl FuzzingEngine {
             failures,
         })
     }
-
-    /// Create a generator for the specified type
-    fn create_generator<T>(&mut self) -> CoreResult<T>
-    where
-        T: FuzzingGenerator<T>,
-    {
-        // This is a placeholder - in practice, we would need type-specific
-        // generator implementations
-        Err(CoreError::ValidationError(crate::error::ErrorContext::new(
-            "Generator creation not yet implemented for this type",
-        )))
-    }
 }
 
 /// Floating-point number fuzzing generator
@@ -250,7 +240,7 @@ impl FloatFuzzingGenerator {
     pub fn new(min_value: f64, max_value: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: StdRng::from_entropy(),
+            rng: StdRng::from_seed(Default::default()),
             min_value,
             max_value,
         }
@@ -260,7 +250,7 @@ impl FloatFuzzingGenerator {
     pub fn with_seed(min_value: f64, max_value: f64, seed: u64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: Box::new(StdRng::seed_from_u64(seed)),
+            rng: StdRng::seed_from_u64(seed),
             min_value,
             max_value,
         }
@@ -352,7 +342,7 @@ impl VectorFuzzingGenerator {
     pub fn new(min_size: usize, max_size: usize, min_value: f64, max_value: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: StdRng::from_entropy(),
+            rng: StdRng::from_seed(Default::default()),
             min_size,
             max_size,
             element_generator: FloatFuzzingGenerator::new(min_value, max_value),
@@ -452,9 +442,9 @@ impl FuzzingUtils {
         F: Fn(f64) -> CoreResult<f64>,
     {
         let mut engine = FuzzingEngine::new(config);
-        let mut generator = FloatFuzzingGenerator::new(min_value, max_value);
+        let generator = FloatFuzzingGenerator::new(min_value, max_value);
 
-        engine.fuzz_function(|input: &f64| function(*input).map(|_| ()))
+        engine.fuzz_function_with_generator(|input: &f64| function(*input).map(|_| ()), generator)
     }
 
     /// Fuzz a vector function
@@ -470,9 +460,10 @@ impl FuzzingUtils {
         F: Fn(&[f64]) -> CoreResult<Vec<f64>>,
     {
         let mut engine = FuzzingEngine::new(config);
-        let mut generator = VectorFuzzingGenerator::new(min_size, max_size, min_value, max_value);
+        let generator = VectorFuzzingGenerator::new(min_size, max_size, min_value, max_value);
 
-        engine.fuzz_function(|input: &Vec<f64>| function(input).map(|_| ()))
+        engine
+            .fuzz_function_with_generator(|input: &Vec<f64>| function(input).map(|_| ()), generator)
     }
 
     /// Create a comprehensive fuzzing test suite

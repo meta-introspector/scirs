@@ -132,7 +132,7 @@ impl ArrayValidator {
     where
         S: Data,
         D: Dimension,
-        S::Elem: Float + fmt::Debug,
+        S::Elem: Float + fmt::Debug + Send + Sync,
     {
         let mut nan_count = 0;
         let mut inf_count = 0;

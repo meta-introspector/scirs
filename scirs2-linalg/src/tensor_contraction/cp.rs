@@ -125,7 +125,7 @@ where
     /// * `ArrayD<A>` - The full tensor
     pub fn to_full(&self) -> LinalgResult<ArrayD<A>> {
         let rank = self.factors[0].shape()[1];
-        let n_modes = self.factors.len();
+        let _n_modes = self.factors.len();
 
         // Create a tensor filled with zeros
         let mut result = ArrayD::zeros(self.shape.clone());
@@ -166,7 +166,7 @@ where
                 // Compute the outer product value for this element
                 let mut value = weight;
                 for (mode, &i) in idx.iter().enumerate() {
-                    value = value * self.factors[mode][[i, r]];
+                    value *= self.factors[mode][[i, r]];
                 }
 
                 // Add to the result
@@ -210,8 +210,8 @@ where
 
         for (idx, &orig_val) in tensor_dyn.indexed_iter() {
             let rec_val = reconstructed[idx.clone()];
-            diff_squared_sum = diff_squared_sum + (orig_val - rec_val).powi(2);
-            orig_squared_sum = orig_squared_sum + orig_val.powi(2);
+            diff_squared_sum += (orig_val - rec_val).powi(2);
+            orig_squared_sum += orig_val.powi(2);
         }
 
         // Handle division by zero
@@ -323,10 +323,18 @@ pub fn cp_als<A, D>(
     normalize: bool,
 ) -> LinalgResult<CanonicalPolyadic<A>>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + Send
+        + Sync
+        + 'static
+        + ndarray::ScalarOperand,
     D: Dimension,
 {
-
     // Validate inputs
     if rank == 0 {
         return Err(LinalgError::ValueError(
@@ -477,7 +485,7 @@ where
     let rank = factors[0].shape()[1];
 
     // Determine the number of rows in the result
-    let n_rows: usize = factors
+    let _n_rows: usize = factors
         .iter()
         .enumerate()
         .filter(|&(i, _)| i != skip_mode)
@@ -489,12 +497,11 @@ where
     let mut result_rows = 1;
 
     // Compute the Khatri-Rao product
-    for mode in 0..n_modes {
+    for (mode, factor) in factors.iter().enumerate() {
         if mode == skip_mode {
             continue;
         }
 
-        let factor = &factors[mode];
         let factor_rows = factor.shape()[0];
 
         // Initialize a new result matrix
@@ -523,26 +530,25 @@ fn compute_gram_matrix<A>(factors: &[Array2<A>], skip_mode: usize) -> LinalgResu
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
-    let n_modes = factors.len();
+    let _n_modes = factors.len();
     let rank = factors[0].shape()[1];
 
     // Initialize result with ones
     let mut gram = Array2::ones((rank, rank));
 
     // Compute the Gram matrix as the Hadamard product of all factor Gram matrices
-    for mode in 0..n_modes {
+    for (mode, factor) in factors.iter().enumerate() {
         if mode == skip_mode {
             continue;
         }
 
-        let factor = &factors[mode];
         let factor_t = factor.t();
         let factor_gram = factor_t.dot(factor);
 
         // Update the Gram matrix with Hadamard (element-wise) product
         for i in 0..rank {
             for j in 0..rank {
-                gram[[i, j]] = gram[[i, j]] * factor_gram[[i, j]];
+                gram[[i, j]] *= factor_gram[[i, j]];
             }
         }
     }
@@ -553,9 +559,17 @@ where
 // Computes the Moore-Penrose pseudoinverse using SVD
 fn pseudo_inverse<A>(matrix: &Array2<A>) -> LinalgResult<Array2<A>>
 where
-    A: Clone + Float + NumAssign + Zero + Debug + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
+    A: Clone
+        + Float
+        + NumAssign
+        + Zero
+        + Debug
+        + Sum
+        + Send
+        + Sync
+        + 'static
+        + ndarray::ScalarOperand,
 {
-
     let (u, s, vt) = svd(&matrix.view(), false, None)?;
 
     // Compute the pseudoinverse of the singular values
@@ -581,7 +595,7 @@ fn normalize_factors<A>(factors: &mut [Array2<A>]) -> Array1<A>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
-    let n_modes = factors.len();
+    let _n_modes = factors.len();
     let rank = factors[0].shape()[1];
 
     // Initialize weights
@@ -590,21 +604,21 @@ where
     // For each component
     for r in 0..rank {
         // For each mode, compute the norm of the r-th column
-        for mode in 0..n_modes {
+        for factor in factors.iter_mut() {
             let mut norm_sq = A::zero();
-            for i in 0..factors[mode].shape()[0] {
-                norm_sq = norm_sq + factors[mode][[i, r]].powi(2);
+            for i in 0..factor.shape()[0] {
+                norm_sq += factor[[i, r]].powi(2);
             }
             let norm = norm_sq.sqrt();
 
             if norm > A::epsilon() {
                 // Normalize the column
-                for i in 0..factors[mode].shape()[0] {
-                    factors[mode][[i, r]] = factors[mode][[i, r]] / norm;
+                for i in 0..factor.shape()[0] {
+                    factor[[i, r]] /= norm;
                 }
 
                 // Update the weight
-                weights[r] = weights[r] * norm;
+                weights[r] *= norm;
             }
         }
     }
@@ -640,7 +654,7 @@ mod tests {
         assert_eq!(cp.weights.as_ref().unwrap().len(), 3);
 
         // Reconstruct the tensor
-        let reconstructed = cp.to_full().unwrap();
+        let _reconstructed = cp.to_full().unwrap();
 
         // Check reconstruction error
         let error = cp.reconstruction_error(&tensor.view()).unwrap();

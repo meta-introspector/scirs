@@ -241,6 +241,7 @@ fn generate_recommendations() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use scirs2_spatial::simd_distance::simd_euclidean_distance;
 
     #[test]
     fn test_benchmark_demo() {

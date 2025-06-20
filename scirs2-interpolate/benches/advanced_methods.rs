@@ -1,17 +1,15 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::advanced::enhanced_kriging::{EnhancedKriging, EnhancedKrigingBuilder};
+use scirs2_interpolate::advanced::enhanced_kriging::EnhancedKrigingBuilder;
 use scirs2_interpolate::advanced::enhanced_rbf::{
     EnhancedRBFInterpolator, KernelType, KernelWidthStrategy,
 };
-use scirs2_interpolate::advanced::fast_kriging::{
-    FastKriging, FastKrigingBuilder, FastKrigingMethod,
-};
+use scirs2_interpolate::advanced::fast_kriging::{FastKrigingBuilder, FastKrigingMethod};
 use scirs2_interpolate::advanced::kriging::{CovarianceFunction, KrigingInterpolator};
 use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
 use scirs2_interpolate::advanced::thinplate::ThinPlateSpline;
 use scirs2_interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
-use scirs2_interpolate::sparse_grid::{make_sparse_grid_interpolator, SparseGridBuilder};
+use scirs2_interpolate::sparse_grid::make_sparse_grid_interpolator;
 
 fn generate_2d_test_data(n: usize) -> (Array2<f64>, Array1<f64>) {
     let mut points = Array2::zeros((n, 2));

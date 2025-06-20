@@ -344,7 +344,7 @@ where
     }
 
     /// Get a slice of the viewed data
-    pub const fn as_slice(&self) -> &[T] {
+    pub fn as_slice(&self) -> &[T] {
         &self.data.as_slice()[self.start..self.start + self.len]
     }
 
@@ -563,7 +563,10 @@ impl ZeroCopyInterface {
     }
 
     /// Get data by ID
-    pub fn get_data_by_id<T: Clone + 'static + Send + Sync + std::fmt::Debug>(&self, id: DataId) -> CoreResult<ZeroCopyData<T>> {
+    pub fn get_data_by_id<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
+        &self,
+        id: DataId,
+    ) -> CoreResult<ZeroCopyData<T>> {
         let id_map = self.id_data.read().unwrap();
 
         if let Some(any_data) = id_map.get(&id) {
@@ -592,7 +595,9 @@ impl ZeroCopyInterface {
     }
 
     /// Get all data of a specific type
-    pub fn get_data_by_type<T: Clone + 'static + Send + Sync + std::fmt::Debug>(&self) -> Vec<ZeroCopyData<T>> {
+    pub fn get_data_by_type<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
+        &self,
+    ) -> Vec<ZeroCopyData<T>> {
         let type_map = self.type_data.read().unwrap();
         let type_id = TypeId::of::<T>();
 
@@ -608,7 +613,10 @@ impl ZeroCopyInterface {
     }
 
     /// Borrow data by name (creates a view)
-    pub fn borrow_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(&self, name: &str) -> CoreResult<ZeroCopyView<T>> {
+    pub fn borrow_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
+        &self,
+        name: &str,
+    ) -> CoreResult<ZeroCopyView<T>> {
         let data = self.get_data::<T>(name)?;
         let view = data.view(0, data.len())?;
 
@@ -780,12 +788,16 @@ pub fn register_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
 }
 
 /// Get data globally by name
-pub fn get_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(name: &str) -> CoreResult<ZeroCopyData<T>> {
+pub fn get_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
+    name: &str,
+) -> CoreResult<ZeroCopyData<T>> {
     global_interface().get_data(name)
 }
 
 /// Create zero-copy data from a vector
-pub fn create_zero_copy_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(data: Vec<T>) -> CoreResult<ZeroCopyData<T>> {
+pub fn create_zero_copy_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
+    data: Vec<T>,
+) -> CoreResult<ZeroCopyData<T>> {
     ZeroCopyData::new(data)
 }
 

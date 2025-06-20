@@ -80,13 +80,13 @@ where
     /// The total number of elements
     pub size: usize,
     /// The memory-mapped data (read-only)
-    mmap_view: Option<Mmap>,
+    pub(crate) mmap_view: Option<Mmap>,
     /// The memory-mapped data (mutable)
-    mmap_view_mut: Option<MmapMut>,
+    pub(crate) mmap_view_mut: Option<MmapMut>,
     /// Whether the file is temporary and should be deleted on drop
-    is_temp: bool,
+    pub(crate) is_temp: bool,
     /// Phantom data for type parameters
-    _phantom: PhantomData<A>,
+    pub(crate) _phantom: PhantomData<A>,
 }
 
 /// Header information stored at the beginning of the file

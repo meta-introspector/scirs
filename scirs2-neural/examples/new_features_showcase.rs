@@ -163,7 +163,7 @@ fn demonstrate_performance_optimizations() -> Result<(), Box<dyn std::error::Err
 
     // Simulate some operations with profiling
     {
-        let timer = optimizer.profiler().start_timer("matrix_setup");
+        let timer = optimizer.profiler_mut().start_timer("matrix_setup");
         let test_matrix_a = Array::from_elem((200, 100), 1.5f32).into_dyn();
         let test_matrix_b = Array::from_elem((100, 150), 2.5f32).into_dyn();
         optimizer

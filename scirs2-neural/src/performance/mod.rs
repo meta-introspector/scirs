@@ -33,16 +33,23 @@
 //!
 //! ```rust
 //! use scirs2_neural::performance::threading::ThreadPoolManager;
+//! use ndarray::Array;
 //!
+//! let a = Array::ones((100, 200)).into_dyn();
+//! let b = Array::ones((200, 150)).into_dyn();
 //! let pool = ThreadPoolManager::new(Some(8)).unwrap();
 //! let result = pool.parallel_matmul(&a, &b).unwrap();
+//! assert_eq!(result.shape(), &[100, 150]);
 //! ```
 //!
 //! ## Unified Performance Optimization
 //!
 //! ```rust
 //! use scirs2_neural::performance::PerformanceOptimizer;
+//! use ndarray::Array;
 //!
+//! let a = Array::ones((100, 200)).into_dyn();
+//! let b = Array::ones((200, 150)).into_dyn();
 //! let mut optimizer = PerformanceOptimizer::new(
 //!     Some(256),  // chunk_size
 //!     Some(1024), // max_memory_mb

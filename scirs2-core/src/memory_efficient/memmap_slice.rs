@@ -367,12 +367,12 @@ mod tests {
         let slice = mmap.slice(s![2..5, 3..7]).unwrap();
 
         // Load the slice data
-        let array = slice.load().unwrap();
+        let array: ndarray::Array2<f64> = slice.load().unwrap();
 
         // Check that the slice contains the expected data
-        assert_eq!(array.shape(), &[3, 4]);
-        for i in 0..3 {
-            for j in 0..4 {
+        assert_eq!(array.shape(), &[3usize, 4usize]);
+        for i in 0..3usize {
+            for j in 0..4usize {
                 assert_eq!(array[[i, j]], ((i + 2) * 10 + (j + 3)) as f64);
             }
         }

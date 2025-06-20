@@ -122,6 +122,7 @@ impl AsyncRetryExecutor {
 /// Async circuit breaker for handling repeated failures in async contexts
 #[derive(Debug)]
 pub struct AsyncCircuitBreaker {
+    #[allow(dead_code)]
     inner: Arc<CircuitBreaker>,
 }
 
@@ -184,6 +185,7 @@ impl AsyncCircuitBreaker {
 /// Timeout wrapper for async operations
 pub struct TimeoutWrapper<F> {
     future: F,
+    #[allow(dead_code)]
     timeout: Duration,
 }
 

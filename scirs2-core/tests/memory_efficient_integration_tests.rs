@@ -166,7 +166,7 @@ mod tests {
         data[[7, 9]] = f64::NAN;
 
         // 1. Create a masked array that masks out NaN values
-        let masked = masked_invalid(&data);
+        let masked = masked_invalid(data.clone());
 
         // 2. Process the masked array in chunks
         let result = chunk_wise_op(

@@ -432,7 +432,7 @@ impl RecurrentClassifier for LSTMClassifier {
                 doutput[[i, j]] -= targets[[i, j]];
             }
         }
-        doutput /= (batch_size as f32);
+        doutput /= batch_size as f32;
 
         // Backpropagate through output layer
         dw_out = dw_out + doutput.t().dot(final_hidden);
@@ -962,7 +962,7 @@ impl RecurrentClassifier for GRUClassifier {
                 doutput[[i, j]] -= targets[[i, j]];
             }
         }
-        doutput /= (batch_size as f32);
+        doutput /= batch_size as f32;
 
         // Backpropagate through output layer
         dw_out = dw_out + doutput.t().dot(final_hidden);

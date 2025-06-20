@@ -194,8 +194,10 @@ impl Hash for CacheKey {
 #[derive(Debug)]
 pub struct TransferEvent {
     /// Device associated with the event
+    #[allow(dead_code)]
     device: DeviceType,
     /// Internal event handle (implementation-specific)
+    #[allow(dead_code)]
     handle: Arc<Mutex<Box<dyn std::any::Any + Send + Sync>>>,
     /// Whether the event has been completed
     completed: Arc<std::sync::atomic::AtomicBool>,
@@ -203,6 +205,7 @@ pub struct TransferEvent {
 
 impl TransferEvent {
     /// Create a new transfer event
+    #[allow(dead_code)]
     fn new(device: DeviceType, handle: Box<dyn std::any::Any + Send + Sync>) -> Self {
         Self {
             device,
@@ -234,6 +237,7 @@ struct CacheEntry<T: GpuDataType> {
     /// Last access time
     last_access: std::time::Instant,
     /// Whether the buffer is dirty (modified on device)
+    #[allow(dead_code)]
     dirty: bool,
 }
 
@@ -811,8 +815,10 @@ impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
 /// Stream for asynchronous operations
 pub struct DeviceStream {
     /// Device associated with the stream
+    #[allow(dead_code)]
     device: DeviceType,
     /// Internal stream handle (implementation-specific)
+    #[allow(dead_code)]
     handle: Arc<Mutex<Box<dyn std::any::Any + Send + Sync>>>,
 }
 

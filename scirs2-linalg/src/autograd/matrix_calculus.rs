@@ -282,7 +282,7 @@ pub mod matrix_derivatives {
         }
 
         // Compute matrix exponential
-        let exp_x = crate::matrix_functions::expm(x)?;
+        let exp_x = crate::matrix_functions::expm(x, None)?;
 
         // First-order approximation: (exp(X) * dX + dX * exp(X)) / 2
         let term1 = exp_x.dot(dx);
@@ -543,7 +543,7 @@ pub mod matrix_functions {
         DifferentiableMatrixFunction<F> for MatrixExp
     {
         fn evaluate(&self, x: &ArrayView2<F>) -> LinalgResult<Array2<F>> {
-            crate::matrix_functions::expm(x)
+            crate::matrix_functions::expm(x, None)
         }
 
         fn directional_derivative(

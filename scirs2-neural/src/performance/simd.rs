@@ -5,10 +5,12 @@
 //! performance improvements. All functions are feature-gated with "simd" feature.
 
 use crate::error::{NeuralError, Result};
-use ndarray::{Array, ArrayD, ArrayView, ArrayViewMut, IxDyn};
+use ndarray::{ArrayD, ArrayView, ArrayViewMut, IxDyn};
 #[allow(unused_imports)]
 use num_traits::Float;
 
+#[cfg(feature = "simd")]
+use ndarray::Array;
 #[cfg(feature = "simd")]
 use wide::{f32x8, CmpGt};
 
@@ -473,14 +475,14 @@ impl SIMDOperations {
             for j in 0..n {
                 let mut sum = 0.0f32;
 
-                // SIMD-accelerated dot product  
+                // SIMD-accelerated dot product
                 let a_row_view = a.slice(ndarray::s![i, ..]);
                 let a_row_slice = if a.is_standard_layout() {
                     a_row_view.as_slice()
                 } else {
                     None
                 };
-                
+
                 if let Some(a_row) = a_row_slice {
                     sum = Self::simd_dot_product_f32(a_row, &Self::extract_column(b, j));
                 } else {

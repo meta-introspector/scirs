@@ -399,7 +399,7 @@ fn demonstrate_model_interpretation() -> Result<()> {
 
     // Analyze layer activations
     println!("\n2. Analyzing layer activations...");
-    let layer_activations = Array2::from_shape_fn((20, 64), |(i, j)| {
+    let _layer_activations = Array2::from_shape_fn((20, 64), |(i, j)| {
         if (i + j) % 7 == 0 {
             0.0
         } else {

@@ -668,7 +668,6 @@ where
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::array;
 
     #[test]
     fn test_tensor_node_creation() {
@@ -780,7 +779,7 @@ mod tests {
         let result = node.trace("i", "j").unwrap();
 
         // Check result shape and indices
-        assert_eq!(result.shape(), vec![]);
+        assert_eq!(result.shape(), vec![] as Vec<usize>);
         assert_eq!(result.indices.len(), 0);
 
         // Check result data (should be trace of matrix)

@@ -1,14 +1,12 @@
-//! Example demonstrating Z-domain filter design methods
+//! Example demonstrating various digital filter design methods
 //!
-//! This example shows how to use the new Z-domain filter design functions
-//! to create digital filters directly in the Z-domain.
+//! This example shows how to use various filter design functions
+//! to create different types of digital filters.
 
-use scirs2_signal::filter::{
-    butter_bandpass_bandstop, z_domain_chebyshev1, z_domain_iir_design, FilterType,
-};
+use scirs2_signal::filter::{butter_bandpass_bandstop, cheby1, FilterType};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Z-Domain Filter Design Examples");
+    println!("Digital Filter Design Examples");
     println!("===============================\n");
 
     // Example 1: Bandpass Butterworth filter
@@ -56,13 +54,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         a_bs.len()
     );
 
-    // Example 3: Direct Z-domain Chebyshev Type I filter
-    println!("3. Z-Domain Chebyshev Type I Filter Design");
+    // Example 3: Chebyshev Type I filter
+    println!("3. Chebyshev Type I Filter Design");
     let cheby_order = 3;
     let ripple_db = 1.0;
     let cutoff = 0.3;
-    let (b_cheby, a_cheby) =
-        z_domain_chebyshev1(cheby_order, ripple_db, cutoff, FilterType::Lowpass)?;
+    let (b_cheby, a_cheby) = cheby1(cheby_order, ripple_db, cutoff, FilterType::Lowpass)?;
 
     println!("   Order: {}", cheby_order);
     println!("   Ripple: {:.1} dB", ripple_db);
@@ -71,19 +68,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Denominator coefficients: {:?}", a_cheby);
     println!();
 
-    // Example 4: Direct Z-domain IIR optimization design
-    println!("4. Direct Z-Domain IIR Optimization Design");
-    let frequencies = vec![0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
-    let desired = vec![1.0, 1.0, 1.0, 0.7, 0.3, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001];
-    let weights = vec![1.0; frequencies.len()];
+    // Example 4: Elliptic filter design
+    println!("4. Elliptic Filter Design");
+    use scirs2_signal::filter::ellip;
 
-    let opt_order = 3;
-    let (b_opt, a_opt) = z_domain_iir_design(opt_order, &desired, &frequencies, Some(&weights))?;
+    let ellip_order = 3;
+    let passband_ripple = 1.0;
+    let stopband_attenuation = 40.0;
+    let cutoff = 0.3;
+    let (b_ellip, a_ellip) = ellip(
+        ellip_order,
+        passband_ripple,
+        stopband_attenuation,
+        cutoff,
+        FilterType::Lowpass,
+    )?;
 
-    println!("   Order: {}", opt_order);
-    println!("   Frequency points: {}", frequencies.len());
-    println!("   Numerator coefficients: {:?}", b_opt);
-    println!("   Denominator coefficients: {:?}", a_opt);
+    println!("   Order: {}", ellip_order);
+    println!("   Passband ripple: {:.1} dB", passband_ripple);
+    println!("   Stopband attenuation: {:.1} dB", stopband_attenuation);
+    println!("   Cutoff: {:.2}", cutoff);
+    println!(
+        "   Numerator coefficients: {:?}",
+        &b_ellip[..3.min(b_ellip.len())]
+    );
+    println!(
+        "   Denominator coefficients: {:?}",
+        &a_ellip[..3.min(a_ellip.len())]
+    );
     println!();
 
     // Demonstrate filter evaluation at a test frequency
@@ -110,6 +122,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Chebyshev filter magnitude: {:.2} dB", magnitude_db);
     println!("   Chebyshev filter phase: {:.2} radians", response.arg());
 
-    println!("\nZ-domain filter design examples completed successfully!");
+    println!("\nDigital filter design examples completed successfully!");
     Ok(())
 }

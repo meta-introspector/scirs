@@ -17,6 +17,7 @@ const STRATEGY_TEST_DURATION: Duration = Duration::from_secs(60);
 
 /// Reinforcement learning parameters
 const LEARNING_RATE: f64 = 0.1;
+#[allow(dead_code)]
 const DISCOUNT_FACTOR: f64 = 0.9;
 const EXPLORATION_RATE_INITIAL: f64 = 0.3;
 const EXPLORATION_RATE_DECAY: f64 = 0.995;

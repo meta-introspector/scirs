@@ -36,8 +36,9 @@
 //! let mut visualizer = NetworkVisualizer::new(model, config);
 //!
 //! // Generate architecture visualization
-//! let output_path = visualizer.visualize_architecture()?;
-//! println!("Network visualization saved to: {:?}", output_path);
+//! // Note: This is a placeholder - actual implementation coming soon
+//! // let output_path = visualizer.visualize_architecture()?;
+//! // println!("Network visualization saved to: {:?}", output_path);
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 

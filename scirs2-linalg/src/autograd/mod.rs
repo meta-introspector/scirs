@@ -98,7 +98,7 @@ pub mod helpers {
 
         // Element-wise multiply and sum
         let diag_elements = matrix * eye;
-        ag::tensor_ops::sum_all(&diag_elements)
+        ag::tensor_ops::sum_all(diag_elements)
     }
 
     /// Create identity matrix using available operations (workaround)

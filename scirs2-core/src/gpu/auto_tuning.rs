@@ -273,9 +273,11 @@ pub struct AutoTuner {
 #[derive(Debug, Clone)]
 struct DeviceInfo {
     compute_capability: String,
+    #[allow(dead_code)]
     memory_size: usize,
     max_work_group_size: usize,
     max_local_memory_size: usize,
+    #[allow(dead_code)]
     warp_size: usize,
 }
 

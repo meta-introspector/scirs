@@ -50,6 +50,7 @@ impl From<CompressionLevel> for u32 {
 pub struct CompressedBuffer<T> {
     compressed_data: Vec<u8>,
     algorithm: CompressionAlgorithm,
+    #[allow(dead_code)]
     compression_level: CompressionLevel,
     original_size: usize,
     _phantom: PhantomData<T>,

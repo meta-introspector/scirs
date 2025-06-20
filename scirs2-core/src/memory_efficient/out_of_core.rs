@@ -186,7 +186,8 @@ where
 
         // Extract just this chunk's data from the full array
         // This is inefficient; a better implementation would read directly from disk
-        let chunk_dynamic = full_array.clone().to_shape(chunk_shape).map_err(|e| {
+        let cloned_array = full_array.clone();
+        let chunk_dynamic = cloned_array.to_shape(chunk_shape).map_err(|e| {
             CoreError::DimensionError(
                 ErrorContext::new(format!("Failed to reshape chunk: {}", e))
                     .with_location(ErrorLocation::new(file!(), line!())),

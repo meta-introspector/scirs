@@ -1155,18 +1155,21 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     }
 
     /// Clear the cache.
+    #[allow(dead_code)]
     fn clear(&self) {
         let mut cache = self.cache.write().unwrap();
         cache.clear();
     }
 
     /// Get the number of blocks in the cache.
+    #[allow(dead_code)]
     fn len(&self) -> usize {
         let cache = self.cache.read().unwrap();
         cache.len()
     }
 
     /// Check if the cache is empty.
+    #[allow(dead_code)]
     fn is_empty(&self) -> bool {
         let cache = self.cache.read().unwrap();
         cache.is_empty()

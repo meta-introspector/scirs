@@ -62,9 +62,9 @@ where
     let mut h = Array2::zeros((krylov_dim + 1, krylov_dim));
     
     // Start with random initial vector
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rand::Rng::gen::<f64>(&mut rng) - 0.5).unwrap();
+        v[[i, 0]] = T::from(rand::Rng::random_range(&mut rng, -0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector
@@ -205,9 +205,9 @@ where
     let mut beta = Array1::zeros(lanczos_dim + 1);
     
     // Start with random initial vector
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rand::Rng::gen::<f64>(&mut rng) - 0.5).unwrap();
+        v[[i, 0]] = T::from(rand::Rng::random_range(&mut rng, -0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector

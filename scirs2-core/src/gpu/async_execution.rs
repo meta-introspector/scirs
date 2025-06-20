@@ -161,6 +161,7 @@ impl GpuEvent {
     }
 
     /// Mark the event as completed
+    #[allow(dead_code)]
     pub(crate) fn complete(&self) {
         let start_time = self.timestamp.unwrap_or_else(Instant::now);
         let duration = start_time.elapsed();
@@ -176,11 +177,13 @@ impl GpuEvent {
     }
 
     /// Mark the event as failed
+    #[allow(dead_code)]
     pub(crate) fn fail(&self) {
         *self.state.lock().unwrap() = EventState::Failed;
     }
 
     /// Cancel the event
+    #[allow(dead_code)]
     pub(crate) fn cancel(&self) {
         *self.state.lock().unwrap() = EventState::Cancelled;
     }

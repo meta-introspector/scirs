@@ -223,7 +223,7 @@ fn demo_enterprise_features() -> CoreResult<()> {
             workload_name, workload_type
         );
 
-        profiler.start_workload_analysis(workload_name, *workload_type)?;
+        profiler.start_workload_analysis(workload_name, workload_type.clone())?;
 
         // Simulate different types of work
         match workload_type {
@@ -235,7 +235,8 @@ fn demo_enterprise_features() -> CoreResult<()> {
             WorkloadType::Custom(_) => simulate_compute_work(),
         }
 
-        let report = profiler.finish_workload_analysis_by_id(workload_name, *workload_type)?;
+        let report =
+            profiler.finish_workload_analysis_by_id(workload_name, workload_type.clone())?;
 
         println!(
             "  ✅ Completed - Quality: {}/100, Samples: {}",

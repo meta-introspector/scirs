@@ -788,7 +788,7 @@ pub type Array1<A> = Array<A, ndarray::Ix1>;
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::{array, Array, Ix3};
+    use ndarray::array;
 
     #[test]
     fn test_tensor_train_decomposition_3d() {

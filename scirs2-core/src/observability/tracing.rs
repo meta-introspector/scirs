@@ -1684,11 +1684,31 @@ pub fn integrate_with_metrics_system() -> Result<(), CoreError> {
     let registry = crate::metrics::global_metrics_registry();
 
     // Register tracing metrics
-    registry.register_counter("tracing_spans_started", "Total number of spans started")?;
-    registry.register_counter("tracing_spans_completed", "Total number of spans completed")?;
-    registry.register_counter("tracing_spans_failed", "Total number of failed spans")?;
-    registry.register_gauge("tracing_active_spans", "Current number of active spans")?;
-    registry.register_histogram("tracing_span_duration", "Span duration distribution")?;
+    use crate::metrics::{Counter, Gauge, Histogram};
+
+    registry.register(
+        "tracing_spans_started".to_string(),
+        Counter::new("tracing_spans_started".to_string()),
+    )?;
+    registry.register(
+        "tracing_spans_completed".to_string(),
+        Counter::new("tracing_spans_completed".to_string()),
+    )?;
+    registry.register(
+        "tracing_spans_failed".to_string(),
+        Counter::new("tracing_spans_failed".to_string()),
+    )?;
+    registry.register(
+        "tracing_active_spans".to_string(),
+        Gauge::new("tracing_active_spans".to_string()),
+    )?;
+    registry.register(
+        "tracing_span_duration".to_string(),
+        Histogram::with_buckets(
+            "tracing_span_duration".to_string(),
+            vec![0.001, 0.01, 0.1, 1.0, 10.0],
+        ),
+    )?;
 
     Ok(())
 }
