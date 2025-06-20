@@ -260,7 +260,7 @@ where
 ///
 /// * Array of linearly spaced values
 #[must_use]
-pub fn linspace<F: Float + std::iter::Sum>(start: F, end: F, num: usize) -> Array1<F> {
+pub fn linspace<F: Float + std::iter::Sum + Send + Sync>(start: F, end: F, num: usize) -> Array1<F> {
     if num < 2 {
         return Array::from_vec(vec![start]);
     }
@@ -269,28 +269,24 @@ pub fn linspace<F: Float + std::iter::Sum>(start: F, end: F, num: usize) -> Arra
     #[cfg(feature = "parallel")]
     {
         if num >= 1000 {
-            // TODO: Re-enable when par_linspace is implemented
-            // use crate::parallel::par_linspace;
-
-            // Use numeric conversion for f64 values
-            let start_f64: Option<f64> = NumCast::from(start);
-            let end_f64: Option<f64> = NumCast::from(end);
-
-            if let (Some(_start_64), Some(_end_64)) = (start_f64, end_f64) {
-                // TODO: Implement par_linspace
-                // let result = par_linspace(start_64, end_64, num);
-                // Convert back to F using safe numeric conversion
-                // let mut result_f = Array1::zeros(result.raw_dim());
-                // for (i, val) in result.iter().enumerate() {
-                //     if let Some(val_f) = NumCast::from(*val) {
-                //         result_f[i] = val_f;
-                //     } else {
-                //         // If conversion fails for any value, fall back to serial implementation
-                //         break;
-                //     }
-                // }
-                // return result_f;
-            }
+            use rayon::prelude::*;
+            
+            let step = (end - start) / F::from(num - 1).unwrap();
+            let result: Vec<F> = (0..num)
+                .into_par_iter()
+                .map(|i| {
+                    if i == num - 1 {
+                        // Ensure the last value is exactly end
+                        end
+                    } else {
+                        start + step * F::from(i).unwrap()
+                    }
+                })
+                .collect::<Vec<F>>();
+            
+            // The parallel collection doesn't guarantee order, but par_iter does preserve order
+            // when collecting, so this should be fine
+            return Array::from_vec(result);
         }
     }
 
@@ -324,7 +320,7 @@ pub fn linspace<F: Float + std::iter::Sum>(start: F, end: F, num: usize) -> Arra
 ///
 /// * Array of logarithmically spaced values
 #[must_use]
-pub fn logspace<F: Float + std::iter::Sum>(
+pub fn logspace<F: Float + std::iter::Sum + Send + Sync>(
     start: F,
     end: F,
     num: usize,
@@ -376,13 +372,27 @@ where
     // Use parallel implementation for larger arrays
     #[cfg(feature = "parallel")]
     {
-        // TODO: Re-enable when par_maximum is implemented
-        // use crate::parallel::par_maximum;
-
-        // Check if array is large enough
         if a.len() > 1000 {
-            // TODO: Implement par_maximum
-            // return par_maximum(a, b);
+            use rayon::prelude::*;
+            
+            // Convert to owned arrays for parallel processing
+            let (a_vec, _) = a.to_owned().into_raw_vec_and_offset();
+            let (b_vec, _) = b.to_owned().into_raw_vec_and_offset();
+            
+            let result_vec: Vec<T> = a_vec
+                .into_par_iter()
+                .zip(b_vec.into_par_iter())
+                .map(|(a_val, b_val)| {
+                    if b_val > a_val {
+                        b_val
+                    } else {
+                        a_val
+                    }
+                })
+                .collect();
+            
+            return Array::from_shape_vec(a.raw_dim(), result_vec)
+                .expect("Shape mismatch in parallel maximum");
         }
     }
 
@@ -443,13 +453,27 @@ where
     // Use parallel implementation for larger arrays
     #[cfg(feature = "parallel")]
     {
-        // TODO: Re-enable when par_minimum is implemented
-        // use crate::parallel::par_minimum;
-
-        // Check if array is large enough
         if a.len() > 1000 {
-            // TODO: Implement par_minimum
-            // return par_minimum(a, b);
+            use rayon::prelude::*;
+            
+            // Convert to owned arrays for parallel processing
+            let (a_vec, _) = a.to_owned().into_raw_vec_and_offset();
+            let (b_vec, _) = b.to_owned().into_raw_vec_and_offset();
+            
+            let result_vec: Vec<T> = a_vec
+                .into_par_iter()
+                .zip(b_vec.into_par_iter())
+                .map(|(a_val, b_val)| {
+                    if b_val < a_val {
+                        b_val
+                    } else {
+                        a_val
+                    }
+                })
+                .collect();
+            
+            return Array::from_shape_vec(a.raw_dim(), result_vec)
+                .expect("Shape mismatch in parallel minimum");
         }
     }
 

@@ -685,3 +685,316 @@ impl GpuKernelImpl for CpuKernel {
 
 // In a real implementation, we would have implementations for other backends
 // such as CUDA, WebGPU, Metal, and OpenCL.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_gpu_backend_preferred() {
+        let backend = GpuBackend::preferred();
+        // Should return a valid backend
+        match backend {
+            GpuBackend::Cuda
+            | GpuBackend::Rocm
+            | GpuBackend::Wgpu
+            | GpuBackend::Metal
+            | GpuBackend::OpenCL
+            | GpuBackend::Cpu => {}
+        }
+    }
+
+    #[test]
+    fn test_gpu_backend_default() {
+        let backend = GpuBackend::default();
+        assert_eq!(backend, GpuBackend::preferred());
+    }
+
+    #[test]
+    fn test_gpu_backend_is_available() {
+        let backend = GpuBackend::Cpu;
+        assert!(backend.is_available());
+
+        // Test other backends based on feature flags
+        #[cfg(feature = "cuda")]
+        assert!(GpuBackend::Cuda.is_available());
+        #[cfg(not(feature = "cuda"))]
+        assert!(!GpuBackend::Cuda.is_available());
+
+        #[cfg(feature = "rocm")]
+        assert!(GpuBackend::Rocm.is_available());
+        #[cfg(not(feature = "rocm"))]
+        assert!(!GpuBackend::Rocm.is_available());
+
+        #[cfg(all(feature = "metal", target_os = "macos"))]
+        assert!(GpuBackend::Metal.is_available());
+        #[cfg(not(all(feature = "metal", target_os = "macos")))]
+        assert!(!GpuBackend::Metal.is_available());
+    }
+
+    #[test]
+    fn test_gpu_backend_display() {
+        assert_eq!(GpuBackend::Cuda.to_string(), "CUDA");
+        assert_eq!(GpuBackend::Rocm.to_string(), "ROCm");
+        assert_eq!(GpuBackend::Wgpu.to_string(), "WebGPU");
+        assert_eq!(GpuBackend::Metal.to_string(), "Metal");
+        assert_eq!(GpuBackend::OpenCL.to_string(), "OpenCL");
+        assert_eq!(GpuBackend::Cpu.to_string(), "CPU");
+    }
+
+    #[test]
+    fn test_gpu_error_from_conversion() {
+        let gpu_error = GpuError::BackendNotAvailable("CUDA".to_string());
+        let core_error: CoreError = gpu_error.into();
+        match core_error {
+            CoreError::ComputationError(_) => {}
+            _ => panic!("Expected ComputationError"),
+        }
+
+        let gpu_error = GpuError::OutOfMemory("8GB required".to_string());
+        let core_error: CoreError = gpu_error.into();
+        match core_error {
+            CoreError::MemoryError(_) => {}
+            _ => panic!("Expected MemoryError"),
+        }
+
+        let gpu_error = GpuError::InvalidParameter("batch_size must be > 0".to_string());
+        let core_error: CoreError = gpu_error.into();
+        match core_error {
+            CoreError::InvalidArgument(_) => {}
+            _ => panic!("Expected InvalidArgument"),
+        }
+
+        let gpu_error = GpuError::UnsupportedDataType(kernels::DataType::Float16);
+        let core_error: CoreError = gpu_error.into();
+        match core_error {
+            CoreError::TypeError(_) => {}
+            _ => panic!("Expected TypeError"),
+        }
+    }
+
+    #[test]
+    fn test_gpu_data_type_trait() {
+        // Test that various types implement GpuDataType
+        fn assert_gpu_data_type<T: GpuDataType>() {}
+
+        assert_gpu_data_type::<f32>();
+        assert_gpu_data_type::<f64>();
+        assert_gpu_data_type::<i32>();
+        assert_gpu_data_type::<u32>();
+        assert_gpu_data_type::<u8>();
+        assert_gpu_data_type::<i8>();
+        assert_gpu_data_type::<u16>();
+        assert_gpu_data_type::<i16>();
+        assert_gpu_data_type::<u64>();
+        assert_gpu_data_type::<i64>();
+    }
+
+    #[test]
+    fn test_gpu_buffer_creation() {
+        let inner = Arc::new(CpuBuffer::new(100));
+        let buffer = GpuBuffer::<f32>::new(inner, 25);
+
+        assert_eq!(buffer.len(), 25);
+        assert!(!buffer.is_empty());
+    }
+
+    #[test]
+    fn test_gpu_buffer_empty() {
+        let inner = Arc::new(CpuBuffer::new(0));
+        let buffer = GpuBuffer::<f32>::new(inner, 0);
+
+        assert_eq!(buffer.len(), 0);
+        assert!(buffer.is_empty());
+    }
+
+    #[test]
+    fn test_gpu_buffer_copy_operations() {
+        let inner = Arc::new(CpuBuffer::new(16));
+        let buffer = GpuBuffer::<f32>::new(inner, 4);
+
+        let data = vec![1.0f32, 2.0, 3.0, 4.0];
+        buffer.copy_from_host(&data);
+
+        let mut result = vec![0.0f32; 4];
+        buffer.copy_to_host(&mut result);
+
+        assert_eq!(result, data);
+    }
+
+    #[test]
+    fn test_gpu_buffer_to_vec() {
+        let inner = Arc::new(CpuBuffer::new(12));
+        let buffer = GpuBuffer::<f32>::new(inner, 3);
+
+        let data = vec![5.0f32, 6.0, 7.0];
+        buffer.copy_from_host(&data);
+
+        let result = buffer.to_vec();
+        assert_eq!(result, data);
+    }
+
+    #[test]
+    #[should_panic(expected = "Data size exceeds buffer size")]
+    fn test_gpu_buffer_copy_from_host_overflow() {
+        let inner = Arc::new(CpuBuffer::new(8));
+        let buffer = GpuBuffer::<f32>::new(inner, 2);
+
+        let data = vec![1.0f32, 2.0, 3.0]; // 3 elements > 2 buffer size
+        buffer.copy_from_host(&data);
+    }
+
+    #[test]
+    #[should_panic(expected = "Data size exceeds buffer size")]
+    fn test_gpu_buffer_copy_to_host_overflow() {
+        let inner = Arc::new(CpuBuffer::new(8));
+        let buffer = GpuBuffer::<f32>::new(inner, 2);
+
+        let mut data = vec![0.0f32; 3]; // 3 elements > 2 buffer size
+        buffer.copy_to_host(&mut data);
+    }
+
+    #[test]
+    fn test_gpu_kernel_handle() {
+        let kernel = Arc::new(CpuKernel);
+        let handle = GpuKernelHandle::new(kernel);
+
+        // Test setting various parameter types
+        let buffer = GpuBuffer::<f32>::new(Arc::new(CpuBuffer::new(16)), 4);
+        handle.set_buffer("input", &buffer);
+        handle.set_u32("size", 100);
+        handle.set_i32("offset", -5);
+        handle.set_f32("scale", 2.5);
+        handle.set_f64("precision", 0.0001);
+
+        // Test dispatch
+        handle.dispatch([16, 8, 1]);
+    }
+
+    #[test]
+    fn test_gpu_context_cpu_backend() {
+        let context = GpuContext::new(GpuBackend::Cpu).unwrap();
+        assert_eq!(context.backend(), GpuBackend::Cpu);
+        assert_eq!(context.backend_name(), "CPU");
+
+        // Test memory query methods
+        assert_eq!(context.get_available_memory(), Some(1024 * 1024 * 1024));
+        assert_eq!(context.get_total_memory(), Some(4 * 1024 * 1024 * 1024));
+    }
+
+    #[test]
+    fn test_gpu_context_buffer_creation() {
+        let context = GpuContext::new(GpuBackend::Cpu).unwrap();
+
+        let buffer = context.create_buffer::<f32>(100);
+        assert_eq!(buffer.len(), 100);
+
+        let data = vec![1.0f32; 50];
+        let buffer_from_slice = context.create_buffer_from_slice(&data);
+        assert_eq!(buffer_from_slice.len(), 50);
+
+        let result = buffer_from_slice.to_vec();
+        assert_eq!(result, data);
+    }
+
+    #[test]
+    fn test_gpu_context_unsupported_backend() {
+        // Test a backend that's not available
+        #[cfg(not(feature = "cuda"))]
+        {
+            let result = GpuContext::new(GpuBackend::Cuda);
+            assert!(result.is_err());
+            match result {
+                Err(GpuError::UnsupportedBackend(_)) => {}
+                _ => panic!("Expected UnsupportedBackend error"),
+            }
+        }
+    }
+
+    #[test]
+    fn test_gpu_compiler() {
+        let compiler_impl = Arc::new(CpuCompiler);
+        let compiler = GpuCompiler::new(compiler_impl);
+
+        // Test compiling from source
+        let kernel = compiler.compile("dummy kernel source").unwrap();
+        kernel.dispatch([1, 1, 1]);
+
+        // Test typed compilation
+        let typed_kernel = compiler.compile_kernel::<f32, f32>("vector_add");
+        typed_kernel.dispatch([32, 1, 1]);
+    }
+
+    #[test]
+    fn test_gpu_context_execute() {
+        let context = GpuContext::new(GpuBackend::Cpu).unwrap();
+
+        let result = context.execute(|compiler| compiler.compile("test kernel").is_ok());
+
+        assert!(result);
+    }
+
+    #[test]
+    fn test_gpu_context_kernel_registry() {
+        let context = GpuContext::new(GpuBackend::Cpu).unwrap();
+
+        // Test getting a non-existent kernel
+        let result = context.get_kernel("non_existent_kernel");
+        assert!(result.is_err());
+        match result {
+            Err(GpuError::KernelNotFound(_)) => {}
+            _ => panic!("Expected KernelNotFound error"),
+        }
+    }
+
+    #[test]
+    fn test_cpu_buffer_implementation() {
+        let buffer = CpuBuffer::new(256);
+        assert_eq!(buffer.data.len(), 256);
+
+        // Test that initial data is zeroed
+        assert!(buffer.data.iter().all(|&b| b == 0));
+    }
+
+    #[test]
+    fn test_gpu_error_display() {
+        let error = GpuError::BackendNotAvailable("CUDA".to_string());
+        assert_eq!(error.to_string(), "GPU backend CUDA is not available");
+
+        let error = GpuError::OutOfMemory("allocation failed".to_string());
+        assert_eq!(error.to_string(), "GPU out of memory: allocation failed");
+
+        let error = GpuError::KernelCompilationError("syntax error".to_string());
+        assert_eq!(error.to_string(), "Kernel compilation error: syntax error");
+
+        let error = GpuError::KernelNotFound("gemm".to_string());
+        assert_eq!(error.to_string(), "Kernel not found: gemm");
+    }
+
+    #[test]
+    fn test_backend_equality() {
+        assert_eq!(GpuBackend::Cuda, GpuBackend::Cuda);
+        assert_ne!(GpuBackend::Cuda, GpuBackend::Rocm);
+
+        // Test Clone and Copy
+        let backend = GpuBackend::Metal;
+        let cloned = backend;
+        let copied = backend;
+        assert_eq!(backend, cloned);
+        assert_eq!(backend, copied);
+    }
+
+    #[test]
+    fn test_backend_hash() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(GpuBackend::Cuda);
+        set.insert(GpuBackend::Rocm);
+        set.insert(GpuBackend::Cuda); // Duplicate
+
+        assert_eq!(set.len(), 2); // Should only have 2 unique entries
+        assert!(set.contains(&GpuBackend::Cuda));
+        assert!(set.contains(&GpuBackend::Rocm));
+    }
+}

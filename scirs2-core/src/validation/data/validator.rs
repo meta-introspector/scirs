@@ -79,8 +79,6 @@ use std::fmt;
 #[cfg(feature = "serde")]
 use serde_json::Value as JsonValue;
 
-#[cfg(feature = "parallel")]
-// For checksum validation
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
@@ -768,45 +766,472 @@ impl Validator {
                     // Custom constraint validation is handled separately in validate_fields
                     // This is just a placeholder for consistency
                 }
-                Constraint::Statistical(_stats_constraints) => {
-                    // Statistical constraints would require numerical array analysis
-                    // This would be better handled by the array validator
-                    _warnings.push(ValidationError {
-                        error_type: ValidationErrorType::SchemaError,
-                        field_path: field_path.to_string(),
-                        message: "Statistical constraints require array validation".to_string(),
-                        expected: None,
-                        actual: None,
-                        constraint: Some("statistical".to_string()),
-                        severity: ErrorSeverity::Warning,
-                        context: HashMap::new(),
-                    });
+                Constraint::Statistical(stats_constraints) => {
+                    // Validate statistical properties of numeric arrays
+                    if let Some(arr) = value.as_array() {
+                        let mut numeric_values: Vec<f64> = Vec::new();
+
+                        // Extract numeric values from array
+                        for (idx, val) in arr.iter().enumerate() {
+                            if let Some(num) = val.as_f64() {
+                                numeric_values.push(num);
+                            } else if let Some(num) = val.as_i64() {
+                                numeric_values.push(num as f64);
+                            } else {
+                                errors.push(ValidationError {
+                                    error_type: ValidationErrorType::TypeMismatch,
+                                    field_path: format!("{}[{}]", field_path, idx),
+                                    message: format!("Expected numeric value, got {}", val),
+                                    expected: Some("number".to_string()),
+                                    actual: Some(val.to_string()),
+                                    constraint: Some("statistical".to_string()),
+                                    severity: ErrorSeverity::Error,
+                                    context: HashMap::new(),
+                                });
+                                continue;
+                            }
+                        }
+
+                        if numeric_values.is_empty() {
+                            errors.push(ValidationError {
+                                error_type: ValidationErrorType::ConstraintViolation,
+                                field_path: field_path.to_string(),
+                                message: "Statistical validation requires numeric values"
+                                    .to_string(),
+                                expected: Some("numeric array".to_string()),
+                                actual: Some("empty or non-numeric array".to_string()),
+                                constraint: Some("statistical".to_string()),
+                                severity: ErrorSeverity::Error,
+                                context: HashMap::new(),
+                            });
+                        } else {
+                            // Calculate statistics
+                            let count = numeric_values.len() as f64;
+                            let mean = numeric_values.iter().sum::<f64>() / count;
+
+                            // Calculate standard deviation
+                            let variance = numeric_values
+                                .iter()
+                                .map(|x| (x - mean).powi(2))
+                                .sum::<f64>()
+                                / count;
+                            let std_dev = variance.sqrt();
+
+                            // Check mean constraints
+                            if let Some(min_mean) = stats_constraints.min_mean {
+                                if mean < min_mean {
+                                    errors.push(ValidationError {
+                                        error_type: ValidationErrorType::ConstraintViolation,
+                                        field_path: field_path.to_string(),
+                                        message: format!(
+                                            "Mean {:.4} is less than minimum {:.4}",
+                                            mean, min_mean
+                                        ),
+                                        expected: Some(format!("mean >= {:.4}", min_mean)),
+                                        actual: Some(format!("mean = {:.4}", mean)),
+                                        constraint: Some("statistical.min_mean".to_string()),
+                                        severity: ErrorSeverity::Error,
+                                        context: HashMap::new(),
+                                    });
+                                }
+                            }
+
+                            if let Some(max_mean) = stats_constraints.max_mean {
+                                if mean > max_mean {
+                                    errors.push(ValidationError {
+                                        error_type: ValidationErrorType::ConstraintViolation,
+                                        field_path: field_path.to_string(),
+                                        message: format!(
+                                            "Mean {:.4} exceeds maximum {:.4}",
+                                            mean, max_mean
+                                        ),
+                                        expected: Some(format!("mean <= {:.4}", max_mean)),
+                                        actual: Some(format!("mean = {:.4}", mean)),
+                                        constraint: Some("statistical.max_mean".to_string()),
+                                        severity: ErrorSeverity::Error,
+                                        context: HashMap::new(),
+                                    });
+                                }
+                            }
+
+                            // Check standard deviation constraints
+                            if let Some(min_std) = stats_constraints.min_std {
+                                if std_dev < min_std {
+                                    errors.push(ValidationError {
+                                        error_type: ValidationErrorType::ConstraintViolation,
+                                        field_path: field_path.to_string(),
+                                        message: format!(
+                                            "Standard deviation {:.4} is less than minimum {:.4}",
+                                            std_dev, min_std
+                                        ),
+                                        expected: Some(format!("std >= {:.4}", min_std)),
+                                        actual: Some(format!("std = {:.4}", std_dev)),
+                                        constraint: Some("statistical.min_std".to_string()),
+                                        severity: ErrorSeverity::Error,
+                                        context: HashMap::new(),
+                                    });
+                                }
+                            }
+
+                            if let Some(max_std) = stats_constraints.max_std {
+                                if std_dev > max_std {
+                                    errors.push(ValidationError {
+                                        error_type: ValidationErrorType::ConstraintViolation,
+                                        field_path: field_path.to_string(),
+                                        message: format!(
+                                            "Standard deviation {:.4} exceeds maximum {:.4}",
+                                            std_dev, max_std
+                                        ),
+                                        expected: Some(format!("std <= {:.4}", max_std)),
+                                        actual: Some(format!("std = {:.4}", std_dev)),
+                                        constraint: Some("statistical.max_std".to_string()),
+                                        severity: ErrorSeverity::Error,
+                                        context: HashMap::new(),
+                                    });
+                                }
+                            }
+
+                            // Check distribution (if specified)
+                            if let Some(expected_dist) = &stats_constraints.expected_distribution {
+                                // For now, just add a warning - full distribution testing would require more complex analysis
+                                _warnings.push(ValidationError {
+                                    error_type: ValidationErrorType::SchemaError,
+                                    field_path: field_path.to_string(),
+                                    message: format!(
+                                        "Distribution testing for '{}' not yet implemented",
+                                        expected_dist
+                                    ),
+                                    expected: None,
+                                    actual: None,
+                                    constraint: Some("statistical.distribution".to_string()),
+                                    severity: ErrorSeverity::Warning,
+                                    context: HashMap::new(),
+                                });
+                            }
+                        }
+                    } else {
+                        errors.push(ValidationError {
+                            error_type: ValidationErrorType::TypeMismatch,
+                            field_path: field_path.to_string(),
+                            message: "Statistical constraints require an array of numeric values"
+                                .to_string(),
+                            expected: Some("numeric array".to_string()),
+                            actual: Some(format!("{}", value)),
+                            constraint: Some("statistical".to_string()),
+                            severity: ErrorSeverity::Error,
+                            context: HashMap::new(),
+                        });
+                    }
                 }
-                Constraint::Temporal(_time_constraints) => {
-                    // Temporal constraints would require time series data
-                    _warnings.push(ValidationError {
-                        error_type: ValidationErrorType::SchemaError,
-                        field_path: field_path.to_string(),
-                        message: "Temporal constraints not yet implemented".to_string(),
-                        expected: None,
-                        actual: None,
-                        constraint: Some("temporal".to_string()),
-                        severity: ErrorSeverity::Warning,
-                        context: HashMap::new(),
-                    });
+                Constraint::Temporal(time_constraints) => {
+                    // Validate temporal data (array of timestamps)
+                    if let Some(arr) = value.as_array() {
+                        let mut timestamps: Vec<i64> = Vec::new();
+
+                        // Extract timestamps from array
+                        for (idx, val) in arr.iter().enumerate() {
+                            if let Some(ts) = val.as_i64() {
+                                timestamps.push(ts);
+                            } else if let Some(ts) = val.as_f64() {
+                                timestamps.push(ts as i64);
+                            } else {
+                                errors.push(ValidationError {
+                                    error_type: ValidationErrorType::TypeMismatch,
+                                    field_path: format!("{}[{}]", field_path, idx),
+                                    message: format!("Expected timestamp (number), got {}", val),
+                                    expected: Some("timestamp (integer or float)".to_string()),
+                                    actual: Some(val.to_string()),
+                                    constraint: Some("temporal".to_string()),
+                                    severity: ErrorSeverity::Error,
+                                    context: HashMap::new(),
+                                });
+                                continue;
+                            }
+                        }
+
+                        if timestamps.len() < 2 {
+                            errors.push(ValidationError {
+                                error_type: ValidationErrorType::ConstraintViolation,
+                                field_path: field_path.to_string(),
+                                message: "Temporal validation requires at least 2 timestamps"
+                                    .to_string(),
+                                expected: Some("at least 2 timestamps".to_string()),
+                                actual: Some(format!("{} timestamps", timestamps.len())),
+                                constraint: Some("temporal".to_string()),
+                                severity: ErrorSeverity::Error,
+                                context: HashMap::new(),
+                            });
+                        } else {
+                            // Check for monotonic ordering if required
+                            if time_constraints.require_monotonic {
+                                let mut _is_monotonic = true;
+                                for i in 1..timestamps.len() {
+                                    if timestamps[i] < timestamps[i - 1] {
+                                        _is_monotonic = false;
+                                        errors.push(ValidationError {
+                                            error_type: ValidationErrorType::ConstraintViolation,
+                                            field_path: field_path.to_string(),
+                                            message: format!(
+                                                "Timestamps not monotonic: {} comes after {}",
+                                                timestamps[i],
+                                                timestamps[i - 1]
+                                            ),
+                                            expected: Some(
+                                                "monotonic increasing timestamps".to_string(),
+                                            ),
+                                            actual: Some("non-monotonic timestamps".to_string()),
+                                            constraint: Some("temporal.monotonic".to_string()),
+                                            severity: ErrorSeverity::Error,
+                                            context: HashMap::new(),
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Check for duplicates if not allowed
+                            if !time_constraints.allow_duplicates {
+                                let mut seen = std::collections::HashSet::new();
+                                for &ts in &timestamps {
+                                    if !seen.insert(ts) {
+                                        errors.push(ValidationError {
+                                            error_type: ValidationErrorType::ConstraintViolation,
+                                            field_path: field_path.to_string(),
+                                            message: format!("Duplicate timestamp found: {}", ts),
+                                            expected: Some("unique timestamps".to_string()),
+                                            actual: Some("duplicate timestamps".to_string()),
+                                            constraint: Some("temporal.unique".to_string()),
+                                            severity: ErrorSeverity::Error,
+                                            context: HashMap::new(),
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Check interval constraints
+                            for i in 1..timestamps.len() {
+                                let interval_ms = (timestamps[i] - timestamps[i - 1]).abs();
+                                let interval = std::time::Duration::from_millis(interval_ms as u64);
+
+                                if let Some(min_interval) = &time_constraints.min_interval {
+                                    if interval < *min_interval {
+                                        errors.push(ValidationError {
+                                            error_type: ValidationErrorType::ConstraintViolation,
+                                            field_path: field_path.to_string(),
+                                            message: format!(
+                                                "Interval {:?} is less than minimum {:?}",
+                                                interval, min_interval
+                                            ),
+                                            expected: Some(format!(
+                                                "min interval {:?}",
+                                                min_interval
+                                            )),
+                                            actual: Some(format!("interval {:?}", interval)),
+                                            constraint: Some("temporal.min_interval".to_string()),
+                                            severity: ErrorSeverity::Error,
+                                            context: HashMap::new(),
+                                        });
+                                        break;
+                                    }
+                                }
+
+                                if let Some(max_interval) = &time_constraints.max_interval {
+                                    if interval > *max_interval {
+                                        errors.push(ValidationError {
+                                            error_type: ValidationErrorType::ConstraintViolation,
+                                            field_path: field_path.to_string(),
+                                            message: format!(
+                                                "Interval {:?} exceeds maximum {:?}",
+                                                interval, max_interval
+                                            ),
+                                            expected: Some(format!(
+                                                "max interval {:?}",
+                                                max_interval
+                                            )),
+                                            actual: Some(format!("interval {:?}", interval)),
+                                            constraint: Some("temporal.max_interval".to_string()),
+                                            severity: ErrorSeverity::Error,
+                                            context: HashMap::new(),
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        errors.push(ValidationError {
+                            error_type: ValidationErrorType::TypeMismatch,
+                            field_path: field_path.to_string(),
+                            message: "Temporal constraints require an array of timestamps"
+                                .to_string(),
+                            expected: Some("array of timestamps".to_string()),
+                            actual: Some(format!("{}", value)),
+                            constraint: Some("temporal".to_string()),
+                            severity: ErrorSeverity::Error,
+                            context: HashMap::new(),
+                        });
+                    }
                 }
-                Constraint::Shape(_shape_constraints) => {
-                    // Shape constraints would require array/matrix validation
-                    _warnings.push(ValidationError {
-                        error_type: ValidationErrorType::SchemaError,
-                        field_path: field_path.to_string(),
-                        message: "Shape constraints require array validation".to_string(),
-                        expected: None,
-                        actual: None,
-                        constraint: Some("shape".to_string()),
-                        severity: ErrorSeverity::Warning,
-                        context: HashMap::new(),
-                    });
+                Constraint::Shape(shape_constraints) => {
+                    // Validate array/matrix shape properties
+                    if let Some(arr) = value.as_array() {
+                        // For JSON arrays, we can only validate 1D arrays directly
+                        // Multi-dimensional arrays would need to be nested arrays
+                        let mut shape = vec![arr.len()];
+
+                        // Check if it's a nested array (2D)
+                        let mut is_2d = true;
+                        let mut inner_sizes = Vec::new();
+                        for elem in arr {
+                            if let Some(inner_arr) = elem.as_array() {
+                                inner_sizes.push(inner_arr.len());
+                            } else {
+                                is_2d = false;
+                                break;
+                            }
+                        }
+
+                        if is_2d && !inner_sizes.is_empty() {
+                            // Check if all inner arrays have the same size
+                            let first_size = inner_sizes[0];
+                            if inner_sizes.iter().all(|&s| s == first_size) {
+                                shape = vec![arr.len(), first_size];
+                            } else {
+                                errors.push(ValidationError {
+                                    error_type: ValidationErrorType::ShapeError,
+                                    field_path: field_path.to_string(),
+                                    message: "Jagged arrays are not supported - all rows must have the same length".to_string(),
+                                    expected: Some("rectangular array".to_string()),
+                                    actual: Some("jagged array".to_string()),
+                                    constraint: Some("shape".to_string()),
+                                    severity: ErrorSeverity::Error,
+                                    context: HashMap::new(),
+                                });
+                                return Ok(());
+                            }
+                        }
+
+                        // Validate dimensions
+                        if !shape_constraints.dimensions.is_empty() {
+                            let expected_dims = &shape_constraints.dimensions;
+                            if shape.len() != expected_dims.len() {
+                                errors.push(ValidationError {
+                                    error_type: ValidationErrorType::ShapeError,
+                                    field_path: field_path.to_string(),
+                                    message: format!(
+                                        "Array has {} dimensions, expected {}",
+                                        shape.len(),
+                                        expected_dims.len()
+                                    ),
+                                    expected: Some(format!("{} dimensions", expected_dims.len())),
+                                    actual: Some(format!("{} dimensions", shape.len())),
+                                    constraint: Some("shape.dimensions".to_string()),
+                                    severity: ErrorSeverity::Error,
+                                    context: HashMap::new(),
+                                });
+                            } else {
+                                // Check each dimension
+                                for (i, (actual_dim, expected_dim)) in
+                                    shape.iter().zip(expected_dims.iter()).enumerate()
+                                {
+                                    if let Some(expected) = expected_dim {
+                                        if actual_dim != expected {
+                                            errors.push(ValidationError {
+                                                error_type: ValidationErrorType::ShapeError,
+                                                field_path: field_path.to_string(),
+                                                message: format!(
+                                                    "Dimension {} has size {}, expected {}",
+                                                    i, actual_dim, expected
+                                                ),
+                                                expected: Some(format!(
+                                                    "dimension {} = {}",
+                                                    i, expected
+                                                )),
+                                                actual: Some(format!(
+                                                    "dimension {} = {}",
+                                                    i, actual_dim
+                                                )),
+                                                constraint: Some(format!("shape.dimension[{}]", i)),
+                                                severity: ErrorSeverity::Error,
+                                                context: HashMap::new(),
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Check total element count
+                        let total_elements: usize = shape.iter().product();
+
+                        if let Some(min_elements) = shape_constraints.min_elements {
+                            if total_elements < min_elements {
+                                errors.push(ValidationError {
+                                    error_type: ValidationErrorType::ShapeError,
+                                    field_path: field_path.to_string(),
+                                    message: format!(
+                                        "Array has {} elements, minimum required is {}",
+                                        total_elements, min_elements
+                                    ),
+                                    expected: Some(format!(">= {} elements", min_elements)),
+                                    actual: Some(format!("{} elements", total_elements)),
+                                    constraint: Some("shape.min_elements".to_string()),
+                                    severity: ErrorSeverity::Error,
+                                    context: HashMap::new(),
+                                });
+                            }
+                        }
+
+                        if let Some(max_elements) = shape_constraints.max_elements {
+                            if total_elements > max_elements {
+                                errors.push(ValidationError {
+                                    error_type: ValidationErrorType::ShapeError,
+                                    field_path: field_path.to_string(),
+                                    message: format!(
+                                        "Array has {} elements, maximum allowed is {}",
+                                        total_elements, max_elements
+                                    ),
+                                    expected: Some(format!("<= {} elements", max_elements)),
+                                    actual: Some(format!("{} elements", total_elements)),
+                                    constraint: Some("shape.max_elements".to_string()),
+                                    severity: ErrorSeverity::Error,
+                                    context: HashMap::new(),
+                                });
+                            }
+                        }
+
+                        // Check if square matrix is required (only for 2D arrays)
+                        if shape_constraints.require_square
+                            && shape.len() == 2
+                            && shape[0] != shape[1]
+                        {
+                            errors.push(ValidationError {
+                                error_type: ValidationErrorType::ShapeError,
+                                field_path: field_path.to_string(),
+                                message: format!(
+                                    "Matrix must be square, but has shape {}x{}",
+                                    shape[0], shape[1]
+                                ),
+                                expected: Some("square matrix".to_string()),
+                                actual: Some(format!("{}x{} matrix", shape[0], shape[1])),
+                                constraint: Some("shape.square".to_string()),
+                                severity: ErrorSeverity::Error,
+                                context: HashMap::new(),
+                            });
+                        }
+                    } else {
+                        errors.push(ValidationError {
+                            error_type: ValidationErrorType::TypeMismatch,
+                            field_path: field_path.to_string(),
+                            message: "Shape constraints require an array".to_string(),
+                            expected: Some("array".to_string()),
+                            actual: Some(format!("{}", value)),
+                            constraint: Some("shape".to_string()),
+                            severity: ErrorSeverity::Error,
+                            context: HashMap::new(),
+                        });
+                    }
                 }
                 Constraint::And(constraints) => {
                     // All constraints must pass

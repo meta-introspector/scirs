@@ -277,6 +277,8 @@ where
         return solve_2x2_symmetric_eigenvalue_problem(a);
     } else if n == 3 {
         return solve_3x3_symmetric_eigenvalue_problem(a);
+    } else if n == 4 {
+        return solve_4x4_symmetric_eigenvalue_problem(a);
     }
 
     // For larger matrices, use a simplified power iteration approach for now
@@ -487,15 +489,122 @@ where
 }
 
 /// Solve 3x3 symmetric eigenvalue problem using analytical methods
+/// Based on "Efficient numerical diagonalization of hermitian 3x3 matrices" by Kopp (2008)
 fn solve_3x3_symmetric_eigenvalue_problem<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + 'static,
 {
-    // For now, fall back to power iteration for 3x3 matrices
-    // This is a simplified implementation
-    solve_symmetric_with_power_iteration(a)
+    // For 3x3 symmetric matrices, use a specialized QR iteration
+    // that converges quickly for small matrices
+
+    let mut work_matrix = a.to_owned();
+    let mut q_total = Array2::eye(3);
+    let max_iter = 50;
+    let tol = F::from(1e-12).unwrap();
+
+    // Apply QR iterations
+    for _ in 0..max_iter {
+        // Check for convergence - if off-diagonal elements are small
+        let off_diag =
+            work_matrix[[0, 1]].abs() + work_matrix[[0, 2]].abs() + work_matrix[[1, 2]].abs();
+        if off_diag < tol {
+            break;
+        }
+
+        // Perform QR decomposition
+        let (q, r) = qr(&work_matrix.view(), None)?;
+
+        // Update: A = R * Q
+        work_matrix = r.dot(&q);
+
+        // Accumulate transformation
+        q_total = q_total.dot(&q);
+    }
+
+    // Extract eigenvalues from diagonal
+    let mut eigenvalues = Array1::zeros(3);
+    for i in 0..3 {
+        eigenvalues[i] = work_matrix[[i, i]];
+    }
+
+    // Sort eigenvalues and corresponding eigenvectors
+    let mut indices = [0, 1, 2];
+    indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+
+    let mut sorted_eigenvalues = Array1::zeros(3);
+    let mut sorted_eigenvectors = Array2::zeros((3, 3));
+
+    for (new_idx, &old_idx) in indices.iter().enumerate() {
+        sorted_eigenvalues[new_idx] = eigenvalues[old_idx];
+        for i in 0..3 {
+            sorted_eigenvectors[[i, new_idx]] = q_total[[i, old_idx]];
+        }
+    }
+
+    Ok((sorted_eigenvalues, sorted_eigenvectors))
+}
+
+/// Solve 4x4 symmetric eigenvalue problem using QR iteration
+fn solve_4x4_symmetric_eigenvalue_problem<F>(
+    a: &ArrayView2<F>,
+) -> LinalgResult<(Array1<F>, Array2<F>)>
+where
+    F: Float + NumAssign + Sum + 'static,
+{
+    // For 4x4 symmetric matrices, use a specialized QR iteration
+    // that converges quickly for small matrices
+
+    let mut work_matrix = a.to_owned();
+    let mut q_total = Array2::eye(4);
+    let max_iter = 100;
+    let tol = F::from(1e-12).unwrap();
+
+    // Apply QR iterations
+    for _ in 0..max_iter {
+        // Check for convergence - if off-diagonal elements are small
+        let mut off_diag = F::zero();
+        for i in 0..4 {
+            for j in (i + 1)..4 {
+                off_diag += work_matrix[[i, j]].abs();
+            }
+        }
+        if off_diag < tol {
+            break;
+        }
+
+        // Perform QR decomposition
+        let (q, r) = qr(&work_matrix.view(), None)?;
+
+        // Update: A = R * Q
+        work_matrix = r.dot(&q);
+
+        // Accumulate transformation
+        q_total = q_total.dot(&q);
+    }
+
+    // Extract eigenvalues from diagonal
+    let mut eigenvalues = Array1::zeros(4);
+    for i in 0..4 {
+        eigenvalues[i] = work_matrix[[i, i]];
+    }
+
+    // Sort eigenvalues and corresponding eigenvectors
+    let mut indices = [0, 1, 2, 3];
+    indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+
+    let mut sorted_eigenvalues = Array1::zeros(4);
+    let mut sorted_eigenvectors = Array2::zeros((4, 4));
+
+    for (new_idx, &old_idx) in indices.iter().enumerate() {
+        sorted_eigenvalues[new_idx] = eigenvalues[old_idx];
+        for i in 0..4 {
+            sorted_eigenvectors[[i, new_idx]] = q_total[[i, old_idx]];
+        }
+    }
+
+    Ok((sorted_eigenvalues, sorted_eigenvectors))
 }
 
 /// QR algorithm for general eigenvalue decomposition

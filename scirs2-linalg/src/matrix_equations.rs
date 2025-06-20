@@ -131,7 +131,7 @@ where
 /// use scirs2_linalg::matrix_equations::solve_sylvester;
 ///
 /// let a = array![[1.0, 2.0], [0.0, 3.0]];
-/// let b = array![[-1.0, 0.0], [0.0, -2.0]];
+/// let b = array![[-4.0, 0.0], [0.0, -5.0]];
 /// let c = array![[1.0, 2.0], [3.0, 4.0]];
 ///
 /// let x = solve_sylvester(&a.view(), &b.view(), &c.view()).unwrap();

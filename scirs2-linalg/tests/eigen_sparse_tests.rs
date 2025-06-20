@@ -137,7 +137,6 @@ fn test_k_equal_zero() {
 }
 
 #[test]
-#[ignore = "Small matrix symmetric eigenvalue decomposition not fully implemented yet"]
 fn test_k_equal_n() {
     let a = array![
         [1.0_f64, 0.0, 0.0, 0.0],

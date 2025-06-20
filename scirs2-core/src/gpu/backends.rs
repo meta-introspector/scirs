@@ -363,3 +363,208 @@ pub fn initialize_optimal_backend() -> Result<GpuBackend, GpuError> {
     // Should never reach here since CPU is always available
     Ok(GpuBackend::Cpu)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_gpu_info_creation() {
+        let info = GpuInfo {
+            backend: GpuBackend::Cuda,
+            device_name: "NVIDIA GeForce RTX 3080".to_string(),
+            memory_bytes: Some(10 * 1024 * 1024 * 1024), // 10GB
+            compute_capability: Some("8.6".to_string()),
+            supports_tensors: true,
+        };
+
+        assert_eq!(info.backend, GpuBackend::Cuda);
+        assert_eq!(info.device_name, "NVIDIA GeForce RTX 3080");
+        assert_eq!(info.memory_bytes, Some(10 * 1024 * 1024 * 1024));
+        assert_eq!(info.compute_capability, Some("8.6".to_string()));
+        assert!(info.supports_tensors);
+    }
+
+    #[test]
+    fn test_gpu_detection_result_with_cpu_fallback() {
+        let result = detect_gpu_backends();
+
+        // Should always have at least CPU fallback
+        assert!(!result.devices.is_empty());
+        assert!(result.devices.iter().any(|d| d.backend == GpuBackend::Cpu));
+
+        // Should have a recommended backend
+        match result.recommended_backend {
+            GpuBackend::Cuda
+            | GpuBackend::Rocm
+            | GpuBackend::Metal
+            | GpuBackend::OpenCL
+            | GpuBackend::Cpu => {}
+            _ => panic!("Unexpected recommended backend"),
+        }
+    }
+
+    #[test]
+    fn test_check_backend_installation_cpu() {
+        // CPU should always be available
+        let result = check_backend_installation(GpuBackend::Cpu).unwrap();
+        assert!(result);
+    }
+
+    #[test]
+    fn test_check_backend_installation_wgpu() {
+        // WebGPU should always be available through wgpu crate
+        let result = check_backend_installation(GpuBackend::Wgpu).unwrap();
+        assert!(result);
+    }
+
+    #[test]
+    fn test_check_backend_installation_metal() {
+        let result = check_backend_installation(GpuBackend::Metal).unwrap();
+        #[cfg(target_os = "macos")]
+        assert!(result);
+        #[cfg(not(target_os = "macos"))]
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_initialize_optimal_backend() {
+        let backend = initialize_optimal_backend().unwrap();
+
+        // Should return a valid backend
+        match backend {
+            GpuBackend::Cuda
+            | GpuBackend::Rocm
+            | GpuBackend::Wgpu
+            | GpuBackend::Metal
+            | GpuBackend::OpenCL
+            | GpuBackend::Cpu => {}
+        }
+    }
+
+    #[test]
+    fn test_get_device_info_invalid_device() {
+        // Try to get info for a non-existent device
+        let result = get_device_info(GpuBackend::Cpu, 100);
+
+        assert!(result.is_err());
+        match result {
+            Err(GpuError::InvalidParameter(_)) => {}
+            _ => panic!("Expected InvalidParameter error"),
+        }
+    }
+
+    #[test]
+    fn test_get_device_info_cpu() {
+        // CPU device should always be available
+        let result = get_device_info(GpuBackend::Cpu, 0);
+
+        assert!(result.is_ok());
+        let info = result.unwrap();
+        assert_eq!(info.backend, GpuBackend::Cpu);
+        assert_eq!(info.device_name, "CPU");
+        assert!(!info.supports_tensors);
+    }
+
+    #[test]
+    fn test_detect_metal_devices_non_macos() {
+        #[cfg(not(target_os = "macos"))]
+        {
+            let result = detect_metal_devices();
+            assert!(result.is_err());
+            match result {
+                Err(GpuError::BackendNotAvailable(_)) => {}
+                _ => panic!("Expected BackendNotAvailable error"),
+            }
+        }
+    }
+
+    #[test]
+    fn test_gpu_info_clone() {
+        let info = GpuInfo {
+            backend: GpuBackend::Rocm,
+            device_name: "AMD Radeon RX 6900 XT".to_string(),
+            memory_bytes: Some(16 * 1024 * 1024 * 1024), // 16GB
+            compute_capability: Some("RDNA2".to_string()),
+            supports_tensors: true,
+        };
+
+        let cloned = info.clone();
+        assert_eq!(info.backend, cloned.backend);
+        assert_eq!(info.device_name, cloned.device_name);
+        assert_eq!(info.memory_bytes, cloned.memory_bytes);
+        assert_eq!(info.compute_capability, cloned.compute_capability);
+        assert_eq!(info.supports_tensors, cloned.supports_tensors);
+    }
+
+    #[test]
+    fn test_gpu_detection_result_clone() {
+        let devices = vec![
+            GpuInfo {
+                backend: GpuBackend::Cuda,
+                device_name: "NVIDIA A100".to_string(),
+                memory_bytes: Some(40 * 1024 * 1024 * 1024),
+                compute_capability: Some("8.0".to_string()),
+                supports_tensors: true,
+            },
+            GpuInfo {
+                backend: GpuBackend::Cpu,
+                device_name: "CPU".to_string(),
+                memory_bytes: None,
+                compute_capability: None,
+                supports_tensors: false,
+            },
+        ];
+
+        let result = GpuDetectionResult {
+            devices: devices.clone(),
+            recommended_backend: GpuBackend::Cuda,
+        };
+
+        let cloned = result.clone();
+        assert_eq!(result.devices.len(), cloned.devices.len());
+        assert_eq!(result.recommended_backend, cloned.recommended_backend);
+    }
+
+    // Mock tests to verify error handling in detection functions
+    #[test]
+    fn test_detect_cuda_devices_error_handling() {
+        // In the real implementation, detect_cuda_devices returns an error
+        // when nvidia-smi is not available. We can't easily test this without
+        // mocking the Command execution, but we can at least call the function
+        let _ = detect_cuda_devices();
+    }
+
+    #[test]
+    fn test_detect_rocm_devices_error_handling() {
+        // Similar to CUDA test
+        let _ = detect_rocm_devices();
+    }
+
+    #[test]
+    fn test_detect_opencl_devices_error_handling() {
+        // Similar to CUDA test
+        let _ = detect_opencl_devices();
+    }
+
+    #[test]
+    fn test_backend_preference_order() {
+        // Test that initialize_optimal_backend respects the preference order
+        let result = detect_gpu_backends();
+
+        // If we have multiple backends, the recommended should follow preference
+        if result.devices.iter().any(|d| d.backend == GpuBackend::Cuda) {
+            // If CUDA is available, it should be preferred
+            let optimal = initialize_optimal_backend().unwrap();
+            if result
+                .devices
+                .iter()
+                .filter(|d| d.backend == GpuBackend::Cuda)
+                .count()
+                > 0
+            {
+                assert_eq!(optimal, GpuBackend::Cuda);
+            }
+        }
+    }
+}

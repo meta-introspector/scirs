@@ -464,4 +464,252 @@ mod tests {
             CompressionAlgorithm::Lz4 | CompressionAlgorithm::None
         ));
     }
+
+    #[test]
+    fn test_compression_levels() {
+        let data: Vec<f64> = vec![1.0; 1000];
+
+        // Test all compression levels
+        let levels = vec![
+            CompressionLevel::Fast,
+            CompressionLevel::Default,
+            CompressionLevel::Best,
+            CompressionLevel::Custom(5),
+        ];
+
+        for level in levels {
+            let buffer = CompressedBuffer::new(&data, CompressionAlgorithm::Gzip, level)
+                .expect("Failed to create buffer");
+            let decompressed = buffer.decompress().expect("Failed to decompress");
+            assert_eq!(data, decompressed);
+        }
+    }
+
+    #[test]
+    fn test_compression_level_conversion() {
+        assert_eq!(u32::from(CompressionLevel::Fast), 1);
+        assert_eq!(u32::from(CompressionLevel::Default), 6);
+        assert_eq!(u32::from(CompressionLevel::Best), 9);
+        assert_eq!(u32::from(CompressionLevel::Custom(7)), 7);
+    }
+
+    #[test]
+    fn test_all_compression_algorithms() {
+        let data: Vec<u32> = (0..100).collect();
+
+        let algorithms = vec![
+            CompressionAlgorithm::Gzip,
+            CompressionAlgorithm::Lz4,
+            CompressionAlgorithm::None,
+        ];
+
+        for algo in algorithms {
+            let buffer = CompressedBuffer::new(&data, algo, CompressionLevel::Default)
+                .expect("Failed to create buffer");
+
+            assert_eq!(buffer.algorithm(), algo);
+            assert_eq!(buffer.original_size(), std::mem::size_of_val(&data));
+
+            let decompressed = buffer.decompress().expect("Failed to decompress");
+            assert_eq!(data, decompressed);
+
+            if algo == CompressionAlgorithm::None {
+                assert_eq!(buffer.compression_ratio(), 1.0);
+            }
+        }
+    }
+
+    #[test]
+    fn test_compressed_buffer_lz4() {
+        let data: Vec<i32> = (0..5000).map(|i| i * 2).collect();
+
+        let buffer =
+            CompressedBuffer::new(&data, CompressionAlgorithm::Lz4, CompressionLevel::Fast)
+                .expect("Failed to create LZ4 buffer");
+
+        let decompressed = buffer.decompress().expect("Failed to decompress");
+        assert_eq!(data, decompressed);
+        assert!(buffer.compressed_size() < buffer.original_size());
+    }
+
+    #[test]
+    fn test_compressed_array_non_standard_layout() {
+        // Create a transposed array (non-standard layout)
+        let array = Array2::<f64>::from_shape_fn((50, 50), |(i, j)| (i * 50 + j) as f64);
+        let transposed = array.t();
+
+        let compressed = CompressedArray::from_array(
+            &transposed,
+            CompressionAlgorithm::Gzip,
+            CompressionLevel::Default,
+        )
+        .expect("Failed to create compressed array");
+
+        let decompressed = compressed.to_array().expect("Failed to decompress");
+        assert_eq!(transposed, decompressed);
+        assert_eq!(compressed.shape().slice(), transposed.shape());
+    }
+
+    #[test]
+    fn test_compressed_buffer_pool_operations() {
+        let mut pool = CompressedBufferPool::new(CompressionAlgorithm::Lz4, CompressionLevel::Fast);
+
+        // Test empty pool
+        assert_eq!(pool.stats().buffer_count, 0);
+        assert_eq!(pool.total_compression_ratio(), 1.0);
+        assert_eq!(pool.memory_saved(), 0);
+
+        // Add buffers
+        let data1: Vec<f64> = vec![0.0; 500];
+        let data2: Vec<f64> = (0..500).map(|i| i as f64).collect();
+        let data3: Vec<f64> = vec![std::f64::consts::PI; 500];
+
+        let id1 = pool.add_buffer(&data1).expect("Failed to add buffer 1");
+        let id2 = pool.add_buffer(&data2).expect("Failed to add buffer 2");
+        let id3 = pool.add_buffer(&data3).expect("Failed to add buffer 3");
+
+        assert_eq!(pool.stats().buffer_count, 3);
+
+        // Test get_buffer
+        assert!(pool.get_buffer(id1).is_some());
+        assert!(pool.get_buffer(id2).is_some());
+        assert!(pool.get_buffer(id3).is_some());
+        assert!(pool.get_buffer(100).is_none());
+
+        // Test remove_buffer
+        let removed = pool.remove_buffer(id2).expect("Failed to remove buffer");
+        let decompressed = removed.decompress().expect("Failed to decompress");
+        assert_eq!(data2, decompressed);
+        assert_eq!(pool.stats().buffer_count, 2);
+
+        // Test remove non-existent buffer
+        assert!(pool.remove_buffer(100).is_none());
+
+        // Test clear
+        pool.clear();
+        assert_eq!(pool.stats().buffer_count, 0);
+        assert_eq!(pool.total_compression_ratio(), 1.0);
+    }
+
+    #[test]
+    fn test_compression_stats_display() {
+        let stats = CompressionStats {
+            buffer_count: 5,
+            total_original_size: 10_485_760,  // 10 MB
+            total_compressed_size: 2_097_152, // 2 MB
+            compression_ratio: 5.0,
+            memory_saved: 8_388_608, // 8 MB
+            algorithm: CompressionAlgorithm::Gzip,
+        };
+
+        let display = format!("{}", stats);
+        assert!(display.contains("Algorithm: Gzip"));
+        assert!(display.contains("Buffers: 5"));
+        assert!(display.contains("10.00 MB"));
+        assert!(display.contains("2.00 MB"));
+        assert!(display.contains("5.00x"));
+        assert!(display.contains("8.00 MB"));
+    }
+
+    #[test]
+    fn test_decompression_size_mismatch() {
+        // Create a buffer with wrong original size to test error handling
+        let data = vec![1u8, 2, 3, 4];
+        let mut buffer =
+            CompressedBuffer::new(&data, CompressionAlgorithm::None, CompressionLevel::Default)
+                .expect("Failed to create buffer");
+
+        // Corrupt the original size
+        buffer.original_size = 10; // Wrong size
+
+        let result = buffer.decompress();
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::InvalidData);
+    }
+
+    #[test]
+    fn test_compression_algorithm_equality() {
+        assert_eq!(CompressionAlgorithm::Gzip, CompressionAlgorithm::Gzip);
+        assert_ne!(CompressionAlgorithm::Gzip, CompressionAlgorithm::Lz4);
+        assert_ne!(CompressionAlgorithm::Lz4, CompressionAlgorithm::None);
+    }
+
+    #[test]
+    fn test_compressed_array_accessors() {
+        let array = Array2::<f32>::from_elem((10, 20), 42.0);
+
+        let compressed =
+            CompressedArray::from_array(&array, CompressionAlgorithm::Gzip, CompressionLevel::Best)
+                .expect("Failed to create compressed array");
+
+        assert!(compressed.compression_ratio() > 1.0);
+        assert!(compressed.compressed_size() < compressed.original_size());
+        assert_eq!(compressed.shape(), &array.raw_dim());
+    }
+
+    #[test]
+    fn test_compression_with_empty_data() {
+        let data: Vec<f64> = vec![];
+
+        let buffer =
+            CompressedBuffer::new(&data, CompressionAlgorithm::Gzip, CompressionLevel::Default)
+                .expect("Failed to create buffer");
+
+        assert_eq!(buffer.original_size(), 0);
+        let decompressed = buffer.decompress().expect("Failed to decompress");
+        assert_eq!(data, decompressed);
+    }
+
+    #[test]
+    fn test_lz4_compression_level_clamping() {
+        let data: Vec<u64> = vec![12345; 100];
+
+        // LZ4 max level is 12, so 20 should be clamped to 12
+        let buffer = CompressedBuffer::new(
+            &data,
+            CompressionAlgorithm::Lz4,
+            CompressionLevel::Custom(20),
+        )
+        .expect("Failed to create buffer");
+
+        let decompressed = buffer.decompress().expect("Failed to decompress");
+        assert_eq!(data, decompressed);
+    }
+
+    #[test]
+    fn test_adaptive_compression_small_data() {
+        // Test with very small data (less than sample size)
+        let small_data: Vec<u8> = vec![1, 2, 3, 4, 5];
+        let algorithm = AdaptiveCompression::choose_algorithm(&small_data);
+        // Small data usually doesn't compress well
+        assert!(matches!(
+            algorithm,
+            CompressionAlgorithm::None | CompressionAlgorithm::Lz4
+        ));
+    }
+
+    #[test]
+    fn test_compression_types() {
+        // Test with different numeric types
+        let u8_data: Vec<u8> = vec![255; 100];
+        let u16_data: Vec<u16> = vec![65535; 100];
+        let i64_data: Vec<i64> = vec![-1; 100];
+
+        let _u8_buffer = CompressedBuffer::new(
+            &u8_data,
+            CompressionAlgorithm::Gzip,
+            CompressionLevel::Default,
+        )
+        .expect("Failed with u8");
+        let _u16_buffer =
+            CompressedBuffer::new(&u16_data, CompressionAlgorithm::Lz4, CompressionLevel::Fast)
+                .expect("Failed with u16");
+        let _i64_buffer = CompressedBuffer::new(
+            &i64_data,
+            CompressionAlgorithm::None,
+            CompressionLevel::Best,
+        )
+        .expect("Failed with i64");
+    }
 }

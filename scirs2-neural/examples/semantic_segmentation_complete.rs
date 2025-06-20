@@ -399,12 +399,15 @@ impl UNetModel {
 
         // Build decoder blocks
         in_channels = bottleneck_channels;
-        for &out_channels in &config.decoder_channels {
-            let decoder_in_channels = if config.skip_connections {
-                in_channels + out_channels // Account for skip connections
-            } else {
-                in_channels
-            };
+        for (i, &out_channels) in config.decoder_channels.iter().enumerate() {
+            let decoder_in_channels =
+                if config.skip_connections && i < config.encoder_channels.len() {
+                    // Skip connections come from corresponding encoder layer (in reverse order)
+                    let encoder_idx = config.encoder_channels.len() - 1 - i;
+                    in_channels + config.encoder_channels[encoder_idx]
+                } else {
+                    in_channels
+                };
             decoders.push(DecoderBlock::new(decoder_in_channels, out_channels, rng)?);
             in_channels = out_channels;
         }
@@ -841,7 +844,14 @@ mod tests {
     #[test]
     fn test_model_creation() -> StdResult<()> {
         let mut rng = SmallRng::seed_from_u64(42);
-        let config = SegmentationConfig::default();
+        // Use smaller input size for faster testing
+        let config = SegmentationConfig {
+            num_classes: 4,
+            input_size: (16, 16),                    // Much smaller for testing
+            encoder_channels: vec![16, 32, 64, 128], // Smaller channels
+            decoder_channels: vec![64, 32, 16, 8],   // Smaller channels
+            skip_connections: true,
+        };
 
         let model = UNetModel::new(config.clone(), &mut rng)?;
 

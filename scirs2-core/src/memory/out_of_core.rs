@@ -202,7 +202,7 @@ pub struct ChunkCache<T> {
     /// Cached chunk data
     chunks: RwLock<HashMap<ChunkId, Array<T, IxDyn>>>,
     /// Chunk metadata
-    metadata: RwLock<HashMap<ChunkId, ChunkMetadata>>,
+    pub(crate) metadata: RwLock<HashMap<ChunkId, ChunkMetadata>>,
     /// Access order for LRU/FIFO policies
     access_order: Mutex<VecDeque<ChunkId>>,
     /// Configuration
@@ -238,15 +238,19 @@ where
         }
     }
 
-    /// Put a chunk into cache
-    pub fn put(
+    /// Put a chunk into cache with optional writer for eviction
+    pub(crate) fn put_with_writer<F>(
         &self,
         chunk_id: ChunkId,
         chunk: Array<T, IxDyn>,
         metadata: ChunkMetadata,
-    ) -> CoreResult<()> {
+        writer: F,
+    ) -> CoreResult<()> 
+    where
+        F: Fn(&ChunkId) -> CoreResult<()>,
+    {
         // Check if we need to evict chunks
-        self.ensure_cache_space(&metadata)?;
+        self.ensure_cache_space_with_writer(&metadata, writer)?;
 
         // Insert chunk and metadata
         let chunk_size = chunk.len() * std::mem::size_of::<T>();
@@ -265,6 +269,16 @@ where
 
         track_allocation("OutOfCoreCache", chunk_size, 0);
         Ok(())
+    }
+    
+    /// Put a chunk into cache
+    pub fn put(
+        &self,
+        chunk_id: ChunkId,
+        chunk: Array<T, IxDyn>,
+        metadata: ChunkMetadata,
+    ) -> CoreResult<()> {
+        self.put_with_writer(chunk_id, chunk, metadata, |_| Ok(()))
     }
 
     /// Remove a chunk from cache
@@ -301,7 +315,14 @@ where
     }
 
     /// Ensure there's space in cache for a new chunk
-    fn ensure_cache_space(&self, new_metadata: &ChunkMetadata) -> CoreResult<()> {
+    pub(crate) fn ensure_cache_space_with_writer<F>(
+        &self, 
+        new_metadata: &ChunkMetadata,
+        writer: F
+    ) -> CoreResult<()> 
+    where
+        F: Fn(&ChunkId) -> CoreResult<()>,
+    {
         let current_memory = *self.current_memory.lock().unwrap();
         let current_count = self.chunks.read().unwrap().len();
 
@@ -311,22 +332,42 @@ where
             || current_count >= self.config.max_cached_chunks;
 
         if needs_eviction {
-            self.evict_chunks(1)?;
+            self.evict_chunks_with_writer(1, writer)?;
         }
 
         Ok(())
     }
+    
+    /// Ensure there's space in cache for a new chunk
+    #[allow(dead_code)]
+    fn ensure_cache_space(&self, new_metadata: &ChunkMetadata) -> CoreResult<()> {
+        self.ensure_cache_space_with_writer(new_metadata, |_| Ok(()))
+    }
 
-    /// Evict chunks based on cache policy
-    fn evict_chunks(&self, count: usize) -> CoreResult<()> {
+    /// Evict chunks based on cache policy with optional dirty chunk writer
+    fn evict_chunks_with_writer<F>(&self, count: usize, writer: F) -> CoreResult<()> 
+    where
+        F: Fn(&ChunkId) -> CoreResult<()>,
+    {
         let chunks_to_evict = self.select_eviction_candidates(count)?;
 
         for chunk_id in chunks_to_evict {
-            // TODO: If chunk is dirty, write it back to storage
+            // Check if chunk is dirty and write back to storage if needed
+            if let Some(metadata) = self.metadata.read().unwrap().get(&chunk_id) {
+                if metadata.is_dirty {
+                    writer(&chunk_id)?;
+                }
+            }
             self.remove(&chunk_id);
         }
 
         Ok(())
+    }
+    
+    /// Evict chunks based on cache policy
+    #[allow(dead_code)]
+    fn evict_chunks(&self, count: usize) -> CoreResult<()> {
+        self.evict_chunks_with_writer(count, |_| Ok(()))
     }
 
     /// Select chunks for eviction based on policy
@@ -382,6 +423,35 @@ where
             memory_usage: current_memory,
             dirty_chunks: dirty_count,
             hit_rate: 0.0, // Would be calculated with hit/miss counters
+        }
+    }
+
+
+    /// Flush all dirty chunks to storage
+    pub fn flush_dirty_chunks(&self) -> CoreResult<Vec<ChunkId>> {
+        let metadata_map = self.metadata.read().unwrap();
+        let dirty_chunks: Vec<ChunkId> = metadata_map
+            .iter()
+            .filter(|(_, metadata)| metadata.is_dirty)
+            .map(|(id, _)| id.clone())
+            .collect();
+
+        Ok(dirty_chunks)
+    }
+
+    /// Mark a chunk as clean (not dirty)
+    pub fn mark_clean(&self, chunk_id: &ChunkId) {
+        let mut metadata_map = self.metadata.write().unwrap();
+        if let Some(metadata) = metadata_map.get_mut(chunk_id) {
+            metadata.is_dirty = false;
+        }
+    }
+
+    /// Mark a chunk as dirty (modified)
+    pub fn mark_dirty(&self, chunk_id: &ChunkId) {
+        let mut metadata_map = self.metadata.write().unwrap();
+        if let Some(metadata) = metadata_map.get_mut(chunk_id) {
+            metadata.mark_dirty();
         }
     }
 }
@@ -530,7 +600,7 @@ pub struct OutOfCoreArray<T> {
 
 impl<T> OutOfCoreArray<T>
 where
-    T: Clone + Default + 'static + Send + Sync,
+    T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
 {
     /// Create a new out-of-core array
     pub fn new(
@@ -605,6 +675,48 @@ where
         }
     }
 
+    /// Get mutable chunk for given chunk coordinates
+    #[allow(dead_code)]
+    fn get_chunk_mut(&self, chunk_coords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
+        // First get the chunk (loading from storage if needed)
+        let chunk = self.get_chunk(chunk_coords)?;
+        
+        // Get the chunk ID to mark it as dirty
+        let chunk_map = self.chunk_map.read().unwrap();
+        if let Some(chunk_id) = chunk_map.get(chunk_coords) {
+            // Mark chunk as dirty since it will be modified
+            self.cache.mark_dirty(chunk_id);
+        }
+        
+        Ok(chunk)
+    }
+    
+    /// Set chunk data for given chunk coordinates
+    fn set_chunk(&self, chunk_coords: &[usize], data: Array<T, IxDyn>) -> CoreResult<()> {
+        // Get or create the chunk
+        let _ = self.get_chunk(chunk_coords)?;
+        
+        // Get the chunk ID
+        let chunk_map = self.chunk_map.read().unwrap();
+        let chunk_id = chunk_map.get(chunk_coords)
+            .ok_or_else(|| OutOfCoreError::ChunkNotFound(format!("Chunk at {:?}", chunk_coords)))?
+            .clone();
+        
+        // Create metadata for the chunk
+        let metadata = ChunkMetadata::new(
+            chunk_id.clone(),
+            data.shape().to_vec(),
+            0, // File offset will be managed by storage backend
+        );
+        
+        // Put the chunk in cache and mark as dirty
+        let writer = |chunk_id: &ChunkId| self.write_chunk_to_storage(chunk_id);
+        self.cache.put_with_writer(chunk_id.clone(), data, metadata, writer)?;
+        self.cache.mark_dirty(&chunk_id);
+        
+        Ok(())
+    }
+
     /// Load chunk from storage
     fn load_chunk_from_storage(&self, chunk_id: &ChunkId) -> CoreResult<Array<T, IxDyn>> {
         // Get metadata for this chunk
@@ -622,7 +734,8 @@ where
         let chunk = self.deserialize_chunk_data(&data, &metadata.shape)?;
 
         // Cache the chunk
-        self.cache.put(chunk_id.clone(), chunk.clone(), metadata)?;
+        let writer = |chunk_id: &ChunkId| self.write_chunk_to_storage(chunk_id);
+        self.cache.put_with_writer(chunk_id.clone(), chunk.clone(), metadata, writer)?;
 
         Ok(chunk)
     }
@@ -646,7 +759,8 @@ where
         chunk_map.insert(chunk_coords.to_vec(), chunk_id.clone());
 
         // Cache the chunk
-        self.cache.put(chunk_id, chunk.clone(), metadata)?;
+        let writer = |chunk_id: &ChunkId| self.write_chunk_to_storage(chunk_id);
+        self.cache.put_with_writer(chunk_id, chunk.clone(), metadata, writer)?;
 
         Ok(chunk)
     }
@@ -666,10 +780,43 @@ where
     }
 
     /// Deserialize chunk data from bytes
-    fn deserialize_chunk_data(&self, _data: &[u8], shape: &[usize]) -> CoreResult<Array<T, IxDyn>> {
-        // Simplified implementation - in reality would properly deserialize
-        let chunk = Array::<T, IxDyn>::default(IxDyn(shape));
-        Ok(chunk)
+    fn deserialize_chunk_data(&self, data: &[u8], shape: &[usize]) -> CoreResult<Array<T, IxDyn>> {
+        // For simplicity, assuming T implements serde traits
+        // In a real implementation, would use bincode or similar
+        use bincode::deserialize;
+        
+        if data.is_empty() {
+            // Return default initialized array if no data
+            return Ok(Array::<T, IxDyn>::default(IxDyn(shape)));
+        }
+        
+        // Try to deserialize the data
+        match deserialize::<Vec<T>>(data) {
+            Ok(vec_data) => {
+                let total_elements: usize = shape.iter().product();
+                if vec_data.len() != total_elements {
+                    return Err(OutOfCoreError::SerializationError(format!(
+                        "Data length {} does not match expected shape {:?} (total: {})",
+                        vec_data.len(), shape, total_elements
+                    )).into());
+                }
+                
+                Array::from_shape_vec(IxDyn(shape), vec_data)
+                    .map_err(|e| OutOfCoreError::SerializationError(e.to_string()).into())
+            }
+            Err(e) => Err(OutOfCoreError::SerializationError(e.to_string()).into()),
+        }
+    }
+
+    /// Serialize chunk data to bytes
+    fn serialize_chunk_data(&self, chunk: &Array<T, IxDyn>) -> CoreResult<Vec<u8>> {
+        use bincode::serialize;
+        
+        // Convert array to vec for serialization
+        let vec_data: Vec<T> = chunk.iter().cloned().collect();
+        
+        serialize(&vec_data)
+            .map_err(|e| OutOfCoreError::SerializationError(e.to_string()).into())
     }
 
     /// Get a view of a specific region
@@ -725,8 +872,47 @@ where
 
     /// Flush all dirty chunks to storage
     pub fn flush(&self) -> CoreResult<()> {
-        // TODO: Write all dirty chunks from cache to storage
+        // Get all dirty chunks from cache
+        let dirty_chunk_ids = self.cache.flush_dirty_chunks()?;
+        
+        // Write each dirty chunk to storage
+        for chunk_id in dirty_chunk_ids {
+            self.write_chunk_to_storage(&chunk_id)?;
+        }
+        
+        // Flush storage backend
         self.storage.flush()?;
+        Ok(())
+    }
+
+    /// Write a single chunk to storage
+    fn write_chunk_to_storage(&self, chunk_id: &ChunkId) -> CoreResult<()> {
+        // Get chunk from cache
+        if let Some(chunk) = self.cache.get(chunk_id) {
+            // Get metadata from chunk map or create new
+            let chunk_map = self.chunk_map.read().unwrap();
+            let _chunk_coords = chunk_map.iter()
+                .find(|(_, id)| *id == chunk_id)
+                .map(|(coords, _)| coords.clone())
+                .ok_or_else(|| OutOfCoreError::ChunkNotFound(chunk_id.to_string()))?;
+            
+            // Create metadata for storage
+            let metadata = ChunkMetadata::new(
+                chunk_id.clone(),
+                chunk.shape().to_vec(),
+                0, // File offset will be managed by storage backend
+            );
+            
+            // Serialize chunk data
+            let data = self.serialize_chunk_data(&chunk)?;
+            
+            // Write to storage backend
+            self.storage.write_chunk(&metadata, &data)?;
+            
+            // Mark chunk as clean in cache
+            self.cache.mark_clean(chunk_id);
+        }
+        
         Ok(())
     }
 
@@ -752,7 +938,7 @@ pub struct RegionView<'a, T> {
 
 impl<'a, T> RegionView<'a, T>
 where
-    T: Clone + Default + 'static + Send + Sync,
+    T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
 {
     /// Create a new region view
     fn new(array: &'a OutOfCoreArray<T>, ranges: &[(usize, usize)]) -> CoreResult<Self> {
@@ -895,7 +1081,7 @@ impl OutOfCoreManager {
         config: Option<OutOfCoreConfig>,
     ) -> CoreResult<Arc<OutOfCoreArray<T>>>
     where
-        T: Clone + Default + 'static + Send + Sync,
+        T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
     {
         let storage_backends = self.storage_backends.read().unwrap();
         let storage = if let Some(name) = storage_name {
@@ -925,7 +1111,7 @@ impl OutOfCoreManager {
     /// Get an existing array
     pub fn get_array<T>(&self, array_id: &str) -> Option<Arc<OutOfCoreArray<T>>>
     where
-        T: Clone + Default + 'static + Send + Sync,
+        T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
     {
         let arrays = self.arrays.read().unwrap();
         arrays
@@ -997,7 +1183,7 @@ pub mod utils {
         shape: Vec<usize>,
     ) -> CoreResult<Arc<OutOfCoreArray<T>>>
     where
-        T: Clone + Default + 'static + Send + Sync,
+        T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
     {
         let manager = global_manager();
         manager.create_array(array_id, shape, None, None)
@@ -1010,7 +1196,7 @@ pub mod utils {
         chunk_processor: F,
     ) -> CoreResult<()>
     where
-        T: Clone + Default + 'static + Send + Sync,
+        T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
         F: FnMut(&Array<T, IxDyn>, &[usize]) -> CoreResult<()>,
     {
         // Create storage backend for the data file
@@ -1031,6 +1217,81 @@ pub mod utils {
         Ok(())
     }
 
+    /// Helper function to recursively copy chunks from in-memory to out-of-core array
+    fn copy_chunks_recursive<T>(
+        source_array: &Array<T, IxDyn>,
+        target_array: &OutOfCoreArray<T>,
+        chunks_per_dim: &[usize],
+        chunk_coords: &mut Vec<usize>,
+        dimension: usize,
+    ) -> CoreResult<()>
+    where
+        T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
+    {
+        if dimension == chunks_per_dim.len() {
+            // We've reached the deepest dimension, copy this chunk
+            
+            // Calculate the slice ranges for this chunk
+            let chunk_shape = &target_array.config.chunk_shape;
+            let mut slices = vec![];
+            
+            for (i, (&coord, &chunk_size)) in chunk_coords.iter().zip(chunk_shape.iter()).enumerate() {
+                let start = coord * chunk_size;
+                let end = ((coord + 1) * chunk_size).min(source_array.shape()[i]);
+                slices.push(start..end);
+            }
+            
+            // Extract the chunk data from the source array
+            let chunk_data = extract_chunk_data(source_array, &slices)?;
+            
+            // Set the chunk data in the target array
+            target_array.set_chunk(chunk_coords, chunk_data)?;
+            
+            Ok(())
+        } else {
+            // Iterate through all chunks in this dimension
+            for i in 0..chunks_per_dim[dimension] {
+                chunk_coords[dimension] = i;
+                copy_chunks_recursive(
+                    source_array,
+                    target_array,
+                    chunks_per_dim,
+                    chunk_coords,
+                    dimension + 1,
+                )?;
+            }
+            Ok(())
+        }
+    }
+    
+    /// Extract a chunk of data from an array given slice ranges
+    fn extract_chunk_data<T>(
+        array: &Array<T, IxDyn>,
+        slices: &[std::ops::Range<usize>],
+    ) -> CoreResult<Array<T, IxDyn>>
+    where
+        T: Clone,
+    {
+        use ndarray::{SliceInfo, SliceInfoElem};
+        
+        // Convert ranges to SliceInfoElem
+        let slice_info: Vec<SliceInfoElem> = slices
+            .iter()
+            .map(|range| SliceInfoElem::Slice {
+                start: range.start as isize,
+                end: Some(range.end as isize),
+                step: 1,
+            })
+            .collect();
+        
+        // Create SliceInfo from elements
+        let slice_info = SliceInfo::<Vec<SliceInfoElem>, IxDyn, IxDyn>::try_from(slice_info)
+            .map_err(|e| OutOfCoreError::InvalidChunkSize(e.to_string()))?;
+        
+        // Slice the array and convert to owned
+        Ok(array.slice(slice_info).to_owned())
+    }
+
     /// Convert an in-memory array to out-of-core format
     pub fn convert_to_out_of_core<T>(
         array: &Array<T, IxDyn>,
@@ -1038,7 +1299,7 @@ pub mod utils {
         chunk_shape: Vec<usize>,
     ) -> CoreResult<Arc<OutOfCoreArray<T>>>
     where
-        T: Clone + Default + 'static + Send + Sync,
+        T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
     {
         let config = OutOfCoreConfig {
             chunk_shape,
@@ -1049,7 +1310,29 @@ pub mod utils {
         let out_of_core_array =
             manager.create_array(array_id, array.shape().to_vec(), None, Some(config))?;
 
-        // TODO: Copy data from in-memory array to out-of-core array
+        // Copy data from in-memory array to out-of-core array
+        let chunk_shape = &out_of_core_array.config.chunk_shape;
+        let array_shape = array.shape();
+        
+        // Calculate the number of chunks needed in each dimension
+        let chunks_per_dim: Vec<usize> = array_shape
+            .iter()
+            .zip(chunk_shape.iter())
+            .map(|(&total, &chunk)| total.div_ceil(chunk))
+            .collect();
+        
+        // Iterate through all chunks and copy data
+        let mut chunk_coords = vec![0; chunks_per_dim.len()];
+        copy_chunks_recursive(
+            array,
+            &out_of_core_array,
+            &chunks_per_dim,
+            &mut chunk_coords,
+            0,
+        )?;
+        
+        // Flush to ensure all data is written
+        out_of_core_array.flush()?;
 
         Ok(out_of_core_array)
     }
@@ -1212,6 +1495,43 @@ mod tests {
         assert_eq!(stats.cached_chunks, 2);
     }
 
+    #[test]
+    fn test_dirty_chunk_tracking() -> CoreResult<()> {
+        let temp_dir = TempDir::new()?;
+        let storage = Arc::new(FileStorageBackend::new(temp_dir.path())?);
+        
+        let config = OutOfCoreConfig {
+            chunk_shape: vec![100, 100],
+            max_cached_chunks: 2,
+            ..Default::default()
+        };
+        
+        let array = OutOfCoreArray::<f64>::new(
+            "test_dirty".to_string(),
+            vec![200, 200],
+            storage,
+            config,
+        );
+        
+        // Create and set a chunk
+        let chunk_coords = vec![0, 0];
+        let chunk_data = Array::<f64, IxDyn>::ones(IxDyn(&[100, 100]));
+        array.set_chunk(&chunk_coords, chunk_data)?;
+        
+        // Check that chunk is marked as dirty
+        let cache_stats = array.cache.get_statistics();
+        assert_eq!(cache_stats.dirty_chunks, 1);
+        
+        // Flush dirty chunks
+        array.flush()?;
+        
+        // Check that chunk is no longer dirty
+        let cache_stats = array.cache.get_statistics();
+        assert_eq!(cache_stats.dirty_chunks, 0);
+        
+        Ok(())
+    }
+    
     #[test]
     fn test_out_of_core_manager() -> CoreResult<()> {
         let manager = OutOfCoreManager::default();

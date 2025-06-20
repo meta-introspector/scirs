@@ -372,10 +372,8 @@ where
                 let mut self_idx = vec![0; self.ndim()];
 
                 // Fill in non-traced indices
-                let mut result_pos = 0;
-                for &axis in &non_trace_axes {
+                for (result_pos, &axis) in non_trace_axes.iter().enumerate() {
                     self_idx[axis] = result_idx[result_pos];
-                    result_pos += 1;
                 }
 
                 // Fill in traced indices

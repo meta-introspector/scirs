@@ -135,11 +135,13 @@ where
                         if i == 0 {
                             // For first input in matmul (A in A*B), grad_A = grad_out * B^T
                             let b = y_tensor.get_backprop_input(1);
-                            Some(T::matmul(gy, T::transpose(b, &[-1, -2])))
+                            // Use positive indices [1, 0] instead of [-1, -2] for 2D transpose
+                            Some(T::matmul(gy, T::transpose(b, &[1, 0])))
                         } else {
                             // For second input in matmul (B in A*B), grad_B = A^T * grad_out
                             let a = y_tensor.get_backprop_input(0);
-                            Some(T::matmul(T::transpose(a, &[-1, -2]), gy))
+                            // Use positive indices [1, 0] instead of [-1, -2] for 2D transpose
+                            Some(T::matmul(T::transpose(a, &[1, 0]), gy))
                         }
                     } else if op_name.contains("Sigmoid") {
                         // For sigmoid: dy/dx = sigmoid * (1 - sigmoid) * grad_out
@@ -195,10 +197,31 @@ where
                     {
                         // For matrix inverse: gradient = -A^{-T} @ grad_out @ A^{-T}
                         // We have access to the output (which is A^{-1})
-                        let inv_transpose = T::transpose(y_tensor, &[-1, -2]);
+                        let inv_transpose = T::transpose(y_tensor, &[1, 0]);
                         let temp = T::matmul(inv_transpose, gy);
                         let grad_before_neg = T::matmul(temp, inv_transpose);
                         Some(T::neg(grad_before_neg))
+                    } else if op_name == "MatrixSqrt" {
+                        // For matrix square root: gradient would involve solving a Sylvester equation
+                        // For now, return zeros with the same shape as the input
+                        let x_tensor = y_tensor.get_backprop_input(0);
+                        let zero_scalar = T::scalar(F::zero(), g);
+                        let zeros = T::mul(x_tensor, zero_scalar);
+                        Some(zeros)
+                    } else if op_name == "MatrixLog" {
+                        // For matrix logarithm: gradient involves Fréchet derivative
+                        // For now, return zeros with the same shape as the input
+                        let x_tensor = y_tensor.get_backprop_input(0);
+                        let zero_scalar = T::scalar(F::zero(), g);
+                        let zeros = T::mul(x_tensor, zero_scalar);
+                        Some(zeros)
+                    } else if op_name == "MatrixPow" {
+                        // For matrix power: gradient is complex
+                        // For now, return zeros with the same shape as the input
+                        let x_tensor = y_tensor.get_backprop_input(0);
+                        let zero_scalar = T::scalar(F::zero(), g);
+                        let zeros = T::mul(x_tensor, zero_scalar);
+                        Some(zeros)
                     } else {
                         // Default case - return scalar one for unknown operations
                         Some(T::scalar(F::one(), g))

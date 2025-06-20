@@ -183,8 +183,8 @@ where
 
         for (idx, &orig_val) in tensor_dyn.indexed_iter() {
             let rec_val = reconstructed[idx.clone()];
-            diff_squared_sum = diff_squared_sum + (orig_val - rec_val).powi(2);
-            orig_squared_sum = orig_squared_sum + orig_val.powi(2);
+            diff_squared_sum += (orig_val - rec_val).powi(2);
+            orig_squared_sum += orig_val.powi(2);
         }
 
         // Handle division by zero
@@ -327,6 +327,7 @@ where
 
         // Compute the corresponding core tensor
         let mut compressed_core = self.core.clone();
+        #[allow(clippy::needless_range_loop)]
         for mode in 0..compressed_factors.len() {
             // Original factor's transpose
             let orig_factor_t = self.factors[mode].t().to_owned();
@@ -515,6 +516,7 @@ where
     // Main ALS loop
     for iteration in 0..max_iterations {
         // For each mode, update the corresponding factor matrix
+        #[allow(clippy::needless_range_loop)]
         for mode in 0..ranks.len() {
             // Create the tensor unfolded along the current mode
             let tensor_unfolded = unfold_tensor(&tensor_dyn, mode)?;

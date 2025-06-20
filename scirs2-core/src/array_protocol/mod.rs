@@ -466,7 +466,9 @@ where
                 // and calls the original function
                 // This is a simplified version - in practice, we would need more complex
                 // type conversion
-                unimplemented!("Type conversion in array_function_dispatch is not implemented yet")
+                Err(CoreError::NotImplementedError(ErrorContext::new(
+                    "ArrayFunctionDecorator: Type conversion in array_function_dispatch is not implemented yet".to_string()
+                )))
             },
         );
 
@@ -1043,7 +1045,9 @@ where
                 // 1. Convert generic args to specific types needed by the function
                 // 2. Call the function with the converted args
                 // 3. Return the result as a Box<dyn Any>
-                unimplemented!("Implementation for array protocol functions is not complete")
+                Err(CoreError::NotImplementedError(ErrorContext::new(
+                    "ArrayProtocolFunction: Implementation for array protocol functions is not complete".to_string()
+                )))
             },
         );
 

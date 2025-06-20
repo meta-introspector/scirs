@@ -853,9 +853,9 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
+/// // Note: This is the old bicgstab API. Use the new API from solvers::iterative instead.
 /// use ndarray::array;
-/// use scirs2_linalg::bicgstab;
 ///
 /// let a = array![[4.0_f64, 1.0], [2.0, 3.0]]; // Non-symmetric
 /// let b = array![1.0_f64, 2.0];

@@ -3,7 +3,6 @@ use num_traits::Float;
 use scirs2_linalg::eigh;
 
 #[test]
-#[ignore = "3x3 symmetric eigenvalue decomposition not fully implemented yet"]
 fn debug_3x3_eigenvalue_computation() {
     let a = array![[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
 
@@ -15,6 +14,21 @@ fn debug_3x3_eigenvalue_computation() {
     println!("Eigenvalues: {:?}", eigenvalues);
     println!("Eigenvectors:");
     println!("{:?}", eigenvectors);
+
+    // Verify each eigenvalue-eigenvector pair individually
+    for i in 0..3 {
+        let eigval = eigenvalues[i];
+        let eigvec = eigenvectors.column(i);
+        let av_i = a.dot(&eigvec);
+        let v_lambda_i = &eigvec * eigval;
+
+        println!("Eigenvalue {}: {}", i, eigval);
+        println!("Eigenvector {}: {:?}", i, eigvec);
+        println!("A*v_{}: {:?}", i, av_i);
+        println!("λ_{}*v_{}: {:?}", i, i, v_lambda_i);
+        println!("Difference: {:?}", &av_i - &v_lambda_i);
+        println!();
+    }
 
     // Check A*V = V*Λ
     let av = a.dot(&eigenvectors);
