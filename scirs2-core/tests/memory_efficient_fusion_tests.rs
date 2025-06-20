@@ -3,7 +3,6 @@ mod tests {
     use scirs2_core::error::{CoreError, ErrorContext};
     use scirs2_core::memory_efficient::{register_fusion, FusedOp, OpFusion};
     use std::any::{Any, TypeId};
-    use std::fmt;
     use std::sync::Arc;
 
     // A simple operation for testing

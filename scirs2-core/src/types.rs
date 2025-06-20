@@ -1509,8 +1509,8 @@ mod enhanced_tests {
 
     #[test]
     fn test_fixed_point() {
-        let a = scientific::FixedPoint::<3>::from_float(3.141);
-        let b = scientific::FixedPoint::<3>::from_float(2.718);
+        let a = scientific::FixedPoint::<3>::from_float(std::f64::consts::PI);
+        let b = scientific::FixedPoint::<3>::from_float(std::f64::consts::E);
         let sum = a.add(b);
 
         assert!((sum.to_float() - 5.859).abs() < 0.001);

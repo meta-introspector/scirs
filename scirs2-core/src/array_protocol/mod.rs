@@ -239,6 +239,7 @@ impl ArrayFunctionRegistry {
 
     /// Get an array function by name.
     #[must_use]
+    #[allow(dead_code)]
     pub fn get(&self, name: &str) -> Option<&ArrayFunction> {
         self.functions.get(name)
     }

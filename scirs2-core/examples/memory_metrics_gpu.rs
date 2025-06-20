@@ -3,7 +3,7 @@
 //! This example demonstrates memory tracking for GPU operations using the
 //! memory metrics system.
 
-use scirs2_core::gpu::{GpuBackend, GpuDataType};
+use scirs2_core::gpu::GpuBackend;
 use scirs2_core::memory::metrics::{
     format_bytes, format_memory_report, generate_memory_report, reset_memory_metrics,
     setup_gpu_memory_tracking, TrackedGpuContext,

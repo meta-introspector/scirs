@@ -257,10 +257,17 @@ impl CrossFilePrefetchConfigBuilder {
     }
 }
 
+impl Default for CrossFilePrefetchConfigBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// A correlation between datasets.
 #[derive(Debug, Clone)]
 struct DatasetCorrelation {
     /// Primary dataset
+    #[allow(dead_code)]
     primary: DatasetId,
 
     /// Related dataset
@@ -302,10 +309,7 @@ impl DatasetCorrelation {
         self.strength = (self.strength * 0.9) + 0.1;
 
         // Update index correlations
-        let entry = self
-            .index_correlations
-            .entry(primary_index)
-            .or_default();
+        let entry = self.index_correlations.entry(primary_index).or_default();
 
         for &related_index in related_indices {
             if !entry.contains(&related_index) {
@@ -620,7 +624,10 @@ impl CrossFilePrefetchRegistry {
             }
         });
 
-        unsafe { INSTANCE.as_ref().unwrap() }
+        #[allow(static_mut_refs)]
+        unsafe {
+            INSTANCE.as_ref().unwrap()
+        }
     }
 
     /// Record a data access.
@@ -772,6 +779,7 @@ pub struct MemoryMappedArrayPrefetcher<A: Clone + Copy + Send + Sync + 'static> 
     array: Arc<super::memmap::MemoryMappedArray<A>>,
 
     /// Chunk size for prefetching
+    #[allow(dead_code)]
     chunk_size: usize,
 }
 
@@ -822,6 +830,7 @@ impl<A: Clone + Copy + Send + Sync + 'static> DatasetPrefetcher for MemoryMapped
 /// Extension traits for compressed arrays to enable cross-file prefetching.
 pub trait CompressedArrayPrefetchExt<A: Clone + Copy + Send + Sync + 'static> {
     /// Register with the cross-file prefetching system.
+    #[allow(dead_code)]
     fn register_for_cross_prefetch(
         &self,
         dataset_id: DatasetId,
@@ -848,6 +857,7 @@ impl<A: Clone + Copy + Send + Sync + 'static> CompressedArrayPrefetchExt<A>
 /// Extension traits for memory-mapped arrays to enable cross-file prefetching.
 pub trait MemoryMappedArrayPrefetchExt<A: Clone + Copy + Send + Sync + 'static> {
     /// Register with the cross-file prefetching system.
+    #[allow(dead_code)]
     fn register_for_cross_prefetch(
         &self,
         dataset_id: DatasetId,
@@ -940,6 +950,7 @@ impl<A: Clone + Copy + 'static + Send + Sync>
     TrackedArray<A, super::compressed_memmap::CompressedMemMappedArray<A>>
 {
     /// Get an element from the array, recording the access.
+    #[allow(dead_code)]
     pub fn get(&self, indices: &[usize]) -> CoreResult<A> {
         let start = Instant::now();
 

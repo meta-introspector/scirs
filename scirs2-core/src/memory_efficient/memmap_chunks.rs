@@ -343,7 +343,7 @@ where
     strategy: ChunkingStrategy,
 }
 
-impl<'a, A> Iterator for ChunkIter<'a, A>
+impl<A> Iterator for ChunkIter<'_, A>
 where
     A: Clone + Copy + 'static + Send + Sync,
 {
@@ -360,9 +360,7 @@ where
             let chunk_size = match self.strategy {
                 ChunkingStrategy::Fixed(size) => size,
                 ChunkingStrategy::NumChunks(n) => self.array.size.div_ceil(n),
-                ChunkingStrategy::Auto => {
-                    (self.array.size / 100).max(1)
-                }
+                ChunkingStrategy::Auto => (self.array.size / 100).max(1),
                 ChunkingStrategy::FixedBytes(bytes) => {
                     let element_size = std::mem::size_of::<A>();
                     let elements_per_chunk = bytes / element_size;
@@ -388,7 +386,7 @@ where
     }
 }
 
-impl<'a, A> ExactSizeIterator for ChunkIter<'a, A> where A: Clone + Copy + 'static + Send + Sync {}
+impl<A> ExactSizeIterator for ChunkIter<'_, A> where A: Clone + Copy + 'static + Send + Sync {}
 
 /// Extension trait for MemoryMappedArray to enable chunked iteration.
 ///
@@ -594,8 +592,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
                     ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
                     ChunkingStrategy::Auto => {
                         let total_elements = self.size;
-                        let optimal_chunk_size = (total_elements / 100).max(1);
-                        optimal_chunk_size
+                        (total_elements / 100).max(1)
                     }
                     ChunkingStrategy::FixedBytes(bytes) => {
                         let element_size = std::mem::size_of::<A>();
@@ -647,8 +644,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
                     ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
                     ChunkingStrategy::Auto => {
                         let total_elements = self.size;
-                        let optimal_chunk_size = (total_elements / 100).max(1);
-                        optimal_chunk_size
+                        (total_elements / 100).max(1)
                     }
                     ChunkingStrategy::FixedBytes(bytes) => {
                         let elements_per_chunk = bytes / element_size;

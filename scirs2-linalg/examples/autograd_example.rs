@@ -9,9 +9,9 @@
 //! available. For the full planned API, see src/autograd/mod.rs.
 
 #[cfg(feature = "autograd")]
-use scirs2_autograd as ag;
-#[cfg(feature = "autograd")]
 use ag::tensor_ops as T;
+#[cfg(feature = "autograd")]
+use scirs2_autograd as ag;
 
 #[cfg(not(feature = "autograd"))]
 fn main() {
@@ -166,10 +166,10 @@ fn demo_composite_operations() {
         let ax = T::matmul(a, T::expand_dims(x, 1));
         let ax_squeezed = T::squeeze(ax, &[1]);
         let norm_squared = T::reduce_sum(&(ax_squeezed * ax_squeezed), &[], false);
-        
+
         let diag = T::extract_diag(a);
         let trace = T::reduce_sum(&diag, &[], false);
-        
+
         let f = norm_squared + trace;
 
         // Compute gradients

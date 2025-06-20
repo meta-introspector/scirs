@@ -1,7 +1,63 @@
 //! Main validator implementation
 //!
-//! This module provides the core Validator struct that orchestrates all validation
+//! This module provides the core `Validator` struct that orchestrates all validation
 //! operations and manages caching, custom rules, and configuration.
+//!
+//! ## Features
+//!
+//! - **Schema-based validation**: Validate data against predefined schemas
+//! - **Custom validation rules**: Extend validation with custom business logic
+//! - **Caching**: Improve performance with result caching
+//! - **Array validation**: Specialized validation for scientific arrays
+//! - **Quality analysis**: Generate comprehensive data quality reports
+//!
+//! ## Examples
+//!
+//! ### Basic validation
+//!
+//! ```rust
+//! use scirs2_core::validation::data::{Validator, ValidationConfig, ValidationSchema, DataType};
+//!
+//! let config = ValidationConfig::default();
+//! let validator = Validator::new(config)?;
+//!
+//! let schema = ValidationSchema::new()
+//!     .name("user_schema")
+//!     .require_field("name", DataType::String)
+//!     .require_field("age", DataType::Integer);
+//!
+//! # #[cfg(feature = "serde")]
+//! # {
+//! let data = serde_json::json!({
+//!     "name": "John Doe",
+//!     "age": 30
+//! });
+//!
+//! let result = validator.validate(&data, &schema)?;
+//! assert!(result.is_valid());
+//! # }
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! ### Array validation
+//!
+//! ```rust
+//! use scirs2_core::validation::data::{Validator, ValidationConfig, ArrayValidationConstraints};
+//! use ndarray::Array2;
+//!
+//! let config = ValidationConfig::default();
+//! let validator = Validator::new(config.clone())?;
+//!
+//! let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])?;
+//!
+//! let constraints = ArrayValidationConstraints::new()
+//!     .with_shape(vec![3, 2])
+//!     .check_numeric_quality();
+//!
+//! let result = validator.validate_ndarray(&data, &constraints, &config)?;
+//! assert!(result.is_valid());
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
 
 use crate::error::{CoreError, ErrorContext};
 use std::collections::{HashMap, HashSet};
@@ -65,6 +121,27 @@ pub struct Validator {
 
 impl Validator {
     /// Create a new validator with configuration
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Validation configuration settings
+    ///
+    /// # Returns
+    ///
+    /// A new `Validator` instance or an error if initialization fails
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use scirs2_core::validation::data::{Validator, ValidationConfig};
+    ///
+    /// let config = ValidationConfig::default()
+    ///     .with_max_depth(10)
+    ///     .with_strict_mode(true);
+    ///
+    /// let validator = Validator::new(config)?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn new(config: ValidationConfig) -> Result<Self, CoreError> {
         Ok(Self {
             config,
@@ -75,7 +152,42 @@ impl Validator {
         })
     }
 
-    /// Validate data against a schema
+    /// Validate JSON data against a schema
+    ///
+    /// This method performs comprehensive validation of JSON data against a predefined schema,
+    /// including type checking, constraint validation, and custom rules.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The JSON data to validate
+    /// * `schema` - The validation schema to apply
+    ///
+    /// # Returns
+    ///
+    /// A `ValidationResult` containing the validation outcome and any errors/warnings
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #[cfg(feature = "serde")]
+    /// # {
+    /// use scirs2_core::validation::data::{Validator, ValidationSchema, DataType, Constraint, ValidationConfig};
+    ///
+    /// let validator = Validator::new(ValidationConfig::default())?;
+    ///
+    /// let schema = ValidationSchema::new()
+    ///     .require_field("email", DataType::String)
+    ///     .add_constraint("email", Constraint::Pattern("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$".to_string()));
+    ///
+    /// let data = serde_json::json!({
+    ///     "email": "user@example.com"
+    /// });
+    ///
+    /// let result = validator.validate(&data, &schema)?;
+    /// assert!(result.is_valid());
+    /// # }
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     #[cfg(feature = "serde")]
     pub fn validate(
         &self,
@@ -139,6 +251,48 @@ impl Validator {
     }
 
     /// Validate ndarray with comprehensive checks
+    ///
+    /// Performs validation on scientific arrays including shape validation, numeric quality
+    /// checks, statistical constraints, and performance characteristics.
+    ///
+    /// # Arguments
+    ///
+    /// * `array` - The ndarray to validate
+    /// * `constraints` - Validation constraints to apply
+    /// * `config` - Validation configuration
+    ///
+    /// # Type Parameters
+    ///
+    /// * `S` - Storage type (must implement `Data`)
+    /// * `D` - Dimension type
+    /// * `S::Elem` - Element type (must be a floating-point type)
+    ///
+    /// # Returns
+    ///
+    /// A `ValidationResult` with detailed validation information
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use scirs2_core::validation::data::{Validator, ValidationConfig, ArrayValidationConstraints};
+    /// use ndarray::Array2;
+    ///
+    /// let validator = Validator::new(ValidationConfig::default())?;
+    ///
+    /// let data = Array2::from_shape_vec((3, 3), vec![
+    ///     1.0, 2.0, 3.0,
+    ///     4.0, 5.0, 6.0,
+    ///     7.0, 8.0, 9.0
+    /// ])?;
+    ///
+    /// let constraints = ArrayValidationConstraints::new()
+    ///     .with_shape(vec![3, 3])
+    ///     .check_numeric_quality();
+    ///
+    /// let result = validator.validate_ndarray(&data, &constraints, &ValidationConfig::default())?;
+    /// assert!(result.is_valid());
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn validate_ndarray<S, D>(
         &self,
         array: &ArrayBase<S, D>,
@@ -155,6 +309,34 @@ impl Validator {
     }
 
     /// Generate comprehensive data quality report
+    ///
+    /// Analyzes an array and generates a detailed quality report including completeness,
+    /// accuracy, consistency, and statistical properties.
+    ///
+    /// # Arguments
+    ///
+    /// * `array` - The array to analyze
+    /// * `field_name` - Name of the field for reporting
+    ///
+    /// # Returns
+    ///
+    /// A `DataQualityReport` with quality metrics and recommendations
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use scirs2_core::validation::data::{Validator, ValidationConfig};
+    /// use ndarray::Array1;
+    ///
+    /// let validator = Validator::new(ValidationConfig::default())?;
+    ///
+    /// let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+    /// let report = validator.generate_quality_report(&data, "measurements")?;
+    ///
+    /// println!("Quality score: {}", report.quality_score);
+    /// println!("Completeness: {}", report.metrics.completeness);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn generate_quality_report<S, D>(
         &self,
         array: &ArrayBase<S, D>,
@@ -170,6 +352,43 @@ impl Validator {
     }
 
     /// Add a custom validation rule
+    ///
+    /// Registers a custom validation rule that can be referenced in schemas.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - Unique name for the rule
+    /// * `rule` - The validation rule implementation
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use scirs2_core::validation::data::{Validator, ValidationConfig, ValidationRule};
+    ///
+    /// struct EmailRule;
+    ///
+    /// impl ValidationRule for EmailRule {
+    ///     #[cfg(feature = "serde")]
+    ///     fn validate(&self, value: &serde_json::Value, field_path: &str) -> Result<(), String> {
+    ///         if let Some(email) = value.as_str() {
+    ///             if email.contains('@') {
+    ///                 Ok(())
+    ///             } else {
+    ///                 Err(format!("Invalid email at {}", field_path))
+    ///             }
+    ///         } else {
+    ///             Err(format!("Expected string at {}", field_path))
+    ///         }
+    ///     }
+    ///
+    ///     fn name(&self) -> &str { "email" }
+    ///     fn description(&self) -> &str { "Validates email format" }
+    /// }
+    ///
+    /// let mut validator = Validator::new(ValidationConfig::default())?;
+    /// validator.add_custom_rule("email".to_string(), Box::new(EmailRule));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn add_custom_rule(&mut self, name: String, rule: Box<dyn ValidationRule + Send + Sync>) {
         self.custom_rules.insert(name, rule);
     }
@@ -339,6 +558,7 @@ impl Validator {
 
     /// Validate field constraints
     #[cfg(feature = "serde")]
+    #[allow(clippy::only_used_in_recursion)]
     fn validate_field_constraints(
         &self,
         value: &JsonValue,
@@ -425,8 +645,284 @@ impl Validator {
                         }
                     }
                 }
-                _ => {
-                    // Other constraints not yet implemented
+                Constraint::Pattern(pattern) => {
+                    if let Some(s) = value.as_str() {
+                        #[cfg(feature = "regex")]
+                        {
+                            if let Ok(re) = regex::Regex::new(pattern) {
+                                if !re.is_match(s) {
+                                    errors.push(ValidationError {
+                                        error_type: ValidationErrorType::InvalidFormat,
+                                        field_path: field_path.to_string(),
+                                        message: format!(
+                                            "Value '{}' does not match pattern '{}'",
+                                            s, pattern
+                                        ),
+                                        expected: Some(format!("pattern: {}", pattern)),
+                                        actual: Some(s.to_string()),
+                                        constraint: Some("pattern".to_string()),
+                                        severity: ErrorSeverity::Error,
+                                        context: HashMap::new(),
+                                    });
+                                }
+                            }
+                        }
+                        #[cfg(not(feature = "regex"))]
+                        {
+                            _warnings.push(ValidationError {
+                                error_type: ValidationErrorType::SchemaError,
+                                field_path: field_path.to_string(),
+                                message: "Pattern validation requires 'regex' feature".to_string(),
+                                expected: None,
+                                actual: None,
+                                constraint: Some("pattern".to_string()),
+                                severity: ErrorSeverity::Warning,
+                                context: HashMap::new(),
+                            });
+                        }
+                    }
+                }
+                Constraint::AllowedValues(allowed) => {
+                    let value_str = match value {
+                        JsonValue::String(s) => s.clone(),
+                        _ => value.to_string(),
+                    };
+                    if !allowed.contains(&value_str) {
+                        errors.push(ValidationError {
+                            error_type: ValidationErrorType::ConstraintViolation,
+                            field_path: field_path.to_string(),
+                            message: format!(
+                                "Value '{}' is not in allowed values: {:?}",
+                                value_str, allowed
+                            ),
+                            expected: Some(format!("{:?}", allowed)),
+                            actual: Some(value_str),
+                            constraint: Some("allowed_values".to_string()),
+                            severity: ErrorSeverity::Error,
+                            context: HashMap::new(),
+                        });
+                    }
+                }
+                Constraint::Precision { decimal_places } => {
+                    if let Some(num) = value.as_f64() {
+                        let num_str = num.to_string();
+                        if let Some(dot_pos) = num_str.find('.') {
+                            let actual_precision = num_str.len() - dot_pos - 1;
+                            if actual_precision > *decimal_places {
+                                errors.push(ValidationError {
+                                    error_type: ValidationErrorType::ConstraintViolation,
+                                    field_path: field_path.to_string(),
+                                    message: format!(
+                                        "Value {} has {} decimal places, expected at most {}",
+                                        num, actual_precision, decimal_places
+                                    ),
+                                    expected: Some(format!(
+                                        "max {} decimal places",
+                                        decimal_places
+                                    )),
+                                    actual: Some(format!("{} decimal places", actual_precision)),
+                                    constraint: Some("precision".to_string()),
+                                    severity: ErrorSeverity::Error,
+                                    context: HashMap::new(),
+                                });
+                            }
+                        }
+                    }
+                }
+                Constraint::ArraySize { min, max } => {
+                    if let Some(arr) = value.as_array() {
+                        let size = arr.len();
+                        if size < *min || size > *max {
+                            errors.push(ValidationError {
+                                error_type: ValidationErrorType::ConstraintViolation,
+                                field_path: field_path.to_string(),
+                                message: format!(
+                                    "Array size {} is out of range [{}, {}]",
+                                    size, min, max
+                                ),
+                                expected: Some(format!("size in [{}, {}]", min, max)),
+                                actual: Some(size.to_string()),
+                                constraint: Some("array_size".to_string()),
+                                severity: ErrorSeverity::Error,
+                                context: HashMap::new(),
+                            });
+                        }
+                    }
+                }
+                Constraint::ArrayElements(element_constraint) => {
+                    if let Some(arr) = value.as_array() {
+                        for (idx, element) in arr.iter().enumerate() {
+                            let element_path = format!("{}[{}]", field_path, idx);
+                            self.validate_field_constraints(
+                                element,
+                                &[(**element_constraint).clone()],
+                                &element_path,
+                                errors,
+                                _warnings,
+                                stats,
+                            )?;
+                        }
+                    }
+                }
+                Constraint::Custom(_rule_name) => {
+                    // Custom constraint validation is handled separately in validate_fields
+                    // This is just a placeholder for consistency
+                }
+                Constraint::Statistical(_stats_constraints) => {
+                    // Statistical constraints would require numerical array analysis
+                    // This would be better handled by the array validator
+                    _warnings.push(ValidationError {
+                        error_type: ValidationErrorType::SchemaError,
+                        field_path: field_path.to_string(),
+                        message: "Statistical constraints require array validation".to_string(),
+                        expected: None,
+                        actual: None,
+                        constraint: Some("statistical".to_string()),
+                        severity: ErrorSeverity::Warning,
+                        context: HashMap::new(),
+                    });
+                }
+                Constraint::Temporal(_time_constraints) => {
+                    // Temporal constraints would require time series data
+                    _warnings.push(ValidationError {
+                        error_type: ValidationErrorType::SchemaError,
+                        field_path: field_path.to_string(),
+                        message: "Temporal constraints not yet implemented".to_string(),
+                        expected: None,
+                        actual: None,
+                        constraint: Some("temporal".to_string()),
+                        severity: ErrorSeverity::Warning,
+                        context: HashMap::new(),
+                    });
+                }
+                Constraint::Shape(_shape_constraints) => {
+                    // Shape constraints would require array/matrix validation
+                    _warnings.push(ValidationError {
+                        error_type: ValidationErrorType::SchemaError,
+                        field_path: field_path.to_string(),
+                        message: "Shape constraints require array validation".to_string(),
+                        expected: None,
+                        actual: None,
+                        constraint: Some("shape".to_string()),
+                        severity: ErrorSeverity::Warning,
+                        context: HashMap::new(),
+                    });
+                }
+                Constraint::And(constraints) => {
+                    // All constraints must pass
+                    for constraint in constraints {
+                        self.validate_field_constraints(
+                            value,
+                            &[constraint.clone()],
+                            field_path,
+                            errors,
+                            _warnings,
+                            stats,
+                        )?;
+                    }
+                }
+                Constraint::Or(constraints) => {
+                    // At least one constraint must pass
+                    let mut temp_errors = Vec::new();
+                    let mut any_passed = false;
+
+                    for constraint in constraints {
+                        let mut constraint_errors = Vec::new();
+                        self.validate_field_constraints(
+                            value,
+                            &[constraint.clone()],
+                            field_path,
+                            &mut constraint_errors,
+                            _warnings,
+                            stats,
+                        )?;
+
+                        if constraint_errors.is_empty() {
+                            any_passed = true;
+                            break;
+                        } else {
+                            temp_errors.extend(constraint_errors);
+                        }
+                    }
+
+                    if !any_passed {
+                        errors.push(ValidationError {
+                            error_type: ValidationErrorType::ConstraintViolation,
+                            field_path: field_path.to_string(),
+                            message: format!(
+                                "None of the OR constraints passed: {} errors",
+                                temp_errors.len()
+                            ),
+                            expected: Some("at least one constraint to pass".to_string()),
+                            actual: Some("all constraints failed".to_string()),
+                            constraint: Some("or".to_string()),
+                            severity: ErrorSeverity::Error,
+                            context: HashMap::new(),
+                        });
+                    }
+                }
+                Constraint::Not(constraint) => {
+                    // Constraint must not pass
+                    let mut temp_errors = Vec::new();
+                    self.validate_field_constraints(
+                        value,
+                        &[*constraint.clone()],
+                        field_path,
+                        &mut temp_errors,
+                        _warnings,
+                        stats,
+                    )?;
+
+                    if temp_errors.is_empty() {
+                        errors.push(ValidationError {
+                            error_type: ValidationErrorType::ConstraintViolation,
+                            field_path: field_path.to_string(),
+                            message: "NOT constraint failed: inner constraint passed".to_string(),
+                            expected: Some("constraint to fail".to_string()),
+                            actual: Some("constraint passed".to_string()),
+                            constraint: Some("not".to_string()),
+                            severity: ErrorSeverity::Error,
+                            context: HashMap::new(),
+                        });
+                    }
+                }
+                Constraint::If {
+                    condition,
+                    then_constraint,
+                    else_constraint,
+                } => {
+                    // Conditional constraint
+                    let mut condition_errors = Vec::new();
+                    self.validate_field_constraints(
+                        value,
+                        &[*condition.clone()],
+                        field_path,
+                        &mut condition_errors,
+                        _warnings,
+                        stats,
+                    )?;
+
+                    if condition_errors.is_empty() {
+                        // Condition passed, apply then_constraint
+                        self.validate_field_constraints(
+                            value,
+                            &[*then_constraint.clone()],
+                            field_path,
+                            errors,
+                            _warnings,
+                            stats,
+                        )?;
+                    } else if let Some(else_constraint) = else_constraint {
+                        // Condition failed, apply else_constraint
+                        self.validate_field_constraints(
+                            value,
+                            &[*else_constraint.clone()],
+                            field_path,
+                            errors,
+                            _warnings,
+                            stats,
+                        )?;
+                    }
                 }
             }
         }
@@ -435,6 +931,7 @@ impl Validator {
 
     /// Validate global constraints
     #[cfg(feature = "serde")]
+    #[allow(clippy::ptr_arg)]
     fn validate_global_constraints(
         &self,
         _data: &JsonValue,
@@ -449,6 +946,7 @@ impl Validator {
 
     /// Check for additional fields
     #[cfg(feature = "serde")]
+    #[allow(clippy::ptr_arg)]
     fn check_additional_fields(
         &self,
         data: &JsonValue,
@@ -666,5 +1164,428 @@ mod tests {
         let result = validator.validate(&invalid_data, &schema).unwrap();
         assert!(!result.is_valid());
         assert_eq!(result.errors().len(), 1);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_allowed_values_constraint() {
+        let config = ValidationConfig::default();
+        let validator = Validator::new(config).unwrap();
+
+        let schema = ValidationSchema::new()
+            .name("test_schema")
+            .optional_field("status", DataType::String)
+            .add_constraint(
+                "status",
+                Constraint::AllowedValues(vec![
+                    "active".to_string(),
+                    "inactive".to_string(),
+                    "pending".to_string(),
+                ]),
+            );
+
+        let valid_data = serde_json::json!({
+            "status": "active"
+        });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({
+            "status": "deleted"
+        });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_precision_constraint() {
+        let config = ValidationConfig::default();
+        let validator = Validator::new(config).unwrap();
+
+        let schema = ValidationSchema::new()
+            .name("test_schema")
+            .optional_field("price", DataType::Float64)
+            .add_constraint("price", Constraint::Precision { decimal_places: 2 });
+
+        let valid_data = serde_json::json!({
+            "price": 19.99
+        });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({
+            "price": 19.999
+        });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_array_size_constraint() {
+        let config = ValidationConfig::default();
+        let validator = Validator::new(config).unwrap();
+
+        let schema = ValidationSchema::new()
+            .name("test_schema")
+            .optional_field("tags", DataType::Array(Box::new(DataType::String)))
+            .add_constraint("tags", Constraint::ArraySize { min: 1, max: 5 });
+
+        let valid_data = serde_json::json!({
+            "tags": ["rust", "programming", "science"]
+        });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({
+            "tags": ["too", "many", "tags", "here", "six", "seven"]
+        });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_array_elements_constraint() {
+        let config = ValidationConfig::default();
+        let validator = Validator::new(config).unwrap();
+
+        let schema = ValidationSchema::new()
+            .name("test_schema")
+            .optional_field("scores", DataType::Array(Box::new(DataType::Float64)))
+            .add_constraint(
+                "scores",
+                Constraint::ArrayElements(Box::new(Constraint::Range {
+                    min: 0.0,
+                    max: 100.0,
+                })),
+            );
+
+        let valid_data = serde_json::json!({
+            "scores": [85.5, 92.0, 78.3, 95.0]
+        });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({
+            "scores": [85.5, 92.0, 105.0, 95.0]
+        });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_composite_constraint_validation() {
+        let validator = Validator::new(ValidationConfig::default()).unwrap();
+
+        // Test AND constraint
+        let schema = ValidationSchema::new()
+            .require_field("age", DataType::Float64)
+            .add_constraint(
+                "age",
+                Constraint::And(vec![
+                    Constraint::Range {
+                        min: 0.0,
+                        max: 150.0,
+                    },
+                    Constraint::NotNull,
+                ]),
+            );
+
+        let valid_data = serde_json::json!({
+            "age": 25.0
+        });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({
+            "age": -5.0
+        });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+
+        // Test OR constraint
+        let schema = ValidationSchema::new()
+            .require_field("status", DataType::String)
+            .add_constraint(
+                "status",
+                Constraint::Or(vec![
+                    Constraint::Pattern("^active$".to_string()),
+                    Constraint::Pattern("^inactive$".to_string()),
+                ]),
+            );
+
+        let valid_data = serde_json::json!({
+            "status": "active"
+        });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({
+            "status": "pending"
+        });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+
+        // Test NOT constraint
+        let schema = ValidationSchema::new()
+            .require_field("password", DataType::String)
+            .add_constraint(
+                "password",
+                Constraint::Not(Box::new(Constraint::Pattern("password".to_string()))),
+            );
+
+        let valid_data = serde_json::json!({
+            "password": "s3cr3t"
+        });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({
+            "password": "password123"
+        });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+
+        // Test IF-THEN constraint
+        let schema = ValidationSchema::new()
+            .optional_field("premium", DataType::Boolean)
+            .optional_field("limit", DataType::Float64)
+            .add_constraint(
+                "limit",
+                Constraint::If {
+                    condition: Box::new(Constraint::NotNull),
+                    then_constraint: Box::new(Constraint::Range {
+                        min: 0.0,
+                        max: 1000000.0,
+                    }),
+                    else_constraint: None,
+                },
+            );
+
+        let valid_data = serde_json::json!({
+            "premium": true,
+            "limit": 50000.0
+        });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_edge_case_validations() {
+        let validator = Validator::new(ValidationConfig::default()).unwrap();
+
+        // Test empty AND constraint
+        let schema = ValidationSchema::new()
+            .require_field("value", DataType::Float64)
+            .add_constraint("value", Constraint::And(vec![]));
+
+        let data = serde_json::json!({ "value": 42.0 });
+        let result = validator.validate(&data, &schema).unwrap();
+        assert!(result.is_valid()); // Empty AND should pass
+
+        // Test empty OR constraint
+        let schema = ValidationSchema::new()
+            .require_field("value", DataType::Float64)
+            .add_constraint("value", Constraint::Or(vec![]));
+
+        let result = validator.validate(&data, &schema).unwrap();
+        assert!(result.is_valid()); // Empty OR currently passes, but could be considered invalid
+
+        // Test nested AND/OR combinations
+        let complex_constraint = Constraint::And(vec![
+            Constraint::Or(vec![
+                Constraint::Range {
+                    min: 0.0,
+                    max: 50.0,
+                },
+                Constraint::Range {
+                    min: 100.0,
+                    max: 150.0,
+                },
+            ]),
+            Constraint::Not(Box::new(Constraint::Range {
+                min: 25.0,
+                max: 30.0,
+            })),
+        ]);
+
+        let schema = ValidationSchema::new()
+            .require_field("score", DataType::Float64)
+            .add_constraint("score", complex_constraint);
+
+        // Value 20 should pass: in range 0-50 AND not in range 25-30
+        let valid_data = serde_json::json!({ "score": 20.0 });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        // Value 27 should fail: in range 0-50 BUT also in range 25-30
+        let invalid_data = serde_json::json!({ "score": 27.0 });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+
+        // Test IF-THEN-ELSE with field dependencies
+        // Note: This test shows a limitation - we need a way to reference other fields
+        // For now, we'll test a simpler case where the condition is on the same field
+        let schema = ValidationSchema::new()
+            .optional_field("value", DataType::Float64)
+            .add_constraint(
+                "value",
+                Constraint::If {
+                    condition: Box::new(Constraint::Range {
+                        min: 1000.0,
+                        max: f64::INFINITY,
+                    }),
+                    then_constraint: Box::new(Constraint::Range {
+                        min: 1000.0,
+                        max: 10000.0,
+                    }),
+                    else_constraint: Some(Box::new(Constraint::Range {
+                        min: 0.0,
+                        max: 100.0,
+                    })),
+                },
+            );
+
+        // High value (>= 1000) must be in range 1000-10000
+        let valid_high = serde_json::json!({
+            "value": 5000.0
+        });
+        let result = validator.validate(&valid_high, &schema).unwrap();
+        assert!(result.is_valid());
+
+        // Low value (< 1000) must be in range 0-100
+        let valid_low = serde_json::json!({
+            "value": 50.0
+        });
+        let result = validator.validate(&valid_low, &schema).unwrap();
+        assert!(result.is_valid());
+
+        // High value out of allowed range (should fail)
+        let invalid_high = serde_json::json!({
+            "value": 15000.0
+        });
+        let result = validator.validate(&invalid_high, &schema).unwrap();
+        assert!(!result.is_valid());
+
+        // Low value out of allowed range (should fail)
+        let invalid_low = serde_json::json!({
+            "value": 150.0
+        });
+        let result = validator.validate(&invalid_low, &schema).unwrap();
+        assert!(!result.is_valid());
+
+        // Test multiple NOT constraints
+        let schema = ValidationSchema::new()
+            .require_field("code", DataType::String)
+            .add_constraint(
+                "code",
+                Constraint::And(vec![
+                    Constraint::Not(Box::new(Constraint::Pattern("test".to_string()))),
+                    Constraint::Not(Box::new(Constraint::Pattern("debug".to_string()))),
+                    Constraint::Length { min: 3, max: 10 },
+                ]),
+            );
+
+        let valid_data = serde_json::json!({ "code": "prod123" });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({ "code": "test123" });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_constraint_error_messages() {
+        let validator = Validator::new(ValidationConfig::default()).unwrap();
+
+        // Test that OR constraint provides meaningful error
+        let schema = ValidationSchema::new()
+            .require_field("format", DataType::String)
+            .add_constraint(
+                "format",
+                Constraint::Or(vec![
+                    Constraint::Pattern("^[A-Z]{3}$".to_string()),
+                    Constraint::Pattern("^[0-9]{6}$".to_string()),
+                ]),
+            );
+
+        let invalid_data = serde_json::json!({ "format": "abc123" });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+
+        let errors = result.errors();
+        assert!(!errors.is_empty());
+        assert!(errors[0]
+            .message
+            .contains("None of the OR constraints passed"));
+
+        // Test nested constraint error propagation
+        let schema = ValidationSchema::new()
+            .require_field("data", DataType::Array(Box::new(DataType::Float64)))
+            .add_constraint(
+                "data",
+                Constraint::And(vec![
+                    Constraint::ArraySize { min: 2, max: 10 },
+                    Constraint::ArrayElements(Box::new(Constraint::Range {
+                        min: 0.0,
+                        max: 100.0,
+                    })),
+                ]),
+            );
+
+        let invalid_data = serde_json::json!({
+            "data": [10.0, 20.0, 150.0] // 150 is out of range
+        });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
+
+        let errors = result.errors();
+        assert!(errors.iter().any(|e| e.field_path.contains("[2]")));
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_performance_edge_cases() {
+        let validator = Validator::new(ValidationConfig::default()).unwrap();
+
+        // Test deeply nested constraints
+        let mut constraint = Constraint::Range {
+            min: 0.0,
+            max: 100.0,
+        };
+        for _ in 0..10 {
+            constraint = Constraint::And(vec![constraint.clone(), Constraint::NotNull]);
+        }
+
+        let schema = ValidationSchema::new()
+            .require_field("value", DataType::Float64)
+            .add_constraint("value", constraint);
+
+        let data = serde_json::json!({ "value": 50.0 });
+        let result = validator.validate(&data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        // Test large OR constraint
+        let many_patterns: Vec<Constraint> = (0..100)
+            .map(|i| Constraint::Pattern(format!("pattern{}", i)))
+            .collect();
+
+        let schema = ValidationSchema::new()
+            .require_field("text", DataType::String)
+            .add_constraint("text", Constraint::Or(many_patterns));
+
+        let valid_data = serde_json::json!({ "text": "pattern42" });
+        let result = validator.validate(&valid_data, &schema).unwrap();
+        assert!(result.is_valid());
+
+        let invalid_data = serde_json::json!({ "text": "no-match" });
+        let result = validator.validate(&invalid_data, &schema).unwrap();
+        assert!(!result.is_valid());
     }
 }

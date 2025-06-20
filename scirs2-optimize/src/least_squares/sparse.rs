@@ -401,11 +401,12 @@ where
 
             // Gradient of 0.5 * sum(r_i^2) is J^T * r
             // Using finite differences: d/dx_i [ 0.5 * sum(r_j^2) ] = sum(r_j * dr_j/dx_i)
-            grad[i] = 2.0 * residual_plus
-                .iter()
-                .zip(residual.iter())
-                .map(|(&rp, &r)| r * (rp - r) / eps)
-                .sum::<f64>();
+            grad[i] = 2.0
+                * residual_plus
+                    .iter()
+                    .zip(residual.iter())
+                    .map(|(&rp, &r)| r * (rp - r) / eps)
+                    .sum::<f64>();
         }
 
         // Proximal gradient step
@@ -592,11 +593,12 @@ where
 
             // Gradient of 0.5 * sum(r_i^2) is J^T * r
             // Using finite differences: d/dx_i [ 0.5 * sum(r_j^2) ] = sum(r_j * dr_j/dx_i)
-            grad[i] = 2.0 * residual_plus
-                .iter()
-                .zip(residual.iter())
-                .map(|(&rp, &r)| r * (rp - r) / eps)
-                .sum::<f64>();
+            grad[i] = 2.0
+                * residual_plus
+                    .iter()
+                    .zip(residual.iter())
+                    .map(|(&rp, &r)| r * (rp - r) / eps)
+                    .sum::<f64>();
         }
 
         // Check convergence

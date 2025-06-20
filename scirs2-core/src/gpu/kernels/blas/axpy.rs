@@ -16,6 +16,12 @@ pub struct AxpyKernel {
     base: BaseKernel,
 }
 
+impl Default for AxpyKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AxpyKernel {
     /// Create a new AXPY kernel
     pub fn new() -> Self {
@@ -166,7 +172,10 @@ impl GpuKernel for AxpyKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        matches!(params.data_type, DataType::Float32 | DataType::Float64 | DataType::Float16)
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Float16
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

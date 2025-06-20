@@ -266,8 +266,8 @@ impl KernelRegistry {
     }
 
     /// Get a kernel by name
-    pub fn get(&self, name: &str) -> Option<&Box<dyn GpuKernel>> {
-        self.kernels.get(name)
+    pub fn get(&self, name: &str) -> Option<&dyn GpuKernel> {
+        self.kernels.get(name).map(|k| k.as_ref())
     }
 
     /// Get a specialized kernel

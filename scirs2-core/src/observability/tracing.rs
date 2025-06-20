@@ -1362,6 +1362,7 @@ impl TraceExporter for ConsoleExporter {
 pub struct HttpExporter {
     endpoint: String,
     client: reqwest::blocking::Client,
+    #[allow(dead_code)]
     timeout: Duration,
 }
 

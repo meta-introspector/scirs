@@ -350,7 +350,7 @@ impl<T> LockFreeQueue<T> {
                         .compare_exchange_weak(head, next, Ordering::Release, Ordering::Relaxed)
                         .is_ok()
                     {
-                        unsafe { Box::from_raw(head) };
+                        unsafe { drop(Box::from_raw(head)) };
                         self.size.fetch_sub(1, Ordering::Relaxed);
                         return data;
                     }
@@ -382,7 +382,7 @@ impl<T> Drop for LockFreeQueue<T> {
         // Clean up the dummy node
         let head = self.head.load(Ordering::Relaxed);
         if !head.is_null() {
-            unsafe { Box::from_raw(head) };
+            unsafe { drop(Box::from_raw(head)) };
         }
     }
 }
@@ -517,6 +517,7 @@ pub trait WorkStealingTask: Send + 'static {
 /// Work-stealing scheduler for efficient parallel processing
 pub struct WorkStealingScheduler {
     /// Worker threads
+    #[allow(dead_code)]
     workers: Vec<Worker>,
     /// Global task queue
     global_queue: Arc<LockFreeQueue<Box<dyn WorkStealingTask>>>,
@@ -528,6 +529,7 @@ pub struct WorkStealingScheduler {
 
 struct Worker {
     /// Worker ID
+    #[allow(dead_code)]
     id: usize,
     /// Local task queue
     local_queue: LockFreeQueue<Box<dyn WorkStealingTask>>,
@@ -560,12 +562,10 @@ impl WorkStealingScheduler {
         }
 
         // Set up stealing references
-        for i in 0..num_workers {
+        for (i, worker) in workers.iter_mut().enumerate() {
             for j in 0..num_workers {
                 if i != j {
-                    workers[i]
-                        .other_workers
-                        .push(Arc::new(LockFreeQueue::new(0))); // Placeholder
+                    worker.other_workers.push(Arc::new(LockFreeQueue::new(0))); // Placeholder
                 }
             }
         }
@@ -658,6 +658,7 @@ where
     /// Buffer pool
     buffer_pool: Arc<BufferPool>,
     /// Work-stealing scheduler
+    #[allow(dead_code)]
     scheduler: Option<Arc<WorkStealingScheduler>>,
     /// Processing function
     process_fn: Arc<dyn Fn(T) -> CoreResult<U> + Send + Sync>,

@@ -479,17 +479,17 @@ mod tests {
         let mut max_prey = 0.0;
         let mut min_pred = f64::INFINITY;
         let mut max_pred = 0.0;
-        
+
         for state in result.y.iter() {
             assert!(state[0] > 0.0, "Prey population became non-positive");
             assert!(state[1] > 0.0, "Predator population became non-positive");
-            
+
             min_prey = f64::min(min_prey, state[0]);
             max_prey = f64::max(max_prey, state[0]);
             min_pred = f64::min(min_pred, state[1]);
             max_pred = f64::max(max_pred, state[1]);
         }
-        
+
         // Populations should oscillate but remain bounded
         assert!(min_prey > 0.01);
         assert!(max_prey < 1000.0);

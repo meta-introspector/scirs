@@ -8,6 +8,7 @@
 //!
 //! - JSON Schema validation with scientific extensions
 //! - Constraint-based validation (range, format, pattern)
+//! - Composite constraints with logical operators (AND, OR, NOT, IF-THEN)
 //! - Data integrity verification with checksums
 //! - Type safety validation for numeric data
 //! - Custom validation rules and plugins
@@ -16,6 +17,7 @@
 //! - Support for complex nested data structures
 //! - Validation caching for repeated validations
 //! - Detailed error reporting with context
+//! - ConstraintBuilder for fluent constraint composition
 //!
 //! ## Example
 //!
@@ -52,6 +54,60 @@
 //!
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
+//!
+//! ## Using Composite Constraints
+//!
+//! The validation system now supports composite constraints using logical operators:
+//!
+//! ```rust
+//! use scirs2_core::validation::data::{Constraint, ConstraintBuilder, ValidationSchema};
+//!
+//! // Create complex constraints using the builder
+//! let age_constraint = ConstraintBuilder::new()
+//!     .range(18.0, 65.0)
+//!     .not_null()
+//!     .and();
+//!
+//! // Use logical operators for conditional validation
+//! let email_or_phone = Constraint::Or(vec![
+//!     Constraint::Pattern(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$".to_string()),
+//!     Constraint::Pattern(r"^\+?[1-9]\d{1,14}$".to_string()),
+//! ]);
+//!
+//! // Conditional constraints: if age > 18, require consent field
+//! let consent_constraint = Constraint::if_then(
+//!     Constraint::Range { min: 18.0, max: f64::INFINITY },
+//!     Constraint::NotNull,
+//!     None
+//! );
+//!
+//! let schema = ValidationSchema::new()
+//!     .require_field("age", DataType::Integer)
+//!     .add_constraint("age", age_constraint)
+//!     .require_field("contact", DataType::String)
+//!     .add_constraint("contact", email_or_phone);
+//! ```
+//!
+//! ## Performance Features
+//!
+//! The validation system includes several performance optimizations:
+//!
+//! - **Validation Caching**: Results are cached for repeated validations with configurable TTL
+//! - **Parallel Validation**: Array elements can be validated in parallel when enabled
+//! - **Early Exit**: Validation stops at first error when configured for fail-fast mode
+//! - **Lazy Evaluation**: Composite constraints evaluate only as needed
+//! - **Memory Efficiency**: Streaming validation for large datasets
+//!
+//! ```rust
+//! use scirs2_core::validation::data::ValidationConfig;
+//!
+//! let mut config = ValidationConfig::default();
+//! config.strict_mode = true; // Fail fast on first error
+//! config.enable_caching = true; // Enable result caching
+//! config.cache_size_limit = 1000; // Cache up to 1000 results
+//! config.enable_parallel_validation = true; // Parallel array validation
+//! config.performance_mode = true; // Optimize for speed
+//! ```
 
 // Core modules
 pub mod array_validation;
@@ -71,8 +127,8 @@ pub use config::{ErrorSeverity, QualityIssueType, ValidationConfig, ValidationEr
 pub use schema::{DataType, FieldDefinition, ValidationSchema};
 
 pub use constraints::{
-    ArrayValidationConstraints, Constraint, ElementValidatorFn, ShapeConstraints, SparseFormat,
-    StatisticalConstraints, TimeConstraints,
+    ArrayValidationConstraints, Constraint, ConstraintBuilder, ElementValidatorFn,
+    ShapeConstraints, SparseFormat, StatisticalConstraints, TimeConstraints,
 };
 
 // Errors and results

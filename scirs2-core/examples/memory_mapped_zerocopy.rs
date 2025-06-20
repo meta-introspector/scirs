@@ -1,4 +1,4 @@
-use ndarray::{Array, Dim, IxDyn};
+use ndarray::Array;
 use scirs2_core::memory_efficient::{
     ArithmeticOps, BroadcastOps, ChunkingStrategy, MemoryMappedArray, MemoryMappedChunks,
     ZeroCopyOps,

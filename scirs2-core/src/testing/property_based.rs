@@ -144,6 +144,7 @@ pub struct PropertyFailure {
 pub struct PropertyTestEngine {
     config: PropertyTestConfig,
     #[cfg(feature = "random")]
+    #[allow(dead_code)]
     rng: StdRng,
 }
 
@@ -811,7 +812,7 @@ mod tests {
 
         for _ in 0..100 {
             let value = generator.generate();
-            assert!(value >= -10.0 && value <= 10.0);
+            assert!((-10.0..=10.0).contains(&value));
         }
 
         let related = generator.generate_related(5);

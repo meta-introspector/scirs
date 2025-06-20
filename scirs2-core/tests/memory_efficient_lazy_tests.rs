@@ -1,9 +1,7 @@
 #[cfg(feature = "memory_efficient")]
 mod tests {
-    use approx::assert_relative_eq;
-    use ndarray::{Array, Array1, Array2};
+    use ndarray::Array1;
     use scirs2_core::memory_efficient::{evaluate, LazyArray, LazyOp, LazyOpKind};
-    use std::fmt;
 
     #[test]
     fn test_lazy_array_creation() {

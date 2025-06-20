@@ -49,7 +49,7 @@ fn demo_basic_conversion() -> CoreResult<()> {
     let f64_data: Vec<f64> = (0..1000).map(|i| i as f64 * 0.123).collect();
 
     // Create a batch converter with default settings
-    let converter = BatchConverter::default();
+    let converter = BatchConverter::with_default_config();
 
     // Convert f64 to f32
     let f32_result: Vec<f32> = converter.convert_slice(&f64_data)?;
@@ -78,7 +78,7 @@ fn demo_error_handling() -> CoreResult<()> {
     println!("2. Error Handling in Batch Conversions");
     println!("======================================");
 
-    let converter = BatchConverter::default();
+    let converter = BatchConverter::with_default_config();
 
     // Data with problematic values
     let problematic_data: Vec<f64> = vec![
@@ -223,7 +223,7 @@ fn demo_complex_conversions() -> CoreResult<()> {
     println!("5. Complex Number Conversions");
     println!("=============================");
 
-    let converter = BatchConverter::default();
+    let converter = BatchConverter::with_default_config();
 
     // Create complex data
     let complex_data: Vec<Complex64> = (0..1000)
@@ -319,7 +319,7 @@ fn demo_ndarray_integration() -> CoreResult<()> {
     println!("===========================");
 
     use ndarray::Array2;
-    let converter = BatchConverter::default();
+    let converter = BatchConverter::with_default_config();
 
     // Create a 2D array
     let array_f64 = Array2::<f64>::from_shape_fn((100, 50), |(i, j)| (i * j) as f64 * 0.01);

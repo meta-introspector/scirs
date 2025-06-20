@@ -100,11 +100,11 @@ impl DeviceType {
 
     /// Check if device supports peer-to-peer transfer
     pub fn supports_p2p_transfer(&self, other: &DeviceType) -> bool {
-        match (self, other) {
-            (DeviceType::CudaGpu(_), DeviceType::CudaGpu(_)) => true,
-            (DeviceType::RocmGpu(_), DeviceType::RocmGpu(_)) => true,
-            _ => false,
-        }
+        matches!(
+            (self, other),
+            (DeviceType::CudaGpu(_), DeviceType::CudaGpu(_))
+                | (DeviceType::RocmGpu(_), DeviceType::RocmGpu(_))
+        )
     }
 }
 
@@ -180,10 +180,24 @@ pub trait Device: Send + Sync {
     fn deallocate(&self, address: usize) -> CoreResult<()>;
 
     /// Copy data to this device from CPU
-    fn copy_from_host(&self, src: *const u8, dst: usize, size: usize) -> CoreResult<()>;
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure:
+    /// - `src` points to at least `size` bytes of valid memory
+    /// - `dst` is a valid device memory address with at least `size` bytes allocated
+    /// - The memory regions do not overlap
+    unsafe fn copy_from_host(&self, src: *const u8, dst: usize, size: usize) -> CoreResult<()>;
 
     /// Copy data from this device to CPU
-    fn copy_to_host(&self, src: usize, dst: *mut u8, size: usize) -> CoreResult<()>;
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure:
+    /// - `src` is a valid device memory address with at least `size` bytes allocated
+    /// - `dst` points to at least `size` bytes of valid writable memory
+    /// - The memory regions do not overlap
+    unsafe fn copy_to_host(&self, src: usize, dst: *mut u8, size: usize) -> CoreResult<()>;
 
     /// Copy data between devices (if supported)
     fn copy_peer(
@@ -258,17 +272,13 @@ impl Device for CpuDevice {
         Ok(())
     }
 
-    fn copy_from_host(&self, src: *const u8, dst: usize, size: usize) -> CoreResult<()> {
-        unsafe {
-            std::ptr::copy_nonoverlapping(src, dst as *mut u8, size);
-        }
+    unsafe fn copy_from_host(&self, src: *const u8, dst: usize, size: usize) -> CoreResult<()> {
+        std::ptr::copy_nonoverlapping(src, dst as *mut u8, size);
         Ok(())
     }
 
-    fn copy_to_host(&self, src: usize, dst: *mut u8, size: usize) -> CoreResult<()> {
-        unsafe {
-            std::ptr::copy_nonoverlapping(src as *const u8, dst, size);
-        }
+    unsafe fn copy_to_host(&self, src: usize, dst: *mut u8, size: usize) -> CoreResult<()> {
+        std::ptr::copy_nonoverlapping(src as *const u8, dst, size);
         Ok(())
     }
 
@@ -337,12 +347,12 @@ impl Device for GpuContextWrapper {
         Ok(())
     }
 
-    fn copy_from_host(&self, _src: *const u8, _dst: usize, _size: usize) -> CoreResult<()> {
+    unsafe fn copy_from_host(&self, _src: *const u8, _dst: usize, _size: usize) -> CoreResult<()> {
         // Would use GPU-specific memory copy operations
         Ok(())
     }
 
-    fn copy_to_host(&self, _src: usize, _dst: *mut u8, _size: usize) -> CoreResult<()> {
+    unsafe fn copy_to_host(&self, _src: usize, _dst: *mut u8, _size: usize) -> CoreResult<()> {
         // Would use GPU-specific memory copy operations
         Ok(())
     }
@@ -507,14 +517,22 @@ impl CrossDeviceMemoryManager {
             let staging_buffer = self.allocate::<T>(&DeviceType::Cpu, src_buffer.count)?;
 
             // Copy from source to CPU
-            src_device.copy_to_host(src_buffer.address, staging_buffer.address as *mut u8, size)?;
+            unsafe {
+                src_device.copy_to_host(
+                    src_buffer.address,
+                    staging_buffer.address as *mut u8,
+                    size,
+                )?;
+            }
 
             // Copy from CPU to destination
-            dst_device_obj.copy_from_host(
-                staging_buffer.address as *const u8,
-                dst_buffer.address,
-                size,
-            )?;
+            unsafe {
+                dst_device_obj.copy_from_host(
+                    staging_buffer.address as *const u8,
+                    dst_buffer.address,
+                    size,
+                )?;
+            }
         }
 
         Ok(dst_buffer)
@@ -708,7 +726,9 @@ impl<T> CrossDeviceBuffer<T> {
             .get(&self.device_type)
             .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{:?}", self.device_type)))?;
 
-        device.copy_from_host(data.as_ptr() as *const u8, self.address, self.size_bytes())?;
+        unsafe {
+            device.copy_from_host(data.as_ptr() as *const u8, self.address, self.size_bytes())?;
+        }
 
         self.manager.touch_allocation(&self.allocation_id);
         Ok(())
@@ -726,11 +746,13 @@ impl<T> CrossDeviceBuffer<T> {
             .get(&self.device_type)
             .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{:?}", self.device_type)))?;
 
-        device.copy_to_host(
-            self.address,
-            result.as_mut_ptr() as *mut u8,
-            self.size_bytes(),
-        )?;
+        unsafe {
+            device.copy_to_host(
+                self.address,
+                result.as_mut_ptr() as *mut u8,
+                self.size_bytes(),
+            )?;
+        }
 
         self.manager.touch_allocation(&self.allocation_id);
         Ok(result)

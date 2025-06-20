@@ -311,6 +311,12 @@ __kernel void norm_l2(
     }
 }
 
+impl Default for NormKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GpuKernel for NormKernel {
     fn name(&self) -> &str {
         self.base.name()
@@ -325,10 +331,7 @@ impl GpuKernel for NormKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 => true,
-            _ => false,
-        }
+        matches!(params.data_type, DataType::Float32 | DataType::Float64)
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

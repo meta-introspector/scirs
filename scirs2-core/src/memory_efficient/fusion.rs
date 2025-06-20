@@ -5,9 +5,14 @@ use std::collections::HashMap;
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
+/// Type alias for a fused operation
+type FusedOpArc = Arc<dyn FusedOp>;
+
+/// Type alias for the fusion registry storage
+type FusionRegistryMap = HashMap<TypeId, Vec<FusedOpArc>>;
+
 // Global registry of fused operations
-static FUSION_REGISTRY: Lazy<Mutex<HashMap<TypeId, Vec<Arc<dyn FusedOp>>>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));
+static FUSION_REGISTRY: Lazy<Mutex<FusionRegistryMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// A trait for operations that can be fused together for better performance
 pub trait FusedOp: Send + Sync {
@@ -69,10 +74,8 @@ impl OpFusion {
             self.output_type = op.output_type();
         } else if op.input_type() != self.output_type {
             return Err(CoreError::ValidationError(
-                ErrorContext::new(
-                    "Operation input type does not match previous output type"
-                )
-                .with_location(ErrorLocation::new(file!(), line!())),
+                ErrorContext::new("Operation input type does not match previous output type")
+                    .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
 
@@ -134,6 +137,12 @@ impl OpFusion {
     /// Check if the operation chain is empty
     pub fn is_empty(&self) -> bool {
         self.ops.is_empty()
+    }
+}
+
+impl Default for OpFusion {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

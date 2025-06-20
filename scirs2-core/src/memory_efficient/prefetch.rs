@@ -71,7 +71,7 @@ impl Default for PrefetchConfig {
 }
 
 /// Builder for prefetch configuration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PrefetchConfigBuilder {
     config: PrefetchConfig,
 }
@@ -79,9 +79,7 @@ pub struct PrefetchConfigBuilder {
 impl PrefetchConfigBuilder {
     /// Create a new prefetch config builder with default settings.
     pub fn new() -> Self {
-        Self {
-            config: PrefetchConfig::default(),
-        }
+        Self::default()
     }
 
     /// Enable or disable prefetching.
@@ -183,7 +181,7 @@ impl BlockAccessTracker {
 
         // Check for sequential access
         let mut is_sequential = true;
-        let mut prev = *self.history.get(0).unwrap();
+        let mut prev = *self.history.front().unwrap();
 
         for &block_idx in self.history.iter().skip(1) {
             if block_idx != prev + 1 {
@@ -200,8 +198,8 @@ impl BlockAccessTracker {
 
         // Check for strided access
         let mut is_strided = true;
-        let stride = self.history.get(1).unwrap() - self.history.get(0).unwrap();
-        prev = *self.history.get(0).unwrap();
+        let stride = self.history.get(1).unwrap() - self.history.front().unwrap();
+        prev = *self.history.front().unwrap();
 
         for &block_idx in self.history.iter().skip(1) {
             if block_idx != prev + stride {
@@ -314,6 +312,7 @@ pub struct PrefetchingState {
     prefetched: HashSet<usize>,
 
     /// Statistics about prefetching
+    #[allow(dead_code)]
     stats: PrefetchStats,
 }
 

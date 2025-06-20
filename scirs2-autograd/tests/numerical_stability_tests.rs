@@ -93,8 +93,8 @@ fn test_matrix_operation_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test with ill-conditioned matrices
         let ill_conditioned = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(
-                (3, 3).into(),
+            Array::<f32, ndarray::Ix2>::from_shape_vec(
+                (3, 3),
                 vec![1.0, 1.0, 1.0, 1.0, 1.0 + 1e-7, 1.0, 1.0, 1.0, 1.0 + 1e-7],
             )
             .unwrap(),
@@ -102,7 +102,7 @@ fn test_matrix_operation_stability() {
         );
 
         let vector = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec((3, 1).into(), vec![1.0, 2.0, 3.0]).unwrap(),
+            Array::<f32, ndarray::Ix2>::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap(),
             ctx,
         );
 
@@ -123,7 +123,7 @@ fn test_matrix_operation_stability() {
 
         // Test matrix inverse for well-conditioned matrix
         let well_conditioned = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec((2, 2).into(), vec![2.0, 1.0, 1.0, 2.0]).unwrap(),
+            Array::<f32, ndarray::Ix2>::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 2.0]).unwrap(),
             ctx,
         );
 
@@ -218,8 +218,8 @@ fn test_reduction_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test sum with values that could cause cancellation
         let cancellation_prone = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(
-                (1000,).into(),
+            Array::<f32, ndarray::Ix1>::from_shape_vec(
+                1000,
                 (0..1000)
                     .map(|i| if i % 2 == 0 { 1e-3 } else { -1e-3 })
                     .collect(),
@@ -236,8 +236,11 @@ fn test_reduction_stability() {
 
         // Test mean with extreme values
         let extreme_values = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec((6,).into(), vec![1e-20, 1e-10, 1.0, 1e10, 1e20, 1e30])
-                .unwrap(),
+            Array::<f32, ndarray::Ix1>::from_shape_vec(
+                6,
+                vec![1e-20, 1e-10, 1.0, 1e10, 1e20, 1e30],
+            )
+            .unwrap(),
             ctx,
         );
 
@@ -249,8 +252,8 @@ fn test_reduction_stability() {
 
         // Test max/min with NaN handling
         let with_special_values = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(
-                (5,).into(),
+            Array::<f32, ndarray::Ix1>::from_shape_vec(
+                5,
                 vec![-f32::INFINITY, -1.0, 0.0, 1.0, f32::INFINITY],
             )
             .unwrap(),
@@ -269,8 +272,8 @@ fn test_reduction_stability() {
 
         // Test variance stability
         let variance_test = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(
-                (100,).into(),
+            Array::<f32, ndarray::Ix1>::from_shape_vec(
+                100,
                 (0..100).map(|i| 1.0 + (i as f32) * 1e-6).collect(),
             )
             .unwrap(),
@@ -336,7 +339,7 @@ fn test_gradient_numerical_stability() {
 
         // Test gradient of matrix operations
         let matrix = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec((2, 2).into(), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+            Array::<f32, ndarray::Ix2>::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
             ctx,
         );
 
@@ -457,8 +460,8 @@ fn test_parallel_operation_stability() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Test parallel reduction stability
             let large_array = T::convert_to_tensor(
-                Array::<f32, _>::from_shape_vec(
-                    (10000,).into(),
+                Array::<f32, ndarray::Ix1>::from_shape_vec(
+                    10000,
                     (0..10000).map(|i| (i as f32).sin() * 1e-3).collect(),
                 )
                 .unwrap(),
@@ -487,16 +490,16 @@ fn test_parallel_operation_stability() {
 
             // Test parallel matrix multiplication
             let matrix_a = T::convert_to_tensor(
-                Array::<f32, _>::from_shape_vec(
-                    (100, 100).into(),
+                Array::<f32, ndarray::Ix2>::from_shape_vec(
+                    (100, 100),
                     (0..10000).map(|i| (i as f32 % 10.0) * 0.1).collect(),
                 )
                 .unwrap(),
                 ctx,
             );
             let matrix_b = T::convert_to_tensor(
-                Array::<f32, _>::from_shape_vec(
-                    (100, 100).into(),
+                Array::<f32, ndarray::Ix2>::from_shape_vec(
+                    (100, 100),
                     (0..10000).map(|i| ((i + 1) as f32 % 10.0) * 0.1).collect(),
                 )
                 .unwrap(),

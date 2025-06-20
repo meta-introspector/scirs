@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use super::config::{ErrorSeverity, ValidationErrorType};
+use crate::error::{CoreError, ErrorContext, ErrorLocation};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -95,6 +96,79 @@ impl ValidationError {
         }
 
         message
+    }
+}
+
+/// Convert ValidationError to CoreError
+impl From<ValidationError> for CoreError {
+    fn from(err: ValidationError) -> Self {
+        // Choose the appropriate CoreError variant based on ValidationErrorType
+        match err.error_type {
+            ValidationErrorType::MissingRequiredField => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::TypeMismatch => CoreError::TypeError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::ConstraintViolation => CoreError::ValueError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::OutOfRange => CoreError::DomainError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::InvalidFormat => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::InvalidArraySize => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::DuplicateValues => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::IntegrityFailure => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::CustomRuleFailure => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::SchemaError => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::ShapeError => CoreError::ShapeError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::InvalidNumeric => CoreError::ValueError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::StatisticalViolation => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::Performance => CoreError::ComputationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::IntegrityError => CoreError::ValidationError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            ValidationErrorType::TypeConversion => CoreError::TypeError(
+                ErrorContext::new(err.formatted_message())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+        }
     }
 }
 

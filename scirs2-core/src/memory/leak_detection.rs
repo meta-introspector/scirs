@@ -366,6 +366,8 @@ pub struct LeakDetector {
     config: LeakDetectionConfig,
     /// Tracked allocations
     allocations: Arc<RwLock<HashMap<u64, AllocationInfo>>>,
+    /// Address to allocation ID mapping
+    address_to_id: Arc<RwLock<HashMap<u64, u64>>>,
     /// Checkpoints
     checkpoints: Arc<Mutex<HashMap<Uuid, MemoryCheckpoint>>>,
     /// Detection results
@@ -384,6 +386,7 @@ impl LeakDetector {
         let detector = Self {
             config,
             allocations: Arc::new(RwLock::new(HashMap::new())),
+            address_to_id: Arc::new(RwLock::new(HashMap::new())),
             checkpoints: Arc::new(Mutex::new(HashMap::new())),
             reports: Arc::new(Mutex::new(Vec::new())),
             monitoring_active: Arc::new(Mutex::new(false)),
@@ -512,7 +515,7 @@ impl LeakDetector {
     }
 
     /// Track a memory allocation
-    pub fn track_allocation(&self, size: u64, _address: u64) -> Result<(), CoreError> {
+    pub fn track_allocation(&self, size: u64, address: u64) -> Result<(), CoreError> {
         if !self.config.enabled {
             return Ok(());
         }
@@ -557,16 +560,30 @@ impl LeakDetector {
         // Prevent memory usage from growing too much
         if allocations.len() >= self.config.max_tracked_allocations {
             // Remove oldest allocation
-            if let Some((oldest_id, _)) = allocations
+            if let Some((oldest_id, _oldest_info)) = allocations
                 .iter()
                 .min_by_key(|(_, info)| info.timestamp)
                 .map(|(id, info)| (*id, info.clone()))
             {
                 allocations.remove(&oldest_id);
+
+                // Also remove from address_to_id mapping
+                // Note: We don't have the address stored in AllocationInfo, so we'd need to
+                // iterate through address_to_id to find it. In a real implementation,
+                // AllocationInfo should store the address.
             }
         }
 
         allocations.insert(allocation_id, allocation_info);
+
+        // Store address to ID mapping
+        let mut address_to_id = self.address_to_id.write().map_err(|_| {
+            CoreError::ComputationError(crate::error::ErrorContext::new(
+                "Failed to acquire address_to_id lock".to_string(),
+            ))
+        })?;
+        address_to_id.insert(address, allocation_id);
+
         Ok(())
     }
 
@@ -576,16 +593,24 @@ impl LeakDetector {
             return Ok(());
         }
 
-        let mut allocations = self.allocations.write().map_err(|_| {
-            CoreError::ComputationError(crate::error::ErrorContext::new(
-                "Failed to acquire allocations lock".to_string(),
-            ))
-        })?;
+        // Look up the allocation ID for this address
+        let allocation_id = {
+            let mut address_to_id = self.address_to_id.write().map_err(|_| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(
+                    "Failed to acquire address_to_id lock".to_string(),
+                ))
+            })?;
+            address_to_id.remove(&address)
+        };
 
-        // Find and remove the allocation
-        // In a real implementation, you'd map addresses to allocation IDs
-        let allocation_id = address; // Simplified
-        allocations.remove(&allocation_id);
+        if let Some(id) = allocation_id {
+            let mut allocations = self.allocations.write().map_err(|_| {
+                CoreError::ComputationError(crate::error::ErrorContext::new(
+                    "Failed to acquire allocations lock".to_string(),
+                ))
+            })?;
+            allocations.remove(&id);
+        }
 
         Ok(())
     }
@@ -965,6 +990,21 @@ macro_rules! check_leaks {
         let _guard = $crate::memory::leak_detection::LeakCheckGuard::new($detector, $name)?;
         $block
     }};
+}
+
+/// Global leak detector instance
+static GLOBAL_DETECTOR: std::sync::OnceLock<Arc<Mutex<LeakDetector>>> = std::sync::OnceLock::new();
+
+/// Get the global leak detector
+pub fn global_leak_detector() -> Arc<Mutex<LeakDetector>> {
+    GLOBAL_DETECTOR
+        .get_or_init(|| {
+            let config = LeakDetectionConfig::default();
+            Arc::new(Mutex::new(
+                LeakDetector::new(config).expect("Failed to create global leak detector"),
+            ))
+        })
+        .clone()
 }
 
 #[cfg(test)]

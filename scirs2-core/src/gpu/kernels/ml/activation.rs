@@ -14,6 +14,12 @@ pub struct ReluKernel {
     base: BaseKernel,
 }
 
+impl Default for ReluKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ReluKernel {
     /// Create a new ReLU kernel
     pub fn new() -> Self {
@@ -121,7 +127,10 @@ impl GpuKernel for ReluKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        matches!(params.data_type, DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16)
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
@@ -137,6 +146,12 @@ impl GpuKernel for ReluKernel {
 /// Sigmoid activation function kernel
 pub struct SigmoidKernel {
     base: BaseKernel,
+}
+
+impl Default for SigmoidKernel {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SigmoidKernel {
@@ -246,7 +261,10 @@ impl GpuKernel for SigmoidKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        matches!(params.data_type, DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16)
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
@@ -262,6 +280,12 @@ impl GpuKernel for SigmoidKernel {
 /// Tanh activation function kernel
 pub struct TanhKernel {
     base: BaseKernel,
+}
+
+impl Default for TanhKernel {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TanhKernel {
@@ -371,7 +395,10 @@ impl GpuKernel for TanhKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        matches!(params.data_type, DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16)
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

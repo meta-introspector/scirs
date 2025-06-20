@@ -153,7 +153,7 @@ impl Default for ResourceAwareConfig {
 }
 
 /// Builder for resource-aware configuration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ResourceAwareConfigBuilder {
     config: ResourceAwareConfig,
 }
@@ -161,9 +161,7 @@ pub struct ResourceAwareConfigBuilder {
 impl ResourceAwareConfigBuilder {
     /// Create a new resource-aware config builder with default settings.
     pub fn new() -> Self {
-        Self {
-            config: ResourceAwareConfig::default(),
-        }
+        Self::default()
     }
 
     /// Set the sampling interval.
@@ -901,7 +899,7 @@ mod tests {
             2 * 1024 * 1024 * 1024,  // 2 GB used memory
             14 * 1024 * 1024 * 1024, // 14 GB available memory
             10,                      // 10 IO ops/sec
-            1 * 1024 * 1024,         // 1 MB/s IO
+            1024 * 1024,             // 1 MB/s IO
         ));
 
         // Take a snapshot

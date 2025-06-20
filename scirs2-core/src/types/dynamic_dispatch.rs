@@ -108,6 +108,7 @@ impl DynamicValue {
     }
 
     /// Consume and downcast to a specific type
+    #[allow(clippy::result_large_err)]
     pub fn downcast<T: Any>(self) -> Result<T, Self> {
         match self.value.downcast::<T>() {
             Ok(value) => Ok(*value),
@@ -705,7 +706,7 @@ mod tests {
         let mut collection = HeterogeneousCollection::new();
 
         collection.push(42i32);
-        collection.push(3.14f64);
+        collection.push(std::f64::consts::PI);
         collection.push("hello".to_string());
         collection.push(true);
 
@@ -728,7 +729,7 @@ mod tests {
 
         collection.push(1i32);
         collection.push(2i32);
-        collection.push(3.14f64);
+        collection.push(std::f64::consts::PI);
         collection.push("test".to_string());
 
         let stats = collection.statistics();

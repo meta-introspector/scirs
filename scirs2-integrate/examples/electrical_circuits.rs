@@ -320,7 +320,7 @@ mod tests {
         // Just verify the integration completed successfully
         assert!(result.t.len() > 2);
         assert_eq!(result.y.len(), result.t.len());
-        
+
         // Verify state variables remain finite
         for state in result.y.iter() {
             assert!(state[0].is_finite()); // Voltage

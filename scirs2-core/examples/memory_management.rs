@@ -56,12 +56,12 @@ fn buffer_pool_example() {
     let mut buffer2 = pool.acquire_vec(10);
 
     // Fill buffers with data
-    for i in 0..buffer1.len() {
-        buffer1[i] = i as f64 * 2.0;
+    for (i, elem) in buffer1.iter_mut().enumerate() {
+        *elem = i as f64 * 2.0;
     }
 
-    for i in 0..buffer2.len() {
-        buffer2[i] = i as f64 * 3.0;
+    for (i, elem) in buffer2.iter_mut().enumerate() {
+        *elem = i as f64 * 3.0;
     }
 
     println!("Buffer 1: {:?}", buffer1);
@@ -110,8 +110,8 @@ fn global_buffer_pool_example() {
     let mut buffer = f32_pool.lock().unwrap().acquire_vec(5);
 
     // Fill the buffer
-    for i in 0..buffer.len() {
-        buffer[i] = i as f32 * 1.5;
+    for (i, elem) in buffer.iter_mut().enumerate() {
+        *elem = i as f32 * 1.5;
     }
 
     println!("Buffer from global pool: {:?}", buffer);

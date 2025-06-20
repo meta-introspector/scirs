@@ -45,6 +45,12 @@ pub struct GemmKernel {
     implementation: GemmImpl,
 }
 
+impl Default for GemmKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GemmKernel {
     /// Create a new GEMM kernel with standard implementation
     pub fn new() -> Self {
@@ -512,7 +518,7 @@ impl GpuKernel for GemmKernel {
         }
 
         // Extract dimensions
-        let m = params.input_dims.get(0).copied().unwrap_or(0);
+        let m = params.input_dims.first().copied().unwrap_or(0);
         let k = params.input_dims.get(1).copied().unwrap_or(0);
         let n = params.output_dims.get(1).copied().unwrap_or(0);
 

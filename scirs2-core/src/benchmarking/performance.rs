@@ -416,6 +416,7 @@ impl StandardBenchmarks {
                 let mut c = vec![vec![0.0; size]; size];
                 for i in 0..size {
                     for j in 0..size {
+                        #[allow(clippy::needless_range_loop)]
                         for k in 0..size {
                             c[i][j] += a[i][k] * b[k][j];
                         }
@@ -512,21 +513,18 @@ impl StandardBenchmarks {
         let mut suite = BenchmarkSuite::new("comprehensive_performance", config.clone());
 
         // Add computation benchmarks
-        let comp_suite = Self::create_computation_suite(config.clone());
-        for _i in 0..comp_suite.benchmarks.len() {
-            // Note: This is a simplified version - in practice you'd need to extract benchmarks
-            suite.add_benchmark(|runner| {
-                runner.run("comprehensive_computation", || {
-                    // Simplified computation benchmark
-                    let mut result = 0.0;
-                    for i in 0..1000 {
-                        result += (i as f64).sin();
-                    }
-                    Ok(result)
-                })
-            });
-            break; // Just add one for demo
-        }
+        let _comp_suite = Self::create_computation_suite(config.clone());
+        // Note: This is a simplified version - in practice you'd need to extract benchmarks
+        suite.add_benchmark(|runner| {
+            runner.run("comprehensive_computation", || {
+                // Simplified computation benchmark
+                let mut result = 0.0;
+                for i in 0..1000 {
+                    result += (i as f64).sin();
+                }
+                Ok(result)
+            })
+        });
 
         // Add memory benchmarks
         suite.add_benchmark(|runner| {
@@ -574,7 +572,8 @@ mod tests {
             PerformanceTarget::new(BenchmarkCategory::Computation, Duration::from_millis(100));
 
         let perf_result = PerformanceBenchmarkResult::new(result, target, 1.0);
-        assert_eq!(perf_result.performance_grade(), PerformanceGrade::Good);
+        // With measurement of 50ms and target of 100ms, ratio is 0.5, which is Excellent
+        assert_eq!(perf_result.performance_grade(), PerformanceGrade::Excellent);
     }
 
     #[test]

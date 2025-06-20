@@ -272,8 +272,8 @@ pub fn trace<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let diag = extract_diag(x);
-    crate::tensor_ops::reduction::sum_all(diag)
+    // Use the TraceOp which has proper gradient computation
+    crate::tensor_ops::linalg_ops::trace(x.as_ref())
 }
 
 /// Creates an identity matrix.
@@ -351,15 +351,8 @@ pub fn qr<'graph, A, F: Float>(x: A) -> (Tensor<'graph, F>, Tensor<'graph, F>)
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let x = x.as_ref();
-    let g = x.graph();
-    let qr_result = Tensor::builder(g)
-        .append_input(x.as_ref(), false)
-        .build(crate::tensor_ops::decomposition_ops::QROp);
-
-    let q = crate::tensor_ops::nth_tensor(qr_result, 0);
-    let r = crate::tensor_ops::nth_tensor(qr_result, 1);
-    (q, r)
+    // Use the correct implementation from decomposition_ops
+    crate::tensor_ops::decomposition_ops::qr(x.as_ref())
 }
 
 /// Computes the Singular Value Decomposition (SVD) of a matrix.
@@ -387,16 +380,8 @@ pub fn svd<'graph, A, F: Float + ndarray::ScalarOperand>(
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let x = x.as_ref();
-    let g = x.graph();
-    let svd_result = Tensor::builder(g)
-        .append_input(x.as_ref(), false)
-        .build(crate::tensor_ops::decomposition_ops::SVDOp);
-
-    let u = crate::tensor_ops::nth_tensor(svd_result, 0);
-    let s = crate::tensor_ops::nth_tensor(svd_result, 1);
-    let vt = crate::tensor_ops::nth_tensor(svd_result, 2);
-    (u, s, vt)
+    // Use the correct implementation from decomposition_ops
+    crate::tensor_ops::decomposition_ops::svd(x.as_ref())
 }
 
 /// Computes the eigenvalues of a matrix.
@@ -450,15 +435,8 @@ pub fn eigen<'graph, A, F: Float + ndarray::ScalarOperand + num_traits::FromPrim
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let x = x.as_ref();
-    let g = x.graph();
-    let eigen_result = Tensor::builder(g)
-        .append_input(x.as_ref(), false)
-        .build(crate::tensor_ops::eigen_ops::EigenOp);
-
-    let w = crate::tensor_ops::nth_tensor(eigen_result, 0);
-    let v = crate::tensor_ops::nth_tensor(eigen_result, 1);
-    (w, v)
+    // Use the correct implementation from eigen_ops
+    crate::tensor_ops::eigen_ops::eigen(x.as_ref())
 }
 
 /// Computes the matrix determinant.
@@ -957,3 +935,104 @@ mod tests {
         });
     }
 }
+
+// Re-export enhanced linear algebra operations
+
+/// Compute the 1-norm of a matrix (maximum column sum)
+pub use crate::tensor_ops::matrix_norms::norm1;
+
+/// Compute the 2-norm of a matrix (largest singular value)
+pub use crate::tensor_ops::matrix_norms::norm2;
+
+/// Compute the infinity-norm of a matrix (maximum row sum)
+pub use crate::tensor_ops::matrix_norms::norminf;
+
+/// Compute the Frobenius norm of a matrix (alias)
+pub use crate::tensor_ops::matrix_norms::normfro;
+
+/// Solve Sylvester equation AX + XB = C
+pub use crate::tensor_ops::matrix_solvers::solve_sylvester;
+
+/// Solve Lyapunov equation AX + XA^T = Q
+pub use crate::tensor_ops::matrix_solvers::solve_lyapunov;
+
+/// Solve linear system AX = B using Cholesky decomposition
+pub use crate::tensor_ops::matrix_solvers::cholesky_solve;
+
+/// Eigendecomposition for symmetric/Hermitian matrices
+pub use crate::tensor_ops::symmetric_ops::eigh;
+
+/// Eigenvalues only for symmetric/Hermitian matrices
+pub use crate::tensor_ops::symmetric_ops::eigvalsh;
+
+/// Polar decomposition A = UP
+pub use crate::tensor_ops::special_decompositions::polar;
+
+/// Schur decomposition A = QTQ^T
+pub use crate::tensor_ops::special_decompositions::schur;
+
+/// Matrix exponential using Padé approximation (method 2)
+pub use crate::tensor_ops::matrix_ops::expm2;
+
+/// Matrix exponential using eigendecomposition (method 3)
+pub use crate::tensor_ops::matrix_ops::expm3;
+
+/// Solve tensor equation
+pub use crate::tensor_ops::advanced_tensor_ops::tensor_solve;
+
+/// Einstein summation convention
+pub use crate::tensor_ops::advanced_tensor_ops::einsum;
+
+/// Kronecker product (tensor product)
+pub use crate::tensor_ops::advanced_tensor_ops::kron as kronecker_product;
+
+// Advanced decompositions
+
+/// SVD using Jacobi algorithm for improved numerical stability
+pub use crate::tensor_ops::advanced_decompositions::svd_jacobi;
+
+/// Randomized SVD for large matrices
+pub use crate::tensor_ops::advanced_decompositions::randomized_svd;
+
+/// Generalized eigenvalue problem Ax = λBx
+pub use crate::tensor_ops::advanced_decompositions::generalized_eigen;
+
+/// QR decomposition with column pivoting
+pub use crate::tensor_ops::advanced_decompositions::qr_pivot;
+
+// Iterative solvers
+
+/// Conjugate gradient solver for symmetric positive definite systems
+pub use crate::tensor_ops::iterative_solvers::conjugate_gradient_solve;
+
+/// GMRES solver for general linear systems
+pub use crate::tensor_ops::iterative_solvers::gmres_solve;
+
+/// BiCGSTAB solver for non-symmetric systems
+pub use crate::tensor_ops::iterative_solvers::bicgstab_solve;
+
+/// Preconditioned conjugate gradient solver
+pub use crate::tensor_ops::iterative_solvers::pcg_solve;
+
+/// Preconditioner types for iterative solvers
+pub use crate::tensor_ops::iterative_solvers::PreconditionerType;
+
+// Matrix functions
+
+/// Matrix sine function
+pub use crate::tensor_ops::matrix_trig_functions::sinm;
+
+/// Matrix cosine function
+pub use crate::tensor_ops::matrix_trig_functions::cosm;
+
+/// Matrix sign function
+pub use crate::tensor_ops::matrix_trig_functions::signm;
+
+/// Matrix hyperbolic sine function
+pub use crate::tensor_ops::matrix_trig_functions::sinhm;
+
+/// Matrix hyperbolic cosine function
+pub use crate::tensor_ops::matrix_trig_functions::coshm;
+
+/// General matrix function
+pub use crate::tensor_ops::matrix_trig_functions::funm;

@@ -122,6 +122,7 @@ impl ArrayValidator {
     }
 
     /// Validate numeric quality (NaN, infinity, precision)
+    #[allow(clippy::ptr_arg)]
     fn validate_numeric_quality<S, D>(
         &self,
         array: &ArrayBase<S, D>,
@@ -388,6 +389,7 @@ impl ArrayValidator {
     }
 
     /// Validate individual elements using custom validator function
+    #[allow(clippy::ptr_arg)]
     fn validate_elements<S, D>(
         &self,
         array: &ArrayBase<S, D>,
@@ -576,6 +578,6 @@ mod tests {
             .validate_ndarray(&array, &constraints, &config)
             .unwrap();
         assert!(!result.is_valid()); // Should fail because 4.0 and 5.0 > 3.0
-        assert!(result.errors().len() > 0);
+        assert!(!result.errors().is_empty());
     }
 }

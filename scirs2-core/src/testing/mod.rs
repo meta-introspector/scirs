@@ -291,7 +291,7 @@ impl TestRunner {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 2 {
                     let kb: usize = parts[1].parse().map_err(|e| {
-                        CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                        CoreError::ValidationError(crate::error::ErrorContext::new(format!(
                             "Failed to parse memory: {}",
                             e
                         )))
@@ -314,10 +314,13 @@ impl TestRunner {
     }
 }
 
+/// Type alias for test functions
+type TestFn = Box<dyn Fn(&TestRunner) -> CoreResult<TestResult> + Send + Sync>;
+
 /// Test suite for organizing and running multiple tests
 pub struct TestSuite {
     name: String,
-    tests: Vec<Box<dyn Fn(&TestRunner) -> CoreResult<TestResult> + Send + Sync>>,
+    tests: Vec<TestFn>,
     config: TestConfig,
 }
 

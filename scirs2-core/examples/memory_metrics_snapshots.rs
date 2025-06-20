@@ -126,7 +126,7 @@ fn main() {
         println!("\nSuccessfully loaded and compared snapshots:");
         println!(
             "  Total current usage delta: {}",
-            format_bytes(diff.current_usage_delta.abs() as usize)
+            format_bytes(diff.current_usage_delta.unsigned_abs())
         );
     } else {
         println!("\nFailed to load snapshots correctly");

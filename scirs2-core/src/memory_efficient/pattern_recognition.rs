@@ -530,7 +530,7 @@ impl PatternRecognizer {
 
             // Check for complete blocks (where all elements in the block are accessed)
             let mut complete_blocks = 0;
-            for (_, accesses) in &block_accesses {
+            for accesses in block_accesses.values() {
                 if accesses.len() == block_height * block_width {
                     complete_blocks += 1;
                 }

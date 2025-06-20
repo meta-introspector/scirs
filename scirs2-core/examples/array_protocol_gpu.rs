@@ -17,8 +17,7 @@
 
 use ndarray::{Array2, Ix2};
 use scirs2_core::array_protocol::{
-    self, add, auto_device::AutoDevice, matmul, multiply, subtract, sum, transpose, GPUBackend,
-    GPUConfig, GPUNdarray, NdarrayWrapper,
+    self, add, matmul, GPUBackend, GPUConfig, GPUNdarray, NdarrayWrapper,
 };
 
 fn main() {

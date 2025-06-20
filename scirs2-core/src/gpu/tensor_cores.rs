@@ -60,7 +60,7 @@ pub enum TensorCoreOp {
 }
 
 /// Tensor core capabilities for different GPU architectures
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct TensorCoreCapabilities {
     /// Whether tensor cores are available
     pub available: bool,
@@ -76,20 +76,6 @@ pub struct TensorCoreCapabilities {
     pub memory_bandwidth_gbps: Option<f64>,
     /// Architecture-specific features
     pub arch_features: Vec<String>,
-}
-
-impl Default for TensorCoreCapabilities {
-    fn default() -> Self {
-        Self {
-            available: false,
-            supported_types: Vec::new(),
-            supported_ops: Vec::new(),
-            supported_dimensions: Vec::new(),
-            peak_tops: None,
-            memory_bandwidth_gbps: None,
-            arch_features: Vec::new(),
-        }
-    }
 }
 
 /// Tensor core configuration for optimized operations

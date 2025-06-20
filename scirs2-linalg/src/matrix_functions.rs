@@ -1220,3 +1220,420 @@ mod tests {
         assert_relative_eq!(sum[[1, 1]], identity[[1, 1]], epsilon = 1e-8);
     }
 }
+
+/// Compute the matrix hyperbolic cosine.
+///
+/// The matrix hyperbolic cosine is defined as:
+/// cosh(A) = (exp(A) + exp(-A))/2
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Matrix hyperbolic cosine of a
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::coshm;
+///
+/// let a = array![[0.0_f64, 0.0], [0.0, 0.0]];
+/// let cosh_a = coshm(&a.view()).unwrap();
+/// // cosh(0) = I
+/// assert!((cosh_a[[0, 0]] - 1.0).abs() < 1e-10);
+/// assert!((cosh_a[[1, 1]] - 1.0).abs() < 1e-10);
+/// ```
+pub fn coshm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute hyperbolic cosine, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        result[[0, 0]] = a[[0, 0]].cosh();
+        return Ok(result);
+    }
+
+    // Compute exp(A) and exp(-A)
+    let exp_a = expm(a, None)?;
+    let neg_a = a.mapv(|x| -x);
+    let exp_neg_a = expm(&neg_a.view(), None)?;
+
+    // cosh(A) = (exp(A) + exp(-A))/2
+    let half = F::from(0.5).unwrap();
+    Ok((exp_a + exp_neg_a) * half)
+}
+
+/// Compute the matrix hyperbolic sine.
+///
+/// The matrix hyperbolic sine is defined as:
+/// sinh(A) = (exp(A) - exp(-A))/2
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Matrix hyperbolic sine of a
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::sinhm;
+///
+/// let a = array![[0.0_f64, 0.0], [0.0, 0.0]];
+/// let sinh_a = sinhm(&a.view()).unwrap();
+/// // sinh(0) = 0
+/// assert!((sinh_a[[0, 0]]).abs() < 1e-10);
+/// assert!((sinh_a[[1, 1]]).abs() < 1e-10);
+/// ```
+pub fn sinhm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute hyperbolic sine, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        result[[0, 0]] = a[[0, 0]].sinh();
+        return Ok(result);
+    }
+
+    // Compute exp(A) and exp(-A)
+    let exp_a = expm(a, None)?;
+    let neg_a = a.mapv(|x| -x);
+    let exp_neg_a = expm(&neg_a.view(), None)?;
+
+    // sinh(A) = (exp(A) - exp(-A))/2
+    let half = F::from(0.5).unwrap();
+    Ok((exp_a - exp_neg_a) * half)
+}
+
+/// Compute the matrix hyperbolic tangent.
+///
+/// The matrix hyperbolic tangent is defined as:
+/// tanh(A) = sinh(A) * cosh(A)^(-1)
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Matrix hyperbolic tangent of a
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::tanhm;
+///
+/// let a = array![[0.0_f64, 0.0], [0.0, 0.0]];
+/// let tanh_a = tanhm(&a.view()).unwrap();
+/// // tanh(0) = 0
+/// assert!((tanh_a[[0, 0]]).abs() < 1e-10);
+/// assert!((tanh_a[[1, 1]]).abs() < 1e-10);
+/// ```
+pub fn tanhm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute hyperbolic tangent, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    // Compute sinh(A) and cosh(A)
+    let sinh_a = sinhm(a)?;
+    let cosh_a = coshm(a)?;
+
+    // Solve cosh(A) * X = sinh(A) for X = tanh(A)
+    solve_multiple(&cosh_a.view(), &sinh_a.view(), None)
+}
+
+/// Compute the matrix sign function.
+///
+/// The matrix sign function is defined as:
+/// sign(A) = A * (A²)^(-1/2)
+///
+/// For matrices with no eigenvalues on the imaginary axis, this computes
+/// a matrix with eigenvalues of ±1.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Matrix sign of a
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::signm;
+///
+/// let a = array![[1.0_f64, 0.0], [0.0, -1.0]];
+/// let sign_a = signm(&a.view()).unwrap();
+/// // sign(diag(1, -1)) = diag(1, -1)
+/// assert!((sign_a[[0, 0]] - 1.0).abs() < 1e-10);
+/// assert!((sign_a[[1, 1]] + 1.0).abs() < 1e-10);
+/// ```
+pub fn signm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute sign function, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        let val = a[[0, 0]];
+        result[[0, 0]] = if val > F::zero() {
+            F::one()
+        } else if val < F::zero() {
+            -F::one()
+        } else {
+            F::zero()
+        };
+        return Ok(result);
+    }
+
+    // Newton iteration for matrix sign function
+    // X_{k+1} = (X_k + X_k^{-1}) / 2
+    let mut x = a.to_owned();
+    let max_iter = 100;
+    let tol = F::epsilon() * F::from(100.0).unwrap();
+
+    for _ in 0..max_iter {
+        // Compute X^{-1}
+        let x_inv = solve_multiple(&x.view(), &Array2::eye(n).view(), None)?;
+
+        // X_{k+1} = (X_k + X_k^{-1}) / 2
+        let x_new = (&x + &x_inv) * F::from(0.5).unwrap();
+
+        // Check convergence
+        let diff = &x_new - &x;
+        let error = matrix_norm(&diff.view(), "fro", None)?;
+
+        x = x_new;
+
+        if error < tol {
+            return Ok(x);
+        }
+    }
+
+    Err(LinalgError::ConvergenceError(
+        "Matrix sign function did not converge".to_string(),
+    ))
+}
+
+/// Compute the matrix inverse cosine.
+///
+/// The matrix inverse cosine is the inverse function of cosm, such that
+/// cosm(acosm(A)) = A for matrices with appropriate spectra.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix (should have eigenvalues in [-1, 1])
+///
+/// # Returns
+///
+/// * Matrix inverse cosine of a
+pub fn acosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute inverse cosine, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    // acos(A) = -i * log(A + i*sqrt(I - A²))
+    // This is a simplified implementation
+    Err(LinalgError::NotImplementedError(
+        "Matrix inverse cosine is not yet implemented".to_string(),
+    ))
+}
+
+/// Compute the matrix inverse sine.
+///
+/// The matrix inverse sine is the inverse function of sinm, such that
+/// sinm(asinm(A)) = A for matrices with appropriate spectra.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix (should have eigenvalues in [-1, 1])
+///
+/// # Returns
+///
+/// * Matrix inverse sine of a
+pub fn asinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute inverse sine, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    // asin(A) = -i * log(iA + sqrt(I - A²))
+    // This is a simplified implementation
+    Err(LinalgError::NotImplementedError(
+        "Matrix inverse sine is not yet implemented".to_string(),
+    ))
+}
+
+/// Compute the matrix inverse tangent.
+///
+/// The matrix inverse tangent is the inverse function of tanm, such that
+/// tanm(atanm(A)) = A for matrices with appropriate spectra.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+///
+/// # Returns
+///
+/// * Matrix inverse tangent of a
+pub fn atanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+{
+    if a.nrows() != a.ncols() {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix must be square to compute inverse tangent, got shape {:?}",
+            a.shape()
+        )));
+    }
+
+    // atan(A) = (i/2) * log((I - iA)/(I + iA))
+    // This is a simplified implementation
+    Err(LinalgError::NotImplementedError(
+        "Matrix inverse tangent is not yet implemented".to_string(),
+    ))
+}
+
+#[cfg(test)]
+mod hyperbolic_tests {
+    use super::*;
+    use approx::assert_relative_eq;
+    use ndarray::array;
+
+    #[test]
+    fn test_coshm_zero_matrix() {
+        // cosh(0) = I
+        let a = array![[0.0, 0.0], [0.0, 0.0]];
+        let cosh_a = coshm(&a.view()).unwrap();
+
+        assert_relative_eq!(cosh_a[[0, 0]], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(cosh_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(cosh_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(cosh_a[[1, 1]], 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_sinhm_zero_matrix() {
+        // sinh(0) = 0
+        let a = array![[0.0, 0.0], [0.0, 0.0]];
+        let sinh_a = sinhm(&a.view()).unwrap();
+
+        assert_relative_eq!(sinh_a[[0, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sinh_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sinh_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sinh_a[[1, 1]], 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_tanhm_zero_matrix() {
+        // tanh(0) = 0
+        let a = array![[0.0, 0.0], [0.0, 0.0]];
+        let tanh_a = tanhm(&a.view()).unwrap();
+
+        assert_relative_eq!(tanh_a[[0, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(tanh_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(tanh_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(tanh_a[[1, 1]], 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_hyperbolic_identity() {
+        // Test the fundamental hyperbolic identity: cosh²(A) - sinh²(A) = I
+        let a = array![[0.1, 0.05], [0.05, 0.1]];
+
+        let sinh_a = sinhm(&a.view()).unwrap();
+        let cosh_a = coshm(&a.view()).unwrap();
+
+        // Compute cosh²(A) and sinh²(A)
+        let cosh_squared = cosh_a.dot(&cosh_a);
+        let sinh_squared = sinh_a.dot(&sinh_a);
+
+        // cosh²(A) - sinh²(A) should equal I
+        let diff = &cosh_squared - &sinh_squared;
+        let identity = Array2::eye(2);
+
+        assert_relative_eq!(diff[[0, 0]], identity[[0, 0]], epsilon = 1e-8);
+        assert_relative_eq!(diff[[0, 1]], identity[[0, 1]], epsilon = 1e-8);
+        assert_relative_eq!(diff[[1, 0]], identity[[1, 0]], epsilon = 1e-8);
+        assert_relative_eq!(diff[[1, 1]], identity[[1, 1]], epsilon = 1e-8);
+    }
+
+    #[test]
+    fn test_signm_diagonal() {
+        // For diagonal matrix, sign(D) = diag(sign(d_1), sign(d_2), ...)
+        let a = array![[2.0, 0.0], [0.0, -3.0]];
+        let sign_a = signm(&a.view()).unwrap();
+
+        assert_relative_eq!(sign_a[[0, 0]], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(sign_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sign_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sign_a[[1, 1]], -1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_signm_identity() {
+        // sign(I) = I
+        let a = array![[1.0, 0.0], [0.0, 1.0]];
+        let sign_a = signm(&a.view()).unwrap();
+
+        assert_relative_eq!(sign_a[[0, 0]], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(sign_a[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sign_a[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(sign_a[[1, 1]], 1.0, epsilon = 1e-10);
+    }
+}

@@ -126,7 +126,7 @@ impl BatchConverter {
     }
 
     /// Create a batch converter with default configuration
-    pub fn default() -> Self {
+    pub fn with_default_config() -> Self {
         Self::new(BatchConversionConfig::default())
     }
 
@@ -709,25 +709,25 @@ pub mod utils {
 
     /// Convert f64 slice to f32 with SIMD optimization
     pub fn f64_to_f32_batch(slice: &[f64]) -> CoreResult<Vec<f32>> {
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
         converter.convert_slice(slice)
     }
 
     /// Convert f32 slice to f64 with SIMD optimization  
     pub fn f32_to_f64_batch(slice: &[f32]) -> CoreResult<Vec<f64>> {
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
         converter.convert_slice(slice)
     }
 
     /// Convert i32 slice to f32 with SIMD optimization
     pub fn i32_to_f32_batch(slice: &[i32]) -> Vec<f32> {
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
         converter.convert_slice_clamped(slice)
     }
 
     /// Convert i64 slice to f64 with SIMD optimization
     pub fn i64_to_f64_batch(slice: &[i64]) -> Vec<f64> {
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
         converter.convert_slice_clamped(slice)
     }
 
@@ -804,8 +804,8 @@ mod tests {
             .with_chunk_size(512)
             .with_parallel_threshold(5000);
 
-        assert_eq!(config.use_simd, true);
-        assert_eq!(config.use_parallel, false);
+        assert!(config.use_simd);
+        assert!(!config.use_parallel);
         assert_eq!(config.parallel_chunk_size, 512);
         assert_eq!(config.parallel_threshold, 5000);
     }
@@ -827,7 +827,7 @@ mod tests {
     #[test]
     fn test_conversion_with_errors() {
         let data: Vec<f64> = vec![1.0, f64::NAN, 3.0, f64::INFINITY];
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
 
         let (converted, errors) = converter.convert_slice_with_errors::<f64, f32>(&data);
         assert_eq!(converted.len(), 2); // Only 1.0 and 3.0 should convert
@@ -837,7 +837,7 @@ mod tests {
     #[test]
     fn test_clamped_conversion() {
         let data: Vec<f64> = vec![1e20, 2.5, -1e20, 100.0];
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
 
         let result: Vec<f32> = converter.convert_slice_clamped(&data);
         assert_eq!(result.len(), data.len());
@@ -855,7 +855,7 @@ mod tests {
             Complex64::new(3.0, 4.0),
             Complex64::new(-1.0, -2.0),
         ];
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
 
         let result: Vec<num_complex::Complex32> = converter.convert_complex_slice(&data).unwrap();
         assert_eq!(result.len(), data.len());
@@ -866,7 +866,7 @@ mod tests {
     #[test]
     fn test_empty_slice() {
         let data: Vec<f64> = vec![];
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
 
         let result: Vec<f32> = converter.convert_slice(&data).unwrap();
         assert_eq!(result.len(), 0);
@@ -879,7 +879,7 @@ mod tests {
     #[cfg(feature = "simd")]
     #[test]
     fn test_simd_detection() {
-        let converter = BatchConverter::default();
+        let converter = BatchConverter::with_default_config();
 
         // These should support SIMD
         assert!(converter.can_use_simd_for_conversion::<f64, f32>());

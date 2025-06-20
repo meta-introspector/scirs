@@ -213,7 +213,7 @@ impl ValidationSchema {
 
     /// Check if field is required
     pub fn is_field_required(&self, name: &str) -> bool {
-        self.fields.get(name).map_or(false, |f| f.required)
+        self.fields.get(name).is_some_and(|f| f.required)
     }
 
     /// Get all required field names
@@ -239,15 +239,14 @@ impl ValidationSchema {
 
         // Check for circular references in array/matrix types
         for (field_name, field) in &self.fields {
-            if let Err(err) = self.check_circular_references(&field.data_type, field_name) {
-                return Err(err);
-            }
+            self.check_circular_references(&field.data_type, field_name)?;
         }
 
         Ok(())
     }
 
     /// Check for circular references in data types
+    #[allow(clippy::only_used_in_recursion)]
     fn check_circular_references(
         &self,
         data_type: &DataType,

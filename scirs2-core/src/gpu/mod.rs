@@ -96,6 +96,8 @@ impl fmt::Display for GpuBackend {
     }
 }
 
+use crate::error::{CoreError, ErrorContext, ErrorLocation};
+
 /// Error type for GPU operations
 #[derive(Debug, thiserror::Error)]
 pub enum GpuError {
@@ -144,6 +146,57 @@ pub enum GpuError {
     Other(String),
 }
 
+/// Convert GPU errors to core errors with semantic preservation
+impl From<GpuError> for CoreError {
+    fn from(err: GpuError) -> Self {
+        match err {
+            GpuError::BackendNotAvailable(backend) => CoreError::ComputationError(
+                ErrorContext::new(format!("GPU backend {} is not available", backend))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::UnsupportedBackend(backend) => CoreError::NotImplementedError(
+                ErrorContext::new(format!("GPU backend {} is not supported", backend))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::BackendNotImplemented(backend) => CoreError::NotImplementedError(
+                ErrorContext::new(format!("GPU backend {} is not implemented yet", backend))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::OutOfMemory(details) => CoreError::MemoryError(
+                ErrorContext::new(format!("GPU out of memory: {}", details))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::KernelCompilationError(msg) => CoreError::ComputationError(
+                ErrorContext::new(format!("Kernel compilation failed: {}", msg))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::KernelExecutionError(msg) => CoreError::ComputationError(
+                ErrorContext::new(format!("Kernel execution failed: {}", msg))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::InvalidParameter(msg) => CoreError::InvalidArgument(
+                ErrorContext::new(format!("Invalid GPU parameter: {}", msg))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::KernelNotFound(name) => CoreError::ComputationError(
+                ErrorContext::new(format!("GPU kernel not found: {}", name))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::SpecializationNotSupported => CoreError::NotImplementedError(
+                ErrorContext::new("Kernel specialization not supported".to_string())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::UnsupportedDataType(dtype) => CoreError::TypeError(
+                ErrorContext::new(format!("Unsupported GPU data type: {:?}", dtype))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ),
+            GpuError::Other(msg) => CoreError::ComputationError(
+                ErrorContext::new(msg).with_location(ErrorLocation::new(file!(), line!())),
+            ),
+        }
+    }
+}
+
 /// Trait for types that can be used with GPU operations
 pub trait GpuDataType: Copy + Send + Sync + 'static {}
 
@@ -190,10 +243,8 @@ impl<T: GpuDataType> GpuBuffer<T> {
     pub fn copy_from_host(&self, data: &[T]) {
         assert!(data.len() <= self.size, "Data size exceeds buffer size");
         unsafe {
-            self.inner.copy_from_host(
-                data.as_ptr() as *const u8,
-                std::mem::size_of_val(data),
-            );
+            self.inner
+                .copy_from_host(data.as_ptr() as *const u8, std::mem::size_of_val(data));
         }
     }
 
@@ -201,10 +252,8 @@ impl<T: GpuDataType> GpuBuffer<T> {
     pub fn copy_to_host(&self, data: &mut [T]) {
         assert!(data.len() <= self.size, "Data size exceeds buffer size");
         unsafe {
-            self.inner.copy_to_host(
-                data.as_mut_ptr() as *mut u8,
-                std::mem::size_of_val(data),
-            );
+            self.inner
+                .copy_to_host(data.as_mut_ptr() as *mut u8, std::mem::size_of_val(data));
         }
     }
 

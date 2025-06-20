@@ -11,6 +11,12 @@ use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 use thiserror::Error;
 
+/// Type alias for a callback function
+type CallbackFn = Box<dyn FnOnce() + Send + 'static>;
+
+/// Type alias for a list of callbacks
+type CallbackList = Arc<Mutex<Vec<CallbackFn>>>;
+
 /// Unique identifier for GPU events
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EventId(u64);
@@ -67,7 +73,7 @@ pub struct GpuEvent {
     timestamp: Option<Instant>,
     duration: Arc<Mutex<Option<Duration>>>,
     dependencies: Vec<EventId>,
-    callbacks: Arc<Mutex<Vec<Box<dyn FnOnce() + Send + 'static>>>>,
+    callbacks: CallbackList,
 }
 
 impl GpuEvent {
@@ -296,7 +302,8 @@ impl GpuStream {
         events.iter().all(|weak_event| {
             weak_event
                 .upgrade()
-                .map_or(true, |event| event.is_completed())
+                .map(|event| event.is_completed())
+                .unwrap_or(true)
         })
     }
 
@@ -306,7 +313,7 @@ impl GpuStream {
         events.retain(|weak_event| {
             weak_event
                 .upgrade()
-                .map_or(false, |event| !event.is_completed())
+                .is_some_and(|event| !event.is_completed())
         });
     }
 }

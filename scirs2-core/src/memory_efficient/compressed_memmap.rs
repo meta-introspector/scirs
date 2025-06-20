@@ -62,20 +62,15 @@ pub struct CompressedFileMetadata {
 }
 
 /// Supported compression algorithms
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 pub enum CompressionAlgorithm {
     /// LZ4 compression
+    #[default]
     Lz4,
     /// Zstd compression
     Zstd,
     /// Snappy compression
     Snappy,
-}
-
-impl Default for CompressionAlgorithm {
-    fn default() -> Self {
-        CompressionAlgorithm::Lz4
-    }
 }
 
 /// Builder for compressed memory-mapped arrays.
@@ -257,19 +252,15 @@ impl CompressedMemMapBuilder {
                     result?;
                     compressed
                 }
-                CompressionAlgorithm::Zstd => {
-                    zstd::encode_all(block_data, self.level)?
-                }
-                CompressionAlgorithm::Snappy => {
-                    snap::raw::Encoder::new()
-                        .compress_vec(block_data)
-                        .map_err(|e| {
-                            CoreError::ComputationError(ErrorContext::new(format!(
-                                "Snappy compression error: {}",
-                                e
-                            )))
-                        })?
-                }
+                CompressionAlgorithm::Zstd => zstd::encode_all(block_data, self.level)?,
+                CompressionAlgorithm::Snappy => snap::raw::Encoder::new()
+                    .compress_vec(block_data)
+                    .map_err(|e| {
+                        CoreError::ComputationError(ErrorContext::new(format!(
+                            "Snappy compression error: {}",
+                            e
+                        )))
+                    })?,
             };
 
             // Record the compressed size
@@ -726,7 +717,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
         // Create iterators for the result indices
         let mut result_indices = vec![0; ranges.len()];
         let mut source_indices = Vec::with_capacity(ranges.len());
-        for (_i, &(start, _)) in ranges.iter().enumerate() {
+        for &(start, _) in ranges.iter() {
             source_indices.push(start);
         }
 

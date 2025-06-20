@@ -141,6 +141,7 @@ pub struct FuzzingFailure {
 pub struct FuzzingEngine {
     config: FuzzingConfig,
     #[cfg(feature = "random")]
+    #[allow(dead_code)]
     rng: StdRng,
 }
 
@@ -544,7 +545,7 @@ mod tests {
         // Test normal generation
         for _ in 0..100 {
             let value = generator.generate();
-            assert!(value >= -10.0 && value <= 10.0);
+            assert!((-10.0..=10.0).contains(&value));
         }
 
         // Test edge case generation
@@ -562,9 +563,9 @@ mod tests {
 
         // Test normal generation
         let vector = generator.generate();
-        assert!(vector.len() >= 1 && vector.len() <= 10);
+        assert!(!vector.is_empty() && vector.len() <= 10);
         for &value in &vector {
-            assert!(value >= -5.0 && value <= 5.0);
+            assert!((-5.0..=5.0).contains(&value));
         }
 
         // Test edge case generation

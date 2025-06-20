@@ -33,6 +33,7 @@ where
     /// The chunking strategy
     pub strategy: ChunkingStrategy,
     /// The computed chunk size in elements
+    #[allow(dead_code)]
     chunk_size: usize,
     /// The number of chunks
     num_chunks: usize,

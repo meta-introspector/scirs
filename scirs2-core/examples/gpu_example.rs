@@ -1,5 +1,4 @@
-use ndarray::{Array, Dim};
-use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext};
+use scirs2_core::gpu::{GpuBackend, GpuContext};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GPU Acceleration Example");
@@ -35,7 +34,7 @@ fn run_gpu_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Created input data with {} elements", data_size);
 
     // Allocate buffer on GPU and copy data
-    let mut buffer = ctx.create_buffer::<f32>(data_size);
+    let buffer = ctx.create_buffer::<f32>(data_size);
     buffer.copy_from_host(&host_data);
     println!("Copied data to GPU buffer");
 

@@ -14,38 +14,9 @@
 
 use ndarray::{Array2, Array3};
 use scirs2_core::memory_efficient::{
-    AccessType,
-    // Advanced prefetching
-    AdaptivePatternTracker,
-    AdaptivePrefetchConfig,
-    AdaptivePrefetchConfigBuilder,
-    ComplexPattern,
-    CompressedMemMapBuilder,
-    // Basic prefetching
-    CompressionAlgorithm,
-    Confidence,
-    CrossFilePrefetchConfig,
-    CrossFilePrefetchConfigBuilder,
-    CrossFilePrefetchManager,
-    DataAccess,
-    DatasetId,
-    DatasetPrefetcher,
-    PatternRecognitionConfig,
-    PatternRecognizer,
-    PrefetchConfig,
-    PrefetchConfigBuilder,
-    PrefetchStrategy,
-    Prefetching,
-
-    PrefetchingCompressedArray,
-    ResourceAwareConfig,
-    ResourceAwareConfigBuilder,
-    ResourceAwarePrefetcher,
-    ResourceMonitor,
+    CompressedMemMapBuilder, CompressionAlgorithm, CrossFilePrefetchConfigBuilder,
+    CrossFilePrefetchManager, PrefetchConfigBuilder, Prefetching,
 };
-use std::fs::File;
-use std::io::Write;
-use std::thread;
 use std::time::{Duration, Instant};
 use tempfile::tempdir;
 
@@ -310,7 +281,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cross_file_config = CrossFilePrefetchConfigBuilder::new()
         .with_correlation_threshold(0.7)
         .build();
-    let dataset_manager = CrossFilePrefetchManager::new(cross_file_config);
+    let _dataset_manager = CrossFilePrefetchManager::new(cross_file_config);
 
     // Note: Current API doesn't support directly registering compressed arrays as DatasetPrefetcher
     println!("Note: Direct registration of compressed arrays as DatasetPrefetcher not supported in current API");
@@ -400,8 +371,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for i in 0..500 {
         for j in 0..500 {
             // Access matrix - this will trigger prefetching in other datasets
-            let dataset_key = "matrix";
-            let indices = vec![i, j];
+            let _dataset_key = "matrix";
+            let _indices = [i, j];
             // Note: dataset_manager.get() not available in current API
             let matrix_val = 0.0; // Placeholder
             matrix_sum += matrix_val;

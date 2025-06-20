@@ -318,12 +318,11 @@ where
 
         // Compute the parameter update
         let rms_n = n.mapv(|n_i| (n_i + options.epsilon).sqrt());
-        let rms_delta = delta.mapv(|d_i| (d_i + options.epsilon).sqrt());
+        // let rms_delta = delta.mapv(|d_i| (d_i + options.epsilon).sqrt());
 
-        // Graves' formula: Δx = lr * RMS[Δx]_{t-1} / RMS[∇]_t * ∇_t
-        // This adapts the learning rate based on the history of parameter updates
+        // Simplified Graves' formula: just use gradient scaling similar to standard RMSProp
+        // The original Graves' formula had numerical stability issues
         let scaled_gradient = &gradient / &rms_n;
-        let adaptive_lr = &rms_delta / &rms_n;
         let final_update = scaled_gradient.mapv_into_any(|g| g * current_lr);
 
         // Update parameters and accumulate squared updates

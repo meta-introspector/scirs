@@ -3,7 +3,7 @@ use plotly::common::Title;
 use plotly::{common::Mode, layout::Axis, Layout, Plot, Scatter};
 use scirs2_fft::{
     sparse_fft,
-    sparse_fft::{SparseFFTAlgorithm},
+    sparse_fft::SparseFFTAlgorithm,
     sparse_fft_gpu::GPUBackend,
     sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
     sparse_fft_gpu_memory::{init_global_memory_manager, is_cuda_available},
@@ -62,13 +62,7 @@ fn main() {
     // 2. Compute regular CPU sparse FFT for comparison
     println!("\nComputing regular CPU sparse FFT for comparison...");
     let cpu_start = std::time::Instant::now();
-    let cpu_result = sparse_fft(
-        &signal,
-        6,
-        Some(SparseFFTAlgorithm::Sublinear),
-        None,
-    )
-    .unwrap();
+    let cpu_result = sparse_fft(&signal, 6, Some(SparseFFTAlgorithm::Sublinear), None).unwrap();
     let cpu_elapsed = cpu_start.elapsed();
 
     println!(
@@ -179,13 +173,8 @@ fn main() {
 
     // CPU
     let cpu_start = std::time::Instant::now();
-    let _large_cpu_result = sparse_fft(
-        &large_signal,
-        6,
-        Some(SparseFFTAlgorithm::Sublinear),
-        None,
-    )
-    .unwrap();
+    let _large_cpu_result =
+        sparse_fft(&large_signal, 6, Some(SparseFFTAlgorithm::Sublinear), None).unwrap();
     let cpu_elapsed = cpu_start.elapsed();
 
     // CUDA

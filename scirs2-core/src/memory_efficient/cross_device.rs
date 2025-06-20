@@ -168,6 +168,12 @@ impl TransferOptionsBuilder {
     }
 }
 
+impl Default for TransferOptionsBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Cache key for the device memory cache
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct CacheKey {
@@ -277,10 +283,7 @@ impl DeviceMemoryManager {
     pub fn new(enable_caching: bool, max_cache_size: usize) -> Result<Self, CoreError> {
         // Try to create a GPU context if a GPU is available
         let gpu_context = match GpuBackend::preferred() {
-            backend if backend.is_available() => match GpuContext::new(backend) {
-                Ok(context) => Some(context),
-                Err(_) => None,
-            },
+            backend if backend.is_available() => GpuContext::new(backend).ok(),
             _ => None,
         };
 
@@ -399,7 +402,7 @@ impl DeviceMemoryManager {
                             dirty: false,
                         };
 
-                        let buffer_size = std::mem::size_of_val(&flat_data);
+                        let buffer_size = std::mem::size_of_val(flat_data);
                         self.current_cache_size
                             .fetch_add(buffer_size, std::sync::atomic::Ordering::SeqCst);
 
@@ -932,10 +935,7 @@ impl DeviceMemoryPool {
 
         // Add the buffer to the pool
         let mut free_buffers = self.free_buffers.lock().unwrap();
-        free_buffers
-            .entry(size)
-            .or_default()
-            .push(Box::new(buffer));
+        free_buffers.entry(size).or_default().push(Box::new(buffer));
 
         // Update the pool size
         self.current_pool_size
@@ -1027,8 +1027,10 @@ pub struct CrossDeviceManager {
     /// Active data transfers
     active_transfers: Mutex<Vec<TransferEvent>>,
     /// Enable caching
+    #[allow(dead_code)]
     enable_caching: bool,
     /// Maximum cache size in bytes
+    #[allow(dead_code)]
     max_cache_size: usize,
 }
 
@@ -1218,12 +1220,12 @@ impl CrossDeviceManager {
     /// Clear all caches and pools
     pub fn clear(&self) {
         // Clear all memory managers
-        for (_, manager) in &self.memory_managers {
+        for manager in self.memory_managers.values() {
             manager.clear_cache();
         }
 
         // Clear all memory pools
-        for (_, pool) in &self.memory_pools {
+        for pool in self.memory_pools.values() {
             pool.clear();
         }
 

@@ -42,7 +42,7 @@ fn demo_memory_analytics() -> Result<(), Box<dyn std::error::Error>> {
 
     // Simulate memory allocation patterns
     let components = ["DataProcessor", "NetworkClient", "Cache"];
-    let mut addresses = vec![0x1000, 0x2000, 0x3000];
+    let mut addresses = [0x1000, 0x2000, 0x3000];
 
     println!("Simulating memory allocation patterns...");
 
@@ -236,17 +236,17 @@ fn demo_memory_profiler() -> Result<(), Box<dyn std::error::Error>> {
     for iteration in 0..20 {
         for (idx, component) in components.iter().enumerate() {
             // Different allocation patterns for each component
-            let size = match component {
-                &"WebServer" => 2048 + (iteration * 100), // Growing
-                &"Database" => 8192,                      // Constant
-                &"Cache" => {
+            let size = match *component {
+                "WebServer" => 2048 + (iteration * 100), // Growing
+                "Database" => 8192,                      // Constant
+                "Cache" => {
                     if iteration % 3 == 0 {
                         16384
                     } else {
                         0
                     }
                 } // Periodic
-                &"Logger" => 512 + (iteration * iteration * 10), // Accelerating
+                "Logger" => 512 + (iteration * iteration * 10), // Accelerating
                 _ => 1024,
             };
 

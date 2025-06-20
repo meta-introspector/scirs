@@ -40,9 +40,10 @@ use ndarray::{Array, ArrayBase, Data, Dimension, RawData, ShapeBuilder};
 use std::mem;
 
 /// Memory layout order following `NumPy` conventions
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum LayoutOrder {
     /// C-order (row-major): last axis is contiguous
+    #[default]
     C,
     /// Fortran-order (column-major): first axis is contiguous  
     Fortran,
@@ -50,12 +51,6 @@ pub enum LayoutOrder {
     Any,
     /// Keep existing order (for transformations)
     Keep,
-}
-
-impl Default for LayoutOrder {
-    fn default() -> Self {
-        LayoutOrder::C
-    }
 }
 
 impl LayoutOrder {
@@ -70,7 +65,7 @@ impl LayoutOrder {
     }
 
     /// Parse from string (`NumPy`-compatible)
-    pub fn from_str(s: &str) -> CoreResult<Self> {
+    pub fn parse(s: &str) -> CoreResult<Self> {
         match s.to_uppercase().as_str() {
             "C" => Ok(LayoutOrder::C),
             "F" | "FORTRAN" => Ok(LayoutOrder::Fortran),
@@ -143,7 +138,7 @@ impl MemoryLayout {
         D: Dimension,
     {
         let shape = array.shape().to_vec();
-        let strides: Vec<isize> = array.strides().iter().map(|&s| s).collect();
+        let strides: Vec<isize> = array.strides().to_vec();
         let element_size = mem::size_of::<S::Elem>();
         let total_size = array.len() * element_size;
 
@@ -315,25 +310,25 @@ impl MemoryLayout {
         match self.order {
             LayoutOrder::C => {
                 // C-order: rightmost index varies fastest
-                for i in (0..self.shape.len()).rev() {
-                    indices[i] = remaining % self.shape[i];
-                    remaining /= self.shape[i];
+                for (i, &shape_dim) in self.shape.iter().enumerate().rev() {
+                    indices[i] = remaining % shape_dim;
+                    remaining /= shape_dim;
                 }
             }
             LayoutOrder::Fortran => {
                 // F-order: leftmost index varies fastest
-                for i in 0..self.shape.len() {
-                    indices[i] = remaining % self.shape[i];
-                    remaining /= self.shape[i];
+                for (idx, shape_dim) in indices.iter_mut().zip(&self.shape) {
+                    *idx = remaining % shape_dim;
+                    remaining /= shape_dim;
                 }
             }
             LayoutOrder::Any | LayoutOrder::Keep => {
                 // Use the actual strides to compute indices
                 remaining *= self.element_size;
-                for i in 0..self.shape.len() {
-                    if self.strides[i] > 0 {
-                        indices[i] = (remaining as isize / self.strides[i]) as usize;
-                        remaining = (remaining as isize % self.strides[i]) as usize;
+                for (i, &stride) in self.strides.iter().enumerate().take(self.shape.len()) {
+                    if stride > 0 {
+                        indices[i] = (remaining as isize / stride) as usize;
+                        remaining = (remaining as isize % stride) as usize;
                     }
                 }
             }
@@ -549,11 +544,9 @@ impl ArrayLayout {
         D: Dimension,
     {
         // For simplicity, just convert to owned and let ndarray handle F-order conversion
-        let owned = array.to_owned();
-
         // Create F-order array by transposing appropriately
         // This is a simplified implementation - in practice we'd need more sophisticated F-order handling
-        owned
+        array.to_owned()
     }
 
     /// Create array with specific layout order
@@ -676,6 +669,7 @@ impl LayoutConverter {
             let end = std::cmp::min(start + chunk_size, total_elements);
 
             // Convert each element in the chunk
+            #[allow(clippy::needless_range_loop)]
             for linear_idx in start..end {
                 let source_indices = source_layout.multi_index(linear_idx)?;
                 let target_linear_idx = target_layout.linear_index(&source_indices)?;
@@ -784,15 +778,12 @@ mod tests {
 
     #[test]
     fn test_layout_order_parsing() {
-        assert_eq!(LayoutOrder::from_str("C").unwrap(), LayoutOrder::C);
-        assert_eq!(LayoutOrder::from_str("F").unwrap(), LayoutOrder::Fortran);
-        assert_eq!(
-            LayoutOrder::from_str("fortran").unwrap(),
-            LayoutOrder::Fortran
-        );
-        assert_eq!(LayoutOrder::from_str("A").unwrap(), LayoutOrder::Any);
-        assert_eq!(LayoutOrder::from_str("K").unwrap(), LayoutOrder::Keep);
-        assert!(LayoutOrder::from_str("X").is_err());
+        assert_eq!(LayoutOrder::parse("C").unwrap(), LayoutOrder::C);
+        assert_eq!(LayoutOrder::parse("F").unwrap(), LayoutOrder::Fortran);
+        assert_eq!(LayoutOrder::parse("fortran").unwrap(), LayoutOrder::Fortran);
+        assert_eq!(LayoutOrder::parse("A").unwrap(), LayoutOrder::Any);
+        assert_eq!(LayoutOrder::parse("K").unwrap(), LayoutOrder::Keep);
+        assert!(LayoutOrder::parse("X").is_err());
     }
 
     #[test]

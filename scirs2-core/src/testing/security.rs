@@ -330,6 +330,7 @@ impl InputValidationTester {
     }
 
     /// Generate malicious input patterns
+    #[allow(clippy::vec_init_then_push)]
     fn generate_malicious_patterns(&self) -> Vec<Vec<u8>> {
         let mut patterns = Vec::new();
 
@@ -407,6 +408,7 @@ impl InputValidationTester {
 
 /// Memory safety security tester
 pub struct MemorySafetyTester {
+    #[allow(dead_code)]
     config: SecurityTestConfig,
 }
 
@@ -519,7 +521,7 @@ impl MemorySafetyTester {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 2 {
                         let kb: usize = parts[1].parse().map_err(|e| {
-                            CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                            CoreError::ValidationError(crate::error::ErrorContext::new(format!(
                                 "Failed to parse memory: {}",
                                 e
                             )))

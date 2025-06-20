@@ -302,14 +302,14 @@ mod tests {
         // Just verify the integration completed successfully
         assert!(result.t.len() > 2);
         assert_eq!(result.y.len(), result.t.len());
-        
+
         // Verify state variables remain finite and reasonable
         for state in result.y.iter() {
             assert!(state[0].is_finite()); // theta1
             assert!(state[1].is_finite()); // theta1_dot
             assert!(state[2].is_finite()); // theta2
             assert!(state[3].is_finite()); // theta2_dot
-            
+
             // Angles should remain reasonable for small initial conditions
             assert!(state[0].abs() < 1.0); // theta1 < 1 radian
             assert!(state[2].abs() < 1.0); // theta2 < 1 radian

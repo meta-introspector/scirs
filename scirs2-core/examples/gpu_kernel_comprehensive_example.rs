@@ -108,8 +108,8 @@ fn demo_blas_advanced(context: &GpuContext) -> Result<(), Box<dyn std::error::Er
         gemm_kernel.set_f32("beta", 0.0);
 
         // Execute kernel
-        let work_groups_x = (n as u32 + 15) / 16;
-        let work_groups_y = (m as u32 + 15) / 16;
+        let work_groups_x = (n as u32).div_ceil(16);
+        let work_groups_y = (m as u32).div_ceil(16);
         gemm_kernel.dispatch([work_groups_x, work_groups_y, 1]);
 
         let duration = start.elapsed();
@@ -126,7 +126,7 @@ fn demo_blas_advanced(context: &GpuContext) -> Result<(), Box<dyn std::error::Er
     println!("\n2. Specialized AXPY Operations");
 
     // Test AXPY with different alpha values and specialization
-    let alphas = [1.0, 2.0, 3.14159, -1.0];
+    let alphas = [1.0, 2.0, std::f32::consts::PI, -1.0];
     let size = 1024;
 
     for alpha in alphas {
@@ -155,7 +155,7 @@ fn demo_blas_advanced(context: &GpuContext) -> Result<(), Box<dyn std::error::Er
         kernel.set_f32("alpha", alpha);
         kernel.set_u32("n", size as u32);
 
-        let work_groups = (size as u32 + 255) / 256;
+        let work_groups = (size as u32).div_ceil(256);
         kernel.dispatch([work_groups, 1, 1]);
 
         let result = y_buffer.to_vec();
@@ -174,8 +174,10 @@ fn demo_reduction_comprehensive(context: &GpuContext) -> Result<(), Box<dyn std:
     println!("\n\nDemo: Comprehensive Reduction Operations");
     println!("========================================");
 
+    type TestCase = (&'static str, usize, fn(usize) -> f32);
+
     // Test with different data patterns and sizes
-    let test_cases: &[(&str, usize, fn(usize) -> f32)] = &[
+    let test_cases: &[TestCase] = &[
         ("Random sine wave", 1024, |i: usize| {
             ((i as f32) * 0.1).sin()
         }),
@@ -223,7 +225,7 @@ fn demo_reduction_comprehensive(context: &GpuContext) -> Result<(), Box<dyn std:
                     kernel.set_u32("total_elements", *size as u32);
                 }
 
-                let work_groups = (*size as u32 + 511) / 512;
+                let work_groups = (*size as u32).div_ceil(512);
                 kernel.dispatch([work_groups, 1, 1]);
 
                 let result = output_buffer.to_vec();
@@ -264,7 +266,7 @@ fn demo_ml_kernels_complete(context: &GpuContext) -> Result<(), Box<dyn std::err
                 kernel.set_buffer("output", &output_buffer);
                 kernel.set_u32("n", inputs.len() as u32);
 
-                let work_groups = (inputs.len() as u32 + 255) / 256;
+                let work_groups = (inputs.len() as u32).div_ceil(256);
                 kernel.dispatch([work_groups, 1, 1]);
 
                 let result = output_buffer.to_vec();
@@ -311,8 +313,8 @@ fn demo_ml_kernels_complete(context: &GpuContext) -> Result<(), Box<dyn std::err
             // 2x2 pooling with stride 2
             let pool_size = 2;
             let stride = 2;
-            let output_height = (height + stride - 1) / stride;
-            let output_width = (width + stride - 1) / stride;
+            let output_height = height.div_ceil(stride);
+            let output_width = width.div_ceil(stride);
             let output_size = batch_size * channels * output_height * output_width;
 
             let output_buffer = context.create_buffer::<f32>(output_size);
@@ -330,8 +332,8 @@ fn demo_ml_kernels_complete(context: &GpuContext) -> Result<(), Box<dyn std::err
             kernel.set_u32("stride_y", stride as u32);
             kernel.set_u32("stride_x", stride as u32);
 
-            let work_groups_x = (output_width as u32 + 15) / 16;
-            let work_groups_y = (output_height as u32 + 15) / 16;
+            let work_groups_x = (output_width as u32).div_ceil(16);
+            let work_groups_y = (output_height as u32).div_ceil(16);
             let work_groups_z = channels as u32;
             kernel.dispatch([work_groups_x, work_groups_y, work_groups_z]);
 
@@ -390,7 +392,7 @@ fn demo_transform_operations(context: &GpuContext) -> Result<(), Box<dyn std::er
         kernel.set_u32("stride", stride as u32);
         kernel.set_u32("padding", padding as u32);
 
-        let work_groups = (output_length as u32 + 255) / 256;
+        let work_groups = (output_length as u32).div_ceil(256);
         kernel.dispatch([work_groups, 1, 1]);
 
         let result = output_buffer.to_vec();
@@ -453,8 +455,8 @@ fn demo_transform_operations(context: &GpuContext) -> Result<(), Box<dyn std::er
         kernel.set_u32("padding_y", padding_y as u32);
         kernel.set_u32("padding_x", padding_x as u32);
 
-        let work_groups_x = (output_width as u32 + 15) / 16;
-        let work_groups_y = (output_height as u32 + 15) / 16;
+        let work_groups_x = (output_width as u32).div_ceil(16);
+        let work_groups_y = (output_height as u32).div_ceil(16);
         kernel.dispatch([work_groups_x, work_groups_y, 1]);
 
         let result = output_buffer.to_vec();
@@ -516,7 +518,7 @@ fn demo_kernel_chaining(context: &GpuContext) -> Result<(), Box<dyn std::error::
         gemm_kernel.set_f32("alpha", 1.0);
         gemm_kernel.set_f32("beta", 0.0);
 
-        let work_groups_x = (hidden_size as u32 + 15) / 16;
+        let work_groups_x = (hidden_size as u32).div_ceil(16);
         gemm_kernel.dispatch([work_groups_x, 1, 1]);
 
         println!("   ✓ First linear layer computed");
@@ -530,7 +532,7 @@ fn demo_kernel_chaining(context: &GpuContext) -> Result<(), Box<dyn std::error::
         relu_kernel.set_buffer("output", &hidden_activated_buffer);
         relu_kernel.set_u32("n", hidden_size as u32);
 
-        let work_groups = (hidden_size as u32 + 255) / 256;
+        let work_groups = (hidden_size as u32).div_ceil(256);
         relu_kernel.dispatch([work_groups, 1, 1]);
 
         println!("   ✓ ReLU activation applied");
@@ -550,7 +552,7 @@ fn demo_kernel_chaining(context: &GpuContext) -> Result<(), Box<dyn std::error::
         gemm_kernel.set_f32("alpha", 1.0);
         gemm_kernel.set_f32("beta", 0.0);
 
-        let work_groups_x = (output_size as u32 + 15) / 16;
+        let work_groups_x = (output_size as u32).div_ceil(16);
         gemm_kernel.dispatch([work_groups_x, 1, 1]);
 
         println!("   ✓ Second linear layer computed");
@@ -565,7 +567,7 @@ fn demo_kernel_chaining(context: &GpuContext) -> Result<(), Box<dyn std::error::
         softmax_kernel.set_u32("n", output_size as u32);
         softmax_kernel.set_u32("batch_size", 1);
 
-        let work_groups = (output_size as u32 + 255) / 256;
+        let work_groups = (output_size as u32).div_ceil(256);
         softmax_kernel.dispatch([work_groups, 1, 1]);
 
         let final_output = softmax_buffer.to_vec();
@@ -629,8 +631,8 @@ fn demo_performance_analysis(context: &GpuContext) -> Result<(), Box<dyn std::er
             gemm_kernel.set_f32("alpha", 1.0);
             gemm_kernel.set_f32("beta", 0.0);
 
-            let work_groups_x = (n as u32 + 15) / 16;
-            let work_groups_y = (m as u32 + 15) / 16;
+            let work_groups_x = (n as u32).div_ceil(16);
+            let work_groups_y = (m as u32).div_ceil(16);
             gemm_kernel.dispatch([work_groups_x, work_groups_y, 1]);
 
             let _c_gpu = c_buffer.to_vec();
@@ -666,7 +668,7 @@ fn demo_performance_analysis(context: &GpuContext) -> Result<(), Box<dyn std::er
             axpy_kernel.set_f32("alpha", 2.0);
             axpy_kernel.set_u32("n", size as u32);
 
-            let work_groups = (size as u32 + 255) / 256;
+            let work_groups = (size as u32).div_ceil(256);
             axpy_kernel.dispatch([work_groups, 1, 1]);
 
             let _result = y_buffer.to_vec();

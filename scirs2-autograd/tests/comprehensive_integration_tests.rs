@@ -72,14 +72,25 @@ fn test_complete_ultrathink_pipeline() {
 
         // Step 3: Verify reduced result
         let reduced_output = reduced.eval(ctx).unwrap();
-        assert_eq!(reduced_output.len(), 1);
-        assert!(reduced_output[0].is_finite());
-        assert!(reduced_output[0] > 0.0);
+
+        // Handle scalar result (reduce_sum with keep_dims=false produces a scalar)
+        let reduced_value = if reduced_output.ndim() == 0 {
+            // Scalar tensor
+            assert_eq!(reduced_output.len(), 1);
+            reduced_output[[]]
+        } else {
+            // 1D tensor with single element
+            assert_eq!(reduced_output.len(), 1);
+            reduced_output[[0]]
+        };
+
+        assert!(reduced_value.is_finite());
+        assert!(reduced_value > 0.0);
 
         println!("✅ Complete ultrathink pipeline executed successfully!");
         println!("   - Input shape: [64, 128]");
         println!("   - Final output shape: [8192]");
-        println!("   - Reduced sum: {}", reduced_output[0]);
+        println!("   - Reduced sum: {}", reduced_value);
     });
 }
 
@@ -531,8 +542,16 @@ fn test_realistic_ml_workflow_integration() {
 
         // Step 5: Verify all computations
         let loss_value = loss.eval(ctx).unwrap();
-        assert!(loss_value[0].is_finite());
-        assert!(loss_value[0] > 0.0);
+
+        // Handle scalar result (reduce_mean with keep_dims=false produces a scalar)
+        let loss_scalar = if loss_value.ndim() == 0 {
+            loss_value[[]]
+        } else {
+            loss_value[[0]]
+        };
+
+        assert!(loss_scalar.is_finite());
+        assert!(loss_scalar > 0.0);
 
         let final_output_value = final_output.eval(ctx).unwrap();
         assert_eq!(final_output_value.shape(), &[batch_size, output_size]);
@@ -553,7 +572,7 @@ fn test_realistic_ml_workflow_integration() {
         println!("   - Input features: {}", input_features);
         println!("   - Hidden size: {}", hidden_size);
         println!("   - Output size: {}", output_size);
-        println!("   - Final loss: {:.6}", loss_value[0]);
+        println!("   - Final loss: {:.6}", loss_scalar);
         println!("   - Used features: Custom activations, SIMD ops, checkpointing, caching, parallel ops");
     });
 }

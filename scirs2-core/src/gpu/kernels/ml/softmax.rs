@@ -14,6 +14,12 @@ pub struct SoftmaxKernel {
     base: BaseKernel,
 }
 
+impl Default for SoftmaxKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SoftmaxKernel {
     /// Create a new softmax kernel
     pub fn new() -> Self {
@@ -479,10 +485,10 @@ impl GpuKernel for SoftmaxKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16 => true,
-            _ => false,
-        }
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

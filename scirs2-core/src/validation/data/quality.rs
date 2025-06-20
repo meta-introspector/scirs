@@ -365,7 +365,7 @@ impl QualityAnalyzer {
                         stats.outliers, outlier_percentage
                     ),
                     severity: if outlier_percentage > 15.0 {
-                        ErrorSeverity::Warning
+                        ErrorSeverity::Error
                     } else {
                         ErrorSeverity::Warning
                     },

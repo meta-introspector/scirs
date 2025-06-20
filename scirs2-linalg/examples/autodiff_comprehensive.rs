@@ -9,9 +9,9 @@
 //! workarounds for some common operations.
 
 #[cfg(feature = "autograd")]
-use scirs2_autograd as ag;
-#[cfg(feature = "autograd")]
 use ag::tensor_ops as T;
+#[cfg(feature = "autograd")]
+use scirs2_autograd as ag;
 
 #[cfg(not(feature = "autograd"))]
 fn main() {
@@ -130,12 +130,12 @@ fn demo_matrix_calculus() {
 
         // Demonstrate Jacobian computation
         let x = ctx.placeholder("x", &[3]);
-        
+
         // Define vector function: g(x) = [x₁², x₁*x₂, x₂*x₃]
         let x1 = T::gather(x, &T::constant(vec![0i32], &[1], ctx), 0);
         let x2 = T::gather(x, &T::constant(vec![1i32], &[1], ctx), 0);
         let x3 = T::gather(x, &T::constant(vec![2i32], &[1], ctx), 0);
-        
+
         let g1 = x1 * x1;
         let g2 = x1 * x2;
         let g3 = x2 * x3;
@@ -145,7 +145,7 @@ fn demo_matrix_calculus() {
         let jacobian = T::jacobian(&[g], &[x]);
 
         let x_val = ag::ndarray::arr1(&[2.0, 3.0, 4.0]);
-        
+
         let jac_result = ctx
             .evaluator()
             .push(&jacobian[0])
@@ -185,7 +185,7 @@ fn demo_workarounds() {
 
         // Feed and evaluate
         let a_val = ag::ndarray::arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
-        
+
         let results = ctx
             .evaluator()
             .push(&trace)
@@ -219,14 +219,14 @@ fn demo_performance_tips() {
         // Example: Efficient batch matrix multiplication
         let batch_a = ctx.placeholder("batch_a", &[10, 3, 3]);
         let batch_b = ctx.placeholder("batch_b", &[10, 3, 3]);
-        
+
         // This is more efficient than 10 separate matmuls
         let batch_c = T::matmul(batch_a, batch_b);
-        
+
         println!("\nBatch operations example:");
         println!("- Input: 10 3x3 matrices");
         println!("- Single batched matmul is more efficient than loop");
-        
+
         // For actual use, you would feed real batch data
     });
 

@@ -546,7 +546,7 @@ impl BenchmarkRunner {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 2 {
                         let kb: usize = parts[1].parse().map_err(|e| {
-                            CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                            CoreError::ValidationError(crate::error::ErrorContext::new(format!(
                                 "Failed to parse memory: {}",
                                 e
                             )))
@@ -562,10 +562,13 @@ impl BenchmarkRunner {
     }
 }
 
+/// Type alias for benchmark functions
+type BenchmarkFn = Box<dyn Fn(&BenchmarkRunner) -> CoreResult<BenchmarkResult> + Send + Sync>;
+
 /// Benchmark suite for organizing multiple related benchmarks
 pub struct BenchmarkSuite {
     name: String,
-    benchmarks: Vec<Box<dyn Fn(&BenchmarkRunner) -> CoreResult<BenchmarkResult> + Send + Sync>>,
+    benchmarks: Vec<BenchmarkFn>,
     config: BenchmarkConfig,
 }
 

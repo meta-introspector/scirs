@@ -96,6 +96,7 @@ pub mod broadcast;
 pub mod complex;
 pub mod convolution;
 mod decomposition;
+pub mod decomposition_advanced;
 // Main eigen module
 pub mod eigen;
 pub use self::eigen::{
@@ -111,9 +112,11 @@ pub mod gradient;
 pub mod hierarchical;
 mod iterative_solvers;
 pub mod kronecker;
+pub mod large_scale;
 pub mod lowrank;
 pub mod matrix_calculus;
 pub mod matrix_dynamics;
+pub mod matrix_equations;
 pub mod matrix_factorization;
 pub mod matrix_functions;
 pub mod matrixfree;
@@ -140,6 +143,7 @@ pub mod fft;
 pub mod scalable;
 pub mod simd_ops;
 mod solve;
+pub mod solvers;
 pub mod sparse_dense;
 pub mod special;
 pub mod specialized;
@@ -196,6 +200,11 @@ pub use self::complex::{complex_inverse, complex_matmul, hermitian_transpose};
 pub use self::decomposition::{cholesky, lu, qr, schur, svd};
 // Backward compatibility versions (deprecated)
 pub use self::decomposition::{cholesky_default, lu_default, qr_default, svd_default};
+// Advanced decomposition functions
+pub use self::decomposition_advanced::{
+    jacobi_svd, polar_decomposition as advanced_polar_decomposition, polar_decomposition_newton,
+    qr_with_column_pivoting,
+};
 // Backward compatibility versions for basic functions (deprecated)
 pub use self::basic::{det_default, inv_default, matrix_power_default};
 // Backward compatibility versions for iterative solvers (deprecated)
@@ -204,10 +213,16 @@ pub use self::iterative_solvers::conjugate_gradient_default;
 pub use self::extended_precision::*;
 pub use self::iterative_solvers::*;
 // pub use self::matrix_calculus::*; // Temporarily disabled
+pub use self::matrix_equations::{
+    solve_continuous_riccati, solve_discrete_riccati, solve_generalized_sylvester, solve_stein,
+    solve_sylvester,
+};
 pub use self::matrix_factorization::{
     cur_decomposition, interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
 };
-pub use self::matrix_functions::{cosm, expm, logm, sinm, sqrtm, tanm};
+pub use self::matrix_functions::{
+    acosm, asinm, atanm, coshm, cosm, expm, logm, signm, sinhm, sinm, sqrtm, tanhm, tanm,
+};
 pub use self::matrixfree::{
     block_diagonal_operator, conjugate_gradient as matrix_free_conjugate_gradient,
     diagonal_operator, gmres as matrix_free_gmres, jacobi_preconditioner,
@@ -219,6 +234,11 @@ pub use self::norm::*;
 pub use self::solve::{lstsq, solve, solve_multiple, solve_triangular, LstsqResult};
 // Backward compatibility versions (deprecated)
 pub use self::solve::{lstsq_default, solve_default, solve_multiple_default};
+// Iterative solvers
+pub use self::solvers::iterative::{
+    bicgstab, conjugate_gradient as cg_solver, gmres,
+    preconditioned_conjugate_gradient as pcg_solver, IterativeSolverOptions, IterativeSolverResult,
+};
 pub use self::specialized::{
     specialized_to_operator, BandedMatrix, SpecializedMatrix, SymmetricMatrix, TridiagonalMatrix,
 };
@@ -266,6 +286,10 @@ pub mod prelude {
         max_pool2d_backward,
     };
     pub use super::decomposition::{cholesky, lu, qr, schur, svd};
+    pub use super::decomposition_advanced::{
+        jacobi_svd, polar_decomposition as advanced_polar_decomposition,
+        polar_decomposition_newton, qr_with_column_pivoting,
+    };
     pub use super::eigen::{
         eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh, eigvalsh_gen,
         power_iteration, ultra_precision_eig,
@@ -295,8 +319,17 @@ pub mod prelude {
         advanced_kfac_step, kfac_factorization, kfac_update, kron, kron_factorize, kron_matmul,
         kron_matvec, BlockDiagonalFisher, BlockFisherMemoryInfo, KFACOptimizer,
     };
+    pub use super::large_scale::{
+        block_krylov_solve, ca_gmres, incremental_svd, randomized_block_lanczos,
+        randomized_least_squares, randomized_norm,
+    };
     pub use super::lowrank::{
         cur_decomposition, nmf as lowrank_nmf, pca, randomized_svd, truncated_svd,
+    };
+    pub use super::solvers::iterative::{
+        bicgstab as iterative_bicgstab, conjugate_gradient as iterative_cg,
+        gmres as iterative_gmres, preconditioned_conjugate_gradient as iterative_pcg,
+        IterativeSolverOptions, IterativeSolverResult,
     };
     // Matrix calculus temporarily disabled due to compilation issues
     // pub use super::matrix_calculus::enhanced::{
@@ -311,7 +344,10 @@ pub mod prelude {
     pub use super::matrix_factorization::{
         interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
     };
-    pub use super::matrix_functions::{cosm, expm, logm, matrix_power, sinm, sqrtm, tanm};
+    pub use super::matrix_functions::{
+        acosm, asinm, atanm, coshm, cosm, expm, logm, matrix_power, signm, sinhm, sinm, sqrtm,
+        tanhm, tanm,
+    };
     pub use super::matrixfree::{
         block_diagonal_operator, conjugate_gradient as matrix_free_conjugate_gradient,
         diagonal_operator, gmres as matrix_free_gmres, jacobi_preconditioner,

@@ -106,7 +106,7 @@ impl AdaptiveChunkingParams {
 
         match workload {
             WorkloadType::MemoryIntensive => {
-                params.target_memory_usage = params.target_memory_usage / 2; // Use smaller chunks
+                params.target_memory_usage /= 2; // Use smaller chunks
                 params.consider_distribution = false; // Skip expensive analysis
             }
             WorkloadType::ComputeIntensive => {
@@ -114,7 +114,7 @@ impl AdaptiveChunkingParams {
                 params.optimize_for_parallel = true;
             }
             WorkloadType::IoIntensive => {
-                params.target_memory_usage = params.target_memory_usage * 2; // Larger chunks for I/O
+                params.target_memory_usage *= 2; // Larger chunks for I/O
                 params.min_chunk_size = 64 * 1024; // Larger minimum for I/O efficiency
             }
             WorkloadType::Balanced => {
@@ -504,24 +504,13 @@ pub mod alpha6_enhancements {
     use std::sync::Arc;
 
     /// Performance metrics collector for adaptive optimization
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     #[allow(dead_code)]
     pub struct ChunkingPerformanceMetrics {
         pub chunk_processing_times: Vec<Duration>,
         pub memory_usage_per_chunk: Vec<usize>,
         pub throughput_mbps: Vec<f64>,
         pub cpu_utilization: Vec<f64>,
-    }
-
-    impl Default for ChunkingPerformanceMetrics {
-        fn default() -> Self {
-            Self {
-                chunk_processing_times: Vec::new(),
-                memory_usage_per_chunk: Vec::new(),
-                throughput_mbps: Vec::new(),
-                cpu_utilization: Vec::new(),
-            }
-        }
     }
 
     /// Alpha 6: Dynamic load balancer for heterogeneous computing environments
@@ -709,7 +698,7 @@ mod tests {
 
         // Create adaptive chunking parameters
         let params = AdaptiveChunkingBuilder::new()
-            .with_target_memory(1 * 1024 * 1024) // 1MB chunks
+            .with_target_memory(1024 * 1024) // 1MB chunks
             .with_min_chunk_size(1000)
             .with_max_chunk_size(50000)
             .build();

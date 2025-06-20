@@ -29,9 +29,7 @@ pub type ViewMut<'a, A, D> = NdArrayViewMut<'a, A, D>;
 /// # Returns
 ///
 /// A view of the array with elements interpreted as the new type
-pub unsafe fn view_as<'a, A, B, S, D>(
-    array: &'a ArrayBase<S, D>,
-) -> Result<ArrayView<'a, B, D>, CoreError>
+pub unsafe fn view_as<A, B, S, D>(array: &ArrayBase<S, D>) -> Result<ArrayView<'_, B, D>, CoreError>
 where
     A: Clone,
     S: Data<Elem = A>,
@@ -82,9 +80,9 @@ where
 /// # Returns
 ///
 /// A mutable view of the array with elements interpreted as the new type
-pub unsafe fn view_mut_as<'a, A, B, S, D>(
-    array: &'a mut ArrayBase<S, D>,
-) -> Result<ViewMut<'a, B, D>, CoreError>
+pub unsafe fn view_mut_as<A, B, S, D>(
+    array: &mut ArrayBase<S, D>,
+) -> Result<ViewMut<'_, B, D>, CoreError>
 where
     A: Clone,
     S: Data<Elem = A>,

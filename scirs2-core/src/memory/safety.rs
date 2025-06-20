@@ -588,7 +588,12 @@ mod tests {
 
     #[test]
     fn test_safety_tracker() {
-        let tracker = SafetyTracker::new();
+        // Create a config with zero_on_dealloc disabled to avoid segfault with fake pointers
+        let config = SafetyConfig {
+            zero_on_dealloc: false,
+            ..Default::default()
+        };
+        let tracker = SafetyTracker::with_config(config);
         let ptr = 0x1000 as *mut u8;
 
         // Test allocation tracking

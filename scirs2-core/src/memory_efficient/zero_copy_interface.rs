@@ -105,7 +105,7 @@ impl DataMetadata {
         Self {
             type_id: TypeId::of::<T>(),
             type_name: std::any::type_name::<T>().to_string(),
-            size_bytes: data.len() * std::mem::size_of::<T>(),
+            size_bytes: std::mem::size_of_val(data),
             element_count: data.len(),
             element_size: std::mem::size_of::<T>(),
             created_at: std::time::Instant::now(),
@@ -131,6 +131,7 @@ struct ZeroCopyDataInner<T> {
     /// Metadata about the data
     metadata: DataMetadata,
     /// Weak references to this data
+    #[allow(dead_code)]
     weak_refs: Mutex<Vec<Weak<ZeroCopyDataInner<T>>>>,
 }
 
@@ -398,6 +399,7 @@ impl<T> Clone for ZeroCopyView<T> {
 /// Type-erased zero-copy data for storage in collections
 trait AnyZeroCopyData: Send + Sync + std::fmt::Debug + Any {
     /// Get the type ID of the contained data
+    #[allow(dead_code)]
     fn type_id(&self) -> TypeId;
 
     /// Get the metadata
@@ -414,6 +416,7 @@ trait AnyZeroCopyData: Send + Sync + std::fmt::Debug + Any {
 }
 
 impl<T: Clone + 'static + Send + Sync + std::fmt::Debug> AnyZeroCopyData for ZeroCopyData<T> {
+    #[allow(dead_code)]
     fn type_id(&self) -> TypeId {
         TypeId::of::<T>()
     }
@@ -514,10 +517,7 @@ impl ZeroCopyInterface {
         {
             let mut type_map = self.type_data.write().unwrap();
             let type_id = TypeId::of::<T>();
-            type_map
-                .entry(type_id)
-                .or_insert_with(Vec::new)
-                .push(boxed_data);
+            type_map.entry(type_id).or_default().push(boxed_data);
         }
 
         // Update statistics

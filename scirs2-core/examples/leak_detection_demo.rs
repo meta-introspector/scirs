@@ -46,7 +46,7 @@ fn main() -> CoreResult<()> {
     println!("\n💾 Simulating memory allocations...");
     for i in 0..5 {
         let size = 1024 * (i + 1); // Increasing allocation sizes
-        detector.track_allocation(size, 0x1000 + i as u64)?;
+        detector.track_allocation(size, 0x1000 + i)?;
         println!("  📦 Allocated {} bytes", size);
     }
 

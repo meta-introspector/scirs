@@ -313,9 +313,9 @@ impl AdaptivePatternTracker {
                 };
 
                 // Add or update this strategy in our performance map
-                if !self.strategy_performance.contains_key(&strided_strategy) {
-                    self.strategy_performance.insert(
-                        strided_strategy,
+                self.strategy_performance
+                    .entry(strided_strategy)
+                    .or_insert_with(|| {
                         StrategyPerformance {
                             strategy: strided_strategy,
                             usage_count: 0,
@@ -323,9 +323,8 @@ impl AdaptivePatternTracker {
                             avg_latency_ns: 0.0,
                             last_used: Instant::now(),
                             q_value: 0.2, // Slight bias when detected
-                        },
-                    );
-                }
+                        }
+                    });
 
                 // Consider switching to this strided strategy
                 match self.current_strategy {
@@ -377,9 +376,9 @@ impl AdaptivePatternTracker {
                             };
 
                             // Add this strategy if it doesn't exist
-                            if !self.strategy_performance.contains_key(&strategy) {
-                                self.strategy_performance.insert(
-                                    strategy,
+                            self.strategy_performance
+                                .entry(strategy)
+                                .or_insert_with(|| {
                                     StrategyPerformance {
                                         strategy,
                                         usage_count: 0,
@@ -387,9 +386,8 @@ impl AdaptivePatternTracker {
                                         avg_latency_ns: 0.0,
                                         last_used: Instant::now(),
                                         q_value: 0.3, // Higher bias for dimensional patterns
-                                    },
-                                );
-                            }
+                                    }
+                                });
 
                             // Consider switching to this strategy
                             if (self.exploration_step % 100) < 60 {
@@ -402,19 +400,16 @@ impl AdaptivePatternTracker {
                             };
 
                             // Add this strategy if it doesn't exist
-                            if !self.strategy_performance.contains_key(&strategy) {
-                                self.strategy_performance.insert(
+                            self.strategy_performance
+                                .entry(strategy)
+                                .or_insert_with(|| StrategyPerformance {
                                     strategy,
-                                    StrategyPerformance {
-                                        strategy,
-                                        usage_count: 0,
-                                        hit_rate: 0.0,
-                                        avg_latency_ns: 0.0,
-                                        last_used: Instant::now(),
-                                        q_value: 0.3,
-                                    },
-                                );
-                            }
+                                    usage_count: 0,
+                                    hit_rate: 0.0,
+                                    avg_latency_ns: 0.0,
+                                    last_used: Instant::now(),
+                                    q_value: 0.3,
+                                });
 
                             // Consider switching to this strategy
                             if (self.exploration_step % 100) < 60 {
@@ -430,19 +425,16 @@ impl AdaptivePatternTracker {
                     };
 
                     // Add this strategy if it doesn't exist
-                    if !self.strategy_performance.contains_key(&strategy) {
-                        self.strategy_performance.insert(
+                    self.strategy_performance
+                        .entry(strategy)
+                        .or_insert_with(|| StrategyPerformance {
                             strategy,
-                            StrategyPerformance {
-                                strategy,
-                                usage_count: 0,
-                                hit_rate: 0.0,
-                                avg_latency_ns: 0.0,
-                                last_used: Instant::now(),
-                                q_value: 0.2,
-                            },
-                        );
-                    }
+                            usage_count: 0,
+                            hit_rate: 0.0,
+                            avg_latency_ns: 0.0,
+                            last_used: Instant::now(),
+                            q_value: 0.2,
+                        });
 
                     // Occasionally switch to pattern-based strategy
                     if (self.exploration_step % 100) < 40 {
@@ -768,9 +760,9 @@ impl AdaptivePatternTracker {
 
         for i in 0..self.history.len() - pattern.len() {
             let mut matches = true;
-            for j in 0..pattern.len() {
+            for (j, &pattern_idx) in pattern.iter().enumerate() {
                 if let Some((idx, _, _)) = self.history.get(i + j) {
-                    if *idx != pattern[j] {
+                    if *idx != pattern_idx {
                         matches = false;
                         break;
                     }
@@ -983,6 +975,12 @@ impl AdaptivePrefetchConfigBuilder {
     /// Build the configuration.
     pub fn build(self) -> AdaptivePrefetchConfig {
         self.config
+    }
+}
+
+impl Default for AdaptivePrefetchConfigBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -209,10 +209,7 @@ impl GpuKernel for Conv1dKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 => true,
-            _ => false,
-        }
+        matches!(params.data_type, DataType::Float32 | DataType::Float64)
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
@@ -221,6 +218,12 @@ impl GpuKernel for Conv1dKernel {
         }
 
         Ok(Box::new(Self::new()))
+    }
+}
+
+impl Default for Conv1dKernel {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -478,10 +481,10 @@ impl GpuKernel for Conv2dKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16 => true,
-            _ => false,
-        }
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
@@ -496,5 +499,11 @@ impl GpuKernel for Conv2dKernel {
         // - Memory layout optimizations
 
         Ok(Box::new(Self::new()))
+    }
+}
+
+impl Default for Conv2dKernel {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -586,16 +586,12 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> BroadcastOps<A>
         let mut other_dims = Vec::with_capacity(output_ndim);
 
         // Prepend 1s to the shape with fewer dimensions
-        for _ in 0..(output_ndim - self_ndim) {
-            self_dims.push(1);
-        }
+        self_dims.resize(output_ndim - self_ndim, 1);
         for dim in self_shape.iter() {
             self_dims.push(*dim);
         }
 
-        for _ in 0..(output_ndim - other_ndim) {
-            other_dims.push(1);
-        }
+        other_dims.resize(output_ndim - other_ndim, 1);
         for dim in other_shape.iter() {
             other_dims.push(*dim);
         }
@@ -603,6 +599,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> BroadcastOps<A>
         // Determine the output shape
         let mut output_shape = Vec::with_capacity(output_ndim);
         for i in 0..output_ndim {
+            #[allow(clippy::if_same_then_else)]
             if self_dims[i] == 1 {
                 output_shape.push(other_dims[i]);
             } else if other_dims[i] == 1 {

@@ -49,22 +49,17 @@ use std::time::{Duration, Instant};
 
 #[cfg(feature = "parallel")]
 /// Task priority levels for the work-stealing scheduler
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum TaskPriority {
     /// Low priority tasks (background processing)
     Low = 0,
     /// Normal priority tasks (default)
+    #[default]
     Normal = 1,
     /// High priority tasks (time-sensitive operations)
     High = 2,
     /// Critical priority tasks (must be processed immediately)
     Critical = 3,
-}
-
-impl Default for TaskPriority {
-    fn default() -> Self {
-        TaskPriority::Normal
-    }
 }
 
 /// NUMA node information for work-stealing optimization
@@ -361,10 +356,12 @@ impl PriorityTaskQueue {
         self.total_size
     }
 
+    #[allow(dead_code)]
     fn is_empty(&self) -> bool {
         self.total_size == 0
     }
 
+    #[allow(dead_code)]
     fn is_full(&self) -> bool {
         self.total_size >= self.max_size
     }
@@ -372,10 +369,12 @@ impl PriorityTaskQueue {
 
 /// Worker thread for the work-stealing scheduler
 struct Worker {
+    #[allow(dead_code)]
     id: usize,
     local_queue: Arc<Mutex<PriorityTaskQueue>>,
     global_queue: Arc<Mutex<PriorityTaskQueue>>,
     other_workers: Vec<Arc<Mutex<PriorityTaskQueue>>>,
+    #[allow(dead_code)]
     numa_node: Option<usize>,
     shutdown: Arc<AtomicBool>,
     stats: Arc<WorkerStats>,
@@ -383,27 +382,15 @@ struct Worker {
 }
 
 /// Statistics for individual workers
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct WorkerStats {
     tasks_executed: AtomicU64,
     tasks_stolen: AtomicU64,
+    #[allow(dead_code)]
     tasks_provided: AtomicU64,
     idle_time: AtomicU64,
     active_time: AtomicU64,
     last_activity: AtomicU64,
-}
-
-impl Default for WorkerStats {
-    fn default() -> Self {
-        Self {
-            tasks_executed: AtomicU64::new(0),
-            tasks_stolen: AtomicU64::new(0),
-            tasks_provided: AtomicU64::new(0),
-            idle_time: AtomicU64::new(0),
-            active_time: AtomicU64::new(0),
-            last_activity: AtomicU64::new(0),
-        }
-    }
 }
 
 impl Worker {
@@ -553,7 +540,7 @@ impl Worker {
 }
 
 /// Overall scheduler statistics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SchedulerStats {
     /// Number of tasks submitted
     pub tasks_submitted: u64,
@@ -583,31 +570,17 @@ pub struct SchedulerStats {
     pub throughput: f64,
 }
 
-impl Default for SchedulerStats {
-    fn default() -> Self {
-        Self {
-            tasks_submitted: 0,
-            tasks_completed: 0,
-            tasks_pending: 0,
-            total_steals: 0,
-            avg_execution_time_us: 0.0,
-            worker_utilization: 0.0,
-            memory_usage_per_worker: Vec::new(),
-            load_balance_operations: 0,
-            throughput: 0.0,
-        }
-    }
-}
-
 /// Advanced work-stealing scheduler
 pub struct WorkStealingScheduler {
     config: WorkStealingConfig,
+    #[allow(dead_code)]
     workers: Vec<Worker>,
     worker_handles: Vec<JoinHandle<()>>,
     global_queue: Arc<Mutex<PriorityTaskQueue>>,
     result_receiver: crossbeam::channel::Receiver<Box<dyn std::any::Any + Send>>,
     result_sender: crossbeam::channel::Sender<Box<dyn std::any::Any + Send>>,
     shutdown: Arc<AtomicBool>,
+    #[allow(dead_code)]
     numa_nodes: Vec<NumaNode>,
     stats: Arc<RwLock<SchedulerStats>>,
     start_time: Option<Instant>,

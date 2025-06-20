@@ -19,8 +19,6 @@
 
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
-use std::error::Error;
-use std::fmt;
 
 use ndarray::{Array, IntoDimension, Ix1, Ix2, IxDyn};
 
@@ -30,30 +28,21 @@ use crate::array_protocol::{
 use crate::error::CoreError;
 
 /// Error type for array operations.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum OperationError {
     /// The operation is not implemented for the given array types.
+    #[error("Operation not implemented: {0}")]
     NotImplemented(String),
     /// The array shapes are incompatible for the operation.
+    #[error("Shape mismatch: {0}")]
     ShapeMismatch(String),
     /// The array types are incompatible for the operation.
+    #[error("Type mismatch: {0}")]
     TypeMismatch(String),
     /// Other error during operation.
+    #[error("Operation error: {0}")]
     Other(String),
 }
-
-impl fmt::Display for OperationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotImplemented(msg) => write!(f, "Operation not implemented: {msg}"),
-            Self::ShapeMismatch(msg) => write!(f, "Shape mismatch: {msg}"),
-            Self::TypeMismatch(msg) => write!(f, "Type mismatch: {msg}"),
-            Self::Other(msg) => write!(f, "Operation error: {msg}"),
-        }
-    }
-}
-
-impl Error for OperationError {}
 
 impl From<NotImplemented> for OperationError {
     fn from(_: NotImplemented) -> Self {

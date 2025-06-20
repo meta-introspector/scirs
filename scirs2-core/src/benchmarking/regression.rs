@@ -606,7 +606,7 @@ mod tests {
     fn test_regression_detector() {
         let temp_dir = TempDir::new().unwrap();
         let config = RegressionConfig::new()
-            .with_results_directory(temp_dir.path().to_path_buf())
+            .with_results_directory(temp_dir.path())
             .with_min_historical_samples(1);
 
         let detector = RegressionDetector::new(config);

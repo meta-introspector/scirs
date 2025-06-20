@@ -249,6 +249,12 @@ __kernel void sum_reduce(
     }
 }
 
+impl Default for SumKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GpuKernel for SumKernel {
     fn name(&self) -> &str {
         self.base.name()
@@ -263,10 +269,10 @@ impl GpuKernel for SumKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 | DataType::Int32 | DataType::UInt32 => true,
-            _ => false,
-        }
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Int32 | DataType::UInt32
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

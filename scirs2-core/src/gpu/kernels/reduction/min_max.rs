@@ -245,6 +245,12 @@ __kernel void min_reduce(
     }
 }
 
+impl Default for MinKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GpuKernel for MinKernel {
     fn name(&self) -> &str {
         self.base.name()
@@ -259,10 +265,10 @@ impl GpuKernel for MinKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 | DataType::Int32 | DataType::UInt32 => true,
-            _ => false,
-        }
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Int32 | DataType::UInt32
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
@@ -510,6 +516,12 @@ __kernel void max_reduce(
     }
 }
 
+impl Default for MaxKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GpuKernel for MaxKernel {
     fn name(&self) -> &str {
         self.base.name()
@@ -524,10 +536,10 @@ impl GpuKernel for MaxKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 | DataType::Int32 | DataType::UInt32 => true,
-            _ => false,
-        }
+        matches!(
+            params.data_type,
+            DataType::Float32 | DataType::Float64 | DataType::Int32 | DataType::UInt32
+        )
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

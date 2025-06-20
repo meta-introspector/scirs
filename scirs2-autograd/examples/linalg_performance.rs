@@ -136,7 +136,7 @@ fn main() {
         let chain_a = convert_to_tensor(chain_data, g);
 
         benchmark!("Complex operation chain", {
-            let result = matrix_sqrt(&matrix_inverse(chain_a));
+            let result = matrix_exp(&matrix_inverse(chain_a)); // Changed from matrix_sqrt (not implemented)
             let norm = frobenius_norm(result);
             let det = determinant(result);
             let combined = add(norm, det);

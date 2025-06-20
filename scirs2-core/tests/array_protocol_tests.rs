@@ -61,7 +61,6 @@ fn test_ndarray_wrapper() {
 }
 
 #[test]
-#[ignore = "GPU array operations are not fully implemented"]
 fn test_gpu_array() {
     // Create a regular ndarray
     let arr = Array2::<f64>::ones((3, 3));
@@ -342,7 +341,6 @@ fn test_array_interoperability() {
 }
 
 #[test]
-#[ignore = "Some array operations are not fully implemented"]
 fn test_array_operations() {
     // Initialize the array protocol system
     array_protocol::init();
@@ -485,7 +483,6 @@ fn test_array_operations() {
 }
 
 #[test]
-#[ignore = "Mixed array type operations are not fully implemented"]
 fn test_mixed_array_types() {
     // Initialize the array protocol system
     array_protocol::init();

@@ -17,6 +17,9 @@ use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
+/// Type alias for the processing function
+type ProcessFn<T, U> = Arc<dyn Fn(Vec<T>) -> Result<Vec<U>, CoreError> + Send + Sync>;
+
 /// Stream processing mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StreamMode {
@@ -115,7 +118,7 @@ impl Default for StreamConfig {
 }
 
 /// Builder for stream processor configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct StreamConfigBuilder {
     config: StreamConfig,
 }
@@ -123,9 +126,7 @@ pub struct StreamConfigBuilder {
 impl StreamConfigBuilder {
     /// Create a new stream configuration builder with default values
     pub fn new() -> Self {
-        Self {
-            config: StreamConfig::default(),
-        }
+        Self::default()
     }
 
     /// Set the processing mode
@@ -442,6 +443,7 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
     }
 
     /// Check if the buffer is closed
+    #[allow(dead_code)]
     fn is_closed(&self) -> bool {
         let _guard = self.mutex.lock().unwrap();
         self.closed
@@ -462,7 +464,7 @@ pub struct StreamProcessor<T: Clone + Send + 'static, U: Clone + Send + 'static>
     /// Input buffer
     input_buffer: Arc<Mutex<StreamBuffer<T>>>,
     /// Processing function
-    process_fn: Arc<dyn Fn(Vec<T>) -> Result<Vec<U>, CoreError> + Send + Sync>,
+    process_fn: ProcessFn<T, U>,
     /// Output buffer
     output_buffer: Arc<Mutex<StreamBuffer<U>>>,
     /// Current state of the stream processor
@@ -559,7 +561,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
     fn worker_loop(
         input_buffer: Arc<Mutex<StreamBuffer<T>>>,
         output_buffer: Arc<Mutex<StreamBuffer<U>>>,
-        process_fn: Arc<dyn Fn(Vec<T>) -> Result<Vec<U>, CoreError> + Send + Sync>,
+        process_fn: ProcessFn<T, U>,
         config: StreamConfig,
         state: Arc<RwLock<StreamState>>,
         stats: Arc<RwLock<StreamStats>>,
@@ -978,6 +980,7 @@ pub struct Pipeline {
     /// Pipeline state
     state: Arc<RwLock<StreamState>>,
     /// Pipeline statistics
+    #[allow(dead_code)]
     stats: Arc<RwLock<PipelineStats>>,
     /// Error context for the pipeline
     error_context: Arc<RwLock<Option<ErrorContext>>>,
@@ -1311,7 +1314,7 @@ impl Pipeline {
 
         // Calculate overall statistics
         let mut max_uptime = 0.0;
-        for (_, stage_stats) in &stats.stage_stats {
+        for stage_stats in stats.stage_stats.values() {
             if stage_stats.uptime_seconds > max_uptime {
                 max_uptime = stage_stats.uptime_seconds;
             }
@@ -1522,7 +1525,6 @@ where
     {
         let workers = config.workers.unwrap_or_else(num_cpus::get);
 
-        let process_fn_clone = process_fn.clone();
         let parallel_fn = move |arrays: Vec<ArrayBase<OwnedRepr<A>, D>>| -> Result<Vec<ArrayBase<OwnedRepr<A>, D>>, CoreError> {
             // Process arrays in parallel using rayon
             use rayon::prelude::*;
@@ -1534,10 +1536,11 @@ where
                         .with_location(ErrorLocation::new(file!(), line!()))
                 ))?;
 
+            let process_fn_clone = process_fn.clone();
             pool.install(|| {
                 let results: Result<Vec<_>, _> = arrays
                     .par_iter()
-                    .map(|array| process_fn_clone(array))
+                    .map(process_fn_clone)
                     .collect();
 
                 results
@@ -1566,6 +1569,7 @@ pub fn create_pipeline(name: &str) -> PipelineBuilder {
 /// Extension trait for error handling in stream processing
 pub trait StreamError {
     /// Convert to a stream error
+    #[allow(dead_code)]
     fn to_stream_error(self, message: &str) -> CoreError;
 }
 

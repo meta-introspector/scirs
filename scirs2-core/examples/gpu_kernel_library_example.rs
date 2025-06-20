@@ -93,8 +93,8 @@ fn demo_blas_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::
     gemm_kernel.set_f32("beta", 0.0);
 
     // Execute kernel
-    let work_groups_x = (n as u32 + 15) / 16;
-    let work_groups_y = (m as u32 + 15) / 16;
+    let work_groups_x = (n as u32).div_ceil(16);
+    let work_groups_y = (m as u32).div_ceil(16);
     gemm_kernel.dispatch([work_groups_x, work_groups_y, 1]);
 
     // Read results
@@ -109,7 +109,7 @@ fn demo_blas_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::
     let alpha = 2.5f32;
 
     let x_data: Vec<f32> = (0..size).map(|i| i as f32).collect();
-    let mut y_data: Vec<f32> = (0..size).map(|i| (i as f32) * 0.5).collect();
+    let y_data: Vec<f32> = (0..size).map(|i| (i as f32) * 0.5).collect();
 
     let x_buffer = context.create_buffer_from_slice(&x_data);
     let y_buffer = context.create_buffer_from_slice(&y_data);
@@ -124,7 +124,7 @@ fn demo_blas_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::
     axpy_kernel.set_u32("n", size as u32);
 
     // Execute kernel
-    let work_groups = (size as u32 + 255) / 256;
+    let work_groups = (size as u32).div_ceil(256);
     axpy_kernel.dispatch([work_groups, 1, 1]);
 
     // Read results
@@ -155,7 +155,7 @@ fn demo_reduction_operations(context: &GpuContext) -> Result<(), Box<dyn std::er
     sum_kernel.set_buffer("output", &sum_buffer);
     sum_kernel.set_u32("n", size as u32);
 
-    let work_groups = (size as u32 + 511) / 512; // 2 elements per thread
+    let work_groups = (size as u32).div_ceil(512); // 2 elements per thread
     sum_kernel.dispatch([work_groups, 1, 1]);
 
     let sum_result = sum_buffer.to_vec();
@@ -227,7 +227,7 @@ fn demo_ml_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Er
     relu_kernel.set_buffer("output", &output_buffer);
     relu_kernel.set_u32("n", size as u32);
 
-    let work_groups = (size as u32 + 255) / 256;
+    let work_groups = (size as u32).div_ceil(256);
     relu_kernel.dispatch([work_groups, 1, 1]);
 
     let relu_result = output_buffer.to_vec();
@@ -319,7 +319,7 @@ fn demo_transform_operations(context: &GpuContext) -> Result<(), Box<dyn std::er
     fft_kernel.set_buffer("output", &output_buffer);
     fft_kernel.set_u32("n", size as u32);
 
-    let work_groups = (size as u32 + 255) / 256;
+    let work_groups = (size as u32).div_ceil(256);
     fft_kernel.dispatch([work_groups, 1, 1]);
 
     let fft_result = output_buffer.to_vec();
@@ -350,7 +350,7 @@ fn demo_kernel_specialization(context: &GpuContext) -> Result<(), Box<dyn std::e
 
     // Get specialized kernel for large matrices
     match context.get_specialized_kernel("gemm", &params) {
-        Ok(specialized_kernel) => {
+        Ok(_specialized_kernel) => {
             println!("   Successfully created specialized GEMM kernel for large matrices");
             println!("   Dimensions: 1024x512 * 512x768 = 1024x768");
 
@@ -371,7 +371,7 @@ fn demo_kernel_specialization(context: &GpuContext) -> Result<(), Box<dyn std::e
         .with_string_param("dimension", "1d");
 
     match context.get_specialized_kernel("fft_1d_forward", &fft_params) {
-        Ok(specialized_fft) => {
+        Ok(_specialized_fft) => {
             println!("   Successfully created specialized FFT kernel for 256-point transform");
             println!("   This could use radix-4 or radix-8 algorithms optimized for this size");
         }
@@ -382,11 +382,12 @@ fn demo_kernel_specialization(context: &GpuContext) -> Result<(), Box<dyn std::e
 
     println!("\n5.3 AXPY Kernel with Hardcoded Alpha");
 
-    let axpy_params = KernelParams::new(DataType::Float32).with_numeric_param("alpha", 3.14159);
+    let axpy_params =
+        KernelParams::new(DataType::Float32).with_numeric_param("alpha", std::f64::consts::PI);
 
     match context.get_specialized_kernel("axpy", &axpy_params) {
-        Ok(specialized_axpy) => {
-            println!("   Successfully created specialized AXPY kernel with alpha = 3.14159");
+        Ok(_specialized_axpy) => {
+            println!("   Successfully created specialized AXPY kernel with alpha = PI");
             println!("   This kernel has the alpha value hardcoded for better performance");
         }
         Err(e) => {

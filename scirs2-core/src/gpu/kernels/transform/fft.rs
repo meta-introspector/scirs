@@ -257,3 +257,9 @@ impl GpuKernel for FftKernel {
         Ok(Box::new(specialized))
     }
 }
+
+impl Default for FftKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}

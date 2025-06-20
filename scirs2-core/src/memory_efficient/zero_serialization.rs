@@ -1075,6 +1075,7 @@ mod tests {
             Self { real, imag }
         }
 
+        #[allow(dead_code)]
         fn magnitude(&self) -> f64 {
             (self.real * self.real + self.imag * self.imag).sqrt()
         }

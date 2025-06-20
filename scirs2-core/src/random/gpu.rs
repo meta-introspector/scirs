@@ -474,8 +474,7 @@ impl GpuRandomGenerator {
             kernel.set_f32("mean", mean);
             kernel.set_f32("std_dev", std_dev);
 
-            let num_work_groups =
-                ((count / 2).div_ceil(self.work_group_size)) as u32;
+            let num_work_groups = ((count / 2).div_ceil(self.work_group_size)) as u32;
             kernel.dispatch([num_work_groups, 1, 1]);
 
             let results = output_buffer.to_vec();
@@ -552,8 +551,8 @@ impl GpuRandomGenerator {
         }
 
         normal_samples.truncate(len);
-        Ok(Array::from_shape_vec(IxDyn(&[len]), normal_samples)
-            .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?)
+        Array::from_shape_vec(IxDyn(&[len]), normal_samples)
+            .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))
     }
 
     /// Generate random array with specified shape
@@ -828,24 +827,21 @@ mod tests {
         let exponential = GpuDistribution::Exponential { lambda: 1.0 };
 
         // Test that distributions can be created and compared
-        match uniform {
-            GpuDistribution::Uniform => assert!(true),
-            _ => assert!(false),
-        }
+        assert!(matches!(uniform, GpuDistribution::Uniform));
 
         match normal {
             GpuDistribution::Normal { mean, std_dev } => {
                 assert_eq!(mean, 0.0);
                 assert_eq!(std_dev, 1.0);
             }
-            _ => assert!(false),
+            _ => panic!("Expected Normal distribution"),
         }
 
         match exponential {
             GpuDistribution::Exponential { lambda } => {
                 assert_eq!(lambda, 1.0);
             }
-            _ => assert!(false),
+            _ => panic!("Expected Normal distribution"),
         }
     }
 

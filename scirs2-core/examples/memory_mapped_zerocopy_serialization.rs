@@ -10,9 +10,7 @@
 
 use ndarray::{Array, Array1, Array2, Array3, IxDyn};
 use scirs2_core::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
-use scirs2_core::memory_efficient::{
-    AccessMode, MemoryMappedArray, ZeroCopySerializable, ZeroCopySerialization,
-};
+use scirs2_core::memory_efficient::{AccessMode, MemoryMappedArray, ZeroCopySerializable};
 use serde_json::json;
 use std::fs::File;
 use std::io::Write;
@@ -233,7 +231,7 @@ fn basic_serialization_example(temp_dir: &Path) -> Result<(), Box<dyn std::error
 
     // Save with zero-copy serialization
     let start = Instant::now();
-    let mmap = MemoryMappedArray::<f64>::save_array(&data, &file_path, Some(metadata))?;
+    let _mmap = MemoryMappedArray::<f64>::save_array(&data, &file_path, Some(metadata))?;
     let save_time = start.elapsed();
     println!(
         "Saved array with zero-copy serialization in {:?}",
@@ -348,7 +346,7 @@ fn metadata_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
         updated["properties"]["calibration_factor"]
     );
     println!("  Processing: {}", updated["properties"]["processing"]);
-    println!("  Tags: {}", updated["tags"].to_string());
+    println!("  Tags: {}", updated["tags"]);
 
     // Load the array and verify data wasn't affected by metadata update
     let loaded = MemoryMappedArray::<f32>::open_zero_copy(&file_path, AccessMode::ReadOnly)?;
@@ -498,10 +496,10 @@ fn performance_comparison(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
     let loaded = MemoryMappedArray::<f64>::open_zero_copy(&zero_copy_path, AccessMode::ReadOnly)?;
     let start = Instant::now();
     let array = loaded.readonly_array::<ndarray::Ix2>()?;
-    let mut sum = 0.0;
+    let mut _sum = 0.0;
     for i in 0..10 {
         for j in 0..10 {
-            sum += array[[i, j]];
+            _sum += array[[i, j]];
         }
     }
     let zero_copy_access_time = start.elapsed();
@@ -509,10 +507,10 @@ fn performance_comparison(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
     // 6. Array access time (traditional)
     let loaded_traditional: Array2<f64> = bincode::deserialize(&buffer)?;
     let start = Instant::now();
-    let mut sum = 0.0;
+    let mut _sum = 0.0;
     for i in 0..10 {
         for j in 0..10 {
-            sum += loaded_traditional[[i, j]];
+            _sum += loaded_traditional[[i, j]];
         }
     }
     let traditional_access_time = start.elapsed();

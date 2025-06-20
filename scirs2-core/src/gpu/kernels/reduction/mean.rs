@@ -332,6 +332,12 @@ __kernel void mean_reduce_finalize(
     }
 }
 
+impl Default for MeanKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GpuKernel for MeanKernel {
     fn name(&self) -> &str {
         self.base.name()
@@ -346,10 +352,7 @@ impl GpuKernel for MeanKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 => true,
-            _ => false,
-        }
+        matches!(params.data_type, DataType::Float32 | DataType::Float64)
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

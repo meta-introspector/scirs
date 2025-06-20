@@ -334,7 +334,7 @@ impl MemoryStressTester {
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if parts.len() >= 2 {
                         let kb: usize = parts[1].parse().map_err(|e| {
-                            CoreError::ValidationError(crate::error::ErrorContext::new(&format!(
+                            CoreError::ValidationError(crate::error::ErrorContext::new(format!(
                                 "Failed to parse memory: {}",
                                 e
                             )))
@@ -398,7 +398,6 @@ impl CpuStressTester {
         for thread_id in 0..self.config.thread_count {
             let config = Arc::clone(&config);
             let results = Arc::clone(&results);
-            let start_time = start_time;
 
             let handle = thread::spawn(move || {
                 let mut operations = 0;
@@ -498,7 +497,6 @@ impl ConcurrencyStressTester {
             let counter = Arc::clone(&shared_counter);
             let config = Arc::clone(&config);
             let results = Arc::clone(&results);
-            let start_time = start_time;
 
             let handle = thread::spawn(move || {
                 let mut operations = 0;
@@ -573,7 +571,6 @@ impl ConcurrencyStressTester {
             let counter = Arc::clone(&atomic_counter);
             let config = Arc::clone(&config);
             let results = Arc::clone(&results);
-            let start_time = start_time;
 
             let handle = thread::spawn(move || {
                 let mut operations = 0;

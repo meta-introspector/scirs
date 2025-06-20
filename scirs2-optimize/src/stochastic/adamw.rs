@@ -255,7 +255,7 @@ where
     let mut cycle_start = 0;
     let mut restart_count = 0;
     let initial_lr = options.learning_rate;
-    let total_max_iter = options.max_iter;  // Store the original max_iter
+    let total_max_iter = options.max_iter; // Store the original max_iter
 
     // Store best results across all restarts
     let mut global_best_x = x.clone();
@@ -501,7 +501,7 @@ mod tests {
             learning_rate: 0.01,
             weight_decay: 0.1,
             decouple_weight_decay: false,
-            max_iter: 500,  // Same as decoupled version
+            max_iter: 500, // Same as decoupled version
             tol: 1e-4,
             ..Default::default()
         };
@@ -540,7 +540,7 @@ mod tests {
         .unwrap();
 
         // Cosine restarts should help escape local minima (very relaxed tolerance)
-        assert!(result.fun < 10.0);  // Much more relaxed tolerance
+        assert!(result.fun < 10.0); // Much more relaxed tolerance
     }
 
     #[test]

@@ -100,9 +100,10 @@ impl EnvironmentInfo {
     }
 
     /// Get list of enabled features
-    #[allow(unused_mut)]
+    #[allow(clippy::vec_init_then_push)]
     fn get_enabled_features() -> Vec<String> {
-        let mut features = Vec::with_capacity(6);
+        #[allow(unused_mut)]
+        let mut features = Vec::new();
 
         #[cfg(feature = "parallel")]
         features.push("parallel".to_string());

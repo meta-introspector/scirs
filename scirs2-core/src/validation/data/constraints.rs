@@ -38,6 +38,18 @@ pub enum Constraint {
     Temporal(TimeConstraints),
     /// Matrix/array shape constraints
     Shape(ShapeConstraints),
+    /// Logical AND of multiple constraints - all must pass
+    And(Vec<Constraint>),
+    /// Logical OR of multiple constraints - at least one must pass
+    Or(Vec<Constraint>),
+    /// Logical NOT of a constraint - must not pass
+    Not(Box<Constraint>),
+    /// Conditional constraint - if condition passes, then constraint must pass
+    If {
+        condition: Box<Constraint>,
+        then_constraint: Box<Constraint>,
+        else_constraint: Option<Box<Constraint>>,
+    },
 }
 
 /// Statistical constraints for numeric data
@@ -270,6 +282,18 @@ impl TimeConstraints {
         self
     }
 
+    /// Set minimum time interval
+    pub fn with_min_interval(mut self, interval: Duration) -> Self {
+        self.min_interval = Some(interval);
+        self
+    }
+
+    /// Set maximum time interval
+    pub fn with_max_interval(mut self, interval: Duration) -> Self {
+        self.max_interval = Some(interval);
+        self
+    }
+
     /// Require monotonic timestamps
     pub fn require_monotonic(mut self) -> Self {
         self.require_monotonic = true;
@@ -286,6 +310,124 @@ impl TimeConstraints {
 impl Default for TimeConstraints {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Builder for composing constraints
+pub struct ConstraintBuilder {
+    constraints: Vec<Constraint>,
+}
+
+impl ConstraintBuilder {
+    /// Create a new constraint builder
+    pub fn new() -> Self {
+        Self {
+            constraints: Vec::new(),
+        }
+    }
+
+    /// Add a constraint to the builder
+    #[allow(clippy::should_implement_trait)]
+    pub fn add(mut self, constraint: Constraint) -> Self {
+        self.constraints.push(constraint);
+        self
+    }
+
+    /// Add a range constraint
+    pub fn range(self, min: f64, max: f64) -> Self {
+        self.add(Constraint::Range { min, max })
+    }
+
+    /// Add a pattern constraint
+    pub fn pattern(self, pattern: &str) -> Self {
+        self.add(Constraint::Pattern(pattern.to_string()))
+    }
+
+    /// Add a length constraint
+    pub fn length(self, min: usize, max: usize) -> Self {
+        self.add(Constraint::Length { min, max })
+    }
+
+    /// Add a not-null constraint
+    pub fn not_null(self) -> Self {
+        self.add(Constraint::NotNull)
+    }
+
+    /// Build an AND constraint from all added constraints
+    pub fn and(self) -> Constraint {
+        match self.constraints.len() {
+            0 => panic!("Cannot create AND constraint with no constraints"),
+            1 => self.constraints.into_iter().next().unwrap(),
+            _ => Constraint::And(self.constraints),
+        }
+    }
+
+    /// Build an OR constraint from all added constraints
+    pub fn or(self) -> Constraint {
+        match self.constraints.len() {
+            0 => panic!("Cannot create OR constraint with no constraints"),
+            1 => self.constraints.into_iter().next().unwrap(),
+            _ => Constraint::Or(self.constraints),
+        }
+    }
+}
+
+impl Default for ConstraintBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Constraint {
+    /// Create a constraint that requires all of the given constraints to pass
+    pub fn all_of(constraints: Vec<Constraint>) -> Self {
+        Constraint::And(constraints)
+    }
+
+    /// Create a constraint that requires at least one of the given constraints to pass
+    pub fn any_of(constraints: Vec<Constraint>) -> Self {
+        Constraint::Or(constraints)
+    }
+
+    /// Create a constraint that requires the given constraint to not pass
+    #[allow(clippy::should_implement_trait)]
+    pub fn not(constraint: Constraint) -> Self {
+        Constraint::Not(Box::new(constraint))
+    }
+
+    /// Create a conditional constraint
+    pub fn if_then(
+        condition: Constraint,
+        then_constraint: Constraint,
+        else_constraint: Option<Constraint>,
+    ) -> Self {
+        Constraint::If {
+            condition: Box::new(condition),
+            then_constraint: Box::new(then_constraint),
+            else_constraint: else_constraint.map(Box::new),
+        }
+    }
+
+    /// Chain this constraint with another using AND logic
+    pub fn and(self, other: Constraint) -> Self {
+        match self {
+            Constraint::And(mut constraints) => {
+                constraints.push(other);
+                Constraint::And(constraints)
+            }
+            _ => Constraint::And(vec![self, other]),
+        }
+    }
+
+    /// Chain this constraint with another using OR logic
+    pub fn or(self, other: Constraint) -> Self {
+        match self {
+            Constraint::Or(mut constraints) => {
+                constraints.push(other);
+                Constraint::Or(constraints)
+            }
+            _ => Constraint::Or(vec![self, other]),
+        }
     }
 }
 
@@ -336,6 +478,210 @@ mod tests {
         assert_eq!(constraints.min_elements, Some(100));
         assert_eq!(constraints.max_elements, Some(500));
         assert!(constraints.require_square);
+    }
+
+    #[test]
+    fn test_constraint_builder() {
+        // Test AND composition
+        let constraint = ConstraintBuilder::new().range(0.0, 100.0).not_null().and();
+
+        match constraint {
+            Constraint::And(constraints) => {
+                assert_eq!(constraints.len(), 2);
+            }
+            _ => panic!("Expected And constraint"),
+        }
+
+        // Test OR composition
+        let constraint = ConstraintBuilder::new()
+            .pattern("^[a-z]+$")
+            .pattern("^[A-Z]+$")
+            .or();
+
+        match constraint {
+            Constraint::Or(constraints) => {
+                assert_eq!(constraints.len(), 2);
+            }
+            _ => panic!("Expected Or constraint"),
+        }
+    }
+
+    #[test]
+    fn test_constraint_chaining() {
+        // Test AND chaining
+        let constraint = Constraint::Range {
+            min: 0.0,
+            max: 100.0,
+        }
+        .and(Constraint::NotNull);
+
+        match constraint {
+            Constraint::And(constraints) => {
+                assert_eq!(constraints.len(), 2);
+            }
+            _ => panic!("Expected And constraint"),
+        }
+
+        // Test OR chaining
+        let constraint = Constraint::Pattern("^[a-z]+$".to_string())
+            .or(Constraint::Pattern("^[A-Z]+$".to_string()));
+
+        match constraint {
+            Constraint::Or(constraints) => {
+                assert_eq!(constraints.len(), 2);
+            }
+            _ => panic!("Expected Or constraint"),
+        }
+    }
+
+    #[test]
+    fn test_composite_constraints() {
+        // Test NOT constraint
+        let constraint = Constraint::not(Constraint::Pattern("forbidden".to_string()));
+        match constraint {
+            Constraint::Not(_) => {}
+            _ => panic!("Expected Not constraint"),
+        }
+
+        // Test IF-THEN constraint
+        let constraint = Constraint::if_then(
+            Constraint::NotNull,
+            Constraint::Range {
+                min: 0.0,
+                max: 100.0,
+            },
+            Some(Constraint::Pattern("N/A".to_string())),
+        );
+
+        match constraint {
+            Constraint::If {
+                condition: _,
+                then_constraint: _,
+                else_constraint,
+            } => {
+                assert!(else_constraint.is_some());
+            }
+            _ => panic!("Expected If constraint"),
+        }
+    }
+
+    #[test]
+    fn test_complex_composition() {
+        // Test complex nested constraints
+        let age_constraint = Constraint::all_of(vec![
+            Constraint::Range {
+                min: 0.0,
+                max: 150.0,
+            },
+            Constraint::NotNull,
+        ]);
+
+        let name_constraint = Constraint::any_of(vec![
+            Constraint::Pattern("^[A-Za-z ]+$".to_string()),
+            Constraint::Pattern("^[\\p{L} ]+$".to_string()),
+        ]);
+
+        // Combine constraints
+        let combined = Constraint::And(vec![age_constraint, name_constraint]);
+
+        match combined {
+            Constraint::And(constraints) => {
+                assert_eq!(constraints.len(), 2);
+            }
+            _ => panic!("Expected And constraint"),
+        }
+    }
+
+    #[test]
+    fn test_time_constraints() {
+        let constraints = TimeConstraints::new()
+            .with_min_interval(Duration::from_secs(1))
+            .with_max_interval(Duration::from_secs(60))
+            .require_monotonic()
+            .disallow_duplicates();
+
+        assert_eq!(constraints.min_interval, Some(Duration::from_secs(1)));
+        assert_eq!(constraints.max_interval, Some(Duration::from_secs(60)));
+        assert!(constraints.require_monotonic);
+        assert!(!constraints.allow_duplicates);
+    }
+
+    #[test]
+    fn test_constraint_builder_edge_cases() {
+        // Test single constraint with and()
+        let constraint = ConstraintBuilder::new().range(0.0, 100.0).and();
+
+        match constraint {
+            Constraint::Range { min, max } => {
+                assert_eq!(min, 0.0);
+                assert_eq!(max, 100.0);
+            }
+            _ => panic!("Expected Range constraint, not And"),
+        }
+
+        // Test empty builder should panic
+        let result = std::panic::catch_unwind(|| ConstraintBuilder::new().and());
+        assert!(result.is_err());
+
+        // Test builder with all constraint types
+        let constraint = ConstraintBuilder::new()
+            .range(0.0, 100.0)
+            .pattern("^[A-Z]+$")
+            .length(5, 10)
+            .not_null()
+            .and();
+
+        match constraint {
+            Constraint::And(constraints) => {
+                assert_eq!(constraints.len(), 4);
+            }
+            _ => panic!("Expected And constraint"),
+        }
+    }
+
+    #[test]
+    fn test_nested_constraint_composition() {
+        // Test deep nesting
+        let inner = Constraint::Range {
+            min: 0.0,
+            max: 50.0,
+        };
+        let middle = Constraint::And(vec![inner, Constraint::NotNull]);
+        let outer = Constraint::Or(vec![middle, Constraint::Pattern("special".to_string())]);
+        let complex = Constraint::Not(Box::new(outer));
+
+        match complex {
+            Constraint::Not(inner) => match inner.as_ref() {
+                Constraint::Or(constraints) => {
+                    assert_eq!(constraints.len(), 2);
+                }
+                _ => panic!("Expected Or constraint"),
+            },
+            _ => panic!("Expected Not constraint"),
+        }
+    }
+
+    #[test]
+    fn test_constraint_equality() {
+        let c1 = Constraint::Range {
+            min: 0.0,
+            max: 100.0,
+        };
+        let c2 = Constraint::Range {
+            min: 0.0,
+            max: 100.0,
+        };
+        let c3 = Constraint::Range {
+            min: 0.0,
+            max: 200.0,
+        };
+
+        assert_eq!(c1, c2);
+        assert_ne!(c1, c3);
+
+        let and1 = Constraint::And(vec![c1.clone(), Constraint::NotNull]);
+        let and2 = Constraint::And(vec![c2.clone(), Constraint::NotNull]);
+        assert_eq!(and1, and2);
     }
 
     #[test]

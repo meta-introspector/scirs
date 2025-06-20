@@ -416,7 +416,7 @@ fn simulate_coverage_recording(
 /// Simulate test execution with comprehensive coverage
 fn simulate_test_execution(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn std::error::Error>> {
     // Simulate multiple test files
-    let test_files = vec![
+    let test_files = [
         PathBuf::from("src/core.rs"),
         PathBuf::from("src/utils.rs"),
         PathBuf::from("src/algorithms.rs"),
