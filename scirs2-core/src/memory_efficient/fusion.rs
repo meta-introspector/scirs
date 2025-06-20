@@ -69,9 +69,9 @@ impl OpFusion {
             self.output_type = op.output_type();
         } else if op.input_type() != self.output_type {
             return Err(CoreError::ValidationError(
-                ErrorContext::new(format!(
+                ErrorContext::new(
                     "Operation input type does not match previous output type"
-                ))
+                )
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
@@ -112,7 +112,7 @@ impl OpFusion {
     pub fn apply<A: 'static>(&self, input: A) -> Result<Box<dyn Any>, CoreError> {
         if TypeId::of::<A>() != self.input_type {
             return Err(CoreError::ValidationError(
-                ErrorContext::new(format!("Input type does not match expected type"))
+                ErrorContext::new("Input type does not match expected type")
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
@@ -142,7 +142,7 @@ pub fn register_fusion<T: 'static>(op: Arc<dyn FusedOp>) -> Result<(), CoreError
     let type_id = TypeId::of::<T>();
 
     let mut registry = FUSION_REGISTRY.lock().unwrap();
-    let ops = registry.entry(type_id).or_insert_with(Vec::new);
+    let ops = registry.entry(type_id).or_default();
     ops.push(op);
 
     Ok(())

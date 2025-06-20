@@ -214,7 +214,7 @@ where
             ChunkingStrategy::Auto => OPTIMAL_CHUNK_SIZE / std::mem::size_of::<A>(),
             ChunkingStrategy::Fixed(size) => size,
             ChunkingStrategy::FixedBytes(bytes) => bytes / std::mem::size_of::<A>(),
-            ChunkingStrategy::NumChunks(n) => (self.size + n - 1) / n,
+            ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
         }
     }
 
@@ -224,10 +224,10 @@ where
             ChunkingStrategy::Auto => OPTIMAL_CHUNK_SIZE / std::mem::size_of::<A>(),
             ChunkingStrategy::Fixed(size) => size,
             ChunkingStrategy::FixedBytes(bytes) => bytes / std::mem::size_of::<A>(),
-            ChunkingStrategy::NumChunks(n) => (self.size + n - 1) / n,
+            ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
         };
 
-        (self.size + chunk_size - 1) / chunk_size
+        self.size.div_ceil(chunk_size)
     }
 
     /// Check if the array is temporary

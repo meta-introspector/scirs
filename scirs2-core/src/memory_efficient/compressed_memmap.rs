@@ -196,7 +196,7 @@ impl CompressedMemMapBuilder {
 
         // Calculate block information
         let block_size = self.block_size.min(num_elements);
-        let num_blocks = (num_elements + block_size - 1) / block_size;
+        let num_blocks = num_elements.div_ceil(block_size);
 
         // Prepare metadata
         let mut metadata = CompressedFileMetadata {
@@ -258,20 +258,17 @@ impl CompressedMemMapBuilder {
                     compressed
                 }
                 CompressionAlgorithm::Zstd => {
-                    let compressed = zstd::encode_all(block_data, self.level)?;
-                    compressed
+                    zstd::encode_all(block_data, self.level)?
                 }
                 CompressionAlgorithm::Snappy => {
-                    let result =
-                        snap::raw::Encoder::new()
-                            .compress_vec(block_data)
-                            .map_err(|e| {
-                                CoreError::ComputationError(ErrorContext::new(format!(
-                                    "Snappy compression error: {}",
-                                    e
-                                )))
-                            })?;
-                    result
+                    snap::raw::Encoder::new()
+                        .compress_vec(block_data)
+                        .map_err(|e| {
+                            CoreError::ComputationError(ErrorContext::new(format!(
+                                "Snappy compression error: {}",
+                                e
+                            )))
+                        })?
                 }
             };
 
@@ -883,7 +880,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
         // Determine block layout
         let block_size = custom_block_size.unwrap_or(self.metadata.block_size);
         let num_elements = self.metadata.num_elements;
-        let num_blocks = (num_elements + block_size - 1) / block_size;
+        let num_blocks = num_elements.div_ceil(block_size);
 
         // Serial processing
         (0..num_blocks)
@@ -916,7 +913,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
         // Determine block layout
         let block_size = custom_block_size.unwrap_or(self.metadata.block_size);
         let num_elements = self.metadata.num_elements;
-        let num_blocks = (num_elements + block_size - 1) / block_size;
+        let num_blocks = num_elements.div_ceil(block_size);
 
         // Process blocks
         if parallel {

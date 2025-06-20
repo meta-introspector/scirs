@@ -669,7 +669,7 @@ impl LayoutConverter {
         let mut result = vec![A::default(); total_elements];
 
         // Process in chunks to avoid excessive memory usage
-        let num_chunks = (total_elements + chunk_size - 1) / chunk_size;
+        let num_chunks = total_elements.div_ceil(chunk_size);
 
         for chunk_idx in 0..num_chunks {
             let start = chunk_idx * chunk_size;
@@ -704,7 +704,7 @@ impl LayoutConverter {
         let converted = Self::convert_chunked(layout, target_order, data, 8192)?;
         data.copy_from_slice(&converted);
 
-        Ok(layout.to_order(target_order)?)
+        layout.to_order(target_order)
     }
 }
 

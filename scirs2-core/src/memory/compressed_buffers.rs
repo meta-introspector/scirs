@@ -66,7 +66,7 @@ where
         algorithm: CompressionAlgorithm,
         level: CompressionLevel,
     ) -> IoResult<Self> {
-        let original_size = data.len() * std::mem::size_of::<T>();
+        let original_size = std::mem::size_of_val(data);
         let bytes = bytemuck::cast_slice(data);
 
         let compressed_data = match algorithm {

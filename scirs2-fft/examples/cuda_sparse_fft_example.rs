@@ -3,7 +3,7 @@ use plotly::common::Title;
 use plotly::{common::Mode, layout::Axis, Layout, Plot, Scatter};
 use scirs2_fft::{
     sparse_fft,
-    sparse_fft::{SparseFFTAlgorithm, WindowFunction},
+    sparse_fft::{SparseFFTAlgorithm},
     sparse_fft_gpu::GPUBackend,
     sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
     sparse_fft_gpu_memory::{init_global_memory_manager, is_cuda_available},
@@ -66,7 +66,7 @@ fn main() {
         &signal,
         6,
         Some(SparseFFTAlgorithm::Sublinear),
-        Some(WindowFunction::Hann),
+        None,
     )
     .unwrap();
     let cpu_elapsed = cpu_start.elapsed();
@@ -86,7 +86,7 @@ fn main() {
         6,
         0, // Use first CUDA device
         Some(SparseFFTAlgorithm::Sublinear),
-        Some(WindowFunction::Hann),
+        None,
     )
     .unwrap();
     let cuda_elapsed = cuda_start.elapsed();
@@ -183,7 +183,7 @@ fn main() {
         &large_signal,
         6,
         Some(SparseFFTAlgorithm::Sublinear),
-        Some(WindowFunction::Hann),
+        None,
     )
     .unwrap();
     let cpu_elapsed = cpu_start.elapsed();
@@ -195,7 +195,7 @@ fn main() {
         6,
         0, // Use first CUDA device
         Some(SparseFFTAlgorithm::Sublinear),
-        Some(WindowFunction::Hann),
+        None,
     )
     .unwrap();
     let cuda_elapsed = cuda_start.elapsed();

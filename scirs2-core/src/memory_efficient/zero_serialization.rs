@@ -1114,7 +1114,7 @@ mod tests {
     #[test]
     fn test_custom_complex_type() {
         // Create a complex number
-        let complex = Complex64::new(3.14, 2.71);
+        let complex = Complex64::new(3.5, 2.7);
 
         // Test zero-copy serialization
         unsafe {
@@ -1181,7 +1181,7 @@ mod tests {
 
     #[test]
     fn test_zero_copy_serializable_f32() {
-        let value: f32 = 3.14159;
+        let value: f32 = 3.5;
 
         unsafe {
             let bytes = value.as_bytes();

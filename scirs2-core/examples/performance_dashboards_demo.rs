@@ -5,7 +5,7 @@
 
 use scirs2_core::profiling::dashboards::{
     AlertCondition, AlertConfig, AlertSeverity, ChartType, DashboardConfig, DashboardTheme,
-    MetricSource, NotificationChannel, NumberFormat, PerformanceDashboard, Widget,
+    MetricSource, NotificationChannel, PerformanceDashboard, Widget,
 };
 use scirs2_core::CoreResult;
 use std::thread;

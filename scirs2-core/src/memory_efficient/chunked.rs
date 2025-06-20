@@ -57,22 +57,22 @@ where
                 // Default to optimal chunk size in bytes, converted to elements
                 let chunk_size_bytes = OPTIMAL_CHUNK_SIZE;
                 let chunk_size = chunk_size_bytes / elem_size;
-                let num_chunks = (total_elements + chunk_size - 1) / chunk_size;
+                let num_chunks = total_elements.div_ceil(chunk_size);
                 (chunk_size, num_chunks)
             }
             ChunkingStrategy::Fixed(size) => {
-                let num_chunks = (total_elements + size - 1) / size;
+                let num_chunks = total_elements.div_ceil(size);
                 (size, num_chunks)
             }
             ChunkingStrategy::FixedBytes(bytes) => {
                 let elements = bytes / elem_size;
                 let chunk_size = if elements == 0 { 1 } else { elements };
-                let num_chunks = (total_elements + chunk_size - 1) / chunk_size;
+                let num_chunks = total_elements.div_ceil(chunk_size);
                 (chunk_size, num_chunks)
             }
             ChunkingStrategy::NumChunks(n) => {
                 let num_chunks = if n == 0 { 1 } else { n };
-                let chunk_size = (total_elements + num_chunks - 1) / num_chunks;
+                let chunk_size = total_elements.div_ceil(num_chunks);
                 (chunk_size, num_chunks)
             }
         };

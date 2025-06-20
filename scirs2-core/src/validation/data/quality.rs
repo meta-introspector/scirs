@@ -440,8 +440,8 @@ impl Default for QualityAnalyzer {
 impl DataQualityReport {
     /// Get formatted report string
     pub fn formatted_report(&self) -> String {
-        let mut report = format!("Data Quality Report\n");
-        report.push_str(&format!("==================\n\n"));
+        let mut report = "Data Quality Report\n".to_string();
+        report.push_str("==================\n\n");
         report.push_str(&format!(
             "Overall Quality Score: {:.2}\n\n",
             self.quality_score

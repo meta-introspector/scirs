@@ -61,14 +61,17 @@
 //! let l = extended_cholesky::<_, f64>(&spd_matrix.view()).unwrap();
 //! ```
 
+pub mod eigen;
+pub mod factorizations;
+
+// Re-export commonly used functions
+pub use eigen::{extended_eig, extended_eigvals, extended_eigvalsh};
+pub use factorizations::{extended_cholesky, extended_lu, extended_qr, extended_svd};
+
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, One, Zero};
 
 use crate::error::LinalgResult;
-
-// Extended precision modules
-pub mod eigen;
-pub mod factorizations;
 
 /// Trait for promoting numerical types to higher precision
 pub trait PromotableTo<T> {

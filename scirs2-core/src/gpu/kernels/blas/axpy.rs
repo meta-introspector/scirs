@@ -166,10 +166,7 @@ impl GpuKernel for AxpyKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        match params.data_type {
-            DataType::Float32 | DataType::Float64 | DataType::Float16 => true,
-            _ => false,
-        }
+        matches!(params.data_type, DataType::Float32 | DataType::Float64 | DataType::Float16)
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

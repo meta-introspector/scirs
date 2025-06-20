@@ -137,13 +137,8 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
     for &algorithm in &algorithms {
         // CPU implementation
         let cpu_start = Instant::now();
-        let cpu_result = scirs2_fft::sparse_fft::sparse_fft(
-            &signal,
-            sparsity,
-            Some(algorithm),
-            Some(WindowFunction::Hann),
-        )
-        .unwrap();
+        let cpu_result =
+            scirs2_fft::sparse_fft::sparse_fft(&signal, sparsity, Some(algorithm), None).unwrap();
         let cpu_time = cpu_start.elapsed().as_millis();
 
         // Evaluate CPU accuracy
@@ -170,7 +165,7 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
                 sparsity,
                 0, // Device ID
                 Some(algorithm),
-                Some(WindowFunction::Hann),
+                None,
             )
             .unwrap();
             gpu_time = gpu_start.elapsed().as_millis();
@@ -317,7 +312,7 @@ fn run_size_benchmark() {
                 6, // Sparsity
                 0, // Device ID
                 Some(algorithm),
-                Some(WindowFunction::Hann),
+                None,
             )
             .unwrap();
             let elapsed = start.elapsed().as_millis();
@@ -379,7 +374,7 @@ fn run_noise_benchmark() {
                 6, // Sparsity
                 0, // Device ID
                 Some(algorithm),
-                Some(WindowFunction::Hann),
+                None,
             )
             .unwrap();
 

@@ -769,8 +769,10 @@ impl PatternRecognizer {
 }
 
 /// Factory for creating pattern recognizers.
+#[allow(dead_code)]
 pub struct PatternRecognizerFactory;
 
+#[allow(dead_code)]
 impl PatternRecognizerFactory {
     /// Create a new pattern recognizer with default configuration.
     pub fn create() -> PatternRecognizer {
@@ -789,6 +791,7 @@ pub mod pattern_utils {
     use crate::memory_efficient::prefetch::AccessPattern;
 
     /// Convert from complex pattern to basic pattern.
+    #[allow(dead_code)]
     pub fn to_basic_pattern(pattern: &ComplexPattern) -> AccessPattern {
         match pattern {
             ComplexPattern::RowMajor => AccessPattern::Sequential,
@@ -807,6 +810,7 @@ pub mod pattern_utils {
     }
 
     /// Get the prefetch pattern for a complex pattern.
+    #[allow(dead_code)]
     pub fn get_prefetch_pattern(
         pattern: &ComplexPattern,
         dimensions: &[usize],

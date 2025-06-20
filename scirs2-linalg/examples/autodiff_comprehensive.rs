@@ -1,235 +1,234 @@
 //! Comprehensive example of linear algebra operations with autodiff support
 //!
-//! This example demonstrates the full range of automatic differentiation capabilities
-//! for linear algebra operations, including:
-//! - Basic operations (matmul, inv, det, etc.)
-//! - Batch operations
-//! - Matrix calculus (gradient, jacobian)
-//! - Special matrix functions (pinv, sqrtm, logm)
+//! NOTE: This example has been simplified due to API changes in scirs2-autograd.
+//! Many linear algebra operations that were planned for autodiff support
+//! (inv, det, svd, eig, pinv, sqrtm, logm, etc.) are not yet implemented
+//! in the scirs2-autograd crate.
+//!
+//! This example demonstrates what is currently available and provides
+//! workarounds for some common operations.
 
 #[cfg(feature = "autograd")]
-fn main() {
-    use ndarray::{array, Array};
-    use scirs2_autograd::variable::Variable;
-    use scirs2_linalg::prelude::autograd::*;
-
-    println!("Comprehensive Linear Algebra Operations with Automatic Differentiation");
-    println!("===================================================================");
-
-    // 1. Basic Operations
-    println!("\n1. Basic Matrix Operations");
-    println!("-------------------------");
-
-    // Create some input matrices and vectors with gradient tracking
-    let a_data = array![[1.0_f64, 2.0], [3.0, 4.0]].into_dyn();
-    let mut a = Variable::new(a_data, true);
-
-    let b_data = array![[5.0_f64, 6.0], [7.0, 8.0]].into_dyn();
-    let mut b = Variable::new(b_data, true);
-
-    let x_data = array![1.0_f64, 2.0].into_dyn();
-    let mut x = Variable::new(x_data, true);
-
-    // Matrix multiplication
-    let mut c = var_matmul(&a, &b).unwrap();
-    println!("A = [[1, 2], [3, 4]]");
-    println!("B = [[5, 6], [7, 8]]");
-    println!("C = A @ B = \n{}", c.data().as_standard_layout());
-
-    // Matrix inverse
-    let mut a_inv = var_inv(&a).unwrap();
-    println!("\nA^(-1) = \n{}", a_inv.data().as_standard_layout());
-
-    // Determinant
-    let mut det_a = var_det(&a).unwrap();
-    println!("\ndet(A) = {}", det_a.data().as_standard_layout());
-
-    // Matrix-vector multiplication
-    let mut y = var_matvec(&a, &x).unwrap();
-    println!("\nx = [1, 2]");
-    println!("y = A @ x = {}", y.data().as_standard_layout());
-
-    // 2. Matrix Decompositions
-    println!("\n2. Matrix Decompositions");
-    println!("----------------------");
-
-    // SVD
-    let (mut u, s, vt) = var_svd(&a).unwrap();
-    println!("SVD of A:");
-    println!("U = \n{}", u.data().as_standard_layout());
-    println!("S = {}", s.data().as_standard_layout());
-    println!("V^T = \n{}", vt.data().as_standard_layout());
-
-    // Eigendecomposition
-    let (mut eigenvals, eigenvecs) = var_eig(&a).unwrap();
-    println!("\nEigendecomposition of A:");
-    println!("Eigenvalues = {}", eigenvals.data().as_standard_layout());
-    println!("Eigenvectors = \n{}", eigenvecs.data().as_standard_layout());
-
-    // 3. Special Matrix Functions
-    println!("\n3. Special Matrix Functions");
-    println!("--------------------------");
-
-    // Matrix exponential
-    let mut expm_a = var_expm(&a).unwrap();
-    println!("exp(A) = \n{}", expm_a.data().as_standard_layout());
-
-    // Matrix square root
-    let mut sqrtm_a = var_sqrtm(&a).unwrap();
-    println!("\nsqrt(A) = \n{}", sqrtm_a.data().as_standard_layout());
-
-    // Matrix logarithm
-    let mut logm_a = var_logm(&a).unwrap();
-    println!("\nlog(A) = \n{}", logm_a.data().as_standard_layout());
-
-    // Pseudo-inverse
-    let g_data = array![[1.0_f64, 2.0], [3.0, 4.0], [5.0, 6.0]].into_dyn();
-    let mut g = Variable::new(g_data, true);
-    let mut pinv_g = var_pinv(&g, None).unwrap();
-    println!("\nG = [[1, 2], [3, 4], [5, 6]]");
-    println!("pinv(G) = \n{}", pinv_g.data().as_standard_layout());
-
-    // 4. Batch Operations
-    println!("\n4. Batch Operations");
-    println!("------------------");
-
-    // Create batch of matrices
-    let batch_a_data =
-        array![[[1.0_f64, 2.0], [3.0, 4.0]], [[5.0_f64, 6.0], [7.0, 8.0]],].into_dyn();
-    let mut batch_a = Variable::new(batch_a_data, true);
-
-    let batch_b_data = array![
-        [[9.0_f64, 10.0], [11.0, 12.0]],
-        [[13.0_f64, 14.0], [15.0, 16.0]],
-    ]
-    .into_dyn();
-    let mut batch_b = Variable::new(batch_b_data, true);
-
-    // Batch matrix multiplication
-    let mut batch_c = var_batch_matmul(&batch_a, &batch_b).unwrap();
-    println!("Batch A = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]");
-    println!("Batch B = [[[9, 10], [11, 12]], [[13, 14], [15, 16]]]");
-    println!("Batch A @ B = \n{}", batch_c.data().as_standard_layout());
-
-    // Batch matrix inverse
-    let mut batch_a_inv = var_batch_inv(&batch_a).unwrap();
-    println!(
-        "\nBatch A^(-1) = \n{}",
-        batch_a_inv.data().as_standard_layout()
-    );
-
-    // Batch determinant
-    let mut batch_det_a = var_batch_det(&batch_a).unwrap();
-    println!(
-        "\nBatch det(A) = {}",
-        batch_det_a.data().as_standard_layout()
-    );
-
-    // 5. Matrix Calculus
-    println!("\n5. Matrix Calculus");
-    println!("-----------------");
-
-    // Define a scalar function of a vector
-    let scalar_fn =
-        |x: &Variable<f64>| -> Result<Variable<f64>, scirs2_autograd::error::AutogradError> {
-            // Function: f(x) = x_1^2 + 2*x_2^2
-            let x_data = x.data();
-            let result = x_data[0].powi(2) + 2.0 * x_data[1].powi(2);
-            let result_data = array![result].into_dyn();
-            Ok(Variable::new(result_data, x.tensor.requires_grad))
-        };
-
-    // Define a vector function of a vector
-    let vector_fn =
-        |x: &Variable<f64>| -> Result<Variable<f64>, scirs2_autograd::error::AutogradError> {
-            // Function: f(x) = [x_1^2, x_1*x_2]
-            let x_data = x.data();
-            let result_data = array![x_data[0].powi(2), x_data[0] * x_data[1]].into_dyn();
-            Ok(Variable::new(result_data, x.tensor.requires_grad))
-        };
-
-    // Create input vector
-    let v_data = array![2.0_f64, 3.0].into_dyn();
-    let v = Variable::new(v_data, true);
-
-    // Compute gradient of scalar function
-    let grad_f = var_gradient(scalar_fn, &v, None).unwrap();
-    println!("v = [2, 3]");
-    println!("f(v) = v_1^2 + 2*v_2^2 = 22");
-    println!("∇f(v) = {}", grad_f.data().as_standard_layout());
-
-    // Compute Jacobian of vector function
-    let jac_f = var_jacobian(vector_fn, &v, None).unwrap();
-    println!("\nf(v) = [v_1^2, v_1*v_2] = [4, 6]");
-    println!("J_f(v) = \n{}", jac_f.data().as_standard_layout());
-
-    // Compute Hessian of scalar function
-    let hess_f = var_hessian(scalar_fn, &v, None).unwrap();
-    println!("\nH_f(v) = \n{}", hess_f.data().as_standard_layout());
-
-    // 6. Jacobian-Vector and Vector-Jacobian Products
-    println!("\n6. Jacobian-Vector and Vector-Jacobian Products");
-    println!("--------------------------------------------");
-
-    // Create vector for JVP and VJP
-    let p_data = array![1.0_f64, 1.0].into_dyn();
-    let p = Variable::new(p_data, false);
-
-    // Compute JVP: J_f(v) * p
-    let jvp = var_jacobian_vector_product(vector_fn, &v, &p, None).unwrap();
-    println!("p = [1, 1]");
-    println!("J_f(v) * p = {}", jvp.data().as_standard_layout());
-
-    // Compute VJP: p^T * J_f(v)
-    let vjp = var_vector_jacobian_product(vector_fn, &v, &p).unwrap();
-    println!("p^T * J_f(v) = {}", vjp.data().as_standard_layout());
-
-    // 7. Gradient Propagation Examples
-    println!("\n7. Gradient Propagation Examples");
-    println!("------------------------------");
-
-    // Reset gradients
-    a.zero_grad();
-
-    // Chain of operations with gradient tracking
-    println!("Computing: L = trace(A^(-1) * exp(A))");
-
-    let a_inv = var_inv(&a).unwrap();
-    let expm_a = var_expm(&a).unwrap();
-    let product = var_matmul(&a_inv, &expm_a).unwrap();
-    let mut trace_result = var_trace(&product).unwrap();
-
-    println!("Result = {}", trace_result.data().as_standard_layout());
-
-    // Backpropagate
-    trace_result.backward(None).unwrap();
-
-    println!("dL/dA = \n{:?}", a.grad().unwrap());
-
-    // Reset gradients and try another example
-    a.zero_grad();
-
-    println!("\nComputing: L = det(sqrtm(A)) * norm(A)");
-
-    let sqrtm_a = var_sqrtm(&a).unwrap();
-    let det_sqrtm_a = var_det(&sqrtm_a).unwrap();
-    let norm_a = var_norm(&a, "fro").unwrap();
-    let mut result = var_matmul(
-        &det_sqrtm_a.reshape(&[1, 1]).unwrap(),
-        &norm_a.reshape(&[1, 1]).unwrap(),
-    )
-    .unwrap();
-
-    println!("Result = {}", result.data().as_standard_layout());
-
-    // Backpropagate
-    result.backward(None).unwrap();
-
-    println!("dL/dA = \n{:?}", a.grad().unwrap());
-}
+use scirs2_autograd as ag;
+#[cfg(feature = "autograd")]
+use ag::tensor_ops as T;
 
 #[cfg(not(feature = "autograd"))]
 fn main() {
-    println!("This example requires the 'autograd' feature.");
-    println!("Run with: cargo run --example autodiff_comprehensive --features autograd");
+    println!("This example requires the 'autograd' feature. Run with:");
+    println!("cargo run --example autodiff_comprehensive --features=autograd");
+}
+
+#[cfg(feature = "autograd")]
+fn main() {
+    println!("Comprehensive Linear Algebra Operations with Automatic Differentiation");
+    println!("===================================================================");
+    println!("\nNOTE: Many operations are not yet available in scirs2-autograd.");
+    println!("See src/autograd/mod.rs for the list of planned features.\n");
+
+    // 1. Available Operations
+    demo_available_operations();
+
+    // 2. Matrix Calculus
+    demo_matrix_calculus();
+
+    // 3. Workarounds for Common Operations
+    demo_workarounds();
+
+    // 4. Performance Considerations
+    demo_performance_tips();
+}
+
+#[cfg(feature = "autograd")]
+fn demo_available_operations() {
+    println!("1. Currently Available Operations");
+    println!("--------------------------------");
+
+    ag::run(|ctx: &mut ag::Context<f64>| {
+        // Create matrix and vector placeholders
+        let a = ctx.placeholder("a", &[2, 2]);
+        let b = ctx.placeholder("b", &[2, 2]);
+        let x = ctx.placeholder("x", &[2]);
+
+        println!("Available operations:");
+        println!("- Matrix multiplication: matmul(A, B)");
+        let c = T::matmul(a, b);
+
+        println!("- Transpose: transpose(A)");
+        let a_t = T::transpose(a);
+
+        println!("- Element-wise operations: A + B, A * B, etc.");
+        let sum = a + b;
+        let prod = a * b;
+
+        println!("- Reductions: sum, mean, etc.");
+        let total = T::reduce_sum(&c, &[], false);
+
+        println!("- Diagonal extraction: extract_diag(A)");
+        let diag = T::extract_diag(a);
+
+        println!("- Matrix-vector operations (via matmul with expand_dims)");
+        let x_col = T::expand_dims(x, 1);
+        let y = T::matmul(a, x_col);
+        let y_vec = T::squeeze(y, &[1]);
+
+        // Feed values and evaluate
+        let a_val = ag::ndarray::arr2(&[[1.0, 2.0], [3.0, 4.0]]);
+        let b_val = ag::ndarray::arr2(&[[5.0, 6.0], [7.0, 8.0]]);
+        let x_val = ag::ndarray::arr1(&[1.0, 2.0]);
+
+        let results = ctx
+            .evaluator()
+            .push(&c)
+            .push(&total)
+            .push(&y_vec)
+            .feed(a, a_val.view().into_dyn())
+            .feed(b, b_val.view().into_dyn())
+            .feed(x, x_val.view().into_dyn())
+            .run();
+
+        println!("\nResults:");
+        println!("C = A @ B = \n{:?}", results[0]);
+        println!("sum(C) = {:?}", results[1]);
+        println!("y = A @ x = {:?}", results[2]);
+    });
+
+    println!();
+}
+
+#[cfg(feature = "autograd")]
+fn demo_matrix_calculus() {
+    println!("2. Matrix Calculus");
+    println!("-----------------");
+
+    ag::run(|ctx: &mut ag::Context<f64>| {
+        // Demonstrate gradient computation for matrix functions
+        let a = ctx.placeholder("a", &[2, 2]);
+
+        // Define a scalar function of a matrix: f(A) = trace(A^T @ A)
+        let a_t = T::transpose(a);
+        let ata = T::matmul(a_t, a);
+        let diag = T::extract_diag(ata);
+        let f = T::reduce_sum(&diag, &[], false);
+
+        // Compute gradient
+        let grad_f = T::grad(&[f], &[a])[0];
+
+        // Feed value
+        let a_val = ag::ndarray::arr2(&[[1.0, 2.0], [3.0, 4.0]]);
+
+        let results = ctx
+            .evaluator()
+            .push(&f)
+            .push(&grad_f)
+            .feed(a, a_val.view().into_dyn())
+            .run();
+
+        println!("A = \n{:?}", a_val);
+        println!("f(A) = trace(A^T @ A) = {:?}", results[0]);
+        println!("∇f(A) = 2A = \n{:?}", results[1]);
+
+        // Demonstrate Jacobian computation
+        let x = ctx.placeholder("x", &[3]);
+        
+        // Define vector function: g(x) = [x₁², x₁*x₂, x₂*x₃]
+        let x1 = T::gather(x, &T::constant(vec![0i32], &[1], ctx), 0);
+        let x2 = T::gather(x, &T::constant(vec![1i32], &[1], ctx), 0);
+        let x3 = T::gather(x, &T::constant(vec![2i32], &[1], ctx), 0);
+        
+        let g1 = x1 * x1;
+        let g2 = x1 * x2;
+        let g3 = x2 * x3;
+        let g = T::concat(&[g1, g2, g3], 0);
+
+        // Compute Jacobian
+        let jacobian = T::jacobian(&[g], &[x]);
+
+        let x_val = ag::ndarray::arr1(&[2.0, 3.0, 4.0]);
+        
+        let jac_result = ctx
+            .evaluator()
+            .push(&jacobian[0])
+            .feed(x, x_val.view().into_dyn())
+            .run();
+
+        println!("\nVector function g(x) = [x₁², x₁*x₂, x₂*x₃]");
+        println!("x = {:?}", x_val);
+        println!("Jacobian = \n{:?}", jac_result[0]);
+    });
+
+    println!();
+}
+
+#[cfg(feature = "autograd")]
+fn demo_workarounds() {
+    println!("3. Workarounds for Missing Operations");
+    println!("------------------------------------");
+
+    ag::run(|ctx: &mut ag::Context<f64>| {
+        println!("Trace (using diagonal extraction):");
+        let a = ctx.placeholder("a", &[3, 3]);
+        let diag = T::extract_diag(a);
+        let trace = T::reduce_sum(&diag, &[], false);
+
+        println!("\nFrobenius norm (using element-wise operations):");
+        let frob_squared = T::reduce_sum(&(a * a), &[], false);
+        let frob_norm = T::sqrt(&frob_squared);
+
+        println!("\nMatrix power (for small powers, use repeated multiplication):");
+        let a2 = T::matmul(a, a); // A²
+        let a3 = T::matmul(a2, a); // A³
+
+        println!("\nIdentity matrix (manual construction):");
+        let eye_data = vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
+        let eye = T::constant(eye_data, &[3, 3], ctx);
+
+        // Feed and evaluate
+        let a_val = ag::ndarray::arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
+        
+        let results = ctx
+            .evaluator()
+            .push(&trace)
+            .push(&frob_norm)
+            .push(&a3)
+            .feed(a, a_val.view().into_dyn())
+            .run();
+
+        println!("\nA = \n{:?}", a_val);
+        println!("trace(A) = {:?}", results[0]);
+        println!("||A||_F = {:?}", results[1]);
+        println!("A³ = \n{:?}", results[2]);
+    });
+
+    println!();
+}
+
+#[cfg(feature = "autograd")]
+fn demo_performance_tips() {
+    println!("4. Performance Considerations");
+    println!("----------------------------");
+
+    println!("Tips for efficient autodiff with linear algebra:");
+    println!("1. Batch operations when possible (reduces graph size)");
+    println!("2. Use in-place operations where gradients aren't needed");
+    println!("3. Consider manual gradient implementation for complex operations");
+    println!("4. Profile memory usage for large matrices");
+    println!("5. Use sparse matrices when appropriate (future feature)");
+
+    ag::run(|ctx: &mut ag::Context<f64>| {
+        // Example: Efficient batch matrix multiplication
+        let batch_a = ctx.placeholder("batch_a", &[10, 3, 3]);
+        let batch_b = ctx.placeholder("batch_b", &[10, 3, 3]);
+        
+        // This is more efficient than 10 separate matmuls
+        let batch_c = T::matmul(batch_a, batch_b);
+        
+        println!("\nBatch operations example:");
+        println!("- Input: 10 3x3 matrices");
+        println!("- Single batched matmul is more efficient than loop");
+        
+        // For actual use, you would feed real batch data
+    });
+
+    println!("\nFor more examples, see the autograd module documentation.");
 }

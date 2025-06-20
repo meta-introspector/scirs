@@ -532,6 +532,7 @@ pub mod alpha6_enhancements {
         target_efficiency: f64,               // Target CPU utilization (0.0-1.0)
     }
 
+    #[allow(dead_code)]
     impl DynamicLoadBalancer {
         /// Create a new load balancer for the specified number of workers
         pub fn new(num_workers: usize) -> Self {
@@ -589,6 +590,7 @@ pub mod alpha6_enhancements {
         workload_characteristics: Vec<(WorkloadType, usize)>, // (workload_type, optimal_chunk_size)
     }
 
+    #[allow(dead_code)]
     impl ChunkSizePredictor {
         pub fn new() -> Self {
             Self {

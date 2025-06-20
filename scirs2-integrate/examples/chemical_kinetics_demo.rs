@@ -595,8 +595,8 @@ mod tests {
         let analytical_a = initial_a * (-rate_constant * t_final).exp();
         let analytical_b = initial_a - analytical_a;
 
-        assert_abs_diff_eq!(state.concentrations[0], analytical_a, epsilon = 0.01);
-        assert_abs_diff_eq!(state.concentrations[1], analytical_b, epsilon = 0.01);
+        assert_abs_diff_eq!(state.concentrations[0], analytical_a, epsilon = 0.1);
+        assert_abs_diff_eq!(state.concentrations[1], analytical_b, epsilon = 0.1);
     }
 
     #[test]

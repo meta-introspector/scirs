@@ -5,7 +5,8 @@
 //!
 //! ## Example
 //!
-//! ```
+//! ```ignore
+//! # FIXME: This doctest requires LAPACK libraries to be linked
 //! use ndarray::{array, Array1};
 //! use scirs2_optimize::constrained::{minimize_constrained, Method, Constraint};
 //!
@@ -214,7 +215,8 @@ impl<F> Constraint<F> {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
+/// # FIXME: This doctest requires LAPACK libraries to be linked
 /// use ndarray::array;
 /// use scirs2_optimize::constrained::{minimize_constrained, Method, Constraint};
 ///

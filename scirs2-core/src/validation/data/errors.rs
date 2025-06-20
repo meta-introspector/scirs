@@ -293,7 +293,7 @@ impl ValidationResult {
             }
         }
 
-        report.push_str(&format!("\n\nStatistics:"));
+        report.push_str("\n\nStatistics:");
         report.push_str(&format!(
             "\n  Fields validated: {}",
             self.stats.fields_validated

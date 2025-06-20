@@ -800,6 +800,7 @@ impl ResourceAwarePrefetcher {
 
 /// Enhanced prefetching configuration with resource awareness.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ResourceAwarePrefetchingConfig {
     /// Base prefetching configuration
     pub base_config: PrefetchConfig,
@@ -808,6 +809,7 @@ pub struct ResourceAwarePrefetchingConfig {
     pub resource_config: ResourceAwareConfig,
 }
 
+#[allow(dead_code)]
 impl ResourceAwarePrefetchingConfig {
     /// Create a new resource-aware prefetching configuration.
     pub fn new(base_config: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {

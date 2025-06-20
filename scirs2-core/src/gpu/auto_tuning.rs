@@ -628,8 +628,8 @@ mod tests {
         assert_eq!(int_val.as_int(), Some(42));
         assert_eq!(int_val.as_float(), Some(42.0));
 
-        let float_val = ParameterValue::Float(3.14);
-        assert_eq!(float_val.as_float(), Some(3.14));
+        let float_val = ParameterValue::Float(3.5);
+        assert_eq!(float_val.as_float(), Some(3.5));
         assert_eq!(float_val.as_int(), Some(3));
     }
 

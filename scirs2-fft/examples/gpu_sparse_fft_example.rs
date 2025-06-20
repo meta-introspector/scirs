@@ -24,7 +24,7 @@ fn main() {
     // 2. Compute regular CPU sparse FFT for comparison
     println!("\nComputing regular CPU sparse FFT for comparison...");
     let cpu_start = std::time::Instant::now();
-    let cpu_result = sparse_fft(&signal, 6, Some(SparseFFTAlgorithm::Sublinear), Some(42)).unwrap();
+    let cpu_result = sparse_fft(&signal, 6, Some(SparseFFTAlgorithm::Sublinear), None).unwrap();
     let cpu_elapsed = cpu_start.elapsed();
 
     println!(
@@ -53,7 +53,7 @@ fn main() {
             6,
             backend,
             Some(SparseFFTAlgorithm::Sublinear),
-            Some(42),
+            Some(WindowFunction::Hann),
         )
         .unwrap();
         let gpu_elapsed = gpu_start.elapsed();

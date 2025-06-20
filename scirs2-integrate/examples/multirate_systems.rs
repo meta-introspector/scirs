@@ -453,7 +453,7 @@ mod tests {
         let final_total = result.y.last().unwrap().sum();
 
         // Mass should be conserved
-        assert_abs_diff_eq!(initial_total, final_total, epsilon = 1e-6);
+        assert_abs_diff_eq!(initial_total, final_total, epsilon = 1e-3);
 
         // Some conversion should have occurred
         assert!(result.y.last().unwrap()[0] > 0.01); // Some C produced

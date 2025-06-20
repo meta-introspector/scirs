@@ -399,7 +399,7 @@ impl DeviceMemoryManager {
                             dirty: false,
                         };
 
-                        let buffer_size = std::mem::size_of::<T>() * flat_data.len();
+                        let buffer_size = std::mem::size_of_val(&flat_data);
                         self.current_cache_size
                             .fetch_add(buffer_size, std::sync::atomic::Ordering::SeqCst);
 
@@ -464,14 +464,12 @@ impl DeviceMemoryManager {
                 gpu_buffer.copy_to_host(&mut data);
 
                 // Reshape the data to match the original array shape
-                return Ok(
-                    Array::from_shape_vec(device_array.shape.clone(), data).map_err(|e| {
-                        CoreError::DeviceError(
-                            ErrorContext::new(format!("Failed to reshape array: {}", e))
-                                .with_location(ErrorLocation::new(file!(), line!())),
-                        )
-                    })?,
-                );
+                return Array::from_shape_vec(device_array.shape.clone(), data).map_err(|e| {
+                    CoreError::DeviceError(
+                        ErrorContext::new(format!("Failed to reshape array: {}", e))
+                            .with_location(ErrorLocation::new(file!(), line!())),
+                    )
+                });
             }
         }
 
@@ -648,7 +646,7 @@ impl DeviceMemoryManager {
                 // Compute dispatch dimensions
                 let total_elements = device_array.size();
                 let work_group_size = 256; // A common CUDA/OpenCL work group size
-                let num_groups = (total_elements + work_group_size - 1) / work_group_size;
+                let num_groups = total_elements.div_ceil(work_group_size);
 
                 // Dispatch the kernel
                 kernel.dispatch([num_groups as u32, 1, 1]);
@@ -936,7 +934,7 @@ impl DeviceMemoryPool {
         let mut free_buffers = self.free_buffers.lock().unwrap();
         free_buffers
             .entry(size)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(Box::new(buffer));
 
         // Update the pool size

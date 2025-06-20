@@ -423,7 +423,7 @@ impl GpuRandomGenerator {
         kernel.set_buffer("output", &output_buffer);
         kernel.set_u32("count", count as u32);
 
-        let num_work_groups = ((count + self.work_group_size - 1) / self.work_group_size) as u32;
+        let num_work_groups = (count.div_ceil(self.work_group_size)) as u32;
         kernel.dispatch([num_work_groups, 1, 1]);
 
         // Read results back to CPU
@@ -441,14 +441,12 @@ impl GpuRandomGenerator {
                 .copy_from_slice(&updated_counters[..num_threads.min(updated_counters.len())]);
         }
 
-        Ok(
-            Array::from_shape_vec(IxDyn(&[count]), results).map_err(|e| {
-                CoreError::ShapeError(ErrorContext::new(format!(
-                    "Failed to create array from shape: {}",
-                    e
-                )))
-            })?,
-        )
+        Array::from_shape_vec(IxDyn(&[count]), results).map_err(|e| {
+            CoreError::ShapeError(ErrorContext::new(format!(
+                "Failed to create array from shape: {}",
+                e
+            )))
+        })
     }
 
     /// Generate normal random numbers
@@ -477,7 +475,7 @@ impl GpuRandomGenerator {
             kernel.set_f32("std_dev", std_dev);
 
             let num_work_groups =
-                ((count / 2 + self.work_group_size - 1) / self.work_group_size) as u32;
+                ((count / 2).div_ceil(self.work_group_size)) as u32;
             kernel.dispatch([num_work_groups, 1, 1]);
 
             let results = output_buffer.to_vec();
@@ -519,8 +517,8 @@ impl GpuRandomGenerator {
             .map(|&u| -(-u.ln()) / lambda)
             .collect();
 
-        Ok(Array::from_shape_vec(IxDyn(&[count]), exponential_samples)
-            .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))?)
+        Array::from_shape_vec(IxDyn(&[count]), exponential_samples)
+            .map_err(|e| CoreError::ShapeError(ErrorContext::new(e.to_string())))
     }
 
     /// Box-Muller transformation for normal distribution

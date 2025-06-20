@@ -243,7 +243,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
             let chunk_size = (self.size / rayon::current_num_threads()).max(1024);
 
             // Calculate the number of chunks
-            let num_chunks = (self.size + chunk_size - 1) / chunk_size;
+            let num_chunks = self.size.div_ceil(chunk_size);
 
             // Process each chunk sequentially to avoid mutable borrow issues
             let array = self.as_array::<ndarray::IxDyn>()?;
@@ -277,7 +277,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
             let _strategy = ChunkingStrategy::Fixed(chunk_size);
 
             // Manually process chunks instead of using process_chunks_mut
-            for chunk_idx in 0..(self.size + chunk_size - 1) / chunk_size {
+            for chunk_idx in 0..self.size.div_ceil(chunk_size) {
                 // Calculate chunk bounds
                 let start = chunk_idx * chunk_size;
                 let end = (start + chunk_size).min(self.size);
@@ -311,7 +311,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
         let _strategy = ChunkingStrategy::Fixed(chunk_size);
 
         // Since we can't use process_chunks directly, we'll implement manually
-        let num_chunks = (self.size + chunk_size - 1) / chunk_size;
+        let num_chunks = self.size.div_ceil(chunk_size);
         let mut chunk_results = Vec::with_capacity(num_chunks);
 
         // Process each chunk
@@ -373,7 +373,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
         let _strategy = ChunkingStrategy::Fixed(chunk_size);
 
         // Calculate the number of chunks
-        let num_chunks = (self.size + chunk_size - 1) / chunk_size;
+        let num_chunks = self.size.div_ceil(chunk_size);
 
         // Process each chunk
         for chunk_idx in 0..num_chunks {
@@ -410,7 +410,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
     {
         // Process the input array in chunks manually
         let chunk_size = 1024 * 1024; // 1M elements
-        let num_chunks = (self.size + chunk_size - 1) / chunk_size;
+        let num_chunks = self.size.div_ceil(chunk_size);
         let mut result = Vec::new();
 
         // Process each chunk

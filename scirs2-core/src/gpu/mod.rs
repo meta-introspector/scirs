@@ -192,7 +192,7 @@ impl<T: GpuDataType> GpuBuffer<T> {
         unsafe {
             self.inner.copy_from_host(
                 data.as_ptr() as *const u8,
-                data.len() * std::mem::size_of::<T>(),
+                std::mem::size_of_val(data),
             );
         }
     }
@@ -203,7 +203,7 @@ impl<T: GpuDataType> GpuBuffer<T> {
         unsafe {
             self.inner.copy_to_host(
                 data.as_mut_ptr() as *mut u8,
-                data.len() * std::mem::size_of::<T>(),
+                std::mem::size_of_val(data),
             );
         }
     }

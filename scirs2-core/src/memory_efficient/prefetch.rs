@@ -516,7 +516,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
                         }
 
                         // Attempt to prefetch the block (ignoring errors)
-                        if let Ok(_) = array.preload_block(block_idx) {
+                        if array.preload_block(block_idx).is_ok() {
                             // Mark the block as prefetched
                             if let Ok(mut guard) = prefetch_state.lock() {
                                 guard.mark_prefetched(block_idx);
@@ -544,7 +544,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
                                     }
 
                                     // Attempt to prefetch the block (ignoring errors)
-                                    if let Ok(_) = array.preload_block(block_idx) {
+                                    if array.preload_block(block_idx).is_ok() {
                                         // Mark the block as prefetched
                                         if let Ok(mut guard) = prefetch_state.lock() {
                                             guard.mark_prefetched(block_idx);

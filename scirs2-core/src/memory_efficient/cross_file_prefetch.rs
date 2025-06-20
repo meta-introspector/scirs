@@ -305,7 +305,7 @@ impl DatasetCorrelation {
         let entry = self
             .index_correlations
             .entry(primary_index)
-            .or_insert_with(Vec::new);
+            .or_default();
 
         for &related_index in related_indices {
             if !entry.contains(&related_index) {
@@ -877,6 +877,7 @@ impl<A: Clone + Copy + Send + Sync + 'static> MemoryMappedArrayPrefetchExt<A>
 }
 
 /// Middleware wrapper for tracking array accesses.
+#[allow(dead_code)]
 pub struct TrackedArray<A: Clone + Copy + 'static + Send + Sync, T> {
     /// Underlying array
     array: T,
@@ -888,6 +889,7 @@ pub struct TrackedArray<A: Clone + Copy + 'static + Send + Sync, T> {
     _phantom: std::marker::PhantomData<A>,
 }
 
+#[allow(dead_code)]
 impl<A: Clone + Copy + 'static + Send + Sync, T> TrackedArray<A, T> {
     /// Create a new tracked array.
     pub fn new(array: T, dataset_id: DatasetId) -> Self {

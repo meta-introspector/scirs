@@ -359,10 +359,9 @@ where
             // Get chunk start/end indices
             let chunk_size = match self.strategy {
                 ChunkingStrategy::Fixed(size) => size,
-                ChunkingStrategy::NumChunks(n) => (self.array.size + n - 1) / n,
+                ChunkingStrategy::NumChunks(n) => self.array.size.div_ceil(n),
                 ChunkingStrategy::Auto => {
-                    let optimal_chunk_size = (self.array.size / 100).max(1);
-                    optimal_chunk_size
+                    (self.array.size / 100).max(1)
                 }
                 ChunkingStrategy::FixedBytes(bytes) => {
                     let element_size = std::mem::size_of::<A>();
@@ -440,7 +439,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
         match strategy {
             ChunkingStrategy::Fixed(size) => {
                 // Calculate how many chunks of the given size we need
-                (self.size + size - 1) / size
+                self.size.div_ceil(size)
             }
             ChunkingStrategy::NumChunks(n) => {
                 // Number of chunks is explicitly specified
@@ -450,14 +449,14 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
                 // Determine a reasonable chunk size based on the array size
                 let total_elements = self.size;
                 let optimal_chunk_size = (total_elements / 100).max(1);
-                (total_elements + optimal_chunk_size - 1) / optimal_chunk_size
+                total_elements.div_ceil(optimal_chunk_size)
             }
             ChunkingStrategy::FixedBytes(bytes) => {
                 // Calculate how many chunks based on bytes
                 let element_size = std::mem::size_of::<A>();
                 let elements_per_chunk = bytes / element_size;
                 let elements_per_chunk = elements_per_chunk.max(1); // Ensure at least 1 element per chunk
-                (self.size + elements_per_chunk - 1) / elements_per_chunk
+                self.size.div_ceil(elements_per_chunk)
             }
         }
     }
@@ -474,11 +473,10 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
             // Calculate chunk size and indices
             let chunk_size = match strategy {
                 ChunkingStrategy::Fixed(size) => size,
-                ChunkingStrategy::NumChunks(n) => (self.size + n - 1) / n,
+                ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
                 ChunkingStrategy::Auto => {
                     let total_elements = self.size;
-                    let optimal_chunk_size = (total_elements / 100).max(1);
-                    optimal_chunk_size
+                    (total_elements / 100).max(1)
                 }
                 ChunkingStrategy::FixedBytes(bytes) => {
                     let element_size = std::mem::size_of::<A>();
@@ -515,11 +513,10 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
             // Calculate chunk size and indices
             let chunk_size = match strategy {
                 ChunkingStrategy::Fixed(size) => size,
-                ChunkingStrategy::NumChunks(n) => (self.size + n - 1) / n,
+                ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
                 ChunkingStrategy::Auto => {
                     let total_elements = self.size;
-                    let optimal_chunk_size = (total_elements / 100).max(1);
-                    optimal_chunk_size
+                    (total_elements / 100).max(1)
                 }
                 ChunkingStrategy::FixedBytes(bytes) => {
                     let elements_per_chunk = bytes / element_size;
@@ -557,7 +554,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
                 let effective_offset = self.offset + start_idx * element_size;
 
                 // Seek to the position and write the data
-                if let Ok(_) = file.seek(SeekFrom::Start(effective_offset as u64)) {
+                if file.seek(SeekFrom::Start(effective_offset as u64)).is_ok() {
                     // Convert the chunk data to bytes
                     let bytes = unsafe {
                         std::slice::from_raw_parts(
@@ -594,7 +591,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
             .map(|chunk_idx| {
                 let chunk_size = match strategy {
                     ChunkingStrategy::Fixed(size) => size,
-                    ChunkingStrategy::NumChunks(n) => (self.size + n - 1) / n,
+                    ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
                     ChunkingStrategy::Auto => {
                         let total_elements = self.size;
                         let optimal_chunk_size = (total_elements / 100).max(1);
@@ -647,7 +644,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
             .map(|chunk_idx| {
                 let chunk_size = match strategy {
                     ChunkingStrategy::Fixed(size) => size,
-                    ChunkingStrategy::NumChunks(n) => (self.size + n - 1) / n,
+                    ChunkingStrategy::NumChunks(n) => self.size.div_ceil(n),
                     ChunkingStrategy::Auto => {
                         let total_elements = self.size;
                         let optimal_chunk_size = (total_elements / 100).max(1);
@@ -698,7 +695,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
                 let effective_offset = offset + start_idx * element_size;
 
                 // Seek to the position and write the data
-                if let Ok(_) = file.seek(SeekFrom::Start(effective_offset as u64)) {
+                if file.seek(SeekFrom::Start(effective_offset as u64)).is_ok() {
                     // Convert the chunk data to bytes
                     let bytes = unsafe {
                         std::slice::from_raw_parts(

@@ -531,7 +531,7 @@ impl AdaptivePatternTracker {
         for pattern in &detected_patterns {
             self.dimensional_patterns
                 .entry(pattern.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(flat_indices.len());
         }
 

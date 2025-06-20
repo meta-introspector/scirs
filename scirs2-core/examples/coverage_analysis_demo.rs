@@ -3,7 +3,6 @@
 //! This example demonstrates the comprehensive test coverage analysis system
 //! with enterprise-grade features for production environments.
 
-use scirs2_core::profiling::adaptive::Priority;
 use scirs2_core::profiling::coverage::{
     BranchCoverage, BranchType, CoverageAnalyzer, CoverageConfig, CoverageType, FileCoverage,
     FunctionCoverage, IntegrationPoint, IntegrationType, ReportFormat,
