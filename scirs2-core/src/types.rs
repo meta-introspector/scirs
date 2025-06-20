@@ -408,7 +408,7 @@ where
         let real = self
             .re
             .to_numeric()
-            .map_err(|e| ComplexConversionError::RealPartError(e))?;
+            .map_err(ComplexConversionError::RealPartError)?;
 
         let imag = self
             .im

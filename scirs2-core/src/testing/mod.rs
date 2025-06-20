@@ -166,7 +166,7 @@ impl TestRunner {
         let start_time = Instant::now();
 
         // Execute the test with timeout monitoring
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| test_fn()));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(test_fn));
 
         let duration = start_time.elapsed();
 

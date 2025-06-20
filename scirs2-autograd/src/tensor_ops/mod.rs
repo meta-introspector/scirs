@@ -1361,6 +1361,14 @@ pub use scalar_ops::scalar_mul as scalar_multiply;
 pub use solver_ops::{lstsq as linalg_lstsq, solve as linalg_solve};
 pub use special_matrices::{band_matrix, cholesky, symmetrize, tril, triu};
 
+// Common aliases for linear algebra operations
+pub use matrix_ops::matrix_inverse as inv;
+pub use matrix_ops::pseudo_inverse as pinv;
+pub use matrix_ops::determinant as det;
+pub use matrix_functions::matrix_sqrt as sqrtm;
+pub use matrix_functions::matrix_log as logm;
+pub use eigen_ops::eigen as eig;
+
 // Memory optimization functions
 pub use checkpoint_ops::{
     adaptive_checkpoint, checkpoint, checkpoint_segment, checkpoint_segment_flex, detach,
@@ -1497,6 +1505,47 @@ mod tests {
             let diag_result = x.diag();
             let expected_diag = array![1.0_f32, 4.0];
             assert_eq!(diag_result.eval(g).unwrap(), expected_diag.into_dyn());
+        });
+    }
+
+    #[test]
+    fn test_linalg_aliases() {
+        crate::run(|g| {
+            let x = convert_to_tensor(array![[2.0_f32, 1.0], [1.0, 3.0]], g);
+
+            // Test inv alias
+            let inv_result = inv(x);
+            let inv_direct = matrix_inverse(x);
+            assert_eq!(inv_result.eval(g).unwrap(), inv_direct.eval(g).unwrap());
+
+            // Test det alias
+            let det_result = det(x);
+            let det_direct = determinant(x);
+            assert_eq!(det_result.eval(g).unwrap(), det_direct.eval(g).unwrap());
+
+            // Test eig alias
+            let (eigenvals, eigenvecs) = eig(x);
+            let (eigenvals_direct, eigenvecs_direct) = eigen(x);
+            assert_eq!(eigenvals.eval(g).unwrap(), eigenvals_direct.eval(g).unwrap());
+            assert_eq!(eigenvecs.eval(g).unwrap(), eigenvecs_direct.eval(g).unwrap());
+
+            // Test pinv alias
+            let rect = convert_to_tensor(array![[1.0_f32, 2.0], [3.0, 4.0], [5.0, 6.0]], g);
+            let pinv_result = pinv(rect);
+            let pinv_direct = pseudo_inverse(rect);
+            assert_eq!(pinv_result.eval(g).unwrap(), pinv_direct.eval(g).unwrap());
+
+            // Test sqrtm alias  
+            let pos_def = convert_to_tensor(array![[4.0_f32, 1.0], [1.0, 3.0]], g);
+            let sqrtm_result = sqrtm(pos_def);
+            let sqrtm_direct = matrix_sqrt(pos_def);
+            assert_eq!(sqrtm_result.eval(g).unwrap(), sqrtm_direct.eval(g).unwrap());
+
+            // Test logm alias
+            let small_mat = convert_to_tensor(array![[1.1_f32, 0.1], [0.1, 1.2]], g);
+            let logm_result = logm(small_mat);
+            let logm_direct = matrix_log(small_mat);
+            assert_eq!(logm_result.eval(g).unwrap(), logm_direct.eval(g).unwrap());
         });
     }
 }

@@ -1520,7 +1520,7 @@ where
             + 'static,
         A: Send + Sync,
     {
-        let workers = config.workers.unwrap_or_else(|| num_cpus::get());
+        let workers = config.workers.unwrap_or_else(num_cpus::get);
 
         let process_fn_clone = process_fn.clone();
         let parallel_fn = move |arrays: Vec<ArrayBase<OwnedRepr<A>, D>>| -> Result<Vec<ArrayBase<OwnedRepr<A>, D>>, CoreError> {

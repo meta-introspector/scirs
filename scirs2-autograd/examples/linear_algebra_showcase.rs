@@ -28,8 +28,8 @@ fn main() {
         println!("\n2. Matrix Operations with Gradients");
 
         let a_var = variable(array![[3.0, 1.0], [1.0, 2.0]], g);
-        let inv_a = matrix_inverse(a_var);
-        let det_a = determinant(a_var);
+        let inv_a = inv(a_var);  // Using the new inv alias
+        let det_a = det(a_var);  // Using the new det alias
 
         println!("Inverse of A:");
         println!("{:?}", inv_a.eval(g).unwrap());
@@ -51,7 +51,7 @@ fn main() {
 
         // Eigenvalue decomposition
         let symmetric = convert_to_tensor(array![[4.0, 1.0], [1.0, 3.0]], g);
-        let (eigenvals, eigenvecs) = eigen(symmetric);
+        let (eigenvals, eigenvecs) = eig(symmetric);  // Using the new eig alias
         println!("\nEigenvalue decomposition:");
         println!("Eigenvalues: {:?}", eigenvals.eval(g).unwrap());
         println!("Eigenvectors:\n{:?}", eigenvecs.eval(g).unwrap());
@@ -100,7 +100,7 @@ fn main() {
 
         let small_matrix = convert_to_tensor(array![[0.5, 0.1], [0.1, 0.3]], g);
         let exp_matrix = matrix_exp(&small_matrix);
-        let log_exp = matrix_log(&exp_matrix);
+        let log_exp = logm(&exp_matrix);  // Using the new logm alias
 
         println!("Original matrix:");
         println!("{:?}", small_matrix.eval(g).unwrap());
@@ -108,6 +108,12 @@ fn main() {
         println!("{:?}", exp_matrix.eval(g).unwrap());
         println!("log(exp(A)) - should equal A:");
         println!("{:?}", log_exp.eval(g).unwrap());
+        
+        // Matrix square root
+        let pos_def = convert_to_tensor(array![[4.0, 1.0], [1.0, 3.0]], g);
+        let sqrt_matrix = sqrtm(&pos_def);  // Using the new sqrtm alias
+        println!("\nMatrix square root:");
+        println!("{:?}", sqrt_matrix.eval(g).unwrap());
 
         // 6. Special Matrix Operations
         println!("\n6. Special Matrix Operations");
@@ -159,7 +165,7 @@ fn main() {
         let cov_scaled = scalar_mul(cov, 1.0 / 5.0); // n-1 = 5
 
         // Eigendecomposition of covariance matrix
-        let (eigenvalues, eigenvectors) = eigen(cov_scaled);
+        let (eigenvalues, eigenvectors) = eig(cov_scaled);  // Using the new eig alias
 
         println!("Data covariance matrix:");
         println!("{:?}", cov_scaled.eval(g).unwrap());
@@ -174,14 +180,14 @@ fn main() {
         let a_grad = variable(array![[2.0, 1.0], [1.0, 3.0]], g);
         let b_grad = variable(array![[1.0], [2.0]], g);
 
-        // Complex computation with gradients
-        let _inv = matrix_inverse(a_grad);
+        // Complex computation with gradients using aliases
+        let _inv = inv(a_grad);  // Using the new inv alias
         let x_sol = solve(a_grad, b_grad);
-        let det = determinant(a_grad);
+        let det_val = det(a_grad);  // Using the new det alias
         let norm = frobenius_norm(a_grad);
 
         // Combine all results
-        let combined = add(add(sum_all(x_sol), det), norm);
+        let combined = add(add(sum_all(x_sol), det_val), norm);
 
         // Compute gradients
         let grads = grad(&[&combined], &[&a_grad, &b_grad]);

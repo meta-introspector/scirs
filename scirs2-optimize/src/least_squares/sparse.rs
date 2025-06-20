@@ -399,10 +399,12 @@ where
             let residual_plus = fun(&x_plus.view());
             *nfev += 1;
 
-            grad[i] = residual_plus
+            // Gradient of 0.5 * sum(r_i^2) is J^T * r
+            // Using finite differences: d/dx_i [ 0.5 * sum(r_j^2) ] = sum(r_j * dr_j/dx_i)
+            grad[i] = 2.0 * residual_plus
                 .iter()
                 .zip(residual.iter())
-                .map(|(&rp, &r)| (rp - r) / eps)
+                .map(|(&rp, &r)| r * (rp - r) / eps)
                 .sum::<f64>();
         }
 
@@ -588,10 +590,12 @@ where
             let residual_plus = fun(&x_plus.view());
             *nfev += 1;
 
-            grad[i] = residual_plus
+            // Gradient of 0.5 * sum(r_i^2) is J^T * r
+            // Using finite differences: d/dx_i [ 0.5 * sum(r_j^2) ] = sum(r_j * dr_j/dx_i)
+            grad[i] = 2.0 * residual_plus
                 .iter()
                 .zip(residual.iter())
-                .map(|(&rp, &r)| (rp - r) / eps)
+                .map(|(&rp, &r)| r * (rp - r) / eps)
                 .sum::<f64>();
         }
 
