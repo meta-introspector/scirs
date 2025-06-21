@@ -16,9 +16,13 @@ use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg(feature = "memory_efficient")]
-use scirs2_core::memory_efficient::{
-    chunk_wise_op, OutOfCoreArray,
-};
+use scirs2_core::memory_efficient::chunk_wise_op;
+
+#[cfg(feature = "memory_management")]
+use scirs2_core::memory_efficient::BufferPool;
+
+#[cfg(feature = "memory_management")]
+use scirs2_core::resource::memory::{AllocationStrategy, MemoryManager};
 
 #[cfg(feature = "memory_management")]
 use scirs2_core::ChunkProcessor;
@@ -510,7 +514,7 @@ pub struct BatchProcessorStats {
 pub struct MemoryEfficientLayer {
     /// Weight matrix stored in memory-efficient format
     #[cfg(feature = "memory_efficient")]
-    weights: MemoryEfficientArray<f32>,
+    weights: ArrayD<f32>,
 
     /// Bias vector
     bias: ndarray::Array1<f32>,
@@ -538,12 +542,7 @@ impl MemoryEfficientLayer {
         let default_chunk_size = chunk_size.unwrap_or(1024);
 
         #[cfg(feature = "memory_efficient")]
-        let weights = MemoryEfficientArray::zeros(_weights_shape).map_err(|e| {
-            NeuralError::ComputationError(format!(
-                "Failed to create memory-efficient weights: {:?}",
-                e
-            ))
-        })?;
+        let weights = ArrayD::zeros(IxDyn(&_weights_shape));
 
         let bias = ndarray::Array1::zeros(output_size);
 
@@ -701,7 +700,7 @@ impl MemoryEfficientLayer {
 /// Processor for chunk-wise forward operations
 #[cfg(feature = "memory_efficient")]
 struct ChunkForwardProcessor<'a> {
-    weights: &'a MemoryEfficientArray<f32>,
+    weights: &'a ArrayD<f32>,
     bias: &'a ndarray::Array1<f32>,
 }
 
@@ -713,7 +712,7 @@ impl<'a> ChunkProcessor<f32> for ChunkForwardProcessor<'a> {
     fn process_chunk(
         &self,
         chunk: ArrayView<f32, IxDyn>,
-    ) -> std::result::Result<Self::Output, Self::Error> {
+    ) -> std::result::Result<ArrayD<f32>, crate::error::NeuralError> {
         // Simplified processing for demonstration
         // In a real implementation, this would use the memory-efficient weights
         Ok(chunk.to_owned())

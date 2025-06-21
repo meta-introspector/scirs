@@ -508,7 +508,7 @@ impl AsyncDifferentialEvolution {
     }
 
     /// Handle incomplete generation by filling missing fitness values
-    fn handle_incomplete_generation(&self, fitness_values: &mut Vec<f64>, completed: usize) {
+    fn handle_incomplete_generation(&self, fitness_values: &mut [f64], completed: usize) {
         // Fill incomplete evaluations with a penalty value
         let max_completed_fitness = fitness_values[..completed]
             .iter()

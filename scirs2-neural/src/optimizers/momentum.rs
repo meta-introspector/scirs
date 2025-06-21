@@ -1,4 +1,4 @@
-//! Stochastic Gradient Descent optimizer for neural networks
+//! Momentum optimizer for neural networks
 
 use crate::error::{NeuralError, Result};
 use crate::optimizers::Optimizer;
@@ -6,9 +6,9 @@ use ndarray::{Array, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;
 
-/// Stochastic Gradient Descent optimizer
+/// Momentum optimizer
 ///
-/// Implements the classic SGD algorithm with support for momentum and weight decay.
+/// Implements SGD with momentum. This is essentially SGD but with momentum always enabled.
 ///
 /// Formula:
 /// v_t = momentum * v_{t-1} + learning_rate * (gradient + weight_decay * param)
@@ -18,19 +18,19 @@ use std::fmt::Debug;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_neural::optimizers::{SGD, Optimizer};
+/// use scirs2_neural::optimizers::{MomentumOptimizer, Optimizer};
 ///
-/// // Create a simple SGD optimizer with learning rate 0.01
-/// let mut sgd = SGD::new(0.01f64);
+/// // Create a momentum optimizer with learning rate 0.01 and momentum 0.9
+/// let mut momentum = MomentumOptimizer::new(0.01f64, 0.9);
 ///
-/// // or with momentum and weight decay
-/// let mut sgd_with_momentum = SGD::new_with_config(0.01f64, 0.9, 0.0001);
+/// // or with weight decay
+/// let mut momentum_with_decay = MomentumOptimizer::new_with_weight_decay(0.01f64, 0.9, 0.0001);
 /// ```
 #[derive(Debug, Clone)]
-pub struct SGD<F: Float + ScalarOperand + Debug> {
+pub struct MomentumOptimizer<F: Float + ScalarOperand + Debug> {
     /// Learning rate
     learning_rate: F,
-    /// Momentum factor (0.0 means no momentum)
+    /// Momentum factor
     momentum: F,
     /// Weight decay factor (L2 regularization)
     weight_decay: F,
@@ -38,29 +38,30 @@ pub struct SGD<F: Float + ScalarOperand + Debug> {
     velocity: Vec<Array<F, ndarray::IxDyn>>,
 }
 
-impl<F: Float + ScalarOperand + Debug> SGD<F> {
-    /// Creates a new SGD optimizer with the given learning rate and no momentum/weight decay
+impl<F: Float + ScalarOperand + Debug> MomentumOptimizer<F> {
+    /// Creates a new momentum optimizer with the given learning rate and momentum
     ///
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: F) -> Self {
+    /// * `momentum` - The momentum factor (typically 0.9)
+    pub fn new(learning_rate: F, momentum: F) -> Self {
         Self {
             learning_rate,
-            momentum: F::zero(),
+            momentum,
             weight_decay: F::zero(),
             velocity: Vec::new(),
         }
     }
 
-    /// Creates a new SGD optimizer with the full configuration
+    /// Creates a new momentum optimizer with weight decay
     ///
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    /// * `momentum` - The momentum factor (0.0 means no momentum)
+    /// * `momentum` - The momentum factor (typically 0.9)
     /// * `weight_decay` - The weight decay factor (L2 regularization)
-    pub fn new_with_config(learning_rate: F, momentum: F, weight_decay: F) -> Self {
+    pub fn new_with_weight_decay(learning_rate: F, momentum: F, weight_decay: F) -> Self {
         Self {
             learning_rate,
             momentum,
@@ -73,7 +74,7 @@ impl<F: Float + ScalarOperand + Debug> SGD<F> {
     ///
     /// # Arguments
     ///
-    /// * `momentum` - The momentum factor (0.0 means no momentum)
+    /// * `momentum` - The momentum factor
     pub fn set_momentum(&mut self, momentum: F) -> &mut Self {
         self.momentum = momentum;
         self
@@ -98,14 +99,9 @@ impl<F: Float + ScalarOperand + Debug> SGD<F> {
     pub fn get_weight_decay(&self) -> F {
         self.weight_decay
     }
-
-    /// Resets the internal state of the optimizer
-    pub fn reset(&mut self) {
-        self.velocity.clear();
-    }
 }
 
-impl<F: Float + ScalarOperand + Debug> Optimizer<F> for SGD<F> {
+impl<F: Float + ScalarOperand + Debug> Optimizer<F> for MomentumOptimizer<F> {
     fn update(
         &mut self,
         params: &mut [Array<F, ndarray::IxDyn>],
@@ -134,12 +130,8 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for SGD<F> {
             };
 
             // Update velocity with momentum
-            if self.momentum > F::zero() {
-                self.velocity[i] =
-                    &self.velocity[i] * self.momentum + &(&adjusted_grad * self.learning_rate);
-            } else {
-                self.velocity[i] = &adjusted_grad * self.learning_rate;
-            }
+            self.velocity[i] =
+                &self.velocity[i] * self.momentum + &(&adjusted_grad * self.learning_rate);
 
             // Update parameters
             params[i] = &params[i] - &self.velocity[i];
@@ -155,7 +147,12 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for SGD<F> {
     fn set_learning_rate(&mut self, lr: F) {
         self.learning_rate = lr;
     }
-}
 
-// Enable direct usage of scirs2-optim's SGD when the optim feature is enabled
-// TODO: Uncomment when scirs2-optim crate is available
+    fn reset(&mut self) {
+        self.velocity.clear();
+    }
+
+    fn name(&self) -> &'static str {
+        "MomentumOptimizer"
+    }
+}

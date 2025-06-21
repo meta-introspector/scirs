@@ -8,7 +8,7 @@ use crate::error::{FFTError, FFTResult};
 use crate::sparse_fft::{SparseFFTAlgorithm, SparseFFTResult, WindowFunction};
 use crate::sparse_fft_gpu_cuda::CUDAContext;
 use crate::sparse_fft_gpu_kernels::{GPUKernel, KernelConfig, KernelStats};
-use crate::sparse_fft_gpu_memory::{BufferDescriptor, is_cuda_available};
+use crate::sparse_fft_gpu_memory::BufferDescriptor;
 
 use num_complex::Complex64;
 use num_traits::NumCast;

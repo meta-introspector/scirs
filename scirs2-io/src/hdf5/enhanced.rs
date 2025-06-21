@@ -10,7 +10,7 @@
 
 use crate::error::{IoError, Result};
 use crate::hdf5::{CompressionOptions, DatasetOptions, FileMode, HDF5File};
-use ndarray::{ArrayBase, ArrayD, IxDyn};
+use ndarray::{ArrayBase, ArrayD};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex, RwLock};
@@ -18,7 +18,7 @@ use std::thread;
 use std::time::Instant;
 
 #[cfg(feature = "hdf5")]
-use hdf5::{File, H5Type};
+use hdf5::File;
 
 /// Extended data type support for HDF5
 #[derive(Debug, Clone, PartialEq)]
@@ -252,7 +252,7 @@ impl EnhancedHDF5File {
         // Apply chunking if specified
         if let Some(ref chunk_size) = options.chunk_size {
             if chunk_size.len() == shape.len() {
-                dataset_builder = dataset_builder.chunk(&chunk_size);
+                dataset_builder = dataset_builder.chunk(chunk_size);
             } else {
                 // Auto-calculate optimal chunk size
                 let optimal_chunks = self.calculate_optimal_chunks(&shape, total_elements);
@@ -303,7 +303,7 @@ impl EnhancedHDF5File {
     /// Apply compression filters to dataset builder
     #[cfg(feature = "hdf5")]
     #[allow(dead_code)]
-    fn apply_compression_filters<T: H5Type>(
+    fn apply_compression_filters(
         &self,
         mut builder: hdf5::DatasetBuilder,
         compression: &CompressionOptions,
@@ -370,7 +370,7 @@ impl EnhancedHDF5File {
             // Check if group exists, create if it doesn't
             if file.group(&current_path).is_err() {
                 let parent_group = if current_path.contains('/') {
-                    let parent_path = current_path.rsplitn(2, '/').nth(1).unwrap_or("");
+                    let parent_path = current_path.rsplit_once('/').map(|x| x.0).unwrap_or("");
                     if parent_path.is_empty() {
                         match file.as_group() {
                             Ok(g) => g,

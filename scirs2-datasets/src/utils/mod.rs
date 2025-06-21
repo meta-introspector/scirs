@@ -94,7 +94,7 @@ mod tests {
         // Test scaling
         let mut scaled_data = data.clone();
         min_max_scale(&mut scaled_data, (0.0, 1.0));
-        assert!(scaled_data.iter().all(|&x| x >= 0.0 && x <= 1.0));
+        assert!(scaled_data.iter().all(|&x| (0.0..=1.0).contains(&x)));
 
         // Test feature engineering
         let poly_features = polynomial_features(&data, 2, true).unwrap();

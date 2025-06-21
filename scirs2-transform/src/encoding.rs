@@ -1499,7 +1499,7 @@ mod tests {
     #[test]
     fn test_target_encoder_convenience_methods() {
         let _x = Array::from_shape_vec((4, 1), vec![0.0, 1.0, 0.0, 1.0]).unwrap();
-        let _y = vec![1.0, 2.0, 3.0, 4.0];
+        let _y = [1.0, 2.0, 3.0, 4.0];
 
         let encoder1 = TargetEncoder::with_mean(1.0);
         assert_eq!(encoder1.strategy, "mean");

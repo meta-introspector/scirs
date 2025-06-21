@@ -102,9 +102,11 @@ fn bench_serialized(c: &mut Criterion) {
             let mut output = vec![Complex64::default(); size];
 
             // Setup: create a planner with serialization
-            let mut config = PlanningConfig::default();
-            config.strategy = PlanningStrategy::SerializedFirst;
-            config.serialized_db_path = Some(db_path.to_str().unwrap().to_string());
+            let config = PlanningConfig {
+                strategy: PlanningStrategy::SerializedFirst,
+                serialized_db_path: Some(db_path.to_str().unwrap().to_string()),
+                ..Default::default()
+            };
 
             let mut planner = AdvancedFftPlanner::with_config(config);
 
@@ -186,9 +188,11 @@ fn bench_repeated_execution(c: &mut Criterion) {
     // Benchmark with SerializedFirst
     group.bench_function("SerializedFirst", |b| {
         // Setup: create a planner with serialization
-        let mut config = PlanningConfig::default();
-        config.strategy = PlanningStrategy::SerializedFirst;
-        config.serialized_db_path = Some(db_path.to_str().unwrap().to_string());
+        let config = PlanningConfig {
+            strategy: PlanningStrategy::SerializedFirst,
+            serialized_db_path: Some(db_path.to_str().unwrap().to_string()),
+            ..Default::default()
+        };
 
         let mut planner = AdvancedFftPlanner::with_config(config);
 

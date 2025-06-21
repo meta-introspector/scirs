@@ -111,16 +111,13 @@ impl EnhancedMatFile {
         // Try to read as HDF5 file
         #[cfg(feature = "hdf5")]
         {
-            match std::fs::File::open(_path.as_ref()) {
-                Ok(mut file) => {
-                    use std::io::Read;
-                    let mut magic = [0u8; 8];
-                    if file.read_exact(&mut magic).is_ok() {
-                        // HDF5 magic signature
-                        return Ok(&magic[0..4] == b"\x89HDF" || &magic[0..6] == b"MATLAB");
-                    }
+            if let Ok(mut file) = std::fs::File::open(_path.as_ref()) {
+                use std::io::Read;
+                let mut magic = [0u8; 8];
+                if file.read_exact(&mut magic).is_ok() {
+                    // HDF5 magic signature
+                    return Ok(&magic[0..4] == b"\x89HDF" || &magic[0..6] == b"MATLAB");
                 }
-                Err(_) => {}
             }
         }
         Ok(false)

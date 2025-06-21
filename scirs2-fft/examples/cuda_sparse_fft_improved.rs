@@ -32,10 +32,10 @@ fn main() -> FFTResult<()> {
     let mut signal = vec![Complex64::new(0.0, 0.0); n];
 
     // Add some sparse frequency components
-    for i in 0..n {
+    for (i, sample) in signal.iter_mut().enumerate().take(n) {
         let t = i as f64 / n as f64;
         // Add components at specific frequencies
-        signal[i] = Complex64::new(
+        *sample = Complex64::new(
             (2.0 * std::f64::consts::PI * 50.0 * t).sin()
                 + 0.5 * (2.0 * std::f64::consts::PI * 120.0 * t).sin()
                 + 0.3 * (2.0 * std::f64::consts::PI * 200.0 * t).sin(),

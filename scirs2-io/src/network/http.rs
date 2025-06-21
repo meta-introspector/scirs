@@ -168,7 +168,6 @@ impl HttpClient {
         }
 
         let content_length = response.content_length();
-        let mut downloaded = 0u64;
 
         let mut file = std::fs::File::create(local_path)
             .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
@@ -183,7 +182,7 @@ impl HttpClient {
         file.write_all(&bytes)
             .map_err(|e| IoError::FileError(format!("Failed to write file: {}", e)))?;
 
-        downloaded = bytes.len() as u64;
+        let downloaded = bytes.len() as u64;
 
         // Progress reporting could be added here
         if let Some(total) = content_length {
@@ -393,7 +392,6 @@ impl HttpClient {
 }
 
 /// Utility functions
-
 /// Download multiple files concurrently
 #[cfg(feature = "reqwest")]
 pub async fn download_concurrent(

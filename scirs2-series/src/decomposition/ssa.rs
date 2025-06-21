@@ -396,11 +396,13 @@ mod tests {
             ts[i] = trend + seasonal + noise;
         }
 
-        let mut options = SSAOptions::default();
-        options.window_length = 40;
-        options.n_trend_components = 2;
-        options.n_seasonal_components = Some(2);
-        options.group_by_similarity = false;
+        let options = SSAOptions {
+            window_length: 40,
+            n_trend_components: 2,
+            n_seasonal_components: Some(2),
+            group_by_similarity: false,
+            ..Default::default()
+        };
 
         let result = ssa_decomposition(&ts, &options).unwrap();
 
@@ -426,11 +428,13 @@ mod tests {
             ts[i] = trend + seasonal1 + seasonal2;
         }
 
-        let mut options = SSAOptions::default();
-        options.window_length = 50;
-        options.n_trend_components = 1;
-        options.group_by_similarity = true;
-        options.component_similarity_threshold = 0.8;
+        let options = SSAOptions {
+            window_length: 50,
+            n_trend_components: 1,
+            group_by_similarity: true,
+            component_similarity_threshold: 0.8,
+            ..Default::default()
+        };
 
         let result = ssa_decomposition(&ts, &options).unwrap();
 
@@ -448,9 +452,11 @@ mod tests {
     fn test_ssa_edge_cases() {
         // Test with minimum size time series
         let ts = array![1.0, 2.0, 3.0];
-        let mut options = SSAOptions::default();
-        options.window_length = 2;
-        options.n_trend_components = 1;
+        let mut options = SSAOptions {
+            window_length: 2,
+            n_trend_components: 1,
+            ..Default::default()
+        };
 
         let result = ssa_decomposition(&ts, &options);
         assert!(result.is_ok());

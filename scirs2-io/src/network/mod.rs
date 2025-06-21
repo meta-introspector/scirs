@@ -126,13 +126,31 @@ impl NetworkClient {
     /// Download a file from URL to local path
     #[cfg(feature = "reqwest")]
     pub async fn download<P: AsRef<Path>>(&self, url: &str, local_path: P) -> Result<()> {
-        self.http_client.download(url, local_path).await
+        if let Some(_client) = &self.http_client {
+            // Create HttpClient with current config and use it for download
+            let mut http_client = http::HttpClient::new(self.config.clone());
+            http_client.init()?;
+            http_client.download(url, local_path).await
+        } else {
+            Err(IoError::ConfigError(
+                "HTTP client not configured".to_string(),
+            ))
+        }
     }
 
     /// Upload a file from local path to URL
     #[cfg(feature = "reqwest")]
     pub async fn upload<P: AsRef<Path>>(&self, local_path: P, url: &str) -> Result<()> {
-        self.http_client.upload(local_path, url).await
+        if let Some(_client) = &self.http_client {
+            // Create HttpClient with current config and use it for upload
+            let mut http_client = http::HttpClient::new(self.config.clone());
+            http_client.init()?;
+            http_client.upload(local_path, url).await
+        } else {
+            Err(IoError::ConfigError(
+                "HTTP client not configured".to_string(),
+            ))
+        }
     }
 
     /// Download a file to cloud storage
@@ -240,7 +258,6 @@ impl NetworkClient {
 }
 
 /// Convenience functions for common network operations
-
 /// Download a file from URL using default client
 #[cfg(feature = "reqwest")]
 pub async fn download_file<P: AsRef<Path>>(url: &str, local_path: P) -> Result<()> {

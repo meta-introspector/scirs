@@ -403,7 +403,7 @@ mod tests {
         // Check target values are in valid range (0, 1, 2)
         let target = dataset.target.as_ref().unwrap();
         for &val in target.iter() {
-            assert!(val >= 0.0 && val <= 2.0);
+            assert!((0.0..=2.0).contains(&val));
         }
     }
 
@@ -460,13 +460,13 @@ mod tests {
         // Check target values are digits (0-9)
         let target = dataset.target.as_ref().unwrap();
         for &val in target.iter() {
-            assert!(val >= 0.0 && val <= 9.0);
+            assert!((0.0..=9.0).contains(&val));
         }
 
         // Check pixel values are in valid range [0, 1]
         for row in dataset.data.rows() {
             for &pixel in row.iter() {
-                assert!(pixel >= 0.0 && pixel <= 1.0);
+                assert!((0.0..=1.0).contains(&pixel));
             }
         }
     }

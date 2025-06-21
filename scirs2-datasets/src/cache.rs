@@ -1083,7 +1083,7 @@ impl BatchOperations {
             return;
         }
 
-        let result = Arc::new(Mutex::new(result));
+        let result_arc = Arc::new(Mutex::new(BatchResult::new()));
         let cache_dir = self.cache.cache.cache_dir.clone();
         let max_retries = self.max_retries;
         let retry_delay = self.retry_delay;
@@ -1091,7 +1091,7 @@ impl BatchOperations {
         let handles: Vec<_> = urls_and_names
             .iter()
             .map(|&(url, name)| {
-                let result_clone = Arc::clone(&result);
+                let result_clone = Arc::clone(&result_arc);
                 let url = url.to_string();
                 let name = name.to_string();
                 let cache_dir = cache_dir.clone();
@@ -1138,7 +1138,7 @@ impl BatchOperations {
                     if !success {
                         let mut r = result_clone.lock().unwrap();
                         r.failure_count += 1;
-                        r.failures.push((name, last_error));
+                        r.failures.push((name.clone(), last_error));
                     }
 
                     (name, success, downloaded_data)
@@ -1154,6 +1154,13 @@ impl BatchOperations {
                     successful_downloads.push((name, data));
                 }
             }
+        }
+
+        // Merge the results from the arc back into the original result
+        if let Ok(arc_result) = result_arc.lock() {
+            result.success_count += arc_result.success_count;
+            result.failure_count += arc_result.failure_count;
+            result.failures.extend(arc_result.failures.clone());
         }
 
         // Update memory cache after all threads complete

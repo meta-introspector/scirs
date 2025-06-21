@@ -396,7 +396,7 @@ where
 }
 
 /// Parallel Monte Carlo integration using multiple threads to speed up the computation
-/// 
+///
 /// This function provides a convenient wrapper that will use parallel processing
 /// if the `parallel` feature is enabled and workers parameter is specified,
 /// otherwise falls back to the standard monte_carlo function.

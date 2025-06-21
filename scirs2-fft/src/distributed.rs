@@ -199,7 +199,7 @@ impl DistributedFFT {
                 }
             } else {
                 // 1D case
-                let result = fft(&input.as_slice().unwrap_or(&[]), None)?;
+                let result = fft(input.as_slice().unwrap_or(&[]), None)?;
                 for (i, val) in result.iter().enumerate().take(output.len()) {
                     output[i] = *val;
                 }
@@ -309,7 +309,7 @@ impl DistributedFFT {
                         let copy_len = flat_output.len().min(exchanged_data.len());
 
                         for i in 0..copy_len {
-                            flat_output[i] = exchanged_data.iter().nth(i).unwrap().clone();
+                            flat_output[i] = *exchanged_data.iter().nth(i).unwrap();
                         }
                     }
                 }
@@ -353,7 +353,7 @@ impl DistributedFFT {
 
         // For slab decomposition, we divide along the first dimension
         let total_slabs = shape[0];
-        let slabs_per_node = (total_slabs + self.config.node_count - 1) / self.config.node_count;
+        let slabs_per_node = total_slabs.div_ceil(self.config.node_count);
 
         // Calculate my portion
         let my_start = self.config.rank * slabs_per_node;
@@ -412,9 +412,9 @@ impl DistributedFFT {
         } else {
             // For higher dimensions, we'd need a more general approach
             // This is a simplified implementation
-            return Err(FFTError::DimensionError(format!(
-                "Dimensions higher than 3 not yet implemented for slab decomposition"
-            )));
+            return Err(FFTError::DimensionError(
+                "Dimensions higher than 3 not yet implemented for slab decomposition".to_string(),
+            ));
         }
 
         Ok(output)
@@ -471,8 +471,8 @@ impl DistributedFFT {
         let n1 = shape[0];
         let n2 = shape[1];
 
-        let rows_per_node = (n1 + p1 - 1) / p1;
-        let cols_per_node = (n2 + p2 - 1) / p2;
+        let rows_per_node = n1.div_ceil(p1);
+        let cols_per_node = n2.div_ceil(p2);
 
         let my_start_row = my_row * rows_per_node;
         let my_end_row = (my_start_row + rows_per_node).min(n1);
@@ -525,9 +525,9 @@ impl DistributedFFT {
             }
         } else {
             // For higher dimensions, we'd need a more general approach
-            return Err(FFTError::DimensionError(format!(
-                "Dimensions higher than 3 not yet implemented for pencil decomposition"
-            )));
+            return Err(FFTError::DimensionError(
+                "Dimensions higher than 3 not yet implemented for pencil decomposition".to_string(),
+            ));
         }
 
         Ok(output)
@@ -588,9 +588,9 @@ impl DistributedFFT {
         let n2 = shape[1];
         let n3 = shape[2];
 
-        let planes_per_node = (n1 + p1 - 1) / p1;
-        let rows_per_node = (n2 + p2 - 1) / p2;
-        let cols_per_node = (n3 + p3 - 1) / p3;
+        let planes_per_node = n1.div_ceil(p1);
+        let rows_per_node = n2.div_ceil(p2);
+        let cols_per_node = n3.div_ceil(p3);
 
         let my_start_plane = my_plane * planes_per_node;
         let my_end_plane = (my_start_plane + planes_per_node).min(n1);
@@ -638,9 +638,10 @@ impl DistributedFFT {
             }
         } else {
             // For higher dimensions, we'd need a more general approach
-            return Err(FFTError::DimensionError(format!(
+            return Err(FFTError::DimensionError(
                 "Dimensions higher than 3 not yet implemented for volumetric decomposition"
-            )));
+                    .to_string(),
+            ));
         }
 
         Ok(output)

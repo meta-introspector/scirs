@@ -400,7 +400,7 @@ pub mod gpu {
                 });
                 compute_pass.set_pipeline(&self.pipeline);
                 compute_pass.set_bind_group(0, &bind_group, &[]);
-                compute_pass.dispatch_workgroups((data.len() as u32 + 255) / 256, 1, 1);
+                compute_pass.dispatch_workgroups((data.len() as u32).div_ceil(256), 1, 1);
             }
 
             encoder.copy_buffer_to_buffer(&output_buffer, 0, &staging_buffer, 0, size as u64);
@@ -537,8 +537,10 @@ pub mod vectorized {
             Backend::Gpu => {
                 if total_elements >= 1000 {
                     // GPU efficient for larger arrays
-                    let input_cloned = input.clone();
-                    return Ok(GammaResult::Future(Box::pin(gamma_gpu(&input_cloned))));
+                    let input_owned = input.to_owned();
+                    return Ok(GammaResult::Future(Box::pin(async move {
+                        gamma_gpu(&input_owned).await
+                    })));
                 }
             }
             Backend::Cpu => {
@@ -830,10 +832,9 @@ pub mod convenience {
     where
         D: Dimension + Send + Sync + 'static,
     {
-        let config = config.unwrap_or_else(|| {
-            let mut cfg = ArrayConfig::default();
-            cfg.backend = Backend::Lazy;
-            cfg
+        let config = config.unwrap_or_else(|| ArrayConfig {
+            backend: Backend::Lazy,
+            ..Default::default()
         });
 
         if let vectorized::GammaResult::Lazy(lazy_array) = vectorized::gamma_array(input, &config)?

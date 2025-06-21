@@ -206,6 +206,7 @@ fn test_visualization_adapters() {
 
 /// Test creating a custom metric adapter
 #[test]
+#[allow(clippy::unnecessary_cast)]
 fn test_custom_metric_adapter() {
     // Create custom metric adapter
     let custom_metric = NeuralMetricAdapter::new(

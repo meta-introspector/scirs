@@ -516,7 +516,7 @@ mod tests {
         for i in 0..synthetic_data.nrows() {
             for j in 0..synthetic_data.ncols() {
                 let value = synthetic_data[[i, j]];
-                assert!(value >= 0.5 && value <= 2.5); // Should be within range of class 0 samples
+                assert!((0.5..=2.5).contains(&value)); // Should be within range of class 0 samples
             }
         }
     }

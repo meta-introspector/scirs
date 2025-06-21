@@ -633,10 +633,12 @@ mod tests {
             ts[i] = 10.0 + trend + seasonal + noise;
         }
 
-        let mut options = TBATSOptions::default();
-        options.seasonal_periods = vec![12.0];
-        options.use_trend = true;
-        options.use_box_cox = false;
+        let options = TBATSOptions {
+            seasonal_periods: vec![12.0],
+            use_trend: true,
+            use_box_cox: false,
+            ..Default::default()
+        };
 
         let result = tbats_decomposition(&ts, &options).unwrap();
 
@@ -659,10 +661,12 @@ mod tests {
             ts[i] = 5.0 + trend + seasonal1 + seasonal2;
         }
 
-        let mut options = TBATSOptions::default();
-        options.seasonal_periods = vec![12.0, 4.0];
-        options.use_trend = true;
-        options.use_box_cox = false;
+        let options = TBATSOptions {
+            seasonal_periods: vec![12.0, 4.0],
+            use_trend: true,
+            use_box_cox: false,
+            ..Default::default()
+        };
 
         let result = tbats_decomposition(&ts, &options).unwrap();
 
@@ -678,8 +682,10 @@ mod tests {
     fn test_tbats_edge_cases() {
         // Test with minimum size time series
         let ts = array![1.0, 2.0, 3.0];
-        let mut options = TBATSOptions::default();
-        options.seasonal_periods = vec![2.0];
+        let mut options = TBATSOptions {
+            seasonal_periods: vec![2.0],
+            ..Default::default()
+        };
 
         let result = tbats_decomposition(&ts, &options);
         assert!(result.is_ok());
@@ -706,10 +712,12 @@ mod tests {
             ts[i] = 5.0 + trend;
         }
 
-        let mut options = TBATSOptions::default();
-        options.seasonal_periods = vec![];
-        options.use_trend = true;
-        options.use_box_cox = false;
+        let options = TBATSOptions {
+            seasonal_periods: vec![],
+            use_trend: true,
+            use_box_cox: false,
+            ..Default::default()
+        };
 
         let result = tbats_decomposition(&ts, &options).unwrap();
 

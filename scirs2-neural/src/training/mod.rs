@@ -114,9 +114,9 @@ use crate::callbacks::CallbackManager;
 use crate::data::{DataLoader, Dataset};
 use crate::error::Result;
 use crate::evaluation::{EvaluationConfig, Evaluator};
-use crate::layers::Layer;
+use crate::layers::{Layer, ParamLayer};
 use crate::losses::Loss;
-use crate::optimizers::{Optimizer, OptimizerExt};
+use crate::optimizers::Optimizer;
 
 use num_integer::div_ceil;
 
@@ -344,7 +344,7 @@ pub struct Trainer<
     F: Float + Debug + ScalarOperand + num_traits::FromPrimitive + Send + Sync + std::fmt::Display,
 > {
     /// Model to train
-    model: Box<dyn Layer<F> + Send + Sync>,
+    model: Box<dyn ParamLayer<F> + Send + Sync>,
     /// Optimizer for parameter updates
     optimizer: Box<dyn Optimizer<F> + Send + Sync>,
     /// Loss function
@@ -368,7 +368,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
     /// Create a new trainer
     pub fn new<L, O, LF>(model: L, optimizer: O, loss_fn: LF, config: TrainingConfig) -> Self
     where
-        L: Layer<F> + Send + Sync + 'static,
+        L: ParamLayer<F> + Send + Sync + 'static,
         O: Optimizer<F> + Send + Sync + 'static,
         LF: Loss<F> + Send + Sync + 'static,
     {
@@ -516,7 +516,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                     let _input_grad = self.model.backward(&inputs, &loss_grad)?;
 
                     // Update parameters
-                    self.optimizer.step(&mut *self.model)?;
+                    self.optimizer.step_model(&mut *self.model)?;
 
                     loss
                 };

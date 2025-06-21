@@ -439,11 +439,13 @@ mod tests {
             ts[i] = trend + seasonal + noise;
         }
 
-        let mut options = STROptions::default();
-        options.seasonal_periods = vec![12.0];
-        options.trend_degrees = 2;
-        options.trend_lambda = 1.0;
-        options.seasonal_lambda = 0.1;
+        let options = STROptions {
+            seasonal_periods: vec![12.0],
+            trend_degrees: 2,
+            trend_lambda: 1.0,
+            seasonal_lambda: 0.1,
+            ..Default::default()
+        };
 
         let result = str_decomposition(&ts, &options).unwrap();
 
@@ -473,11 +475,13 @@ mod tests {
             ts[i] = trend + seasonal1 + seasonal2;
         }
 
-        let mut options = STROptions::default();
-        options.seasonal_periods = vec![12.0, 4.0];
-        options.trend_degrees = 1;
-        options.trend_lambda = 5.0;
-        options.seasonal_lambda = 0.5;
+        let options = STROptions {
+            seasonal_periods: vec![12.0, 4.0],
+            trend_degrees: 1,
+            trend_lambda: 5.0,
+            seasonal_lambda: 0.5,
+            ..Default::default()
+        };
 
         let result = str_decomposition(&ts, &options).unwrap();
 
@@ -498,8 +502,10 @@ mod tests {
     fn test_str_edge_cases() {
         // Test with minimum size time series
         let ts = array![1.0, 2.0, 3.0];
-        let mut options = STROptions::default();
-        options.seasonal_periods = vec![2.0];
+        let mut options = STROptions {
+            seasonal_periods: vec![2.0],
+            ..Default::default()
+        };
 
         let result = str_decomposition(&ts, &options);
         assert!(result.is_ok());

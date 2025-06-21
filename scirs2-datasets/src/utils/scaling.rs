@@ -236,7 +236,7 @@ mod tests {
         for i in 0..data.nrows() {
             for j in 0..data.ncols() {
                 let value = data[[i, j]];
-                assert!(value >= 0.0 && value <= 1.0);
+                assert!((0.0..=1.0).contains(&value));
             }
         }
 
@@ -392,7 +392,7 @@ mod tests {
         assert!(data3.iter().all(|&x| x.is_finite()));
 
         // Min-max scaled data should be in [0, 1] range
-        assert!(data2.iter().all(|&x| x >= 0.0 && x <= 1.0));
+        assert!(data2.iter().all(|&x| (0.0..=1.0).contains(&x)));
 
         // All scaling methods should preserve shape
         assert_eq!(data1.shape(), data2.shape());

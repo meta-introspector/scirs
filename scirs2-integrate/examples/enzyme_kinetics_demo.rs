@@ -583,12 +583,8 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
         let inhibition_factor = match reg_type {
             RegulationType::CompetitiveInhibition => 1.0 / (1.0 + effector_conc / ki),
             RegulationType::NonCompetitiveInhibition => 1.0 / (1.0 + effector_conc / ki),
-            RegulationType::AllostericInhibition => {
-                1.0 / (1.0 + (effector_conc / ki).powf(2.0))
-            }
-            RegulationType::FeedbackInhibition => {
-                1.0 / (1.0 + (effector_conc / ki).powf(4.0))
-            }
+            RegulationType::AllostericInhibition => 1.0 / (1.0 + (effector_conc / ki).powf(2.0)),
+            RegulationType::FeedbackInhibition => 1.0 / (1.0 + (effector_conc / ki).powf(4.0)),
             _ => 1.0,
         };
 

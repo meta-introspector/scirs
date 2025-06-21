@@ -559,8 +559,8 @@ mod tests {
         // With quantile binning, each bin should have roughly equal frequency
 
         // Count bin distributions
-        let mut uniform_counts = vec![0; 3];
-        let mut quantile_counts = vec![0; 3];
+        let mut uniform_counts = [0; 3];
+        let mut quantile_counts = [0; 3];
 
         for i in 0..data.nrows() {
             uniform_counts[uniform_binned[[i, 0]] as usize] += 1;

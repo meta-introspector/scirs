@@ -836,7 +836,10 @@ mod tests {
 
     #[test]
     fn test_circle_mesh_generation() {
-        let params = MeshGenerationParams { element_size: 0.2, ..Default::default() };
+        let params = MeshGenerationParams {
+            element_size: 0.2,
+            ..Default::default()
+        };
         let generator = AutoMeshGenerator::new(params);
 
         let domain = Domain::Circle {
