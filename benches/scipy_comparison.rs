@@ -70,7 +70,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
-            operation: format!("determinant"),
+            operation: "determinant".to_string(),
             size,
             rust_time_ns: rust_time,
             python_time_ns: None, // Will be filled by Python script
@@ -92,7 +92,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
             let rust_time = start.elapsed().as_nanos() as u64;
 
             results.push(BenchmarkResult {
-                operation: format!("inverse"),
+                operation: "inverse".to_string(),
                 size,
                 rust_time_ns: rust_time,
                 python_time_ns: None,
@@ -114,7 +114,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
-            operation: format!("frobenius_norm"),
+            operation: "frobenius_norm".to_string(),
             size,
             rust_time_ns: rust_time,
             python_time_ns: None,
@@ -154,7 +154,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
-            operation: format!("lu_decomposition"),
+            operation: "lu_decomposition".to_string(),
             size,
             rust_time_ns: rust_time,
             python_time_ns: None,
@@ -179,7 +179,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
-            operation: format!("qr_decomposition"),
+            operation: "qr_decomposition".to_string(),
             size,
             rust_time_ns: rust_time,
             python_time_ns: None,
@@ -204,7 +204,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
-            operation: format!("cholesky_decomposition"),
+            operation: "cholesky_decomposition".to_string(),
             size,
             rust_time_ns: rust_time,
             python_time_ns: None,
@@ -242,7 +242,7 @@ fn bench_solver_comparison(c: &mut Criterion) {
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
-            operation: format!("linear_solve"),
+            operation: "linear_solve".to_string(),
             size,
             rust_time_ns: rust_time,
             python_time_ns: None,
@@ -267,7 +267,7 @@ fn bench_solver_comparison(c: &mut Criterion) {
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
-            operation: format!("least_squares"),
+            operation: "least_squares".to_string(),
             size,
             rust_time_ns: rust_time,
             python_time_ns: None,

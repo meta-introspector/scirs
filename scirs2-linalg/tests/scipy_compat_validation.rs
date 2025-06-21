@@ -595,7 +595,11 @@ mod numerical_stability_tests {
         let rank_nearly =
             compat::matrix_rank(&nearly_singular.view(), Some(1e-12), false, true).unwrap();
         // Check that the rank is reduced (should be 1 for a nearly singular matrix)
-        assert!(rank_nearly <= 1, "Matrix should be numerically rank-deficient, got rank {}", rank_nearly);
+        assert!(
+            rank_nearly <= 1,
+            "Matrix should be numerically rank-deficient, got rank {}",
+            rank_nearly
+        );
     }
 }
 
@@ -631,10 +635,11 @@ mod performance_validation_tests {
                 println!("Warning: Condition number computation failed, using fallback");
                 1.0 // Fallback value for test purposes
             });
-            let _rank = compat::matrix_rank(&matrix.view(), None, false, true).unwrap_or_else(|_| {
-                println!("Warning: Matrix rank computation failed, using fallback");
-                n // Fallback: assume full rank
-            });
+            let _rank =
+                compat::matrix_rank(&matrix.view(), None, false, true).unwrap_or_else(|_| {
+                    println!("Warning: Matrix rank computation failed, using fallback");
+                    n // Fallback: assume full rank
+                });
 
             let elapsed = start.elapsed();
 
@@ -677,10 +682,11 @@ mod performance_validation_tests {
 
         // Test SVD
         let start = Instant::now();
-        let _svd = compat::svd(&matrix.view(), true, true, false, true, "gesdd").unwrap_or_else(|_| {
-            println!("Warning: SVD computation failed, skipping SVD timing test");
-            (None, array![1.0], None) // Dummy values for test purposes
-        });
+        let _svd =
+            compat::svd(&matrix.view(), true, true, false, true, "gesdd").unwrap_or_else(|_| {
+                println!("Warning: SVD computation failed, skipping SVD timing test");
+                (None, array![1.0], None) // Dummy values for test purposes
+            });
         let svd_time = start.elapsed();
         assert!(svd_time.as_millis() < max_time_ms * 2); // SVD can be slower
 

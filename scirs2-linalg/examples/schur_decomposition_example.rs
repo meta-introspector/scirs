@@ -44,7 +44,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let symmetric = array![[2.0, 1.0], [1.0, 3.0]];
     println!("Symmetric matrix A = \n{:8.6}", symmetric);
 
-    let (z_sym, t_sym) = compat::schur(&symmetric.view(), "real", None, false, None, true)?;
+    let (z_sym, t_sym): (Array2<f64>, Array2<f64>) =
+        compat::schur(&symmetric.view(), "real", None, false, None, true)?;
     println!("Z = \n{:8.6}", z_sym);
     println!("T = \n{:8.6}", t_sym);
 

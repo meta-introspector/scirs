@@ -152,7 +152,14 @@ fn bench_mixed_precision(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("mixed_dot", size),
             &(&vector_f32, &vector_f32),
-            |b, (x, y)| b.iter(|| mixed_precision_dot::<f32, f32, f64, f64>(black_box(&x.view()), black_box(&y.view()))),
+            |b, (x, y)| {
+                b.iter(|| {
+                    mixed_precision_dot::<f32, f32, f64, f64>(
+                        black_box(&x.view()),
+                        black_box(&y.view()),
+                    )
+                })
+            },
         );
 
         // Mixed precision solve
@@ -227,7 +234,9 @@ fn bench_matrix_factorizations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cur_decomposition", size),
             &matrix,
-            |b, m| b.iter(|| cur_decomposition(black_box(&m.view()), 10, None, None, "deterministic")),
+            |b, m| {
+                b.iter(|| cur_decomposition(black_box(&m.view()), 10, None, None, "deterministic"))
+            },
         );
 
         // Rank-revealing QR
