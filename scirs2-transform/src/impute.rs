@@ -535,8 +535,9 @@ impl KNNImputer {
                 continue; // No missing values in this sample
             }
 
-            // Find k-nearest neighbors for this sample
-            let neighbors = self.find_nearest_neighbors(&sample.to_owned(), x_train)?;
+            // Find k-nearest neighbors for this sample (excluding itself)
+            let neighbors =
+                self.find_nearest_neighbors_excluding(&sample.to_owned(), x_train, i)?;
 
             // Impute each missing feature
             for &feature_idx in &missing_features {
@@ -564,17 +565,19 @@ impl KNNImputer {
         self.transform(x)
     }
 
-    /// Find k-nearest neighbors for a given sample
-    fn find_nearest_neighbors(
+    /// Find k-nearest neighbors for a given sample, excluding a specific index
+    fn find_nearest_neighbors_excluding(
         &self,
         sample: &Array1<f64>,
         x_train: &Array2<f64>,
+        exclude_idx: usize,
     ) -> Result<Vec<usize>> {
         let n_train_samples = x_train.shape()[0];
 
-        // Compute distances to all training samples
+        // Compute distances to all training samples (excluding the specified index)
         let distances: Vec<(usize, f64)> = (0..n_train_samples)
             .into_par_iter()
+            .filter(|&i| i != exclude_idx)
             .map(|i| {
                 let train_sample = x_train.row(i);
                 let distance = self.compute_distance(sample, &train_sample.to_owned());

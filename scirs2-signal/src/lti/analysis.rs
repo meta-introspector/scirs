@@ -555,7 +555,7 @@ pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDeco
 
     // Find intersection of controllable and observable subspaces
     let co_basis = compute_subspace_intersection(&controllable_basis, &observable_basis)?;
-    let co_dimension = co_basis.len();
+    let _co_dimension = co_basis.len();
 
     // Compute complementary subspaces
     let c_no_basis = compute_orthogonal_complement(&controllable_basis, &co_basis)?;
@@ -574,6 +574,9 @@ pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDeco
 
     // Add CO basis vectors
     for vector in &co_basis {
+        if col >= n {
+            break; // Prevent index out of bounds
+        }
         for (i, &val) in vector.iter().enumerate() {
             transformation[i][col] = val;
         }
@@ -582,6 +585,9 @@ pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDeco
 
     // Add CNO basis vectors
     for vector in &c_no_basis {
+        if col >= n {
+            break; // Prevent index out of bounds
+        }
         for (i, &val) in vector.iter().enumerate() {
             transformation[i][col] = val;
         }
@@ -590,6 +596,9 @@ pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDeco
 
     // Add NCO basis vectors
     for vector in &nc_o_basis {
+        if col >= n {
+            break; // Prevent index out of bounds
+        }
         for (i, &val) in vector.iter().enumerate() {
             transformation[i][col] = val;
         }
@@ -598,17 +607,33 @@ pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDeco
 
     // Add NCNO basis vectors
     for vector in &nc_no_basis {
+        if col >= n {
+            break; // Prevent index out of bounds
+        }
         for (i, &val) in vector.iter().enumerate() {
             transformation[i][col] = val;
         }
         col += 1;
     }
 
+    // Calculate actual used dimensions after bounds checking
+    let mut used_col = 0;
+    let used_co_dimension = std::cmp::min(co_basis.len(), n - used_col);
+    used_col += used_co_dimension;
+
+    let used_c_no_dimension = std::cmp::min(c_no_basis.len(), n - used_col);
+    used_col += used_c_no_dimension;
+
+    let used_nc_o_dimension = std::cmp::min(nc_o_basis.len(), n - used_col);
+    used_col += used_nc_o_dimension;
+
+    let used_nc_no_dimension = std::cmp::min(nc_no_basis.len(), n - used_col);
+
     Ok(KalmanDecomposition {
-        co_dimension,
-        c_no_dimension: c_no_basis.len(),
-        nc_o_dimension: nc_o_basis.len(),
-        nc_no_dimension: nc_no_basis.len(),
+        co_dimension: used_co_dimension,
+        c_no_dimension: used_c_no_dimension,
+        nc_o_dimension: used_nc_o_dimension,
+        nc_no_dimension: used_nc_no_dimension,
         transformation_matrix: transformation,
         co_basis,
         c_no_basis,
@@ -679,14 +704,16 @@ pub fn systems_equivalent(
         return Ok(false);
     }
 
-    // Check if all coefficients match after scaling
-    for ((&a, &b), (&c, &d)) in tf1
-        .num
-        .iter()
-        .zip(&tf2.num)
-        .zip(tf1.den.iter().zip(&tf2.den))
-    {
-        if (b - scale_num * a).abs() > tolerance || (d - scale_den * c).abs() > tolerance {
+    // Check if all numerator coefficients match after scaling
+    for (&a, &b) in tf1.num.iter().zip(&tf2.num) {
+        if (b - scale_num * a).abs() > tolerance {
+            return Ok(false);
+        }
+    }
+
+    // Check if all denominator coefficients match after scaling
+    for (&c, &d) in tf1.den.iter().zip(&tf2.den) {
+        if (d - scale_den * c).abs() > tolerance {
             return Ok(false);
         }
     }

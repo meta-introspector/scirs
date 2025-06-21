@@ -32,7 +32,7 @@ mod advanced_indexing_tests {
             );
 
             // Apply boolean mask
-            let result = T::boolean_mask(data, &mask);
+            let result = T::boolean_mask(&data, &mask);
 
             // The result should be a 1D tensor with selected elements
             let result_array = result.eval(ctx).unwrap();
@@ -58,7 +58,7 @@ mod advanced_indexing_tests {
             );
 
             // Apply take operation
-            let result = T::take(data, &indices, 0);
+            let result = T::take(&data, &indices, 0);
 
             // Verify result
             let result_array = result.eval(ctx).unwrap();
@@ -92,7 +92,7 @@ mod advanced_indexing_tests {
             );
 
             // Apply where operation
-            let result = T::where_op(condition, &x, &y);
+            let result = T::where_op(&condition, &x, &y);
 
             // Verify result: should be [1.0, 20.0, 3.0, 40.0]
             let result_array = result.eval(ctx).unwrap();
@@ -118,7 +118,7 @@ mod advanced_indexing_tests {
             );
 
             // Apply scatter operation
-            let result = T::scatter(indices, &updates, 5, 0);
+            let result = T::scatter(&indices, &updates, 5, 0);
 
             // Verify result: should be [10.0, 20.0, 30.0, 0.0, 0.0]
             let result_array = result.eval(ctx).unwrap();
@@ -142,7 +142,7 @@ mod broadcasting_tests {
         // Test same shape (no broadcasting needed)
         let left_shape = vec![3, 4];
         let right_shape = vec![3, 4];
-        let info = T::analyze_broadcast(left_shape, &right_shape).unwrap();
+        let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
 
         assert_eq!(info.strategy, T::BroadcastStrategy::NoOp);
         assert!(!info.left_needs_broadcast);
@@ -155,7 +155,7 @@ mod broadcasting_tests {
         // Test scalar broadcasting
         let left_shape = vec![];
         let right_shape = vec![3, 4];
-        let info = T::analyze_broadcast(left_shape, &right_shape).unwrap();
+        let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
 
         assert_eq!(info.strategy, T::BroadcastStrategy::ScalarBroadcast);
         assert!(info.left_needs_broadcast);
@@ -168,7 +168,7 @@ mod broadcasting_tests {
         // Test compatible broadcasting
         let left_shape = vec![1, 4];
         let right_shape = vec![3, 1];
-        let info = T::analyze_broadcast(left_shape, &right_shape).unwrap();
+        let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
 
         assert_eq!(info.output_shape, vec![3, 4]);
         assert!(info.left_needs_broadcast);
@@ -180,7 +180,7 @@ mod broadcasting_tests {
         // Test incompatible broadcasting
         let left_shape = vec![3, 4];
         let right_shape = vec![2, 4];
-        let result = T::analyze_broadcast(left_shape, &right_shape);
+        let result = T::analyze_broadcast(&left_shape, &right_shape);
 
         assert!(result.is_err());
     }
@@ -199,14 +199,14 @@ mod broadcasting_tests {
             );
 
             // Test broadcast addition
-            let result = T::broadcast_add(a, &b);
+            let result = T::broadcast_add(&a, &b);
             let result_array = result.eval(ctx).unwrap();
 
             // Result should be 2x3 matrix
             assert_eq!(result_array.shape(), &[2, 3]);
 
             // Test broadcast multiplication
-            let result = T::broadcast_mul(a, &b);
+            let result = T::broadcast_mul(&a, &b);
             let result_array = result.eval(ctx).unwrap();
             assert_eq!(result_array.shape(), &[2, 3]);
         });
@@ -222,7 +222,7 @@ mod broadcasting_tests {
         // After some operations, cache should have entries
         let left_shape = vec![2, 3];
         let right_shape = vec![2, 3];
-        let _ = T::analyze_broadcast(left_shape, &right_shape).unwrap();
+        let _ = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
 
         let (size, _) = T::get_broadcast_cache_stats();
         assert!(size > 0);
@@ -290,7 +290,7 @@ mod memory_optimization_tests {
                 ),
                 ctx,
             );
-            let _result = T::inplace_add(a, &b);
+            let _result = T::inplace_add(&a, &b);
         });
 
         // Check tracking stats again
@@ -314,7 +314,7 @@ mod memory_optimization_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::efficient_zeros(&[10, 10], ctx);
             let b = T::efficient_ones(&[10, 10], ctx);
-            let _result = T::inplace_mul(a, &b);
+            let _result = T::inplace_mul(&a, &b);
         });
 
         let (tracking_stats, pool_stats) = T::MemoryOptimizer::end_session();
@@ -337,7 +337,7 @@ mod memory_optimization_tests {
             );
 
             // Test in-place operations
-            let add_result = T::inplace_add(a, &b);
+            let add_result = T::inplace_add(&a, &b);
             let add_array = add_result.eval(ctx).unwrap();
 
             // Should be [5.0, 7.0, 9.0]
@@ -363,7 +363,7 @@ mod memory_optimization_tests {
                 );
             }
 
-            let mul_result = T::inplace_mul(a, &b);
+            let mul_result = T::inplace_mul(&a, &b);
             let mul_array = mul_result.eval(ctx).unwrap();
 
             // Should be [4.0, 10.0, 18.0]
@@ -417,7 +417,7 @@ mod efficient_operations_tests {
             );
 
             // Reshape to 3x2
-            let reshaped = T::efficient_reshape_with_shape(data, &[3, 2]);
+            let reshaped = T::efficient_reshape_with_shape(&data, &[3, 2]);
             let reshaped_array = reshaped.eval(ctx).unwrap();
 
             assert_eq!(reshaped_array.shape(), &[3, 2]);
@@ -440,7 +440,7 @@ mod efficient_operations_tests {
                 T::SliceRange::new(Some(0), Some(2), Some(1)), // cols 0-1
             ];
 
-            let sliced = T::efficient_slice(data, &slices);
+            let sliced = T::efficient_slice(&data, &slices);
             let sliced_array = sliced.eval(ctx).unwrap();
 
             // Should be a 2x2 matrix
@@ -463,7 +463,7 @@ mod efficient_operations_tests {
             );
 
             // Concatenate along axis 0
-            let concat_result = T::efficient_concat([&a, &b], 0);
+            let concat_result = T::efficient_concat(&[&a, &b], 0);
             let concat_array = concat_result.eval(ctx).unwrap();
 
             // Should be a 4x2 matrix
@@ -740,7 +740,7 @@ mod numerical_stability_tests {
             );
 
             // Broadcasting operations should maintain numerical stability
-            let result = T::broadcast_add(large, &small);
+            let result = T::broadcast_add(&large, &small);
             let result_array = result.eval(ctx).unwrap();
 
             // All results should be finite
@@ -775,12 +775,12 @@ mod integration_tests {
 
             // Forward pass with checkpointing
             let linear = T::matmul(input, &weights);
-            let linear_checkpointed = T::checkpoint(linear);
-            let biased = T::broadcast_add(linear_checkpointed, &bias);
+            let linear_checkpointed = T::checkpoint(&linear);
+            let biased = T::broadcast_add(&linear_checkpointed, &bias);
             let activated = T::relu(biased);
 
             // Use efficient operations
-            let reshaped = T::efficient_reshape_with_shape(activated, &[32 * 64]);
+            let reshaped = T::efficient_reshape_with_shape(&activated, &[32 * 64]);
             let result = T::reduce_sum(reshaped, &[0], false);
 
             // Verify result
@@ -824,13 +824,13 @@ mod integration_tests {
             );
 
             // Select rows using advanced indexing
-            let selected_rows = T::select_rows(data, &row_indices);
+            let selected_rows = T::select_rows(&data, &row_indices);
 
             // Apply broadcasting operation
             let scalar =
                 T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![10.0]).unwrap(), ctx);
 
-            let result = T::broadcast_mul(selected_rows, &scalar);
+            let result = T::broadcast_mul(&selected_rows, &scalar);
             let result_array = result.eval(ctx).unwrap();
 
             // Should be 3x5 matrix with values multiplied by 10
@@ -853,15 +853,15 @@ mod integration_tests {
             );
 
             // Apply efficient operations
-            let reshaped = T::efficient_reshape_with_shape(x, &[3, 2]);
-            let checkpointed = T::checkpoint(reshaped);
+            let reshaped = T::efficient_reshape_with_shape(&x, &[3, 2]);
+            let checkpointed = T::checkpoint(&reshaped);
 
             // Slice operation
             let slices = vec![
                 T::SliceRange::new(Some(0), Some(2), Some(1)), // First 2 rows
                 T::SliceRange::full(),                         // All columns
             ];
-            let sliced = T::efficient_slice(checkpointed, &slices);
+            let sliced = T::efficient_slice(&checkpointed, &slices);
 
             // Compute loss
             let loss = T::reduce_sum(sliced, &[0, 1], false);
@@ -895,7 +895,7 @@ mod stress_tests {
             let large_b = T::efficient_ones(&[1, 100], ctx);
 
             // This should create a 100x100 result via broadcasting
-            let result = T::broadcast_mul(large_a, &large_b);
+            let result = T::broadcast_mul(&large_a, &large_b);
             let result_array = result.eval(ctx).unwrap();
 
             assert_eq!(result_array.shape(), &[100, 100]);
@@ -921,7 +921,7 @@ mod stress_tests {
                 let size = 100 + i * 10;
                 let a = T::efficient_zeros(&[size], ctx);
                 let b = T::efficient_ones(&[size], ctx);
-                let _result = T::inplace_add(a, &b);
+                let _result = T::inplace_add(&a, &b);
             }
         });
 

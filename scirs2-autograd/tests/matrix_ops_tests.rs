@@ -27,7 +27,7 @@ fn test_matrix_inverse() {
         // Evaluate using evaluator.feed() approach instead of Feeder
         let identity_result = ctx
             .evaluator()
-            .push(identity_approx)
+            .push(&identity_approx)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -54,7 +54,7 @@ fn test_matrix_inverse() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(grad_a)
+            .push(&grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -92,7 +92,7 @@ fn test_determinant() {
         // Evaluate using evaluator.feed() approach
         let det_result = ctx
             .evaluator()
-            .push(det_a)
+            .push(&det_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -113,7 +113,7 @@ fn test_determinant() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(grad_a)
+            .push(&grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -173,7 +173,7 @@ fn test_matrix_solve() {
         // Evaluate using evaluator.feed() approach
         let x_result = ctx
             .evaluator()
-            .push(x)
+            .push(&x)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -197,8 +197,8 @@ fn test_matrix_solve() {
         // Evaluate using evaluator.feed() approach
         let grad_results = ctx
             .evaluator()
-            .push(grad_a)
-            .push(grad_b)
+            .push(&grad_a)
+            .push(&grad_b)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run();
@@ -241,8 +241,8 @@ fn test_qr_decomposition() {
         // Evaluate using evaluator.feed() approach
         let results = ctx
             .evaluator()
-            .push(q)
-            .push(r)
+            .push(&q)
+            .push(&r)
             .feed(a, a_data.view().into_dyn())
             .run();
 
@@ -254,8 +254,8 @@ fn test_qr_decomposition() {
 
         // Check if Q is orthogonal (Q^T * Q ≈ I)
         let q_2d = q_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
-        let q_t = q_2d.t();
-        let q_orthogonal = q_t.dot(q_2d);
+        let q_t = q_2d.t().to_owned();
+        let q_orthogonal = q_t.dot(&q_2d);
         let identity = ag::ndarray::Array2::<f32>::eye(3);
 
         let orthogonal_error = (q_orthogonal - &identity).mapv(|x| x.abs()).sum();
@@ -268,7 +268,7 @@ fn test_qr_decomposition() {
 
         // Check if A = Q * R
         let r_2d = r_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
-        let a_reconstructed = q_2d.dot(r_2d);
+        let a_reconstructed = q_2d.dot(&r_2d);
 
         let reconstruction_error = (a_reconstructed - &a_data).mapv(|x| x.abs()).sum();
         println!("Reconstruction error: {}", reconstruction_error);
@@ -285,7 +285,7 @@ fn test_qr_decomposition() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(grad_a)
+            .push(&grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -320,7 +320,7 @@ fn test_matrix_exp() {
         // Evaluate using evaluator.feed() approach
         let exp_result = ctx
             .evaluator()
-            .push(exp_a)
+            .push(&exp_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -348,7 +348,7 @@ fn test_matrix_exp() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(grad_a)
+            .push(&grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -395,7 +395,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate using evaluator.feed() approach
         let a_inv_result = ctx
             .evaluator()
-            .push(a_inv)
+            .push(&a_inv)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -409,7 +409,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate using evaluator.feed() approach
         let identity_result = ctx
             .evaluator()
-            .push(identity_approx)
+            .push(&identity_approx)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -437,7 +437,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate using evaluator.feed() approach
         let det_result = ctx
             .evaluator()
-            .push(det_a)
+            .push(&det_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -464,7 +464,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate using evaluator.feed() approach
         let x_result = ctx
             .evaluator()
-            .push(x)
+            .push(&x)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -479,7 +479,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate using evaluator.feed() approach
         let b_reconstructed_result = ctx
             .evaluator()
-            .push(b_reconstructed)
+            .push(&b_reconstructed)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -516,7 +516,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate all gradients using evaluator.feed() approach
         let grad_results1 = ctx
             .evaluator()
-            .push(grad_a1)
+            .push(&grad_a1)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -524,7 +524,7 @@ fn test_near_singular_matrix_operations() {
 
         let grad_results2 = ctx
             .evaluator()
-            .push(grad_a2)
+            .push(&grad_a2)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -532,7 +532,7 @@ fn test_near_singular_matrix_operations() {
 
         let grad_results3 = ctx
             .evaluator()
-            .push(grad_a3)
+            .push(&grad_a3)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -584,12 +584,12 @@ fn test_matrix_sqrt() {
         let a = ctx.placeholder("a", &[2, 2]);
 
         // Compute matrix square root
-        let sqrt_a = T::matrix_sqrt(a);
+        let sqrt_a = T::matrix_sqrt(&a);
 
         // Evaluate using evaluator.feed() approach
         let sqrt_result = ctx
             .evaluator()
-            .push(sqrt_a)
+            .push(&sqrt_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -603,7 +603,7 @@ fn test_matrix_sqrt() {
         // Evaluate using evaluator.feed() approach
         let sqrt_squared_result = ctx
             .evaluator()
-            .push(sqrt_squared)
+            .push(&sqrt_squared)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -624,7 +624,7 @@ fn test_matrix_sqrt() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(grad_a)
+            .push(&grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()

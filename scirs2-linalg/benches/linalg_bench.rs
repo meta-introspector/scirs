@@ -6,7 +6,12 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{s, Array1, Array2};
 use scirs2_linalg::blas::{dot, nrm2};
-use scirs2_linalg::prelude::*;
+use scirs2_linalg::circulant_toeplitz::{solve_circulant, solve_toeplitz};
+use scirs2_linalg::mixed_precision::{
+    mixed_precision_dot, mixed_precision_matmul, mixed_precision_solve,
+};
+use scirs2_linalg::structured::{CirculantMatrix, ToeplitzMatrix};
+use scirs2_linalg::*;
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix
@@ -63,7 +68,7 @@ fn bench_blas_operations(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("matvec", mv_size),
                 &(&matrix, &v),
-                |b, (m, v)| b.iter(|| m.dot(black_box(v))),
+                |b, (m, v)| b.iter(|| m.dot(v)), // Remove black_box from inside dot
             );
         }
     }
@@ -99,7 +104,9 @@ fn bench_iterative_solvers(c: &mut Criterion) {
             BenchmarkId::new("jacobi_method", size),
             &(&matrix, &rhs),
             |b, (m, r)| {
-                b.iter(|| jacobi_method(black_box(&m.view()), black_box(&r.view()), 50, 1e-10))
+                b.iter(|| {
+                    jacobi_method(black_box(&m.view()), black_box(&r.view()), 50, 1e-10, None)
+                })
             },
         );
 
@@ -108,7 +115,7 @@ fn bench_iterative_solvers(c: &mut Criterion) {
             BenchmarkId::new("gauss_seidel", size),
             &(&matrix, &rhs),
             |b, (m, r)| {
-                b.iter(|| gauss_seidel(black_box(&m.view()), black_box(&r.view()), 50, 1e-10))
+                b.iter(|| gauss_seidel(black_box(&m.view()), black_box(&r.view()), 50, 1e-10, None))
             },
         );
     }
@@ -133,8 +140,12 @@ fn bench_mixed_precision(c: &mut Criterion) {
             BenchmarkId::new("mixed_matmul", size),
             &(&matrix_f32, &matrix_f32),
             |bencher, (a, mat_b)| {
-                bencher
-                    .iter(|| mixed_precision_matmul(black_box(&a.view()), black_box(&mat_b.view())))
+                bencher.iter(|| {
+                    mixed_precision_matmul::<f32, f32, f64, f32>(
+                        black_box(&a.view()),
+                        black_box(&mat_b.view()),
+                    )
+                })
             },
         );
 
@@ -175,7 +186,7 @@ fn bench_structured_matrices(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let toeplitz = ToeplitzMatrix::new(black_box(r.clone()), black_box(r.clone()));
+                    let toeplitz = ToeplitzMatrix::new(r.view(), r.view()).unwrap();
                     solve_toeplitz(&toeplitz, black_box(&rhs.view()))
                 })
             },
@@ -187,7 +198,7 @@ fn bench_structured_matrices(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(black_box(r.clone()));
+                    let circulant = CirculantMatrix::new(r.view()).unwrap();
                     solve_circulant(&circulant, black_box(&rhs.view()))
                 })
             },

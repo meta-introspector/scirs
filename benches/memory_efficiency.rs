@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2};
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::SeedableRng;
@@ -22,7 +22,7 @@ fn bench_buffer_pool_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("buffer_pool_efficiency");
 
     for &size in &[1024, 4096, 16384] {
-        let pool = BufferPool::<f64>::new();
+        let mut pool = BufferPool::<f64>::new();
 
         group.bench_with_input(
             BenchmarkId::new("buffer_allocation", size),
@@ -254,7 +254,7 @@ fn bench_large_matrix_operations(c: &mut Criterion) {
 
                         for _ in 0..iters {
                             let _det = det(&matrix.view(), None);
-                            black_box(_det);
+                            let _ = black_box(_det);
                         }
 
                         start.elapsed()

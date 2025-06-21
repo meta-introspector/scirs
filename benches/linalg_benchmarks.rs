@@ -7,7 +7,9 @@ use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use scirs2_linalg::{cholesky, det, eigen, inv, lstsq, lu, matrix_norm, qr, solve, solve_triangular, svd};
+use scirs2_linalg::{
+    cholesky, det, eigen, inv, lstsq, lu, matrix_norm, qr, solve, solve_triangular, svd,
+};
 use std::time::Instant;
 
 // Benchmark configuration
@@ -185,7 +187,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
         if let Ok(l) = cholesky(&spd_matrix.view(), None) {
             group.bench_with_input(BenchmarkId::new("triangular_solve", size), &size, |b, _| {
                 b.iter(|| {
-                    let result = solve_triangular(&l.view(), &rhs.view(), true, false, None);
+                    let result = solve_triangular(&l.view(), &rhs.view(), true, false);
                     black_box(result)
                 })
             });

@@ -376,61 +376,6 @@ fn find_bin_index(value: f64, bin_edges: &[f64]) -> usize {
     bin_edges.len() - 2 // Last bin
 }
 
-/// Trait extension for statistical operations
-pub trait StatsExt {
-    /// Calculate the mean of the array
-    fn mean(&self) -> Option<f64>;
-    /// Calculate the standard deviation with specified degrees of freedom
-    fn std(&self, ddof: f64) -> f64;
-}
-
-impl StatsExt for ndarray::ArrayView1<'_, f64> {
-    /// Calculate the mean of the array
-    ///
-    /// # Returns
-    ///
-    /// Some(mean) if the array is not empty, None otherwise
-    fn mean(&self) -> Option<f64> {
-        if self.is_empty() {
-            return None;
-        }
-
-        let sum: f64 = self.sum();
-        Some(sum / self.len() as f64)
-    }
-
-    /// Calculate the standard deviation
-    ///
-    /// # Arguments
-    ///
-    /// * `ddof` - Degrees of freedom (delta degrees of freedom)
-    ///
-    /// # Returns
-    ///
-    /// Standard deviation of the array
-    fn std(&self, ddof: f64) -> f64 {
-        if self.is_empty() {
-            return 0.0;
-        }
-
-        let n = self.len() as f64;
-        let mean = self.mean().unwrap_or(0.0);
-
-        let mut sum_sq = 0.0;
-        for &x in self.iter() {
-            let diff = x - mean;
-            sum_sq += diff * diff;
-        }
-
-        let divisor = n - ddof;
-        if divisor <= 0.0 {
-            return 0.0;
-        }
-
-        (sum_sq / divisor).sqrt()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

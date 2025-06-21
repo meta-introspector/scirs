@@ -22,7 +22,7 @@ fn test_minimal_matmul() {
         // Evaluate using evaluator.feed() approach instead of Feeder
         let result = ctx
             .evaluator()
-            .push(c)
+            .push(&c)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]

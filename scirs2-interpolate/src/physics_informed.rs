@@ -233,11 +233,13 @@ where
         let spline_constraints = Self::convert_physical_constraints(&constraints, x, y)?;
 
         // Create underlying constrained spline using builder pattern
+        // Choose degree based on available data points: min(3, n-1) where n is number of points
+        let degree = std::cmp::min(3, x.len() - 1);
         let constrained_spline = ConstrainedSpline::interpolate(
             x,
             y,
             spline_constraints,
-            3, // cubic degree
+            degree,
             crate::bspline::ExtrapolateMode::Extrapolate,
         )?;
 

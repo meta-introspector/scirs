@@ -31,7 +31,7 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
         .write_all(b"MATLAB")
         .map_err(|e| IoError::FileError(format!("Failed to write header: {}", e)))?;
 
-    // Write descriptive text to make exactly 116 bytes total for header text
+    // Write descriptive text - MATLAB header is exactly 128 bytes total
     let description = b" 5.0 MAT-file, Created by: scirs2-io library";
     let description_len = description.len();
 
@@ -40,8 +40,8 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
         .write_all(description)
         .map_err(|e| IoError::FileError(format!("Failed to write description: {}", e)))?;
 
-    // Calculate padding needed to reach exactly 116 bytes (MATLAB + description + padding = 116)
-    let header_text_target = 116;
+    // Calculate padding needed to reach position 124 (subsystem data offset at 124-128)
+    let header_text_target = 124;
     let already_written = 6 + description_len; // "MATLAB" (6 bytes) + description
     let padding_needed = header_text_target - already_written;
 
@@ -53,7 +53,7 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
             .map_err(|e| IoError::FileError(format!("Failed to write padding: {}", e)))?;
     }
 
-    // Write version and endianness (4 bytes total: 116 + 4 = 120 bytes header)
+    // Write subsystem data offset (4 bytes: version + endianness at positions 124-128)
     writer
         .write_u16::<LittleEndian>(0x0100) // Version
         .map_err(|e| IoError::FileError(format!("Failed to write version: {}", e)))?;

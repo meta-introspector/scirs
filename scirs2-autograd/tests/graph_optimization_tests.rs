@@ -340,7 +340,7 @@ mod integration_tests {
             peak_usage: 200,
         };
 
-        assert!(lifetime1.overlaps_with(lifetime2));
+        assert!(lifetime1.overlaps_with(&lifetime2));
         assert_eq!(lifetime1.duration(), 10);
 
         // Test lifetime analyzer
@@ -419,8 +419,8 @@ mod ultrathink_feature_integration_tests {
             );
 
             // Apply custom activations
-            let swish_result = T::custom_activation(x, "swish");
-            let gelu_result = T::custom_activation(x, "gelu");
+            let swish_result = T::custom_activation(&x, "swish");
+            let gelu_result = T::custom_activation(&x, "gelu");
 
             // Test that these can be evaluated
             let _swish_output = swish_result.eval(ctx).unwrap();
@@ -446,7 +446,7 @@ mod ultrathink_feature_integration_tests {
             let simd_mul = T::simd_mul(&a, &b);
 
             // Memory optimized operations
-            let inplace_result = T::inplace_add(a, &b);
+            let inplace_result = T::inplace_add(&a, &b);
 
             // Test evaluation
             let _add_result = simd_add.eval(ctx).unwrap();
@@ -464,8 +464,8 @@ mod ultrathink_feature_integration_tests {
             );
 
             // Test enhanced graph operations
-            let cached_result = T::cached_op(x, "square");
-            let checkpointed = T::checkpoint(cached_result);
+            let cached_result = T::cached_op(&x, "square");
+            let checkpointed = T::checkpoint(&cached_result);
 
             // Test conditional operations
             let condition =
@@ -501,14 +501,14 @@ mod ultrathink_feature_integration_tests {
             let efficient_ones = T::efficient_ones(&[10, 10], ctx);
 
             // Test efficient operations
-            let reshaped = T::efficient_reshape_with_shape(efficient_zeros, &[100]);
+            let reshaped = T::efficient_reshape_with_shape(&efficient_zeros, &[100]);
 
             // Test slice operations
             let slices = vec![T::SliceRange::new(Some(0), Some(50), Some(1))];
-            let sliced = T::efficient_slice(reshaped, &slices);
+            let sliced = T::efficient_slice(&reshaped, &slices);
 
             // Test concatenation
-            let concat_result = T::efficient_concat([&efficient_ones, &efficient_ones], 0);
+            let concat_result = T::efficient_concat(&[&efficient_ones, &efficient_ones], 0);
 
             // Test evaluation
             let _zeros_output = efficient_zeros.eval(ctx).unwrap();
@@ -527,22 +527,22 @@ mod ultrathink_feature_integration_tests {
             let input = T::efficient_ones(&[32, 64], ctx);
 
             // 2. Apply custom activation
-            let activated = T::custom_activation(input, "swish");
+            let activated = T::custom_activation(&input, "swish");
 
             // 3. Use SIMD operations
             let scaled = T::simd_mul(&activated, &activated);
 
             // 4. Apply memory optimization
-            let optimized = T::inplace_add(scaled, &input);
+            let optimized = T::inplace_add(&scaled, &input);
 
             // 5. Use efficient reshape
-            let reshaped = T::efficient_reshape_with_shape(optimized, &[2048]);
+            let reshaped = T::efficient_reshape_with_shape(&optimized, &[2048]);
 
             // 6. Apply caching
-            let cached = T::cached_op(reshaped, "identity");
+            let cached = T::cached_op(&reshaped, "identity");
 
             // 7. Apply checkpointing
-            let checkpointed = T::smart_checkpoint(cached, 100000);
+            let checkpointed = T::smart_checkpoint(&cached, 100000);
 
             // 8. Use conditional operations
             let condition = T::efficient_ones(&[1], ctx);

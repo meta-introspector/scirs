@@ -27,19 +27,25 @@ static WINDOW_KERNELS: OnceLock<Option<WindowKernels>> = OnceLock::new();
 
 #[cfg(feature = "cuda")]
 struct WindowKernels {
-    hann_kernel: CudaFunction,
-    hamming_kernel: CudaFunction,
-    blackman_kernel: CudaFunction,
-    flattop_kernel: CudaFunction,
+    // CUDA types temporarily disabled until cudarc dependency is enabled
+    // hann_kernel: CudaFunction,
+    // hamming_kernel: CudaFunction,
+    // blackman_kernel: CudaFunction,
+    // flattop_kernel: CudaFunction,
+    _placeholder: u8, // Placeholder field
 }
 
 /// Initialize CUDA kernels for window functions
 #[cfg(feature = "cuda")]
-fn init_window_kernels(device: &CudaDevice) -> Result<WindowKernels, cudarc::driver::DriverError> {
+// CUDA function temporarily disabled until cudarc dependency is enabled
+// fn init_window_kernels(device: &CudaDevice) -> Result<WindowKernels, cudarc::driver::DriverError> {
+fn init_window_kernels(_device: &u8) -> Result<WindowKernels, &'static str> {
     // For now, we'll use a simple approach with cuBLAS-like operations
     // In a real implementation, we would compile custom CUDA kernels
     // This is a placeholder that demonstrates the structure
 
+    // CUDA kernel loading temporarily disabled until cudarc dependency is enabled
+    /*
     // Create placeholder functions - in real implementation these would be actual CUDA kernels
     let module = device.load_module("window_kernels", &[])?;
 
@@ -49,6 +55,9 @@ fn init_window_kernels(device: &CudaDevice) -> Result<WindowKernels, cudarc::dri
         blackman_kernel: module.get_func("blackman_window_kernel")?,
         flattop_kernel: module.get_func("flattop_window_kernel")?,
     })
+    */
+
+    Ok(WindowKernels { _placeholder: 0 })
 }
 
 /// CUDA kernel for applying window functions
@@ -147,7 +156,7 @@ impl CUDAWindowKernel {
             }
 
             // Get device pointer if available
-            if let Some(device_ptr) = self.input_buffer.get_device_ptr() {
+            if let Some(_device_ptr) = self.input_buffer.get_cuda_device_ptr() {
                 // For now, we'll use simple device operations since we don't have compiled kernels
                 // In a full implementation, this would launch actual CUDA kernels
 

@@ -27,7 +27,7 @@ mod custom_activation_tests {
             );
 
             // Test Swish activation
-            let swish_result = T::custom_activation(x, "swish");
+            let swish_result = T::custom_activation(&x, "swish");
             let swish_output = swish_result.eval(ctx).unwrap();
 
             // Swish(0) should be 0, Swish(1) should be positive
@@ -35,14 +35,14 @@ mod custom_activation_tests {
             assert!(swish_output[2] > 0.0);
 
             // Test Mish activation
-            let mish_result = T::custom_activation(x, "mish");
+            let mish_result = T::custom_activation(&x, "mish");
             let mish_output = mish_result.eval(ctx).unwrap();
 
             // Mish should produce reasonable outputs
             assert!(mish_output.iter().all(|&val: &f32| val.is_finite()));
 
             // Test GELU activation
-            let gelu_result = T::custom_activation(x, "gelu");
+            let gelu_result = T::custom_activation(&x, "gelu");
             let gelu_output = gelu_result.eval(ctx).unwrap();
 
             // GELU should be monotonic and produce finite outputs
@@ -51,7 +51,7 @@ mod custom_activation_tests {
             assert!(gelu_output[1] < gelu_output[2]);
 
             // Test Parametric ReLU
-            let prelu_result = T::custom_activation(x, "parametric_relu");
+            let prelu_result = T::custom_activation(&x, "parametric_relu");
             let prelu_output = prelu_result.eval(ctx).unwrap();
 
             // PReLU should handle negative values with small slope
@@ -84,8 +84,8 @@ mod custom_activation_tests {
             );
 
             // Test parameterized activation with different parameters
-            let result1 = T::parameterized_activation(x, "parametric_relu", &[0.01]);
-            let result2 = T::parameterized_activation(x, "parametric_relu", &[0.1]);
+            let result1 = T::parameterized_activation(&x, "parametric_relu", &[0.01]);
+            let result2 = T::parameterized_activation(&x, "parametric_relu", &[0.1]);
 
             let output1 = result1.eval(ctx).unwrap();
             let output2 = result2.eval(ctx).unwrap();
@@ -145,7 +145,7 @@ mod performance_optimization_tests {
             );
 
             // Test SIMD ReLU
-            let relu_result = T::simd_relu(x);
+            let relu_result = T::simd_relu(&x);
             let relu_output = relu_result.eval(ctx).unwrap();
 
             // Should be [0.0, 0.0, 2.0]
@@ -154,7 +154,7 @@ mod performance_optimization_tests {
             assert_eq!(relu_output[2], 2.0);
 
             // Test SIMD Sigmoid
-            let sigmoid_result = T::simd_sigmoid(x);
+            let sigmoid_result = T::simd_sigmoid(&x);
             let sigmoid_output = sigmoid_result.eval(ctx).unwrap();
 
             // All outputs should be between 0 and 1
@@ -177,7 +177,7 @@ mod performance_optimization_tests {
             );
 
             // Test cache-friendly matrix multiplication
-            let result = T::cache_friendly_matmul(a, &b, Some(32));
+            let result = T::cache_friendly_matmul(&a, &b, Some(32));
             let output = result.eval(ctx).unwrap();
 
             // Verify matrix multiplication result
@@ -195,7 +195,7 @@ mod performance_optimization_tests {
             );
 
             // Test parallel sum
-            let sum_result = T::parallel_sum(x, &[0], false);
+            let sum_result = T::parallel_sum(&x, &[0], false);
             let sum_output = sum_result.eval(ctx).unwrap();
 
             // Should sum along axis 0
@@ -291,8 +291,8 @@ mod graph_enhancement_tests {
             );
 
             // Test smart checkpointing with different thresholds
-            let checkpointed_small = T::smart_checkpoint(x, 100000); // High threshold
-            let checkpointed_large = T::smart_checkpoint(x, 1000); // Low threshold
+            let checkpointed_small = T::smart_checkpoint(&x, 100000); // High threshold
+            let checkpointed_large = T::smart_checkpoint(&x, 1000); // Low threshold
 
             let output1 = checkpointed_small.eval(ctx).unwrap();
             let output2 = checkpointed_large.eval(ctx).unwrap();
@@ -314,9 +314,9 @@ mod graph_enhancement_tests {
             );
 
             // Test cached operations
-            let cached_identity = T::cached_op(x, "identity");
-            let cached_square = T::cached_op(x, "square");
-            let cached_sqrt = T::cached_op(x, "sqrt");
+            let cached_identity = T::cached_op(&x, "identity");
+            let cached_square = T::cached_op(&x, "square");
+            let cached_sqrt = T::cached_op(&x, "sqrt");
 
             let identity_output = cached_identity.eval(ctx).unwrap();
             let square_output = cached_square.eval(ctx).unwrap();
@@ -356,7 +356,7 @@ mod graph_enhancement_tests {
                 Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
                 ctx,
             );
-            let _result = T::cached_op(x, "square");
+            let _result = T::cached_op(&x, "square");
         });
 
         // Check if cache has been used
@@ -418,19 +418,19 @@ mod integration_tests {
             let bias = T::efficient_zeros(&[64], ctx);
 
             // Use cache-friendly matrix multiplication
-            let linear = T::cache_friendly_matmul(input, &weights, Some(32));
+            let linear = T::cache_friendly_matmul(&input, &weights, Some(32));
 
             // Use smart checkpointing for memory efficiency
-            let checkpointed = T::smart_checkpoint(linear, 50000);
+            let checkpointed = T::smart_checkpoint(&linear, 50000);
 
             // Add bias using SIMD-optimized operations
             let biased = T::simd_add(&checkpointed, &bias);
 
             // Apply custom activation function
-            let activated = T::custom_activation(biased, "swish");
+            let activated = T::custom_activation(&biased, "swish");
 
             // Use cached operation for final processing
-            let final_result = T::cached_op(activated, "identity");
+            let final_result = T::cached_op(&activated, "identity");
 
             // Verify the result
             let output = final_result.eval(ctx).unwrap();
@@ -451,10 +451,10 @@ mod integration_tests {
 
             // True branch: SIMD-optimized computation
             let data = T::efficient_ones(&[100], ctx);
-            let true_branch = T::simd_relu(data);
+            let true_branch = T::simd_relu(&data);
 
             // False branch: Custom activation
-            let false_branch = T::custom_activation(data, "gelu");
+            let false_branch = T::custom_activation(&data, "gelu");
 
             // Conditional execution
             let result = T::conditional(
@@ -465,7 +465,7 @@ mod integration_tests {
             );
 
             // Apply parallel reduction
-            let final_result = T::parallel_sum(result, &[0], false);
+            let final_result = T::parallel_sum(&result, &[0], false);
 
             let output = final_result.eval(ctx).unwrap();
             assert!(output[0] > 0.0); // Should have selected ReLU branch (all positive)
@@ -483,16 +483,16 @@ mod integration_tests {
             let x = T::efficient_ones(&[50, 50], ctx);
 
             // Use in-place operations to reduce memory usage
-            let processed = T::inplace_mul(x, &x);
+            let processed = T::inplace_mul(&x, &x);
 
             // Efficient reshape
-            let reshaped = T::efficient_reshape_with_shape(processed, &[2500]);
+            let reshaped = T::efficient_reshape_with_shape(&processed, &[2500]);
 
             // Smart checkpointing with low memory threshold
-            let checkpointed = T::smart_checkpoint(reshaped, 1000);
+            let checkpointed = T::smart_checkpoint(&reshaped, 1000);
 
             // Custom activation with memory-friendly implementation
-            let activated = T::custom_activation(checkpointed, "parametric_relu");
+            let activated = T::custom_activation(&checkpointed, "parametric_relu");
 
             let output = activated.eval(ctx).unwrap();
             assert_eq!(output.len(), 2500);
@@ -516,13 +516,13 @@ mod integration_tests {
             let data = T::efficient_ones(&[16, 32], ctx);
 
             // 3. Apply custom activation
-            let activated = T::custom_activation(data, "mish");
+            let activated = T::custom_activation(&data, "mish");
 
             // 4. Use SIMD operations
             let scaled = T::simd_mul(&activated, &activated);
 
             // 5. Cache the result
-            let cached = T::cached_op(scaled, "square");
+            let cached = T::cached_op(&scaled, "square");
 
             // 6. Apply conditional logic
             let condition =
@@ -536,10 +536,10 @@ mod integration_tests {
             );
 
             // 7. Smart checkpointing
-            let checkpointed = T::smart_checkpoint(conditional_result, 10000);
+            let checkpointed = T::smart_checkpoint(&conditional_result, 10000);
 
             // 8. Parallel reduction
-            let final_result = T::parallel_sum(checkpointed, &[0], false);
+            let final_result = T::parallel_sum(&checkpointed, &[0], false);
 
             // Verify the entire pipeline works
             let output = final_result.eval(ctx).unwrap();

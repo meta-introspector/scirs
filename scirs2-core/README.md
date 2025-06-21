@@ -336,7 +336,7 @@ let result = span.in_span(|| compute_eigenvalues(&matrix))?;
 
 ## 🗺️ Roadmap
 
-### Alpha 6 (Current)
+### Alpha 5 (Current)
 - ✅ Module resolution fixes and stability improvements
 - 🔄 Enhanced data validation system
 - 🔄 Production-grade error handling

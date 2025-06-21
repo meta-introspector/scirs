@@ -1,9 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
 use scirs2_interpolate::advanced::enhanced_kriging::EnhancedKrigingBuilder;
-use scirs2_interpolate::advanced::enhanced_rbf::{
-    EnhancedRBFInterpolator, KernelType, KernelWidthStrategy,
-};
+use scirs2_interpolate::advanced::enhanced_rbf::{EnhancedRBFInterpolator, KernelWidthStrategy};
 use scirs2_interpolate::advanced::fast_kriging::{FastKrigingBuilder, FastKrigingMethod};
 use scirs2_interpolate::advanced::kriging::{CovarianceFunction, KrigingInterpolator};
 use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
@@ -27,6 +25,7 @@ fn generate_2d_test_data(n: usize) -> (Array2<f64>, Array1<f64>) {
     (points, values)
 }
 
+#[allow(dead_code)]
 fn generate_3d_test_data(n: usize) -> (Array2<f64>, Array1<f64>) {
     let mut points = Array2::zeros((n, 3));
     let mut values = Array1::zeros(n);
@@ -61,7 +60,7 @@ fn bench_rbf_interpolation(c: &mut Criterion) {
         ("gaussian", RBFKernel::Gaussian),
         ("multiquadric", RBFKernel::Multiquadric),
         ("inverse_multiquadric", RBFKernel::InverseMultiquadric),
-        ("thin_plate", RBFKernel::ThinPlate),
+        ("thin_plate", RBFKernel::ThinPlateSpline),
     ];
 
     for (kernel_name, kernel) in kernels.iter() {
@@ -97,9 +96,9 @@ fn bench_enhanced_rbf(c: &mut Criterion) {
     let mut group = c.benchmark_group("enhanced_rbf");
 
     let strategies = [
-        ("median_heuristic", KernelWidthStrategy::MedianHeuristic),
-        ("cross_validation", KernelWidthStrategy::CrossValidation),
-        ("fixed", KernelWidthStrategy::Fixed(1.0)),
+        ("mean_distance", KernelWidthStrategy::MeanDistance),
+        ("cross_validation", KernelWidthStrategy::CrossValidation(5)),
+        ("fixed", KernelWidthStrategy::Fixed),
     ];
 
     for (strategy_name, strategy) in strategies.iter() {
@@ -110,12 +109,12 @@ fn bench_enhanced_rbf(c: &mut Criterion) {
             strategy_name,
             |b, _| {
                 b.iter(|| {
-                    let _ = black_box(EnhancedRBFInterpolator::new(
-                        black_box(points.clone()),
-                        black_box(values.clone()),
-                        black_box(KernelType::Gaussian),
-                        black_box(strategy.clone()),
-                    ));
+                    let _ = black_box(
+                        EnhancedRBFInterpolator::builder()
+                            .with_standard_kernel(RBFKernel::Gaussian)
+                            .with_width_strategy(*strategy)
+                            .build(&points.view(), &values.view()),
+                    );
                 });
             },
         );
@@ -129,7 +128,10 @@ fn bench_kriging_interpolation(c: &mut Criterion) {
 
     let covariance_functions = [
         ("exponential", CovarianceFunction::Exponential),
-        ("gaussian", CovarianceFunction::Gaussian),
+        (
+            "squared_exponential",
+            CovarianceFunction::SquaredExponential,
+        ),
         ("matern32", CovarianceFunction::Matern32),
         ("matern52", CovarianceFunction::Matern52),
     ];
@@ -142,9 +144,10 @@ fn bench_kriging_interpolation(c: &mut Criterion) {
                 &points.view(),
                 &values.view(),
                 *cov_func,
-                [1.0, 1.0], // length scales
-                1.0,        // variance
-                0.01,       // nugget
+                1.0,  // sigma_sq (variance)
+                1.0,  // length_scale
+                0.01, // nugget
+                1.0,  // alpha
             )
             .unwrap();
 
@@ -157,7 +160,7 @@ fn bench_kriging_interpolation(c: &mut Criterion) {
                 |b, _| {
                     b.iter(|| {
                         for i in 0..queries.nrows() {
-                            let query = queries.slice(ndarray::s![i, ..]);
+                            let query = queries.slice(ndarray::s![i..i + 1, ..]);
                             let _ = black_box(interpolator.predict(black_box(&query)));
                         }
                     });
@@ -182,9 +185,9 @@ fn bench_enhanced_kriging(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = black_box(
                         EnhancedKrigingBuilder::new()
-                            .with_points(black_box(points.clone()))
-                            .with_values(black_box(values.clone()))
-                            .with_auto_hyperparameters(true)
+                            .points(black_box(points.clone()))
+                            .values(black_box(values.clone()))
+                            .optimize_parameters(true)
                             .build(),
                     );
                 });
@@ -199,9 +202,9 @@ fn bench_fast_kriging(c: &mut Criterion) {
     let mut group = c.benchmark_group("fast_kriging");
 
     let methods = [
-        ("fixed_rank", FastKrigingMethod::FixedRank { rank: 50 }),
-        ("local", FastKrigingMethod::Local { neighbors: 50 }),
-        ("tapered", FastKrigingMethod::Tapered { taper_range: 2.0 }),
+        ("fixed_rank", FastKrigingMethod::FixedRank(50)),
+        ("local", FastKrigingMethod::Local),
+        ("tapering", FastKrigingMethod::Tapering(2.0)),
     ];
 
     for (method_name, method) in methods.iter() {
@@ -214,9 +217,9 @@ fn bench_fast_kriging(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = black_box(
                         FastKrigingBuilder::new()
-                            .with_points(black_box(points.clone()))
-                            .with_values(black_box(values.clone()))
-                            .with_method(black_box(method.clone()))
+                            .points(black_box(points.clone()))
+                            .values(black_box(values.clone()))
+                            .approximation_method(black_box(*method))
                             .build(),
                     );
                 });
@@ -299,8 +302,8 @@ fn bench_moving_least_squares(c: &mut Criterion) {
         for (basis_name, poly_basis) in polynomial_bases.iter() {
             let (points, values) = generate_2d_test_data(200);
             let interpolator = MovingLeastSquares::new(
-                &points.view(),
-                &values.view(),
+                points.clone(),
+                values.clone(),
                 *weight_func,
                 *poly_basis,
                 0.5, // bandwidth

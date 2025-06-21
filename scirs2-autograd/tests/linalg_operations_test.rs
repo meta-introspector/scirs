@@ -12,7 +12,7 @@ fn test_matrix_inverse_and_gradient() {
         let a = variable(array![[3.0_f64, 1.0], [1.0, 2.0]], g);
 
         // Test matrix inverse
-        let inv_a = matinv(a);
+        let inv_a = matinv(&a);
         let result = inv_a.eval(g).unwrap();
 
         // Expected inverse: [2/5, -1/5; -1/5, 3/5]
@@ -63,7 +63,7 @@ fn test_determinant_and_gradient() {
         let a = variable(array![[3.0_f64, 1.0], [1.0, 2.0]], g);
 
         // Test determinant
-        let det_a = det(a);
+        let det_a = det(&a);
         let result = det_a.eval(g).unwrap();
         assert_relative_eq!(result[[]], 5.0, epsilon = 1e-6); // 3*2 - 1*1 = 5
 
@@ -331,10 +331,10 @@ fn test_complex_linear_algebra_chain() {
         let a = variable(array![[3.0_f64, 1.0], [1.0, 2.0]], g);
 
         // Compute: trace(sqrtm(inv(A))) + det(A)
-        let inv_a = matinv(a);
+        let inv_a = matinv(&a);
         let sqrt_inv = sqrtm(&inv_a);
         let tr = trace(sqrt_inv);
-        let det_a = det(a);
+        let det_a = det(&a);
         let result = add(tr, &det_a);
 
         // Evaluate the result

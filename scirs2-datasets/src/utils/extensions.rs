@@ -4,8 +4,8 @@
 //! particularly for statistical operations and data manipulation that complement
 //! the core ndarray functionality.
 
-// Re-export the StatsExt trait from feature_engineering where it's defined and used
-pub use crate::utils::feature_engineering::StatsExt;
+// Re-export the StatsExt trait from scaling where it's defined
+pub use crate::utils::scaling::StatsExt;
 
 // Additional trait extensions can be added here in the future
 // For example: Extensions for DataFrame operations, specialized array operations, etc.

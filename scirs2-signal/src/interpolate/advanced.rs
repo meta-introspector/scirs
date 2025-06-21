@@ -740,7 +740,7 @@ mod tests {
 
         let thin_plate = rbf_functions::thin_plate_spline();
         assert_eq!(thin_plate(0.0), 0.0);
-        assert!(thin_plate(1.0) > 0.0);
+        assert!(thin_plate(2.0) > 0.0);
     }
 
     #[test]

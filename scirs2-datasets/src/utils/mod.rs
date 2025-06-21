@@ -39,11 +39,11 @@ pub use balancing::{
 };
 
 // Data scaling and normalization
-pub use scaling::{min_max_scale, normalize, robust_scale, StatsExt as ScalingStatsExt};
+pub use scaling::{min_max_scale, normalize, robust_scale, StatsExt};
 
 // Feature engineering
 pub use feature_engineering::{
-    create_binned_features, polynomial_features, statistical_features, BinningStrategy, StatsExt,
+    create_binned_features, polynomial_features, statistical_features, BinningStrategy,
 };
 
 // Trait extensions

@@ -184,9 +184,9 @@ fn test_thread_pool_extreme_load() {
         let large_data = T::efficient_ones(&[10000], ctx);
 
         // Multiple parallel operations
-        let result1 = T::parallel_sum(large_data, &[0], false);
-        let result2 = T::cached_op(large_data, "square");
-        let result3 = T::simd_relu(large_data);
+        let result1 = T::parallel_sum(&large_data, &[0], false);
+        let result2 = T::cached_op(&large_data, "square");
+        let result3 = T::simd_relu(&large_data);
 
         let output1 = result1.eval(ctx).unwrap();
         let output2 = result2.eval(ctx).unwrap();
@@ -253,7 +253,7 @@ fn test_custom_activations_extreme_inputs() {
 
         for activation in activations {
             // Test extreme positive
-            let result_pos = T::custom_activation(extreme_positive, activation);
+            let result_pos = T::custom_activation(&extreme_positive, activation);
             let output_pos = result_pos.eval(ctx).unwrap();
 
             // Should handle large values gracefully (no panics, mostly finite)
@@ -265,7 +265,7 @@ fn test_custom_activations_extreme_inputs() {
             );
 
             // Test extreme negative
-            let result_neg = T::custom_activation(extreme_negative, activation);
+            let result_neg = T::custom_activation(&extreme_negative, activation);
             let output_neg = result_neg.eval(ctx).unwrap();
 
             let finite_count = output_neg.iter().filter(|&&x| x.is_finite()).count();
@@ -280,7 +280,7 @@ fn test_custom_activations_extreme_inputs() {
                 Array::from_shape_vec(IxDyn(&[3]), vec![0.0, f32::EPSILON, -f32::EPSILON]).unwrap(),
                 ctx,
             );
-            let result_edge = T::custom_activation(normal_edge, activation);
+            let result_edge = T::custom_activation(&normal_edge, activation);
             let output_edge = result_edge.eval(ctx).unwrap();
 
             assert!(
@@ -395,7 +395,7 @@ fn test_simd_operations_edge_cases() {
             ctx,
         );
 
-        let simd_relu_result = T::simd_relu(mixed_values);
+        let simd_relu_result = T::simd_relu(&mixed_values);
         let relu_output = simd_relu_result.eval(ctx).unwrap();
 
         // ReLU should handle all values correctly
@@ -424,11 +424,11 @@ fn test_memory_optimization_stress() {
         for i in 0..10 {
             // Apply expensive operations
             current = T::simd_mul(&current, &current); // Square
-            current = T::custom_activation(current, "swish"); // Non-linear
+            current = T::custom_activation(&current, "swish"); // Non-linear
 
             // Use smart checkpointing every few steps
             if i % 3 == 0 {
-                current = T::smart_checkpoint(current, 500000); // Checkpoint if > 500K elements
+                current = T::smart_checkpoint(&current, 500000); // Checkpoint if > 500K elements
             }
         }
 
@@ -441,7 +441,7 @@ fn test_memory_optimization_stress() {
         let mut temporary_results = Vec::new();
         for _i in 0..50 {
             let temp = T::efficient_ones(&[100, 100], ctx);
-            let processed = T::cached_op(temp, "square");
+            let processed = T::cached_op(&temp, "square");
             temporary_results.push(processed);
         }
 
@@ -454,7 +454,7 @@ fn test_memory_optimization_stress() {
         let base = T::efficient_ones(&[500, 500], ctx);
         let modifier = T::efficient_ones(&[500, 500], ctx);
 
-        let inplace_result = T::inplace_add(base, &modifier);
+        let inplace_result = T::inplace_add(&base, &modifier);
         let inplace_output = inplace_result.eval(ctx).unwrap();
         assert!(inplace_output.iter().all(|&x| x == 2.0));
 
@@ -510,7 +510,7 @@ fn test_parallel_operations_numerical_stability() {
     )
     .unwrap();
 
-    let sum_result = ParallelReduction::sum(cancellation_test, &config).unwrap();
+    let sum_result = ParallelReduction::sum(&cancellation_test, &config).unwrap();
     // Result should be 0 but might have some numerical error
     assert!(
         sum_result.abs() < 1e6,
@@ -526,10 +526,10 @@ fn test_parallel_operations_numerical_stability() {
     )
     .unwrap();
 
-    let small_sum = ParallelReduction::sum(small_values, &config).unwrap();
+    let small_sum = ParallelReduction::sum(&small_values, &config).unwrap();
     assert!(small_sum.is_finite());
 
-    let small_mean = ParallelReduction::mean(small_values, &config).unwrap();
+    let small_mean = ParallelReduction::mean(&small_values, &config).unwrap();
     assert!(small_mean.is_finite());
 
     // Test parallel matrix multiplication with ill-conditioned matrices
@@ -559,7 +559,7 @@ fn test_parallel_operations_numerical_stability() {
     )
     .unwrap();
 
-    let matmul_result = ParallelMatrix::matmul(ill_conditioned_a, &identity, &config).unwrap();
+    let matmul_result = ParallelMatrix::matmul(&ill_conditioned_a, &identity, &config).unwrap();
 
     // Should be approximately equal to the original matrix
     let max_error = matmul_result
@@ -586,7 +586,7 @@ fn test_parallel_operations_numerical_stability() {
     )
     .unwrap();
 
-    let add_result = ParallelElementWise::add(small_values, &large_values, &config).unwrap();
+    let add_result = ParallelElementWise::add(&small_values, &large_values, &config).unwrap();
     let finite_count = add_result.iter().filter(|&&x| x.is_finite()).count();
     assert!(
         finite_count >= 990,
@@ -612,7 +612,7 @@ fn test_graph_enhancements_edge_cases() {
                 Array::from_shape_vec(IxDyn(&[1]), vec![i as f32]).unwrap(),
                 ctx,
             );
-            let cached = T::cached_op(data, "square");
+            let cached = T::cached_op(&data, "square");
             let _ = cached.eval(ctx).unwrap();
         }
 
@@ -653,7 +653,7 @@ fn test_graph_enhancements_edge_cases() {
 
         // Test smart checkpointing with zero-size tensors
         let empty_tensor = T::efficient_zeros(&[0], ctx);
-        let checkpointed_empty = T::smart_checkpoint(empty_tensor, 1000);
+        let checkpointed_empty = T::smart_checkpoint(&empty_tensor, 1000);
         let empty_result = checkpointed_empty.eval(ctx).unwrap();
         assert_eq!(empty_result.len(), 0);
 
@@ -709,21 +709,21 @@ fn test_cross_feature_integration_stress() {
         );
 
         // Step 2: Apply visualization-optimized operations
-        let normalized = T::efficient_reshape_with_shape(input, &[batch_size * feature_size]);
+        let normalized = T::efficient_reshape_with_shape(&input, &[batch_size * feature_size]);
 
         // Step 3: SIMD operations with custom activations
         let simd_processed = T::simd_mul(&normalized, &normalized);
-        let activated = T::custom_activation(simd_processed, "gelu");
+        let activated = T::custom_activation(&simd_processed, "gelu");
 
         // Step 4: Memory-efficient reshaping back
-        let reshaped = T::efficient_reshape_with_shape(activated, &[batch_size, feature_size]);
+        let reshaped = T::efficient_reshape_with_shape(&activated, &[batch_size, feature_size]);
 
         // Step 5: Parallel reductions with checkpointing
-        let checkpointed = T::smart_checkpoint(reshaped, 1000);
-        let reduced = T::parallel_sum(checkpointed, &[1], true); // Sum along feature dimension
+        let checkpointed = T::smart_checkpoint(&reshaped, 1000);
+        let reduced = T::parallel_sum(&checkpointed, &[1], true); // Sum along feature dimension
 
         // Step 6: Cached operations
-        let cached_result = T::cached_op(reduced, "square");
+        let cached_result = T::cached_op(&reduced, "square");
 
         // Step 7: Conditional processing based on results
         let condition = T::reduce_max(cached_result, &[0], true);
@@ -819,7 +819,7 @@ fn test_numerical_precision_stability() {
         )
         .unwrap();
 
-        let parallel_sum: f32 = ParallelReduction::sum(balanced_values, &config).unwrap();
+        let parallel_sum: f32 = ParallelReduction::sum(&balanced_values, &config).unwrap();
         assert!(
             parallel_sum.abs() < 1e-6,
             "Parallel sum lost precision: {:.2e}",
@@ -837,7 +837,7 @@ fn test_numerical_precision_stability() {
         );
 
         for activation in ["swish", "gelu", "mish"] {
-            let result = T::custom_activation(critical_points, activation);
+            let result = T::custom_activation(&critical_points, activation);
             let output = result.eval(ctx).unwrap();
 
             // Check for numerical stability (no NaN, reasonable values)

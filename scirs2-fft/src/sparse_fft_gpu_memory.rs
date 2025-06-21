@@ -21,12 +21,12 @@ use std::sync::{Arc, Mutex};
 use std::sync::OnceLock;
 
 // CUDA support temporarily disabled until cudarc dependency is enabled
-// #[cfg(feature = "cuda")]
-// static CUDA_DEVICE: OnceLock<Option<Arc<CudaDevice>>> = OnceLock::new();
+#[cfg(feature = "cuda")]
+static CUDA_DEVICE: OnceLock<Option<Arc<u8>>> = OnceLock::new(); // Placeholder type
 
 // HIP support temporarily disabled until hiprt dependency is enabled
-// #[cfg(feature = "hip")]
-// static HIP_DEVICE: OnceLock<Option<hipDevice_t>> = OnceLock::new();
+#[cfg(feature = "hip")]
+static HIP_DEVICE: OnceLock<Option<u8>> = OnceLock::new(); // Placeholder type
 
 #[cfg(feature = "sycl")]
 static SYCL_DEVICE: OnceLock<Option<SyclDevice>> = OnceLock::new();
@@ -99,10 +99,10 @@ pub struct BufferDescriptor {
     pub backend: GPUBackend,
     /// Device memory pointer (for CUDA)
     #[cfg(feature = "cuda")]
-    cuda_device_ptr: Option<DevicePtr<u8>>,
+    cuda_device_ptr: Option<*mut u8>, // Placeholder type for disabled CUDA
     /// Device memory pointer (for HIP)
     #[cfg(feature = "hip")]
-    hip_device_ptr: Option<hipDeviceptr_t>,
+    hip_device_ptr: Option<*mut u8>, // Placeholder type for disabled HIP
     /// Device memory pointer (for SYCL)
     #[cfg(feature = "sycl")]
     sycl_device_ptr: Option<SyclDevicePtr>,
@@ -118,9 +118,15 @@ unsafe impl Sync for BufferDescriptor {}
 /// Initialize CUDA device (call once at startup)
 #[cfg(feature = "cuda")]
 pub fn init_cuda_device() -> FFTResult<bool> {
-    let device_result = CUDA_DEVICE.get_or_init(|| match CudaDevice::new(0) {
-        Ok(device) => Some(Arc::new(device)),
-        Err(_) => None,
+    let device_result = CUDA_DEVICE.get_or_init(|| {
+        // CUDA device initialization temporarily disabled until cudarc dependency is enabled
+        /*
+        match CudaDevice::new(0) {
+            Ok(device) => Some(Arc::new(device)),
+            Err(_) => None,
+        }
+        */
+        None // Placeholder - no CUDA device available
     });
 
     Ok(device_result.is_some())
@@ -286,7 +292,9 @@ impl BufferDescriptor {
                     GPUBackend::CUDA => {
                         #[cfg(feature = "cuda")]
                         {
-                            if let Some(device) = CUDA_DEVICE.get().and_then(|d| d.as_ref()) {
+                            if let Some(_device) = CUDA_DEVICE.get().and_then(|d| d.as_ref()) {
+                                // CUDA API calls temporarily disabled until cudarc dependency is enabled
+                                /*
                                 let device_mem = device.alloc::<u8>(total_size).map_err(|e| {
                                     FFTError::ComputationError(format!(
                                         "Failed to allocate CUDA memory: {:?}",
@@ -295,6 +303,7 @@ impl BufferDescriptor {
                                 })?;
                                 self.cuda_device_ptr = Some(device_mem);
                                 return Ok(());
+                                */
                             }
                         }
 
@@ -307,7 +316,9 @@ impl BufferDescriptor {
                         #[cfg(feature = "hip")]
                         {
                             if HIP_DEVICE.get().map(|d| d.is_some()).unwrap_or(false) {
-                                use hiprt::*;
+                                // use hiprt::*; // Temporarily disabled
+                                // HIP API calls temporarily disabled until hiprt dependency is available
+                                /*
                                 unsafe {
                                     let mut device_ptr: hipDeviceptr_t = std::ptr::null_mut();
                                     let result = hipMalloc(&mut device_ptr, total_size);
@@ -321,6 +332,7 @@ impl BufferDescriptor {
                                         )));
                                     }
                                 }
+                                */
                             }
                         }
 
@@ -387,13 +399,13 @@ impl BufferDescriptor {
 
     /// Get device pointer (CUDA)
     #[cfg(feature = "cuda")]
-    pub fn get_cuda_device_ptr(&self) -> Option<&DevicePtr<u8>> {
-        self.cuda_device_ptr.as_ref()
+    pub fn get_cuda_device_ptr(&self) -> Option<*mut u8> {
+        self.cuda_device_ptr
     }
 
     /// Get device pointer (HIP)
     #[cfg(feature = "hip")]
-    pub fn get_hip_device_ptr(&self) -> Option<hipDeviceptr_t> {
+    pub fn get_hip_device_ptr(&self) -> Option<*mut u8> {
         self.hip_device_ptr
     }
 
@@ -436,10 +448,12 @@ impl BufferDescriptor {
                     GPUBackend::CUDA => {
                         #[cfg(feature = "cuda")]
                         {
-                            if let (Some(device_ptr), Some(device)) = (
+                            if let (Some(_device_ptr), Some(_device)) = (
                                 self.cuda_device_ptr.as_ref(),
                                 CUDA_DEVICE.get().and_then(|d| d.as_ref()),
                             ) {
+                                // CUDA API calls temporarily disabled until cudarc dependency is enabled
+                                /*
                                 device.htod_copy(host_data, device_ptr).map_err(|e| {
                                     FFTError::ComputationError(format!(
                                         "Failed to copy data to CUDA GPU: {:?}",
@@ -447,6 +461,7 @@ impl BufferDescriptor {
                                     ))
                                 })?;
                                 return Ok(());
+                                */
                             }
                         }
 
@@ -456,8 +471,10 @@ impl BufferDescriptor {
                     GPUBackend::HIP => {
                         #[cfg(feature = "hip")]
                         {
-                            if let Some(device_ptr) = self.hip_device_ptr {
-                                use hiprt::*;
+                            if let Some(_device_ptr) = self.hip_device_ptr {
+                                // use hiprt::*; // Temporarily disabled
+                                // HIP API calls temporarily disabled until hiprt dependency is available
+                                /*
                                 unsafe {
                                     let result = hipMemcpyHtoD(
                                         device_ptr,
@@ -473,6 +490,7 @@ impl BufferDescriptor {
                                         )));
                                     }
                                 }
+                                */
                             }
                         }
 
@@ -539,10 +557,12 @@ impl BufferDescriptor {
                     GPUBackend::CUDA => {
                         #[cfg(feature = "cuda")]
                         {
-                            if let (Some(device_ptr), Some(device)) = (
+                            if let (Some(_device_ptr), Some(_device)) = (
                                 self.cuda_device_ptr.as_ref(),
                                 CUDA_DEVICE.get().and_then(|d| d.as_ref()),
                             ) {
+                                // CUDA API calls temporarily disabled until cudarc dependency is enabled
+                                /*
                                 device.dtoh_copy(device_ptr, host_data).map_err(|e| {
                                     FFTError::ComputationError(format!(
                                         "Failed to copy data from CUDA GPU: {:?}",
@@ -550,6 +570,7 @@ impl BufferDescriptor {
                                     ))
                                 })?;
                                 return Ok(());
+                                */
                             }
                         }
 
@@ -559,8 +580,10 @@ impl BufferDescriptor {
                     GPUBackend::HIP => {
                         #[cfg(feature = "hip")]
                         {
-                            if let Some(device_ptr) = self.hip_device_ptr {
-                                use hiprt::*;
+                            if let Some(_device_ptr) = self.hip_device_ptr {
+                                // use hiprt::*; // Temporarily disabled
+                                // HIP API calls temporarily disabled until hiprt dependency is available
+                                /*
                                 unsafe {
                                     let result = hipMemcpyDtoH(
                                         host_data.as_mut_ptr() as *mut std::os::raw::c_void,
@@ -576,6 +599,7 @@ impl BufferDescriptor {
                                         )));
                                     }
                                 }
+                                */
                             }
                         }
 
@@ -659,11 +683,14 @@ impl Drop for BufferDescriptor {
                 // Clean up HIP device memory
                 #[cfg(feature = "hip")]
                 {
-                    if let Some(device_ptr) = self.hip_device_ptr.take() {
-                        use hiprt::*;
+                    if let Some(_device_ptr) = self.hip_device_ptr.take() {
+                        // use hiprt::*; // Temporarily disabled
+                        // HIP API calls temporarily disabled until hiprt dependency is available
+                        /*
                         unsafe {
                             let _ = hipFree(device_ptr);
                         }
+                        */
                     }
                 }
             }

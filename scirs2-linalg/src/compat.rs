@@ -947,14 +947,19 @@ where
         )));
     }
 
-    // RQ decomposition can be computed as QR of the reversed matrix
-    // A = RQ => flip(A) = flip(Q)flip(R) = QR decomposition of flip(A)
-    let a_flipped = a.slice(ndarray::s![.., ..;-1]).to_owned();
-    let (q_temp, r_temp) = decomposition::qr(&a_flipped.view(), None)?;
+    // RQ decomposition can be computed using QR decomposition of the transpose
+    // If A^T = Q₁R₁ (QR decomposition), then A = R₁^T Q₁^T = RQ
+    // where R = R₁^T (upper triangular) and Q = Q₁^T (orthogonal)
 
-    // Flip back to get R and Q
-    let r = r_temp.slice(ndarray::s![..;-1, ..;-1]).to_owned();
-    let q = q_temp.slice(ndarray::s![..;-1, ..]).to_owned();
+    // Step 1: Transpose the input matrix
+    let a_transpose = a.t().to_owned();
+
+    // Step 2: Compute QR decomposition of A^T
+    let (q_temp, r_temp) = decomposition::qr(&a_transpose.view(), None)?;
+
+    // Step 3: Get RQ decomposition: R = R₁^T, Q = Q₁^T
+    let r = r_temp.t().to_owned(); // R₁^T is upper triangular
+    let q = q_temp.t().to_owned(); // Q₁^T is orthogonal
 
     Ok((r, q))
 }

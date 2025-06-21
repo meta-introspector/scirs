@@ -170,11 +170,10 @@ where
 }
 
 /// Compute Short-Time Fourier Transform (STFT)
-fn compute_stft(
-    signal: &[f64],
-    config: &TFConfig,
-    sample_rate: Option<f64>,
-) -> FFTResult<TFResult> {
+fn compute_stft<T>(signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
+where
+    T: NumCast + Copy + Debug,
+{
     // Get parameters from config
     let window_size = config.window_size.min(config.max_size);
     let hop_size = config.hop_size.min(window_size / 2);
@@ -242,7 +241,9 @@ fn compute_stft(
 
         // Copy frame and apply window
         for i in 0..window_size {
-            let signal_val = signal[start + i];
+            let signal_val: f64 = NumCast::from(signal[start + i]).ok_or_else(|| {
+                FFTError::ValueError("Failed to convert signal value to f64".to_string())
+            })?;
             windowed_frame.push(Complex64::new(signal_val * window[i], 0.0));
         }
 
@@ -283,7 +284,10 @@ fn compute_stft(
 }
 
 /// Compute Continuous Wavelet Transform (CWT)
-fn compute_cwt(signal: &[f64], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult> {
+fn compute_cwt<T>(signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
+where
+    T: NumCast + Copy + Debug,
+{
     // Signal length
     let n = signal.len().min(config.max_size);
 
@@ -320,7 +324,10 @@ fn compute_cwt(signal: &[f64], config: &TFConfig, sample_rate: Option<f64>) -> F
     // Convert signal to complex for FFT
     let mut signal_complex = Vec::with_capacity(n);
     for &val in signal.iter().take(n) {
-        signal_complex.push(Complex64::new(val, 0.0));
+        let val_f64: f64 = NumCast::from(val).ok_or_else(|| {
+            FFTError::ValueError("Failed to convert signal value to f64".to_string())
+        })?;
+        signal_complex.push(Complex64::new(val_f64, 0.0));
     }
 
     // Compute FFT of signal

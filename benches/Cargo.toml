@@ -36,6 +36,7 @@ scirs2-fft = { path = "../scirs2-fft" }
 scirs2-optimize = { path = "../scirs2-optimize" }
 scirs2-integrate = { path = "../scirs2-integrate" }
 scirs2-cluster = { path = "../scirs2-cluster" }
+scirs2-interpolate = { path = "../scirs2-interpolate" }
 
 # Benchmarking framework
 criterion = { version = "0.5", features = ["html_reports"] }

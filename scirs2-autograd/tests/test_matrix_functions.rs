@@ -66,7 +66,13 @@ fn test_matrix_sqrt() {
 fn test_matrix_log() {
     ag::run(|g| {
         // Test with a simple diagonal matrix
-        let a = convert_to_tensor(array![[2.718282_f32, 0.0], [0.0, 7.389056]], g); // e and e^2
+        let a = convert_to_tensor(
+            array![
+                [std::f32::consts::E, 0.0],
+                [0.0, std::f32::consts::E.powi(2)]
+            ],
+            g,
+        ); // e and e^2
         let log_a = logm(&a);
         let log_result = log_a.eval(g).unwrap();
 

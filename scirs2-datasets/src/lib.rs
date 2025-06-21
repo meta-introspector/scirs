@@ -102,6 +102,9 @@ pub mod toy;
 /// manipulating and transforming datasets.
 pub mod utils;
 
+// Temporary module to test method resolution conflict
+mod method_resolution_test;
+
 // Re-export commonly used functionality
 pub use cache::{
     get_cache_dir, BatchOperations, BatchResult, CacheFileInfo, CacheManager, CacheStats,

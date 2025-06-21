@@ -5,9 +5,11 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Axis};
+use scirs2_linalg::matrix_functions::{expm, logm, sqrtm};
+use scirs2_linalg::norm::{matrix_norm, vector_norm};
 use scirs2_linalg::{
-    cholesky, compat, cond, det, eig, eigh, eigvals, eigvalsh, expm, inv, logm, lstsq, lu,
-    matrix_norm, matrix_rank, qr, solve, sqrtm, svd, vector_norm,
+    cholesky, compat, cond, det, eig, eigh, eigvals, eigvalsh, inv, lstsq, lu, matrix_rank, qr,
+    solve, svd,
 };
 use std::time::Duration;
 
@@ -51,7 +53,7 @@ fn bench_basic_operations(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("det_basic", size), &matrix, |b, m| {
-            b.iter(|| det(&m.view()).unwrap())
+            b.iter(|| det(&m.view(), None).unwrap())
         });
 
         // Benchmark matrix inverse
@@ -95,7 +97,7 @@ fn bench_matrix_norms(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("norm_1_basic", size), &matrix, |b, m| {
-            b.iter(|| norm_mod::matrix_norm(&m.view(), "1").unwrap())
+            b.iter(|| matrix_norm(&m.view(), "1").unwrap())
         });
 
         // Infinity norm

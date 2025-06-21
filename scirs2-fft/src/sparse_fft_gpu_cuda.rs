@@ -23,7 +23,7 @@ use std::time::Instant;
 use std::sync::OnceLock;
 
 #[cfg(feature = "cuda")]
-static CUDA_CONTEXT: OnceLock<Option<CudaDevice>> = OnceLock::new();
+static CUDA_CONTEXT: OnceLock<Option<u8>> = OnceLock::new(); // Placeholder type
 
 /// Check if CUDA is available and initialize if necessary
 pub fn ensure_cuda_available() -> FFTResult<bool> {

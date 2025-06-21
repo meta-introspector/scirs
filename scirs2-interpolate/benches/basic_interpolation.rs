@@ -1,14 +1,12 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array1;
-use scirs2_interpolate::{
-    cubic_interpolate, linear_interpolate, pchip_interpolate,
-};
 use scirs2_interpolate::interp1d::monotonic::{MonotonicInterpolator, MonotonicMethod};
 use scirs2_interpolate::spline::CubicSpline;
+use scirs2_interpolate::{cubic_interpolate, linear_interpolate, pchip_interpolate};
 
 fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);
-    let y = x.mapv(|xi| (xi * 0.5).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos());
+    let y = x.mapv(|xi| (xi * 0.5_f64).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos());
     (x, y)
 }
 

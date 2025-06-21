@@ -4,7 +4,7 @@ use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use scirs2_linalg::{cholesky, det, inv, lu, lstsq, matrix_norm, qr, solve, svd};
+use scirs2_linalg::{cholesky, det, inv, lstsq, lu, matrix_norm, qr, solve};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -66,7 +66,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
 
         // Matrix determinant
         let start = Instant::now();
-        let _result = basic::det(&matrix.view());
+        let _result = det(&matrix.view(), None);
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
@@ -127,7 +127,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = norm::matrix_norm(&matrix.view(), "frobenius");
+                    let result = matrix_norm(&matrix.view(), "frobenius", None);
                     black_box(result)
                 })
             },
@@ -150,7 +150,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
 
         // LU decomposition
         let start = Instant::now();
-        let _result = decomposition::lu(&matrix.view());
+        let _result = lu(&matrix.view(), None);
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
@@ -167,7 +167,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = decomposition::lu(&matrix.view());
+                    let result = lu(&matrix.view(), None);
                     black_box(result)
                 })
             },
@@ -175,7 +175,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
 
         // QR decomposition
         let start = Instant::now();
-        let _result = decomposition::qr(&matrix.view());
+        let _result = qr(&matrix.view(), None);
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
@@ -192,7 +192,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = decomposition::qr(&matrix.view());
+                    let result = qr(&matrix.view(), None);
                     black_box(result)
                 })
             },
@@ -200,7 +200,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
 
         // Cholesky decomposition
         let start = Instant::now();
-        let _result = decomposition::cholesky(&spd_matrix.view());
+        let _result = cholesky(&spd_matrix.view(), None);
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
@@ -217,7 +217,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = decomposition::cholesky(&spd_matrix.view());
+                    let result = cholesky(&spd_matrix.view(), None);
                     black_box(result)
                 })
             },
@@ -305,14 +305,14 @@ fn bench_cross_platform_performance(c: &mut Criterion) {
         // Compare f32 vs f64 performance
         group.bench_with_input(BenchmarkId::new("det_f32", size), &size, |b, _| {
             b.iter(|| {
-                let result = basic::det(&matrix_f32.view());
+                let result = det(&matrix_f32.view(), None);
                 black_box(result)
             })
         });
 
         group.bench_with_input(BenchmarkId::new("det_f64", size), &size, |b, _| {
             b.iter(|| {
-                let result = basic::det(&matrix_f64.view());
+                let result = det(&matrix_f64.view(), None);
                 black_box(result)
             })
         });
@@ -330,6 +330,7 @@ fn save_rust_results(results: &[BenchmarkResult]) {
 }
 
 /// Load and analyze comparison results if available
+#[allow(dead_code)]
 fn analyze_comparison_results() {
     if let Ok(contents) = fs::read_to_string("target/benchmark_comparison.json") {
         if let Ok(report) = serde_json::from_str::<ComparisonReport>(&contents) {
@@ -339,6 +340,7 @@ fn analyze_comparison_results() {
 }
 
 /// Print detailed analysis of Rust vs Python performance
+#[allow(dead_code)]
 fn print_comparison_analysis(report: &ComparisonReport) {
     println!("\n=== SciRS2 vs SciPy Performance Comparison ===");
     println!(
@@ -370,7 +372,7 @@ fn print_comparison_analysis(report: &ComparisonReport) {
 
 /// Benchmark that outputs performance characteristics
 fn bench_performance_characteristics(c: &mut Criterion) {
-    let mut group = c.benchmark_group("performance_characteristics");
+    let group = c.benchmark_group("performance_characteristics");
 
     // Test algorithmic complexity scaling
     let test_sizes = vec![50, 100, 200, 400];
@@ -387,7 +389,7 @@ fn bench_performance_characteristics(c: &mut Criterion) {
 
         // Measure determinant (O(n^3))
         let start = Instant::now();
-        let _result = basic::det(&matrix.view());
+        let _result = det(&matrix.view(), None);
         let time_ns = start.elapsed().as_nanos();
         complexity_data.insert(format!("det_{}", size), time_ns);
     }

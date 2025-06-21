@@ -4,7 +4,7 @@ use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use scirs2_linalg::{det, inv, solve, vector_norm};
+use scirs2_linalg::{det, inv, lu, matrix_norm, qr, solve, svd, vector_norm};
 use serde::{Deserialize, Serialize};
 use std::f64;
 use std::fs;
@@ -30,8 +30,8 @@ fn generate_conditioned_matrix(size: usize, condition_number: f64) -> Array2<f64
     let u_raw = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
     let v_raw = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
 
-    let (u, _) = decomposition::qr(&u_raw.view()).unwrap();
-    let (v, _) = decomposition::qr(&v_raw.view()).unwrap();
+    let (u, _) = qr(&u_raw.view(), None).unwrap();
+    let (v, _) = qr(&v_raw.view(), None).unwrap();
 
     // Create singular values with specified condition number
     let mut singular_values = Array1::linspace(1.0, 1.0 / condition_number, size);
@@ -107,8 +107,8 @@ fn test_solve_accuracy(matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -
     match solve(matrix, &rhs.view(), None) {
         Ok(computed_solution) => {
             let error = &computed_solution - known_solution;
-            let relative_error = vector_norm(&error.view(), 2, None).unwrap()
-                / vector_norm(&known_solution.view(), 2, None).unwrap();
+            let relative_error = vector_norm(&error.view(), 2).unwrap()
+                / vector_norm(&known_solution.view(), 2).unwrap();
 
             let success = relative_error < 1e-10; // Tolerance for success
             (success, relative_error)
@@ -123,9 +123,9 @@ fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
         Ok(inv_matrix) => {
             let product = matrix.dot(&inv_matrix);
             let identity = Array2::eye(matrix.nrows());
-            let error = &product - &identity;
-            let relative_error = norm::matrix_norm(&error.view(), "frobenius").unwrap()
-                / norm::matrix_norm(&identity.view(), "frobenius").unwrap();
+            let error: Array2<f64> = &product - &identity;
+            let relative_error = matrix_norm::<f64>(&error.view(), "frobenius", None).unwrap()
+                / matrix_norm::<f64>(&identity.view(), "frobenius", None).unwrap();
 
             let success = relative_error < 1e-10;
             (success, relative_error)
@@ -137,35 +137,35 @@ fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
 /// Test numerical accuracy of matrix decompositions
 fn test_decomposition_accuracy(matrix: &ArrayView2<f64>, decomp_type: &str) -> (bool, f64) {
     match decomp_type {
-        "lu" => match decomposition::lu(matrix) {
+        "lu" => match lu(matrix, None) {
             Ok((p, l, u)) => {
                 let reconstructed = p.dot(&l).dot(&u);
-                let error = &reconstructed - matrix;
-                let relative_error = norm::matrix_norm(&error.view(), "frobenius").unwrap()
-                    / norm::matrix_norm(matrix, "frobenius").unwrap();
+                let error: Array2<f64> = &reconstructed - matrix;
+                let relative_error = matrix_norm(&error.view(), "frobenius", None).unwrap()
+                    / matrix_norm(matrix, "frobenius", None).unwrap();
                 (relative_error < 1e-12, relative_error)
             }
             Err(_) => (false, f64::INFINITY),
         },
-        "qr" => match decomposition::qr(matrix) {
+        "qr" => match qr(matrix, None) {
             Ok((q, r)) => {
                 let reconstructed = q.dot(&r);
-                let error = &reconstructed - matrix;
-                let relative_error = norm::matrix_norm(&error.view(), "frobenius").unwrap()
-                    / norm::matrix_norm(matrix, "frobenius").unwrap();
+                let error: Array2<f64> = &reconstructed - matrix;
+                let relative_error = matrix_norm(&error.view(), "frobenius", None).unwrap()
+                    / matrix_norm(matrix, "frobenius", None).unwrap();
                 (relative_error < 1e-12, relative_error)
             }
             Err(_) => (false, f64::INFINITY),
         },
         "svd" => {
-            match decomposition::svd(matrix, false) {
+            match svd(matrix, false, None) {
                 Ok((u, s, vt)) => {
                     // Reconstruct matrix: A = U * Σ * V^T
                     let sigma = Array2::from_diag(&s);
                     let reconstructed = u.dot(&sigma).dot(&vt);
-                    let error = &reconstructed - matrix;
-                    let relative_error = norm::matrix_norm(&error.view(), "frobenius").unwrap()
-                        / norm::matrix_norm(matrix, "frobenius").unwrap();
+                    let error: Array2<f64> = &reconstructed - matrix;
+                    let relative_error = matrix_norm(&error.view(), "frobenius", None).unwrap()
+                        / matrix_norm(matrix, "frobenius", None).unwrap();
                     (relative_error < 1e-12, relative_error)
                 }
                 Err(_) => (false, f64::INFINITY),
@@ -383,10 +383,10 @@ fn bench_edge_cases(c: &mut Criterion) {
     group.bench_function("large_matrix_det", |b| {
         b.iter(|| {
             let start = std::time::Instant::now();
-            let result = det(&large_matrix.view(), None);
+            let result: Result<f64, _> = det(&large_matrix.view(), None);
             let elapsed = start.elapsed().as_nanos() as u64;
 
-            let success = result.is_ok() && result.unwrap().is_finite();
+            let success = result.is_ok() && result.as_ref().unwrap().is_finite();
             results.push(StabilityTestResult {
                 test_name: "large_matrix_det".to_string(),
                 matrix_size: 2,
@@ -407,7 +407,7 @@ fn bench_edge_cases(c: &mut Criterion) {
 
 /// Estimate condition number using singular values
 fn estimate_condition_number(matrix: &ArrayView2<f64>) -> f64 {
-    match decomposition::svd(matrix, false) {
+    match svd(matrix, false, None) {
         Ok((_, s, _)) => {
             let max_sv = s.iter().cloned().fold(0.0, f64::max);
             let min_sv = s.iter().cloned().fold(f64::INFINITY, f64::min);

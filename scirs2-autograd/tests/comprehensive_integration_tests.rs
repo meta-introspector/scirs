@@ -236,14 +236,14 @@ fn test_comprehensive_parallel_operations() {
         let b = Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x * 2) as f32).collect())
             .unwrap();
 
-        let add_result = ParallelElementWise::add(a, &b, config).unwrap();
+        let add_result = ParallelElementWise::add(&a, &b, config).unwrap();
         assert_eq!(add_result.len(), 1000);
 
         // Test parallel reductions
-        let sum_result = ParallelReduction::sum(a, config).unwrap();
+        let sum_result = ParallelReduction::sum(&a, config).unwrap();
         assert!(sum_result > 0.0);
 
-        let mean_result = ParallelReduction::mean(a, config).unwrap();
+        let mean_result = ParallelReduction::mean(&a, config).unwrap();
         assert!(mean_result > 0.0);
 
         println!(
@@ -388,7 +388,7 @@ fn test_comprehensive_simd_operations() {
         assert!(relu_output[7] == 3.0); // ReLU(3) = 3
 
         // Verify sigmoid properties (all values between 0 and 1)
-        assert!(sigmoid_output.iter().all(|&x| (0.0..=1.0).contains(x)));
+        assert!(sigmoid_output.iter().all(|&x| (0.0..=1.0).contains(&x)));
 
         println!(
             "✅ SIMD operations working correctly with {} elements",
@@ -425,7 +425,7 @@ fn test_comprehensive_graph_enhancements() {
         let out2 = checkpoint_large.eval(ctx).unwrap();
 
         assert_eq!(out1.len(), out2.len());
-        assert!(out1.iter().zip(out2.iter()).all(|(a, &b)| a == b));
+        assert!(out1.iter().zip(out2.iter()).all(|(a, b)| a == b));
 
         // Test conditional operations
         let condition_true =
@@ -494,12 +494,12 @@ fn test_realistic_ml_workflow_integration() {
         let weights1 = T::efficient_ones(&[input_features, hidden_size], ctx);
         let bias1 = T::efficient_zeros(&[hidden_size], ctx);
 
-        let linear1 = T::cache_friendly_matmul(input_data, &weights1, Some(64));
-        let biased1 = T::broadcast_add(linear1, &bias1);
-        let activated1 = T::custom_activation(biased1, "swish");
+        let linear1 = T::cache_friendly_matmul(&input_data, &weights1, Some(64));
+        let biased1 = T::broadcast_add(&linear1, &bias1);
+        let activated1 = T::custom_activation(&biased1, "swish");
 
         // Apply checkpointing for memory efficiency
-        let checkpointed1 = T::smart_checkpoint(activated1, 50000);
+        let checkpointed1 = T::smart_checkpoint(&activated1, 50000);
 
         // Layer 2: Linear + SIMD operations
         let weights2 = T::efficient_ones(&[hidden_size, output_size], ctx);
@@ -526,7 +526,7 @@ fn test_realistic_ml_workflow_integration() {
 
         // Simplified softmax + cross-entropy
         let max_logits = T::reduce_max(logits, &[1], true);
-        let shifted_logits = T::broadcast_sub(logits, &max_logits);
+        let shifted_logits = T::broadcast_sub(&logits, &max_logits);
         let exp_logits = T::exp(shifted_logits);
         let sum_exp = T::reduce_sum(exp_logits, &[1], true);
         let log_sum_exp = T::ln(sum_exp);

@@ -108,7 +108,7 @@ struct MatrixFlags {
     /// Whether the matrix is a global variable
     _is_global: bool,
     /// Whether the matrix is logical
-    _is_logical: bool,
+    is_logical: bool,
 }
 
 impl MatrixFlags {
@@ -117,13 +117,13 @@ impl MatrixFlags {
         let class_type = (flags & 0xFF) as i32;
         let is_complex = (flags & 0x800) != 0;
         let _is_global = (flags & 0x400) != 0;
-        let _is_logical = (flags & 0x200) != 0;
+        let is_logical = (flags & 0x200) != 0;
 
         MatrixFlags {
             class_type,
             is_complex,
             _is_global,
-            _is_logical,
+            is_logical,
         }
     }
 
@@ -136,7 +136,7 @@ impl MatrixFlags {
         if self._is_global {
             flags |= 0x400;
         }
-        if self._is_logical {
+        if self.is_logical {
             flags |= 0x200;
         }
         flags
@@ -192,8 +192,8 @@ pub fn read_mat<P: AsRef<Path>>(path: P) -> Result<HashMap<String, MatType>> {
     let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut reader = BufReader::new(file);
 
-    // Read the MAT file header (116 bytes)
-    let mut header_bytes = [0u8; 116];
+    // Read the MAT file header (128 bytes total)
+    let mut header_bytes = [0u8; 128];
     reader
         .read_exact(&mut header_bytes)
         .map_err(|e| IoError::FileError(format!("Failed to read MAT header: {}", e)))?;
@@ -206,8 +206,8 @@ pub fn read_mat<P: AsRef<Path>>(path: P) -> Result<HashMap<String, MatType>> {
         return Err(IoError::FormatError("Not a valid MATLAB file".to_string()));
     }
 
-    // Parse version and endianness
-    let subsystem_data_offset = &header_bytes[108..116];
+    // Parse version and endianness from last 4 bytes (positions 124-128)
+    let subsystem_data_offset = &header_bytes[124..128];
     let version = LittleEndian::read_u16(&subsystem_data_offset[0..2]);
     let endian_indicator = LittleEndian::read_u16(&subsystem_data_offset[2..4]);
 
@@ -387,10 +387,19 @@ fn parse_matrix_data(data: &[u8]) -> Result<(String, MatType)> {
             MatType::Int8(ndarray)
         }
         MX_UINT8_CLASS => {
-            let data_vec = real_data.to_vec();
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
-                .map_err(|e| IoError::FormatError(format!("Failed to create array: {}", e)))?;
-            MatType::UInt8(ndarray)
+            if flags.is_logical {
+                // Handle as logical data
+                let data_vec: Vec<bool> = real_data.iter().map(|&b| b != 0).collect();
+                let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+                    .map_err(|e| IoError::FormatError(format!("Failed to create array: {}", e)))?;
+                MatType::Logical(ndarray)
+            } else {
+                // Handle as regular uint8 data
+                let data_vec = real_data.to_vec();
+                let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+                    .map_err(|e| IoError::FormatError(format!("Failed to create array: {}", e)))?;
+                MatType::UInt8(ndarray)
+            }
         }
         MX_INT16_CLASS => {
             let data_vec = bytes_to_i16_vec(real_data);

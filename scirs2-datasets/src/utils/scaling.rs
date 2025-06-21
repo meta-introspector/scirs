@@ -366,10 +366,10 @@ mod tests {
         let view = data.view();
 
         // Mean of empty array should be None
-        assert!(view.mean().is_none());
+        assert!(StatsExt::mean(&view).is_none());
 
         // Standard deviation of empty array should be 0
-        assert_eq!(view.std(0.0), 0.0);
+        assert_eq!(StatsExt::std(&view, 0.0), 0.0);
     }
 
     #[test]

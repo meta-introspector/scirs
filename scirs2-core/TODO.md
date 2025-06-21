@@ -179,27 +179,6 @@ Core utilities and foundation for the SciRS2 scientific computing library in Rus
 ## 📝 Development Notes
 
 ### Recent Changes
-- **2025-06-20**: Implemented dirty chunk tracking and persistence in out-of-core memory module with writer callbacks
-- **2025-06-20**: Implemented convert_to_out_of_core utility function for copying in-memory arrays to out-of-core format
-- **2025-06-20**: Implemented parallel utility functions (par_linspace, par_maximum, par_minimum) using Rayon
-- **2025-06-20**: Fixed unimplemented!() macros in array protocol module (ArrayFunctionDecorator, ArrayProtocolFunction)
-- **2025-06-20**: Created comprehensive validation examples demonstrating all validation features
-- **2025-06-20**: Implemented ChunkedArray::map and ChunkedArray::par_map methods for memory-efficient array processing
-- **2025-06-20**: Implemented all validation constraints (Temporal, Statistical, Shape) with comprehensive tests
-- **2025-06-20**: Fixed all clippy warnings across codebase (achieved zero warnings again)
-- **2025-06-20**: Updated workspace dependencies: once_cell 1.19.0→1.21.3, rustfft 6.2.0→6.4.0, regex 1.10→1.11, libc 0.2→0.2.174, bzip2 0.4→0.4.4, itertools 0.13→0.14, tempfile 3.9→3.15, memmap2 0.7.1→0.9.5, cranelift-* 0.118.0→0.120.0
-- **2025-06-20**: Fixed all ignored tests: enabled 5 of 6 tests (2 serialization, 3 array protocol); 1 thread safety test has alternative
-- **2025-06-20**: Updated validation module documentation to reflect composite constraints and performance features
-- **2025-06-20**: Standardized error handling patterns across modules with conversions and guide
-- **2025-06-20**: Fixed segmentation faults in memory tests (safety tracker and leak detection)
-- **2025-06-20**: Fixed all doc test compilation errors in tracing and versioning modules
-- **2025-06-20**: Created validation performance benchmarks for optimization tracking
-- **2025-06-20**: Implemented validation rule composition with AND, OR, NOT, and IF-THEN constraints
-- **2025-06-20**: Fixed performance grade test assertion error in benchmarking module
-- **2025-06-20**: Fixed build warnings in memory management modules
-- **2024-06-17**: Fixed module resolution conflict in validation/data module
-- **2024-06-17**: Updated doc tests to resolve compilation errors
-- **2024-06-17**: Reorganized TODO.md for better actionability and clarity
 
 ### Next Actions for Contributors
 1. Pick an item from "Current Issues & Quick Fixes" for immediate impact
@@ -212,6 +191,3 @@ Core utilities and foundation for the SciRS2 scientific computing library in Rus
 - Performance-sensitive code should include benchmarks
 - Breaking changes require RFC and migration path
 - Documentation updates are required for all API changes
-
-**Last Updated**: 2024-06-17  
-**Status**: Active Development - Alpha 6 Phase

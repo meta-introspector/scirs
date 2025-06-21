@@ -180,7 +180,7 @@ fn test_adaptive_checkpoint() {
         let b = T::convert_to_tensor(array![[5.0, 6.0], [7.0, 8.0]], ctx);
 
         // Create a large tensor that should be checkpointed
-        let large_tensor = T::ones([100, 100], ctx);
+        let large_tensor = T::ones(&[100, 100], ctx);
 
         // Set threshold between small and large
         let threshold = 1000;

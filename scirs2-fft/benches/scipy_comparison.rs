@@ -229,7 +229,7 @@ fn bench_worker_scaling(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let _ = set_workers(workers);
-                    fft2(black_box(&data.view()), None, None, None)
+                    fft2(black_box(data), None, None, None)
                 })
             },
         );

@@ -6,7 +6,10 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
-use scirs2_linalg::prelude::*;
+use scirs2_linalg::circulant_toeplitz::{solve_circulant, solve_toeplitz};
+use scirs2_linalg::solvers::iterative::*;
+use scirs2_linalg::structured::{CirculantMatrix, ToeplitzMatrix};
+use scirs2_linalg::*;
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix
@@ -80,7 +83,7 @@ fn create_ill_conditioned_matrix(n: usize, condition_number: f64) -> Array2<f64>
 /// Create an orthogonal matrix for transformations
 fn create_orthogonal_matrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
-    let (q, _) = qr(&a.view()).unwrap();
+    let (q, _) = qr(&a.view(), None).unwrap();
     q
 }
 
@@ -111,7 +114,12 @@ fn bench_direct_solvers_general(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("solve_lu", size),
             &(&matrix, &rhs),
-            |b, (m, r)| b.iter(|| solve_lu(black_box(&m.view()), black_box(&r.view())).unwrap()),
+            |b, (m, r)| {
+                b.iter(|| {
+                    // solve_lu doesn't exist, use solve which internally uses LU
+                    solve(black_box(&m.view()), black_box(&r.view()), None).unwrap()
+                })
+            },
         );
 
         // General linear solver with partial pivoting
