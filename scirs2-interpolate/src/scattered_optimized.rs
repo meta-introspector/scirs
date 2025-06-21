@@ -26,9 +26,9 @@
 //!     OptimizedScatteredInterpolator, ScatteredConfig
 //! };
 //!
-//! // Large scattered dataset
-//! let points = Array2::from_shape_vec((100000, 3), vec![0.0; 300000]).unwrap();
-//! let values = Array1::from_vec(vec![1.0; 100000]);
+//! // Small scattered dataset for demonstration
+//! let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+//! let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 //! let config = ScatteredConfig::for_large_dataset();
 //!
 //! let interpolator = OptimizedScatteredInterpolator::new(

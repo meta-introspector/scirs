@@ -381,10 +381,10 @@ mod api_contract_tests {
             // L should be lower triangular
             for i in 0..l.nrows() {
                 for j in (i + 1)..l.ncols() {
+                    #[allow(clippy::unnecessary_cast)]
+                    let val = (l[[i, j]] as f64).abs();
                     assert!(
-                        #[allow(clippy::unnecessary_cast)]
-                        (l[[i, j]] as f64).abs()
-                            < 1e-12_f64,
+                        val < 1e-12_f64,
                         "Cholesky result not lower triangular"
                     );
                 }

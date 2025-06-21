@@ -5,7 +5,7 @@
 //! as A = Z * T * Z^T, where Z is orthogonal and T is upper triangular
 //! (or quasi-triangular for real matrices).
 
-use ndarray::array;
+use ndarray::{array, Array2};
 use scirs2_linalg::compat;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
