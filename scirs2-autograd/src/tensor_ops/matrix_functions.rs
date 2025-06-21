@@ -194,11 +194,9 @@ fn compute_matrix_sqrt<F: Float + ndarray::ScalarOperand + FromPrimitive>(
                             diag = false;
                             break;
                         }
-                    } else {
-                        if eigenvectors[[i, j]].abs() > F::epsilon() * F::from(10.0).unwrap() {
-                            diag = false;
-                            break;
-                        }
+                    } else if eigenvectors[[i, j]].abs() > F::epsilon() * F::from(10.0).unwrap() {
+                        diag = false;
+                        break;
                     }
                 }
                 if !diag {

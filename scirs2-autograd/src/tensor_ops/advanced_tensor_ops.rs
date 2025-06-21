@@ -79,7 +79,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for TensorSolveOp {
         let grad_b = compute_grad_b(&a_array, &grad_output_array, &self.axes);
 
         // grad_a = -grad_x ⊗ x (outer product, reshaped)
-        let grad_a = compute_grad_a(&grad_output_array, &x_array, &a_array.shape(), &self.axes);
+        let grad_a = compute_grad_a(&grad_output_array, &x_array, a_array.shape(), &self.axes);
 
         // Convert to tensors
         let grad_a_tensor = convert_to_tensor(grad_a, g);
@@ -325,8 +325,8 @@ fn compute_solution_shape(
     if x_shape.is_empty() {
         // If no axes specified, use last dimensions
         let ndim_b = _b_shape.len();
-        for i in (ndim_a - ndim_b)..ndim_a {
-            x_shape.push(a_shape[i]);
+        for &dim in a_shape.iter().skip(ndim_a - ndim_b) {
+            x_shape.push(dim);
         }
     }
 
@@ -367,10 +367,8 @@ fn compute_grad_a<F: Float>(
     _axes: &Option<Vec<i32>>,
 ) -> ArrayD<F> {
     // Simplified: return negative outer product with appropriate shape
-    let grad_a = ArrayD::<F>::zeros(IxDyn(a_shape));
-
     // This is a placeholder - actual implementation would compute proper tensor product
-    grad_a
+    ArrayD::<F>::zeros(IxDyn(a_shape))
 }
 
 // Einsum helpers

@@ -84,23 +84,15 @@ mod tests {
         let chunked = ChunkedArray::new(data.clone(), ChunkingStrategy::Fixed(1000));
 
         // Compute a somewhat expensive operation on each chunk
-        let results = chunked.par_map(|chunk| {
-            chunk
-                .iter()
-                .map(|&x: &f64| x.sin() * x.cos())
-                .sum::<f64>()
-        });
+        let results =
+            chunked.par_map(|chunk| chunk.iter().map(|&x: &f64| x.sin() * x.cos()).sum::<f64>());
 
         // We should have 10 chunks
         assert_eq!(results.len(), 10);
 
         // Compare with sequential version to ensure correctness
-        let sequential_results = chunked.map(|chunk| {
-            chunk
-                .iter()
-                .map(|&x: &f64| x.sin() * x.cos())
-                .sum::<f64>()
-        });
+        let sequential_results =
+            chunked.map(|chunk| chunk.iter().map(|&x: &f64| x.sin() * x.cos()).sum::<f64>());
 
         // Results should be the same (within floating point tolerance)
         for (par, seq) in results.iter().zip(sequential_results.iter()) {

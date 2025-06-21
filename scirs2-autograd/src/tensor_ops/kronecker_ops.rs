@@ -105,7 +105,7 @@ impl<F: Float> Op<F> for KroneckerOp {
                         let mut sum = F::zero();
                         for k in 0..p {
                             for l in 0..q {
-                                sum = sum + gy_2d[[i * p + k, j * q + l]] * b_2d[[k, l]];
+                                sum += gy_2d[[i * p + k, j * q + l]] * b_2d[[k, l]];
                             }
                         }
                         grad_a[[i, j]] = sum;
@@ -119,7 +119,7 @@ impl<F: Float> Op<F> for KroneckerOp {
                         let mut sum = F::zero();
                         for i in 0..m {
                             for j in 0..n {
-                                sum = sum + gy_2d[[i * p + k, j * q + l]] * a_2d[[i, j]];
+                                sum += gy_2d[[i * p + k, j * q + l]] * a_2d[[i, j]];
                             }
                         }
                         grad_b[[k, l]] = sum;

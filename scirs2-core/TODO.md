@@ -17,6 +17,7 @@ Core utilities and foundation for the SciRS2 scientific computing library in Rus
 - [x] ✅ **COMPLETED**: Standardize error handling patterns across all modules (created guide, implemented conversions)
 - [x] ✅ **COMPLETED**: Review and update dependency versions in workspace (updated 11 dependencies)
 - [x] ✅ **COMPLETED**: Add missing unit tests for edge cases in validation system
+- [x] ✅ **COMPLETED**: Implement dirty chunk tracking and persistence in out-of-core memory module
 - [ ] Improve code coverage in GPU and memory management modules
 - [ ] Update examples to use latest API patterns
 
@@ -52,6 +53,9 @@ Core utilities and foundation for the SciRS2 scientific computing library in Rus
    - [ ] Performance optimization for large-scale validation
 
 2. **Memory Management Enhancements**
+   - [x] ✅ **COMPLETED**: Implement dirty chunk tracking and persistence for out-of-core arrays
+   - [x] ✅ **COMPLETED**: Add serialization/deserialization for chunk data using bincode
+   - [x] ✅ **COMPLETED**: Implement automatic write-back of dirty chunks before eviction
    - [ ] Implement cross-device memory management (CPU/GPU/TPU)
    - [ ] Add memory leak detection and automated cleanup
    - [ ] Optimize memory allocation patterns for scientific workloads
@@ -147,6 +151,7 @@ Core utilities and foundation for the SciRS2 scientific computing library in Rus
 - Distributed computing only supports thread-based parallelism
 - JIT compilation interface incomplete
 - Memory mapping limited to read-only operations
+- Out-of-core array tests require manual verification due to file I/O operations
 
 ### Planned Fixes
 - GPU operations require proper backend selection and configuration

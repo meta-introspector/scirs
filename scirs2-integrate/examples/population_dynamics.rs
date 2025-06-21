@@ -469,10 +469,10 @@ mod tests {
         let result = solve_ivp(lotka_volterra, t_span, y0.clone(), Some(options)).unwrap();
 
         // First integral: H = cbN - d ln(N) + aP - b ln(P)
-        let a = 1.0;
-        let b = 0.1;
-        let c = 0.075;
-        let d = 1.5;
+        let _a = 1.0;
+        let _b = 0.1;
+        let _c = 0.075;
+        let _d = 1.5;
 
         // Verify populations remain positive and reasonable
         let mut min_prey = f64::INFINITY;

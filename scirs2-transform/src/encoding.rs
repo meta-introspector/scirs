@@ -501,7 +501,7 @@ impl OrdinalEncoder {
 /// let x = Array2::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 0.0, 1.0, 2.0]).unwrap();
 /// let y = vec![1.0, 2.0, 3.0, 1.5, 2.5, 3.5];
 ///
-/// let mut encoder = TargetEncoder::new("mean", 1.0, 0.0);
+/// let mut encoder = TargetEncoder::new("mean", 1.0, 0.0).unwrap();
 /// let encoded = encoder.fit_transform(&x, &y).unwrap();
 /// ```
 #[derive(Debug, Clone)]

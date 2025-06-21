@@ -58,7 +58,7 @@ impl<F: Float> Op<F> for RankOp<F> {
             t
         } else {
             // Default tolerance: max(m, n) * eps * max(singular_values)
-            let max_sv = singular_values.get(0).copied().unwrap_or(F::zero());
+            let max_sv = singular_values.first().copied().unwrap_or(F::zero());
             let eps = F::epsilon();
             let max_dim = F::from(m.max(n)).unwrap();
             max_dim * eps * max_sv
@@ -164,7 +164,7 @@ impl<F: Float> Op<F> for CondOp {
                 for j in 0..n {
                     let mut col_sum = F::zero();
                     for i in 0..m {
-                        col_sum = col_sum + matrix[[i, j]].abs();
+                        col_sum += matrix[[i, j]].abs();
                     }
                     max_col_sum = max_col_sum.max(col_sum);
                 }
@@ -179,7 +179,7 @@ impl<F: Float> Op<F> for CondOp {
                 for i in 0..m {
                     let mut row_sum = F::zero();
                     for j in 0..n {
-                        row_sum = row_sum + matrix[[i, j]].abs();
+                        row_sum += matrix[[i, j]].abs();
                     }
                     max_row_sum = max_row_sum.max(row_sum);
                 }
@@ -193,7 +193,7 @@ impl<F: Float> Op<F> for CondOp {
                 for i in 0..m {
                     for j in 0..n {
                         let val = matrix[[i, j]];
-                        sum = sum + val * val;
+                        sum += val * val;
                     }
                 }
                 sum.sqrt()
@@ -322,7 +322,7 @@ impl<F: Float> Op<F> for LogDetOp {
                 log_det = F::neg_infinity();
                 break;
             } else {
-                log_det = log_det + u[[i, i]].abs().ln();
+                log_det += u[[i, i]].abs().ln();
             }
         }
 
@@ -347,7 +347,7 @@ impl<F: Float> Op<F> for LogDetOp {
                 // TODO: Implement proper matrix inverse
 
                 let grad = crate::tensor_ops::scalar_mul(
-                    &crate::tensor_ops::convert_to_tensor(inv_t, g),
+                    crate::tensor_ops::convert_to_tensor(inv_t, g),
                     gy_val[[]],
                 );
 
@@ -439,7 +439,7 @@ impl<F: Float> Op<F> for SLogDetOp {
                 if u[[i, i]] < F::zero() {
                     sign = -sign;
                 }
-                log_det = log_det + u[[i, i]].abs().ln();
+                log_det += u[[i, i]].abs().ln();
             }
         }
 
@@ -503,7 +503,7 @@ impl<F: Float> Op<F> for SLogDetExtractOp {
                 if u[[i, i]] < F::zero() {
                     sign = -sign;
                 }
-                log_det = log_det + u[[i, i]].abs().ln();
+                log_det += u[[i, i]].abs().ln();
             }
         }
 

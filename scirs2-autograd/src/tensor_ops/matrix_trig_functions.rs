@@ -348,7 +348,7 @@ fn compute_matrix_sine<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     for k in 1..10 {
         term = -term.dot(&a2) / F::from((2 * k) * (2 * k + 1)).unwrap();
         let old_result = result.clone();
-        result = result + &term;
+        result += &term;
 
         // Check convergence
         let diff = (&result - &old_result).mapv(|x| x.abs()).sum();
@@ -373,7 +373,7 @@ fn compute_matrix_cosine<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     for k in 1..10 {
         term = -term.dot(&a2) / F::from((2 * k - 1) * (2 * k)).unwrap();
         let old_result = result.clone();
-        result = result + &term;
+        result += &term;
 
         // Check convergence
         let diff = (&result - &old_result).mapv(|x| x.abs()).sum();
@@ -447,7 +447,7 @@ fn compute_matrix_exp<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     for k in 1..=20 {
         term = term.dot(matrix) / F::from(k).unwrap();
         let old_result = result.clone();
-        result = result + &term;
+        result += &term;
 
         // Check convergence
         let diff = (&result - &old_result).mapv(|x| x.abs()).sum();

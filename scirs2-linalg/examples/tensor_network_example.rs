@@ -48,8 +48,9 @@ fn main() -> scirs2_linalg::error::LinalgResult<()> {
     );
 
     // Create a 4×2 matrix C
-    let data_c = ArrayD::from_shape_vec(IxDyn(&[4, 2]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-        .map_err(|e| scirs2_linalg::error::LinalgError::ShapeError(e.to_string()))?;
+    let data_c =
+        ArrayD::from_shape_vec(IxDyn(&[4, 2]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .map_err(|e| scirs2_linalg::error::LinalgError::ShapeError(e.to_string()))?;
     let indices_c = vec!["k".to_string(), "l".to_string()];
     let tensor_c = TensorNode::new(data_c, indices_c)?;
 
