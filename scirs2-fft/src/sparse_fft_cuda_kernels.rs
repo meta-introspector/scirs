@@ -19,13 +19,14 @@ use std::time::Instant;
 #[cfg(feature = "cuda")]
 // CUDA support temporarily disabled until cudarc dependency is enabled
 // use cudarc::driver::{CudaDevice, CudaFunction, LaunchAsync, LaunchConfig};
-#[cfg(feature = "cuda")]
 use std::sync::OnceLock;
 
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 static WINDOW_KERNELS: OnceLock<Option<WindowKernels>> = OnceLock::new();
 
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 struct WindowKernels {
     // CUDA types temporarily disabled until cudarc dependency is enabled
     // hann_kernel: CudaFunction,
@@ -39,6 +40,7 @@ struct WindowKernels {
 #[cfg(feature = "cuda")]
 // CUDA function temporarily disabled until cudarc dependency is enabled
 // fn init_window_kernels(device: &CudaDevice) -> Result<WindowKernels, cudarc::driver::DriverError> {
+#[allow(dead_code)]
 fn init_window_kernels(_device: &u8) -> Result<WindowKernels, &'static str> {
     // For now, we'll use a simple approach with cuBLAS-like operations
     // In a real implementation, we would compile custom CUDA kernels

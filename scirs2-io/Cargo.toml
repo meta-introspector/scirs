@@ -41,6 +41,8 @@ rayon = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, optional = true, features = ["fs", "io-util", "time", "rt"] }
 futures = { workspace = true, optional = true }
+futures-util = { workspace = true, optional = true }
+log = { workspace = true, optional = true }
 memmap2 = { workspace = true }
 bytemuck = { workspace = true }
 reqwest = { workspace = true, optional = true }
@@ -54,8 +56,8 @@ csv = []
 compression = []
 validation = []
 hdf5 = ["dep:hdf5"]
-async = ["dep:tokio", "dep:futures"]
-reqwest = ["dep:reqwest"]
+async = ["dep:tokio", "dep:futures", "dep:futures-util"]
+reqwest = ["dep:reqwest", "dep:log"]
 aws-sdk-s3 = []
 google-cloud-storage = []
 azure-storage-blobs = []

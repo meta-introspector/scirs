@@ -248,10 +248,8 @@ fn numerical_stability_demo() -> LinalgResult<()> {
     let mut nearly_singular = Array2::from_shape_fn((3, 3), |(i, j)| {
         if i == j {
             1.0
-        } else if i == 2 && j == 1 {
-            1.0 + 1e-15 // Nearly dependent row
-        } else if i == 1 && j == 2 {
-            1.0 + 1e-15
+        } else if (i == 2 && j == 1) || (i == 1 && j == 2) {
+            1.0 + 1e-15 // Nearly dependent entries
         } else {
             0.0
         }

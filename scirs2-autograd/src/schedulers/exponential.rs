@@ -12,19 +12,21 @@ use crate::Float;
 /// `lr = initial_lr * gamma^step`
 ///
 /// # Example
-/// ```ignore
+/// ```
 /// use scirs2_autograd::schedulers::{ExponentialLR, LRScheduler};
 ///
-/// let mut scheduler = ExponentialLR::new(0.1, 0.95);
+/// let scheduler = ExponentialLR::new(0.1f32, 0.95f32);
 ///
 /// // Initial learning rate
-/// assert_eq!(scheduler.get_lr(0), 0.1);
+/// assert!((scheduler.get_lr(0) - 0.1).abs() < 1e-6);
 ///
 /// // After 1 step
-/// assert_eq!(scheduler.get_lr(1), 0.095);
+/// assert!((scheduler.get_lr(1) - 0.095).abs() < 1e-6);
 ///
 /// // After 10 steps
 /// // lr ≈ 0.1 * 0.95^10 ≈ 0.0599
+/// let lr_10 = scheduler.get_lr(10);
+/// assert!((lr_10 - 0.0599).abs() < 1e-3);
 /// ```
 pub struct ExponentialLR<F: Float> {
     /// Initial learning rate

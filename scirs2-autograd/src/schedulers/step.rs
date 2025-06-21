@@ -12,19 +12,19 @@ use crate::Float;
 /// `lr = initial_lr * gamma^(step // step_size)`
 ///
 /// # Example
-/// ```ignore
+/// ```
 /// use scirs2_autograd::schedulers::{StepLR, LRScheduler};
 ///
-/// let mut scheduler = StepLR::new(0.1, 30, 0.1);
+/// let scheduler = StepLR::new(0.1f32, 30, 0.1f32);
 ///
 /// // Initial learning rate
-/// assert_eq!(scheduler.get_lr(0), 0.1);
+/// assert!((scheduler.get_lr(0) - 0.1).abs() < 1e-6);
 ///
 /// // After 30 steps, learning rate is reduced by gamma
-/// assert_eq!(scheduler.get_lr(30), 0.01);
+/// assert!((scheduler.get_lr(30) - 0.01).abs() < 1e-6);
 ///
 /// // After 60 steps, learning rate is reduced again
-/// assert_eq!(scheduler.get_lr(60), 0.001);
+/// assert!((scheduler.get_lr(60) - 0.001).abs() < 1e-6);
 /// ```
 pub struct StepLR<F: Float> {
     /// Initial learning rate

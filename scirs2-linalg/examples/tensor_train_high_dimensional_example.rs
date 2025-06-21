@@ -76,7 +76,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tensor_data: Vec<f64> = (0..4_usize.pow(4))
         .map(|flat_idx| {
             // Convert flat index to multi-index
-            let mut idx = vec![0; 4];
+            let mut idx = [0; 4];
             let mut remaining = flat_idx;
             for k in (0..4).rev() {
                 idx[k] = remaining % 4;

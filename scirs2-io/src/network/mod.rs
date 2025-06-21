@@ -126,13 +126,13 @@ impl NetworkClient {
     /// Download a file from URL to local path
     #[cfg(feature = "reqwest")]
     pub async fn download<P: AsRef<Path>>(&self, url: &str, local_path: P) -> Result<()> {
-        self.http.download(url, local_path).await
+        self.http_client.download(url, local_path).await
     }
 
     /// Upload a file from local path to URL
     #[cfg(feature = "reqwest")]
     pub async fn upload<P: AsRef<Path>>(&self, local_path: P, url: &str) -> Result<()> {
-        self.http.upload(local_path, url).await
+        self.http_client.upload(local_path, url).await
     }
 
     /// Download a file to cloud storage

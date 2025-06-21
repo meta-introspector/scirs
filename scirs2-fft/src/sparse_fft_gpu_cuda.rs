@@ -19,10 +19,10 @@ use std::time::Instant;
 #[cfg(feature = "cuda")]
 // CUDA support temporarily disabled until cudarc dependency is enabled
 // use cudarc::driver::{CudaDevice, DevicePtr};
-#[cfg(feature = "cuda")]
 use std::sync::OnceLock;
 
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 static CUDA_CONTEXT: OnceLock<Option<u8>> = OnceLock::new(); // Placeholder type
 
 /// Check if CUDA is available and initialize if necessary

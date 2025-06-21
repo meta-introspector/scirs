@@ -13,37 +13,34 @@ use crate::{Context, Float, VariableEnvironment};
 /// and weight decay are not equivalent. AdamW decouples weight decay from gradient-based updates.
 ///
 /// # Example
-/// ```ignore
+/// ```
 /// use scirs2_autograd as ag;
 /// use ag::prelude::*;
 /// use ag::optimizers::AdamW;
 /// use ag::variable::NamespaceTrait;
+/// use ag::tensor_ops::*;
 ///
 /// // Define parameters to optimize.
 /// let mut env = ag::VariableEnvironment::new();
 /// let mut rng = ag::ndarray_ext::ArrayRng::<f32>::default();
 ///
-/// let w = env.slot().set(rng.glorot_uniform(&[28 * 28, 10]));
-/// let b = env.slot().set(ag::ndarray_ext::zeros(&[1, 10]));
+/// let w = env.slot().set(rng.glorot_uniform(&[4, 2]));
+/// let b = env.slot().set(ag::ndarray_ext::zeros(&[1, 2]));
 ///
 /// // AdamW optimizer with default params.
-/// // State arrays are created in the "my_adamw" namespace.
-/// let adamw = AdamW::default("my_adamw", env.default_namespace().current_var_ids(), &mut env);
+/// let _adamw = AdamW::default("my_adamw", env.default_namespace().current_var_ids(), &mut env);
 ///
 /// env.run(|g| {
 ///     let w = g.variable(w);
 ///     let b = g.variable(b);
-///
-///     // some operations using w and b
-///     // let y = ...
-///     // let grads = g.grad(&[y], &[w, b]);
-///
-///     // Getting update ops of `params` using its gradients and adamw.
-///     // let updates: &[ag::Tensor<f32>] = &adamw.update(&[w, b], &grads, &g);
-///
-///     // for result in &g.eval(updates, &[]) {
-///     //     println!("updates: {:?}", result.unwrap());
-///     // }
+///     
+///     // Simple operations using w and b
+///     let x = ones(&[1, 4], g);
+///     let y = add(matmul(x, w), b);
+///     let loss = sum_all(y);
+///     
+///     let _grads = grad(&[loss], &[w, b]);
+///     // Optimizer usage would happen here in a real training loop
 /// });
 /// ```
 ///

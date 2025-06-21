@@ -204,7 +204,7 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cholesky_standard", size),
             &spd_matrix,
-            |b, m| b.iter(|| cholesky(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| cholesky(black_box(&m.view()), None).unwrap()),
         );
 
         // Cholesky solve
@@ -213,24 +213,27 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
             BenchmarkId::new("cholesky_solve", size),
             &(&spd_matrix, &rhs),
             |b, (m, r)| {
-                b.iter(|| cholesky_solve(black_box(&m.view()), black_box(&r.view())).unwrap())
+                b.iter(|| {
+                    let l = cholesky(black_box(&m.view()), None).unwrap();
+                    solve_triangular(&l.view(), black_box(&r.view()), false, false, None).unwrap()
+                })
             },
         );
 
-        // Cholesky update (if available)
-        if size <= 100 {
-            let update_vec = Array1::from_shape_fn(size, |i| ((i as f64 + 1.0) * 0.01).sin());
-            group.bench_with_input(
-                BenchmarkId::new("cholesky_update", size),
-                &(&spd_matrix, &update_vec),
-                |b, (m, v)| {
-                    b.iter(|| {
-                        let l = cholesky(black_box(&m.view())).unwrap();
-                        cholesky_rank_one_update(&l, black_box(&v.view())).unwrap()
-                    })
-                },
-            );
-        }
+        // Cholesky update (not implemented yet)
+        // if size <= 100 {
+        //     let update_vec = Array1::from_shape_fn(size, |i| ((i as f64 + 1.0) * 0.01).sin());
+        //     group.bench_with_input(
+        //         BenchmarkId::new("cholesky_update", size),
+        //         &(&spd_matrix, &update_vec),
+        //         |b, (m, v)| {
+        //             b.iter(|| {
+        //                 let l = cholesky(black_box(&m.view()), None).unwrap();
+        //                 cholesky_rank_one_update(&l, black_box(&v.view())).unwrap()
+        //             })
+        //         },
+        //     );
+        // }
     }
 
     group.finish();
@@ -542,21 +545,22 @@ fn bench_decomposition_memory_efficiency(c: &mut Criterion) {
 
         // In-place vs out-of-place Cholesky
         let spd_matrix = create_spd_matrix(size);
-        group.bench_with_input(
-            BenchmarkId::new("cholesky_in_place", size),
-            &spd_matrix,
-            |b, m| {
-                b.iter(|| {
-                    let mut m_copy = m.clone();
-                    cholesky_inplace(&mut m_copy.view_mut()).unwrap()
-                })
-            },
-        );
+        // In-place cholesky not implemented yet
+        // group.bench_with_input(
+        //     BenchmarkId::new("cholesky_in_place", size),
+        //     &spd_matrix,
+        //     |b, m| {
+        //         b.iter(|| {
+        //             let mut m_copy = m.clone();
+        //             cholesky_inplace(&mut m_copy.view_mut()).unwrap()
+        //         })
+        //     },
+        // );
 
         group.bench_with_input(
             BenchmarkId::new("cholesky_out_of_place", size),
             &spd_matrix,
-            |b, m| b.iter(|| cholesky(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| cholesky(black_box(&m.view()), None).unwrap()),
         );
     }
 

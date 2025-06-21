@@ -292,6 +292,7 @@ pub mod gpu {
         /// Create a new GPU pipeline
         #[cfg(feature = "gpu")]
         pub async fn new() -> SpecialResult<Self> {
+            #[allow(unused_imports)]
             use wgpu::util::DeviceExt;
             use wgpu::*;
 

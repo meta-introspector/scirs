@@ -154,10 +154,10 @@ impl EnhancedMatFile {
         let mut vars = HashMap::new();
 
         // List all datasets in the file
-        let dataset_names = hdf5_file.list_datasets("/")?;
+        let dataset_names = hdf5_file.list_datasets();
         for name in dataset_names {
             let mat_type = self.read_mat_type_from_hdf5(&hdf5_file, &name)?;
-            vars.insert(name, mat_type);
+            vars.insert(name.to_string(), mat_type);
         }
 
         Ok(vars)
@@ -207,10 +207,11 @@ impl EnhancedMatFile {
                 file.create_dataset_from_array(name, &array, Some(options))?;
 
                 // Add attribute to indicate this is a string
-                if let Ok(dataset) = file.get_dataset_mut(&format!("/{}", name)) {
-                    dataset
-                        .set_attribute("matlab_class", AttributeValue::String("char".to_string()));
-                }
+                // TODO: Find the correct way to set attributes on datasets
+                // if let Ok(dataset) = file.get_dataset(&format!("/{}", name)) {
+                //     dataset
+                //         .set_attribute("matlab_class", AttributeValue::String("char".to_string()));
+                // }
             }
             _ => {
                 return Err(IoError::Other(format!(

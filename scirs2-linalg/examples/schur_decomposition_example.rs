@@ -56,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Verify off-diagonal elements are small for symmetric case
-    let off_diag_error: f64 = (t_sym[[0, 1]] as f64).abs() + (t_sym[[1, 0]] as f64).abs();
+    let off_diag_error: f64 = t_sym[[0, 1]].abs() + t_sym[[1, 0]].abs();
     println!("Off-diagonal error in T: {:.2e}\n", off_diag_error);
 
     // Test with a 3x3 matrix

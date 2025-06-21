@@ -24,19 +24,22 @@ use std::f64::consts::PI;
 /// to escape local minima and fine-tune the solution.
 ///
 /// # Example
-/// ```ignore
+/// ```
 /// use scirs2_autograd::schedulers::{CosineAnnealingLR, LRScheduler};
 ///
-/// let scheduler = CosineAnnealingLR::new(0.1, 0.001, 100);
+/// let scheduler = CosineAnnealingLR::new(0.1f32, 0.001f32, 100);
 ///
 /// // Initial learning rate
-/// assert_eq!(scheduler.get_lr(0), 0.1);
+/// assert!((scheduler.get_lr(0) - 0.1).abs() < 1e-6);
 ///
-/// // At middle of cycle, learning rate is at minimum
-/// assert_eq!(scheduler.get_lr(50), 0.001);
+/// // At middle of cycle, learning rate is at midpoint
+/// // cos(π/2) = 0, so lr = eta_min + (eta_max - eta_min) * 0.5
+/// let mid_lr = scheduler.get_lr(50);
+/// assert!((mid_lr - (0.001 + (0.1 - 0.001) * 0.5)).abs() < 1e-3);
 ///
-/// // At end of cycle, learning rate returns to maximum
-/// assert_eq!(scheduler.get_lr(100), 0.1);
+/// // At end of cycle, learning rate returns to minimum
+/// // cos(π) = -1, so lr = eta_min + (eta_max - eta_min) * 0 = eta_min
+/// assert!((scheduler.get_lr(100) - 0.001).abs() < 1e-6);
 /// ```
 pub struct CosineAnnealingLR<F: Float> {
     /// Maximum learning rate (initial value)

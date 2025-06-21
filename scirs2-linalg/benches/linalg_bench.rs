@@ -6,7 +6,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{s, Array1, Array2};
 use scirs2_linalg::blas::{dot, nrm2};
-use scirs2_linalg::circulant_toeplitz::{solve_circulant, solve_toeplitz};
 use scirs2_linalg::mixed_precision::{
     mixed_precision_dot, mixed_precision_matmul, mixed_precision_solve,
 };
@@ -153,7 +152,7 @@ fn bench_mixed_precision(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("mixed_dot", size),
             &(&vector_f32, &vector_f32),
-            |b, (x, y)| b.iter(|| mixed_precision_dot(black_box(&x.view()), black_box(&y.view()))),
+            |b, (x, y)| b.iter(|| mixed_precision_dot::<f32, f32, f64, f64>(black_box(&x.view()), black_box(&y.view()))),
         );
 
         // Mixed precision solve
@@ -186,8 +185,8 @@ fn bench_structured_matrices(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let toeplitz = ToeplitzMatrix::new(r.view(), r.view()).unwrap();
-                    solve_toeplitz(&toeplitz, black_box(&rhs.view()))
+                    let toeplitz = ToeplitzMatrix::new(r.clone(), r.clone()).unwrap();
+                    toeplitz.solve(black_box(&rhs.view()))
                 })
             },
         );
@@ -198,8 +197,8 @@ fn bench_structured_matrices(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(r.view()).unwrap();
-                    solve_circulant(&circulant, black_box(&rhs.view()))
+                    let mut circulant = CirculantMatrix::new(r.clone()).unwrap();
+                    circulant.solve(black_box(&rhs.view()))
                 })
             },
         );
@@ -228,14 +227,14 @@ fn bench_matrix_factorizations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cur_decomposition", size),
             &matrix,
-            |b, m| b.iter(|| cur_decomposition(black_box(&m.view()), 10)),
+            |b, m| b.iter(|| cur_decomposition(black_box(&m.view()), 10, None, None, "deterministic")),
         );
 
         // Rank-revealing QR
         group.bench_with_input(
             BenchmarkId::new("rank_revealing_qr", size),
             &matrix,
-            |b, m| b.iter(|| rank_revealing_qr(black_box(&m.view()), Some(1e-12))),
+            |b, m| b.iter(|| rank_revealing_qr(black_box(&m.view()), 1e-12)),
         );
     }
 

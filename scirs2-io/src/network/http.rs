@@ -81,8 +81,7 @@ impl HttpClient {
         let mut client_builder = reqwest::Client::builder()
             .connect_timeout(self.config.connect_timeout)
             .timeout(self.config.read_timeout)
-            .user_agent(&self.config.user_agent)
-            .gzip(self.config.compression);
+            .user_agent(&self.config.user_agent);
 
         // Add default headers
         let mut headers = reqwest::header::HeaderMap::new();
@@ -174,27 +173,20 @@ impl HttpClient {
         let mut file = std::fs::File::create(local_path)
             .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
 
-        let mut stream = response.bytes_stream();
-        use futures_util::StreamExt;
         use std::io::Write;
 
-        while let Some(chunk) = stream.next().await {
-            let chunk =
-                chunk.map_err(|e| IoError::NetworkError(format!("Failed to read chunk: {}", e)))?;
+        let bytes = response.bytes().await
+            .map_err(|e| IoError::NetworkError(format!("Failed to read response body: {}", e)))?;
 
-            file.write_all(&chunk)
-                .map_err(|e| IoError::FileError(format!("Failed to write chunk: {}", e)))?;
+        file.write_all(&bytes)
+            .map_err(|e| IoError::FileError(format!("Failed to write file: {}", e)))?;
 
-            downloaded += chunk.len() as u64;
+        downloaded = bytes.len() as u64;
 
-            // Progress reporting could be added here
-            if let Some(total) = content_length {
-                let progress = (downloaded as f64 / total as f64 * 100.0) as u8;
-                if downloaded % (total / 20).max(1) == 0 {
-                    // Report every 5%
-                    log::debug!("Download progress: {}%", progress);
-                }
-            }
+        // Progress reporting could be added here
+        if let Some(total) = content_length {
+            let progress = (downloaded as f64 / total as f64 * 100.0) as u8;
+            log::debug!("Download progress: {}%", progress);
         }
 
         Ok(())

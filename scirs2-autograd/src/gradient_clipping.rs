@@ -74,11 +74,23 @@ impl<F: Float> Default for ClippingStats<F> {
 /// This is the simplest form of gradient clipping.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use scirs2_autograd as ag;
 /// use scirs2_autograd::gradient_clipping::{ClipByValue, GradientClipper};
+/// use scirs2_autograd::tensor_ops::*;
 ///
-/// let clipper = ClipByValue::new(-1.0, 1.0);
-/// let clipped_gradients = clipper.clip_gradients(&gradients);
+/// let mut env = ag::VariableEnvironment::new();
+/// let mut rng = ag::ndarray_ext::ArrayRng::<f32>::default();
+///
+/// env.run(|g| {
+///     // Create some example gradients
+///     let grad1 = convert_to_tensor(rng.standard_normal(&[2, 2]), g);
+///     let grad2 = convert_to_tensor(rng.standard_normal(&[3]), g);
+///     let gradients = vec![grad1, grad2];
+///
+///     let mut clipper = ClipByValue::new(-1.0f32, 1.0f32);
+///     let _clipped_gradients = clipper.clip_gradients(&gradients);
+/// });
 /// ```
 pub struct ClipByValue<F: Float> {
     pub min_value: F,
@@ -151,11 +163,23 @@ impl<F: Float> GradientClipper<F> for ClipByValue<F> {
 /// g_clipped = g * (max_norm / ||g||)
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use scirs2_autograd as ag;
 /// use scirs2_autograd::gradient_clipping::{ClipByNorm, GradientClipper};
+/// use scirs2_autograd::tensor_ops::*;
 ///
-/// let clipper = ClipByNorm::new(1.0);
-/// let clipped_gradients = clipper.clip_gradients(&gradients);
+/// let mut env = ag::VariableEnvironment::new();
+/// let mut rng = ag::ndarray_ext::ArrayRng::<f32>::default();
+///
+/// env.run(|g| {
+///     // Create some example gradients
+///     let grad1 = convert_to_tensor(rng.standard_normal(&[2, 2]), g);
+///     let grad2 = convert_to_tensor(rng.standard_normal(&[3]), g);
+///     let gradients = vec![grad1, grad2];
+///
+///     let mut clipper = ClipByNorm::new(1.0f32);
+///     let _clipped_gradients = clipper.clip_gradients(&gradients);
+/// });
 /// ```
 pub struct ClipByNorm<F: Float> {
     pub max_norm: F,
@@ -239,11 +263,23 @@ impl<F: Float> GradientClipper<F> for ClipByNorm<F> {
 /// while ensuring the overall gradient update is not too large.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use scirs2_autograd as ag;
 /// use scirs2_autograd::gradient_clipping::{ClipByGlobalNorm, GradientClipper};
+/// use scirs2_autograd::tensor_ops::*;
 ///
-/// let clipper = ClipByGlobalNorm::new(1.0);
-/// let clipped_gradients = clipper.clip_gradients(&gradients);
+/// let mut env = ag::VariableEnvironment::new();
+/// let mut rng = ag::ndarray_ext::ArrayRng::<f32>::default();
+///
+/// env.run(|g| {
+///     // Create some example gradients
+///     let grad1 = convert_to_tensor(rng.standard_normal(&[2, 2]), g);
+///     let grad2 = convert_to_tensor(rng.standard_normal(&[3]), g);
+///     let gradients = vec![grad1, grad2];
+///
+///     let mut clipper = ClipByGlobalNorm::new(1.0f32);
+///     let _clipped_gradients = clipper.clip_gradients(&gradients);
+/// });
 /// ```
 pub struct ClipByGlobalNorm<F: Float> {
     pub max_norm: F,

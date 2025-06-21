@@ -60,6 +60,28 @@ where
         return Ok(result);
     }
 
+    // Special case for diagonal matrix
+    let mut is_diagonal = true;
+    for i in 0..n {
+        for j in 0..n {
+            if i != j && a[[i, j]].abs() > F::epsilon() {
+                is_diagonal = false;
+                break;
+            }
+        }
+        if !is_diagonal {
+            break;
+        }
+    }
+
+    if is_diagonal {
+        let mut result = Array2::zeros((n, n));
+        for i in 0..n {
+            result[[i, i]] = a[[i, i]].exp();
+        }
+        return Ok(result);
+    }
+
     // Choose a suitable scaling factor and Padé order
     let norm_a = matrix_norm(a, "1", None)?;
     let scaling_f = norm_a.log2().ceil().max(F::zero());
@@ -281,6 +303,38 @@ where
         return Ok(result);
     }
 
+    // Special case for diagonal matrix
+    let mut is_diagonal = true;
+    for i in 0..n {
+        for j in 0..n {
+            if i != j && a[[i, j]].abs() > F::epsilon() {
+                is_diagonal = false;
+                break;
+            }
+        }
+        if !is_diagonal {
+            break;
+        }
+    }
+
+    if is_diagonal {
+        // Check that all diagonal elements are positive
+        for i in 0..n {
+            if a[[i, i]] <= F::zero() {
+                return Err(LinalgError::InvalidInputError(
+                    "Cannot compute real logarithm of matrix with non-positive eigenvalues"
+                        .to_string(),
+                ));
+            }
+        }
+
+        let mut result = Array2::zeros((n, n));
+        for i in 0..n {
+            result[[i, i]] = a[[i, i]].ln();
+        }
+        return Ok(result);
+    }
+
     // Check if the matrix is the identity
     let mut is_identity = true;
     for i in 0..n {
@@ -318,48 +372,166 @@ where
         return Ok(result);
     }
 
-    // For general matrices, we need to use a more sophisticated approach
-    // In a real implementation, we would use the Schur decomposition method
-    // and apply logarithm to the triangular factor
+    // For general matrices, we use a simplified approach for matrices close to the identity
+    // This is a basic implementation that works for many cases but is not as robust as
+    // a full Schur decomposition-based implementation
 
-    // For now, we'll implement a simplified approach using inverse scaling and squaring
-    // This is a placeholder for more sophisticated implementation
-    // A proper implementation would use Schur decomposition and handle complex eigenvalues
-
-    // The algorithm below is simplified and not as numerically stable as a full implementation
-    // It's intended as a starting point that can be enhanced with proper Schur decomposition
-
-    // 1. Compute a good scaling factor s such that A^(1/2^s) is close to I
-    let scaling_factor = 5; // Fixed scaling for this implementation
-    let scaling = F::from(2.0_f64.powi(scaling_factor)).unwrap();
-
-    // 2. Compute B = A^(1/2^s) ≈ I
-    // For now, we'll use matrix_power with fractional power
-    // In a real implementation, we'd compute sqrtm repeatedly or use eigendecomposition
-    let power = F::one() / scaling;
-    let b = match matrix_power(a, power) {
-        Ok(result) => result,
-        Err(_) => {
-            return Err(LinalgError::ImplementationError(
-                "Could not compute fractional matrix power for logarithm".to_string(),
-            ));
-        }
-    };
-
-    // 3. Compute log(B) using Padé approximation
-    // Since B is close to I, we can use: log(I + X) ≈ X - X^2/2 + X^3/3 - ...
-    let mut x = Array2::zeros((n, n));
+    // Check if the matrix is close to the identity (within a reasonable range)
+    let identity = Array2::eye(n);
+    let mut max_diff = F::zero();
     for i in 0..n {
         for j in 0..n {
-            x[[i, j]] = if i == j {
-                b[[i, j]] - F::one()
-            } else {
-                b[[i, j]]
-            };
+            let diff = (a[[i, j]] - identity[[i, j]]).abs();
+            if diff > max_diff {
+                max_diff = diff;
+            }
         }
     }
 
-    // Compute X^2
+    // If the matrix is too far from identity, try an inverse scaling and squaring approach
+    if max_diff > F::from(0.5).unwrap() {
+        // For matrices not close to identity, we use inverse scaling and squaring
+        // This approach works by finding a scaling factor k such that A^(1/2^k) is close to I
+        // then computing log(A) = 2^k * log(A^(1/2^k))
+
+        // Find an appropriate scaling factor
+        let mut scaling_k = 0;
+        let mut a_scaled = a.to_owned();
+
+        // Try to find a scaling where the matrix becomes closer to identity
+        // We'll use matrix square root iterations to get A^(1/2^k)
+        while scaling_k < 10 {
+            // Limit iterations to avoid infinite loops
+            let mut max_scaled_diff = F::zero();
+            for i in 0..n {
+                for j in 0..n {
+                    let expected = if i == j { F::one() } else { F::zero() };
+                    let diff = (a_scaled[[i, j]] - expected).abs();
+                    if diff > max_scaled_diff {
+                        max_scaled_diff = diff;
+                    }
+                }
+            }
+
+            if max_scaled_diff <= F::from(0.2).unwrap() {
+                break;
+            }
+
+            // Compute matrix square root using our sqrtm function
+            match sqrtm(&a_scaled.view(), 20, F::from(1e-12).unwrap()) {
+                Ok(sqrt_result) => {
+                    a_scaled = sqrt_result;
+                    scaling_k += 1;
+                }
+                Err(_) => {
+                    return Err(LinalgError::ImplementationError(
+                        "Matrix logarithm: Could not compute matrix square root for scaling"
+                            .to_string(),
+                    ));
+                }
+            }
+        }
+
+        if scaling_k >= 10 {
+            return Err(LinalgError::ImplementationError(
+                "Matrix logarithm: Matrix could not be scaled close enough to identity".to_string(),
+            ));
+        }
+
+        // Now compute log(A^(1/2^k)) using the series
+        let mut x_scaled = Array2::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                let expected = if i == j { F::one() } else { F::zero() };
+                x_scaled[[i, j]] = a_scaled[[i, j]] - expected;
+            }
+        }
+
+        // Compute powers of X for the series (use more terms for better accuracy)
+        let mut x2 = Array2::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for k in 0..n {
+                    x2[[i, j]] += x_scaled[[i, k]] * x_scaled[[k, j]];
+                }
+            }
+        }
+
+        let mut x3 = Array2::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for k in 0..n {
+                    x3[[i, j]] += x2[[i, k]] * x_scaled[[k, j]];
+                }
+            }
+        }
+
+        let mut x4 = Array2::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for k in 0..n {
+                    x4[[i, j]] += x3[[i, k]] * x_scaled[[k, j]];
+                }
+            }
+        }
+
+        let mut x5 = Array2::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for k in 0..n {
+                    x5[[i, j]] += x4[[i, k]] * x_scaled[[k, j]];
+                }
+            }
+        }
+
+        let mut x6 = Array2::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                for k in 0..n {
+                    x6[[i, j]] += x5[[i, k]] * x_scaled[[k, j]];
+                }
+            }
+        }
+
+        // Compute log(A^(1/2^k)) using the series with more terms
+        // log(1 + X) = X - X²/2 + X³/3 - X⁴/4 + X⁵/5 - X⁶/6 + ...
+        let mut log_scaled = Array2::zeros((n, n));
+        let half = F::from(0.5).unwrap();
+        let third = F::from(1.0 / 3.0).unwrap();
+        let fourth = F::from(0.25).unwrap();
+        let fifth = F::from(0.2).unwrap();
+        let sixth = F::from(1.0 / 6.0).unwrap();
+
+        for i in 0..n {
+            for j in 0..n {
+                log_scaled[[i, j]] = x_scaled[[i, j]] - half * x2[[i, j]] + third * x3[[i, j]]
+                    - fourth * x4[[i, j]]
+                    + fifth * x5[[i, j]]
+                    - sixth * x6[[i, j]];
+            }
+        }
+
+        // Scale back: log(A) = 2^k * log(A^(1/2^k))
+        let scale_factor = F::from(2.0_f64.powi(scaling_k)).unwrap();
+        for i in 0..n {
+            for j in 0..n {
+                log_scaled[[i, j]] *= scale_factor;
+            }
+        }
+
+        return Ok(log_scaled);
+    }
+
+    // For matrices close to I, we can use the series: log(I + X) = X - X²/2 + X³/3 - X⁴/4 + ...
+    // where X = A - I
+    let mut x = Array2::zeros((n, n));
+    for i in 0..n {
+        for j in 0..n {
+            x[[i, j]] = a[[i, j]] - identity[[i, j]];
+        }
+    }
+
+    // Compute X^2, X^3, X^4, X^5, X^6 for the series
     let mut x2 = Array2::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -369,7 +541,6 @@ where
         }
     }
 
-    // Compute X^3
     let mut x3 = Array2::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -379,7 +550,6 @@ where
         }
     }
 
-    // Compute X^4
     let mut x4 = Array2::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -389,28 +559,42 @@ where
         }
     }
 
-    // Compute log(B) using Padé approximation
-    // log(I + X) ≈ X - X^2/2 + X^3/3 - X^4/4 + ...
-    let mut log_b = Array2::zeros((n, n));
+    let mut x5 = Array2::zeros((n, n));
+    for i in 0..n {
+        for j in 0..n {
+            for k in 0..n {
+                x5[[i, j]] += x4[[i, k]] * x[[k, j]];
+            }
+        }
+    }
+
+    let mut x6 = Array2::zeros((n, n));
+    for i in 0..n {
+        for j in 0..n {
+            for k in 0..n {
+                x6[[i, j]] += x5[[i, k]] * x[[k, j]];
+            }
+        }
+    }
+
+    // Compute log(A) using the series log(I + X) = X - X²/2 + X³/3 - X⁴/4 + X⁵/5 - X⁶/6 + ...
+    let mut result = Array2::zeros((n, n));
     let half = F::from(0.5).unwrap();
     let third = F::from(1.0 / 3.0).unwrap();
     let fourth = F::from(0.25).unwrap();
+    let fifth = F::from(0.2).unwrap();
+    let sixth = F::from(1.0 / 6.0).unwrap();
 
     for i in 0..n {
         for j in 0..n {
-            log_b[[i, j]] =
-                x[[i, j]] - half * x2[[i, j]] + third * x3[[i, j]] - fourth * x4[[i, j]];
+            result[[i, j]] = x[[i, j]] - half * x2[[i, j]] + third * x3[[i, j]]
+                - fourth * x4[[i, j]]
+                + fifth * x5[[i, j]]
+                - sixth * x6[[i, j]];
         }
     }
 
-    // 4. Scale back: log(A) = 2^s * log(A^(1/2^s))
-    for i in 0..n {
-        for j in 0..n {
-            log_b[[i, j]] *= scaling;
-        }
-    }
-
-    Ok(log_b)
+    Ok(result)
 }
 
 /// Compute the matrix square root using the Denman-Beavers iteration.

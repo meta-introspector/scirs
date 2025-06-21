@@ -34,6 +34,7 @@ static SYCL_DEVICE: OnceLock<Option<SyclDevice>> = OnceLock::new();
 /// Placeholder SYCL device type
 #[cfg(feature = "sycl")]
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct SyclDevice {
     device_id: i32,
     device_name: String,

@@ -79,8 +79,8 @@ fn test_svd_rectangular_matrix() {
     }
 
     // Reconstruct A
-    let mut s_diag = Array2::zeros((2, 2));
-    for i in 0..2 {
+    let mut s_diag = Array2::zeros((s.len(), s.len()));
+    for i in 0..s.len() {
         s_diag[[i, i]] = s[i];
     }
     let reconstructed = u.dot(&s_diag).dot(&vt);

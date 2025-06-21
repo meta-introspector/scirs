@@ -246,7 +246,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------------------------------------");
 
     let signal = Array1::from_shape_fn(64, |i| {
-        if i >= 20 && i <= 25 {
+        if (20..=25).contains(&i) {
             1.0
         } else {
             0.0
