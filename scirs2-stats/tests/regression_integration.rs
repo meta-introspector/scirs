@@ -1,7 +1,7 @@
 use ndarray::{array, Array1, Array2};
-use scirs2_stats::regression::*;
 use rand::{Rng, SeedableRng};
 use rand_pcg::Pcg64;
+use scirs2_stats::regression::*;
 
 #[test]
 fn test_linear_regression() {
@@ -288,7 +288,7 @@ fn test_huber_regression_advanced() {
 fn test_huber_regression_with_regularization() {
     // Use a seeded RNG for reproducible tests
     let mut rng = Pcg64::seed_from_u64(42);
-    
+
     // Create a design matrix with many highly correlated variables
     // to test L2 regularization in Huber regression
     let mut x = Array2::zeros((30, 10)); // 30 observations, 10 variables

@@ -48,21 +48,21 @@ fn main() {
     println!("{:^10} {:^15} {:^15} {:^15}", "t", "y", "exact", "error");
     println!("{:-<10} {:-<15} {:-<15} {:-<15}", "", "", "", "");
 
-    let exact_points = [0.0, 0.5, 1.0, 1.5, 2.0];
+    let exact_points: [f64; 5] = [0.0, 0.5, 1.0, 1.5, 2.0];
     for &t in &exact_points {
         // Find closest solution point
         let idx = result
             .t
             .iter()
-            .position(|&rt| ((rt as f64) - t).abs() < 1e-10f64)
+            .position(|&rt| (rt - t).abs() < 1e-10f64)
             .unwrap_or_else(|| {
                 result
                     .t
                     .iter()
                     .enumerate()
                     .min_by(|(_, a), (_, b)| {
-                        let a_diff = ((**a as f64) - t).abs();
-                        let b_diff = ((**b as f64) - t).abs();
+                        let a_diff = (**a - t).abs();
+                        let b_diff = (**b - t).abs();
                         a_diff.partial_cmp(&b_diff).unwrap()
                     })
                     .map(|(i, _)| i)
@@ -70,7 +70,7 @@ fn main() {
             });
 
         let y_val = result.y[idx][0];
-        let exact = (-(t as f64)).exp();
+        let exact = (-t).exp();
         let error = ((y_val as f64) - exact).abs();
 
         println!(

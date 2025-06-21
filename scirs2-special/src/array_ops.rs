@@ -427,7 +427,7 @@ pub mod gpu {
 
             // Reconstruct array with original shape
             let result_array = Array::from_vec(result_f64)
-                .into_shape(input.dim())
+                .into_shape_with_order(input.dim())
                 .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?;
             Ok(result_array)
         }

@@ -9,6 +9,7 @@ use scirs2_linalg::blas::{dot, nrm2};
 use scirs2_linalg::mixed_precision::{
     mixed_precision_dot, mixed_precision_matmul, mixed_precision_solve,
 };
+use scirs2_linalg::prelude::*;
 use scirs2_linalg::structured::{CirculantMatrix, ToeplitzMatrix};
 use scirs2_linalg::*;
 use std::time::Duration;

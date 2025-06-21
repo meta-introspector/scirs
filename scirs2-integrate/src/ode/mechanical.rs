@@ -1353,7 +1353,7 @@ mod tests {
 
         // After one time step, position should have changed
         assert!(result.state.position[0] > 0.0);
-        assert_eq!(result.stats.converged, true);
+        assert!(result.stats.converged);
     }
 
     #[test]

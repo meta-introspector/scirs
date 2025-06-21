@@ -383,10 +383,7 @@ mod api_contract_tests {
                 for j in (i + 1)..l.ncols() {
                     #[allow(clippy::unnecessary_cast)]
                     let val = (l[[i, j]] as f64).abs();
-                    assert!(
-                        val < 1e-12_f64,
-                        "Cholesky result not lower triangular"
-                    );
+                    assert!(val < 1e-12_f64, "Cholesky result not lower triangular");
                 }
             }
 

@@ -187,6 +187,7 @@ fn create_l_shaped_mesh(divisions: usize) -> TriangularMesh {
     let mut node_count = 0;
 
     // Create nodes
+    #[allow(clippy::needless_range_loop)]
     for j in 0..=divisions {
         for i in 0..=divisions {
             let x = i as f64 * h;

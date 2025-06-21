@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Comparing element types on Poisson equation with exact solution u = sin(πx)sin(πy)");
     println!("Domain: [0,1] × [0,1] with homogeneous Dirichlet boundary conditions");
-    println!("");
+    println!();
 
     for &(element_type, type_name) in &element_types {
         println!("=== {} Elements ===", type_name);
@@ -126,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             prev_error = Some(l2_error);
         }
 
-        println!("");
+        println!();
     }
 
     // Demonstrate convergence rates
@@ -134,7 +134,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Linear elements:    O(h²) in L² norm, O(h) in maximum norm");
     println!("Quadratic elements: O(h³) in L² norm, O(h²) in maximum norm");
     println!("Cubic elements:     O(h⁴) in L² norm, O(h³) in maximum norm");
-    println!("");
+    println!();
     println!("Where h is the mesh spacing. Higher-order elements should show");
     println!("faster convergence rates, especially on smooth solutions.");
 

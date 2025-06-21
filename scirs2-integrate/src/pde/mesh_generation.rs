@@ -824,8 +824,8 @@ mod tests {
 
         let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
 
-        assert!(mesh.points.len() > 0);
-        assert!(mesh.elements.len() > 0);
+        assert!(!mesh.points.is_empty());
+        assert!(!mesh.elements.is_empty());
 
         // Check that all points are within domain
         for point in &mesh.points {
@@ -836,8 +836,7 @@ mod tests {
 
     #[test]
     fn test_circle_mesh_generation() {
-        let mut params = MeshGenerationParams::default();
-        params.element_size = 0.2;
+        let params = MeshGenerationParams { element_size: 0.2, ..Default::default() };
         let generator = AutoMeshGenerator::new(params);
 
         let domain = Domain::Circle {
@@ -849,8 +848,8 @@ mod tests {
 
         let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
 
-        assert!(mesh.points.len() > 0);
-        assert!(mesh.elements.len() > 0);
+        assert!(!mesh.points.is_empty());
+        assert!(!mesh.elements.is_empty());
 
         // Check that all points are within or on circle boundary
         for point in &mesh.points {
@@ -909,13 +908,13 @@ mod tests {
 
         let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
 
-        assert!(mesh.points.len() > 0);
-        assert!(mesh.elements.len() > 0);
+        assert!(!mesh.points.is_empty());
+        assert!(!mesh.elements.is_empty());
 
         // Check that all points are within annulus
         for point in &mesh.points {
             let distance = (point.x.powi(2) + point.y.powi(2)).sqrt();
-            assert!(distance >= 0.49 && distance <= 1.01); // Allow tolerance
+            assert!((0.49..=1.01).contains(&distance)); // Allow tolerance
         }
     }
 
@@ -932,8 +931,8 @@ mod tests {
 
         let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
 
-        assert!(mesh.points.len() > 0);
-        assert!(mesh.elements.len() > 0);
+        assert!(!mesh.points.is_empty());
+        assert!(!mesh.elements.is_empty());
     }
 
     #[test]

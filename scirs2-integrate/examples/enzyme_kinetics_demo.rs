@@ -325,7 +325,7 @@ fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
     let initial_rates = pathway.calculate_reaction_rates(&initial_concentrations);
     println!();
     println!("   Initial enzyme fluxes:");
-    for (_i, (enzyme, &rate)) in pathway.enzymes.iter().zip(initial_rates.iter()).enumerate() {
+    for (enzyme, &rate) in pathway.enzymes.iter().zip(initial_rates.iter()) {
         println!("   {}: {:.2} μM/s", enzyme.name, rate * 1000.0);
     }
 
@@ -566,8 +566,8 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Comparing different regulation types:");
 
     let _base_rate = 50.0; // Base enzyme rate
-    let effector_conc = 1.0;
-    let ki = 0.5; // Inhibition constant
+    let effector_conc: f64 = 1.0;
+    let ki: f64 = 0.5; // Inhibition constant
 
     let regulation_types = vec![
         ("Competitive", RegulationType::CompetitiveInhibition),
@@ -584,10 +584,10 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
             RegulationType::CompetitiveInhibition => 1.0 / (1.0 + effector_conc / ki),
             RegulationType::NonCompetitiveInhibition => 1.0 / (1.0 + effector_conc / ki),
             RegulationType::AllostericInhibition => {
-                1.0 / (1.0 + (effector_conc as f64 / ki).powf(2.0))
+                1.0 / (1.0 + (effector_conc / ki).powf(2.0))
             }
             RegulationType::FeedbackInhibition => {
-                1.0 / (1.0 + (effector_conc as f64 / ki).powf(4.0))
+                1.0 / (1.0 + (effector_conc / ki).powf(4.0))
             }
             _ => 1.0,
         };

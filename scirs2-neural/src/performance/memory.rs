@@ -9,7 +9,10 @@ use ndarray::{Array, ArrayD, ArrayView, IxDyn};
 use std::fmt::Debug;
 
 #[cfg(feature = "memory_efficient")]
-use scirs2_core::memory_efficient::{chunk_wise_op, ChunkProcessor};
+use scirs2_core::memory_efficient::chunk_wise_op;
+
+#[cfg(feature = "memory_management")]
+use scirs2_core::ChunkProcessor;
 
 /// Memory-efficient batch processor
 ///

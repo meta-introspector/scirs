@@ -17,13 +17,17 @@ use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg(feature = "memory_efficient")]
 use scirs2_core::memory_efficient::{
-    chunk_wise_op, ChunkProcessor, MemoryEfficientArray, OutOfCoreArray,
+    chunk_wise_op, OutOfCoreArray,
 };
 
 #[cfg(feature = "memory_management")]
-use scirs2_core::memory_management::{
-    AllocationStrategy, BufferPool, MemoryManager, MemoryMetrics,
-};
+use scirs2_core::ChunkProcessor;
+
+// Note: These imports may need to be adjusted based on available types in scirs2_core
+// #[cfg(feature = "memory_management")]
+// use scirs2_core::memory_management::{
+//     AllocationStrategy, BufferPool, MemoryManager, MemoryMetrics,
+// };
 
 #[cfg(feature = "cache")]
 use scirs2_core::cache::{CacheBuilder, TTLSizedCache};

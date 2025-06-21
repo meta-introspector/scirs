@@ -7,6 +7,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array2;
 use scirs2_linalg::matrix_functions;
+use scirs2_linalg::prelude::*;
 use scirs2_linalg::*;
 use std::time::Duration;
 

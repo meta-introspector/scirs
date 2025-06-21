@@ -166,7 +166,7 @@ where
     let duration = start.elapsed();
 
     // Compute accuracy (energy conservation for oscillator system)
-    let final_energy = compute_system_energy(&result.y.last().unwrap());
+    let final_energy = compute_system_energy(result.y.last().unwrap());
     let initial_energy = compute_system_energy(&result.y[0]);
     let energy_error = ((final_energy - initial_energy) / initial_energy).abs();
 
@@ -397,7 +397,7 @@ fn print_recommendations() {
     println!("• ODE function involves element-wise operations");
     println!("• Memory layout is contiguous (ndarray slices)");
     println!("• Target CPU supports SIMD instructions (AVX, SSE, etc.)");
-    println!("");
+    println!();
     println!("To enable SIMD optimizations:");
     println!("• Compile with --features simd");
     println!("• Use SIMD-friendly data structures");

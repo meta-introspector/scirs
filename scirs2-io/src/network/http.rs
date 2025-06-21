@@ -175,7 +175,9 @@ impl HttpClient {
 
         use std::io::Write;
 
-        let bytes = response.bytes().await
+        let bytes = response
+            .bytes()
+            .await
             .map_err(|e| IoError::NetworkError(format!("Failed to read response body: {}", e)))?;
 
         file.write_all(&bytes)
