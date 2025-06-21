@@ -512,7 +512,7 @@ fn solve_sylvester_internal<F: Float + ndarray::ScalarOperand>(
                 // B^T ⊗ I contribution
                 for l in 0..n {
                     let col = i * n + l;
-                    kron_sum[[row, col]] = kron_sum[[row, col]] + b[[l, j]];
+                    kron_sum[[row, col]] += b[[l, j]];
                 }
             }
         }

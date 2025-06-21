@@ -1799,7 +1799,7 @@ mod tests {
         Profiler::global().lock().unwrap().start();
 
         // Baseline run
-        let timer = Timer::start("diff_test");
+        let timer = Timer::start("diff_test_operation");
         thread::sleep(Duration::from_millis(10));
         timer.stop();
 
@@ -1809,8 +1809,8 @@ mod tests {
             Some("baseline".to_string()),
         );
 
-        // Current run (slower)
-        let timer = Timer::start("diff_test2"); // Use different name to avoid conflicts
+        // Current run (slower) - use same operation name for comparison
+        let timer = Timer::start("diff_test_operation");
         thread::sleep(Duration::from_millis(20));
         timer.stop();
 

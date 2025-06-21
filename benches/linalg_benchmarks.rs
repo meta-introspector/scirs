@@ -2,13 +2,12 @@ use criterion::{
     black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
     PlotConfiguration,
 };
-use ndarray::{Array1, Array2, Axis};
+use ndarray::{Array1, Array2};
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use scirs2_core::profiling::{ProfilingContext, ScopedTimer};
-use scirs2_linalg::{basic, decomposition, eigen, norm, solve};
+use scirs2_linalg::{cholesky, det, eigen, inv, lstsq, lu, matrix_norm, qr, solve, solve_triangular, svd};
 use std::time::Instant;
 
 // Benchmark configuration
@@ -51,7 +50,7 @@ fn generate_spd_matrix(n: usize) -> Array2<f64> {
 
     // A^T * A is always positive definite
     let at = a.t();
-    at.dot(&a) + Array2::eye(n) * 0.1 // Add small diagonal term for numerical stability
+    at.dot(&a) + Array2::<f64>::eye(n) * 0.1 // Add small diagonal term for numerical stability
 }
 
 /// Benchmark basic matrix operations
@@ -65,7 +64,7 @@ fn bench_basic_operations(c: &mut Criterion) {
         // Matrix determinant
         group.bench_with_input(BenchmarkId::new("determinant", size), &size, |b, _| {
             b.iter(|| {
-                let result = basic::det(&matrix.view());
+                let result = det(&matrix.view(), None);
                 black_box(result)
             })
         });
@@ -75,7 +74,7 @@ fn bench_basic_operations(c: &mut Criterion) {
             // Limit inverse to smaller matrices
             group.bench_with_input(BenchmarkId::new("inverse", size), &size, |b, _| {
                 b.iter(|| {
-                    let result = basic::inv(&matrix.view());
+                    let result = inv(&matrix.view(), None);
                     black_box(result)
                 })
             });
@@ -84,14 +83,14 @@ fn bench_basic_operations(c: &mut Criterion) {
         // Matrix norms
         group.bench_with_input(BenchmarkId::new("frobenius_norm", size), &size, |b, _| {
             b.iter(|| {
-                let result = norm::matrix_norm(&matrix.view(), "frobenius");
+                let result = matrix_norm(&matrix.view(), "frobenius", None);
                 black_box(result)
             })
         });
 
         group.bench_with_input(BenchmarkId::new("spectral_norm", size), &size, |b, _| {
             b.iter(|| {
-                let result = norm::matrix_norm(&matrix.view(), "2");
+                let result = matrix_norm(&matrix.view(), "2", None);
                 black_box(result)
             })
         });
@@ -112,7 +111,7 @@ fn bench_decompositions(c: &mut Criterion) {
         // LU decomposition
         group.bench_with_input(BenchmarkId::new("lu_decomposition", size), &size, |b, _| {
             b.iter(|| {
-                let result = decomposition::lu(&matrix.view());
+                let result = lu(&matrix.view(), None);
                 black_box(result)
             })
         });
@@ -120,7 +119,7 @@ fn bench_decompositions(c: &mut Criterion) {
         // QR decomposition
         group.bench_with_input(BenchmarkId::new("qr_decomposition", size), &size, |b, _| {
             b.iter(|| {
-                let result = decomposition::qr(&matrix.view());
+                let result = qr(&matrix.view(), None);
                 black_box(result)
             })
         });
@@ -133,7 +132,7 @@ fn bench_decompositions(c: &mut Criterion) {
                 &size,
                 |b, _| {
                     b.iter(|| {
-                        let result = decomposition::svd(&matrix.view(), false);
+                        let result = svd(&matrix.view(), false, None);
                         black_box(result)
                     })
                 },
@@ -146,7 +145,7 @@ fn bench_decompositions(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = decomposition::cholesky(&spd_matrix.view());
+                    let result = cholesky(&spd_matrix.view(), None);
                     black_box(result)
                 })
             },
@@ -169,7 +168,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
         // General linear solver
         group.bench_with_input(BenchmarkId::new("general_solve", size), &size, |b, _| {
             b.iter(|| {
-                let result = solve::solve(&matrix.view(), &rhs.view());
+                let result = solve(&matrix.view(), &rhs.view(), None);
                 black_box(result)
             })
         });
@@ -177,16 +176,16 @@ fn bench_linear_solvers(c: &mut Criterion) {
         // Least squares solver
         group.bench_with_input(BenchmarkId::new("least_squares", size), &size, |b, _| {
             b.iter(|| {
-                let result = solve::lstsq(&matrix.view(), &rhs.view());
+                let result = lstsq(&matrix.view(), &rhs.view(), None);
                 black_box(result)
             })
         });
 
         // Triangular solver (using Cholesky factor)
-        if let Ok(l) = decomposition::cholesky(&spd_matrix.view()) {
+        if let Ok(l) = cholesky(&spd_matrix.view(), None) {
             group.bench_with_input(BenchmarkId::new("triangular_solve", size), &size, |b, _| {
                 b.iter(|| {
-                    let result = solve::solve_triangular(&l.view(), &rhs.view(), true, false);
+                    let result = solve_triangular(&l.view(), &rhs.view(), true, false, None);
                     black_box(result)
                 })
             });
@@ -213,7 +212,7 @@ fn bench_eigenvalues(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = eigen::eigvalsh(&spd_matrix.view());
+                    let result = eigen::eigvalsh(&spd_matrix.view(), None);
                     black_box(result)
                 })
             },
@@ -225,7 +224,7 @@ fn bench_eigenvalues(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = eigen::eigh(&spd_matrix.view());
+                    let result = eigen::eigh(&spd_matrix.view(), None);
                     black_box(result)
                 })
             },
@@ -252,7 +251,7 @@ fn bench_numerical_stability(c: &mut Criterion) {
                 |b, _| {
                     let rhs = Array1::ones(size);
                     b.iter(|| {
-                        let result = solve::solve(&matrix.view(), &rhs.view());
+                        let result = solve(&matrix.view(), &rhs.view(), None);
                         black_box(result)
                     })
                 },
@@ -264,7 +263,7 @@ fn bench_numerical_stability(c: &mut Criterion) {
                 |b, _| {
                     let rhs = Array1::ones(size);
                     b.iter(|| {
-                        let result = solve::lstsq(&matrix.view(), &rhs.view());
+                        let result = lstsq(&matrix.view(), &rhs.view(), None);
                         black_box(result)
                     })
                 },
@@ -291,7 +290,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 
                     for _ in 0..iters {
                         let rhs = Array1::ones(size);
-                        let _result = solve::solve(&matrix.view(), &rhs.view());
+                        let _result = solve(&matrix.view(), &rhs.view(), None);
                         // Force deallocation
                         drop(_result);
                     }

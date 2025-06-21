@@ -1101,7 +1101,7 @@ mod tests {
             let scenario = create_test_scenario(
                 "test_scenario".to_string(),
                 "A test scenario".to_string(),
-                |x: &Tensor<f32>| Ok(x.clone()),
+                |x: &Tensor<f32>| Ok(*x),
                 input,
                 StabilityGrade::Good,
             );

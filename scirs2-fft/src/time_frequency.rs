@@ -170,7 +170,11 @@ where
 }
 
 /// Compute Short-Time Fourier Transform (STFT)
-fn compute_stft(signal: &[f64], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult> {
+fn compute_stft(
+    signal: &[f64],
+    config: &TFConfig,
+    sample_rate: Option<f64>,
+) -> FFTResult<TFResult> {
     // Get parameters from config
     let window_size = config.window_size.min(config.max_size);
     let hop_size = config.hop_size.min(window_size / 2);

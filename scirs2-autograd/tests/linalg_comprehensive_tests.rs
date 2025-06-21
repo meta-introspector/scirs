@@ -193,7 +193,7 @@ fn test_gradient_computation() {
         // Test gradient through inverse
         let inv_a = matrix_inverse(&a);
         let y = matmul(&inv_a, &b);
-        let loss = sum_all(&square(&y));
+        let loss = sum_all(square(&y));
 
         let grads = grad(&[&loss], &[&a]);
         let grad_a = &grads[0];
@@ -201,7 +201,7 @@ fn test_gradient_computation() {
 
         // Test gradient through solve
         let x = solve(&a, &b);
-        let loss2 = sum_all(&square(&x));
+        let loss2 = sum_all(square(&x));
 
         let grads2 = grad(&[&loss2], &[&a, &b]);
         assert!(grads2[0].eval(g).is_ok());

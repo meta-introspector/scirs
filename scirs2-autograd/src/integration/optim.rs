@@ -774,9 +774,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "Factory tests skipped due to lifetime complexity"]
     fn test_optimizer_factory() {
-        // Skip factory tests due to lifetime complexity
-        assert!(true); // Placeholder test
+        // TODO: Implement factory tests when lifetime issues are resolved
     }
 
     #[test]

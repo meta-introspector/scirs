@@ -4,6 +4,14 @@ use crate::Float;
 use ndarray::{s, Array1, Array2, Ix2};
 use num_traits::FromPrimitive;
 
+// Type aliases to reduce complexity
+type SVDResult<F> = Result<(Array2<F>, Array1<F>, Array2<F>), OpError>;
+#[allow(dead_code)]
+type QRResult<F> = Result<(Array2<F>, Array2<F>), OpError>;
+type QRPivotResult<F> = Result<(Array2<F>, Array2<F>, Array1<F>), OpError>;
+#[allow(dead_code)]
+type EigenResult<F> = Result<(Array2<F>, Array2<F>, Array1<F>), OpError>;
+
 /// Improved SVD using Jacobi algorithm for better numerical stability
 pub struct JacobiSVDOp {
     full_matrices: bool,
@@ -282,7 +290,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for QRPivotOp {
 fn compute_svd_jacobi<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
     full_matrices: bool,
-) -> Result<(Array2<F>, Array1<F>, Array2<F>), OpError> {
+) -> SVDResult<F> {
     let (m, n) = (matrix.shape()[0], matrix.shape()[1]);
     let k = m.min(n);
 
@@ -433,7 +441,7 @@ fn compute_randomized_svd<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     rank: usize,
     oversampling: usize,
     n_iter: usize,
-) -> Result<(Array2<F>, Array1<F>, Array2<F>), OpError> {
+) -> SVDResult<F> {
     let (m, n) = (matrix.shape()[0], matrix.shape()[1]);
     let l = (rank + oversampling).min(n.min(m));
 
@@ -505,7 +513,7 @@ fn compute_generalized_eigen<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 /// QR decomposition with column pivoting
 fn compute_qr_pivot<F: Float + ndarray::ScalarOperand>(
     matrix: &ndarray::ArrayView2<F>,
-) -> Result<(Array2<F>, Array2<F>, Array1<F>), OpError> {
+) -> QRPivotResult<F> {
     let (m, n) = (matrix.shape()[0], matrix.shape()[1]);
     let k = m.min(n);
 
@@ -859,15 +867,15 @@ pub fn svd_jacobi<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
 
     // Extract components using SVDExtractOp
     let u = Tensor::builder(g)
-        .append_input(&svd_op, false)
+        .append_input(svd_op, false)
         .build(SVDJacobiExtractOp { component: 0 });
 
     let s = Tensor::builder(g)
-        .append_input(&svd_op, false)
+        .append_input(svd_op, false)
         .build(SVDJacobiExtractOp { component: 1 });
 
     let vt = Tensor::builder(g)
-        .append_input(&svd_op, false)
+        .append_input(svd_op, false)
         .build(SVDJacobiExtractOp { component: 2 });
 
     (u, s, vt)
@@ -891,15 +899,15 @@ pub fn randomized_svd<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
         });
 
     let u = Tensor::builder(g)
-        .append_input(&svd_op, false)
+        .append_input(svd_op, false)
         .build(RandomizedSVDExtractOp { component: 0 });
 
     let s = Tensor::builder(g)
-        .append_input(&svd_op, false)
+        .append_input(svd_op, false)
         .build(RandomizedSVDExtractOp { component: 1 });
 
     let vt = Tensor::builder(g)
-        .append_input(&svd_op, false)
+        .append_input(svd_op, false)
         .build(RandomizedSVDExtractOp { component: 2 });
 
     (u, s, vt)
@@ -918,11 +926,11 @@ pub fn generalized_eigen<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
         .build(GeneralizedEigenOp);
 
     let eigenvalues = Tensor::builder(g)
-        .append_input(&eigen_op, false)
+        .append_input(eigen_op, false)
         .build(GeneralizedEigenExtractOp { component: 0 });
 
     let eigenvectors = Tensor::builder(g)
-        .append_input(&eigen_op, false)
+        .append_input(eigen_op, false)
         .build(GeneralizedEigenExtractOp { component: 1 });
 
     (eigenvalues, eigenvectors)
@@ -939,15 +947,15 @@ pub fn qr_pivot<'g, F: Float + ndarray::ScalarOperand>(
         .build(QRPivotOp);
 
     let q = Tensor::builder(g)
-        .append_input(&qr_op, false)
+        .append_input(qr_op, false)
         .build(QRPivotExtractOp { component: 0 });
 
     let r = Tensor::builder(g)
-        .append_input(&qr_op, false)
+        .append_input(qr_op, false)
         .build(QRPivotExtractOp { component: 1 });
 
     let p = Tensor::builder(g)
-        .append_input(&qr_op, false)
+        .append_input(qr_op, false)
         .build(QRPivotExtractOp { component: 2 });
 
     (q, r, p)

@@ -1578,12 +1578,12 @@ mod tests {
 
             // Test matinv alias (inv conflicts with reciprocal function)
             let inv_result = matinv(&x);
-            let inv_direct = matrix_inverse(&x);
+            let inv_direct = matrix_inverse(x);
             assert_eq!(inv_result.eval(g).unwrap(), inv_direct.eval(g).unwrap());
 
             // Test det alias
             let det_result = det(&x);
-            let det_direct = determinant(&x);
+            let det_direct = determinant(x);
             assert_eq!(det_result.eval(g).unwrap(), det_direct.eval(g).unwrap());
 
             // Test eig alias

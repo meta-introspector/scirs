@@ -27,7 +27,7 @@ fn test_matrix_inverse() {
         // Evaluate using evaluator.feed() approach instead of Feeder
         let identity_result = ctx
             .evaluator()
-            .push(&identity_approx)
+            .push(identity_approx)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -37,7 +37,7 @@ fn test_matrix_inverse() {
 
         // Check if close to identity - fix the size to 2x2
         let identity = ag::ndarray::Array2::<f32>::eye(2);
-        let error = (&identity_result
+        let error = (identity_result
             .into_dimensionality::<ag::ndarray::Ix2>()
             .unwrap()
             - &identity)
@@ -54,7 +54,7 @@ fn test_matrix_inverse() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(&grad_a)
+            .push(grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -92,7 +92,7 @@ fn test_determinant() {
         // Evaluate using evaluator.feed() approach
         let det_result = ctx
             .evaluator()
-            .push(&det_a)
+            .push(det_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -113,7 +113,7 @@ fn test_determinant() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(&grad_a)
+            .push(grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -173,7 +173,7 @@ fn test_matrix_solve() {
         // Evaluate using evaluator.feed() approach
         let x_result = ctx
             .evaluator()
-            .push(&x)
+            .push(x)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -184,7 +184,7 @@ fn test_matrix_solve() {
 
         // Check if solution is correct
         let x_result_2d = x_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
-        let error = (&x_result_2d - &expected_x).mapv(|x| x.abs()).sum();
+        let error = (x_result_2d - &expected_x).mapv(|x| x.abs()).sum();
 
         println!("Solution error: {}", error);
         assert!(error < 1e-5, "Linear solve failed, error: {}", error);
@@ -197,8 +197,8 @@ fn test_matrix_solve() {
         // Evaluate using evaluator.feed() approach
         let grad_results = ctx
             .evaluator()
-            .push(&grad_a)
-            .push(&grad_b)
+            .push(grad_a)
+            .push(grad_b)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run();
@@ -241,8 +241,8 @@ fn test_qr_decomposition() {
         // Evaluate using evaluator.feed() approach
         let results = ctx
             .evaluator()
-            .push(&q)
-            .push(&r)
+            .push(q)
+            .push(r)
             .feed(a, a_data.view().into_dyn())
             .run();
 
@@ -255,10 +255,10 @@ fn test_qr_decomposition() {
         // Check if Q is orthogonal (Q^T * Q ≈ I)
         let q_2d = q_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
         let q_t = q_2d.t();
-        let q_orthogonal = q_t.dot(&q_2d);
+        let q_orthogonal = q_t.dot(q_2d);
         let identity = ag::ndarray::Array2::<f32>::eye(3);
 
-        let orthogonal_error = (&q_orthogonal - &identity).mapv(|x| x.abs()).sum();
+        let orthogonal_error = (q_orthogonal - &identity).mapv(|x| x.abs()).sum();
         println!("Orthogonality error: {}", orthogonal_error);
         assert!(
             orthogonal_error < 1e-5,
@@ -268,9 +268,9 @@ fn test_qr_decomposition() {
 
         // Check if A = Q * R
         let r_2d = r_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
-        let a_reconstructed = q_2d.dot(&r_2d);
+        let a_reconstructed = q_2d.dot(r_2d);
 
-        let reconstruction_error = (&a_reconstructed - &a_data).mapv(|x| x.abs()).sum();
+        let reconstruction_error = (a_reconstructed - &a_data).mapv(|x| x.abs()).sum();
         println!("Reconstruction error: {}", reconstruction_error);
         assert!(
             reconstruction_error < 1e-5,
@@ -285,7 +285,7 @@ fn test_qr_decomposition() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(&grad_a)
+            .push(grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -320,7 +320,7 @@ fn test_matrix_exp() {
         // Evaluate using evaluator.feed() approach
         let exp_result = ctx
             .evaluator()
-            .push(&exp_a)
+            .push(exp_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -336,7 +336,7 @@ fn test_matrix_exp() {
         let exp_2d = exp_result
             .into_dimensionality::<ag::ndarray::Ix2>()
             .unwrap();
-        let error = (&exp_2d - &expected_exp).mapv(|x| x.abs()).sum();
+        let error = (exp_2d - &expected_exp).mapv(|x| x.abs()).sum();
 
         println!("Matrix exponential error: {}", error);
         assert!(error < 1e-5, "Matrix exponential failed, error: {}", error);
@@ -348,7 +348,7 @@ fn test_matrix_exp() {
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(&grad_a)
+            .push(grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -395,7 +395,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate using evaluator.feed() approach
         let a_inv_result = ctx
             .evaluator()
-            .push(&a_inv)
+            .push(a_inv)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -409,7 +409,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate using evaluator.feed() approach
         let identity_result = ctx
             .evaluator()
-            .push(&identity_approx)
+            .push(identity_approx)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -421,7 +421,7 @@ fn test_near_singular_matrix_operations() {
 
         // Check if close to identity with a larger tolerance
         let identity = Array2::<f32>::eye(3);
-        let error = (&identity_2d - &identity).mapv(|x| x.abs()).sum();
+        let error = (identity_2d - &identity).mapv(|x| x.abs()).sum();
 
         println!("Error from identity for near-singular matrix: {}", error);
         // Use a larger tolerance for nearly singular matrices
@@ -437,7 +437,7 @@ fn test_near_singular_matrix_operations() {
         // Evaluate using evaluator.feed() approach
         let det_result = ctx
             .evaluator()
-            .push(&det_a)
+            .push(det_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -459,12 +459,12 @@ fn test_near_singular_matrix_operations() {
         let b_data = ag::ndarray::array![[3.0], [3.0001], [3.0001]];
         let b = ctx.placeholder("b", &[3, 1]);
 
-        let x = T::solve(&a, &b);
+        let x = T::solve(a, &b);
 
         // Evaluate using evaluator.feed() approach
         let x_result = ctx
             .evaluator()
-            .push(&x)
+            .push(x)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -474,12 +474,12 @@ fn test_near_singular_matrix_operations() {
         println!("Solution x for near-singular matrix:\n{:?}", x_result);
 
         // Verify Ax ≈ b
-        let b_reconstructed = T::matmul(&a, &x);
+        let b_reconstructed = T::matmul(a, &x);
 
         // Evaluate using evaluator.feed() approach
         let b_reconstructed_result = ctx
             .evaluator()
-            .push(&b_reconstructed)
+            .push(b_reconstructed)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -490,7 +490,7 @@ fn test_near_singular_matrix_operations() {
             .into_dimensionality::<ag::ndarray::Ix2>()
             .unwrap();
 
-        let b_error = (&b_reconstructed_2d - &b_data).mapv(|x| x.abs()).sum();
+        let b_error = (b_reconstructed_2d - &b_data).mapv(|x| x.abs()).sum();
         println!("Error in Ax = b for near-singular matrix: {}", b_error);
         assert!(
             b_error < 1e-3,
@@ -502,21 +502,21 @@ fn test_near_singular_matrix_operations() {
         println!("Testing gradients for near-singular matrices...");
 
         // Test inverse gradient
-        let y1 = T::sum_all(&T::matrix_inverse(&a));
+        let y1 = T::sum_all(T::matrix_inverse(a));
         let grad_a1 = T::grad(&[y1], &[a])[0];
 
         // Test determinant gradient
-        let y2 = T::determinant(&a);
+        let y2 = T::determinant(a);
         let grad_a2 = T::grad(&[y2], &[a])[0];
 
         // Test solver gradient
-        let y3 = T::sum_all(&T::solve(&a, &b));
+        let y3 = T::sum_all(T::solve(a, &b));
         let grad_a3 = T::grad(&[y3], &[a])[0];
 
         // Evaluate all gradients using evaluator.feed() approach
         let grad_results1 = ctx
             .evaluator()
-            .push(&grad_a1)
+            .push(grad_a1)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -524,7 +524,7 @@ fn test_near_singular_matrix_operations() {
 
         let grad_results2 = ctx
             .evaluator()
-            .push(&grad_a2)
+            .push(grad_a2)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -532,7 +532,7 @@ fn test_near_singular_matrix_operations() {
 
         let grad_results3 = ctx
             .evaluator()
-            .push(&grad_a3)
+            .push(grad_a3)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -584,12 +584,12 @@ fn test_matrix_sqrt() {
         let a = ctx.placeholder("a", &[2, 2]);
 
         // Compute matrix square root
-        let sqrt_a = T::matrix_sqrt(&a);
+        let sqrt_a = T::matrix_sqrt(a);
 
         // Evaluate using evaluator.feed() approach
         let sqrt_result = ctx
             .evaluator()
-            .push(&sqrt_a)
+            .push(sqrt_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -598,12 +598,12 @@ fn test_matrix_sqrt() {
         println!("sqrt(A):\n{:?}", sqrt_result);
 
         // Verify sqrt(A) * sqrt(A) ≈ A
-        let sqrt_squared = T::matmul(&sqrt_a, &sqrt_a);
+        let sqrt_squared = T::matmul(sqrt_a, &sqrt_a);
 
         // Evaluate using evaluator.feed() approach
         let sqrt_squared_result = ctx
             .evaluator()
-            .push(&sqrt_squared)
+            .push(sqrt_squared)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
@@ -613,18 +613,18 @@ fn test_matrix_sqrt() {
             .into_dimensionality::<ag::ndarray::Ix2>()
             .unwrap();
 
-        let error = (&sqrt_squared_2d - &a_data).mapv(|x| x.abs()).sum();
+        let error = (sqrt_squared_2d - &a_data).mapv(|x| x.abs()).sum();
         println!("Matrix square root verification error: {}", error);
         assert!(error < 1e-4, "Matrix square root failed, error: {}", error);
 
         // Test gradient computation
-        let y = T::sum_all(&sqrt_a);
+        let y = T::sum_all(sqrt_a);
         let grad_a = T::grad(&[y], &[a])[0];
 
         // Evaluate using evaluator.feed() approach
         let grad_result = ctx
             .evaluator()
-            .push(&grad_a)
+            .push(grad_a)
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()

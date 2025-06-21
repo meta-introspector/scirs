@@ -1135,8 +1135,8 @@ mod tests {
 
     #[test]
     fn test_linalg_parameter() {
-        let float_param = LinalgParameter::Float(3.14);
-        assert_eq!(float_param.as_float().unwrap(), 3.14);
+        let float_param = LinalgParameter::Float(std::f64::consts::PI);
+        assert_eq!(float_param.as_float().unwrap(), std::f64::consts::PI);
 
         let string_param = LinalgParameter::String("test".to_string());
         assert_eq!(string_param.as_string().unwrap(), "test");
@@ -1147,7 +1147,7 @@ mod tests {
         crate::run(|g| {
             let tensor = Tensor::from_vec(vec![1.0f32, 2.0], vec![2], g);
             let result = LinalgResult {
-                primary_output: tensor.clone(),
+                primary_output: tensor,
                 auxiliary_outputs: HashMap::new(),
                 operation_info: OperationInfo {
                     operation: LinalgOperation::MatMul,

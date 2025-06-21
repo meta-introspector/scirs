@@ -730,9 +730,11 @@ mod tests {
 
     #[test]
     fn test_fusion_stats() {
-        let mut stats: FusionStats<f32> = FusionStats::default();
-        stats.chains_identified = 5;
-        stats.total_operations_fused = 20;
+        let mut stats: FusionStats<f32> = FusionStats {
+            chains_identified: 5,
+            total_operations_fused: 20,
+            ..Default::default()
+        };
 
         stats.calculate_memory_reduction(25);
         assert_eq!(stats.memory_bandwidth_reduction, 80.0);

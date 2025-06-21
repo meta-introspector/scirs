@@ -17,6 +17,9 @@ pub(crate) enum MemoryOrder {
 #[cfg(feature = "blas")]
 pub(crate) type BlasIF = i32;
 
+#[cfg(feature = "blas")]
+pub(crate) type MklInt = BlasIF;
+
 #[cfg(all(feature = "blas", feature = "intel-mkl"))]
 extern "C" {
     pub(crate) fn vsSin(n: BlasIF, a: *const libc::c_float, y: *mut libc::c_float);

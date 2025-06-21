@@ -205,10 +205,11 @@ impl EnhancedMatFile {
                 let bytes = string.as_bytes();
                 let array = ndarray::Array1::from_vec(bytes.to_vec()).into_dyn();
                 file.create_dataset_from_array(name, &array, Some(options))?;
-                
+
                 // Add attribute to indicate this is a string
                 if let Ok(dataset) = file.get_dataset_mut(&format!("/{}", name)) {
-                    dataset.set_attribute("matlab_class", AttributeValue::String("char".to_string()));
+                    dataset
+                        .set_attribute("matlab_class", AttributeValue::String("char".to_string()));
                 }
             }
             _ => {
@@ -231,7 +232,9 @@ impl EnhancedMatFile {
                 // Try to read as string from dataset
                 // First check if it's a string dataset by looking for matlab_class attribute
                 if let Ok(dataset) = file.get_dataset(&format!("/{}", name)) {
-                    if let Some(AttributeValue::String(class)) = dataset.get_attribute("matlab_class") {
+                    if let Some(AttributeValue::String(class)) =
+                        dataset.get_attribute("matlab_class")
+                    {
                         if class == "char" {
                             // Read the byte data and convert back to string
                             match file.read_dataset(name) {
@@ -239,7 +242,9 @@ impl EnhancedMatFile {
                                     let bytes: Vec<u8> = array.iter().map(|&x| x as u8).collect();
                                     match String::from_utf8(bytes) {
                                         Ok(string) => Ok(MatType::Char(string)),
-                                        Err(_) => Err(IoError::Other("Invalid UTF-8 string data".to_string())),
+                                        Err(_) => Err(IoError::Other(
+                                            "Invalid UTF-8 string data".to_string(),
+                                        )),
                                     }
                                 }
                                 Err(e) => Err(e),

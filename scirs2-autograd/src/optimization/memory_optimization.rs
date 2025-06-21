@@ -782,9 +782,11 @@ mod tests {
 
     #[test]
     fn test_memory_pool_stats() {
-        let mut stats = MemoryPoolStats::default();
-        stats.pool_hits = 8;
-        stats.pool_misses = 2;
+        let stats = MemoryPoolStats {
+            pool_hits: 8,
+            pool_misses: 2,
+            ..Default::default()
+        };
 
         assert_eq!(stats.hit_ratio(), 0.8);
     }

@@ -9,7 +9,7 @@ fn debug_svd_reconstruction() {
         println!("Original matrix A:");
         println!("{:?}", a.eval(g).unwrap());
 
-        let (u, s, v) = svd(&a);
+        let (u, s, v) = svd(a);
 
         let u_val = u.eval(g).unwrap();
         let s_val = s.eval(g).unwrap();
@@ -25,14 +25,14 @@ fn debug_svd_reconstruction() {
         println!("V:\n{:?}", v_val);
 
         // Try reconstruction
-        let s_diag = diag(&s);
+        let s_diag = diag(s);
         println!("\nS_diag shape: {:?}", s_diag.shape());
         match s_diag.eval(g) {
             Ok(val) => println!("S_diag:\n{:?}", val),
             Err(e) => println!("S_diag eval error: {:?}", e),
         }
 
-        let us = matmul(&u, &s_diag);
+        let us = matmul(u, &s_diag);
         match us.eval(g) {
             Ok(val) => {
                 println!("\nU * S shape: {:?}", val.shape());
@@ -41,7 +41,7 @@ fn debug_svd_reconstruction() {
             Err(e) => println!("U * S eval error: {:?}", e),
         }
 
-        let reconstructed = matmul(&us, &transpose(&v, &[1, 0]));
+        let reconstructed = matmul(us, &transpose(v, &[1, 0]));
         match reconstructed.eval(g) {
             Ok(val) => {
                 println!("\nReconstructed shape: {:?}", val.shape());

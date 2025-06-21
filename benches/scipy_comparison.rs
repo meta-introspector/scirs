@@ -4,7 +4,7 @@ use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use scirs2_linalg::{basic, decomposition, norm, solve};
+use scirs2_linalg::{cholesky, det, inv, lu, lstsq, matrix_norm, qr, solve, svd};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -53,7 +53,7 @@ fn generate_spd_matrix(size: usize) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
     let a = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
     let at = a.t();
-    at.dot(&a) + Array2::eye(size) * 0.1
+    at.dot(&a) + Array2::<f64>::eye(size) * 0.1
 }
 
 /// Benchmark comparison for basic operations
@@ -80,7 +80,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("determinant_rust", size), &size, |b, _| {
             b.iter(|| {
-                let result = basic::det(&matrix.view());
+                let result = det(&matrix.view(), None);
                 black_box(result)
             })
         });
@@ -88,7 +88,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
         // Matrix inverse (for smaller matrices)
         if size <= 200 {
             let start = Instant::now();
-            let _result = basic::inv(&matrix.view());
+            let _result = inv(&matrix.view(), None);
             let rust_time = start.elapsed().as_nanos() as u64;
 
             results.push(BenchmarkResult {
@@ -102,7 +102,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
 
             group.bench_with_input(BenchmarkId::new("inverse_rust", size), &size, |b, _| {
                 b.iter(|| {
-                    let result = basic::inv(&matrix.view());
+                    let result = inv(&matrix.view(), None);
                     black_box(result)
                 })
             });
@@ -110,7 +110,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
 
         // Matrix norms
         let start = Instant::now();
-        let _result = norm::matrix_norm(&matrix.view(), "frobenius");
+        let _result = matrix_norm(&matrix.view(), "frobenius", None);
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
@@ -238,7 +238,7 @@ fn bench_solver_comparison(c: &mut Criterion) {
 
         // General linear solve
         let start = Instant::now();
-        let _result = solve::solve(&matrix.view(), &vector.view());
+        let _result = solve(&matrix.view(), &vector.view(), None);
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
@@ -255,7 +255,7 @@ fn bench_solver_comparison(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = solve::solve(&matrix.view(), &vector.view());
+                    let result = solve(&matrix.view(), &vector.view(), None);
                     black_box(result)
                 })
             },
@@ -263,7 +263,7 @@ fn bench_solver_comparison(c: &mut Criterion) {
 
         // Least squares solve
         let start = Instant::now();
-        let _result = solve::lstsq(&matrix.view(), &vector.view());
+        let _result = lstsq(&matrix.view(), &vector.view(), None);
         let rust_time = start.elapsed().as_nanos() as u64;
 
         results.push(BenchmarkResult {
@@ -280,7 +280,7 @@ fn bench_solver_comparison(c: &mut Criterion) {
             &size,
             |b, _| {
                 b.iter(|| {
-                    let result = solve::lstsq(&matrix.view(), &vector.view());
+                    let result = lstsq(&matrix.view(), &vector.view(), None);
                     black_box(result)
                 })
             },

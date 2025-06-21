@@ -17,12 +17,12 @@ fn test_minimal_matmul() {
         let b = ctx.placeholder("b", &[2, 2]);
 
         // Compute matrix multiplication
-        let c = T::matmul(&a, &b);
+        let c = T::matmul(a, b);
 
         // Evaluate using evaluator.feed() approach instead of Feeder
         let result = ctx
             .evaluator()
-            .push(&c)
+            .push(c)
             .feed(a, a_data.view().into_dyn())
             .feed(b, b_data.view().into_dyn())
             .run()[0]
@@ -34,7 +34,7 @@ fn test_minimal_matmul() {
         // Expected result: [[19, 22], [43, 50]]
         let expected = array![[19.0, 22.0], [43.0, 50.0]];
         let result_2d = result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
-        let diff = (&result_2d - &expected).mapv(|x| x.abs()).sum();
+        let diff = (result_2d - &expected).mapv(|x| x.abs()).sum();
 
         println!("Difference from expected: {}", diff);
         assert!(diff < 1e-5, "Matrix multiplication failed, diff: {}", diff);

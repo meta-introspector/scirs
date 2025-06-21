@@ -208,7 +208,7 @@ mod tests {
             let c = kron(&a, &b);
 
             // c should be [[6], [8], [3], [4]]
-            let sum_c = crate::tensor_ops::sum_all(&c);
+            let sum_c = crate::tensor_ops::sum_all(c);
 
             // Compute gradients
             let grads = crate::tensor_ops::grad(&[&sum_c], &[&a, &b]);

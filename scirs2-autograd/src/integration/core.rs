@@ -529,11 +529,11 @@ mod tests {
 
     #[test]
     fn test_parameter_types() {
-        let float_param = Parameter::Float(3.14);
-        assert_eq!(float_param.as_float().unwrap(), 3.14);
+        let float_param = Parameter::Float(std::f64::consts::PI);
+        assert_eq!(float_param.as_float().unwrap(), std::f64::consts::PI);
 
         let bool_param = Parameter::Bool(true);
-        assert_eq!(bool_param.as_bool().unwrap(), true);
+        assert!(bool_param.as_bool().unwrap());
 
         let string_param = Parameter::String("test".to_string());
         assert_eq!(string_param.as_string().unwrap(), "test");

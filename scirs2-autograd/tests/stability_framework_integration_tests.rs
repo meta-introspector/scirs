@@ -145,7 +145,7 @@ fn test_numerical_analysis_integration() {
     //         "Test not fully implemented".to_string(),
     //     ))
     // };
-    // let conditioning_result = analyzer.analyze_condition_number(&test_function, &input);
+    // let conditioning_result = analyzer.analyze_condition_number(test_function, &input);
     // assert!(conditioning_result.is_ok());
     println!("Condition number analysis: Skipped due to lifetime complexity");
 }
@@ -163,15 +163,15 @@ fn test_stability_metrics_integration() {
     //         "Test not fully implemented".to_string(),
     //     ))
     // };
-    // let forward_result = metrics.compute_forward_stability(&test_function, &input, 1e-8);
+    // let forward_result = metrics.compute_forward_stability(test_function, &input, 1e-8);
     // assert!(forward_result.is_ok());
     println!("Forward stability metrics: Skipped due to lifetime complexity");
 
     // Test backward stability
     // Note: Since test_function always returns error, we skip backward stability test
     // In real implementation, this would use the actual function output
-    // let output = test_function(&input).unwrap();
-    // let backward_result = metrics.compute_backward_stability(&test_function, &input, &output);
+    // let output = test_function(input).unwrap();
+    // let backward_result = metrics.compute_backward_stability(test_function, &input, &output);
     // assert!(backward_result.is_ok());
     //
     // let backward_metrics = backward_result.unwrap();
@@ -193,7 +193,7 @@ fn test_error_propagation_analysis() {
     //         "Test not fully implemented".to_string(),
     //     ))
     // };
-    // let result = analyze_error_propagation(&linear_function, &input, &uncertainty);
+    // let result = analyze_error_propagation(linear_function, &input, &uncertainty);
     // assert!(result.is_ok());
     println!("Error propagation analysis: Skipped due to lifetime complexity");
 }
@@ -491,12 +491,12 @@ fn test_complete_stability_workflow() {
     //         "Test not fully implemented".to_string(),
     //     ))
     // };
-    // let conditioning = analyzer.analyze_condition_number(&test_function, &input);
+    // let conditioning = analyzer.analyze_condition_number(test_function, &input);
     // assert!(conditioning.is_ok());
     println!("   ✓ Numerical analysis skipped");
 
     // Test stability metrics (skipped due to implementation limitations)
-    // let forward_metrics = compute_forward_stability(&test_function, &input, 1e-8);
+    // let forward_metrics = compute_forward_stability(test_function, &input, 1e-8);
     // assert!(forward_metrics.is_ok());
     println!("   ✓ Stability metrics skipped");
 

@@ -582,6 +582,69 @@ pub fn apply_cse<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationEr
     Ok(report.cse_applied)
 }
 
+// Temporary stub implementations for types used in tests
+// These will be replaced when the full optimization modules are completed
+
+/// Stub implementation of ConstantFolder for testing
+pub struct ConstantFolder<F: Float> {
+    _phantom: std::marker::PhantomData<F>,
+}
+
+impl<F: Float> ConstantFolder<F> {
+    /// Create a new constant folder
+    pub fn new() -> Self {
+        Self {
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Check if a tensor is constant
+    pub fn is_constant(&self, _tensor_id: TensorID) -> bool {
+        false
+    }
+
+    /// Get the constant value of a tensor if it's constant
+    pub fn get_constant_value(&self, _tensor_id: TensorID) -> Option<F> {
+        None
+    }
+
+    /// Clear the constant cache
+    pub fn clear_cache(&mut self) {
+        // No-op for stub
+    }
+}
+
+impl<F: Float> Default for ConstantFolder<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Stub implementation of ExpressionSimplifier for testing
+pub struct ExpressionSimplifier<F: Float> {
+    _phantom: std::marker::PhantomData<F>,
+}
+
+impl<F: Float> ExpressionSimplifier<F> {
+    /// Create a new expression simplifier
+    pub fn new() -> Self {
+        Self {
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Clear the simplifier cache
+    pub fn clear_cache(&mut self) {
+        // No-op for stub
+    }
+}
+
+impl<F: Float> Default for ExpressionSimplifier<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -651,68 +714,5 @@ mod tests {
     fn test_optimization_pass() {
         let pass = OptimizationPass::<f32>::new("test_pass");
         assert_eq!(pass.name(), "test_pass");
-    }
-}
-
-// Temporary stub implementations for types used in tests
-// These will be replaced when the full optimization modules are completed
-
-/// Stub implementation of ConstantFolder for testing
-pub struct ConstantFolder<F: Float> {
-    _phantom: std::marker::PhantomData<F>,
-}
-
-impl<F: Float> ConstantFolder<F> {
-    /// Create a new constant folder
-    pub fn new() -> Self {
-        Self {
-            _phantom: std::marker::PhantomData,
-        }
-    }
-
-    /// Check if a tensor is constant
-    pub fn is_constant(&self, _tensor_id: TensorID) -> bool {
-        false
-    }
-
-    /// Get the constant value of a tensor if it's constant
-    pub fn get_constant_value(&self, _tensor_id: TensorID) -> Option<F> {
-        None
-    }
-
-    /// Clear the constant cache
-    pub fn clear_cache(&mut self) {
-        // No-op for stub
-    }
-}
-
-impl<F: Float> Default for ConstantFolder<F> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Stub implementation of ExpressionSimplifier for testing
-pub struct ExpressionSimplifier<F: Float> {
-    _phantom: std::marker::PhantomData<F>,
-}
-
-impl<F: Float> ExpressionSimplifier<F> {
-    /// Create a new expression simplifier
-    pub fn new() -> Self {
-        Self {
-            _phantom: std::marker::PhantomData,
-        }
-    }
-
-    /// Clear the simplifier cache
-    pub fn clear_cache(&mut self) {
-        // No-op for stub
-    }
-}
-
-impl<F: Float> Default for ExpressionSimplifier<F> {
-    fn default() -> Self {
-        Self::new()
     }
 }

@@ -804,6 +804,107 @@ where
     crate::tensor_ops::reduction::frobenius_norm(x)
 }
 
+// Re-export enhanced linear algebra operations
+
+/// Compute the 1-norm of a matrix (maximum column sum)
+pub use crate::tensor_ops::matrix_norms::norm1;
+
+/// Compute the 2-norm of a matrix (largest singular value)
+pub use crate::tensor_ops::matrix_norms::norm2;
+
+/// Compute the infinity-norm of a matrix (maximum row sum)
+pub use crate::tensor_ops::matrix_norms::norminf;
+
+/// Compute the Frobenius norm of a matrix (alias)
+pub use crate::tensor_ops::matrix_norms::normfro;
+
+/// Solve Sylvester equation AX + XB = C
+pub use crate::tensor_ops::matrix_solvers::solve_sylvester;
+
+/// Solve Lyapunov equation AX + XA^T = Q
+pub use crate::tensor_ops::matrix_solvers::solve_lyapunov;
+
+/// Solve linear system AX = B using Cholesky decomposition
+pub use crate::tensor_ops::matrix_solvers::cholesky_solve;
+
+/// Eigendecomposition for symmetric/Hermitian matrices
+pub use crate::tensor_ops::symmetric_ops::eigh;
+
+/// Eigenvalues only for symmetric/Hermitian matrices
+pub use crate::tensor_ops::symmetric_ops::eigvalsh;
+
+/// Polar decomposition A = UP
+pub use crate::tensor_ops::special_decompositions::polar;
+
+/// Schur decomposition A = QTQ^T
+pub use crate::tensor_ops::special_decompositions::schur;
+
+/// Matrix exponential using Padé approximation (method 2)
+pub use crate::tensor_ops::matrix_ops::expm2;
+
+/// Matrix exponential using eigendecomposition (method 3)
+pub use crate::tensor_ops::matrix_ops::expm3;
+
+/// Solve tensor equation
+pub use crate::tensor_ops::advanced_tensor_ops::tensor_solve;
+
+/// Einstein summation convention
+pub use crate::tensor_ops::advanced_tensor_ops::einsum;
+
+/// Kronecker product (tensor product)
+pub use crate::tensor_ops::advanced_tensor_ops::kron as kronecker_product;
+
+// Advanced decompositions
+
+/// SVD using Jacobi algorithm for improved numerical stability
+pub use crate::tensor_ops::advanced_decompositions::svd_jacobi;
+
+/// Randomized SVD for large matrices
+pub use crate::tensor_ops::advanced_decompositions::randomized_svd;
+
+/// Generalized eigenvalue problem Ax = λBx
+pub use crate::tensor_ops::advanced_decompositions::generalized_eigen;
+
+/// QR decomposition with column pivoting
+pub use crate::tensor_ops::advanced_decompositions::qr_pivot;
+
+// Iterative solvers
+
+/// Conjugate gradient solver for symmetric positive definite systems
+pub use crate::tensor_ops::iterative_solvers::conjugate_gradient_solve;
+
+/// GMRES solver for general linear systems
+pub use crate::tensor_ops::iterative_solvers::gmres_solve;
+
+/// BiCGSTAB solver for non-symmetric systems
+pub use crate::tensor_ops::iterative_solvers::bicgstab_solve;
+
+/// Preconditioned conjugate gradient solver
+pub use crate::tensor_ops::iterative_solvers::pcg_solve;
+
+/// Preconditioner types for iterative solvers
+pub use crate::tensor_ops::iterative_solvers::PreconditionerType;
+
+// Matrix functions
+
+/// Matrix sine function
+pub use crate::tensor_ops::matrix_trig_functions::sinm;
+
+/// Matrix cosine function
+pub use crate::tensor_ops::matrix_trig_functions::cosm;
+
+/// Matrix sign function
+pub use crate::tensor_ops::matrix_trig_functions::signm;
+
+/// Matrix hyperbolic sine function
+pub use crate::tensor_ops::matrix_trig_functions::sinhm;
+
+/// Matrix hyperbolic cosine function
+pub use crate::tensor_ops::matrix_trig_functions::coshm;
+
+/// General matrix function
+pub use crate::tensor_ops::matrix_trig_functions::funm;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -935,104 +1036,3 @@ mod tests {
         });
     }
 }
-
-// Re-export enhanced linear algebra operations
-
-/// Compute the 1-norm of a matrix (maximum column sum)
-pub use crate::tensor_ops::matrix_norms::norm1;
-
-/// Compute the 2-norm of a matrix (largest singular value)
-pub use crate::tensor_ops::matrix_norms::norm2;
-
-/// Compute the infinity-norm of a matrix (maximum row sum)
-pub use crate::tensor_ops::matrix_norms::norminf;
-
-/// Compute the Frobenius norm of a matrix (alias)
-pub use crate::tensor_ops::matrix_norms::normfro;
-
-/// Solve Sylvester equation AX + XB = C
-pub use crate::tensor_ops::matrix_solvers::solve_sylvester;
-
-/// Solve Lyapunov equation AX + XA^T = Q
-pub use crate::tensor_ops::matrix_solvers::solve_lyapunov;
-
-/// Solve linear system AX = B using Cholesky decomposition
-pub use crate::tensor_ops::matrix_solvers::cholesky_solve;
-
-/// Eigendecomposition for symmetric/Hermitian matrices
-pub use crate::tensor_ops::symmetric_ops::eigh;
-
-/// Eigenvalues only for symmetric/Hermitian matrices
-pub use crate::tensor_ops::symmetric_ops::eigvalsh;
-
-/// Polar decomposition A = UP
-pub use crate::tensor_ops::special_decompositions::polar;
-
-/// Schur decomposition A = QTQ^T
-pub use crate::tensor_ops::special_decompositions::schur;
-
-/// Matrix exponential using Padé approximation (method 2)
-pub use crate::tensor_ops::matrix_ops::expm2;
-
-/// Matrix exponential using eigendecomposition (method 3)
-pub use crate::tensor_ops::matrix_ops::expm3;
-
-/// Solve tensor equation
-pub use crate::tensor_ops::advanced_tensor_ops::tensor_solve;
-
-/// Einstein summation convention
-pub use crate::tensor_ops::advanced_tensor_ops::einsum;
-
-/// Kronecker product (tensor product)
-pub use crate::tensor_ops::advanced_tensor_ops::kron as kronecker_product;
-
-// Advanced decompositions
-
-/// SVD using Jacobi algorithm for improved numerical stability
-pub use crate::tensor_ops::advanced_decompositions::svd_jacobi;
-
-/// Randomized SVD for large matrices
-pub use crate::tensor_ops::advanced_decompositions::randomized_svd;
-
-/// Generalized eigenvalue problem Ax = λBx
-pub use crate::tensor_ops::advanced_decompositions::generalized_eigen;
-
-/// QR decomposition with column pivoting
-pub use crate::tensor_ops::advanced_decompositions::qr_pivot;
-
-// Iterative solvers
-
-/// Conjugate gradient solver for symmetric positive definite systems
-pub use crate::tensor_ops::iterative_solvers::conjugate_gradient_solve;
-
-/// GMRES solver for general linear systems
-pub use crate::tensor_ops::iterative_solvers::gmres_solve;
-
-/// BiCGSTAB solver for non-symmetric systems
-pub use crate::tensor_ops::iterative_solvers::bicgstab_solve;
-
-/// Preconditioned conjugate gradient solver
-pub use crate::tensor_ops::iterative_solvers::pcg_solve;
-
-/// Preconditioner types for iterative solvers
-pub use crate::tensor_ops::iterative_solvers::PreconditionerType;
-
-// Matrix functions
-
-/// Matrix sine function
-pub use crate::tensor_ops::matrix_trig_functions::sinm;
-
-/// Matrix cosine function
-pub use crate::tensor_ops::matrix_trig_functions::cosm;
-
-/// Matrix sign function
-pub use crate::tensor_ops::matrix_trig_functions::signm;
-
-/// Matrix hyperbolic sine function
-pub use crate::tensor_ops::matrix_trig_functions::sinhm;
-
-/// Matrix hyperbolic cosine function
-pub use crate::tensor_ops::matrix_trig_functions::coshm;
-
-/// General matrix function
-pub use crate::tensor_ops::matrix_trig_functions::funm;

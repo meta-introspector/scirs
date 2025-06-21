@@ -73,7 +73,7 @@ fn test_arithmetic_stability() {
             ctx,
         );
 
-        let div_result = T::div(&numerator, &small_denom);
+        let div_result = T::div(numerator, &small_denom);
         let div_output = div_result.eval(ctx).unwrap();
 
         // Should handle extreme divisions gracefully
@@ -107,14 +107,14 @@ fn test_matrix_operation_stability() {
         );
 
         // Matrix multiplication with ill-conditioned matrix
-        let matmul_result = T::matmul(&ill_conditioned, &vector);
+        let matmul_result = T::matmul(ill_conditioned, &vector);
         let matmul_output = matmul_result.eval(ctx).unwrap();
 
         // Result should be finite
         assert!(matmul_output.iter().all(|&x| x.is_finite()));
 
         // Test near-singular matrix determinant
-        let det_result = T::linear_algebra::determinant(&ill_conditioned);
+        let det_result = T::linear_algebra::determinant(ill_conditioned);
         let det_output = det_result.eval(ctx).unwrap();
 
         // Determinant should be very small but finite
@@ -132,7 +132,7 @@ fn test_matrix_operation_stability() {
             ctx,
         );
 
-        let inv_result = T::inv(&well_conditioned);
+        let inv_result = T::inv(well_conditioned);
         let inv_output = inv_result.eval(ctx).unwrap();
 
         // Just verify the inverse computation doesn't crash and produces finite values
@@ -162,29 +162,29 @@ fn test_activation_function_stability() {
         );
 
         // Test sigmoid stability
-        let sigmoid_result = T::sigmoid(&extreme_inputs);
+        let sigmoid_result = T::sigmoid(extreme_inputs);
         let sigmoid_output = sigmoid_result.eval(ctx).unwrap();
 
         // Sigmoid should be bounded [0, 1] and finite
         assert!(sigmoid_output
             .iter()
-            .all(|&x| x.is_finite() && x >= 0.0 && x <= 1.0));
+            .all(|&x| x.is_finite() && (0.0..=1.0).contains(x)));
 
         // Check expected behavior at extremes
         assert!(sigmoid_output[0] < 1e-6); // sigmoid(-100) ≈ 0
         assert!(sigmoid_output[7] > 0.999999); // sigmoid(100) ≈ 1
 
         // Test tanh stability
-        let tanh_result = T::tanh(&extreme_inputs);
+        let tanh_result = T::tanh(extreme_inputs);
         let tanh_output = tanh_result.eval(ctx).unwrap();
 
         // Tanh should be bounded [-1, 1] and finite
         assert!(tanh_output
             .iter()
-            .all(|&x| x.is_finite() && x >= -1.0 && x <= 1.0));
+            .all(|&x| x.is_finite() && (-1.0..=1.0).contains(x)));
 
         // Test ReLU stability (should be exact)
-        let relu_result = T::relu(&extreme_inputs);
+        let relu_result = T::relu(extreme_inputs);
         let relu_output = relu_result.eval(ctx).unwrap();
 
         // ReLU should be exact: max(0, x)
@@ -194,13 +194,13 @@ fn test_activation_function_stability() {
         }
 
         // Test custom activations with extreme values
-        let swish_result = T::custom_activation(&extreme_inputs, "swish");
+        let swish_result = T::custom_activation(extreme_inputs, "swish");
         let swish_output = swish_result.eval(ctx).unwrap();
 
         // Swish should be finite
         assert!(swish_output.iter().all(|&x| x.is_finite()));
 
-        let gelu_result = T::custom_activation(&extreme_inputs, "gelu");
+        let gelu_result = T::custom_activation(extreme_inputs, "gelu");
         let gelu_output = gelu_result.eval(ctx).unwrap();
 
         // GELU should be finite and roughly monotonic
@@ -228,7 +228,7 @@ fn test_reduction_stability() {
             ctx,
         );
 
-        let sum_result = T::reduce_sum(&cancellation_prone, &[0], false);
+        let sum_result = T::reduce_sum(cancellation_prone, &[0], false);
         let sum_output = sum_result.eval(ctx).unwrap();
 
         // Result should be close to zero (500 * 1e-3 - 500 * 1e-3 = 0)
@@ -247,7 +247,7 @@ fn test_reduction_stability() {
             ctx,
         );
 
-        let mean_result = T::reduce_mean(&extreme_values, &[0], false);
+        let mean_result = T::reduce_mean(extreme_values, &[0], false);
         let mean_output = mean_result.eval(ctx).unwrap();
 
         // Mean should be finite
@@ -266,7 +266,7 @@ fn test_reduction_stability() {
             ctx,
         );
 
-        let max_result = T::reduce_max(&with_special_values, &[0], false);
+        let max_result = T::reduce_max(with_special_values, &[0], false);
         let max_output = max_result.eval(ctx).unwrap();
 
         // When reducing all dimensions, we get a scalar (0D array)
@@ -274,7 +274,7 @@ fn test_reduction_stability() {
         let max_scalar = *max_output.iter().next().unwrap();
         assert_eq!(max_scalar, f32::INFINITY);
 
-        let min_result = T::reduce_min(&with_special_values, &[0], false);
+        let min_result = T::reduce_min(with_special_values, &[0], false);
         let min_output = min_result.eval(ctx).unwrap();
 
         // When reducing all dimensions, we get a scalar (0D array)
@@ -292,7 +292,7 @@ fn test_reduction_stability() {
             ctx,
         );
 
-        let variance_result = T::reduce_variance(&variance_test, &[0], false);
+        let variance_result = T::reduce_variance(variance_test, &[0], false);
         let variance_output = variance_result.eval(ctx).unwrap();
 
         // Variance should be positive and finite
@@ -353,8 +353,8 @@ fn test_gradient_numerical_stability() {
         }
 
         // Test chain rule stability
-        let z = T::sigmoid(&y);
-        let w = T::reduce_sum(&z, &[0], false);
+        let z = T::sigmoid(y);
+        let w = T::reduce_sum(z, &[0], false);
         let grad_w = T::grad(&[w], &[&x]);
 
         let grad_w_output = grad_w[0].eval(ctx).unwrap();
@@ -368,7 +368,7 @@ fn test_gradient_numerical_stability() {
             ctx,
         );
 
-        let det = T::linear_algebra::determinant(&matrix);
+        let det = T::linear_algebra::determinant(matrix);
         let grad_det = T::grad(&[det], &[&matrix]);
 
         let grad_det_output = grad_det[0].eval(ctx).unwrap();
@@ -427,7 +427,7 @@ fn test_optimization_numerical_stability() {
 
         let zero_term = T::simd_mul(&const1, &large_constant); // Should optimize to 0
         let identity_term = T::simd_mul(&const2, &x); // Should optimize to x
-        let result = T::simd_add(&T::simd_add(&x, &zero_term), &identity_term);
+        let result = T::simd_add(&T::simd_add(x, &zero_term), &identity_term);
 
         // Test without optimization
         let unoptimized_output = result.eval(ctx).unwrap();
@@ -501,11 +501,11 @@ fn test_parallel_operation_stability() {
                 ctx,
             );
 
-            let parallel_sum = T::parallel_sum(&large_array, &[0], false);
+            let parallel_sum = T::parallel_sum(large_array, &[0], false);
             let parallel_output = parallel_sum.eval(ctx).unwrap();
 
             // Compare with sequential sum for consistency
-            let sequential_sum = T::reduce_sum(&large_array, &[0], false);
+            let sequential_sum = T::reduce_sum(large_array, &[0], false);
             let sequential_output = sequential_sum.eval(ctx).unwrap();
 
             // Results should be very close
@@ -550,17 +550,17 @@ fn test_parallel_operation_stability() {
                 ctx,
             );
 
-            let parallel_matmul = T::cache_friendly_matmul(&matrix_a, &matrix_b, Some(32));
+            let parallel_matmul = T::cache_friendly_matmul(matrix_a, &matrix_b, Some(32));
             let parallel_matmul_output = parallel_matmul.eval(ctx).unwrap();
 
-            let sequential_matmul = T::matmul(&matrix_a, &matrix_b);
+            let sequential_matmul = T::matmul(matrix_a, &matrix_b);
             let sequential_matmul_output = sequential_matmul.eval(ctx).unwrap();
 
             // Compare results element-wise
             let max_error = parallel_matmul_output
                 .iter()
                 .zip(sequential_matmul_output.iter())
-                .map(|(&p, &s)| (p - s).abs())
+                .map(|(p, &s)| (p - s).abs())
                 .fold(0.0f32, |acc, err| acc.max(err));
 
             assert!(
@@ -598,9 +598,9 @@ fn test_tracing_numerical_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Perform computations that should be traced
         let x = T::efficient_ones(&[1000], ctx);
-        let y = T::custom_activation(&x, "swish");
+        let y = T::custom_activation(x, "swish");
         let z = T::simd_mul(&y, &y);
-        let result = T::reduce_sum(&z, &[0], false);
+        let result = T::reduce_sum(z, &[0], false);
 
         let output = result.eval(ctx).unwrap();
 
@@ -660,14 +660,14 @@ fn test_memory_optimization_stability() {
 
         // Without checkpointing
         let normal_computation = T::simd_mul(&large_input, &large_input);
-        let normal_result = T::reduce_sum(&normal_computation, &[0], false);
+        let normal_result = T::reduce_sum(normal_computation, &[0], false);
         let normal_output = normal_result.eval(ctx).unwrap();
 
         // With checkpointing
-        let checkpointed_computation = T::smart_checkpoint(&large_input, 5000);
+        let checkpointed_computation = T::smart_checkpoint(large_input, 5000);
         let checkpointed_squared =
             T::simd_mul(&checkpointed_computation, &checkpointed_computation);
-        let checkpointed_result = T::reduce_sum(&checkpointed_squared, &[0], false);
+        let checkpointed_result = T::reduce_sum(checkpointed_squared, &[0], false);
         let checkpointed_output = checkpointed_result.eval(ctx).unwrap();
 
         // Results should be identical
@@ -690,7 +690,7 @@ fn test_memory_optimization_stability() {
             ctx,
         );
 
-        let inplace_result = T::inplace_add(&base_tensor, &addend);
+        let inplace_result = T::inplace_add(base_tensor, &addend);
         let inplace_output = inplace_result.eval(ctx).unwrap();
 
         // Should be exactly 1.5 for all elements
@@ -702,7 +702,7 @@ fn test_memory_optimization_stability() {
         T::clear_computation_cache();
         T::configure_cache(1000, 60);
 
-        let cached_computation = T::cached_op(&large_input, "square");
+        let cached_computation = T::cached_op(large_input, "square");
         let cached_output = cached_computation.eval(ctx).unwrap();
 
         // Should be exactly 1.0 for all elements (1^2 = 1)
@@ -711,13 +711,13 @@ fn test_memory_optimization_stability() {
             .all(|&x| (x - 1.0).abs() < EPSILON_STRICT));
 
         // Second call should use cache but give same result
-        let cached_again = T::cached_op(&large_input, "square");
+        let cached_again = T::cached_op(large_input, "square");
         let cached_again_output = cached_again.eval(ctx).unwrap();
 
         assert!(cached_output
             .iter()
             .zip(cached_again_output.iter())
-            .all(|(&a, &b)| (a - b).abs() < EPSILON_STRICT));
+            .all(|(a, &b)| (a - b).abs() < EPSILON_STRICT));
 
         println!("✅ Memory optimizations maintain numerical stability");
     });

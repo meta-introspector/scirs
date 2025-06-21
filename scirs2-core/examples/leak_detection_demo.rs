@@ -3,9 +3,18 @@
 //! This example demonstrates the comprehensive memory leak detection system
 //! implemented in SciRS2 Core.
 
+#[cfg(not(feature = "memory_management"))]
+fn main() {
+    println!("This example requires the 'memory_management' feature to be enabled.");
+    println!("Run with: cargo run --example leak_detection_demo --features memory_management");
+}
+
+#[cfg(feature = "memory_management")]
 use scirs2_core::memory::leak_detection::{LeakCheckGuard, LeakDetectionConfig, LeakDetector};
+#[cfg(feature = "memory_management")]
 use scirs2_core::CoreResult;
 
+#[cfg(feature = "memory_management")]
 fn main() -> CoreResult<()> {
     println!("🔍 SciRS2 Core Memory Leak Detection Demo");
     println!("==========================================\n");

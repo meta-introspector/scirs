@@ -26,7 +26,7 @@ fn main() {
         println!("\nUsing det(A): {}", determinant.eval(g).unwrap()[[]]);
 
         // Verify: A * inv(A) = I
-        let identity_check = matmul(&a, &inverse);
+        let identity_check = matmul(a, inverse);
         println!("\nA * inv(A) (should be identity):");
         println!("{:?}", identity_check.eval(g).unwrap());
 
@@ -46,7 +46,7 @@ fn main() {
         println!("{:?}", pseudo_inv.eval(g).unwrap());
 
         // Verify: A * pinv(A) * A ≈ A
-        let check = matmul(&matmul(&rect, &pseudo_inv), &rect);
+        let check = matmul(matmul(rect, pseudo_inv), rect);
         println!("\nA * pinv(A) * A (should equal A):");
         println!("{:?}", check.eval(g).unwrap());
 
@@ -74,7 +74,7 @@ fn main() {
         println!("{:?}", sqrt_mat.eval(g).unwrap());
 
         // Verify: sqrtm(A) * sqrtm(A) = A
-        let sqrt_squared = matmul(&sqrt_mat, &sqrt_mat);
+        let sqrt_squared = matmul(sqrt_mat, sqrt_mat);
         println!("\nsqrtm(A) * sqrtm(A) (should equal A):");
         println!("{:?}", sqrt_squared.eval(g).unwrap());
 
@@ -98,12 +98,12 @@ fn main() {
 
         // Compute: tr(inv(A)) + det(A) - ||sqrtm(A)||_F
         let inv_x = matinv(&x);
-        let tr_inv = trace(&inv_x);
+        let tr_inv = trace(inv_x);
         let det_x = det(&x);
         let sqrt_x = sqrtm(&x);
-        let norm_sqrt = frobenius_norm(&sqrt_x);
+        let norm_sqrt = frobenius_norm(sqrt_x);
 
-        let result = sub(&add(&tr_inv, &det_x), &norm_sqrt);
+        let result = sub(add(tr_inv, det_x), norm_sqrt);
 
         println!("Complex expression: tr(inv(A)) + det(A) - ||sqrtm(A)||_F");
         println!("Result: {}", result.eval(g).unwrap()[[]]);

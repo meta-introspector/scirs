@@ -144,7 +144,7 @@ mod advanced_linalg_demo_tests {
 
             // Test Frobenius norm gradient
             let norm = normfro(&x);
-            let grad = grad(&[norm], &[x])[0];
+            let grad = grad(&[norm], &[&x])[0];
 
             println!("Gradient of Frobenius norm:");
             println!("{:?}", grad.eval(g).unwrap());

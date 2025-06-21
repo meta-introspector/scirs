@@ -4,13 +4,24 @@
 //! using the out-of-core array system with automatic dirty chunk tracking
 //! and persistence.
 
+#[cfg(not(feature = "memory_management"))]
+fn main() {
+    println!("This example requires the 'memory_management' feature to be enabled.");
+    println!("Run with: cargo run --example out_of_core_demo --features memory_management");
+}
+
+#[cfg(feature = "memory_management")]
 use ndarray::{Array, IxDyn};
+#[cfg(feature = "memory_management")]
 use scirs2_core::memory::out_of_core::{
     CachePolicy, FileStorageBackend, OutOfCoreArray, OutOfCoreConfig, OutOfCoreManager,
 };
+#[cfg(feature = "memory_management")]
 use std::sync::Arc;
+#[cfg(feature = "memory_management")]
 use tempfile::TempDir;
 
+#[cfg(feature = "memory_management")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Out-of-Core Memory Management Demo ===\n");
 

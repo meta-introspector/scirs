@@ -1,27 +1,36 @@
+//! Example demonstrating memory management utilities for scientific computing
+//!
+//! This example shows:
+//! - Using the global buffer pool for efficient memory allocation
+//! - Zero-copy views for efficient data access
+//! - 2D chunk processing for memory-efficient operations on large arrays
+
+#[cfg(not(feature = "memory_management"))]
+fn main() {
+    println!("This example requires the 'memory_management' feature to be enabled.");
+    println!("Run with: cargo run --example memory_management --features memory_management");
+}
+
+#[cfg(feature = "memory_management")]
 use ndarray::Array2;
+#[cfg(feature = "memory_management")]
 use scirs2_core::memory::{global_buffer_pool, BufferPool, ChunkProcessor2D, ZeroCopyView};
 
+#[cfg(feature = "memory_management")]
 fn main() {
     println!("Memory Management Example");
 
-    // Only run the example if the memory_management feature is enabled
-    #[cfg(feature = "memory_management")]
-    {
-        println!("\n--- Chunk Processing Example ---");
-        chunk_processing_example();
+    println!("\n--- Chunk Processing Example ---");
+    chunk_processing_example();
 
-        println!("\n--- Buffer Pool Example ---");
-        buffer_pool_example();
+    println!("\n--- Buffer Pool Example ---");
+    buffer_pool_example();
 
-        println!("\n--- Zero-Copy Example ---");
-        zero_copy_example();
+    println!("\n--- Zero-Copy Example ---");
+    zero_copy_example();
 
-        println!("\n--- Global Buffer Pool Example ---");
-        global_buffer_pool_example();
-    }
-
-    #[cfg(not(feature = "memory_management"))]
-    println!("Memory management feature not enabled. Run with --features=\"memory_management\" to see the example.");
+    println!("\n--- Global Buffer Pool Example ---");
+    global_buffer_pool_example();
 }
 
 #[cfg(feature = "memory_management")]

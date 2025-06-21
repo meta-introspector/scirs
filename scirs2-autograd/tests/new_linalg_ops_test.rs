@@ -124,7 +124,7 @@ fn test_kronecker_gradient() {
         let b = variable(array![[3.0_f64]], g);
 
         let c = kron(&a, &b);
-        let sum_c = sum_all(&c);
+        let sum_c = sum_all(c);
 
         let grads = grad(&[&sum_c], &[&a, &b]);
 
@@ -260,8 +260,8 @@ fn test_aliases_usage() {
         let _det = det(&a);
         let _pinv = pinv(&a);
         // Not yet implemented:
-        // let _sqrt = sqrtm(&a);
-        // let _log = logm(&a);
+        // let _sqrt = sqrtm(a);
+        // let _log = logm(a);
         // let _pow = powm(&a, 2.0);
 
         // Test numerical properties
@@ -292,8 +292,8 @@ fn test_combined_operations() {
         let c = cond_2(&a);
         let ld = logdet(&a);
 
-        let rc = mul(&r, &c);
-        let result = add(&rc, &ld);
+        let rc = mul(r, &c);
+        let result = add(rc, &ld);
 
         // Should evaluate without error
         let _val = result.eval(g).unwrap();

@@ -737,12 +737,14 @@ mod tests {
     fn test_config_value_types() {
         let bool_val = ConfigValue::Bool(true);
         let int_val = ConfigValue::Int(42);
-        let float_val = ConfigValue::Float(3.14);
+        let float_val = ConfigValue::Float(std::f64::consts::PI);
         let string_val = ConfigValue::String("test".to_string());
 
         assert!(matches!(bool_val, ConfigValue::Bool(true)));
         assert!(matches!(int_val, ConfigValue::Int(42)));
-        assert!(matches!(float_val, ConfigValue::Float(f) if (f - 3.14).abs() < 1e-10));
+        assert!(
+            matches!(float_val, ConfigValue::Float(f) if (f - std::f64::consts::PI).abs() < 1e-10)
+        );
         assert!(matches!(string_val, ConfigValue::String(ref s) if s == "test"));
     }
 
@@ -760,12 +762,14 @@ mod tests {
     fn test_config_value_conversions() {
         let bool_val: ConfigValue = true.into();
         let int_val: ConfigValue = 42i64.into();
-        let float_val: ConfigValue = 3.14f64.into();
+        let float_val: ConfigValue = std::f64::consts::PI.into();
         let string_val: ConfigValue = "test".into();
 
         assert!(matches!(bool_val, ConfigValue::Bool(true)));
         assert!(matches!(int_val, ConfigValue::Int(42)));
-        assert!(matches!(float_val, ConfigValue::Float(f) if (f - 3.14).abs() < 1e-10));
+        assert!(
+            matches!(float_val, ConfigValue::Float(f) if (f - std::f64::consts::PI).abs() < 1e-10)
+        );
         assert!(matches!(string_val, ConfigValue::String(ref s) if s == "test"));
     }
 

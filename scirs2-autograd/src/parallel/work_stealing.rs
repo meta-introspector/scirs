@@ -649,13 +649,25 @@ mod tests {
             let deque_consumer = Arc::clone(&deque);
             let processed_consumer = Arc::clone(&processed);
 
-            let consumer = thread::spawn(move || loop {
-                match deque_consumer.steal() {
-                    StealResult::Success(_) => {
-                        processed_consumer.fetch_add(1, Ordering::SeqCst);
+            let consumer = thread::spawn(move || {
+                let mut empty_count = 0;
+                loop {
+                    match deque_consumer.steal() {
+                        StealResult::Success(_) => {
+                            processed_consumer.fetch_add(1, Ordering::SeqCst);
+                            empty_count = 0; // Reset empty count on success
+                        }
+                        StealResult::Empty => {
+                            empty_count += 1;
+                            // Only exit after multiple consecutive empty results
+                            if empty_count > 10 {
+                                break;
+                            }
+                            // Brief pause before checking again
+                            std::thread::sleep(std::time::Duration::from_micros(100));
+                        }
+                        StealResult::Retry => continue,
                     }
-                    StealResult::Empty => break,
-                    StealResult::Retry => continue,
                 }
             });
 

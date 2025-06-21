@@ -203,7 +203,7 @@ mod tests {
         let scheduler = StepLR::new(1.0f32, 3, 0.5);
         let sequence = scheduler.get_lr_sequence(0, 10);
 
-        let expected = vec![1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 0.25, 0.25, 0.25, 0.125];
+        let expected = [1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 0.25, 0.25, 0.25, 0.125];
 
         for (actual, expected) in sequence.iter().zip(expected.iter()) {
             assert!(

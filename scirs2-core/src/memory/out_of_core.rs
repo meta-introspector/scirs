@@ -706,7 +706,9 @@ where
             let chunk_map = self.chunk_map.read().unwrap();
             chunk_map
                 .get(chunk_coords)
-                .ok_or_else(|| OutOfCoreError::ChunkNotFound(format!("Chunk at {:?}", chunk_coords)))?
+                .ok_or_else(|| {
+                    OutOfCoreError::ChunkNotFound(format!("Chunk at {:?}", chunk_coords))
+                })?
                 .clone()
         };
 

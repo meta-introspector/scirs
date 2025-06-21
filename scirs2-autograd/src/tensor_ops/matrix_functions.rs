@@ -400,7 +400,7 @@ fn compute_matrix_log_inverse_scaling<F: Float + ndarray::ScalarOperand + FromPr
     let mut log_a = compute_log_pade(&x)?;
 
     // Scale back
-    log_a = log_a * F::from(2.0_f64.powi(s)).unwrap();
+    log_a *= F::from(2.0_f64.powi(s)).unwrap();
 
     Ok(log_a)
 }
@@ -438,7 +438,7 @@ fn compute_matrix_pow_integer<F: Float + ndarray::ScalarOperand>(
         return Ok(Array2::<F>::eye(n));
     }
 
-    let abs_power = power.abs() as u32;
+    let abs_power = power.unsigned_abs();
     let mut result = Array2::<F>::eye(n);
     let mut base = if power > 0 {
         matrix.to_owned()

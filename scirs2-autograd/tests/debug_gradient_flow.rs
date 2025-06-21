@@ -12,7 +12,7 @@ fn test_trace_gradient_flow() {
         let a = variable(array![[1.0_f64, 2.0], [3.0, 4.0]], g);
 
         // Compute trace
-        let tr = trace(&a);
+        let tr = trace(a);
         println!("Trace value: {:?}", tr.eval(g).unwrap());
 
         // Compute gradient
@@ -38,8 +38,8 @@ fn test_matrix_inverse_gradient_flow() {
         let a = variable(array![[3.0_f64, 1.0], [1.0, 2.0]], g);
 
         // Just test matrix inverse gradient directly
-        let inv_a = matinv(&a);
-        let sum_inv = sum_all(&inv_a);
+        let inv_a = matinv(a);
+        let sum_inv = sum_all(inv_a);
 
         println!("Sum of inverse: {:?}", sum_inv.eval(g).unwrap());
 
@@ -62,10 +62,10 @@ fn test_chained_gradient_flow() {
         let a = variable(array![[3.0_f64, 1.0], [1.0, 2.0]], g);
 
         // Step by step
-        let inv_a = matinv(&a);
+        let inv_a = matinv(a);
         println!("Inverse shape: {:?}", inv_a.eval(g).unwrap().shape());
 
-        let tr_inv = trace(&inv_a);
+        let tr_inv = trace(inv_a);
         println!(
             "Trace of inverse shape: {:?}",
             tr_inv.eval(g).unwrap().shape()

@@ -4,7 +4,7 @@ use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use scirs2_linalg::{decomposition, det, eigen, inv, norm, solve};
+use scirs2_linalg::{det, inv, solve, vector_norm};
 use serde::{Deserialize, Serialize};
 use std::f64;
 use std::fs;
@@ -104,11 +104,11 @@ fn generate_pathological_matrix(size: usize, test_type: &str) -> Array2<f64> {
 fn test_solve_accuracy(matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -> (bool, f64) {
     let rhs = matrix.dot(known_solution);
 
-    match solve::solve(matrix, &rhs.view()) {
+    match solve(matrix, &rhs.view(), None) {
         Ok(computed_solution) => {
             let error = &computed_solution - known_solution;
-            let relative_error = norm::vector_norm(&error.view(), 2).unwrap()
-                / norm::vector_norm(&known_solution.view(), 2).unwrap();
+            let relative_error = vector_norm(&error.view(), 2, None).unwrap()
+                / vector_norm(&known_solution.view(), 2, None).unwrap();
 
             let success = relative_error < 1e-10; // Tolerance for success
             (success, relative_error)

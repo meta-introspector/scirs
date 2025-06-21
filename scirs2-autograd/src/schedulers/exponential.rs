@@ -230,7 +230,7 @@ mod tests {
         let scheduler = ExponentialLR::new(1.0f32, 0.5);
         let sequence = scheduler.get_lr_sequence(0, 5);
 
-        let expected = vec![1.0, 0.5, 0.25, 0.125, 0.0625];
+        let expected = [1.0, 0.5, 0.25, 0.125, 0.0625];
 
         for (actual, expected) in sequence.iter().zip(expected.iter()) {
             assert!(

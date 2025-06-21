@@ -38,39 +38,21 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for MatrixSineOp {
         let g = ctx.graph();
 
         // Gradient of sin(A) is cos(A) ⊙ grad_output (element-wise product)
-        match input.eval(g) {
-            Ok(input_array) => {
-                match input_array.view().into_dimensionality::<Ix2>() {
-                    Ok(input_2d) => {
-                        match compute_matrix_cosine(&input_2d) {
-                            Ok(cos_a) => {
-                                match grad_output.eval(g) {
-                                    Ok(grad_array) => {
-                                        match grad_array.view().into_dimensionality::<Ix2>() {
-                                            Ok(grad_2d) => {
-                                                // Element-wise multiplication
-                                                let grad_input = cos_a * grad_2d;
-                                                let grad_tensor =
-                                                    crate::tensor_ops::convert_to_tensor(
-                                                        grad_input.into_dyn(),
-                                                        g,
-                                                    );
-                                                ctx.append_input_grad(0, Some(grad_tensor));
-                                                return;
-                                            }
-                                            Err(_) => {}
-                                        }
-                                    }
-                                    Err(_) => {}
-                                }
-                            }
-                            Err(_) => {}
+        if let Ok(input_array) = input.eval(g) {
+            if let Ok(input_2d) = input_array.view().into_dimensionality::<Ix2>() {
+                if let Ok(cos_a) = compute_matrix_cosine(&input_2d) {
+                    if let Ok(grad_array) = grad_output.eval(g) {
+                        if let Ok(grad_2d) = grad_array.view().into_dimensionality::<Ix2>() {
+                            // Element-wise multiplication
+                            let grad_input = cos_a * grad_2d;
+                            let grad_tensor =
+                                crate::tensor_ops::convert_to_tensor(grad_input.into_dyn(), g);
+                            ctx.append_input_grad(0, Some(grad_tensor));
+                            return;
                         }
                     }
-                    Err(_) => {}
                 }
             }
-            Err(_) => {}
         }
 
         ctx.append_input_grad(0, None);
@@ -111,27 +93,20 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for MatrixCosineOp
         let g = ctx.graph();
 
         // Gradient of cos(A) is -sin(A) ⊙ grad_output
-        match input.eval(g) {
-            Ok(input_array) => match input_array.view().into_dimensionality::<Ix2>() {
-                Ok(input_2d) => match compute_matrix_sine(&input_2d) {
-                    Ok(sin_a) => match grad_output.eval(g) {
-                        Ok(grad_array) => match grad_array.view().into_dimensionality::<Ix2>() {
-                            Ok(grad_2d) => {
-                                let grad_input = -sin_a * grad_2d;
-                                let grad_tensor =
-                                    crate::tensor_ops::convert_to_tensor(grad_input.into_dyn(), g);
-                                ctx.append_input_grad(0, Some(grad_tensor));
-                                return;
-                            }
-                            Err(_) => {}
-                        },
-                        Err(_) => {}
-                    },
-                    Err(_) => {}
-                },
-                Err(_) => {}
-            },
-            Err(_) => {}
+        if let Ok(input_array) = input.eval(g) {
+            if let Ok(input_2d) = input_array.view().into_dimensionality::<Ix2>() {
+                if let Ok(sin_a) = compute_matrix_sine(&input_2d) {
+                    if let Ok(grad_array) = grad_output.eval(g) {
+                        if let Ok(grad_2d) = grad_array.view().into_dimensionality::<Ix2>() {
+                            let grad_input = -sin_a * grad_2d;
+                            let grad_tensor =
+                                crate::tensor_ops::convert_to_tensor(grad_input.into_dyn(), g);
+                            ctx.append_input_grad(0, Some(grad_tensor));
+                            return;
+                        }
+                    }
+                }
+            }
         }
 
         ctx.append_input_grad(0, None);
@@ -207,27 +182,20 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for MatrixSinhOp {
         let g = ctx.graph();
 
         // Gradient of sinh(A) is cosh(A) ⊙ grad_output
-        match input.eval(g) {
-            Ok(input_array) => match input_array.view().into_dimensionality::<Ix2>() {
-                Ok(input_2d) => match compute_matrix_cosh(&input_2d) {
-                    Ok(cosh_a) => match grad_output.eval(g) {
-                        Ok(grad_array) => match grad_array.view().into_dimensionality::<Ix2>() {
-                            Ok(grad_2d) => {
-                                let grad_input = cosh_a * grad_2d;
-                                let grad_tensor =
-                                    crate::tensor_ops::convert_to_tensor(grad_input.into_dyn(), g);
-                                ctx.append_input_grad(0, Some(grad_tensor));
-                                return;
-                            }
-                            Err(_) => {}
-                        },
-                        Err(_) => {}
-                    },
-                    Err(_) => {}
-                },
-                Err(_) => {}
-            },
-            Err(_) => {}
+        if let Ok(input_array) = input.eval(g) {
+            if let Ok(input_2d) = input_array.view().into_dimensionality::<Ix2>() {
+                if let Ok(cosh_a) = compute_matrix_cosh(&input_2d) {
+                    if let Ok(grad_array) = grad_output.eval(g) {
+                        if let Ok(grad_2d) = grad_array.view().into_dimensionality::<Ix2>() {
+                            let grad_input = cosh_a * grad_2d;
+                            let grad_tensor =
+                                crate::tensor_ops::convert_to_tensor(grad_input.into_dyn(), g);
+                            ctx.append_input_grad(0, Some(grad_tensor));
+                            return;
+                        }
+                    }
+                }
+            }
         }
 
         ctx.append_input_grad(0, None);
@@ -268,27 +236,20 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for MatrixCoshOp {
         let g = ctx.graph();
 
         // Gradient of cosh(A) is sinh(A) ⊙ grad_output
-        match input.eval(g) {
-            Ok(input_array) => match input_array.view().into_dimensionality::<Ix2>() {
-                Ok(input_2d) => match compute_matrix_sinh(&input_2d) {
-                    Ok(sinh_a) => match grad_output.eval(g) {
-                        Ok(grad_array) => match grad_array.view().into_dimensionality::<Ix2>() {
-                            Ok(grad_2d) => {
-                                let grad_input = sinh_a * grad_2d;
-                                let grad_tensor =
-                                    crate::tensor_ops::convert_to_tensor(grad_input.into_dyn(), g);
-                                ctx.append_input_grad(0, Some(grad_tensor));
-                                return;
-                            }
-                            Err(_) => {}
-                        },
-                        Err(_) => {}
-                    },
-                    Err(_) => {}
-                },
-                Err(_) => {}
-            },
-            Err(_) => {}
+        if let Ok(input_array) = input.eval(g) {
+            if let Ok(input_2d) = input_array.view().into_dimensionality::<Ix2>() {
+                if let Ok(sinh_a) = compute_matrix_sinh(&input_2d) {
+                    if let Ok(grad_array) = grad_output.eval(g) {
+                        if let Ok(grad_2d) = grad_array.view().into_dimensionality::<Ix2>() {
+                            let grad_input = sinh_a * grad_2d;
+                            let grad_tensor =
+                                crate::tensor_ops::convert_to_tensor(grad_input.into_dyn(), g);
+                            ctx.append_input_grad(0, Some(grad_tensor));
+                            return;
+                        }
+                    }
+                }
+            }
         }
 
         ctx.append_input_grad(0, None);

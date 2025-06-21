@@ -497,7 +497,7 @@ mod tests {
     fn test_ndarray_conversion() {
         crate::run(|g| {
             let data = vec![1.0f32, 2.0, 3.0, 4.0];
-            let _shape = vec![2, 2];
+            let _shape = [2, 2];
             let tensor = convert_to_tensor(
                 ndarray::Array::from_shape_vec((2, 2), data.clone()).unwrap(),
                 g,

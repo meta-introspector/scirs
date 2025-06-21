@@ -41,7 +41,7 @@ fn fast_sigmoid_impl<F: Float>(x: &NdArrayView<F>) -> NdArray<F> {
                 y.as_mut_ptr() as *mut f32,
             );
             y.mapv_inplace(move |x2| half * (x2 + F::one()));
-            return y;
+            y
         } else if same_type::<F, f64>() {
             let mut y = x.mapv(move |x| x * half);
             vdTanh(
@@ -50,7 +50,7 @@ fn fast_sigmoid_impl<F: Float>(x: &NdArrayView<F>) -> NdArray<F> {
                 y.as_mut_ptr() as *mut f64,
             );
             y.mapv_inplace(move |x2| half * (x2 + F::one()));
-            return y;
+            y
         } else {
             x.mapv(move |a| ((a * half).tanh() * half) + half)
         }

@@ -19,7 +19,6 @@ use std::time::Instant;
 #[cfg(feature = "cuda")]
 // CUDA support temporarily disabled until cudarc dependency is enabled
 // use cudarc::driver::{CudaDevice, CudaFunction, LaunchAsync, LaunchConfig};
-
 #[cfg(feature = "cuda")]
 use std::sync::OnceLock;
 

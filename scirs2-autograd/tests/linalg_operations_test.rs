@@ -12,7 +12,7 @@ fn test_matrix_inverse_and_gradient() {
         let a = variable(array![[3.0_f64, 1.0], [1.0, 2.0]], g);
 
         // Test matrix inverse
-        let inv_a = matinv(&a);
+        let inv_a = matinv(a);
         let result = inv_a.eval(g).unwrap();
 
         // Expected inverse: [2/5, -1/5; -1/5, 3/5]
@@ -22,7 +22,7 @@ fn test_matrix_inverse_and_gradient() {
         assert_relative_eq!(result[[1, 1]], 0.6, epsilon = 1e-6);
 
         // Test gradient of trace(inv(A)) w.r.t. A
-        let trace_inv = trace(&inv_a);
+        let trace_inv = trace(inv_a);
         println!(
             "Trace result shape: {:?}",
             trace_inv.eval(g).unwrap().shape()
@@ -45,10 +45,7 @@ fn test_matrix_inverse_and_gradient() {
         assert_eq!(grad_a.shape(), &[2, 2]);
 
         // Gradient should be -inv(A)^T * inv(A)^T
-        let expected_grad = matmul(
-            &neg(&transpose(&inv_a, &[1, 0])),
-            &transpose(&inv_a, &[1, 0]),
-        );
+        let expected_grad = matmul(&neg(transpose(inv_a, &[1, 0])), &transpose(inv_a, &[1, 0]));
         let expected = expected_grad.eval(g).unwrap();
 
         for i in 0..2 {
@@ -66,7 +63,7 @@ fn test_determinant_and_gradient() {
         let a = variable(array![[3.0_f64, 1.0], [1.0, 2.0]], g);
 
         // Test determinant
-        let det_a = det(&a);
+        let det_a = det(a);
         let result = det_a.eval(g).unwrap();
         assert_relative_eq!(result[[]], 5.0, epsilon = 1e-6); // 3*2 - 1*1 = 5
 
@@ -92,7 +89,7 @@ fn test_svd_decomposition() {
         let a = convert_to_tensor(array![[1.0_f64, 2.0], [3.0, 4.0], [5.0, 6.0]], g);
 
         // Test SVD
-        let (u, s, v) = svd(&a);
+        let (u, s, v) = svd(a);
 
         let u_val = u.eval(g).unwrap();
         let s_val = s.eval(g).unwrap();
@@ -107,8 +104,8 @@ fn test_svd_decomposition() {
         // Skip reconstruction test until proper SVD is implemented
         /*
         // Verify reconstruction: A ≈ U * diag(S) * V^T
-        let s_diag = diag(&s);
-        let reconstructed = matmul(&matmul(&u, &s_diag), &transpose(&v, &[1, 0]));
+        let s_diag = diag(s);
+        let reconstructed = matmul(matmul(u, &s_diag), &transpose(v, &[1, 0]));
         let reconstructed_val = reconstructed.eval(g).unwrap();
 
         for i in 0..3 {
@@ -160,7 +157,7 @@ fn test_pseudo_inverse() {
         assert_eq!(result.shape(), &[2, 3]);
 
         // Verify: A * pinv(A) * A ≈ A
-        let check = matmul(&matmul(&a, &pinv_a), &a);
+        let check = matmul(matmul(a, &pinv_a), &a);
         let check_val = check.eval(g).unwrap();
 
         for i in 0..3 {
@@ -186,7 +183,7 @@ fn test_matrix_square_root() {
         let _result = sqrt_a.eval(g).unwrap();
 
         // Verify: sqrtm(A) * sqrtm(A) ≈ A
-        let squared = matmul(&sqrt_a, &sqrt_a);
+        let squared = matmul(sqrt_a, &sqrt_a);
         let squared_val = squared.eval(g).unwrap();
 
         for i in 0..2 {
@@ -200,7 +197,7 @@ fn test_matrix_square_root() {
         }
 
         // Test gradient
-        let trace_sqrt = trace(&sqrt_a);
+        let trace_sqrt = trace(sqrt_a);
         let grads = grad(&[&trace_sqrt], &[&a]);
         let grad_a = grads[0].eval(g).unwrap();
 
@@ -236,7 +233,7 @@ fn test_qr_decomposition() {
         let a = convert_to_tensor(array![[1.0_f64, 2.0], [3.0, 4.0], [5.0, 6.0]], g);
 
         // Test QR decomposition
-        let (q, r) = qr(&a);
+        let (q, r) = qr(a);
 
         let q_val = q.eval(g).unwrap();
         let r_val = r.eval(g).unwrap();
@@ -246,7 +243,7 @@ fn test_qr_decomposition() {
         assert_eq!(r_val.shape(), &[2, 2]);
 
         // Q should have orthonormal columns
-        let qtq = matmul(&transpose(&q, &[1, 0]), &q);
+        let qtq = matmul(transpose(q, &[1, 0]), &q);
         let qtq_val = qtq.eval(g).unwrap();
 
         // Should be close to identity
@@ -256,7 +253,7 @@ fn test_qr_decomposition() {
         assert_relative_eq!(qtq_val[[1, 0]], 0.0, epsilon = 1e-5);
 
         // Verify reconstruction: A ≈ Q * R
-        let reconstructed = matmul(&q, &r);
+        let reconstructed = matmul(q, &r);
         let reconstructed_val = reconstructed.eval(g).unwrap();
 
         for i in 0..3 {
@@ -288,7 +285,7 @@ fn test_cholesky_decomposition() {
         assert_relative_eq!(l_val[[0, 1]], 0.0, epsilon = 1e-10);
 
         // Verify: L * L^T = A
-        let llt = matmul(&l, &transpose(&l, &[1, 0]));
+        let llt = matmul(l, &transpose(l, &[1, 0]));
         let llt_val = llt.eval(g).unwrap();
 
         for i in 0..2 {
@@ -306,18 +303,18 @@ fn test_solve_linear_system() {
         let b = variable(array![[9.0_f64], [8.0]], g);
 
         // Solve Ax = b
-        let x = solve(&a, &b);
+        let x = solve(a, &b);
         let _x_val = x.eval(g).unwrap();
 
         // Verify solution
-        let ax = matmul(&a, &x);
+        let ax = matmul(a, &x);
         let ax_val = ax.eval(g).unwrap();
 
         assert_relative_eq!(ax_val[[0, 0]], b.eval(g).unwrap()[[0, 0]], epsilon = 1e-5);
         assert_relative_eq!(ax_val[[1, 0]], b.eval(g).unwrap()[[1, 0]], epsilon = 1e-5);
 
         // Test gradient
-        let sum_x = sum_all(&x);
+        let sum_x = sum_all(x);
         let grads = grad(&[&sum_x], &[&a, &b]);
 
         // Gradients should be non-zero
@@ -334,11 +331,11 @@ fn test_complex_linear_algebra_chain() {
         let a = variable(array![[3.0_f64, 1.0], [1.0, 2.0]], g);
 
         // Compute: trace(sqrtm(inv(A))) + det(A)
-        let inv_a = matinv(&a);
+        let inv_a = matinv(a);
         let sqrt_inv = sqrtm(&inv_a);
-        let tr = trace(&sqrt_inv);
-        let det_a = det(&a);
-        let result = add(&tr, &det_a);
+        let tr = trace(sqrt_inv);
+        let det_a = det(a);
+        let result = add(tr, &det_a);
 
         // Evaluate the result
         let result_val = result.eval(g).unwrap();
@@ -366,7 +363,7 @@ fn test_batch_operations() {
             g,
         );
 
-        let c = batch_matmul(&a, &b);
+        let c = batch_matmul(a, &b);
         let c_val = c.eval(g).unwrap();
 
         // Check shape

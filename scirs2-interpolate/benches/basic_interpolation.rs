@@ -1,9 +1,9 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array1;
-use scirs2_interpolate::interp1d::{
-    cubic_interpolate, linear_interpolate, pchip_interpolate, InterpolationMethod,
-    MonotonicInterpolator,
+use scirs2_interpolate::{
+    cubic_interpolate, linear_interpolate, pchip_interpolate,
 };
+use scirs2_interpolate::interp1d::monotonic::{MonotonicInterpolator, MonotonicMethod};
 use scirs2_interpolate::spline::CubicSpline;
 
 fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
@@ -29,13 +29,11 @@ fn bench_linear_interpolation(c: &mut Criterion) {
             data_size,
             |b, _| {
                 b.iter(|| {
-                    for &query in queries.iter() {
-                        let _ = black_box(linear_interpolate(
-                            black_box(&x.view()),
-                            black_box(&y.view()),
-                            black_box(query),
-                        ));
-                    }
+                    let _ = black_box(linear_interpolate(
+                        black_box(&x.view()),
+                        black_box(&y.view()),
+                        black_box(&queries.view()),
+                    ));
                 });
             },
         );
@@ -57,13 +55,11 @@ fn bench_cubic_interpolation(c: &mut Criterion) {
             data_size,
             |b, _| {
                 b.iter(|| {
-                    for &query in queries.iter() {
-                        let _ = black_box(cubic_interpolate(
-                            black_box(&x.view()),
-                            black_box(&y.view()),
-                            black_box(query),
-                        ));
-                    }
+                    let _ = black_box(cubic_interpolate(
+                        black_box(&x.view()),
+                        black_box(&y.view()),
+                        black_box(&queries.view()),
+                    ));
                 });
             },
         );
@@ -85,13 +81,12 @@ fn bench_pchip_interpolation(c: &mut Criterion) {
             data_size,
             |b, _| {
                 b.iter(|| {
-                    for &query in queries.iter() {
-                        let _ = black_box(pchip_interpolate(
-                            black_box(&x.view()),
-                            black_box(&y.view()),
-                            black_box(query),
-                        ));
-                    }
+                    let _ = black_box(pchip_interpolate(
+                        black_box(&x.view()),
+                        black_box(&y.view()),
+                        black_box(&queries.view()),
+                        black_box(true), // extrapolate parameter
+                    ));
                 });
             },
         );
@@ -109,7 +104,7 @@ fn bench_monotonic_interpolation(c: &mut Criterion) {
 
         // Pre-build the interpolator
         let interpolator =
-            MonotonicInterpolator::new(&x.view(), &y.view(), InterpolationMethod::Pchip).unwrap();
+            MonotonicInterpolator::new(&x.view(), &y.view(), MonotonicMethod::Pchip, true).unwrap();
 
         group.throughput(Throughput::Elements(queries.len() as u64));
         group.bench_with_input(
