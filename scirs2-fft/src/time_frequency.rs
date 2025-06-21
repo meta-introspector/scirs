@@ -170,10 +170,7 @@ where
 }
 
 /// Compute Short-Time Fourier Transform (STFT)
-fn compute_stft<T>(signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
-where
-    T: NumCast + Copy + Debug,
-{
+fn compute_stft(signal: &[f64], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult> {
     // Get parameters from config
     let window_size = config.window_size.min(config.max_size);
     let hop_size = config.hop_size.min(window_size / 2);
@@ -241,9 +238,7 @@ where
 
         // Copy frame and apply window
         for i in 0..window_size {
-            let signal_val = NumCast::from(signal[start + i])
-                .ok_or_else(|| FFTError::ValueError("Conversion error".to_string()))?;
-
+            let signal_val = signal[start + i];
             windowed_frame.push(Complex64::new(signal_val * window[i], 0.0));
         }
 
@@ -284,21 +279,9 @@ where
 }
 
 /// Compute Continuous Wavelet Transform (CWT)
-fn compute_cwt<T>(signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
-where
-    T: NumCast + Copy + Debug,
-{
-    // Convert signal to f64
-    let signal_f64: Vec<f64> = signal
-        .iter()
-        .map(|&val| {
-            NumCast::from(val)
-                .ok_or_else(|| FFTError::ValueError(format!("Could not convert {:?} to f64", val)))
-        })
-        .collect::<FFTResult<Vec<_>>>()?;
-
+fn compute_cwt(signal: &[f64], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult> {
     // Signal length
-    let n = signal_f64.len().min(config.max_size);
+    let n = signal.len().min(config.max_size);
 
     // Calculate frequencies (scales)
     let min_freq = config.frequency_range.0;
@@ -332,7 +315,7 @@ where
 
     // Convert signal to complex for FFT
     let mut signal_complex = Vec::with_capacity(n);
-    for &val in signal_f64.iter().take(n) {
+    for &val in signal.iter().take(n) {
         signal_complex.push(Complex64::new(val, 0.0));
     }
 
@@ -475,14 +458,11 @@ fn create_wavelet_fft(
 }
 
 /// Compute reassigned spectrogram
-fn compute_reassigned_spectrogram<T>(
-    signal: &[T],
+fn compute_reassigned_spectrogram(
+    signal: &[f64],
     config: &TFConfig,
     sample_rate: Option<f64>,
-) -> FFTResult<TFResult>
-where
-    T: NumCast + Copy + Debug,
-{
+) -> FFTResult<TFResult> {
     // For simplicity, we'll implement a basic version of the reassigned spectrogram
     // just to demonstrate the concept. A full implementation would be more complex.
 
@@ -568,14 +548,11 @@ where
 }
 
 /// Compute synchrosqueezed wavelet transform
-fn compute_synchrosqueezed_wt<T>(
-    signal: &[T],
+fn compute_synchrosqueezed_wt(
+    signal: &[f64],
     config: &TFConfig,
     sample_rate: Option<f64>,
-) -> FFTResult<TFResult>
-where
-    T: NumCast + Copy + Debug,
-{
+) -> FFTResult<TFResult> {
     // First, compute CWT
     let cwt_result = compute_cwt(signal, config, sample_rate)?;
 

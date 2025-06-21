@@ -658,16 +658,20 @@ where
 
     /// Get chunk for given chunk coordinates
     fn get_chunk(&self, chunk_coords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
-        let chunk_map = self.chunk_map.read().unwrap();
+        // Check if chunk exists and get its ID
+        let chunk_id_opt = {
+            let chunk_map = self.chunk_map.read().unwrap();
+            chunk_map.get(chunk_coords).cloned()
+        };
 
-        if let Some(chunk_id) = chunk_map.get(chunk_coords) {
+        if let Some(chunk_id) = chunk_id_opt {
             // Try to get from cache first
-            if let Some(chunk) = self.cache.get(chunk_id) {
+            if let Some(chunk) = self.cache.get(&chunk_id) {
                 return Ok(chunk);
             }
 
             // Load from storage
-            self.load_chunk_from_storage(chunk_id)
+            self.load_chunk_from_storage(&chunk_id)
         } else {
             // Create new chunk
             self.create_new_chunk(chunk_coords)
@@ -680,11 +684,13 @@ where
         // First get the chunk (loading from storage if needed)
         let chunk = self.get_chunk(chunk_coords)?;
 
-        // Get the chunk ID to mark it as dirty
-        let chunk_map = self.chunk_map.read().unwrap();
-        if let Some(chunk_id) = chunk_map.get(chunk_coords) {
-            // Mark chunk as dirty since it will be modified
-            self.cache.mark_dirty(chunk_id);
+        // Get the chunk ID to mark it as dirty - release lock immediately
+        {
+            let chunk_map = self.chunk_map.read().unwrap();
+            if let Some(chunk_id) = chunk_map.get(chunk_coords) {
+                // Mark chunk as dirty since it will be modified
+                self.cache.mark_dirty(chunk_id);
+            }
         }
 
         Ok(chunk)
@@ -695,12 +701,14 @@ where
         // Get or create the chunk
         let _ = self.get_chunk(chunk_coords)?;
 
-        // Get the chunk ID
-        let chunk_map = self.chunk_map.read().unwrap();
-        let chunk_id = chunk_map
-            .get(chunk_coords)
-            .ok_or_else(|| OutOfCoreError::ChunkNotFound(format!("Chunk at {:?}", chunk_coords)))?
-            .clone();
+        // Get the chunk ID - release lock immediately after cloning
+        let chunk_id = {
+            let chunk_map = self.chunk_map.read().unwrap();
+            chunk_map
+                .get(chunk_coords)
+                .ok_or_else(|| OutOfCoreError::ChunkNotFound(format!("Chunk at {:?}", chunk_coords)))?
+                .clone()
+        };
 
         // Create metadata for the chunk
         let metadata = ChunkMetadata::new(

@@ -70,14 +70,14 @@ impl<F: Float> Op<F> for CustomActivationOp {
                 let one = F::one();
                 half * x * (one + x.tanh())
             }),
-            "parametric_relu" => input.mapv(|x| {
-                let negative_slope = F::from(0.01).unwrap();
-                if x > F::zero() {
-                    x
+            "parametric_relu" => {
+                let negative_slope = if self.learnable_params.is_empty() {
+                    F::from(0.01).unwrap()
                 } else {
-                    negative_slope * x
-                }
-            }),
+                    F::from(self.learnable_params[0]).unwrap()
+                };
+                input.mapv(|x| if x > F::zero() { x } else { negative_slope * x })
+            }
             _ => {
                 return Err(OpError::Other(format!(
                     "Unknown activation function: {}",

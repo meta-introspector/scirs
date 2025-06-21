@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 #[cfg(feature = "hdf5")]
-use crate::hdf5::{CompressionOptions, DatasetOptions, FileMode, HDF5File};
+use crate::hdf5::{AttributeValue, CompressionOptions, DatasetOptions, FileMode, HDF5File};
 
 #[cfg(not(feature = "hdf5"))]
 type CompressionOptions = ();
@@ -179,11 +179,10 @@ impl EnhancedMatFile {
         name: &str,
         mat_type: &MatType,
     ) -> Result<()> {
-        let options = if let Some(ref compression) = self.config.compression {
-            DatasetOptions::default().with_compression(compression.clone())
-        } else {
-            DatasetOptions::default()
-        };
+        let mut options = DatasetOptions::default();
+        if let Some(ref compression) = self.config.compression {
+            options.compression = compression.clone();
+        }
 
         match mat_type {
             MatType::Double(array) => {
@@ -201,8 +200,16 @@ impl EnhancedMatFile {
             }
             // Add other numeric types as needed
             MatType::Char(string) => {
-                // Store string as attribute for simplicity
-                file.set_attribute(name, "string_data", string)?;
+                // Create a dataset for the string
+                // Convert string to byte array for storage
+                let bytes = string.as_bytes();
+                let array = ndarray::Array1::from_vec(bytes.to_vec()).into_dyn();
+                file.create_dataset_from_array(name, &array, Some(options))?;
+                
+                // Add attribute to indicate this is a string
+                if let Ok(dataset) = file.get_dataset_mut(&format!("/{}", name)) {
+                    dataset.set_attribute("matlab_class", AttributeValue::String("char".to_string()));
+                }
             }
             _ => {
                 return Err(IoError::Other(format!(
@@ -221,10 +228,30 @@ impl EnhancedMatFile {
         match file.read_dataset(name) {
             Ok(array) => Ok(MatType::Double(array)),
             Err(_) => {
-                // Try to read as string attribute
-                match file.get_attribute::<String>(name, "string_data") {
-                    Ok(string_val) => Ok(MatType::Char(string_val)),
-                    Err(_) => Err(IoError::Other(format!("Cannot read variable: {}", name))),
+                // Try to read as string from dataset
+                // First check if it's a string dataset by looking for matlab_class attribute
+                if let Ok(dataset) = file.get_dataset(&format!("/{}", name)) {
+                    if let Some(AttributeValue::String(class)) = dataset.get_attribute("matlab_class") {
+                        if class == "char" {
+                            // Read the byte data and convert back to string
+                            match file.read_dataset(name) {
+                                Ok(array) => {
+                                    let bytes: Vec<u8> = array.iter().map(|&x| x as u8).collect();
+                                    match String::from_utf8(bytes) {
+                                        Ok(string) => Ok(MatType::Char(string)),
+                                        Err(_) => Err(IoError::Other("Invalid UTF-8 string data".to_string())),
+                                    }
+                                }
+                                Err(e) => Err(e),
+                            }
+                        } else {
+                            Err(IoError::Other(format!("Unknown MATLAB class: {}", class)))
+                        }
+                    } else {
+                        Err(IoError::Other(format!("No class attribute for: {}", name)))
+                    }
+                } else {
+                    Err(IoError::Other(format!("Cannot read variable: {}", name)))
                 }
             }
         }

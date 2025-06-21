@@ -138,7 +138,15 @@ impl<F: Float> Op<F> for ParallelReductionOp {
     fn compute(&self, ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         let input = ctx.input(0);
         let result = input.sum_axis(Axis(self.axis));
-        ctx.append_output(result.into_dyn());
+        // Convert to dynamic dimensions, ensuring scalar becomes 1D array with single element
+        let dyn_result = if result.ndim() == 0 {
+            // Convert 0D scalar to 1D array with single element
+            let scalar_val = result.iter().next().copied().unwrap_or(F::zero());
+            ndarray::arr1(&[scalar_val]).into_dyn()
+        } else {
+            result.into_dyn()
+        };
+        ctx.append_output(dyn_result);
         Ok(())
     }
 

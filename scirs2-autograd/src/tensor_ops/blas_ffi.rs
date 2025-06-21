@@ -1,5 +1,8 @@
 #[cfg(feature = "blas")]
-pub(crate) use crate::cblas_sys::*;
+extern crate cblas_sys;
+
+#[cfg(feature = "blas")]
+pub(crate) use cblas_sys::*;
 
 // #[cfg(all(feature = "blas", feature = "intel-mkl"))]
 // pub(crate) use crate::intel_mkl_sys::*;

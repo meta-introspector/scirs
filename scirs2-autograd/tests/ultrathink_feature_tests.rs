@@ -121,7 +121,7 @@ mod performance_optimization_tests {
 
             // Should be [3.0, 5.0, 7.0, 9.0]
             for i in 0..4 {
-                assert!((add_output[i] - (i as f32 + 3.0)).abs() < 1e-6);
+                assert!((add_output[i] - (2.0 * i as f32 + 3.0)).abs() < 1e-6);
             }
 
             // Test SIMD multiplication

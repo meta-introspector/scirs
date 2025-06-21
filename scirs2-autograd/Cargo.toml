@@ -34,10 +34,11 @@ scirs2-core = { workspace = true }
 # Remove dependency on scirs2-linalg to avoid circular dependency
 ndarray-linalg = { workspace = true, default-features = false }
 toml = { workspace = true }
+cblas-sys = { workspace = true, optional = true }
 
 [features]
 default = []
-blas = ["scirs2-core/linalg"]
+blas = ["scirs2-core/linalg", "dep:cblas-sys"]
 openblas = ["scirs2-core/openblas"] 
 netlib = ["scirs2-core/netlib"]
 intel-mkl = ["scirs2-core/intel-mkl"]  # Legacy feature compatibility

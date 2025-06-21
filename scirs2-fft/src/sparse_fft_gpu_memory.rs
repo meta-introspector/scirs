@@ -9,26 +9,24 @@ use num_complex::Complex64;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-#[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, DevicePtr, DriverError};
+// CUDA support temporarily disabled until cudarc dependency is enabled
+// #[cfg(feature = "cuda")]
+// use cudarc::driver::{CudaDevice, DevicePtr, DriverError};
 
-#[cfg(feature = "hip")]
-use hiprt::{hipDevice_t, hipDeviceptr_t, hipError_t};
+// HIP support temporarily disabled until hiprt dependency is enabled
+// #[cfg(feature = "hip")]
+// use hiprt::{hipDevice_t, hipDeviceptr_t, hipError_t};
 
-#[cfg(feature = "cuda")]
+#[cfg(any(feature = "cuda", feature = "hip", feature = "sycl"))]
 use std::sync::OnceLock;
 
-#[cfg(feature = "hip")]
-use std::sync::OnceLock;
+// CUDA support temporarily disabled until cudarc dependency is enabled
+// #[cfg(feature = "cuda")]
+// static CUDA_DEVICE: OnceLock<Option<Arc<CudaDevice>>> = OnceLock::new();
 
-#[cfg(feature = "sycl")]
-use std::sync::OnceLock;
-
-#[cfg(feature = "cuda")]
-static CUDA_DEVICE: OnceLock<Option<Arc<CudaDevice>>> = OnceLock::new();
-
-#[cfg(feature = "hip")]
-static HIP_DEVICE: OnceLock<Option<hipDevice_t>> = OnceLock::new();
+// HIP support temporarily disabled until hiprt dependency is enabled
+// #[cfg(feature = "hip")]
+// static HIP_DEVICE: OnceLock<Option<hipDevice_t>> = OnceLock::new();
 
 #[cfg(feature = "sycl")]
 static SYCL_DEVICE: OnceLock<Option<SyclDevice>> = OnceLock::new();
@@ -137,20 +135,10 @@ pub fn init_cuda_device() -> FFTResult<bool> {
 /// Initialize HIP device (call once at startup)
 #[cfg(feature = "hip")]
 pub fn init_hip_device() -> FFTResult<bool> {
-    use hiprt::*;
-
-    let device_result = HIP_DEVICE.get_or_init(|| unsafe {
-        let mut device_count: i32 = 0;
-        if hipGetDeviceCount(&mut device_count) == hipError_t::hipSuccess && device_count > 0 {
-            let mut device: hipDevice_t = std::ptr::null_mut();
-            if hipDeviceGet(&mut device, 0) == hipError_t::hipSuccess {
-                return Some(device);
-            }
-        }
-        None
-    });
-
-    Ok(device_result.is_some())
+    // HIP support temporarily disabled until hiprt dependency is enabled
+    Err(FFTError::NotImplementedError(
+        "HIP support is temporarily disabled".to_string(),
+    ))
 }
 
 /// Initialize HIP device (no-op without HIP feature)

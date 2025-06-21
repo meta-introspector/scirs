@@ -43,6 +43,7 @@ tokio = { workspace = true, optional = true, features = ["fs", "io-util", "time"
 futures = { workspace = true, optional = true }
 memmap2 = { workspace = true }
 bytemuck = { workspace = true }
+reqwest = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }
@@ -54,7 +55,7 @@ compression = []
 validation = []
 hdf5 = ["dep:hdf5"]
 async = ["dep:tokio", "dep:futures"]
-reqwest = []
+reqwest = ["dep:reqwest"]
 aws-sdk-s3 = []
 google-cloud-storage = []
 azure-storage-blobs = []

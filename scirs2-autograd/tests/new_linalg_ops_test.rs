@@ -148,8 +148,15 @@ fn test_kronecker_gradient() {
         );
 
         // Just verify gradients were computed (values may be incorrect due to grad function issues)
-        assert!(grad_a_val.ndim() >= 0);
-        assert!(grad_b_val.ndim() >= 0);
+        // Note: gradients might be scalars (0-dimensional) for certain operations
+        assert!(
+            grad_a_val.len() > 0,
+            "Gradient w.r.t. a should have elements"
+        );
+        assert!(
+            grad_b_val.len() > 0,
+            "Gradient w.r.t. b should have elements"
+        );
     });
 }
 

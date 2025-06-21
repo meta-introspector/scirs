@@ -17,7 +17,8 @@ use std::fmt::Debug;
 use std::time::Instant;
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, DevicePtr};
+// CUDA support temporarily disabled until cudarc dependency is enabled
+// use cudarc::driver::{CudaDevice, DevicePtr};
 
 #[cfg(feature = "cuda")]
 use std::sync::OnceLock;
