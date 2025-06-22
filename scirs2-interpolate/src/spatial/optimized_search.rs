@@ -206,6 +206,7 @@ impl<F: Float + FromPrimitive + 'static> SIMDDistanceCalculator<F> {
 
     /// Non-SIMD fallback for when SIMD is not available
     #[cfg(not(all(feature = "simd", target_arch = "x86_64")))]
+    #[allow(dead_code)]
     fn batch_squared_distances_avx2_f64(
         &self,
         query: &[F],

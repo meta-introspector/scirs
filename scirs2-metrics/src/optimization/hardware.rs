@@ -6,7 +6,11 @@
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use std::arch::x86_64::*;
+
+#[cfg(target_arch = "aarch64")]
+use std::arch::aarch64::*;
 
 /// Configuration for hardware acceleration
 #[derive(Debug, Clone)]
@@ -105,36 +109,95 @@ pub struct HardwareCapabilities {
 impl HardwareCapabilities {
     /// Detect hardware capabilities
     pub fn detect() -> Self {
-        Self {
-            has_sse: is_x86_feature_detected!("sse"),
-            has_sse2: is_x86_feature_detected!("sse2"),
-            has_sse3: is_x86_feature_detected!("sse3"),
-            has_ssse3: is_x86_feature_detected!("ssse3"),
-            has_sse41: is_x86_feature_detected!("sse4.1"),
-            has_sse42: is_x86_feature_detected!("sse4.2"),
-            has_avx: is_x86_feature_detected!("avx"),
-            has_avx2: is_x86_feature_detected!("avx2"),
-            has_avx512f: is_x86_feature_detected!("avx512f"),
-            has_fma: is_x86_feature_detected!("fma"),
-            has_gpu: false, // TODO: Detect GPU capabilities
-            gpu_memory: None,
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            Self {
+                has_sse: is_x86_feature_detected!("sse"),
+                has_sse2: is_x86_feature_detected!("sse2"),
+                has_sse3: is_x86_feature_detected!("sse3"),
+                has_ssse3: is_x86_feature_detected!("ssse3"),
+                has_sse41: is_x86_feature_detected!("sse4.1"),
+                has_sse42: is_x86_feature_detected!("sse4.2"),
+                has_avx: is_x86_feature_detected!("avx"),
+                has_avx2: is_x86_feature_detected!("avx2"),
+                has_avx512f: is_x86_feature_detected!("avx512f"),
+                has_fma: is_x86_feature_detected!("fma"),
+                has_gpu: false, // TODO: Detect GPU capabilities
+                gpu_memory: None,
+            }
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            Self {
+                has_sse: false,
+                has_sse2: false,
+                has_sse3: false,
+                has_ssse3: false,
+                has_sse41: false,
+                has_sse42: false,
+                has_avx: false,
+                has_avx2: false,
+                has_avx512f: false,
+                has_fma: std::arch::is_aarch64_feature_detected!("fp"),
+                has_gpu: false, // TODO: Detect GPU capabilities
+                gpu_memory: None,
+            }
+        }
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
+        {
+            Self {
+                has_sse: false,
+                has_sse2: false,
+                has_sse3: false,
+                has_ssse3: false,
+                has_sse41: false,
+                has_sse42: false,
+                has_avx: false,
+                has_avx2: false,
+                has_avx512f: false,
+                has_fma: false,
+                has_gpu: false,
+                gpu_memory: None,
+            }
         }
     }
 
     /// Get optimal vector width for current hardware
     pub fn optimal_vector_width(&self) -> VectorWidth {
-        if self.has_avx512f {
-            VectorWidth::V512
-        } else if self.has_avx2 {
-            VectorWidth::V256
-        } else {
-            VectorWidth::V128 // SSE2 or fallback
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            if self.has_avx512f {
+                VectorWidth::V512
+            } else if self.has_avx2 {
+                VectorWidth::V256
+            } else {
+                VectorWidth::V128 // SSE2 or fallback
+            }
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            VectorWidth::V128 // NEON supports 128-bit vectors
+        }
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
+        {
+            VectorWidth::V128 // Conservative fallback
         }
     }
 
     /// Check if SIMD is available
     pub fn simd_available(&self) -> bool {
-        self.has_sse2 // Minimum requirement
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            self.has_sse2 // Minimum requirement for x86
+        }
+        #[cfg(target_arch = "aarch64")]
+        {
+            true // NEON is always available on AArch64
+        }
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
+        {
+            false // No SIMD support for other architectures
+        }
     }
 }
 
@@ -300,6 +363,7 @@ impl SimdDistanceMetrics {
         Ok(1.0 - cosine_similarity)
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "avx2")]
     unsafe fn euclidean_distance_avx2(&self, a: &[f64], b: &[f64]) -> f64 {
         let mut sum = _mm256_setzero_pd();
@@ -328,6 +392,7 @@ impl SimdDistanceMetrics {
         total.sqrt()
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "sse2")]
     unsafe fn euclidean_distance_sse2(&self, a: &[f64], b: &[f64]) -> f64 {
         let mut sum = _mm_setzero_pd();
@@ -356,6 +421,135 @@ impl SimdDistanceMetrics {
         total.sqrt()
     }
 
+    // ARM64 NEON implementations
+    #[cfg(target_arch = "aarch64")]
+    #[target_feature(enable = "neon")]
+    unsafe fn euclidean_distance_neon(&self, a: &[f64], b: &[f64]) -> f64 {
+        let mut sum = vdupq_n_f64(0.0);
+        let chunks = a.len() / 2;
+
+        for i in 0..chunks {
+            let offset = i * 2;
+            let va = vld1q_f64(a.as_ptr().add(offset));
+            let vb = vld1q_f64(b.as_ptr().add(offset));
+            let diff = vsubq_f64(va, vb);
+            let squared = vmulq_f64(diff, diff);
+            sum = vaddq_f64(sum, squared);
+        }
+
+        // Extract and sum the elements
+        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
+
+        // Handle remaining elements
+        for i in (chunks * 2)..a.len() {
+            let diff = a[i] - b[i];
+            total += diff * diff;
+        }
+
+        total.sqrt()
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    #[target_feature(enable = "neon")]
+    unsafe fn manhattan_distance_neon(&self, a: &[f64], b: &[f64]) -> f64 {
+        let mut sum = vdupq_n_f64(0.0);
+        let chunks = a.len() / 2;
+
+        for i in 0..chunks {
+            let offset = i * 2;
+            let va = vld1q_f64(a.as_ptr().add(offset));
+            let vb = vld1q_f64(b.as_ptr().add(offset));
+            let diff = vsubq_f64(va, vb);
+            let abs_diff = vabsq_f64(diff);
+            sum = vaddq_f64(sum, abs_diff);
+        }
+
+        // Extract and sum the elements
+        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
+
+        // Handle remaining elements
+        for i in (chunks * 2)..a.len() {
+            total += (a[i] - b[i]).abs();
+        }
+
+        total
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    #[target_feature(enable = "neon")]
+    unsafe fn dot_product_neon(&self, a: &[f64], b: &[f64]) -> f64 {
+        let mut sum = vdupq_n_f64(0.0);
+        let chunks = a.len() / 2;
+
+        for i in 0..chunks {
+            let offset = i * 2;
+            let va = vld1q_f64(a.as_ptr().add(offset));
+            let vb = vld1q_f64(b.as_ptr().add(offset));
+            let product = vmulq_f64(va, vb);
+            sum = vaddq_f64(sum, product);
+        }
+
+        // Extract and sum the elements
+        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
+
+        // Handle remaining elements
+        for i in (chunks * 2)..a.len() {
+            total += a[i] * b[i];
+        }
+
+        total
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    #[target_feature(enable = "neon")]
+    unsafe fn sum_neon(&self, data: &[f64]) -> f64 {
+        let mut sum = vdupq_n_f64(0.0);
+        let chunks = data.len() / 2;
+
+        for i in 0..chunks {
+            let offset = i * 2;
+            let v = vld1q_f64(data.as_ptr().add(offset));
+            sum = vaddq_f64(sum, v);
+        }
+
+        // Extract and sum the elements
+        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
+
+        // Handle remaining elements
+        for i in (chunks * 2)..data.len() {
+            total += data[i];
+        }
+
+        total
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    #[target_feature(enable = "neon")]
+    unsafe fn sum_squared_differences_neon(&self, data: &[f64], mean: f64) -> f64 {
+        let mean_vec = vdupq_n_f64(mean);
+        let mut sum = vdupq_n_f64(0.0);
+        let chunks = data.len() / 2;
+
+        for i in 0..chunks {
+            let offset = i * 2;
+            let v = vld1q_f64(data.as_ptr().add(offset));
+            let diff = vsubq_f64(v, mean_vec);
+            let squared = vmulq_f64(diff, diff);
+            sum = vaddq_f64(sum, squared);
+        }
+
+        // Extract and sum the elements
+        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
+
+        // Handle remaining elements
+        for i in (chunks * 2)..data.len() {
+            let diff = data[i] - mean;
+            total += diff * diff;
+        }
+
+        total
+    }
+
     fn euclidean_distance_with_width(
         &self,
         a: &Array1<f64>,
@@ -366,12 +560,16 @@ impl SimdDistanceMetrics {
         let b_slice = b.as_slice().unwrap();
 
         let result = match width {
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             VectorWidth::V256 if self.capabilities.has_avx2 => unsafe {
                 self.euclidean_distance_avx2(a_slice, b_slice)
             },
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             VectorWidth::V128 if self.capabilities.has_sse2 => unsafe {
                 self.euclidean_distance_sse2(a_slice, b_slice)
             },
+            #[cfg(target_arch = "aarch64")]
+            VectorWidth::V128 => unsafe { self.euclidean_distance_neon(a_slice, b_slice) },
             _ => {
                 // Fallback to standard implementation
                 return self.euclidean_distance_standard(a, b);
@@ -381,6 +579,7 @@ impl SimdDistanceMetrics {
         Ok(result)
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "avx2")]
     unsafe fn manhattan_distance_avx2(&self, a: &[f64], b: &[f64]) -> f64 {
         let mut sum = _mm256_setzero_pd();
@@ -422,9 +621,12 @@ impl SimdDistanceMetrics {
         let b_slice = b.as_slice().unwrap();
 
         let result = match width {
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             VectorWidth::V256 if self.capabilities.has_avx2 => unsafe {
                 self.manhattan_distance_avx2(a_slice, b_slice)
             },
+            #[cfg(target_arch = "aarch64")]
+            VectorWidth::V128 => unsafe { self.manhattan_distance_neon(a_slice, b_slice) },
             _ => {
                 // Fallback to standard implementation
                 return self.manhattan_distance_standard(a, b);
@@ -434,6 +636,7 @@ impl SimdDistanceMetrics {
         Ok(result)
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "avx2")]
     unsafe fn dot_product_avx2(&self, a: &[f64], b: &[f64]) -> f64 {
         let mut sum = _mm256_setzero_pd();
@@ -460,6 +663,7 @@ impl SimdDistanceMetrics {
         total
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "sse2")]
     unsafe fn dot_product_sse2(&self, a: &[f64], b: &[f64]) -> f64 {
         let mut sum = _mm_setzero_pd();
@@ -496,12 +700,16 @@ impl SimdDistanceMetrics {
         let b_slice = b.as_slice().unwrap();
 
         let result = match width {
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             VectorWidth::V256 if self.capabilities.has_avx2 => unsafe {
                 self.dot_product_avx2(a_slice, b_slice)
             },
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             VectorWidth::V128 if self.capabilities.has_sse2 => unsafe {
                 self.dot_product_sse2(a_slice, b_slice)
             },
+            #[cfg(target_arch = "aarch64")]
+            VectorWidth::V128 => unsafe { self.dot_product_neon(a_slice, b_slice) },
             _ => {
                 // Fallback to standard implementation
                 return Ok(a.dot(b));
@@ -591,12 +799,25 @@ impl SimdStatistics {
         }
 
         let data_slice = data.as_slice().unwrap();
-        let result = if self.capabilities.has_avx2 {
-            unsafe { self.sum_avx2(data_slice) }
-        } else if self.capabilities.has_sse2 {
-            unsafe { self.sum_sse2(data_slice) }
-        } else {
-            data.sum()
+        let result = {
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            {
+                if self.capabilities.has_avx2 {
+                    unsafe { self.sum_avx2(data_slice) }
+                } else if self.capabilities.has_sse2 {
+                    unsafe { self.sum_sse2(data_slice) }
+                } else {
+                    data.sum()
+                }
+            }
+            #[cfg(target_arch = "aarch64")]
+            {
+                unsafe { self.sum_neon(data_slice) }
+            }
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
+            {
+                data.sum()
+            }
         };
 
         Ok(result)
@@ -613,12 +834,25 @@ impl SimdStatistics {
         }
 
         let data_slice = data.as_slice().unwrap();
-        let result = if self.capabilities.has_avx2 {
-            unsafe { self.sum_squared_differences_avx2(data_slice, mean) }
-        } else if self.capabilities.has_sse2 {
-            unsafe { self.sum_squared_differences_sse2(data_slice, mean) }
-        } else {
-            data.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
+        let result = {
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            {
+                if self.capabilities.has_avx2 {
+                    unsafe { self.sum_squared_differences_avx2(data_slice, mean) }
+                } else if self.capabilities.has_sse2 {
+                    unsafe { self.sum_squared_differences_sse2(data_slice, mean) }
+                } else {
+                    data.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
+                }
+            }
+            #[cfg(target_arch = "aarch64")]
+            {
+                unsafe { self.sum_squared_differences_neon(data_slice, mean) }
+            }
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
+            {
+                data.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
+            }
         };
 
         Ok(result)
@@ -626,6 +860,7 @@ impl SimdStatistics {
 
     // Private SIMD implementations
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "avx2")]
     unsafe fn sum_avx2(&self, data: &[f64]) -> f64 {
         let mut sum = _mm256_setzero_pd();
@@ -650,6 +885,7 @@ impl SimdStatistics {
         total
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "sse2")]
     unsafe fn sum_sse2(&self, data: &[f64]) -> f64 {
         let mut sum = _mm_setzero_pd();
@@ -674,6 +910,7 @@ impl SimdStatistics {
         total
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "avx2")]
     unsafe fn sum_squared_differences_avx2(&self, data: &[f64], mean: f64) -> f64 {
         let mean_vec = _mm256_set1_pd(mean);
@@ -702,6 +939,7 @@ impl SimdStatistics {
         total
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     #[target_feature(enable = "sse2")]
     unsafe fn sum_squared_differences_sse2(&self, data: &[f64], mean: f64) -> f64 {
         let mean_vec = _mm_set1_pd(mean);
@@ -720,6 +958,57 @@ impl SimdStatistics {
         let mut result = [0.0; 2];
         _mm_storeu_pd(result.as_mut_ptr(), sum);
         let mut total = result[0] + result[1];
+
+        // Handle remaining elements
+        for i in (chunks * 2)..data.len() {
+            let diff = data[i] - mean;
+            total += diff * diff;
+        }
+
+        total
+    }
+
+    // ARM64 NEON implementations for SimdStatistics
+    #[cfg(target_arch = "aarch64")]
+    #[target_feature(enable = "neon")]
+    unsafe fn sum_neon(&self, data: &[f64]) -> f64 {
+        let mut sum = vdupq_n_f64(0.0);
+        let chunks = data.len() / 2;
+
+        for i in 0..chunks {
+            let offset = i * 2;
+            let v = vld1q_f64(data.as_ptr().add(offset));
+            sum = vaddq_f64(sum, v);
+        }
+
+        // Extract and sum the elements
+        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
+
+        // Handle remaining elements
+        for i in (chunks * 2)..data.len() {
+            total += data[i];
+        }
+
+        total
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    #[target_feature(enable = "neon")]
+    unsafe fn sum_squared_differences_neon(&self, data: &[f64], mean: f64) -> f64 {
+        let mean_vec = vdupq_n_f64(mean);
+        let mut sum = vdupq_n_f64(0.0);
+        let chunks = data.len() / 2;
+
+        for i in 0..chunks {
+            let offset = i * 2;
+            let v = vld1q_f64(data.as_ptr().add(offset));
+            let diff = vsubq_f64(v, mean_vec);
+            let squared = vmulq_f64(diff, diff);
+            sum = vaddq_f64(sum, squared);
+        }
+
+        // Extract and sum the elements
+        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
 
         // Handle remaining elements
         for i in (chunks * 2)..data.len() {

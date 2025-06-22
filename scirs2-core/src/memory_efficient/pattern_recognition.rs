@@ -369,9 +369,7 @@ impl PatternRecognizer {
         for (access_order, &idx) in indices.iter().enumerate() {
             let row = idx / cols;
             let col = idx % cols;
-            rows.entry(row)
-                .or_default()
-                .push((col, access_order));
+            rows.entry(row).or_default().push((col, access_order));
         }
 
         // Check if consecutive rows alternate direction based on access order

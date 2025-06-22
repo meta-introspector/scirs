@@ -3,8 +3,7 @@
 //! This module provides memory system detection and analysis for
 //! optimizing memory-intensive operations.
 
-use crate::error::{CoreError, CoreResult};
-use std::fs;
+use crate::error::CoreResult;
 
 /// Memory system information
 #[derive(Debug, Clone)]
@@ -118,6 +117,7 @@ impl MemoryInfo {
     }
 
     /// Parse value from /proc/meminfo line
+    #[allow(dead_code)]
     fn parse_meminfo_value(line: &str) -> Option<usize> {
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() >= 2 {
@@ -128,12 +128,14 @@ impl MemoryInfo {
     }
 
     /// Get system page size
+    #[allow(dead_code)]
     fn get_page_size() -> usize {
         // Use a simplified implementation without libc dependency
         4096 // Most common page size on modern systems
     }
 
     /// Detect NUMA nodes
+    #[allow(dead_code)]
     fn detect_numa_nodes() -> usize {
         #[cfg(target_os = "linux")]
         {
@@ -152,6 +154,7 @@ impl MemoryInfo {
     }
 
     /// Estimate memory bandwidth
+    #[allow(dead_code)]
     fn estimate_memory_bandwidth() -> f64 {
         // This is a simplified estimation
         // In a real implementation, we might:
@@ -174,6 +177,7 @@ impl MemoryInfo {
     }
 
     /// Estimate memory latency
+    #[allow(dead_code)]
     fn estimate_memory_latency() -> f64 {
         // Simplified estimation
         // Real implementation might benchmark memory access patterns
@@ -181,6 +185,7 @@ impl MemoryInfo {
     }
 
     /// Detect memory pressure
+    #[allow(dead_code)]
     fn detect_memory_pressure() -> MemoryPressure {
         #[cfg(target_os = "linux")]
         {

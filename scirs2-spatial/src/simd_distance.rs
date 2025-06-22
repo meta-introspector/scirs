@@ -55,9 +55,11 @@ use std::arch::x86_64::*;
 const SIMD_WIDTH: usize = 8; // AVX 256-bit / f32
 
 #[cfg(target_arch = "aarch64")]
+#[allow(dead_code)]
 const SIMD_WIDTH: usize = 4; // NEON 128-bit / f32
 
 #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+#[allow(dead_code)]
 const SIMD_WIDTH: usize = 4; // Fallback
 
 /// Supported distance metrics for SIMD operations

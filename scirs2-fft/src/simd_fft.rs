@@ -29,6 +29,7 @@ pub enum NormMode {
 use std::arch::x86_64::*;
 
 #[cfg(target_arch = "aarch64")]
+#[allow(unused_imports)]
 use std::arch::aarch64::*;
 
 /// Check if SIMD support is available at runtime
@@ -41,16 +42,20 @@ pub fn simd_support_available() -> bool {
         if is_x86_feature_detected!("sse4.1") {
             return true;
         }
+        return false;
     }
 
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is required in all ARMv8-A implementations (aarch64)
         // so we can just return true here
-        return true;
+        true
     }
 
-    false
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        false
+    }
 }
 
 /// Convert a 1D array of Complex64 to SIMD-compatible representation
@@ -201,40 +206,36 @@ pub fn apply_simd_normalization(data: &mut [Complex64], scale: f64) {
         // Use NEON (always available on aarch64)
         unsafe {
             apply_simd_normalization_neon(data, scale);
-            return;
         }
     }
 
-    // Fall back to scalar implementation if no SIMD is available
-    data.iter_mut().for_each(|c| *c *= scale);
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        // Fall back to scalar implementation if no SIMD is available
+        data.iter_mut().for_each(|c| *c *= scale);
+    }
 }
 
 /// Convert f64 to complex using NEON SIMD instructions
 #[cfg(target_arch = "aarch64")]
 unsafe fn simd_f64_to_complex_neon(input: &[f64]) -> FFTResult<Vec<Complex64>> {
     let len = input.len();
-    let mut result = Vec::<Complex64>::with_capacity(len);
-
-    // Set up result with correct length
-    result.set_len(len);
-
-    // Create zero vector for imaginary parts
-    let zero = vdupq_n_f64(0.0);
+    // Initialize with zeros to avoid uninitialized memory
+    let mut result = vec![Complex64::new(0.0, 0.0); len];
 
     // Process 2 doubles at a time (producing 2 complex numbers)
     let len_aligned = len - (len % 2);
     for i in (0..len_aligned).step_by(2) {
-        // Load 2 real values
+        // Load 2 real values from input
         let real_values = vld1q_f64(&input[i]);
 
-        // Set imaginary parts to zero
-        let result_ptr = result.as_mut_ptr() as *mut f64;
+        // Extract individual values from NEON register
+        let real0 = vgetq_lane_f64(real_values, 0);
+        let real1 = vgetq_lane_f64(real_values, 1);
 
-        // Store real values
-        vst1q_f64(result_ptr.add(i * 2), real_values);
-
-        // Store imaginary parts (zeros)
-        vst1q_f64(result_ptr.add(i * 2 + 1), zero);
+        // Store as complex numbers with zero imaginary parts
+        result[i] = Complex64::new(real0, 0.0);
+        result[i + 1] = Complex64::new(real1, 0.0);
     }
 
     // Handle remaining elements
@@ -600,18 +601,24 @@ where
     #[cfg(target_arch = "x86_64")]
     {
         if is_x86_feature_detected!("avx2") {
-            return fft_simd(input, n, norm);
+            fft_simd(input, n, norm)
+        } else {
+            // Fall back to standard implementation for x86_64 without AVX2
+            crate::fft::fft(input, n)
         }
     }
 
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is always available on aarch64
-        return fft_simd(input, n, norm);
+        fft_simd(input, n, norm)
     }
 
-    // Fall back to standard implementation
-    crate::fft::fft(input, n)
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        // Fall back to standard implementation for other architectures
+        crate::fft::fft(input, n)
+    }
 }
 
 /// Adaptive iFFT dispatcher that selects the best implementation based on hardware support
@@ -627,18 +634,24 @@ where
     #[cfg(target_arch = "x86_64")]
     {
         if is_x86_feature_detected!("avx2") {
-            return ifft_simd(input, n, norm);
+            ifft_simd(input, n, norm)
+        } else {
+            // Fall back to standard implementation for x86_64 without AVX2
+            crate::fft::ifft(input, n)
         }
     }
 
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is always available on aarch64
-        return ifft_simd(input, n, norm);
+        ifft_simd(input, n, norm)
     }
 
-    // Fall back to standard implementation
-    crate::fft::ifft(input, n)
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        // Fall back to standard implementation for other architectures
+        crate::fft::ifft(input, n)
+    }
 }
 
 /// Compute the 2-dimensional Fast Fourier Transform with SIMD acceleration
@@ -873,53 +886,59 @@ where
         if is_x86_feature_detected!("avx2") {
             return fft2_simd(input, shape, axes, norm);
         }
+        // Fall back to standard implementation for x86_64 without AVX2
     }
 
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is required in all ARMv8-A implementations (aarch64)
         // so we can always use the SIMD implementation
-        return fft2_simd(input, shape, axes, norm);
+        fft2_simd(input, shape, axes, norm)
     }
 
     // Fall back to standard implementation by converting to ndarray Array2
-    // This is necessary because the core implementation uses ndarray types
+    // This is only reached by x86_64 without AVX2 or other architectures
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        // This is necessary because the core implementation uses ndarray types
 
-    // Convert input to Vec<T> if not already
-    let input_vec: Vec<T> = input.to_vec();
+        // Convert input to Vec<T> if not already
+        let input_vec: Vec<T> = input.to_vec();
 
-    // Create Array2 from 1D vector
-    let array2d = ndarray::Array::from_shape_vec(ndarray::IxDyn(&[shape[0], shape[1]]), input_vec)
-        .map_err(|e| FFTError::ValueError(format!("Failed to reshape input: {}", e)))?;
+        // Create Array2 from 1D vector
+        let array2d =
+            ndarray::Array::from_shape_vec(ndarray::IxDyn(&[shape[0], shape[1]]), input_vec)
+                .map_err(|e| FFTError::ValueError(format!("Failed to reshape input: {}", e)))?;
 
-    // Convert to Array2 for fft2
-    let array2d_ref = array2d
-        .into_dimensionality::<ndarray::Ix2>()
-        .map_err(|e| FFTError::ValueError(format!("Failed to create 2D array: {}", e)))?;
+        // Convert to Array2 for fft2
+        let array2d_ref = array2d
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|e| FFTError::ValueError(format!("Failed to create 2D array: {}", e)))?;
 
-    // Convert axes format
-    let ndarray_axes = axes.map(|[a, b]| (a as i32, b as i32));
+        // Convert axes format
+        let ndarray_axes = axes.map(|[a, b]| (a as i32, b as i32));
 
-    // Convert norm mode
-    let norm_str = match norm {
-        Some(NormMode::Forward) => Some("forward"),
-        Some(NormMode::Backward) => Some("backward"),
-        Some(NormMode::Ortho) => Some("ortho"),
-        Some(NormMode::None) | None => None,
-    };
+        // Convert norm mode
+        let norm_str = match norm {
+            Some(NormMode::Forward) => Some("forward"),
+            Some(NormMode::Backward) => Some("backward"),
+            Some(NormMode::Ortho) => Some("ortho"),
+            Some(NormMode::None) | None => None,
+        };
 
-    // Call standard implementation
-    let result = crate::fft::fft2(
-        &array2d_ref,
-        Some((shape[0], shape[1])),
-        ndarray_axes,
-        norm_str,
-    )?;
+        // Call standard implementation
+        let result = crate::fft::fft2(
+            &array2d_ref,
+            Some((shape[0], shape[1])),
+            ndarray_axes,
+            norm_str,
+        )?;
 
-    // Convert result back to Vec
-    let (result_vec, _) = result.into_raw_vec_and_offset();
+        // Convert result back to Vec
+        let (result_vec, _) = result.into_raw_vec_and_offset();
 
-    Ok(result_vec)
+        Ok(result_vec)
+    } // End of non-aarch64 fallback
 }
 
 /// Compute the N-dimensional Fast Fourier Transform with SIMD acceleration
@@ -1192,56 +1211,59 @@ where
         if is_x86_feature_detected!("avx2") {
             return fftn_simd(input, shape, axes, norm);
         }
+        // Fall back to standard implementation for x86_64 without AVX2
     }
 
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is required in all ARMv8-A implementations (aarch64)
         // so we can always use the SIMD implementation
-        return fftn_simd(input, shape, axes, norm);
+        fftn_simd(input, shape, axes, norm)
     }
 
     // Fall back to standard implementation by converting to ndarray ArrayD
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        // Convert input to Vec<T> if not already
+        let input_vec: Vec<T> = input.to_vec();
 
-    // Convert input to Vec<T> if not already
-    let input_vec: Vec<T> = input.to_vec();
+        // Create ArrayD from 1D vector
+        let arrayd = ndarray::Array::from_shape_vec(ndarray::IxDyn(shape), input_vec)
+            .map_err(|e| FFTError::ValueError(format!("Failed to reshape input: {}", e)))?;
 
-    // Create ArrayD from 1D vector
-    let arrayd = ndarray::Array::from_shape_vec(ndarray::IxDyn(shape), input_vec)
-        .map_err(|e| FFTError::ValueError(format!("Failed to reshape input: {}", e)))?;
+        // Convert axes format
+        let ndarray_axes: Option<Vec<usize>> = match axes {
+            Some(a) => {
+                // Convert from isize to usize, handling negative indices
+                let n_dims = shape.len();
+                Some(
+                    a.iter()
+                        .map(|&ax| {
+                            let ax_pos = if ax < 0 { ax + n_dims as isize } else { ax };
+                            ax_pos as usize
+                        })
+                        .collect(),
+                )
+            }
+            None => None,
+        };
 
-    // Convert axes format
-    let ndarray_axes: Option<Vec<usize>> = match axes {
-        Some(a) => {
-            // Convert from isize to usize, handling negative indices
-            let n_dims = shape.len();
-            Some(
-                a.iter()
-                    .map(|&ax| {
-                        let ax_pos = if ax < 0 { ax + n_dims as isize } else { ax };
-                        ax_pos as usize
-                    })
-                    .collect(),
-            )
-        }
-        None => None,
-    };
+        // Convert norm mode
+        let norm_str = match norm {
+            Some(NormMode::Forward) => Some("forward"),
+            Some(NormMode::Backward) => Some("backward"),
+            Some(NormMode::Ortho) => Some("ortho"),
+            Some(NormMode::None) | None => None,
+        };
 
-    // Convert norm mode
-    let norm_str = match norm {
-        Some(NormMode::Forward) => Some("forward"),
-        Some(NormMode::Backward) => Some("backward"),
-        Some(NormMode::Ortho) => Some("ortho"),
-        Some(NormMode::None) | None => None,
-    };
+        // Call standard implementation with all required parameters
+        let result = crate::fft::fftn(&arrayd, None, ndarray_axes, norm_str, None, None)?;
 
-    // Call standard implementation with all required parameters
-    let result = crate::fft::fftn(&arrayd, None, ndarray_axes, norm_str, None, None)?;
+        // Convert result back to Vec
+        let (result_vec, _) = result.into_raw_vec_and_offset();
 
-    // Convert result back to Vec
-    let (result_vec, _) = result.into_raw_vec_and_offset();
-
-    Ok(result_vec)
+        Ok(result_vec)
+    } // End of non-aarch64 fallback
 }
 
 /// Adaptive N-dimensional IFFT dispatcher that selects the best implementation based on hardware support
@@ -1260,56 +1282,59 @@ where
         if is_x86_feature_detected!("avx2") {
             return ifftn_simd(input, shape, axes, norm);
         }
+        // Fall back to standard implementation for x86_64 without AVX2
     }
 
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is required in all ARMv8-A implementations (aarch64)
         // so we can always use the SIMD implementation
-        return ifftn_simd(input, shape, axes, norm);
+        ifftn_simd(input, shape, axes, norm)
     }
 
     // Fall back to standard implementation by converting to ndarray ArrayD
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        // Convert input to Vec<T> if not already
+        let input_vec: Vec<T> = input.to_vec();
 
-    // Convert input to Vec<T> if not already
-    let input_vec: Vec<T> = input.to_vec();
+        // Create ArrayD from 1D vector
+        let arrayd = ndarray::Array::from_shape_vec(ndarray::IxDyn(shape), input_vec)
+            .map_err(|e| FFTError::ValueError(format!("Failed to reshape input: {}", e)))?;
 
-    // Create ArrayD from 1D vector
-    let arrayd = ndarray::Array::from_shape_vec(ndarray::IxDyn(shape), input_vec)
-        .map_err(|e| FFTError::ValueError(format!("Failed to reshape input: {}", e)))?;
+        // Convert axes format
+        let ndarray_axes: Option<Vec<usize>> = match axes {
+            Some(a) => {
+                // Convert from isize to usize, handling negative indices
+                let n_dims = shape.len();
+                Some(
+                    a.iter()
+                        .map(|&ax| {
+                            let ax_pos = if ax < 0 { ax + n_dims as isize } else { ax };
+                            ax_pos as usize
+                        })
+                        .collect(),
+                )
+            }
+            None => None,
+        };
 
-    // Convert axes format
-    let ndarray_axes: Option<Vec<usize>> = match axes {
-        Some(a) => {
-            // Convert from isize to usize, handling negative indices
-            let n_dims = shape.len();
-            Some(
-                a.iter()
-                    .map(|&ax| {
-                        let ax_pos = if ax < 0 { ax + n_dims as isize } else { ax };
-                        ax_pos as usize
-                    })
-                    .collect(),
-            )
-        }
-        None => None,
-    };
+        // Convert norm mode
+        let norm_str = match norm {
+            Some(NormMode::Forward) => Some("forward"),
+            Some(NormMode::Backward) => Some("backward"),
+            Some(NormMode::Ortho) => Some("ortho"),
+            Some(NormMode::None) | None => None,
+        };
 
-    // Convert norm mode
-    let norm_str = match norm {
-        Some(NormMode::Forward) => Some("forward"),
-        Some(NormMode::Backward) => Some("backward"),
-        Some(NormMode::Ortho) => Some("ortho"),
-        Some(NormMode::None) | None => None,
-    };
+        // Call standard implementation with all required parameters
+        let result = crate::fft::ifftn(&arrayd, None, ndarray_axes, norm_str, None, None)?;
 
-    // Call standard implementation with all required parameters
-    let result = crate::fft::ifftn(&arrayd, None, ndarray_axes, norm_str, None, None)?;
+        // Convert result back to Vec
+        let (result_vec, _) = result.into_raw_vec_and_offset();
 
-    // Convert result back to Vec
-    let (result_vec, _) = result.into_raw_vec_and_offset();
-
-    Ok(result_vec)
+        Ok(result_vec)
+    } // End of non-aarch64 fallback
 }
 
 /// Adaptive 2D IFFT dispatcher that selects the best implementation based on hardware support
@@ -1328,53 +1353,58 @@ where
         if is_x86_feature_detected!("avx2") {
             return ifft2_simd(input, shape, axes, norm);
         }
+        // Fall back to standard implementation for x86_64 without AVX2
     }
 
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is required in all ARMv8-A implementations (aarch64)
         // so we can always use the SIMD implementation
-        return ifft2_simd(input, shape, axes, norm);
+        ifft2_simd(input, shape, axes, norm)
     }
 
     // Fall back to standard implementation by converting to ndarray Array2
-    // This is necessary because the core implementation uses ndarray types
+    #[cfg(not(target_arch = "aarch64"))]
+    {
+        // This is necessary because the core implementation uses ndarray types
 
-    // Convert input to Vec<T> if not already
-    let input_vec: Vec<T> = input.to_vec();
+        // Convert input to Vec<T> if not already
+        let input_vec: Vec<T> = input.to_vec();
 
-    // Create Array2 from 1D vector
-    let array2d = ndarray::Array::from_shape_vec(ndarray::IxDyn(&[shape[0], shape[1]]), input_vec)
-        .map_err(|e| FFTError::ValueError(format!("Failed to reshape input: {}", e)))?;
+        // Create Array2 from 1D vector
+        let array2d =
+            ndarray::Array::from_shape_vec(ndarray::IxDyn(&[shape[0], shape[1]]), input_vec)
+                .map_err(|e| FFTError::ValueError(format!("Failed to reshape input: {}", e)))?;
 
-    // Convert to Array2 for ifft2
-    let array2d_ref = array2d
-        .into_dimensionality::<ndarray::Ix2>()
-        .map_err(|e| FFTError::ValueError(format!("Failed to create 2D array: {}", e)))?;
+        // Convert to Array2 for ifft2
+        let array2d_ref = array2d
+            .into_dimensionality::<ndarray::Ix2>()
+            .map_err(|e| FFTError::ValueError(format!("Failed to create 2D array: {}", e)))?;
 
-    // Convert axes format
-    let ndarray_axes = axes.map(|[a, b]| (a as i32, b as i32));
+        // Convert axes format
+        let ndarray_axes = axes.map(|[a, b]| (a as i32, b as i32));
 
-    // Convert norm mode
-    let norm_str = match norm {
-        Some(NormMode::Forward) => Some("forward"),
-        Some(NormMode::Backward) => Some("backward"),
-        Some(NormMode::Ortho) => Some("ortho"),
-        Some(NormMode::None) | None => None,
-    };
+        // Convert norm mode
+        let norm_str = match norm {
+            Some(NormMode::Forward) => Some("forward"),
+            Some(NormMode::Backward) => Some("backward"),
+            Some(NormMode::Ortho) => Some("ortho"),
+            Some(NormMode::None) | None => None,
+        };
 
-    // Call standard implementation
-    let result = crate::fft::ifft2(
-        &array2d_ref,
-        Some((shape[0], shape[1])),
-        ndarray_axes,
-        norm_str,
-    )?;
+        // Call standard implementation
+        let result = crate::fft::ifft2(
+            &array2d_ref,
+            Some((shape[0], shape[1])),
+            ndarray_axes,
+            norm_str,
+        )?;
 
-    // Convert result back to Vec
-    let (result_vec, _) = result.into_raw_vec_and_offset();
+        // Convert result back to Vec
+        let (result_vec, _) = result.into_raw_vec_and_offset();
 
-    Ok(result_vec)
+        Ok(result_vec)
+    } // End of non-aarch64 fallback
 }
 
 #[cfg(test)]

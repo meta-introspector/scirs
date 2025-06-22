@@ -635,7 +635,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         } else {
             alignment - (current_pos % alignment)
         };
-        
+
         // Write padding bytes
         if padding_needed > 0 {
             let padding = vec![0u8; padding_needed];

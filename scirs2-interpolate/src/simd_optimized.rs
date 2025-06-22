@@ -59,6 +59,7 @@ use std::arch::x86_64::*;
 use std::arch::x86::*;
 
 #[cfg(target_arch = "aarch64")]
+#[allow(unused_imports)]
 use std::arch::aarch64::*;
 
 /// RBF kernel types for SIMD evaluation
@@ -142,6 +143,7 @@ impl SimdConfig {
         }
     }
 
+    #[allow(dead_code)]
     fn fallback() -> Self {
         Self {
             simd_available: false,
@@ -559,6 +561,7 @@ where
 }
 
 /// Evaluate RBF kernel (scalar version)
+#[allow(dead_code)]
 fn evaluate_rbf_kernel_scalar(r: f64, epsilon: f64, kernel: RBFKernel) -> f64 {
     let r_sq = r * r;
     let eps_sq = epsilon * epsilon;
@@ -765,6 +768,7 @@ unsafe fn simd_distance_matrix_sse2(
 /// NEON-optimized distance matrix computation for ARM64
 #[cfg(target_arch = "aarch64")]
 #[target_feature(enable = "neon")]
+#[allow(dead_code)]
 unsafe fn simd_distance_matrix_neon(
     points_a: &ArrayView2<f64>,
     points_b: &ArrayView2<f64>,

@@ -48,7 +48,13 @@ libc = { workspace = true, optional = true }  # System calls for resource monito
 sysinfo = { workspace = true, optional = true }  # System information gathering
 
 # BLAS/LAPACK dependencies for linear algebra operations
+# Note: BLAS backend selection is now handled at workspace level with platform-specific defaults
 ndarray-linalg = { workspace = true, optional = true, default-features = false }  # LAPACK bindings for ndarray
+
+# BLAS backend dependencies - optional and feature-gated
+openblas-src = { workspace = true, optional = true }
+blas-src = { workspace = true, optional = true }
+intel-mkl-src = { workspace = true, optional = true }
 
 # JIT compilation for Array Protocol
 cranelift-module = { workspace = true, optional = true }  # JIT compilation module
@@ -61,6 +67,21 @@ tokio = { workspace = true, optional = true }  # Async runtime for async error h
 # Production-level feature dependencies
 reqwest = { workspace = true, optional = true }  # HTTP client for tracing export
 sha2 = { workspace = true, optional = true }  # Cryptographic hash functions
+
+# Platform-specific BLAS backend configuration
+# macOS: Use Accelerate framework by default (when linalg feature is enabled)
+[target.'cfg(target_os = "macos")'.dependencies]
+# For macOS, we don't include OpenBLAS dependencies - use system Accelerate framework
+
+# Linux: OpenBLAS by default (when openblas feature is enabled)
+[target.'cfg(target_os = "linux")'.dependencies]
+openblas-src = { workspace = true, optional = true }
+blas-src = { workspace = true, optional = true }
+
+# Windows: OpenBLAS by default (when openblas feature is enabled)
+[target.'cfg(target_os = "windows")'.dependencies]
+openblas-src = { workspace = true, optional = true }
+blas-src = { workspace = true, optional = true }
 
 [dev-dependencies]
 approx = { workspace = true }
@@ -105,11 +126,11 @@ ufuncs = []  # Universal Functions (ufuncs) system
 testing = ["tempfile", "serde", "serde_json"]  # Testing framework for production systems
 benchmarking = ["testing", "serde", "serde_json"]  # Comprehensive benchmarking system
 linalg = ["ndarray-linalg"]  # Linear algebra with BLAS/LAPACK bindings
-# LAPACK backends - these are mutually exclusive, use only one at a time
-# NOTE: We let ndarray-linalg handle BLAS backend selection internally to avoid lax conflicts
-openblas = ["linalg"]  # Use OpenBLAS backend (via ndarray-linalg default)
-intel-mkl = ["linalg"]  # Use Intel MKL backend (via ndarray-linalg default)  
-netlib = ["linalg"]  # Use Netlib backend (via ndarray-linalg default)
+# LAPACK backends - Note: On macOS, use system Accelerate; on Linux/Windows, use OpenBLAS
+openblas = ["linalg", "dep:openblas-src", "dep:blas-src"]  # Force OpenBLAS (Linux/Windows)
+intel-mkl = ["linalg", "dep:intel-mkl-src"]  # Force Intel MKL
+netlib = ["linalg", "dep:blas-src"]  # Force Reference Netlib
+accelerate = ["linalg"]  # Use system BLAS (typically Accelerate on macOS)
 array_protocol = []  # Array Protocol for third-party array implementations
 array_protocol_jit = ["array_protocol", "cranelift-module", "cranelift-jit", "cranelift-frontend"]  # JIT compilation for Array Protocol
 array_protocol_gpu = ["array_protocol", "gpu"]  # GPU support for Array Protocol

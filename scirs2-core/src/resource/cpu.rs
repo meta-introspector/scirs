@@ -4,7 +4,6 @@
 //! optimizing computational workloads.
 
 use crate::error::{CoreError, CoreResult};
-use std::fs;
 
 /// CPU information and capabilities
 #[derive(Debug, Clone)]
@@ -171,6 +170,7 @@ impl CpuInfo {
     }
 
     /// Parse cache size string (e.g., "32K", "256K", "8192K")
+    #[allow(dead_code)]
     fn parse_cache_size(size_str: &str) -> CoreResult<usize> {
         if size_str.ends_with('K') || size_str.ends_with('k') {
             let num_str = &size_str[..size_str.len() - 1];

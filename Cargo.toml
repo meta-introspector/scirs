@@ -83,12 +83,20 @@ chrono = "0.4"
 
 # Linear algebra and math (heavy dependencies - minimize features)
 nalgebra = { version = "0.33.2", default-features = false }
-ndarray-linalg = { version = "0.17.0", default-features = false }
-openblas-src = { version = "0.10.11", features = ["cblas", "lapacke"], default-features = false }
-blas = { version = "0.23.0", default-features = false }
 rustfft = { version = "6.4.0", default-features = false }
 argmin = { version = "0.10.0", default-features = false }
 sprs = { version = "0.11.3", default-features = false }
+
+# Platform-specific BLAS/LAPACK backends
+# ndarray-linalg with different backends - choose only one per platform
+ndarray-linalg = { version = "0.17.0", default-features = false }
+
+# BLAS backends (mutually exclusive) - used conditionally by individual crates
+openblas-src = { version = "0.10.11", features = ["cblas", "lapacke"], default-features = false }
+blas-src = { version = "0.8", default-features = false }
+intel-mkl-src = { version = "0.8.1", default-features = false }
+cblas-sys = { version = "0.1.4", default-features = false }
+blas = { version = "0.23.0", default-features = false }
 
 # Serialization and data handling
 serde = { version = "1.0", features = ["derive"] }
@@ -132,11 +140,6 @@ lazy_static = "1.4"
 statrs = "0.16.0"
 petgraph = "0.6"
 itertools = "0.14"
-
-# BLAS specific - these are feature-gated in modules
-blas-src = { version = "0.8", default-features = false }
-intel-mkl-src = { version = "0.8.1", default-features = false }
-cblas-sys = { version = "0.1.4", default-features = false }
 
 # Additional dependencies for modules
 half = { version = "2.4.0", features = ["num-traits", "serde", "alloc"] }
@@ -213,6 +216,7 @@ scirs2-text = { version = "0.1.0-alpha.5", path = "./scirs2-text" }
 scirs2-vision = { version = "0.1.0-alpha.5", path = "./scirs2-vision" }
 scirs2-series = { version = "0.1.0-alpha.5", path = "./scirs2-series" }
 scirs2-autograd = { version = "0.1.0-alpha.5", path = "./scirs2-autograd" }
+
 
 [profile.release]
 opt-level = 3

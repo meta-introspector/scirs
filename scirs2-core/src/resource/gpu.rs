@@ -146,7 +146,7 @@ impl GpuInfo {
         // For Apple Silicon, we know it has integrated GPU
         #[cfg(target_arch = "aarch64")]
         {
-            return Ok(Self {
+            Ok(Self {
                 name: "Apple GPU".to_string(),
                 vendor: GpuVendor::Apple,
                 memory_total: 8 * 1024 * 1024 * 1024, // Unified memory
@@ -169,15 +169,18 @@ impl GpuInfo {
                     memory_bandwidth_gbps: 200.0,
                     efficiency_score: 0.9,
                 },
-            });
+            })
         }
-
-        Err(CoreError::ComputationError(
-            crate::error::ErrorContext::new("macOS GPU detection not implemented"),
-        ))
+        #[cfg(not(target_arch = "aarch64"))]
+        {
+            Err(CoreError::ComputationError(
+                crate::error::ErrorContext::new("macOS GPU detection not implemented"),
+            ))
+        }
     }
 
     /// Create GPU info from PCI vendor/device IDs
+    #[allow(dead_code)]
     fn create_from_pci_ids(vendor_id: &str, device_id: &str) -> Self {
         let vendor = match vendor_id {
             "0x10de" => GpuVendor::Nvidia,

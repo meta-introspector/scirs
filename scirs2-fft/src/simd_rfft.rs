@@ -16,6 +16,7 @@ use std::fmt::Debug;
 use std::arch::x86_64::*;
 
 #[cfg(target_arch = "aarch64")]
+#[allow(unused_imports)]
 use std::arch::aarch64::*;
 
 /// Compute the 1-dimensional discrete Fourier Transform for real input with SIMD acceleration.
@@ -226,13 +227,20 @@ where
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is always available on aarch64
-        return rfft_simd(input, n, norm);
+        rfft_simd(input, n, norm)
     }
 
-    // Fall back to standard implementation
-    // We don't need the norm_str conversion for the standard implementation call
+    // Fall back to standard implementation for non-SIMD architectures or unsupported features
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        crate::rfft::rfft(input, n)
+    }
 
-    crate::rfft::rfft(input, n)
+    // For x86_64 without AVX2 support, also use standard implementation
+    #[cfg(target_arch = "x86_64")]
+    {
+        crate::rfft::rfft(input, n)
+    }
 }
 
 /// Adaptive IRFFT dispatcher that selects the best implementation based on hardware support
@@ -255,11 +263,20 @@ where
     #[cfg(target_arch = "aarch64")]
     {
         // NEON is always available on aarch64
-        return irfft_simd(input, n, norm);
+        irfft_simd(input, n, norm)
     }
 
-    // Fall back to standard implementation
-    crate::rfft::irfft(input, n)
+    // Fall back to standard implementation for non-SIMD architectures or unsupported features
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    {
+        crate::rfft::irfft(input, n)
+    }
+
+    // For x86_64 without AVX2 support, also use standard implementation
+    #[cfg(target_arch = "x86_64")]
+    {
+        crate::rfft::irfft(input, n)
+    }
 }
 
 #[cfg(test)]

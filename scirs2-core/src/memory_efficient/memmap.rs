@@ -122,7 +122,7 @@ where
     A: Clone + Copy + 'static + Send + Sync + Send + Sync,
 {
     /// Validate safety preconditions and create a slice from raw parts
-    /// 
+    ///
     /// # Safety
     /// This method performs comprehensive validation before creating the slice
     fn validate_slice_creation(&self, ptr: *const A, mmap_len: usize) -> Result<&[A], CoreError> {
@@ -133,7 +133,7 @@ where
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         // Check alignment
         if (ptr as usize) % std::mem::align_of::<A>() != 0 {
             return Err(CoreError::MemoryError(
@@ -146,7 +146,7 @@ where
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         // Check size bounds to prevent overflow
         let element_size = std::mem::size_of::<A>();
         if element_size > 0 && self.size > isize::MAX as usize / element_size {
@@ -158,7 +158,7 @@ where
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         // Check that we don't exceed the memory map bounds
         let total_bytes = self.size.checked_mul(element_size).ok_or_else(|| {
             CoreError::MemoryError(
@@ -166,7 +166,7 @@ where
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
-        
+
         if total_bytes > mmap_len {
             return Err(CoreError::MemoryError(
                 ErrorContext::new(format!(
@@ -176,7 +176,7 @@ where
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         // Now it's safe to create the slice
         // SAFETY: We have validated:
         // 1. ptr is not null
@@ -479,7 +479,7 @@ where
                 self.validate_slice_creation(ptr, view.len())?
             }
             (_, Some(view)) => {
-                // Mutable view 
+                // Mutable view
                 let ptr = view.as_ptr() as *const A;
                 self.validate_slice_creation(ptr, view.len())?
             }
@@ -542,7 +542,7 @@ where
         // Get a mutable slice to the memory-mapped data
         let data_slice = if let Some(view) = &mut self.mmap_view_mut {
             let ptr = view.as_mut_ptr() as *mut A;
-            
+
             // Validate safety preconditions for from_raw_parts_mut
             if ptr.is_null() {
                 return Err(CoreError::MemoryError(
@@ -550,7 +550,7 @@ where
                         .with_location(ErrorLocation::new(file!(), line!())),
                 ));
             }
-            
+
             // Check alignment
             if (ptr as usize) % std::mem::align_of::<A>() != 0 {
                 return Err(CoreError::MemoryError(
@@ -563,7 +563,7 @@ where
                     .with_location(ErrorLocation::new(file!(), line!())),
                 ));
             }
-            
+
             // Check size bounds to prevent overflow
             let element_size = std::mem::size_of::<A>();
             if element_size > 0 && self.size > isize::MAX as usize / element_size {
@@ -575,7 +575,7 @@ where
                     .with_location(ErrorLocation::new(file!(), line!())),
                 ));
             }
-            
+
             // Check that we don't exceed the memory map bounds
             let total_bytes = self.size.checked_mul(element_size).ok_or_else(|| {
                 CoreError::MemoryError(
@@ -583,17 +583,18 @@ where
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
-            
+
             if total_bytes > view.len() {
                 return Err(CoreError::MemoryError(
                     ErrorContext::new(format!(
                         "Requested array size {} bytes exceeds memory map size {} bytes",
-                        total_bytes, view.len()
+                        total_bytes,
+                        view.len()
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 ));
             }
-            
+
             // Now it's safe to create the slice
             // SAFETY: We have validated:
             // 1. ptr is not null

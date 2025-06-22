@@ -10,9 +10,9 @@
 
 use crate::error::{IoError, Result};
 use crate::hdf5::{CompressionOptions, DatasetOptions, FileMode, HDF5File};
-use ndarray::{ArrayBase, ArrayD};
 #[cfg(feature = "hdf5")]
 use ndarray::IxDyn;
+use ndarray::{ArrayBase, ArrayD};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex, RwLock};

@@ -210,12 +210,16 @@ mod tests {
 
         // Create a large test signal to benefit from parallel planning
         let n = 4096;
-        let signal: Vec<f64> = (0..n)
-            .map(|i| (2.0 * PI * i as f64 / 512.0).sin())
+        let signal: Vec<Complex64> = (0..n)
+            .map(|i| Complex64::new((2.0 * PI * i as f64 / 512.0).sin(), 0.0))
             .collect();
 
         // Test with parallel planning
-        let spectrum = crate::planning_parallel::fft_with_parallel_planning(&signal, None)?;
+        let planner = crate::planning_parallel::ParallelPlanner::new(None);
+        let plan = planner.plan_fft(&[n], false, crate::planning::PlannerBackend::RustFFT)?;
+        let executor = crate::planning_parallel::ParallelExecutor::new(plan, None);
+        let mut spectrum = vec![Complex64::new(0.0, 0.0); n];
+        executor.execute(&signal, &mut spectrum)?;
 
         // Verify the result has the correct dimension
         assert_eq!(spectrum.len(), n);
