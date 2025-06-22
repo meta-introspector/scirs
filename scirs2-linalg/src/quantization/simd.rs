@@ -202,9 +202,9 @@ pub fn simd_quantized_matvec(
                             ];
 
                             // Convert to ndarray views for core SIMD operations
-                            let row_view = ArrayView1::from(&row_chunk);
+                            let _row_view = ArrayView1::from(&row_chunk);
                             let vec_view = ArrayView1::from(&vec_chunk);
-                            
+
                             // Create dequantized values: (row - zero_point) * scale
                             let mut dequantized = [0.0f32; 8];
                             for (k, val) in dequantized.iter_mut().enumerate() {
@@ -459,7 +459,7 @@ pub fn simd_quantized_matmul(
                                         // Dequantize chunks
                                         let mut a_dequant = [0.0f32; 8];
                                         let mut b_dequant = [0.0f32; 8];
-                                        
+
                                         for k in 0..8 {
                                             a_dequant[k] = (a_chunk[k] - a_zero) * a_scale;
                                             b_dequant[k] = (b_chunk[k] - b_zero) * b_scale;
@@ -660,7 +660,7 @@ pub fn simd_quantized_dot(
             // Dequantize chunks
             let mut a_dequant = [0.0f32; 8];
             let mut b_dequant = [0.0f32; 8];
-            
+
             for k in 0..8 {
                 a_dequant[k] = (a_chunk[k] - a_zero) * a_scale;
                 b_dequant[k] = (b_chunk[k] - b_zero) * b_scale;

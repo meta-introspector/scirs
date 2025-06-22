@@ -623,7 +623,7 @@ mod tests {
         let template = create_test_image(10, 10, 0).to_luma8();
 
         let ncc = compute_ncc(&ref_img, &template, 0, 0);
-        assert!(ncc >= -1.0 && ncc <= 1.0);
+        assert!((-1.0..=1.0).contains(&ncc));
     }
 
     #[test]

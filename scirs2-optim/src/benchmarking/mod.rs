@@ -1542,8 +1542,8 @@ mod tests {
     fn test_visualization_data_export() {
         let mut analyzer = GradientFlowAnalyzer::new(10);
 
-        let _gradients = vec![Array1::from_vec(vec![1.0, 2.0])];
-        let _updates = vec![Array1::from_vec(vec![0.1, 0.2])];
+        let _gradients = [Array1::from_vec(vec![1.0, 2.0])];
+        let _updates = [Array1::from_vec(vec![0.1, 0.2])];
 
         for i in 0..5 {
             let scale = 1.0 / (i + 1) as f64;

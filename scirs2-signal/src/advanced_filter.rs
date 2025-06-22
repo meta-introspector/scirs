@@ -325,11 +325,23 @@ pub fn least_squares_design(
         .collect();
 
     // Solve least squares problem: A * h = b
-    use ndarray_linalg::LeastSquaresSvd;
-    let coefficients = design_matrix
-        .least_squares(&weighted_desired)
-        .map_err(|_| SignalError::Compute("Failed to solve least squares problem".to_string()))?
-        .solution;
+    // For small problems, we can use the normal equations approach: A^T A x = A^T b
+    use scirs2_linalg::solve;
+
+    let at = design_matrix.t();
+    let ata = at.dot(&design_matrix);
+    let atb = at.dot(&weighted_desired);
+
+    // Add small regularization to ensure numerical stability
+    let mut ata_reg = ata.clone();
+    let eps = 1e-10;
+    for i in 0..ata_reg.nrows() {
+        ata_reg[[i, i]] = ata_reg[[i, i]] + eps;
+    }
+
+    let coefficients = solve(&ata_reg.view(), &atb.view(), None).map_err(|e| {
+        SignalError::Compute(format!("Failed to solve least squares problem: {}", e))
+    })?;
 
     // Compute design error
     let estimated_response: Array1<f64> = design_matrix.dot(&coefficients);
@@ -400,12 +412,23 @@ pub fn constrained_least_squares_design(
         augmented_rhs[row_idx] = phase;
     }
 
-    // Solve constrained least squares
-    use ndarray_linalg::LeastSquaresSvd;
-    let coefficients = augmented_matrix
-        .least_squares(&augmented_rhs)
-        .map_err(|_| SignalError::Compute("Failed to solve constrained least squares".to_string()))?
-        .solution;
+    // Solve constrained least squares using normal equations
+    use scirs2_linalg::solve;
+
+    let at = augmented_matrix.t();
+    let ata = at.dot(&augmented_matrix);
+    let atb = at.dot(&augmented_rhs);
+
+    // Add small regularization to ensure numerical stability
+    let mut ata_reg = ata.clone();
+    let eps = 1e-10;
+    for i in 0..ata_reg.nrows() {
+        ata_reg[[i, i]] = ata_reg[[i, i]] + eps;
+    }
+
+    let coefficients = solve(&ata_reg.view(), &atb.view(), None).map_err(|e| {
+        SignalError::Compute(format!("Failed to solve constrained least squares: {}", e))
+    })?;
 
     // Compute error on magnitude response only
     let mut error = 0.0;
@@ -646,10 +669,10 @@ fn solve_interpolation_problem(
     }
 
     // Solve the system
-    use ndarray_linalg::Solve;
-    let solution = interpolation_matrix
-        .solve(&rhs)
-        .map_err(|_| SignalError::Compute("Failed to solve interpolation system".to_string()))?;
+    use scirs2_linalg::solve;
+    let solution = solve(&interpolation_matrix.view(), &rhs.view(), None).map_err(|e| {
+        SignalError::Compute(format!("Failed to solve interpolation system: {}", e))
+    })?;
 
     // Extract filter coefficients (excluding error term)
     Ok(solution.slice(s![0..=order]).to_owned())

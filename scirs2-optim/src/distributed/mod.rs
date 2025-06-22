@@ -1815,7 +1815,7 @@ mod tests {
         for &val in result.iter() {
             if val != 0.0 {
                 // Non-zero values from top-k
-                assert!(val >= -2.5 && val <= 2.5);
+                assert!((-2.5..=2.5).contains(&val));
             }
         }
     }

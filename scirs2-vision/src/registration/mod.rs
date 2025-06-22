@@ -148,10 +148,9 @@ pub fn transform_points(points: &[Point2D], transform: &TransformMatrix) -> Vec<
 
 /// Invert a transformation matrix
 pub fn invert_transform(transform: &TransformMatrix) -> Result<TransformMatrix> {
-    use ndarray_linalg::Inverse;
-
-    transform
-        .inv()
+    // TODO: Replace with proper matrix inversion once ndarray-linalg alternative is available
+    // For now, use a simple 3x3 matrix inversion
+    invert_3x3_matrix(transform)
         .map_err(|e| VisionError::OperationError(format!("Failed to invert transformation: {}", e)))
 }
 
@@ -431,7 +430,7 @@ fn estimate_affine_transform(matches: &[PointMatch]) -> Result<TransformMatrix> 
         ));
     }
 
-    use ndarray_linalg::LeastSquaresSvd;
+    // use ndarray_linalg::LeastSquaresSvd; // TODO: Replace with alternative
 
     let n = matches.len();
     let mut a = Array2::zeros((2 * n, 6));
@@ -454,21 +453,32 @@ fn estimate_affine_transform(matches: &[PointMatch]) -> Result<TransformMatrix> 
         b[row2] = m.target.y;
     }
 
+    // TODO: Replace with proper least squares solver
+    // For now, return a simple error
+    return Err(VisionError::OperationError(
+        "Affine estimation not implemented without ndarray-linalg".to_string(),
+    ));
+    /*
     let params = a
         .least_squares(&b)
         .map_err(|e| VisionError::OperationError(format!("Failed to solve affine system: {}", e)))?
         .solution;
+    */
 
-    let mut transform = Array2::zeros((3, 3));
-    transform[[0, 0]] = params[0];
-    transform[[0, 1]] = params[1];
-    transform[[0, 2]] = params[2];
-    transform[[1, 0]] = params[3];
-    transform[[1, 1]] = params[4];
-    transform[[1, 2]] = params[5];
-    transform[[2, 2]] = 1.0;
+    #[allow(unreachable_code)]
+    {
+        let params = Array1::zeros(6);
+        let mut transform = Array2::zeros((3, 3));
+        transform[[0, 0]] = params[0];
+        transform[[0, 1]] = params[1];
+        transform[[0, 2]] = params[2];
+        transform[[1, 0]] = params[3];
+        transform[[1, 1]] = params[4];
+        transform[[1, 2]] = params[5];
+        transform[[2, 2]] = 1.0;
 
-    Ok(transform)
+        Ok(transform)
+    }
 }
 
 /// Estimate homography transformation
@@ -479,7 +489,7 @@ fn estimate_homography_transform(matches: &[PointMatch]) -> Result<TransformMatr
         ));
     }
 
-    use ndarray_linalg::SVD;
+    // use ndarray_linalg::SVD; // TODO: Replace with alternative
 
     let n = matches.len();
     let mut a = Array2::zeros((2 * n, 9));
@@ -510,6 +520,12 @@ fn estimate_homography_transform(matches: &[PointMatch]) -> Result<TransformMatr
         a[[row2, 8]] = -v;
     }
 
+    // TODO: Replace with proper SVD implementation
+    // For now, return a simple error
+    return Err(VisionError::OperationError(
+        "Homography estimation not implemented without ndarray-linalg SVD".to_string(),
+    ));
+    /*
     let (_u, _s, vt) = a
         .svd(true, true)
         .map_err(|e| VisionError::OperationError(format!("SVD failed: {}", e)))?;
@@ -519,20 +535,61 @@ fn estimate_homography_transform(matches: &[PointMatch]) -> Result<TransformMatr
 
     // Last column of V (last row of Vt) corresponds to smallest singular value
     let h = vt.row(8);
+    */
 
-    let mut transform = Array2::zeros((3, 3));
-    for i in 0..3 {
-        for j in 0..3 {
-            transform[[i, j]] = h[i * 3 + j];
+    #[allow(unreachable_code)]
+    {
+        let h = Array1::<f64>::zeros(9);
+        let mut transform = Array2::zeros((3, 3));
+        for i in 0..3 {
+            for j in 0..3 {
+                transform[[i, j]] = h[i * 3 + j];
+            }
         }
+
+        // Normalize so that H[2,2] = 1
+        if transform[[2, 2]].abs() > 1e-10 {
+            transform /= transform[[2, 2]];
+        }
+
+        Ok(transform)
+    }
+}
+
+/// Simple 3x3 matrix inversion for TransformMatrix
+/// TODO: Replace with proper implementation from linear algebra library
+fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
+    if matrix.shape() != [3, 3] {
+        return Err(VisionError::InvalidParameter(
+            "Matrix must be 3x3".to_string(),
+        ));
     }
 
-    // Normalize so that H[2,2] = 1
-    if transform[[2, 2]].abs() > 1e-10 {
-        transform /= transform[[2, 2]];
+    // Compute determinant
+    let det = matrix[[0, 0]] * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+        - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+        + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+
+    if det.abs() < 1e-10 {
+        return Err(VisionError::OperationError(
+            "Matrix is singular, cannot invert".to_string(),
+        ));
     }
 
-    Ok(transform)
+    let mut inv = Array2::zeros((3, 3));
+
+    // Compute adjugate matrix
+    inv[[0, 0]] = (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
+    inv[[0, 1]] = (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
+    inv[[0, 2]] = (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
+    inv[[1, 0]] = (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
+    inv[[1, 1]] = (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
+    inv[[1, 2]] = (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
+    inv[[2, 0]] = (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
+    inv[[2, 1]] = (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
+    inv[[2, 2]] = (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
+
+    Ok(inv)
 }
 
 #[cfg(test)]

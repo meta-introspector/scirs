@@ -8,7 +8,6 @@
 use crate::error::{Result, VisionError};
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 use ndarray::{Array1, Array2};
-use rand::distr::Uniform;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use std::f64::consts::PI;
@@ -132,6 +131,12 @@ impl ThinPlateSpline {
             target_y[i] = target_points[i].1;
         }
 
+        // TODO: Replace with proper linear solver
+        // For now, return an error
+        return Err(VisionError::LinAlgError(
+            "TPS solve not implemented without ndarray-linalg".to_string(),
+        ));
+        /*
         // Solve the linear system for x and y mappings
         use ndarray_linalg::solve::Solve;
 
@@ -154,14 +159,21 @@ impl ThinPlateSpline {
                 )))
             }
         };
+        */
 
-        Ok(Self {
-            source_points: source_points.to_vec(),
-            target_points: target_points.to_vec(),
-            coef_x,
-            coef_y,
-            lambda,
-        })
+        #[allow(unreachable_code)]
+        {
+            let coef_x = Array1::zeros(n + 3);
+            let coef_y = Array1::zeros(n + 3);
+
+            Ok(Self {
+                source_points: source_points.to_vec(),
+                target_points: target_points.to_vec(),
+                coef_x,
+                coef_y,
+                lambda,
+            })
+        }
     }
 
     /// Get the regularization parameter
@@ -295,19 +307,19 @@ impl ElasticDeformation {
         let mut rng = if let Some(seed_value) = seed {
             StdRng::seed_from_u64(seed_value)
         } else {
-            // According to CLAUDE.md, should use rng() instead of thread_rng() for rand 0.9.0
-            StdRng::from_rng(&mut rand::rng())
+            // For rand 0.9.0+, we need to create a seeded RNG for reproducibility
+            let mut thread_rng = rand::rng();
+            StdRng::from_rng(&mut thread_rng)
         };
 
         // Generate random displacement fields
-        let dist = Uniform::new(-1.0, 1.0).unwrap();
         let mut dx_map = Array2::zeros((height as usize, width as usize));
         let mut dy_map = Array2::zeros((height as usize, width as usize));
 
         for y in 0..height as usize {
             for x in 0..width as usize {
-                dx_map[[y, x]] = rng.sample(dist);
-                dy_map[[y, x]] = rng.sample(dist);
+                dx_map[[y, x]] = rng.random_range(-1.0..1.0);
+                dy_map[[y, x]] = rng.random_range(-1.0..1.0);
             }
         }
 

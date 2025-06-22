@@ -338,11 +338,11 @@ type ConfidenceIntervalsResult<F> = Result<(
 /// Compute confidence intervals for STR components
 fn compute_confidence_intervals<F>(
     design_matrix: &Array2<F>,
-    system_matrix: &Array2<F>,
+    _system_matrix: &Array2<F>,
     residual: &Array1<F>,
-    trend_basis: &Array2<F>,
-    seasonal_bases: &[Array2<F>],
-    confidence_level: f64,
+    _trend_basis: &Array2<F>,
+    _seasonal_bases: &[Array2<F>],
+    _confidence_level: f64,
 ) -> ConfidenceIntervalsResult<F>
 where
     F: Float
@@ -356,37 +356,13 @@ where
     let n = residual.len();
 
     // Estimate residual variance
-    let residual_variance =
+    let _residual_variance =
         residual.mapv(|x| x * x).sum() / F::from_usize(n - design_matrix.ncols()).unwrap();
 
     // Compute covariance matrix: σ² (X^T X + λR)^(-1)
     // TODO: Replace with scirs2-core matrix inversion when available
     // For now, skip confidence interval calculation
-    return Ok((None, None)); // Temporary - proper matrix inversion needed
-
-    /*
-    let covariance_matrix = match system_matrix.inv() {
-        Ok(inv) => inv * residual_variance,
-        Err(_) => {
-            // Fall back to simplified confidence intervals
-            return Ok((None, None));
-        }
-    };
-    */
-
-    // Critical value for the given confidence level
-    let alpha = 1.0 - confidence_level;
-    let t_critical = F::from_f64(
-        // Approximate critical value for normal distribution
-        if alpha / 2.0 <= 0.025 { 1.96 } else { 1.645 },
-    )
-    .unwrap();
-
-    // Placeholder for confidence intervals since we don't have matrix inversion yet
-    let trend_ci = None;
-    let seasonal_cis = None;
-
-    Ok((trend_ci, seasonal_cis))
+    Ok((None, None)) // Temporary - proper matrix inversion needed
 }
 
 /// Simple matrix solve using Gaussian elimination

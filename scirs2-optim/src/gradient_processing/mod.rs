@@ -572,10 +572,12 @@ mod tests {
 
     #[test]
     fn test_gradient_processor() {
-        let mut config = GradientClipConfig::default();
-        config.max_value = Some(5.0);
-        config.min_value = Some(-5.0);
-        config.max_norm = Some(10.0);
+        let config = GradientClipConfig::<f64> {
+            max_value: Some(5.0),
+            min_value: Some(-5.0),
+            max_norm: Some(10.0),
+            ..Default::default()
+        };
 
         let processor = GradientProcessor::with_config(config);
 

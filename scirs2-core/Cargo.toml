@@ -453,3 +453,8 @@ harness = false
 [[bench]]
 name = "simple_array_bench"
 harness = false
+
+[[example]]
+name = "parallel_ops_example"
+path = "examples/parallel_ops_example.rs"
+required-features = ["parallel"]

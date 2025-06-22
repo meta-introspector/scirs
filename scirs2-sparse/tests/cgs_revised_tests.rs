@@ -156,10 +156,12 @@ fn test_cgs_real_world_pattern() {
     // Create a simple RHS
     let b: Vec<f64> = (0..n * n).map(|i| (i + 1) as f64).collect();
 
-    let mut options = CGSOptions::default();
-    options.max_iter = 200; // May need more iterations for larger problems
-    options.rtol = 1e-5;
-    options.atol = 1e-7;
+    let options = CGSOptions::<f64> {
+        max_iter: 200, // May need more iterations for larger problems
+        rtol: 1e-5,
+        atol: 1e-7,
+        ..Default::default()
+    };
 
     let result = cgs(op.as_ref(), &b, options).unwrap();
 
@@ -187,8 +189,10 @@ fn test_cgs_symmetric_vs_cg() {
     let op = matrix.as_linear_operator();
 
     let b = vec![2.0, 2.0, 2.0];
-    let mut options = CGSOptions::default();
-    options.rtol = 1e-8;
+    let options = CGSOptions::<f64> {
+        rtol: 1e-8,
+        ..Default::default()
+    };
 
     let result = cgs(op.as_ref(), &b, options).unwrap();
 

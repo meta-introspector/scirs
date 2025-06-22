@@ -10,7 +10,7 @@
 #[cfg(all(feature = "simd", target_arch = "x86_64"))]
 use wide::f64x4;
 
-use crate::error::{InterpolateError, InterpolateResult};
+use crate::error::InterpolateResult;
 use crate::spatial::{BallTree, KdTree};
 use ndarray::{Array1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};

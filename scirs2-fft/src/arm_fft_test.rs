@@ -23,7 +23,7 @@ mod tests {
             .collect();
 
         // Compute FFT
-        let spectrum = fft_adaptive(&signal, None, None)?;
+        let spectrum = fft_adaptive(&signal, None)?;
 
         // The spectrum should have peaks at bin 8 (frequency = n/128) and n-8
         // Due to the properties of the sine wave at frequency 1/128
@@ -49,7 +49,7 @@ mod tests {
         );
 
         // Now do inverse FFT
-        let reconstructed = ifft_adaptive(&spectrum, None, None)?;
+        let reconstructed = ifft_adaptive(&spectrum, None)?;
 
         // Check the reconstructed signal matches the original
         for i in 0..n {
@@ -84,7 +84,7 @@ mod tests {
         }
 
         // Compute 2D FFT
-        let spectrum = fft2_adaptive(&signal, [n_rows, n_cols], None, None)?;
+        let spectrum = fft2_adaptive(&signal, Some((n_rows, n_cols)), None)?;
 
         // The spectrum should have peaks at (3, 5), (3, n_cols-5), (n_rows-3, 5), (n_rows-3, n_cols-5)
         // due to the properties of the sine/cosine waves
@@ -98,8 +98,7 @@ mod tests {
                     continue; // Skip DC component
                 }
 
-                let idx = i * n_cols + j;
-                if magnitude(&spectrum[idx]) > (n_rows * n_cols) as f64 / 8.0 {
+                if magnitude(&spectrum[[i, j]]) > (n_rows * n_cols) as f64 / 8.0 {
                     peak_positions.push((i, j));
                 }
             }
@@ -140,7 +139,7 @@ mod tests {
         }
 
         // Compute N-dimensional FFT
-        let spectrum = fftn_adaptive(&signal, &shape, None, None)?;
+        let spectrum = fftn_adaptive(&signal, Some(&shape), None, None)?;
 
         // Verify the result has the correct dimensions
         assert_eq!(spectrum.len(), total_elements);

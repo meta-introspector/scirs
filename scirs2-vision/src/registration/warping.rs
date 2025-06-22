@@ -61,8 +61,9 @@ pub fn warp_image(
     let mut output = GrayImage::new(out_width, out_height);
 
     // Invert transformation for backwards mapping
-    use ndarray_linalg::Inverse;
-    let inv_transform = transform.inv().map_err(|e| {
+    // TODO: Replace with proper matrix inversion once ndarray-linalg alternative is available
+    // For now, use a simple 3x3 matrix inversion
+    let inv_transform = invert_3x3_matrix(transform).map_err(|e| {
         VisionError::OperationError(format!("Failed to invert transformation: {}", e))
     })?;
 
@@ -106,8 +107,9 @@ pub fn warp_rgb_image(
     let mut output = RgbImage::new(out_width, out_height);
 
     // Invert transformation for backwards mapping
-    use ndarray_linalg::Inverse;
-    let inv_transform = transform.inv().map_err(|e| {
+    // TODO: Replace with proper matrix inversion once ndarray-linalg alternative is available
+    // For now, use a simple 3x3 matrix inversion
+    let inv_transform = invert_3x3_matrix(transform).map_err(|e| {
         VisionError::OperationError(format!("Failed to invert transformation: {}", e))
     })?;
 
@@ -533,6 +535,42 @@ pub fn stitch_images(
     }
 
     Ok(DynamicImage::ImageRgb8(output))
+}
+
+/// Simple 3x3 matrix inversion for TransformMatrix
+/// TODO: Replace with proper implementation from linear algebra library
+fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
+    if matrix.shape() != [3, 3] {
+        return Err(VisionError::InvalidParameter(
+            "Matrix must be 3x3".to_string(),
+        ));
+    }
+
+    // Compute determinant
+    let det = matrix[[0, 0]] * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+        - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+        + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+
+    if det.abs() < 1e-10 {
+        return Err(VisionError::OperationError(
+            "Matrix is singular, cannot invert".to_string(),
+        ));
+    }
+
+    let mut inv = Array2::zeros((3, 3));
+
+    // Compute adjugate matrix
+    inv[[0, 0]] = (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
+    inv[[0, 1]] = (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
+    inv[[0, 2]] = (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
+    inv[[1, 0]] = (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
+    inv[[1, 1]] = (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
+    inv[[1, 2]] = (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
+    inv[[2, 0]] = (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
+    inv[[2, 1]] = (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
+    inv[[2, 2]] = (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
+
+    Ok(inv)
 }
 
 #[cfg(test)]

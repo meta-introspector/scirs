@@ -7,10 +7,7 @@ use crate::Float;
 use crate::NdArrayView;
 use crate::{op, NdArrayViewMut};
 use ndarray;
-use ndarray::Dimension;
 use ndarray::{ArrayView2, ArrayViewMut2};
-use std::cmp;
-use std::mem;
 
 // Read pointer to type `A` as type `B`.
 //
@@ -21,29 +18,7 @@ fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
     unsafe { ::std::ptr::read(a as *const _ as *const B) }
 }
 
-// Matrix multiplication implementation
-fn mat_mul_impl<F: Float>(
-    alpha: F,
-    lhs: &ArrayView2<'_, F>,
-    rhs: &ArrayView2<'_, F>,
-    beta: F,
-    c: &mut ArrayViewMut2<'_, F>,
-) {
-    // BLAS implementation removed - always use fallback
-    mat_mul_impl_slow(alpha, lhs, rhs, beta, c)
-}
-
-// Batch matrix multiplication implementation
-fn batch_mat_mul_impl<F: Float>(
-    alpha: F,
-    lhs: &NdArrayView<'_, F>,
-    rhs: &NdArrayView<'_, F>,
-    beta: F,
-    c: &mut NdArrayViewMut<'_, F>,
-) {
-    // BLAS implementation removed - always use fallback
-    batch_mat_mul_impl_slow(alpha, lhs, rhs, beta, c)
-}
+// Note: mat_mul_impl and batch_mat_mul_impl removed as they were unused wrappers
 
 /// C ← α A B + β C
 fn mat_mul_impl_slow<F: Float>(

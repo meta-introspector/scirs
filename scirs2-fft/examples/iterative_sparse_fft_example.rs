@@ -440,14 +440,7 @@ fn run_iteration_comparison() {
         let start = Instant::now();
 
         // Use our direct implementation instead of the generic cuda_sparse_fft
-        let result = execute_cuda_iterative_sparse_fft(
-            &signal,
-            sparsity,
-            Some(iterations),
-            WindowFunction::Hann,
-            0, // Device ID
-        )
-        .unwrap();
+        let result = execute_cuda_iterative_sparse_fft(&signal, sparsity, iterations).unwrap();
 
         let elapsed = start.elapsed().as_millis();
 
@@ -540,13 +533,9 @@ fn run_iteration_comparison() {
     // Compare with sublinear algorithm
     println!("\nComparing with Sublinear algorithm (single pass):");
     let start = Instant::now();
-    let sublinear_result = execute_cuda_sublinear_sparse_fft(
-        &signal,
-        sparsity,
-        WindowFunction::Hann,
-        0, // Device ID
-    )
-    .unwrap();
+    let sublinear_result =
+        execute_cuda_sublinear_sparse_fft(&signal, sparsity, SparseFFTAlgorithm::Sublinear)
+            .unwrap();
     let elapsed = start.elapsed().as_millis();
 
     let (_, recall, true_positives) = evaluate_accuracy(&sublinear_result, &frequencies, n);
@@ -615,14 +604,8 @@ fn main() {
         let devices = get_cuda_devices().unwrap();
         println!("\nCUDA is available with {} device(s):", devices.len());
 
-        for device in &devices {
-            println!(
-                "  - {} (Device {}, Compute Capability {}.{})",
-                device.name,
-                device.device_id,
-                device.compute_capability.0,
-                device.compute_capability.1
-            );
+        for (idx, device) in devices.iter().enumerate() {
+            println!("  - Device {} (initialized: {})", idx, device.initialized);
         }
     } else {
         println!("\nCUDA is not available. This example will use CPU implementations.");

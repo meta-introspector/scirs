@@ -271,7 +271,7 @@ mod tests {
 
         // Check that learning rates are within expected range
         for &rate in &rates {
-            assert!(rate >= 0.08 && rate <= 0.12);
+            assert!((0.08..=0.12).contains(&rate));
         }
 
         // Check that there is some variation in the learning rates

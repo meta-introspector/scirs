@@ -120,6 +120,7 @@ impl<'a> InteriorPointSolver<'a> {
     }
 
     /// Solve the constrained optimization problem
+    #[allow(clippy::many_single_char_names)]
     pub fn solve<F, G>(
         &mut self,
         fun: &mut F,
@@ -530,7 +531,7 @@ impl<'a> InteriorPointSolver<'a> {
 
 /// Solve linear system using LU decomposition
 /// TODO: Replace with scirs2-core BLAS abstractions when available
-fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError> {
+fn solve_linear_system(_a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError> {
     // Temporary implementation using basic operations
     // This should be replaced with proper BLAS solve operations from scirs2-core
     // For now, return a placeholder result to allow compilation

@@ -139,10 +139,8 @@ impl HardwareCapabilities {
             VectorWidth::V512
         } else if self.avx2_available {
             VectorWidth::V256
-        } else if self.simd_available {
-            VectorWidth::V128
         } else {
-            VectorWidth::V128 // Conservative fallback
+            VectorWidth::V128 // Default for SIMD or fallback
         }
     }
 
@@ -304,8 +302,6 @@ impl SimdDistanceMetrics {
         let cosine_similarity = dot_product / (norm_a * norm_b);
         Ok(1.0 - cosine_similarity)
     }
-
-
 }
 
 impl Default for SimdDistanceMetrics {
@@ -408,7 +404,6 @@ impl SimdStatistics {
         let sum = f64::simd_sum(&squared.view());
         Ok(sum)
     }
-
 }
 
 impl Default for SimdStatistics {

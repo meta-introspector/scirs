@@ -4,6 +4,10 @@ use ndarray::Array1;
 use plotters::prelude::*;
 use scirs2_optim::optimizers::{Adam, AdamW, Optimizer, RAdam, RMSprop, SGD};
 
+// Type aliases to simplify complex types
+type OptimizerList = Vec<(String, Box<dyn Optimizer<f64, ndarray::Ix1>>)>;
+type OptimizerSlice<'a> = &'a [(String, Box<dyn Optimizer<f64, ndarray::Ix1>>)];
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Define a simple 2D quadratic function: f(x, y) = x^2 + 2y^2
     // Minimum at (0, 0)
@@ -13,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let learning_rate = 0.1;
     let num_iterations = 100;
 
-    let mut optimizers: Vec<(String, Box<dyn Optimizer<f64, ndarray::Ix1>>)> = vec![
+    let mut optimizers: OptimizerList = vec![
         ("SGD".to_string(), Box::new(SGD::new(learning_rate))),
         ("Adam".to_string(), Box::new(Adam::new(learning_rate))),
         ("AdamW".to_string(), Box::new(AdamW::new(learning_rate))),
@@ -87,7 +91,7 @@ fn compute_gradients(params: &Array1<f64>) -> Array1<f64> {
 fn plot_paths(
     filename: &str,
     paths: &[Vec<(f64, f64)>],
-    optimizers: &[(String, Box<dyn Optimizer<f64, ndarray::Ix1>>)],
+    optimizers: OptimizerSlice,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Determine plot boundaries
     let mut x_min = f64::INFINITY;
@@ -188,7 +192,7 @@ fn plot_paths(
 fn plot_loss_history(
     filename: &str,
     loss_histories: &[Vec<f64>],
-    optimizers: &[(String, Box<dyn Optimizer<f64, ndarray::Ix1>>)],
+    optimizers: OptimizerSlice,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let root = BitMapBackend::new(filename, (800, 600)).into_drawing_area();
     root.fill(&WHITE)?;

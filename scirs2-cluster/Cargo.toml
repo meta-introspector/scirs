@@ -16,7 +16,8 @@ scirs2-spatial = { workspace = true }
 scirs2-linalg = { workspace = true }
 scirs2-stats = { workspace = true }
 ndarray = { workspace = true }
-ndarray-linalg = { workspace = true }
+# BLAS dependencies removed - using core abstractions
+# ndarray-linalg = { workspace = true }
 num-traits = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }

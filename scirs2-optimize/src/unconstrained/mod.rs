@@ -334,7 +334,7 @@ where
 
 /// Wrapper function for truncated Newton method
 fn truncated_newton_wrapper<F, S>(
-    fun: F,
+    mut fun: F,
     x0: Array1<f64>,
     options: &Options,
 ) -> Result<OptimizeResult<S>, OptimizeError>
@@ -342,8 +342,7 @@ where
     F: FnMut(&ArrayView1<f64>) -> S + Clone,
     S: Into<f64> + Clone + From<f64>,
 {
-    let mut fun_clone = fun.clone();
-    let fun_f64 = move |x: &ArrayView1<f64>| fun_clone(x).into();
+    let fun_f64 = move |x: &ArrayView1<f64>| fun(x).into();
 
     let truncated_options = TruncatedNewtonOptions {
         max_iter: options.max_iter,
@@ -377,7 +376,7 @@ where
 
 /// Wrapper function for trust-region Newton method
 fn trust_region_newton_wrapper<F, S>(
-    fun: F,
+    mut fun: F,
     x0: Array1<f64>,
     options: &Options,
 ) -> Result<OptimizeResult<S>, OptimizeError>
@@ -385,8 +384,7 @@ where
     F: FnMut(&ArrayView1<f64>) -> S + Clone,
     S: Into<f64> + Clone + From<f64>,
 {
-    let mut fun_clone = fun.clone();
-    let fun_f64 = move |x: &ArrayView1<f64>| fun_clone(x).into();
+    let fun_f64 = move |x: &ArrayView1<f64>| fun(x).into();
 
     let truncated_options = TruncatedNewtonOptions {
         max_iter: options.max_iter,

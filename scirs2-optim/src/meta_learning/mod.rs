@@ -1003,8 +1003,8 @@ mod tests {
         // Test bounds
         let lr: f64 = hyperparams["learning_rate"];
         let wd: f64 = hyperparams["weight_decay"];
-        assert!(lr >= 0.0001 && lr <= 0.1);
-        assert!(wd >= 0.0 && wd <= 0.01);
+        assert!((0.0001..=0.1).contains(&lr));
+        assert!((0.0..=0.01).contains(&wd));
     }
 
     #[test]
@@ -1065,7 +1065,7 @@ mod tests {
 
         // Check that outputs are bounded (due to tanh activation)
         for &val in update.iter() {
-            assert!(val >= -1.0 && val <= 1.0);
+            assert!((-1.0..=1.0).contains(&val));
         }
     }
 

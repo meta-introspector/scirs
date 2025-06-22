@@ -326,14 +326,8 @@ fn main() {
         let devices = get_cuda_devices().unwrap();
         println!("\nCUDA is available with {} device(s):", devices.len());
 
-        for device in &devices {
-            println!(
-                "  - {} (Device {}, Compute Capability {}.{})",
-                device.name,
-                device.device_id,
-                device.compute_capability.0,
-                device.compute_capability.1
-            );
+        for (idx, device) in devices.iter().enumerate() {
+            println!("  - Device {} (initialized: {})", idx, device.initialized);
         }
     } else {
         println!("\nCUDA is not available. Only CPU benchmarks will be run.");

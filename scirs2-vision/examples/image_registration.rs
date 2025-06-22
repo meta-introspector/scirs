@@ -148,19 +148,24 @@ fn main() -> Result<()> {
     reference.save("output/registration_reference.png").ok();
     target.save("output/registration_target.png").ok();
 
-    if let Ok(_) = DynamicImage::ImageLuma8(registered_feature_clone)
+    if DynamicImage::ImageLuma8(registered_feature_clone)
         .save("output/registration_feature_result.png")
+        .is_ok()
     {
         println!("  Saved feature-based result");
     }
 
-    if let Ok(_) = DynamicImage::ImageLuma8(registered_intensity_clone)
+    if DynamicImage::ImageLuma8(registered_intensity_clone)
         .save("output/registration_intensity_result.png")
+        .is_ok()
     {
         println!("  Saved intensity-based result");
     }
 
-    if let Ok(_) = DynamicImage::ImageRgb8(comparison).save("output/registration_comparison.png") {
+    if DynamicImage::ImageRgb8(comparison)
+        .save("output/registration_comparison.png")
+        .is_ok()
+    {
         println!("  Saved comparison visualization");
     }
 

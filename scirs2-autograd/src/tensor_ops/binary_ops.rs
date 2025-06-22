@@ -189,13 +189,10 @@ impl<T: Float> op::Op<T> for SubOp {
         let x0 = &ctx.input(0);
         let x1 = &ctx.input(1);
         let shape0: &[usize] = x0.shape();
-        let shape1: &[usize] = x1.shape();
         let ret = if shape0.is_empty() {
             // is scalar
             let x0_elem = x0[ndarray::IxDyn(&[])];
             x1.map(move |&a| x0_elem - a)
-        } else if shape0 == shape1 {
-            x0 - x1
         } else {
             x0 - x1
         };
@@ -264,8 +261,6 @@ impl<T: Float> op::Op<T> for DivOp {
             let x1_elem = x1[ndarray::IxDyn(&[])];
             let rhs = T::one() / x1_elem;
             x0.mapv(|x0_elem| x0_elem * rhs)
-        } else if shape0 == shape1 {
-            x0 / x1
         } else {
             x0 / x1
         };

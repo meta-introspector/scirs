@@ -1,20 +1,21 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2, ArrayView1};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use ndarray::Array1;
 use rand::Rng;
 use scirs2_sparse::*;
+use std::hint::black_box;
 
 fn generate_sparse_matrix(size: usize, density: f64) -> (Vec<usize>, Vec<usize>, Vec<f64>) {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut rows = Vec::new();
     let mut cols = Vec::new();
     let mut data = Vec::new();
 
     for i in 0..size {
         for j in 0..size {
-            if rng.gen::<f64>() < density {
+            if rng.random::<f64>() < density {
                 rows.push(i);
                 cols.push(j);
-                data.push(rng.gen::<f64>());
+                data.push(rng.random::<f64>());
             }
         }
     }
@@ -74,49 +75,46 @@ fn bench_sparse_construction(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_sparse_matrix_vector(c: &mut Criterion) {
-    let mut group = c.benchmark_group("sparse_matvec");
+fn bench_sparse_operations(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sparse_operations");
 
     for size in [100, 500, 1000].iter() {
         let (rows, cols, data) = generate_sparse_matrix(*size, 0.05);
         let shape = (*size, *size);
 
         let csr = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
-        let csc = CscArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
-        let vector = Array1::from_iter((0..*size).map(|i| i as f64));
+        let vector = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
 
-        group.throughput(Throughput::Elements(*size as u64));
+        group.throughput(Throughput::Elements(data.len() as u64));
 
+        // Matrix-vector multiplication
         group.bench_with_input(BenchmarkId::new("csr_matvec", size), size, |b, _| {
-            b.iter(|| {
-                let vector_view = vector.view();
-                csr.dot_vector(&vector_view).unwrap()
-            })
+            b.iter(|| csr.dot_vector(&vector.view()).unwrap())
         });
 
-        group.bench_with_input(BenchmarkId::new("csc_matvec", size), size, |b, _| {
-            b.iter(|| {
-                let vector_view = vector.view();
-                csc.dot_vector(&vector_view).unwrap()
-            })
+        // Transpose operation
+        group.bench_with_input(BenchmarkId::new("csr_transpose", size), size, |b, _| {
+            b.iter(|| csr.transpose().unwrap())
         });
     }
 
     group.finish();
 }
 
-fn bench_sparse_matrix_matrix(c: &mut Criterion) {
-    let mut group = c.benchmark_group("sparse_matmul");
+fn bench_sparse_sparse_ops(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sparse_sparse_ops");
 
-    for size in [100, 300, 500].iter() {
-        let (rows, cols, data) = generate_sparse_matrix(*size, 0.05);
+    for size in [100, 500].iter() {
+        let (rows1, cols1, data1) = generate_sparse_matrix(*size, 0.02);
+        let (rows2, cols2, data2) = generate_sparse_matrix(*size, 0.02);
         let shape = (*size, *size);
 
-        let csr1 = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
-        let csr2 = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let csr1 = CsrArray::from_triplets(&rows1, &cols1, &data1, shape, false).unwrap();
+        let csr2 = CsrArray::from_triplets(&rows2, &cols2, &data2, shape, false).unwrap();
 
-        group.throughput(Throughput::Elements((*size * *size) as u64));
+        group.throughput(Throughput::Elements((data1.len() + data2.len()) as u64));
 
+        // Matrix-matrix multiplication
         group.bench_with_input(BenchmarkId::new("csr_matmul", size), size, |b, _| {
             b.iter(|| black_box(&csr1).dot(black_box(&csr2)).unwrap())
         });
@@ -154,16 +152,16 @@ fn bench_format_conversions(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_sparse_linear_algebra(c: &mut Criterion) {
-    let mut group = c.benchmark_group("sparse_linalg");
+fn bench_linear_solvers(c: &mut Criterion) {
+    let mut group = c.benchmark_group("linear_solvers");
 
-    for size in [100, 300, 500].iter() {
-        // Create a symmetric positive definite matrix for CG solver
+    for size in [50, 100].iter() {
+        // Create a diagonally dominant matrix for guaranteed convergence
         let mut rows = Vec::new();
         let mut cols = Vec::new();
         let mut data = Vec::new();
 
-        // Add diagonal dominance
+        // Add strong diagonal
         for i in 0..*size {
             rows.push(i);
             cols.push(i);
@@ -171,11 +169,11 @@ fn bench_sparse_linear_algebra(c: &mut Criterion) {
         }
 
         // Add some off-diagonal elements
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for i in 0..*size {
             for j in (i + 1)..*size {
-                if rng.gen::<f64>() < 0.02 {
-                    let val = rng.gen::<f64>() * 0.5;
+                if rng.random::<f64>() < 0.02 {
+                    let val = rng.random::<f64>() * 0.5;
                     rows.push(i);
                     cols.push(j);
                     data.push(val);
@@ -187,8 +185,8 @@ fn bench_sparse_linear_algebra(c: &mut Criterion) {
         }
 
         let shape = (*size, *size);
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, true).unwrap();
-        let rhs = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
+        let _matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, true).unwrap();
+        let _rhs = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
 
         group.throughput(Throughput::Elements(*size as u64));
 
@@ -197,7 +195,7 @@ fn bench_sparse_linear_algebra(c: &mut Criterion) {
             size,
             |b, _| {
                 b.iter(|| {
-                    let options = CGOptions {
+                    let _options = CGOptions {
                         max_iter: 100,
                         rtol: 1e-6,
                         atol: 1e-12,
@@ -222,14 +220,14 @@ fn bench_symmetric_operations(c: &mut Criterion) {
         let mut rows = Vec::new();
         let mut cols = Vec::new();
         let mut data = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for i in 0..*size {
             for j in 0..=i {
-                if rng.gen::<f64>() < 0.05 {
+                if rng.random::<f64>() < 0.05 {
                     rows.push(i);
                     cols.push(j);
-                    data.push(rng.gen::<f64>());
+                    data.push(rng.random::<f64>());
                 }
             }
         }
@@ -237,53 +235,42 @@ fn bench_symmetric_operations(c: &mut Criterion) {
         let shape = (*size, *size);
         let csr_temp = CsrArray::from_triplets(&rows, &cols, &data, shape, true).unwrap();
         let sym_csr = SymCsrArray::from_csr_array(&csr_temp).unwrap();
-        let vector = Array1::from_iter((0..*size).map(|i| i as f64));
+        let vector = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
 
-        group.throughput(Throughput::Elements(*size as u64));
+        group.throughput(Throughput::Elements(data.len() as u64));
 
+        // Symmetric matrix-vector multiplication
         group.bench_with_input(BenchmarkId::new("sym_csr_matvec", size), size, |b, _| {
-            b.iter(|| {
-                let vector_view = vector.view();
-                sym_csr.dot_vector(&vector_view).unwrap()
-            })
+            b.iter(|| sym_csr.dot_vector(&vector.view()).unwrap())
         });
-
-        group.bench_with_input(
-            BenchmarkId::new("sym_csr_quadratic_form", size),
-            size,
-            |b, _| {
-                b.iter(|| {
-                    // Use regular matrix-vector multiplication as substitute
-                    let vector_view = vector.view();
-                    sym_csr.dot_vector(&vector_view).unwrap()
-                })
-            },
-        );
     }
 
     group.finish();
 }
 
-fn bench_diagonal_operations(c: &mut Criterion) {
-    let mut group = c.benchmark_group("diagonal_operations");
+fn bench_special_formats(c: &mut Criterion) {
+    let mut group = c.benchmark_group("special_formats");
 
     for size in [100, 500, 1000].iter() {
-        let diag_data = vec![Array1::from_iter((0..*size).map(|i| (i + 1) as f64))];
-        let offsets = vec![0];
-        let shape = (*size, *size);
+        // Create DIA format data
+        let offsets = vec![-3, -1, 0, 1, 3];
+        let mut diagonals = Vec::new();
+        for _ in offsets.iter() {
+            let diag = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
+            diagonals.push(diag);
+        }
 
-        let dia = DiaArray::new(diag_data, offsets, shape).unwrap();
-        let vector = Array1::from_iter((0..*size).map(|i| i as f64));
+        let dia = DiaArray::new(diagonals, offsets.clone(), (*size, *size)).unwrap();
+        let vector = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
 
         group.throughput(Throughput::Elements(*size as u64));
 
+        // DIA matrix-vector multiplication
         group.bench_with_input(BenchmarkId::new("dia_matvec", size), size, |b, _| {
-            b.iter(|| {
-                let vector_view = vector.view();
-                dia.dot_vector(&vector_view).unwrap()
-            })
+            b.iter(|| dia.dot_vector(&vector.view()).unwrap())
         });
 
+        // DIA to CSR conversion
         group.bench_with_input(BenchmarkId::new("dia_to_csr", size), size, |b, _| {
             b.iter(|| black_box(&dia).to_csr().unwrap())
         });
@@ -292,44 +279,41 @@ fn bench_diagonal_operations(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_memory_efficiency(c: &mut Criterion) {
-    let mut group = c.benchmark_group("memory_efficiency");
+fn bench_dok_lil_operations(c: &mut Criterion) {
+    let mut group = c.benchmark_group("dok_lil_operations");
 
-    // Test memory usage with different densities
-    for density in [0.01, 0.05, 0.1].iter() {
-        let size = 1000;
-        let (rows, cols, data) = generate_sparse_matrix(size, *density);
-        let shape = (size, size);
+    for size in [100, 500].iter() {
+        let shape = (*size, *size);
 
-        group.throughput(Throughput::Elements(data.len() as u64));
-
-        group.bench_with_input(
-            BenchmarkId::new("dok_insertion", format!("density_{}", density)),
-            density,
-            |b, _| {
-                b.iter(|| {
-                    let mut dok = DokArray::<f64>::new(shape);
-                    for ((&r, &c), &v) in rows.iter().zip(cols.iter()).zip(data.iter()) {
-                        dok.set(r, c, v).unwrap();
+        // DOK operations
+        group.bench_with_input(BenchmarkId::new("dok_construction", size), size, |b, _| {
+            b.iter(|| {
+                let mut dok = DokArray::new(shape);
+                for i in 0..*size {
+                    for j in 0..*size {
+                        if (i + j) % 20 == 0 {
+                            dok.set(i, j, (i + j) as f64).unwrap();
+                        }
                     }
-                    black_box(dok)
-                })
-            },
-        );
+                }
+                black_box(dok)
+            })
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("lil_insertion", format!("density_{}", density)),
-            density,
-            |b, _| {
-                b.iter(|| {
-                    let mut lil = LilArray::<f64>::new(shape);
-                    for ((&r, &c), &v) in rows.iter().zip(cols.iter()).zip(data.iter()) {
-                        lil.set(r, c, v).unwrap();
+        // LIL operations
+        group.bench_with_input(BenchmarkId::new("lil_construction", size), size, |b, _| {
+            b.iter(|| {
+                let mut lil = LilArray::new(shape);
+                for i in 0..*size {
+                    for j in 0..*size {
+                        if (i + j) % 20 == 0 {
+                            lil.set(i, j, (i + j) as f64).unwrap();
+                        }
                     }
-                    black_box(lil)
-                })
-            },
-        );
+                }
+                black_box(lil)
+            })
+        });
     }
 
     group.finish();
@@ -338,12 +322,12 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 criterion_group!(
     benches,
     bench_sparse_construction,
-    bench_sparse_matrix_vector,
-    bench_sparse_matrix_matrix,
+    bench_sparse_operations,
+    bench_sparse_sparse_ops,
     bench_format_conversions,
-    bench_sparse_linear_algebra,
+    bench_linear_solvers,
     bench_symmetric_operations,
-    bench_diagonal_operations,
-    bench_memory_efficiency
+    bench_special_formats,
+    bench_dok_lil_operations
 );
 criterion_main!(benches);

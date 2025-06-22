@@ -120,7 +120,7 @@ pub mod matrix_equations;
 pub mod matrix_factorization;
 pub mod matrix_functions;
 pub mod matrixfree;
-// pub mod mixed_precision; // Temporarily disabled due to wide dependency issues
+pub mod mixed_precision;
 mod norm;
 pub mod optim;
 pub mod parallel;
@@ -141,6 +141,7 @@ pub mod random_matrices;
 pub mod circulant_toeplitz;
 mod diagnostics;
 pub mod fft;
+pub mod quantization;
 pub mod scalable;
 pub mod simd_ops;
 mod solve;
@@ -182,7 +183,6 @@ pub mod accelerated {
     pub use super::blas_accelerated::*;
     pub use super::lapack_accelerated::*;
 }
-// accelerated実装は既にpubモジュールとして公開されているので、ここでの再エクスポートは不要
 
 // Re-exports for user convenience
 pub use self::basic::{det, inv, matrix_power, trace as basic_trace};
@@ -356,11 +356,11 @@ pub mod prelude {
         LinearOperator, MatrixFreeOp,
     };
     // Temporarily disabled due to wide dependency issues
-    // pub use super::mixed_precision::{
-    //     convert, convert_2d, iterative_refinement_solve, mixed_precision_cond, mixed_precision_det,
-    //     mixed_precision_dot, mixed_precision_inv, mixed_precision_matmul, mixed_precision_matvec,
-    //     mixed_precision_qr, mixed_precision_solve, mixed_precision_svd,
-    // };
+    pub use super::mixed_precision::{
+        convert, convert_2d, iterative_refinement_solve, mixed_precision_cond,
+        mixed_precision_dot_f32, mixed_precision_matmul, mixed_precision_matvec,
+        mixed_precision_qr, mixed_precision_solve, mixed_precision_svd,
+    };
     // #[cfg(feature = "simd")]
     // pub use super::mixed_precision::{
     //     simd_mixed_precision_dot_f32_f64, simd_mixed_precision_matmul_f32_f64,
@@ -383,20 +383,19 @@ pub mod prelude {
         gaussian_random_matrix, johnson_lindenstrauss_min_dim, johnson_lindenstrauss_transform,
         project, sparse_random_matrix, very_sparse_random_matrix,
     };
-    // Temporarily disabled due to wide dependency issues
-    // pub use super::quantization::calibration::{
-    //     calibrate_matrix, calibrate_vector, CalibrationConfig, CalibrationMethod,
-    // };
-    // #[cfg(feature = "simd")]
-    // pub use super::quantization::simd::{
-    //     simd_quantized_dot, simd_quantized_matmul, simd_quantized_matvec,
-    // };
-    // pub use super::quantization::{
-    //     dequantize_matrix, dequantize_vector, fake_quantize, quantize_matrix,
-    //     quantize_matrix_per_channel, quantize_vector, quantized_dot, quantized_matmul,
-    //     quantized_matvec, QuantizationMethod, QuantizationParams, QuantizedDataType,
-    //     QuantizedMatrix, QuantizedVector,
-    // };
+    pub use super::quantization::calibration::{
+        calibrate_matrix, calibrate_vector, CalibrationConfig, CalibrationMethod,
+    };
+    #[cfg(feature = "simd")]
+    pub use super::quantization::simd::{
+        simd_quantized_dot, simd_quantized_matmul, simd_quantized_matvec,
+    };
+    pub use super::quantization::{
+        dequantize_matrix, dequantize_vector, fake_quantize, quantize_matrix,
+        quantize_matrix_per_channel, quantize_vector, quantized_dot, quantized_matmul,
+        quantized_matvec, QuantizationMethod, QuantizationParams, QuantizedDataType,
+        QuantizedMatrix, QuantizedVector,
+    };
     pub use super::random::{
         banded, diagonal, hilbert, low_rank, normal, orthogonal, permutation, random_correlation,
         sparse, spd, toeplitz, uniform, vandermonde, with_condition_number, with_eigenvalues,

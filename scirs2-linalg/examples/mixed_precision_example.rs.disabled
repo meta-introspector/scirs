@@ -5,6 +5,7 @@
 
 use ndarray::{array, Array1, Array2};
 use scirs2_linalg::prelude::*;
+use scirs2_linalg::mixed_precision::conversions::convert;
 
 // Simple benchmark function to compare execution times
 fn benchmark_fn<F>(name: &str, mut f: F) -> std::time::Duration
@@ -45,11 +46,11 @@ fn main() {
     println!("Original f64 array: {:?}", arr_f64);
 
     // Convert to lower precision
-    let arr_f32 = convert::<f64, f32>(&arr_f64.view());
+    let arr_f32: Array1<f32> = convert(&arr_f64.view());
     println!("Converted to f32: {:?}", arr_f32);
 
     // Convert back to higher precision
-    let arr_f64_again = convert::<f32, f64>(&arr_f32.view());
+    let arr_f64_again: Array1<f64> = convert(&arr_f32.view());
     println!("Converted back to f64: {:?}", arr_f64_again);
 
     // Show that the conversion is lossless for these simple values
@@ -65,7 +66,7 @@ fn main() {
     println!("Original f64 matrix:\n{:?}", mat_f64);
 
     // Convert to lower precision
-    let mat_f32 = convert_2d::<f64, f32>(&mat_f64.view());
+    let mat_f32: Array2<f32> = convert_2d(&mat_f64.view());
     println!("Converted to f32:\n{:?}", mat_f32);
     println!();
 

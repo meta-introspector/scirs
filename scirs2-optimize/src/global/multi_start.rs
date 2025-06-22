@@ -164,7 +164,7 @@ where
     }
 
     /// Generate grid-based starting points
-    fn generate_grid_points(&mut self) -> Vec<Array1<f64>> {
+    fn generate_grid_points(&self) -> Vec<Array1<f64>> {
         let points_per_dim = (self.options.n_starts as f64)
             .powf(1.0 / self.ndim as f64)
             .ceil() as usize;

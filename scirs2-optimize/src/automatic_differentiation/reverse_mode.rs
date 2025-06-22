@@ -382,27 +382,36 @@ where
                 hessian[[i, j]] = (f_plus - 2.0 * f_center + f_minus) / (h * h);
             } else {
                 // Off-diagonal element: mixed partial derivative
-                let mut x_pp = x.to_owned();
-                x_pp[i] += h;
-                x_pp[j] += h;
-                let f_pp = func(&x_pp.view());
+                // Variable names represent plus/minus combinations for finite differences
+                {
+                    #[allow(clippy::similar_names)]
+                    let mut x_pp = x.to_owned();
+                    x_pp[i] += h;
+                    x_pp[j] += h;
+                    #[allow(clippy::similar_names)]
+                    let f_pp = func(&x_pp.view());
 
-                let mut x_pm = x.to_owned();
-                x_pm[i] += h;
-                x_pm[j] -= h;
-                let f_pm = func(&x_pm.view());
+                    #[allow(clippy::similar_names)]
+                    let mut x_pm = x.to_owned();
+                    x_pm[i] += h;
+                    x_pm[j] -= h;
+                    #[allow(clippy::similar_names)]
+                    let f_pm = func(&x_pm.view());
 
-                let mut x_mp = x.to_owned();
-                x_mp[i] -= h;
-                x_mp[j] += h;
-                let f_mp = func(&x_mp.view());
+                    #[allow(clippy::similar_names)]
+                    let mut x_mp = x.to_owned();
+                    x_mp[i] -= h;
+                    x_mp[j] += h;
+                    #[allow(clippy::similar_names)]
+                    let f_mp = func(&x_mp.view());
 
-                let mut x_mm = x.to_owned();
-                x_mm[i] -= h;
-                x_mm[j] -= h;
-                let f_mm = func(&x_mm.view());
+                    let mut x_mm = x.to_owned();
+                    x_mm[i] -= h;
+                    x_mm[j] -= h;
+                    let f_mm = func(&x_mm.view());
 
-                hessian[[i, j]] = (f_pp - f_pm - f_mp + f_mm) / (4.0 * h * h);
+                    hessian[[i, j]] = (f_pp - f_pm - f_mp + f_mm) / (4.0 * h * h);
+                }
             }
         }
     }
@@ -447,6 +456,7 @@ pub fn is_reverse_mode_efficient(input_dim: usize, output_dim: usize) -> bool {
 }
 
 /// Vector-Jacobian product using reverse-mode AD
+#[allow(clippy::many_single_char_names)]
 pub fn reverse_vjp<F>(
     func: F,
     x: &ArrayView1<f64>,

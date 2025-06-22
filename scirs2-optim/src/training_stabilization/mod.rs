@@ -536,7 +536,7 @@ mod tests {
 
         // Mean was (1+2+3+4)/4 = 2.5
         // Centralized: [-1.5, -0.5, 0.5, 1.5]
-        let expected = vec![-1.5, -0.5, 0.5, 1.5];
+        let expected = [-1.5, -0.5, 0.5, 1.5];
         for (actual, expected) in gradients[0].iter().zip(expected.iter()) {
             assert_relative_eq!(*actual, *expected, epsilon = 1e-6);
         }

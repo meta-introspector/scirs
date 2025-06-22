@@ -3,7 +3,7 @@
 //! This module provides utilities for parallel text processing
 //! using multiple threads.
 
-use crate::error::{Result, TextError};
+use crate::error::Result;
 use crate::tokenize::Tokenizer;
 use crate::vectorize::Vectorizer;
 use ndarray::Array2;

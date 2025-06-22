@@ -5,7 +5,7 @@
 
 use crate::error::FFTResult;
 use crate::fft;
-use ndarray::{Array2, ArrayD};
+use ndarray::{Array2, ArrayD, IxDyn};
 use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::simd_ops::PlatformCapabilities;
@@ -51,17 +51,48 @@ where
 
 /// SIMD-accelerated 2D FFT
 pub fn fft2_simd<T>(
-    _x: &[T],
-    _shape: Option<(usize, usize)>,
-    _norm: Option<&str>,
+    x: &[T],
+    shape: Option<(usize, usize)>,
+    norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
-    // For now, just create a simple error
-    Err(crate::error::FFTError::NotImplementedError(
-        "2D FFT from slice not yet implemented".to_string(),
-    ))
+    // If no shape is provided, try to infer a square shape
+    let (n_rows, n_cols) = if let Some(s) = shape {
+        s
+    } else {
+        let len = x.len();
+        let size = (len as f64).sqrt() as usize;
+        if size * size != len {
+            return Err(crate::error::FFTError::ValueError(
+                "Cannot infer 2D shape from slice length".to_string(),
+            ));
+        }
+        (size, size)
+    };
+
+    // Check that the slice has the right number of elements
+    if x.len() != n_rows * n_cols {
+        return Err(crate::error::FFTError::ValueError(format!(
+            "Shape ({}, {}) requires {} elements, but slice has {}",
+            n_rows,
+            n_cols,
+            n_rows * n_cols,
+            x.len()
+        )));
+    }
+
+    // Convert slice to 2D array
+    let mut values = Vec::with_capacity(n_rows * n_cols);
+    for &val in x.iter() {
+        values.push(val);
+    }
+    let arr = Array2::from_shape_vec((n_rows, n_cols), values)
+        .map_err(|e| crate::error::FFTError::DimensionError(e.to_string()))?;
+
+    // Use the regular fft2 function
+    crate::fft::fft2(&arr, None, None, norm)
 }
 
 /// SIMD-accelerated 2D inverse FFT
@@ -81,18 +112,44 @@ where
 
 /// SIMD-accelerated N-dimensional FFT
 pub fn fftn_simd<T>(
-    _x: &[T],
-    _shape: Option<&[usize]>,
-    _axes: Option<&[usize]>,
-    _norm: Option<&str>,
+    x: &[T],
+    shape: Option<&[usize]>,
+    axes: Option<&[usize]>,
+    norm: Option<&str>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
-    // For now, just create a simple error
-    Err(crate::error::FFTError::NotImplementedError(
-        "N-dimensional FFT from slice not yet implemented".to_string(),
-    ))
+    // Shape is required for N-dimensional FFT from slice
+    let shape = shape.ok_or_else(|| {
+        crate::error::FFTError::ValueError(
+            "Shape is required for N-dimensional FFT from slice".to_string(),
+        )
+    })?;
+
+    // Calculate total number of elements
+    let total_elements: usize = shape.iter().product();
+
+    // Check that the slice has the right number of elements
+    if x.len() != total_elements {
+        return Err(crate::error::FFTError::ValueError(format!(
+            "Shape {:?} requires {} elements, but slice has {}",
+            shape,
+            total_elements,
+            x.len()
+        )));
+    }
+
+    // Convert slice to N-dimensional array
+    let mut values = Vec::with_capacity(total_elements);
+    for &val in x.iter() {
+        values.push(val);
+    }
+    let arr = ArrayD::from_shape_vec(IxDyn(shape), values)
+        .map_err(|e| crate::error::FFTError::DimensionError(e.to_string()))?;
+
+    // Use the regular fftn function
+    crate::fft::fftn(&arr, None, axes.map(|a| a.to_vec()), norm, None, None)
 }
 
 /// SIMD-accelerated N-dimensional inverse FFT

@@ -25,18 +25,8 @@ fn main() {
         let devices = get_cuda_devices().unwrap();
         println!("Found {} CUDA device(s):", devices.len());
 
-        for device in &devices {
-            println!(
-                "  - Device {}: {} ({:.1} GB)",
-                device.device_id,
-                device.name,
-                device.total_memory as f64 / (1024.0 * 1024.0 * 1024.0)
-            );
-            println!(
-                "    Compute capability: {}.{}",
-                device.compute_capability.0, device.compute_capability.1
-            );
-            println!("    Multiprocessors: {}", device.multiprocessor_count);
+        for (idx, device) in devices.iter().enumerate() {
+            println!("  - Device {} (initialized: {})", idx, device.initialized);
         }
     }
 

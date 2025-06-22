@@ -3,7 +3,7 @@
 //! This module provides highly optimized distance calculations using the unified
 //! SIMD operations from scirs2-core, with fallbacks to standard implementations.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
@@ -67,7 +67,6 @@ where
     F: Float + FromPrimitive + Debug + SimdUnifiedOps,
 {
     let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
 
     let mut idx = 0;
     for i in 0..n_samples {

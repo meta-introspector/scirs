@@ -170,10 +170,12 @@ impl SecondOrderDual {
     }
 
     /// Compute natural logarithm
+    #[allow(clippy::suspicious_operation_groupings)]
     pub fn ln(self) -> Self {
         Self {
             value: self.value.ln(),
             first: self.first / self.value,
+            // Chain rule for second derivative: d²/dx²[ln(f(x))] = f''(x)/f(x) - (f'(x))²/(f(x))²
             second: (self.second * self.value - self.first * self.first)
                 / (self.value * self.value),
         }

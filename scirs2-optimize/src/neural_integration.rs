@@ -195,7 +195,7 @@ where
     }
 
     /// SGD parameter update
-    fn sgd_step(&mut self, params: &mut NeuralParameters<F>) -> Result<(), OptimizeError> {
+    fn sgd_step(&self, params: &mut NeuralParameters<F>) -> Result<(), OptimizeError> {
         let lr = F::from(self.options.learning_rate).unwrap_or_else(|| F::from(0.01).unwrap());
 
         for (param, grad) in params.parameters.iter_mut().zip(params.gradients.iter()) {

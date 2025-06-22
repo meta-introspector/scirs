@@ -236,7 +236,7 @@ fn simd_rbf_evaluate_f64_vectorized(
 ) -> InterpolateResult<Array1<f64>> {
     let n_queries = queries.nrows();
     let n_centers = centers.nrows();
-    let dims = queries.ncols();
+    let _dims = queries.ncols();
     let mut results = Array1::zeros(n_queries);
 
     // Use core SIMD operations for optimized computation
@@ -244,7 +244,7 @@ fn simd_rbf_evaluate_f64_vectorized(
         let query_row = queries.row(q);
         let mut sum = 0.0;
 
-        for c in 0..n_centers {
+        for (c, &coeff) in coefficients.iter().enumerate().take(n_centers) {
             let center_row = centers.row(c);
 
             // Compute squared distance using SIMD operations
@@ -264,7 +264,7 @@ fn simd_rbf_evaluate_f64_vectorized(
                 }
             };
 
-            sum += coefficients[c] * kernel_val;
+            sum += coeff * kernel_val;
         }
 
         results[q] = sum;
@@ -274,7 +274,6 @@ fn simd_rbf_evaluate_f64_vectorized(
 }
 
 /// Fallback implementation for all architectures
-
 /// Scalar fallback implementation
 fn simd_rbf_evaluate_scalar<F>(
     queries: &ArrayView2<F>,

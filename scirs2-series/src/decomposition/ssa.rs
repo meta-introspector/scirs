@@ -212,7 +212,7 @@ where
 
         // Define threshold for numerical stability
         let epsilon_val = F::from_f64(1e-12).unwrap_or_else(F::epsilon);
-        let threshold = if s.len() > 0 {
+        let threshold = if !s.is_empty() {
             s[0] * epsilon_val
         } else {
             epsilon_val

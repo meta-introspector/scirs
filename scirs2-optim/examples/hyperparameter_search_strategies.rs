@@ -69,7 +69,7 @@ impl MockModel {
             performance += 0.05; // Good combination
         }
 
-        self.performance = performance.max(0.0).min(1.0);
+        self.performance = performance.clamp(0.0, 1.0);
         self.performance
     }
 }
@@ -303,8 +303,8 @@ fn bayesian_optimization_example() -> Result<()> {
     let mut exploration_trials = 0;
     let mut exploitation_trials = 0;
 
-    for i in 1..trial_history.len() {
-        let current_lr = trial_history[i]["learning_rate"];
+    for trial in trial_history.iter().skip(1) {
+        let current_lr = trial["learning_rate"];
         let best_lr = optimizer.get_best_hyperparameters().unwrap()["learning_rate"];
 
         if (current_lr - best_lr).abs() > 0.01 {
@@ -374,10 +374,10 @@ fn population_based_training_example() -> Result<()> {
 
                 // Apply bounds
                 match param.as_str() {
-                    "learning_rate" => *value = value.max(1e-5).min(1e-1),
-                    "weight_decay" => *value = value.max(0.0).min(0.1),
-                    "batch_size" => *value = value.max(16.0).min(256.0),
-                    "momentum" => *value = value.max(0.0).min(0.999),
+                    "learning_rate" => *value = value.clamp(1e-5, 1e-1),
+                    "weight_decay" => *value = value.clamp(0.0, 0.1),
+                    "batch_size" => *value = value.clamp(16.0, 256.0),
+                    "momentum" => *value = value.clamp(0.0, 0.999),
                     _ => {}
                 }
             }
@@ -633,19 +633,19 @@ fn sensitivity_analysis_example() -> Result<()> {
             match param_name {
                 "learning_rate" => {
                     let val = test_hyperparams.get_mut("learning_rate").unwrap();
-                    *val = val.max(1e-6).min(1.0);
+                    *val = val.clamp(1e-6, 1.0);
                 }
                 "weight_decay" => {
                     let val = test_hyperparams.get_mut("weight_decay").unwrap();
-                    *val = val.max(0.0).min(1.0);
+                    *val = val.clamp(0.0, 1.0);
                 }
                 "batch_size" => {
                     let val = test_hyperparams.get_mut("batch_size").unwrap();
-                    *val = val.max(1.0).min(512.0);
+                    *val = val.clamp(1.0, 512.0);
                 }
                 "momentum" => {
                     let val = test_hyperparams.get_mut("momentum").unwrap();
-                    *val = val.max(0.0).min(0.999);
+                    *val = val.clamp(0.0, 0.999);
                 }
                 _ => {}
             }

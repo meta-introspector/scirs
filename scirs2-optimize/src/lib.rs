@@ -5,6 +5,9 @@
 //!
 
 #![allow(clippy::field_reassign_with_default)]
+// Allow common mathematical conventions in optimization code
+#![allow(clippy::many_single_char_names)] // x, f, g, h, n, m etc. are standard in optimization
+#![allow(clippy::similar_names)] // x_pp, x_pm, x_mp, x_mm are standard for finite differences
 //! ## Submodules
 //!
 //! * `unconstrained`: Unconstrained optimization algorithms

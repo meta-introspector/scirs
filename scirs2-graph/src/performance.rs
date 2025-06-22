@@ -123,7 +123,7 @@ where
 pub fn parallel_shortest_paths<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     sources: &[N],
-    config: &ParallelConfig,
+    _config: &ParallelConfig,
 ) -> Result<HashMap<N, HashMap<N, E>>>
 where
     N: Node + Clone + Send + Sync + std::fmt::Debug,

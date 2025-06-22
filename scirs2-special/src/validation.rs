@@ -18,6 +18,7 @@ where
 }
 
 /// Check if a value is non-negative (>= 0)
+#[allow(dead_code)]
 pub fn check_non_negative<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
@@ -28,6 +29,7 @@ where
 }
 
 /// Check if a value is finite
+#[allow(dead_code)]
 pub fn check_finite<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
@@ -37,6 +39,7 @@ where
 }
 
 /// Check if a value is within bounds (inclusive)
+#[allow(dead_code)]
 pub fn check_in_bounds<T>(value: T, min: T, max: T, name: &str) -> SpecialResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy,
@@ -50,6 +53,7 @@ where
 }
 
 /// Check if a probability value is valid (0 <= p <= 1)
+#[allow(dead_code)]
 pub fn check_probability<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
@@ -60,6 +64,7 @@ where
 }
 
 /// Check if all values in an array are finite
+#[allow(dead_code)]
 pub fn check_array_finite<S, D>(array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
 where
     S: ndarray::Data,
@@ -71,6 +76,7 @@ where
 }
 
 /// Check if an array is not empty
+#[allow(dead_code)]
 pub fn check_not_empty<S, D>(array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
 where
     S: ndarray::Data,
@@ -81,6 +87,7 @@ where
 }
 
 /// Check if two arrays have the same shape
+#[allow(dead_code)]
 pub fn check_same_shape<S1, S2, D1, D2>(
     a: &ArrayBase<S1, D1>,
     a_name: &str,
@@ -107,6 +114,7 @@ where
 // Special function specific validations
 
 /// Check if order n is valid for special functions (non-negative integer or real)
+#[allow(dead_code)]
 pub fn check_order<T>(n: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
@@ -115,6 +123,7 @@ where
 }
 
 /// Check if degree l is valid (non-negative integer)
+#[allow(dead_code)]
 pub fn check_degree(l: i32, name: &str) -> SpecialResult<i32> {
     if l < 0 {
         return Err(SpecialError::DomainError(format!(
@@ -126,6 +135,7 @@ pub fn check_degree(l: i32, name: &str) -> SpecialResult<i32> {
 }
 
 /// Check if order m is valid for associated functions (|m| <= l)
+#[allow(dead_code)]
 pub fn check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
     if m.abs() > l {
         return Err(SpecialError::DomainError(format!(
@@ -137,6 +147,7 @@ pub fn check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
 }
 
 /// Check convergence parameters
+#[allow(dead_code)]
 pub fn check_convergence_params(max_iter: usize, tolerance: f64) -> SpecialResult<()> {
     if max_iter == 0 {
         return Err(SpecialError::ValueError("max_iter must be > 0".to_string()));
@@ -146,6 +157,7 @@ pub fn check_convergence_params(max_iter: usize, tolerance: f64) -> SpecialResul
 }
 
 /// Helper to convert convergence failures to ConvergenceError
+#[allow(dead_code)]
 pub fn convergence_error(function: &str, iterations: usize) -> SpecialError {
     SpecialError::ConvergenceError(format!(
         "{} did not converge after {} iterations",
@@ -154,6 +166,7 @@ pub fn convergence_error(function: &str, iterations: usize) -> SpecialError {
 }
 
 /// Helper to convert not implemented features to NotImplementedError
+#[allow(dead_code)]
 pub fn not_implemented(feature: &str) -> SpecialError {
     SpecialError::NotImplementedError(format!("{} is not yet implemented", feature))
 }

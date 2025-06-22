@@ -119,9 +119,8 @@ impl<T: Float> op::Op<T> for Softplus {
 
 impl<T: Float> op::Op<T> for Sigmoid {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
-        let ret;
         let half = T::from(0.5).unwrap();
-        ret = ctx
+        let ret = ctx
             .input(0)
             .mapv(move |a| ((a * half).tanh() * half) + half);
         ctx.append_output(ret);

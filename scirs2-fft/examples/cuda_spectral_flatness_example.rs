@@ -122,10 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result_direct = execute_cuda_spectral_flatness_sparse_fft(
         &signal_complex,
         sparsity,
-        Some(0.3), // Flatness threshold
-        Some(32),  // Window size
-        WindowFunction::Hann,
-        0, // Use first CUDA device
+        0.3, // Flatness threshold
     )?;
     let duration_direct = start.elapsed();
     println!(

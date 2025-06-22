@@ -5,6 +5,8 @@
 
 use crate::error::{NeuralError, Result};
 use ndarray::{Array, ArrayD};
+#[cfg(feature = "parallel")]
+use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -16,8 +18,8 @@ use std::time::{Duration, Instant};
 /// Manages a pool of worker threads for parallel execution of neural network
 /// operations, providing load balancing and efficient resource utilization.
 pub struct ThreadPoolManager {
-    #[cfg(feature = "rayon")]
-    pool: rayon::ThreadPool,
+    #[cfg(feature = "parallel")]
+    pool: ThreadPool,
     num_threads: usize,
 }
 
@@ -46,8 +48,8 @@ impl ThreadPoolManager {
                 .unwrap_or(4)
         });
 
-        #[cfg(feature = "rayon")]
-        let pool = rayon::ThreadPoolBuilder::new()
+        #[cfg(feature = "parallel")]
+        let pool = ThreadPoolBuilder::new()
             .num_threads(num_threads)
             .build()
             .map_err(|e| {
@@ -55,14 +57,14 @@ impl ThreadPoolManager {
             })?;
 
         Ok(Self {
-            #[cfg(feature = "rayon")]
+            #[cfg(feature = "parallel")]
             pool,
             num_threads,
         })
     }
 
     /// Execute a function in the thread pool
-    #[cfg(feature = "rayon")]
+    #[cfg(feature = "parallel")]
     pub fn execute<F, R>(&self, f: F) -> R
     where
         F: FnOnce() -> R + Send,
@@ -71,8 +73,8 @@ impl ThreadPoolManager {
         self.pool.install(f)
     }
 
-    /// Execute a function in the thread pool (no-op without rayon)
-    #[cfg(not(feature = "rayon"))]
+    /// Execute a function in the thread pool (no-op without parallel)
+    #[cfg(not(feature = "parallel"))]
     pub fn execute<F, R>(&self, f: F) -> R
     where
         F: FnOnce() -> R + Send,
@@ -101,9 +103,8 @@ impl ThreadPoolManager {
             ));
         }
 
-        #[cfg(feature = "rayon")]
+        #[cfg(feature = "parallel")]
         return self.execute(|| {
-            use rayon::prelude::*;
             let mut result = Array::zeros((m, n));
 
             result
@@ -123,7 +124,7 @@ impl ThreadPoolManager {
             Ok(result.into_dyn())
         });
 
-        #[cfg(not(feature = "rayon"))]
+        #[cfg(not(feature = "parallel"))]
         {
             let mut result = Array::zeros((m, n));
             for i in 0..m {
@@ -170,10 +171,8 @@ impl ThreadPoolManager {
         let out_height = (in_height + 2 * padding.0 - kernel_height) / stride.0 + 1;
         let out_width = (in_width + 2 * padding.1 - kernel_width) / stride.1 + 1;
 
-        #[cfg(feature = "rayon")]
+        #[cfg(feature = "parallel")]
         return self.execute(|| {
-            use rayon::prelude::*;
-
             let mut output = Array::zeros((batch_size, out_channels, out_height, out_width));
 
             output
@@ -223,7 +222,7 @@ impl ThreadPoolManager {
             Ok(output.into_dyn())
         });
 
-        #[cfg(not(feature = "rayon"))]
+        #[cfg(not(feature = "parallel"))]
         {
             // Serial implementation as fallback
             let mut output = Array::zeros((batch_size, out_channels, out_height, out_width));

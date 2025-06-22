@@ -27,7 +27,8 @@ scirs2-special = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
 plotly = { workspace = true }
-ndarray-linalg = { workspace = true }
+# BLAS dependencies removed - using core abstractions
+# ndarray-linalg = { workspace = true }
 ndarray-rand = { workspace = true }
 # Optional rayon dependency for parallel processing - now handled by scirs2-core
 # rayon = { workspace = true, optional = true }

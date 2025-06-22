@@ -177,15 +177,9 @@ mod tests {
 
         // Check recovery
         for (i, (&orig, &rec)) in signal.iter().zip(recovered.iter()).enumerate() {
-            assert_abs_diff_eq!(
-                orig,
-                rec,
-                epsilon = 1e-10,
-                "Mismatch at index {}: {} != {}",
-                i,
-                orig,
-                rec
-            );
+            if (orig - rec).abs() > 1e-10 {
+                panic!("Mismatch at index {}: {} != {}", i, orig, rec);
+            }
         }
     }
 

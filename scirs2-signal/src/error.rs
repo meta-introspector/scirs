@@ -38,12 +38,12 @@ pub enum SignalError {
     RuntimeError(String),
 }
 
-// Conversion from ndarray_linalg errors
-impl From<ndarray_linalg::error::LinalgError> for SignalError {
-    fn from(err: ndarray_linalg::error::LinalgError) -> Self {
-        SignalError::Compute(format!("Linear algebra error: {}", err))
-    }
-}
+// Conversion from scirs2_linalg errors
+// impl From<scirs2_linalg::LinalgError> for SignalError {
+//     fn from(err: scirs2_linalg::LinalgError) -> Self {
+//         SignalError::Compute(format!("Linear algebra error: {}", err))
+//     }
+// }
 
 /// Result type for signal processing operations
 pub type SignalResult<T> = Result<T, SignalError>;

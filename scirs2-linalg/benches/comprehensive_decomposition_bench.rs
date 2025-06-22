@@ -110,17 +110,17 @@ fn bench_qr_decomposition(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("qr_square", size),
             &square_matrix,
-            |b, m| b.iter(|| qr(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| qr(black_box(&m.view()), None).unwrap()),
         );
 
         // QR decomposition (tall matrix)
         group.bench_with_input(BenchmarkId::new("qr_tall", size), &tall_matrix, |b, m| {
-            b.iter(|| qr(black_box(&m.view())).unwrap())
+            b.iter(|| qr(black_box(&m.view()), None).unwrap())
         });
 
         // QR decomposition (wide matrix)
         group.bench_with_input(BenchmarkId::new("qr_wide", size), &wide_matrix, |b, m| {
-            b.iter(|| qr(black_box(&m.view())).unwrap())
+            b.iter(|| qr(black_box(&m.view()), None).unwrap())
         });
 
         // Economy QR decomposition

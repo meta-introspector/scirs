@@ -189,10 +189,10 @@ mod tests {
 
         // Try different RNG states
         sd.set_rng_state(12345);
-        let result1 = sd.should_drop();
+        let _result1 = sd.should_drop();
 
         sd.set_rng_state(54321);
-        let result2 = sd.should_drop();
+        let _result2 = sd.should_drop();
 
         // The results should be deterministic for given RNG states
         // result1 is already a boolean, no need to assert
