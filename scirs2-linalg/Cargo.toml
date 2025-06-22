@@ -22,8 +22,6 @@ rand_distr = { workspace = true }
 rand_chacha = { workspace = true }
 ndarray-rand = { workspace = true }
 approx = { workspace = true }
-wide = { workspace = true }
-rayon = { workspace = true }
 half = { workspace = true }
 scirs2-autograd = { workspace = true, optional = true }
 

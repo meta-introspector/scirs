@@ -165,7 +165,7 @@ impl Drop for ScopedWorkers {
 
 /// Parallel iterator utilities for matrix operations
 pub mod iter {
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     /// Process chunks of work in parallel
     ///
@@ -270,7 +270,7 @@ pub mod algorithms {
     use crate::error::{LinalgError, LinalgResult};
     use ndarray::{Array1, ArrayView1, ArrayView2};
     use num_traits::{Float, NumAssign, One, Zero};
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
     use std::iter::Sum;
 
     /// Parallel matrix-vector multiplication

@@ -12,8 +12,7 @@ use num_complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// Compute a 2D FFT using parallel processing for rows and columns
 ///

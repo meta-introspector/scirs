@@ -23,7 +23,6 @@ thiserror = { workspace = true }
 argmin = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
-rayon = { workspace = true }
 friedrich = { workspace = true }
 scirs2-sparse = { workspace = true }
 ndarray-linalg = { workspace = true, features = ["openblas-system"] }

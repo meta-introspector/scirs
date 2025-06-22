@@ -7,7 +7,7 @@
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array2, ArrayView2, Axis};
 use num_traits::{Float, NumAssign};
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::cmp;
 use std::iter::Sum;
 

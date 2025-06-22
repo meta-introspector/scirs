@@ -718,7 +718,7 @@ where
     {
         if let Some(num_workers) = workers {
             // Set thread pool size
-            let pool = rayon::ThreadPoolBuilder::new()
+            let pool = scirs2_core::parallel_ops::ThreadPoolBuilder::new()
                 .num_threads(num_workers)
                 .build()
                 .map_err(|_| {
@@ -787,7 +787,7 @@ fn parallel_qmc_integration_impl<F>(
 where
     F: Fn(ArrayView1<f64>) -> f64 + Send + Sync,
 {
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     // Generate estimates in parallel
     let estimates: Vec<f64> = (0..n_estimates)

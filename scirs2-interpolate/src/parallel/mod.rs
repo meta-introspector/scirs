@@ -56,7 +56,7 @@
 
 use ndarray::{Array1, ArrayView2};
 use num_traits::Float;
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;
 
 use crate::error::InterpolateResult;
@@ -92,8 +92,8 @@ impl ParallelConfig {
     }
 
     /// Initialize a Rayon thread pool with the configured number of workers
-    pub fn init_thread_pool(&self) -> Result<rayon::ThreadPool, rayon::ThreadPoolBuildError> {
-        let mut builder = rayon::ThreadPoolBuilder::new();
+    pub fn init_thread_pool(&self) -> Result<rayon::ThreadPool, ThreadPoolBuildError> {
+        let mut builder = ThreadPoolBuilder::new();
 
         if let Some(n_workers) = self.n_workers {
             builder = builder.num_threads(n_workers);

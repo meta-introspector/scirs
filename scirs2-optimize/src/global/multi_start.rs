@@ -10,7 +10,7 @@ use crate::unconstrained::{
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// Options for multi-start optimization
 #[derive(Debug, Clone)]

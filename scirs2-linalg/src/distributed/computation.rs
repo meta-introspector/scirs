@@ -150,7 +150,7 @@ impl DistributedComputationEngine {
         R: Send + Sync + 'static,
         T: Send + Sync + 'static,
     {
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
         
         // Execute operations in parallel using rayon
         let results: Result<Vec<R>, LinalgError> = operations

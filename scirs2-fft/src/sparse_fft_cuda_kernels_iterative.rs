@@ -6,7 +6,6 @@
 use crate::error::{FFTError, FFTResult};
 use crate::gpu_kernel_stub::MIGRATION_MESSAGE;
 use crate::sparse_fft::SparseFFTResult;
-use num_complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 
@@ -18,6 +17,12 @@ pub struct CUDAFrequencyPruningSparseFFTKernel;
 impl CUDAFrequencyPruningSparseFFTKernel {
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl Default for CUDAFrequencyPruningSparseFFTKernel {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -44,6 +49,12 @@ impl CUDAIterativeSparseFFTKernel {
     }
 }
 
+impl Default for CUDAIterativeSparseFFTKernel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Execute CUDA iterative sparse FFT (stub)
 pub fn execute_cuda_iterative_sparse_fft<T>(
     _input: &[T],
@@ -64,6 +75,12 @@ pub struct CUDASpectralFlatnessSparseFFTKernel;
 impl CUDASpectralFlatnessSparseFFTKernel {
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl Default for CUDASpectralFlatnessSparseFFTKernel {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

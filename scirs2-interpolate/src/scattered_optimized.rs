@@ -42,7 +42,7 @@ use crate::error::{InterpolateError, InterpolateResult};
 use crate::spatial::enhanced_search::{EnhancedNearestNeighborSearcher, IndexType, SearchConfig};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::fmt::{Debug, Display};
 use std::sync::{Arc, RwLock};
 

@@ -19,7 +19,7 @@ use crate::error::IntegrateResult;
 use ndarray::{Array1, Array2, ArrayView1};
 
 #[cfg(feature = "parallel_jacobian")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// Compute Jacobian matrix using parallel finite differences
 ///
@@ -410,8 +410,8 @@ impl ParallelJacobianStrategy {
         // Determine if parallel computation is available and beneficial
         #[cfg(feature = "parallel_jacobian")]
         let (use_parallel, num_threads) = {
-            // Get number of available threads from rayon
-            let threads = rayon::current_num_threads();
+            // Get number of available threads from parallel_ops
+            let threads = num_threads();
             // Check if parallel computation is worthwhile
             (
                 should_use_parallel_jacobian(n_dim, is_sparse, threads),

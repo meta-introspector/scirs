@@ -305,10 +305,10 @@ impl JitCompiler {
         Ok(Box::new(move |x: &ArrayView1<f64>| {
             if n_vars > 1000 {
                 // Use parallel evaluation for large problems
-                use rayon::prelude::*;
+                use scirs2_core::parallel_ops::*;
 
                 // Split into chunks and evaluate in parallel
-                let chunk_size = (n_vars / rayon::current_num_threads()).max(100);
+                let chunk_size = (n_vars / num_threads()).max(100);
                 (0..n_vars)
                     .into_par_iter()
                     .chunks(chunk_size)

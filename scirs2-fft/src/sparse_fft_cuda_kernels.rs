@@ -5,7 +5,7 @@
 //! Direct CUDA implementations are FORBIDDEN by the strict acceleration policy.
 
 use crate::error::{FFTError, FFTResult};
-use crate::gpu_kernel_stub::{GpuFftKernel, MIGRATION_MESSAGE};
+use crate::gpu_kernel_stub::MIGRATION_MESSAGE;
 use crate::sparse_fft::{SparseFFTAlgorithm, SparseFFTResult, WindowFunction};
 use num_complex::Complex64;
 use num_traits::NumCast;
@@ -65,6 +65,12 @@ impl CUDACompressedSensingSparseFFTKernel {
         T: NumCast + Copy + Debug,
     {
         Err(FFTError::NotImplementedError(MIGRATION_MESSAGE.to_string()))
+    }
+}
+
+impl Default for CUDACompressedSensingSparseFFTKernel {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

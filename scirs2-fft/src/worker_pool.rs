@@ -3,7 +3,7 @@
 //! This module provides a configurable thread pool for parallel FFT operations,
 //! similar to SciPy's worker management functionality.
 
-use rayon::{ThreadPool, ThreadPoolBuilder};
+use scirs2_core::parallel_ops::*;
 use std::env;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;

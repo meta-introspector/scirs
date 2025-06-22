@@ -243,7 +243,7 @@ where
             (None, Some(eps)) => {
                 // For each factor matrix, determine how many singular values to keep
                 // based on the epsilon value
-                use rayon::prelude::*;
+                use scirs2_core::parallel_ops::*;
 
                 self.factors
                     .par_iter()
@@ -276,7 +276,7 @@ where
             }
             (Some(r), Some(eps)) => {
                 // Combine both criteria: truncate by epsilon but don't exceed max ranks
-                use rayon::prelude::*;
+                use scirs2_core::parallel_ops::*;
 
                 self.factors
                     .par_iter()
@@ -312,7 +312,7 @@ where
         };
 
         // Compute truncated factor matrices
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
 
         let compressed_factors: Vec<Array2<A>> = self
             .factors

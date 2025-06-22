@@ -6,7 +6,7 @@
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 

@@ -14,10 +14,10 @@ default = ["helper", "window", "parallel"]
 helper = []
 window = []
 minimal = []
-parallel = ["rayon"]
-cuda = ["rayon"] # Optional CUDA support for GPU acceleration (dependencies disabled)
-hip = ["rayon"] # Optional ROCm/HIP support for AMD GPU acceleration
-sycl = ["rayon"] # Optional SYCL support for cross-platform GPU acceleration
+parallel = []
+cuda = [] # Optional CUDA support for GPU acceleration (dependencies disabled)
+hip = [] # Optional ROCm/HIP support for AMD GPU acceleration
+sycl = [] # Optional SYCL support for cross-platform GPU acceleration
 never = [] # Used to conditionally disable tests during development
 
 [dependencies]
@@ -27,7 +27,6 @@ num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
 scirs2-core = { workspace = true, features = ["simd", "parallel"] }
-rayon = { workspace = true, optional = true }
 
 # FFT specific dependencies
 rustfft = { workspace = true }

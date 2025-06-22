@@ -36,7 +36,7 @@ pub fn apply_simd_normalization(data: &mut [Complex64], scale: f64) {
 /// SIMD-accelerated 1D FFT
 pub fn fft_simd<T>(x: &[T], _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     fft::fft(x, None)
 }
@@ -44,19 +44,19 @@ where
 /// SIMD-accelerated 1D inverse FFT
 pub fn ifft_simd<T>(x: &[T], _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     fft::ifft(x, None)
 }
 
 /// SIMD-accelerated 2D FFT
 pub fn fft2_simd<T>(
-    x: &[T],
+    _x: &[T],
     _shape: Option<(usize, usize)>,
     _norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     // For now, just create a simple error
     Err(crate::error::FFTError::NotImplementedError(
@@ -66,12 +66,12 @@ where
 
 /// SIMD-accelerated 2D inverse FFT
 pub fn ifft2_simd<T>(
-    x: &[T],
+    _x: &[T],
     _shape: Option<(usize, usize)>,
     _norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     // For now, just create a simple error
     Err(crate::error::FFTError::NotImplementedError(
@@ -81,13 +81,13 @@ where
 
 /// SIMD-accelerated N-dimensional FFT
 pub fn fftn_simd<T>(
-    x: &[T],
+    _x: &[T],
     _shape: Option<&[usize]>,
     _axes: Option<&[usize]>,
     _norm: Option<&str>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     // For now, just create a simple error
     Err(crate::error::FFTError::NotImplementedError(
@@ -97,13 +97,13 @@ where
 
 /// SIMD-accelerated N-dimensional inverse FFT
 pub fn ifftn_simd<T>(
-    x: &[T],
+    _x: &[T],
     _shape: Option<&[usize]>,
     _axes: Option<&[usize]>,
     _norm: Option<&str>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     // For now, just create a simple error
     Err(crate::error::FFTError::NotImplementedError(
@@ -114,7 +114,7 @@ where
 /// Adaptive FFT
 pub fn fft_adaptive<T>(x: &[T], norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     fft_simd(x, norm)
 }
@@ -122,57 +122,57 @@ where
 /// Adaptive inverse FFT
 pub fn ifft_adaptive<T>(x: &[T], norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     ifft_simd(x, norm)
 }
 
 /// Adaptive 2D FFT
 pub fn fft2_adaptive<T>(
-    x: &[T],
+    _x: &[T],
     shape: Option<(usize, usize)>,
     norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
-    fft2_simd(x, shape, norm)
+    fft2_simd(_x, shape, norm)
 }
 
 /// Adaptive 2D inverse FFT
 pub fn ifft2_adaptive<T>(
-    x: &[T],
+    _x: &[T],
     shape: Option<(usize, usize)>,
     norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
-    ifft2_simd(x, shape, norm)
+    ifft2_simd(_x, shape, norm)
 }
 
 /// Adaptive N-dimensional FFT
 pub fn fftn_adaptive<T>(
-    x: &[T],
+    _x: &[T],
     shape: Option<&[usize]>,
     axes: Option<&[usize]>,
     norm: Option<&str>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
-    fftn_simd(x, shape, axes, norm)
+    fftn_simd(_x, shape, axes, norm)
 }
 
 /// Adaptive N-dimensional inverse FFT
 pub fn ifftn_adaptive<T>(
-    x: &[T],
+    _x: &[T],
     shape: Option<&[usize]>,
     axes: Option<&[usize]>,
     norm: Option<&str>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
-    ifftn_simd(x, shape, axes, norm)
+    ifftn_simd(_x, shape, axes, norm)
 }

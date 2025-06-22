@@ -16,8 +16,6 @@
 //!     .collect();
 //! ```
 
-use crate::error::{CoreError, CoreResult};
-
 // When parallel is enabled, directly re-export Rayon's prelude
 #[cfg(feature = "parallel")]
 pub use rayon::prelude::*;

@@ -173,7 +173,7 @@ impl GpuDevice {
     }
 
     /// Compile a kernel from source
-    pub fn compile_kernel(&self, source: &str, entry_point: &str) -> Result<GpuKernel, GpuError> {
+    pub fn compile_kernel(&self, _source: &str, entry_point: &str) -> Result<GpuKernel, GpuError> {
         // Placeholder implementation
         Ok(GpuKernel {
             backend: self.backend,

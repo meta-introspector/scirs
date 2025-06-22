@@ -1,107 +1,52 @@
-//! CUDA-accelerated sparse FFT implementation
+//! GPU-accelerated sparse FFT implementation using scirs2-core abstractions
 //!
-//! This module provides CUDA-specific implementations of sparse FFT algorithms.
-//! It requires the CUDA toolkit to be installed and the `cuda` feature to be enabled.
+//! This module provides GPU implementations of sparse FFT algorithms through
+//! the scirs2-core::gpu module. All direct GPU API calls are forbidden.
 
 use crate::error::{FFTError, FFTResult};
 use crate::sparse_fft::{
     SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, SparsityEstimationMethod, WindowFunction,
 };
-use crate::sparse_fft_gpu_memory::{
-    get_global_memory_manager, init_cuda_device, init_global_memory_manager, is_cuda_available,
-    BufferDescriptor, BufferLocation, BufferType,
-};
 use num_complex::Complex64;
 use num_traits::NumCast;
+use scirs2_core::gpu::{GpuDevice, GpuKernel};
+use scirs2_core::simd_ops::PlatformCapabilities;
 use std::fmt::Debug;
 use std::time::Instant;
 
-#[cfg(feature = "cuda")]
-// CUDA support temporarily disabled until cudarc dependency is enabled
-// use cudarc::driver::{CudaDevice, DevicePtr};
-use std::sync::OnceLock;
-
-#[cfg(feature = "cuda")]
-#[allow(dead_code)]
-static CUDA_CONTEXT: OnceLock<Option<u8>> = OnceLock::new(); // Placeholder type
-
-/// Check if CUDA is available and initialize if necessary
-pub fn ensure_cuda_available() -> FFTResult<bool> {
-    #[cfg(feature = "cuda")]
-    {
-        init_cuda_device()
-    }
-
-    #[cfg(not(feature = "cuda"))]
-    {
-        Ok(false)
-    }
+/// Check if GPU is available through core platform capabilities
+pub fn ensure_gpu_available() -> FFTResult<bool> {
+    let caps = PlatformCapabilities::detect();
+    Ok(caps.cuda_available || caps.gpu_available)
 }
 
-/// CUDA device information
+/// GPU device information using core abstractions
 #[derive(Debug, Clone)]
-pub struct CUDADeviceInfo {
-    /// Device ID
-    pub device_id: i32,
-    /// Device name
-    pub name: String,
-    /// Total memory in bytes
-    pub total_memory: usize,
-    /// Compute capability
-    pub compute_capability: (i32, i32),
-    /// Number of multiprocessors
-    pub multiprocessor_count: i32,
-    /// Maximum threads per block
-    pub max_threads_per_block: i32,
-    /// Maximum shared memory per block in bytes
-    pub max_shared_memory_per_block: usize,
+pub struct GpuDeviceInfo {
+    /// Device wrapped from core GPU module
+    device: Option<GpuDevice>,
 }
 
-/// CUDA stream for asynchronous execution
+impl GpuDeviceInfo {
+    /// Create GPU device info using core abstractions
+    pub fn new() -> FFTResult<Self> {
+        let device = GpuDevice::default().ok();
+        Ok(Self { device })
+    }
+
+    /// Check if device is available
+    pub fn is_available(&self) -> bool {
+        self.device.is_some()
+    }
+}
+}
+
+/// GPU context for FFT operations using core abstractions
 #[derive(Debug, Clone)]
-pub struct CUDAStream {
-    /// Stream handle (would be CUstream/cudaStream_t in real implementation)
-    #[allow(dead_code)]
-    handle: usize,
-    /// Device ID this stream is associated with
-    #[allow(dead_code)]
-    device_id: i32,
-}
-
-impl CUDAStream {
-    /// Create a new CUDA stream
-    pub fn new(device_id: i32) -> FFTResult<Self> {
-        // In a real implementation, this would call cudaStreamCreate
-        let handle = 1; // Dummy handle for now
-
-        Ok(Self { handle, device_id })
-    }
-
-    /// Synchronize the stream
-    pub fn synchronize(&self) -> FFTResult<()> {
-        // In a real implementation, this would call cudaStreamSynchronize
-        Ok(())
-    }
-}
-
-impl Drop for CUDAStream {
-    fn drop(&mut self) {
-        // In a real implementation, this would call cudaStreamDestroy
-    }
-}
-
-/// CUDA context for GPU operations
-#[derive(Debug, Clone)]
-pub struct CUDAContext {
-    /// Device ID
-    #[allow(dead_code)]
-    device_id: i32,
-    /// Device information
-    device_info: CUDADeviceInfo,
-    /// Primary stream for operations
-    stream: CUDAStream,
+pub struct GpuContext {
+    /// GPU device from core module
+    device: Option<GpuDevice>,
     /// Whether the context is initialized
-    #[allow(dead_code)]
     initialized: bool,
 }
 
@@ -357,43 +302,33 @@ impl CUDASparseFFT {
             SparseFFTAlgorithm::Sublinear => crate::execute_cuda_sublinear_sparse_fft(
                 &signal_complex,
                 self.config.sparsity,
-                self.config.window_function,
-                self.context.device_info().device_id,
+                self.config.algorithm,
             )?,
             SparseFFTAlgorithm::CompressedSensing => {
                 crate::execute_cuda_compressed_sensing_sparse_fft(
                     &signal_complex,
                     self.config.sparsity,
-                    self.config.window_function,
-                    self.context.device_info().device_id,
                 )?
             }
             SparseFFTAlgorithm::Iterative => {
                 crate::execute_cuda_iterative_sparse_fft(
                     &signal_complex,
                     self.config.sparsity,
-                    None, // Use default number of iterations
-                    self.config.window_function,
-                    self.context.device_info().device_id,
+                    100, // Default number of iterations
                 )?
             }
             SparseFFTAlgorithm::FrequencyPruning => {
                 crate::execute_cuda_frequency_pruning_sparse_fft(
                     &signal_complex,
                     self.config.sparsity,
-                    None, // Use default number of bands
-                    self.config.window_function,
-                    self.context.device_info().device_id,
+                    0.01, // Default threshold
                 )?
             }
             SparseFFTAlgorithm::SpectralFlatness => {
                 crate::execute_cuda_spectral_flatness_sparse_fft(
                     &signal_complex,
                     self.config.sparsity,
-                    Some(self.config.flatness_threshold),
-                    Some(self.config.window_size),
-                    self.config.window_function,
-                    self.context.device_info().device_id,
+                    self.config.flatness_threshold,
                 )?
             }
             // For other algorithms, fall back to CPU implementation for now

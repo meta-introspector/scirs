@@ -12,7 +12,7 @@ use crate::sparse_fft_gpu_memory::{
 };
 use num_complex::Complex64;
 use num_traits::NumCast;
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};

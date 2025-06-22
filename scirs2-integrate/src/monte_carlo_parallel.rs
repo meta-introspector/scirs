@@ -17,7 +17,7 @@ use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// Options for parallel Monte Carlo integration
 #[derive(Debug, Clone)]
@@ -139,14 +139,14 @@ where
 
     // Configure thread pool
     let pool = if let Some(n_threads) = opts.n_threads {
-        rayon::ThreadPoolBuilder::new()
+        ThreadPoolBuilder::new()
             .num_threads(n_threads)
             .build()
             .map_err(|e| {
                 IntegrateError::ComputationError(format!("Failed to create thread pool: {}", e))
             })?
     } else {
-        rayon::ThreadPoolBuilder::new().build().map_err(|e| {
+        ThreadPoolBuilder::new().build().map_err(|e| {
             IntegrateError::ComputationError(format!("Failed to create thread pool: {}", e))
         })?
     };
@@ -295,7 +295,7 @@ where
     }
 
     // Determine number of batches and samples per batch
-    let n_threads = rayon::current_num_threads();
+    let n_threads = num_threads();
     let samples_per_batch = n_actual_samples.div_ceil(n_threads); // Ceiling division
 
     // Use Arc<Mutex<>> for thread-safe accumulation of results

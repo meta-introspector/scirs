@@ -888,7 +888,7 @@ where
         workers: Option<usize>,
     ) -> InterpolateResult<Array1<F>> {
         use crate::parallel::{estimate_chunk_size, ParallelConfig};
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
 
         let n_queries = queries.nrows();
 

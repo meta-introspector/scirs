@@ -7,7 +7,7 @@
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt::Debug;
@@ -524,7 +524,7 @@ where
             self.config.num_threads
         {
             // Use custom thread pool with specified number of threads
-            let pool = rayon::ThreadPoolBuilder::new()
+            let pool = ThreadPoolBuilder::new()
                 .num_threads(num_threads)
                 .build()
                 .map_err(|_| {

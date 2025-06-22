@@ -126,7 +126,7 @@ impl KernelRegistry {
 
     /// Register a kernel source
     pub fn register_kernel(&mut self, id: KernelId, source: KernelSource) {
-        self.sources.entry(id).or_insert_with(Vec::new).push(source);
+        self.sources.entry(id).or_default().push(source);
     }
 
     /// Get kernel sources for a given ID

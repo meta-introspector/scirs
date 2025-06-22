@@ -162,7 +162,7 @@ where
     generate_indices(&combined_dims, Vec::new(), 0, &mut all_free_indices);
 
     // Process each combination of free indices in parallel
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let results: Vec<_> = all_free_indices
         .par_iter()
@@ -366,7 +366,7 @@ where
     );
 
     // Process each batch in parallel
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let results: Vec<_> = all_batch_indices
         .par_iter()
@@ -563,7 +563,7 @@ where
     );
 
     // Process each combination of indices in parallel
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let all_results: Vec<Vec<_>> = all_indices
         .par_iter()
@@ -771,7 +771,7 @@ where
     generate_output_indices(&output_shape, Vec::new(), 0, &mut all_output_indices);
 
     // Process each output combination in parallel
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let results: Vec<_> = all_output_indices
         .par_iter()
@@ -931,7 +931,7 @@ where
     let tensor_dyn = tensor.to_owned().into_dyn();
 
     // Compute factor matrices for each mode in parallel
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let modes: Vec<usize> = (0..tensor.ndim()).collect();
     let factors: Vec<Array2<A>> = modes
@@ -1031,7 +1031,7 @@ where
     generate_tensor_indices(&tensor_shape, Vec::new(), 0, &mut all_indices);
 
     // Process all indices in parallel
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let results: Vec<_> = all_indices
         .par_iter()

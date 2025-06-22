@@ -39,7 +39,7 @@
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
+use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 
 /// Supported distance metrics for SIMD operations
 #[derive(Debug, Clone, Copy)]

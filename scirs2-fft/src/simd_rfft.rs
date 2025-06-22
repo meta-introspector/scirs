@@ -3,9 +3,8 @@
 //! This module provides SIMD-accelerated implementations of FFT operations
 //! for real-valued inputs, using the unified SIMD abstraction layer from scirs2-core.
 
-use crate::error::{FFTError, FFTResult};
+use crate::error::FFTResult;
 use crate::rfft::{irfft as irfft_basic, rfft as rfft_basic};
-use crate::simd_fft::NormMode;
 use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities};
@@ -44,13 +43,13 @@ use std::fmt::Debug;
 /// ```
 pub fn rfft_simd<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     // Use the basic rfft implementation which already handles the logic
     let result = rfft_basic(input, n)?;
 
     // Apply normalization if requested
-    if let Some(norm_str) = norm {
+    if let Some(_norm_str) = norm {
         // TODO: Apply normalization based on norm_str when supported
         // For now, just return the result without additional normalization
     }
@@ -94,13 +93,13 @@ where
 /// ```
 pub fn irfft_simd<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     // Use the basic irfft implementation
     let result = irfft_basic(input, n)?;
 
     // Apply normalization if requested
-    if let Some(norm_str) = norm {
+    if let Some(_norm_str) = norm {
         // TODO: Apply normalization based on norm_str when supported
         // For now, just return the result without additional normalization
     }
@@ -115,11 +114,11 @@ pub fn rfft_adaptive<T>(
     norm: Option<&str>,
 ) -> FFTResult<Vec<Complex64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     let optimizer = AutoOptimizer::new();
     let caps = PlatformCapabilities::detect();
-    let size = n.unwrap_or_else(|| input.len());
+    let size = n.unwrap_or(input.len());
 
     if caps.gpu_available && optimizer.should_use_gpu(size) {
         // TODO: Use GPU implementation when available in core
@@ -132,7 +131,7 @@ where
 /// Adaptive IRFFT that automatically chooses the best implementation
 pub fn irfft_adaptive<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
-    T: NumCast + Copy + Debug,
+    T: NumCast + Copy + Debug + 'static,
 {
     let optimizer = AutoOptimizer::new();
     let caps = PlatformCapabilities::detect();
