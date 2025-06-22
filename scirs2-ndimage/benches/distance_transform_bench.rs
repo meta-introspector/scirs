@@ -168,12 +168,8 @@ fn bench_sampling_effects(c: &mut Criterion) {
             &input_dyn,
             |b, input| {
                 b.iter(|| {
-                    let (distances, _) = distance_transform_edt(
-                        black_box(input),
-                        sampling.as_ref().map(|s| s.as_slice()),
-                        true,
-                        false,
-                    );
+                    let (distances, _) =
+                        distance_transform_edt(black_box(input), sampling.as_deref(), true, false);
                     black_box(distances)
                 })
             },

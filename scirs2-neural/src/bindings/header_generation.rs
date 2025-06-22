@@ -399,9 +399,11 @@ mod tests {
 
     #[test]
     fn test_cpp_api_generation() {
-        let mut config = BindingConfig::default();
-        config.language = BindingLanguage::Cpp;
-        config.api_style = ApiStyle::ObjectOriented;
+        let config = BindingConfig {
+            language: BindingLanguage::Cpp,
+            api_style: ApiStyle::ObjectOriented,
+            ..Default::default()
+        };
 
         let temp_dir = TempDir::new().unwrap();
         let output_dir = temp_dir.path().to_path_buf();

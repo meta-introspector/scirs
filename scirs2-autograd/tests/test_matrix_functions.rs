@@ -19,7 +19,7 @@ fn test_matrix_sqrt() {
         assert!(sqrt_result[[1, 0]].abs() < 1e-5);
 
         // Verify: sqrt(A) * sqrt(A) = A
-        let squared = matmul(&sqrt_a, &sqrt_a);
+        let squared = matmul(sqrt_a, sqrt_a);
         let squared_result = squared.eval(g).unwrap();
         let a_result = a.eval(g).unwrap();
 
@@ -45,7 +45,7 @@ fn test_matrix_sqrt() {
         assert_eq!(sqrt_b_result.shape(), &[2, 2]);
 
         // Verify sqrt(B) * sqrt(B) ≈ B
-        let b_squared = matmul(&sqrt_b, &sqrt_b);
+        let b_squared = matmul(sqrt_b, sqrt_b);
         let b_squared_result = b_squared.eval(g).unwrap();
         let b_result = b.eval(g).unwrap();
 
@@ -128,7 +128,7 @@ fn test_matrix_power() {
         // Test A^2
         let a2 = powm(&a, 2.0);
         let a2_result = a2.eval(g).unwrap();
-        let a2_expected = matmul(&a, &a);
+        let a2_expected = matmul(a, a);
         let a2_expected_result = a2_expected.eval(g).unwrap();
         for i in 0..2 {
             for j in 0..2 {
@@ -144,7 +144,7 @@ fn test_matrix_power() {
         // Test A^(-1) = inverse(A)
         let a_inv = powm(&a, -1.0);
         let _a_inv_result = a_inv.eval(g).unwrap();
-        let identity = matmul(&a, &a_inv);
+        let identity = matmul(a, a_inv);
         let identity_result = identity.eval(g).unwrap();
 
         // Check if A * A^(-1) = I

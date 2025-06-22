@@ -271,7 +271,6 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
         #[cfg(not(feature = "parallel"))]
         {
             // Use sequential processing
-            use super::memmap_chunks::MemoryMappedChunks;
 
             let chunk_size = 1024 * 1024; // 1M elements
             let _strategy = ChunkingStrategy::Fixed(chunk_size);

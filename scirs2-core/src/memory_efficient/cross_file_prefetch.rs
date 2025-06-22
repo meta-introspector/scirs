@@ -4,7 +4,9 @@
 //! or arrays and prefetching related data. This is particularly useful for scientific
 //! computing workloads where multiple datasets are often accessed together in predictable ways.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+#[cfg(feature = "memory_compression")]
+use std::collections::HashSet;
+use std::collections::{HashMap, VecDeque};
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, Weak};

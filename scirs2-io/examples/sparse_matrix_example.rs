@@ -10,6 +10,7 @@
 
 use ndarray::array;
 use scirs2_io::sparse::{ops, SparseMatrix};
+use std::f64::consts::PI;
 use std::time::Instant;
 use tempfile::tempdir;
 
@@ -263,7 +264,7 @@ fn demonstrate_io_integration() -> Result<(), Box<dyn std::error::Error>> {
     sparse.push(1, 1, 4.7)?;
     sparse.push(2, 0, 0.8)?;
     sparse.push(2, 2, -1.1)?;
-    sparse.push(3, 3, 3.14)?;
+    sparse.push(3, 3, PI)?;
 
     println!("  🔹 Original matrix:");
     println!("    Shape: {:?}, NNZ: {}", sparse.shape(), sparse.nnz());

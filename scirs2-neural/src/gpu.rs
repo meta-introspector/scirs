@@ -1006,7 +1006,7 @@ mod tests {
         // Test both success and failure cases
         match GpuContext::new() {
             Ok(context) => {
-                assert!(context.all_devices().len() > 0);
+                assert!(!context.all_devices().is_empty());
                 assert!(context.current_device_info().is_available);
             }
             Err(_) => {
@@ -1070,9 +1070,11 @@ mod tests {
 
     #[test]
     fn test_memory_stats() {
-        let mut stats = MemoryStats::default();
-        stats.allocated = 1024;
-        stats.active = 512;
+        let stats = MemoryStats {
+            allocated: 1024,
+            active: 512,
+            ..Default::default()
+        };
 
         assert_eq!(stats.allocated, 1024);
         assert_eq!(stats.active, 512);

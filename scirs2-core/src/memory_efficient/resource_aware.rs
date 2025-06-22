@@ -559,7 +559,7 @@ impl SystemInfo for DefaultSystemInfo {
         #[cfg(not(feature = "sysinfo"))]
         {
             // Check if we have sys-info available
-            #[cfg(feature = "sys-info")]
+            #[cfg(feature = "sysinfo")]
             {
                 if let Ok(mem) = sys_info::mem_info() {
                     let used = (mem.total - mem.free) * 1024;

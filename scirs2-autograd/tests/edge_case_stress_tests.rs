@@ -87,7 +87,7 @@ fn test_optimization_pathological_cases() {
                 Array::from_shape_vec(IxDyn(&[1]), vec![0.001]).unwrap(),
                 ctx,
             );
-            chain = &chain + &constant;
+            chain = chain + constant;
         }
 
         // Test all optimization levels
@@ -156,7 +156,7 @@ fn test_thread_pool_extreme_load() {
         }
 
         // Combine all results
-        let mut combined = results[0].clone();
+        let mut combined = results[0];
         for result in results.iter().skip(1) {
             combined = T::simd_add(&combined, result);
         }

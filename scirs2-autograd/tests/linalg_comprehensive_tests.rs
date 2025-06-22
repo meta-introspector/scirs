@@ -10,8 +10,8 @@ fn test_matrix_operations() {
     ag::run::<f64, _, _>(|g| {
         // Test matrix inverse
         let a = convert_to_tensor(array![[2.0, 1.0], [1.0, 3.0]], g);
-        let inv = matrix_inverse(&a);
-        let identity = matmul(&a, &inv);
+        let inv = matrix_inverse(a);
+        let identity = matmul(a, inv);
         let result = identity.eval(g).unwrap();
 
         assert!((result[[0, 0]] - 1.0_f64).abs() < EPSILON);
@@ -20,7 +20,7 @@ fn test_matrix_operations() {
         assert!((result[[1, 0]] as f64).abs() < EPSILON);
 
         // Test determinant
-        let det = determinant(&a);
+        let det = determinant(a);
         let det_val = det.eval(g).unwrap();
         assert!((det_val[[]] - 5.0_f64).abs() < EPSILON); // det([[2,1],[1,3]]) = 6-1 = 5
     });
@@ -79,7 +79,7 @@ fn test_special_matrices() {
         // Test Cholesky decomposition
         let a = convert_to_tensor(array![[4.0, 2.0], [2.0, 5.0]], g); // Positive definite matrix
         let l = cholesky(&a);
-        let reconstructed = matmul(&l, &transpose(&l, &[1, 0]));
+        let reconstructed = matmul(l, transpose(l, &[1, 0]));
         let result = reconstructed.eval(g).unwrap();
         let original = a.eval(g).unwrap();
 
@@ -121,7 +121,7 @@ fn test_eigenvalue_decomposition() {
     ag::run::<f64, _, _>(|g| {
         // Test with symmetric matrix
         let a = convert_to_tensor(array![[3.0, 1.0], [1.0, 3.0]], g);
-        let (eigenvalues, eigenvectors) = eigen(&a);
+        let (eigenvalues, eigenvectors) = eigen(a);
 
         // Debug shapes by evaluating
         let eigenvals_eval = eigenvalues.eval(g).unwrap();
@@ -130,12 +130,12 @@ fn test_eigenvalue_decomposition() {
         println!("Debug: eigenvectors shape: {:?}", eigenvecs_eval.shape());
 
         // Reconstruct matrix: A = V * Λ * V^T
-        let lambda = diag(&eigenvalues);
+        let lambda = diag(eigenvalues);
         let lambda_eval = lambda.eval(g).unwrap();
         println!("Debug: lambda shape: {:?}", lambda_eval.shape());
 
-        let v_lambda = matmul(&eigenvectors, &lambda);
-        let reconstructed = matmul(&v_lambda, &transpose(&eigenvectors, &[1, 0]));
+        let v_lambda = matmul(eigenvectors, lambda);
+        let reconstructed = matmul(v_lambda, transpose(eigenvectors, &[1, 0]));
 
         let result = reconstructed.eval(g).unwrap();
         let original = a.eval(g).unwrap();
@@ -151,7 +151,7 @@ fn test_eigenvalue_decomposition() {
         let eigenvals_result = eigenvalues.eval(g).unwrap();
 
         // Since we're just testing that we can evaluate the eigenvalues
-        assert!(eigenvals_result.shape() == &[2]);
+        assert!(eigenvals_result.shape() == [2]);
     });
 }
 
@@ -161,10 +161,10 @@ fn test_linear_solvers() {
         // Test linear system solver
         let a = convert_to_tensor(array![[3.0, 1.0], [1.0, 2.0]], g);
         let b = convert_to_tensor(array![[9.0], [8.0]], g);
-        let x = solve(&a, &b);
+        let x = solve(a, b);
 
         // Verify Ax = b
-        let ax = matmul(&a, &x);
+        let ax = matmul(a, x);
         let result = ax.eval(g).unwrap();
         let b_val = b.eval(g).unwrap();
 
@@ -175,11 +175,11 @@ fn test_linear_solvers() {
         // Test least squares solver
         let a_overdetermined = convert_to_tensor(array![[1.0, 1.0], [1.0, 2.0], [1.0, 3.0]], g);
         let b_overdetermined = convert_to_tensor(array![[6.0], [5.0], [7.0]], g);
-        let x_ls = lstsq(&a_overdetermined, &b_overdetermined);
+        let x_ls = lstsq(a_overdetermined, b_overdetermined);
 
         // The solution should minimize ||Ax - b||^2
         let x_result = x_ls.eval(g).unwrap();
-        assert!(x_result.shape() == &[2, 1]);
+        assert!(x_result.shape() == [2, 1]);
     });
 }
 
@@ -191,17 +191,17 @@ fn test_gradient_computation() {
         let b = variable(array![[1.0], [2.0]], g);
 
         // Test gradient through inverse
-        let inv_a = matrix_inverse(&a);
-        let y = matmul(&inv_a, &b);
-        let loss = sum_all(square(&y));
+        let inv_a = matrix_inverse(a);
+        let y = matmul(inv_a, b);
+        let loss = sum_all(square(y));
 
         let grads = grad(&[&loss], &[&a]);
         let grad_a = &grads[0];
         assert!(grad_a.eval(g).is_ok());
 
         // Test gradient through solve
-        let x = solve(&a, &b);
-        let loss2 = sum_all(square(&x));
+        let x = solve(a, b);
+        let loss2 = sum_all(square(x));
 
         let grads2 = grad(&[&loss2], &[&a, &b]);
         assert!(grads2[0].eval(g).is_ok());
@@ -220,15 +220,15 @@ fn test_complex_linear_algebra_pipeline() {
 
         // Solve system using Cholesky factorization
         let b = convert_to_tensor(array![[1.0], [2.0]], g);
-        let y = solve(&l, &b);
-        let x = solve(&transpose(&l, &[1, 0]), &y);
+        let y = solve(l, b);
+        let x = solve(transpose(l, &[1, 0]), y);
 
         // Compute determinant using Cholesky
-        let det_l = determinant(&l);
-        let det_a = square(&det_l); // det(A) = det(L)^2 for A = L*L^T
+        let det_l = determinant(l);
+        let det_a = square(det_l); // det(A) = det(L)^2 for A = L*L^T
 
         // Test results
-        let x_direct = solve(&a, &b);
+        let x_direct = solve(a, b);
         let x_result = x.eval(g).unwrap();
         let x_direct_result = x_direct.eval(g).unwrap();
 
@@ -237,7 +237,7 @@ fn test_complex_linear_algebra_pipeline() {
         }
 
         let det_a_result = det_a.eval(g).unwrap();
-        let det_direct = determinant(&a).eval(g).unwrap();
+        let det_direct = determinant(a).eval(g).unwrap();
         assert!(((det_a_result[[]] - det_direct[[]]) as f64).abs() < EPSILON);
     });
 }

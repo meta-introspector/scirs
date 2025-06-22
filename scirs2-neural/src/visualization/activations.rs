@@ -405,7 +405,7 @@ mod tests {
 
     #[test]
     fn test_activation_visualization_types() {
-        let types = vec![
+        let types = [
             ActivationVisualizationType::FeatureMaps,
             ActivationVisualizationType::Histograms,
             ActivationVisualizationType::Statistics,
@@ -439,7 +439,7 @@ mod tests {
 
     #[test]
     fn test_colormaps() {
-        let colormaps = vec![
+        let colormaps = [
             Colormap::Viridis,
             Colormap::Plasma,
             Colormap::Inferno,
@@ -460,7 +460,7 @@ mod tests {
 
     #[test]
     fn test_channel_aggregation() {
-        let aggregations = vec![
+        let aggregations = [
             ChannelAggregation::None,
             ChannelAggregation::Mean,
             ChannelAggregation::Max,

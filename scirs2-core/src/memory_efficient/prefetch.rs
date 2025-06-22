@@ -12,12 +12,15 @@
 //! - Integration with the block cache system to manage prefetched blocks
 
 use std::collections::{HashSet, VecDeque};
+#[cfg(feature = "memory_compression")]
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "memory_compression")]
 use super::compressed_memmap::CompressedMemMappedArray;
-use crate::error::{CoreError, CoreResult, ErrorContext};
+use crate::error::CoreResult;
+#[cfg(feature = "memory_compression")]
+use crate::error::{CoreError, ErrorContext};
 
 /// Types of access patterns that can be detected and prefetched.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -298,6 +301,7 @@ impl AccessPatternTracker for BlockAccessTracker {
 
 /// Shared state for the prefetching system.
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PrefetchingState {
     /// Configuration for prefetching
     config: PrefetchConfig,
@@ -334,6 +338,7 @@ pub struct PrefetchStats {
 
 impl PrefetchingState {
     /// Create a new prefetching state with the given configuration.
+    #[allow(dead_code)]
     pub fn new(config: PrefetchConfig) -> Self {
         Self {
             tracker: Box::new(BlockAccessTracker::new(config.clone())),
@@ -345,6 +350,7 @@ impl PrefetchingState {
     }
 
     /// Record an access to a block.
+    #[allow(dead_code)]
     pub fn record_access(&mut self, block_idx: usize) {
         self.tracker.record_access(block_idx);
 
@@ -364,6 +370,7 @@ impl PrefetchingState {
     }
 
     /// Get the blocks that should be prefetched next.
+    #[allow(dead_code)]
     pub fn get_blocks_to_prefetch(&self) -> Vec<usize> {
         if !self.config.enabled {
             return Vec::new();
@@ -382,11 +389,13 @@ impl PrefetchingState {
     }
 
     /// Mark a block as being prefetched.
+    #[allow(dead_code)]
     pub fn mark_prefetching(&mut self, block_idx: usize) {
         self.prefetching.insert(block_idx);
     }
 
     /// Mark a block as prefetched and available in the cache.
+    #[allow(dead_code)]
     pub fn mark_prefetched(&mut self, block_idx: usize) {
         self.prefetching.remove(&block_idx);
         self.prefetched.insert(block_idx);
@@ -394,6 +403,7 @@ impl PrefetchingState {
     }
 
     /// Get the current prefetching statistics.
+    #[allow(dead_code)]
     pub fn stats(&self) -> PrefetchStats {
         self.stats.clone()
     }

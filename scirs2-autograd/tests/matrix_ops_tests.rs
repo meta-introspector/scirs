@@ -19,10 +19,10 @@ fn test_matrix_inverse() {
         let a = ctx.placeholder("a", &[2, 2]);
 
         // Compute inverse of A
-        let a_inv = T::matrix_inverse(&a);
+        let a_inv = T::matrix_inverse(a);
 
         // Verify A * A^(-1) ≈ I
-        let identity_approx = T::matmul(&a, &a_inv);
+        let identity_approx = T::matmul(a, a_inv);
 
         // Evaluate using evaluator.feed() approach instead of Feeder
         let identity_result = ctx
@@ -48,7 +48,7 @@ fn test_matrix_inverse() {
         assert!(error < 1e-5, "Matrix inverse failed, error: {}", error);
 
         // Test gradient computation for matrix inverse
-        let y = T::sum_all(&T::matrix_inverse(&a));
+        let y = T::sum_all(T::matrix_inverse(a));
         let grad_a = T::grad(&[y], &[a])[0];
 
         // Evaluate using evaluator.feed() approach
@@ -87,7 +87,7 @@ fn test_determinant() {
         let a = ctx.placeholder("a", &[3, 3]);
 
         // Compute determinant of A
-        let det_a = T::determinant(&a);
+        let det_a = T::determinant(a);
 
         // Evaluate using evaluator.feed() approach
         let det_result = ctx
@@ -168,7 +168,7 @@ fn test_matrix_solve() {
         let b = ctx.placeholder("b", &[2, 1]);
 
         // Solve the system
-        let x = T::solve(&a, &b);
+        let x = T::solve(a, b);
 
         // Evaluate using evaluator.feed() approach
         let x_result = ctx
@@ -190,7 +190,7 @@ fn test_matrix_solve() {
         assert!(error < 1e-5, "Linear solve failed, error: {}", error);
 
         // Test gradient computation for solver
-        let y = T::sum_all(&x);
+        let y = T::sum_all(x);
         let grad_a = T::grad(&[y], &[a])[0];
         let grad_b = T::grad(&[y], &[b])[0];
 
@@ -236,7 +236,7 @@ fn test_qr_decomposition() {
         let a = ctx.placeholder("a", &[3, 3]);
 
         // Compute QR decomposition
-        let (q, r) = T::qr(&a);
+        let (q, r) = T::qr(a);
 
         // Evaluate using evaluator.feed() approach
         let results = ctx
@@ -279,7 +279,7 @@ fn test_qr_decomposition() {
         );
 
         // Test gradient computation
-        let y = T::sum_all(&q) + T::sum_all(&r);
+        let y = T::sum_all(q) + T::sum_all(r);
         let grad_a = T::grad(&[y], &[a])[0];
 
         // Evaluate using evaluator.feed() approach
@@ -342,7 +342,7 @@ fn test_matrix_exp() {
         assert!(error < 1e-5, "Matrix exponential failed, error: {}", error);
 
         // Test gradient computation
-        let y = T::sum_all(&exp_a);
+        let y = T::sum_all(exp_a);
         let grad_a = T::grad(&[y], &[a])[0];
 
         // Evaluate using evaluator.feed() approach
@@ -390,7 +390,7 @@ fn test_near_singular_matrix_operations() {
         let a = ctx.placeholder("a", &[3, 3]);
 
         // Test matrix inverse
-        let a_inv = T::matrix_inverse(&a);
+        let a_inv = T::matrix_inverse(a);
 
         // Evaluate using evaluator.feed() approach
         let a_inv_result = ctx
@@ -404,7 +404,7 @@ fn test_near_singular_matrix_operations() {
         println!("A^(-1):\n{:?}", a_inv_result);
 
         // A*A^(-1) should still be approximately identity
-        let identity_approx = T::matmul(&a, &a_inv);
+        let identity_approx = T::matmul(a, a_inv);
 
         // Evaluate using evaluator.feed() approach
         let identity_result = ctx
@@ -432,7 +432,7 @@ fn test_near_singular_matrix_operations() {
         );
 
         // Test determinant
-        let det_a = T::determinant(&a);
+        let det_a = T::determinant(a);
 
         // Evaluate using evaluator.feed() approach
         let det_result = ctx
@@ -459,7 +459,7 @@ fn test_near_singular_matrix_operations() {
         let b_data = ag::ndarray::array![[3.0], [3.0001], [3.0001]];
         let b = ctx.placeholder("b", &[3, 1]);
 
-        let x = T::solve(a, &b);
+        let x = T::solve(a, b);
 
         // Evaluate using evaluator.feed() approach
         let x_result = ctx
@@ -474,7 +474,7 @@ fn test_near_singular_matrix_operations() {
         println!("Solution x for near-singular matrix:\n{:?}", x_result);
 
         // Verify Ax ≈ b
-        let b_reconstructed = T::matmul(a, &x);
+        let b_reconstructed = T::matmul(a, x);
 
         // Evaluate using evaluator.feed() approach
         let b_reconstructed_result = ctx
@@ -510,7 +510,7 @@ fn test_near_singular_matrix_operations() {
         let grad_a2 = T::grad(&[y2], &[a])[0];
 
         // Test solver gradient
-        let y3 = T::sum_all(T::solve(a, &b));
+        let y3 = T::sum_all(T::solve(a, b));
         let grad_a3 = T::grad(&[y3], &[a])[0];
 
         // Evaluate all gradients using evaluator.feed() approach
@@ -598,7 +598,7 @@ fn test_matrix_sqrt() {
         println!("sqrt(A):\n{:?}", sqrt_result);
 
         // Verify sqrt(A) * sqrt(A) ≈ A
-        let sqrt_squared = T::matmul(sqrt_a, &sqrt_a);
+        let sqrt_squared = T::matmul(sqrt_a, sqrt_a);
 
         // Evaluate using evaluator.feed() approach
         let sqrt_squared_result = ctx

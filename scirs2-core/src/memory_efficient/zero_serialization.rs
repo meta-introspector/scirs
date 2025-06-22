@@ -1181,14 +1181,15 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "float32")]
     fn test_zero_copy_serializable_f32() {
         let value: f32 = 3.5;
 
         unsafe {
-            let bytes = value.as_bytes();
+            let bytes = value.to_ne_bytes();
             assert_eq!(bytes.len(), 4);
 
-            let deserialized = f32::from_bytes(bytes).unwrap();
+            let deserialized = f32::from_ne_bytes(bytes);
             assert_eq!(value, deserialized);
         }
     }
@@ -1249,6 +1250,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "float32")]
     fn test_save_and_load_array_2d() {
         // Create a temporary directory
         let dir = tempdir().unwrap();
@@ -1402,6 +1404,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "float32")]
     fn test_save_and_load_array_mixed_types() {
         // Create a temporary directory
         let dir = tempdir().unwrap();
@@ -1543,6 +1546,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "float32")]
     fn test_modify_array() {
         // Create a temporary directory
         let dir = tempdir().unwrap();

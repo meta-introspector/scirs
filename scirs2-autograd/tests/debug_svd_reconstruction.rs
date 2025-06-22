@@ -32,7 +32,7 @@ fn debug_svd_reconstruction() {
             Err(e) => println!("S_diag eval error: {:?}", e),
         }
 
-        let us = matmul(u, &s_diag);
+        let us = matmul(u, s_diag);
         match us.eval(g) {
             Ok(val) => {
                 println!("\nU * S shape: {:?}", val.shape());
@@ -41,7 +41,7 @@ fn debug_svd_reconstruction() {
             Err(e) => println!("U * S eval error: {:?}", e),
         }
 
-        let reconstructed = matmul(us, &transpose(v, &[1, 0]));
+        let reconstructed = matmul(us, transpose(v, &[1, 0]));
         match reconstructed.eval(g) {
             Ok(val) => {
                 println!("\nReconstructed shape: {:?}", val.shape());

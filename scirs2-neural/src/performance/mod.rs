@@ -138,7 +138,7 @@ impl PerformanceOptimizer {
             simd_ops: SIMDOperations,
 
             #[cfg(feature = "memory_efficient")]
-            memory_processor: MemoryEfficientProcessor::new(chunk_size, max_memory_mb),
+            memory_processor: MemoryEfficientProcessor::new(_chunk_size, _max_memory_mb),
 
             thread_pool: Arc::new(ThreadPoolManager::new(num_threads)?),
             profiler: PerformanceProfiler::new(enable_profiling),

@@ -45,7 +45,7 @@ fn test_matrix_inverse_and_gradient() {
         assert_eq!(grad_a.shape(), &[2, 2]);
 
         // Gradient should be -inv(A)^T * inv(A)^T
-        let expected_grad = matmul(&neg(transpose(inv_a, &[1, 0])), &transpose(inv_a, &[1, 0]));
+        let expected_grad = matmul(neg(transpose(inv_a, &[1, 0])), transpose(inv_a, &[1, 0]));
         let expected = expected_grad.eval(g).unwrap();
 
         for i in 0..2 {
@@ -157,7 +157,7 @@ fn test_pseudo_inverse() {
         assert_eq!(result.shape(), &[2, 3]);
 
         // Verify: A * pinv(A) * A ≈ A
-        let check = matmul(matmul(a, &pinv_a), &a);
+        let check = matmul(matmul(a, pinv_a), a);
         let check_val = check.eval(g).unwrap();
 
         for i in 0..3 {
@@ -183,7 +183,7 @@ fn test_matrix_square_root() {
         let _result = sqrt_a.eval(g).unwrap();
 
         // Verify: sqrtm(A) * sqrtm(A) ≈ A
-        let squared = matmul(sqrt_a, &sqrt_a);
+        let squared = matmul(sqrt_a, sqrt_a);
         let squared_val = squared.eval(g).unwrap();
 
         for i in 0..2 {
@@ -243,7 +243,7 @@ fn test_qr_decomposition() {
         assert_eq!(r_val.shape(), &[2, 2]);
 
         // Q should have orthonormal columns
-        let qtq = matmul(transpose(q, &[1, 0]), &q);
+        let qtq = matmul(transpose(q, &[1, 0]), q);
         let qtq_val = qtq.eval(g).unwrap();
 
         // Should be close to identity
@@ -253,7 +253,7 @@ fn test_qr_decomposition() {
         assert_relative_eq!(qtq_val[[1, 0]], 0.0, epsilon = 1e-5);
 
         // Verify reconstruction: A ≈ Q * R
-        let reconstructed = matmul(q, &r);
+        let reconstructed = matmul(q, r);
         let reconstructed_val = reconstructed.eval(g).unwrap();
 
         for i in 0..3 {
@@ -285,7 +285,7 @@ fn test_cholesky_decomposition() {
         assert_relative_eq!(l_val[[0, 1]], 0.0, epsilon = 1e-10);
 
         // Verify: L * L^T = A
-        let llt = matmul(l, &transpose(l, &[1, 0]));
+        let llt = matmul(l, transpose(l, &[1, 0]));
         let llt_val = llt.eval(g).unwrap();
 
         for i in 0..2 {
@@ -303,11 +303,11 @@ fn test_solve_linear_system() {
         let b = variable(array![[9.0_f64], [8.0]], g);
 
         // Solve Ax = b
-        let x = solve(a, &b);
+        let x = solve(a, b);
         let _x_val = x.eval(g).unwrap();
 
         // Verify solution
-        let ax = matmul(a, &x);
+        let ax = matmul(a, x);
         let ax_val = ax.eval(g).unwrap();
 
         assert_relative_eq!(ax_val[[0, 0]], b.eval(g).unwrap()[[0, 0]], epsilon = 1e-5);
@@ -335,7 +335,7 @@ fn test_complex_linear_algebra_chain() {
         let sqrt_inv = sqrtm(&inv_a);
         let tr = trace(sqrt_inv);
         let det_a = det(&a);
-        let result = add(tr, &det_a);
+        let result = add(tr, det_a);
 
         // Evaluate the result
         let result_val = result.eval(g).unwrap();
@@ -363,7 +363,7 @@ fn test_batch_operations() {
             g,
         );
 
-        let c = batch_matmul(a, &b);
+        let c = batch_matmul(a, b);
         let c_val = c.eval(g).unwrap();
 
         // Check shape

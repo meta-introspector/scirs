@@ -8,11 +8,13 @@ use crate::error::{NeuralError, Result};
 use ndarray::{Array, ArrayD, ArrayView, IxDyn};
 use std::fmt::Debug;
 
-#[cfg(feature = "memory_efficient")]
-use scirs2_core::memory_efficient::chunk_wise_op;
+// FIXME: chunk_wise_op usage commented out due to signature mismatch
+// #[cfg(feature = "memory_efficient")]
+// use scirs2_core::memory_efficient::chunk_wise_op;
 
-#[cfg(feature = "memory_management")]
-use scirs2_core::ChunkProcessor;
+// FIXME: ChunkProcessor usage commented out due to signature mismatch
+// #[cfg(feature = "memory_management")]
+// use scirs2_core::ChunkProcessor;
 
 /// Memory-efficient batch processor
 ///
@@ -89,7 +91,7 @@ impl MemoryEfficientProcessor {
             let end_idx = (start_idx + self.chunk_size).min(batch_size);
             let chunk = input.slice(ndarray::s![start_idx..end_idx, ..]);
 
-            let result = processor(&chunk)?;
+            let result = processor(&chunk.into_dyn())?;
             results.push(result);
 
             start_idx = end_idx;
@@ -127,9 +129,13 @@ impl MemoryEfficientProcessor {
     where
         F: Fn(&ArrayView<f32, IxDyn>) -> Result<ArrayD<f32>>,
     {
-        chunk_wise_op(input, self.chunk_size, &ChunkProcessor::new(forward_fn)).map_err(|e| {
-            NeuralError::ComputationError(format!("Memory-efficient forward failed: {:?}", e))
-        })
+        // FIXME: chunk_wise_op signature mismatch - needs refactoring
+        // chunk_wise_op(input, self.chunk_size, &ChunkProcessor::new(forward_fn)).map_err(|e| {
+        //     NeuralError::ComputationError(format!("Memory-efficient forward failed: {:?}", e))
+        // })
+
+        // Temporary fallback
+        forward_fn(&input.view())
     }
 
     /// Memory-efficient gradient computation
@@ -164,7 +170,7 @@ impl MemoryEfficientProcessor {
             let input_chunk = input.slice(ndarray::s![start_idx..end_idx, ..]);
             let target_chunk = target.slice(ndarray::s![start_idx..end_idx, ..]);
 
-            let gradient = gradient_fn(&input_chunk, &target_chunk)?;
+            let gradient = gradient_fn(&input_chunk.into_dyn(), &target_chunk.into_dyn())?;
             gradients.push(gradient);
 
             start_idx = end_idx;

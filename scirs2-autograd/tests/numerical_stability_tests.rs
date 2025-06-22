@@ -73,7 +73,7 @@ fn test_arithmetic_stability() {
             ctx,
         );
 
-        let div_result = T::div(numerator, &small_denom);
+        let div_result = T::div(numerator, small_denom);
         let div_output = div_result.eval(ctx).unwrap();
 
         // Should handle extreme divisions gracefully
@@ -107,7 +107,7 @@ fn test_matrix_operation_stability() {
         );
 
         // Matrix multiplication with ill-conditioned matrix
-        let matmul_result = T::matmul(ill_conditioned, &vector);
+        let matmul_result = T::matmul(ill_conditioned, vector);
         let matmul_output = matmul_result.eval(ctx).unwrap();
 
         // Result should be finite
@@ -553,7 +553,7 @@ fn test_parallel_operation_stability() {
             let parallel_matmul = T::cache_friendly_matmul(&matrix_a, &matrix_b, Some(32));
             let parallel_matmul_output = parallel_matmul.eval(ctx).unwrap();
 
-            let sequential_matmul = T::matmul(matrix_a, &matrix_b);
+            let sequential_matmul = T::matmul(matrix_a, matrix_b);
             let sequential_matmul_output = sequential_matmul.eval(ctx).unwrap();
 
             // Compare results element-wise

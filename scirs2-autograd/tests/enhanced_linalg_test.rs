@@ -128,7 +128,7 @@ mod enhanced_linalg_tests {
             assert_eq!(x_val.shape(), &[2]);
 
             // Verify solution: multiply A * x should give b
-            let ax = matmul(&a, &x.reshape(&[2, 1]));
+            let ax = matmul(a, x.reshape(&[2, 1]));
             let ax_val = ax.eval(g).unwrap();
             let b_val = b.eval(g).unwrap();
 
@@ -150,9 +150,9 @@ mod enhanced_linalg_tests {
             assert_eq!(x_val.shape(), &[2, 2]);
 
             // Verify solution: AX + XB should equal C
-            let ax = matmul(&a, &x);
-            let xb = matmul(&x, &b);
-            let ax_plus_xb = add(&ax, &xb);
+            let ax = matmul(a, x);
+            let xb = matmul(x, b);
+            let ax_plus_xb = add(ax, xb);
             let result = ax_plus_xb.eval(g).unwrap();
             let c_val = c.eval(g).unwrap();
 
@@ -176,10 +176,10 @@ mod enhanced_linalg_tests {
             assert_eq!(x_val.shape(), &[2, 2]);
 
             // Verify solution
-            let ax = matmul(&a, &x);
-            let at = transpose(&a, &[1, 0]);
-            let xat = matmul(&x, &at);
-            let ax_plus_xat = add(&ax, &xat);
+            let ax = matmul(a, x);
+            let at = transpose(a, &[1, 0]);
+            let xat = matmul(x, at);
+            let ax_plus_xat = add(ax, xat);
             let result = ax_plus_xat.eval(g).unwrap();
             let q_val = q.eval(g).unwrap();
 
@@ -259,7 +259,7 @@ mod enhanced_linalg_tests {
             assert_eq!(c_val.shape(), &[2, 2]);
 
             // Compare with regular matmul
-            let c_matmul = matmul(&a, &b);
+            let c_matmul = matmul(a, b);
             let c_matmul_val = c_matmul.eval(g).unwrap();
 
             for i in 0..2 {

@@ -113,9 +113,11 @@ fn test_csv_round_trip_with_options() {
     ];
 
     // CSV options with semicolon delimiter
-    let mut options = csv::CsvReaderConfig::default();
-    options.delimiter = ';';
-    options.has_header = true;
+    let options = csv::CsvReaderConfig {
+        delimiter: ';',
+        has_header: true,
+        ..Default::default()
+    };
 
     // Write and read with custom options
     // Convert Vec<Vec<String>> to Array2<String>
@@ -137,8 +139,10 @@ fn test_csv_round_trip_with_options() {
     };
 
     // Create write options that match read options
-    let mut write_options = csv::CsvWriterConfig::default();
-    write_options.delimiter = ';';
+    let write_options = csv::CsvWriterConfig {
+        delimiter: ';',
+        ..Default::default()
+    };
     csv::write_csv(
         &file_path,
         &data_only,

@@ -35,10 +35,10 @@ fn test_iterative_solvers() {
         assert_eq!(result_cg.shape(), &[2]);
 
         // Verify Ax = b
-        let ax = matmul(&a, &reshape(&x_cg, &[2, 1]));
-        let ax_flat = reshape(&ax, &[2]);
-        let diff = sub(&ax_flat, &b);
-        let error = normfro(&reshape(&diff, &[2, 1]));
+        let ax = matmul(a, reshape(x_cg, &[2, 1]));
+        let ax_flat = reshape(ax, &[2]);
+        let diff = sub(ax_flat, b);
+        let error = normfro(&reshape(diff, &[2, 1]));
         let error_val = error.eval(g).unwrap()[ndarray::IxDyn(&[])];
         assert!(error_val < 1e-4, "CG solver error too large: {}", error_val);
 
@@ -69,9 +69,9 @@ fn test_matrix_trig_functions() {
         assert_eq!(cos_result.shape(), &[2, 2]);
 
         // Test identity: sin²(A) + cos²(A) = I (approximately for small matrices)
-        let sin2 = matmul(&sin_a, &sin_a);
-        let cos2 = matmul(&cos_a, &cos_a);
-        let sum = add(&sin2, &cos2);
+        let sin2 = matmul(sin_a, sin_a);
+        let cos2 = matmul(cos_a, cos_a);
+        let sum = add(sin2, cos2);
         let sum_result = sum.eval(g).unwrap();
 
         // Should be close to identity for this specific matrix
@@ -127,10 +127,10 @@ fn test_preconditioned_cg() {
         assert_eq!(result_pcg.shape(), &[2]);
 
         // Verify solution
-        let ax = matmul(&a, &reshape(&x_pcg, &[2, 1]));
-        let ax_flat = reshape(&ax, &[2]);
-        let diff = sub(&ax_flat, &b);
-        let error = normfro(&reshape(&diff, &[2, 1]));
+        let ax = matmul(a, reshape(x_pcg, &[2, 1]));
+        let ax_flat = reshape(ax, &[2]);
+        let diff = sub(ax_flat, b);
+        let error = normfro(&reshape(diff, &[2, 1]));
         let error_val = error.eval(g).unwrap()[ndarray::IxDyn(&[])];
         assert!(
             error_val < 1e-4,
@@ -151,7 +151,7 @@ fn test_matrix_sign_function() {
         assert_eq!(sign_result.shape(), &[2, 2]);
 
         // Test property: sign(A)² = I for non-singular matrices
-        let sign2 = matmul(&sign_a, &sign_a);
+        let sign2 = matmul(sign_a, sign_a);
         let sign2_result = sign2.eval(g).unwrap();
 
         assert!((sign2_result[[0, 0]] - 1.0).abs() < 0.1);

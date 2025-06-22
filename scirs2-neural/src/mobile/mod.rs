@@ -278,6 +278,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::const_is_empty)]
     fn test_template_content() {
         // Test that template content is not empty
         assert!(!templates::IOS_INFO_PLIST.is_empty());
@@ -291,6 +292,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::const_is_empty)]
     fn test_guide_content() {
         // Test that guide content is not empty
         assert!(!guides::IOS_INTEGRATION_GUIDE.is_empty());

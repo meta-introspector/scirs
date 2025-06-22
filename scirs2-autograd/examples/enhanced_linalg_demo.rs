@@ -68,8 +68,8 @@ fn main() {
 
         // Verify: A*x = b
         let ax = matmul(
-            &pd_matrix,
-            &convert_to_tensor(x.clone().insert_axis(ndarray::Axis(1)), g),
+            pd_matrix,
+            convert_to_tensor(x.clone().insert_axis(ndarray::Axis(1)), g),
         );
         let ax_flat = ax.eval(g).unwrap();
         println!(

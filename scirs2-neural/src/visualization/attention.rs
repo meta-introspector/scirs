@@ -567,7 +567,7 @@ mod tests {
 
     #[test]
     fn test_attention_visualization_types() {
-        let types = vec![
+        let types = [
             AttentionVisualizationType::Heatmap,
             AttentionVisualizationType::BipartiteGraph,
             AttentionVisualizationType::ArcDiagram,
@@ -628,7 +628,7 @@ mod tests {
 
     #[test]
     fn test_highlight_styles() {
-        let styles = vec![
+        let styles = [
             HighlightStyle::Border,
             HighlightStyle::Background,
             HighlightStyle::Overlay,
@@ -668,7 +668,7 @@ mod tests {
 
     #[test]
     fn test_export_quality_levels() {
-        let qualities = vec![
+        let qualities = [
             ExportQuality::Low,
             ExportQuality::Medium,
             ExportQuality::High,

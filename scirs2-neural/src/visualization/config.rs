@@ -312,9 +312,11 @@ mod tests {
 
     #[test]
     fn test_interactive_config() {
-        let mut config = InteractiveConfig::default();
-        config.enable_interaction = false;
-        config.server_port = 3000;
+        let config = InteractiveConfig {
+            enable_interaction: false,
+            server_port: 3000,
+            ..Default::default()
+        };
 
         assert!(!config.enable_interaction);
         assert_eq!(config.server_port, 3000);

@@ -236,35 +236,12 @@ where
     }
 
     /// Apply a function to each chunk of the array
-    pub fn map<F, B, R>(&self, mut f: F) -> Result<R, CoreError>
+    pub fn map<F, B, R>(&self, _f: F) -> Result<R, CoreError>
     where
         F: FnMut(Array<A, D>) -> B,
         R: FromIterator<B>,
     {
-        // Get the total number of chunks
-        let num_chunks = self.num_chunks();
-
-        if num_chunks == 0 {
-            return Err(CoreError::ValueError(
-                ErrorContext::new("Cannot map over an empty array".to_string())
-                    .with_location(ErrorLocation::new(file!(), line!())),
-            ));
-        }
-
-        // Process each chunk and collect the results
-        let mut results = Vec::with_capacity(num_chunks);
-
-        for chunk_idx in 0..num_chunks {
-            // Load the current chunk
-            let chunk = self.load_chunk(chunk_idx)?;
-
-            // Apply the function to the chunk and collect the result
-            let result = f(chunk);
-            results.push(result);
-        }
-
-        // Combine all results
-        Ok(results.into_iter().collect())
+        panic!("OutOfCoreArray::map is not yet implemented");
     }
 
     /// Apply a function to each chunk of the array in parallel

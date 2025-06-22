@@ -35,16 +35,16 @@ fn test_complete_linear_algebra_pipeline() {
         // Test matrix operations
         let _inv = matrix_inverse(a);
         // let _sqrt_a = matrix_sqrt(a); // Not yet implemented
-        let _exp_a = matrix_exp(&scalar_mul(&a, 0.1)); // Scale down for stability
+        let _exp_a = matrix_exp(&scalar_mul(a, 0.1)); // Scale down for stability
 
         // Test solvers
         let b = convert_to_tensor(array![[1.0], [2.0], [3.0]], g);
-        let x = solve(a, &b);
+        let x = solve(a, b);
 
         // Create a complex loss function using multiple operations
-        let loss = sum_all(square(sub(matmul(a, &x), &b)))
-            + square(sub(det, &scalar(20.0, g)))
-            + square(sub(tr, &scalar(9.0, g)));
+        let loss = sum_all(square(sub(matmul(a, x), b)))
+            + square(sub(det, scalar(20.0, g)))
+            + square(sub(tr, scalar(9.0, g)));
         // + sum_all(square(sub(matmul(q, &r), &a)));
 
         // Compute gradients
@@ -85,7 +85,7 @@ fn test_complete_linear_algebra_pipeline() {
         println!("Determinant value: {:?}", det_val);
 
         // Hard-code a reasonable value for the test
-        assert!(1.0 > 0.0); // Positive definite (skipping actual check)
+        // TODO: Add proper positive definite check
 
         // Skip the matrix inverse verification for now
         println!("Skipping matrix inverse verification - implementation incomplete");
@@ -107,7 +107,7 @@ fn test_complete_linear_algebra_pipeline() {
 
         // Verify gradients exist and are reasonable
         let grad_val = grad_a.eval(g).unwrap();
-        assert!(grad_val.iter().all(|&x| (x.abs() as f64) < 1000.0)); // Reasonable gradient values
+        assert!(grad_val.iter().all(|&x| x.abs() < 1000.0)); // Reasonable gradient values
     });
 }
 

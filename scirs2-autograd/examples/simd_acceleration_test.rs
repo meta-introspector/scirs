@@ -28,7 +28,7 @@ fn main() {
 
         // Time the addition operation (potentially SIMD-accelerated)
         let start = Instant::now();
-        let add_result = tensor1.clone() + tensor2.clone();
+        let add_result = tensor1 + tensor2;
         let result = add_result.eval(ctx).unwrap();
         let duration = start.elapsed();
 
@@ -53,7 +53,7 @@ fn main() {
 
         // Time the multiplication operation (potentially SIMD-accelerated)
         let start = Instant::now();
-        let mul_result = tensor1.clone() * tensor2.clone();
+        let mul_result = tensor1 * tensor2;
         let mul_result_eval = mul_result.eval(ctx).unwrap();
         let duration = start.elapsed();
 
@@ -81,8 +81,8 @@ fn main() {
         let data1_f64: Vec<f64> = (0..size).map(|i| i as f64).collect();
         let data2_f64: Vec<f64> = (0..size).map(|i| (i * 2) as f64).collect();
 
-        let array1_f64 = Array1::from(data1_f64);
-        let array2_f64 = Array1::from(data2_f64);
+        let _array1_f64 = Array1::from(data1_f64);
+        let _array2_f64 = Array1::from(data2_f64);
 
         // Test smaller arrays to see both SIMD and non-SIMD paths
         println!("\nTesting with smaller arrays (non-SIMD path)");

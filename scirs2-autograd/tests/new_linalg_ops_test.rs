@@ -150,11 +150,11 @@ fn test_kronecker_gradient() {
         // Just verify gradients were computed (values may be incorrect due to grad function issues)
         // Note: gradients might be scalars (0-dimensional) for certain operations
         assert!(
-            grad_a_val.len() > 0,
+            !grad_a_val.is_empty(),
             "Gradient w.r.t. a should have elements"
         );
         assert!(
-            grad_b_val.len() > 0,
+            !grad_b_val.is_empty(),
             "Gradient w.r.t. b should have elements"
         );
     });
@@ -185,8 +185,8 @@ fn test_lu_decomposition() {
         assert_eq!(u_val[[1, 0]], 0.0);
 
         // Verify PA = LU
-        let pa = matmul(&p, &a);
-        let lu_prod = matmul(&l, &u);
+        let pa = matmul(p, a);
+        let lu_prod = matmul(l, u);
 
         let pa_val = pa.eval(g).unwrap();
         let lu_val = lu_prod.eval(g).unwrap();
@@ -271,8 +271,8 @@ fn test_aliases_usage() {
         let (_s, _ld2) = slogdet(&a);
 
         // Test decompositions
-        let (_u, _s, _v) = svd(&a);
-        let (_q, _r) = qr(&a);
+        let (_u, _s, _v) = svd(a);
+        let (_q, _r) = qr(a);
         let (_values, _vectors) = eig(&a);
         let (_p, _l, _u) = lu(&a);
 
@@ -292,8 +292,8 @@ fn test_combined_operations() {
         let c = cond_2(&a);
         let ld = logdet(&a);
 
-        let rc = mul(r, &c);
-        let result = add(rc, &ld);
+        let rc = mul(r, c);
+        let result = add(rc, ld);
 
         // Should evaluate without error
         let _val = result.eval(g).unwrap();

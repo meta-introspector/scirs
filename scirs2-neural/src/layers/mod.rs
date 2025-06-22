@@ -749,3 +749,60 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Sequential<F> {
         self
     }
 }
+
+impl<F: Float + Debug + ScalarOperand + 'static> ParamLayer<F> for Sequential<F> {
+    fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+        let mut params = Vec::new();
+
+        for layer in &self.layers {
+            // Try to downcast to ParamLayer to get parameters
+            if let Some(param_layer) = layer
+                .as_any()
+                .downcast_ref::<Box<dyn ParamLayer<F> + Send + Sync>>()
+            {
+                params.extend(param_layer.get_parameters());
+            }
+        }
+
+        params
+    }
+
+    fn get_gradients(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
+        let mut gradients = Vec::new();
+
+        for layer in &self.layers {
+            // Try to downcast to ParamLayer to get gradients
+            if let Some(param_layer) = layer
+                .as_any()
+                .downcast_ref::<Box<dyn ParamLayer<F> + Send + Sync>>()
+            {
+                gradients.extend(param_layer.get_gradients());
+            }
+        }
+
+        gradients
+    }
+
+    fn set_parameters(&mut self, mut params: Vec<Array<F, ndarray::IxDyn>>) -> Result<()> {
+        let mut param_index = 0;
+
+        for layer in &mut self.layers {
+            // Try to downcast to ParamLayer to set parameters
+            if let Some(param_layer) = layer
+                .as_any_mut()
+                .downcast_mut::<Box<dyn ParamLayer<F> + Send + Sync>>()
+            {
+                let layer_param_count = param_layer.get_parameters().len();
+                if param_index + layer_param_count <= params.len() {
+                    let layer_params = params
+                        .drain(param_index..param_index + layer_param_count)
+                        .collect();
+                    param_layer.set_parameters(layer_params)?;
+                    param_index += layer_param_count;
+                }
+            }
+        }
+
+        Ok(())
+    }
+}

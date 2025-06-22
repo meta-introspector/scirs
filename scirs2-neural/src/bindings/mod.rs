@@ -145,18 +145,18 @@ mod tests {
         let result = examples_gen.generate();
         assert!(result.is_ok());
         let (examples, docs) = result.unwrap();
-        assert!(examples.len() > 0 || examples.is_empty()); // Just checking it's valid
-        assert!(docs.len() > 0 || docs.is_empty()); // Just checking it's valid
+        assert!(!examples.is_empty() || examples.is_empty()); // Just checking it's valid
+        assert!(!docs.is_empty() || docs.is_empty()); // Just checking it's valid
     }
 
     #[test]
     fn test_config_variations() {
         // Test different binding configurations
-        let mut config = BindingConfig::default();
-
-        // Test C++ configuration
-        config.language = BindingLanguage::Cpp;
-        config.api_style = ApiStyle::ObjectOriented;
+        let mut config = BindingConfig {
+            language: BindingLanguage::Cpp,
+            api_style: ApiStyle::ObjectOriented,
+            ..Default::default()
+        };
         assert_eq!(config.language, BindingLanguage::Cpp);
         assert_eq!(config.api_style, ApiStyle::ObjectOriented);
 
@@ -179,8 +179,10 @@ mod tests {
     fn test_error_handling() {
         // Test that generators handle invalid configurations gracefully
         let temp_dir = TempDir::new().unwrap();
-        let mut config = BindingConfig::default();
-        config.library_name = "".to_string(); // Invalid empty name
+        let config = BindingConfig {
+            library_name: "".to_string(), // Invalid empty name
+            ..Default::default()
+        };
 
         let output_dir = temp_dir.path().to_path_buf();
 

@@ -129,7 +129,7 @@ mod performance_optimization_tests {
             let mul_output = simd_mul_result.eval(ctx).unwrap();
 
             // Should be [2.0, 6.0, 12.0, 20.0]
-            let expected = vec![2.0, 6.0, 12.0, 20.0];
+            let expected = [2.0, 6.0, 12.0, 20.0];
             for (i, &expected_val) in expected.iter().enumerate() {
                 assert!((mul_output[i] - expected_val).abs() < 1e-6);
             }
@@ -159,7 +159,7 @@ mod performance_optimization_tests {
 
             // All outputs should be between 0 and 1
             for &val in sigmoid_output.iter() {
-                assert!(val >= 0.0 && val <= 1.0);
+                assert!((0.0..=1.0).contains(&val));
             }
         });
     }

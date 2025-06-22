@@ -182,9 +182,9 @@ fn main() {
 
         // Complex computation with gradients using aliases
         let _inv = matinv(&a_grad); // Using the new matinv alias
-        let x_sol = solve(&a_grad, &b_grad);
+        let x_sol = solve(a_grad, b_grad);
         let det_val = det(&a_grad); // Using the new det alias
-        let norm = frobenius_norm(&a_grad);
+        let norm = frobenius_norm(a_grad);
 
         // Combine all results
         let combined = add(add(sum_all(x_sol), det_val), norm);

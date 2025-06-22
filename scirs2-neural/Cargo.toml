@@ -11,7 +11,7 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies - temporarily use minimal features until core issues are resolved
-scirs2-core = { workspace = true, optional = true, features = ["linalg"] }
+scirs2-core = { workspace = true, optional = true, features = ["linalg", "memory_efficient", "cache", "parallel"] }
 # Temporarily commented out for publishing
 # scirs2-linalg = { workspace = true, optional = true }
 # scirs2-optimize = { workspace = true, optional = true }

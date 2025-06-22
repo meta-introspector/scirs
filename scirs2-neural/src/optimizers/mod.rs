@@ -118,6 +118,7 @@ impl<F: Float + Debug + ScalarOperand> OptimizerStep<F> for dyn Optimizer<F> + S
 pub mod adagrad;
 pub mod adam;
 pub mod adamw;
+pub mod lr_scheduler_wrapper;
 pub mod momentum;
 pub mod radam;
 pub mod rmsprop;
@@ -127,6 +128,7 @@ pub mod sgd;
 pub use adagrad::Adagrad;
 pub use adam::Adam;
 pub use adamw::AdamW;
+pub use lr_scheduler_wrapper::{with_cosine_annealing, with_step_decay, LRSchedulerOptimizer};
 pub use momentum::MomentumOptimizer;
 pub use radam::RAdam;
 pub use rmsprop::RMSprop;

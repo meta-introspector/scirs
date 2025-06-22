@@ -568,7 +568,7 @@ mod tests {
 
     #[test]
     fn test_marker_shapes() {
-        let shapes = vec![
+        let shapes = [
             MarkerShape::Circle,
             MarkerShape::Square,
             MarkerShape::Triangle,
@@ -583,7 +583,7 @@ mod tests {
 
     #[test]
     fn test_plot_types() {
-        let types = vec![
+        let types = [
             PlotType::Line,
             PlotType::Scatter,
             PlotType::Bar,

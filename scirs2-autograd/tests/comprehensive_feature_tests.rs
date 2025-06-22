@@ -65,7 +65,7 @@ mod advanced_indexing_tests {
             assert_eq!(result_array.len(), 4);
 
             // Should contain [10.0, 30.0, 50.0, 20.0]
-            let expected = vec![10.0, 30.0, 50.0, 20.0];
+            let expected = [10.0, 30.0, 50.0, 20.0];
             for (i, &expected_val) in expected.iter().enumerate() {
                 assert!((result_array[i] - expected_val).abs() < 1e-6_f32);
             }
@@ -96,7 +96,7 @@ mod advanced_indexing_tests {
 
             // Verify result: should be [1.0, 20.0, 3.0, 40.0]
             let result_array = result.eval(ctx).unwrap();
-            let expected = vec![1.0, 20.0, 3.0, 40.0];
+            let expected = [1.0, 20.0, 3.0, 40.0];
             for (i, &expected_val) in expected.iter().enumerate() {
                 assert!((result_array[i] - expected_val).abs() < 1e-6_f32);
             }
@@ -124,7 +124,7 @@ mod advanced_indexing_tests {
             let result_array = result.eval(ctx).unwrap();
             assert_eq!(result_array.len(), 5);
 
-            let expected = vec![10.0, 20.0, 30.0, 0.0, 0.0];
+            let expected = [10.0, 20.0, 30.0, 0.0, 0.0];
             for (i, &expected_val) in expected.iter().enumerate() {
                 assert!((result_array[i] - expected_val).abs() < 1e-6_f32);
             }
@@ -346,7 +346,7 @@ mod memory_optimization_tests {
             println!("InPlace add result values: {:?}", add_array.as_slice());
 
             // Expected: a[i] + b[i] = [1+4, 2+5, 3+6] = [5, 7, 9]
-            let expected = vec![5.0, 7.0, 9.0];
+            let expected = [5.0, 7.0, 9.0];
             for i in 0..3 {
                 let actual = add_array[[i]];
                 let expected_val = expected[i];
@@ -367,7 +367,7 @@ mod memory_optimization_tests {
             let mul_array = mul_result.eval(ctx).unwrap();
 
             // Should be [4.0, 10.0, 18.0]
-            let expected = vec![4.0, 10.0, 18.0];
+            let expected = [4.0, 10.0, 18.0];
             for (i, &expected_val) in expected.iter().enumerate() {
                 assert!((mul_array[i] - expected_val).abs() < 1e-6);
             }
@@ -504,8 +504,8 @@ mod property_tests {
                 ctx,
             );
 
-            let ab = &a + &b;
-            let ba = &b + &a;
+            let ab = a + b;
+            let ba = b + a;
 
             let ab_array = ab.eval(ctx).unwrap();
             let ba_array = ba.eval(ctx).unwrap();
@@ -535,8 +535,8 @@ mod property_tests {
                 ctx,
             );
 
-            let ab_c = (a * &b) * &c;
-            let a_bc = &a * (b * &c);
+            let ab_c = (a * b) * c;
+            let a_bc = a * (b * c);
 
             let ab_c_array = ab_c.eval(ctx).unwrap();
             let a_bc_array = a_bc.eval(ctx).unwrap();
@@ -566,8 +566,8 @@ mod property_tests {
                 ctx,
             );
 
-            let left = &a * (b + &c);
-            let right = (a * &b) + (a * &c);
+            let left = a * (b + c);
+            let right = (a * b) + (a * c);
 
             let left_array = left.eval(ctx).unwrap();
             let right_array = right.eval(ctx).unwrap();
@@ -592,7 +592,7 @@ mod property_tests {
                 ctx,
             );
 
-            let result = &a + &zero;
+            let result = a + zero;
             let result_array = result.eval(ctx).unwrap();
             let a_array = a.eval(ctx).unwrap();
 
@@ -616,7 +616,7 @@ mod property_tests {
                 ctx,
             );
 
-            let result = &a * &one;
+            let result = a * one;
             let result_array = result.eval(ctx).unwrap();
             let a_array = a.eval(ctx).unwrap();
 
@@ -648,7 +648,7 @@ mod numerical_stability_tests {
             );
 
             // Addition should maintain precision
-            let result = &a + &b;
+            let result = a + b;
             let result_array = result.eval(ctx).unwrap();
 
             // Check that small increments are preserved
@@ -668,7 +668,7 @@ mod numerical_stability_tests {
             );
 
             // Multiplication should not underflow to zero inappropriately
-            let result = &a * &a;
+            let result = a * a;
             let result_array = result.eval(ctx).unwrap();
 
             // Should not be exactly zero (unless actually zero)
@@ -691,7 +691,7 @@ mod numerical_stability_tests {
             );
 
             // Division by zero should produce infinity or NaN, not crash
-            let result = &a / &zero;
+            let result = a / zero;
             let result_array = result.eval(ctx).unwrap();
 
             // Check that we get infinity or NaN, not a crash
@@ -710,7 +710,7 @@ mod numerical_stability_tests {
             );
 
             // Compute a function that might have numerical issues
-            let y = &x * &x + T::scalar(1e-10_f32, ctx);
+            let y = x * x + T::scalar(1e-10_f32, ctx);
             let loss = T::reduce_sum(y, &[0], false);
 
             // Compute gradients
@@ -774,7 +774,7 @@ mod integration_tests {
             let bias = T::efficient_zeros(&[64], ctx);
 
             // Forward pass with checkpointing
-            let linear = T::matmul(input, &weights);
+            let linear = T::matmul(input, weights);
             let linear_checkpointed = T::checkpoint(&linear);
             let biased = T::broadcast_add(&linear_checkpointed, &bias);
             let activated = T::relu(biased);
