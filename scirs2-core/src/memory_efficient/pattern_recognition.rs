@@ -1132,8 +1132,10 @@ mod tests {
 
     #[test]
     fn test_zigzag_detection() {
-        let mut config = PatternRecognitionConfig::default();
-        config.min_history_size = 10; // Lower threshold for test
+        let config = PatternRecognitionConfig {
+            min_history_size: 10, // Lower threshold for test
+            ..Default::default()
+        };
         let mut recognizer = PatternRecognizer::new(config);
         recognizer.set_dimensions(vec![8, 8]);
 
@@ -1163,8 +1165,10 @@ mod tests {
 
     #[test]
     fn test_diagonal_detection() {
-        let mut config = PatternRecognitionConfig::default();
-        config.min_history_size = 10; // Lower threshold for test
+        let config = PatternRecognitionConfig {
+            min_history_size: 10, // Lower threshold for test
+            ..Default::default()
+        };
         let mut recognizer = PatternRecognizer::new(config);
         recognizer.set_dimensions(vec![16, 16]);
 

@@ -3,7 +3,7 @@
 //! This module provides SIMD-accelerated and parallel implementations of commonly used
 //! special functions for better performance on large arrays.
 
-use crate::error::{SpecialError, SpecialResult};
+use crate::error::SpecialResult;
 use ndarray::{Array1, ArrayView1};
 
 #[cfg(feature = "simd")]
@@ -258,12 +258,10 @@ pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>>
                 });
         } else {
             // Fallback for non-contiguous arrays
-            output
-                .par_iter_mut()
-                .zip(input.par_iter())
-                .for_each(|(out, &inp)| {
-                    *out = crate::gamma::gamma(inp);
-                });
+            use ndarray::Zip;
+            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+                *out = crate::gamma::gamma(inp);
+            });
         }
     } else {
         // Use sequential processing for small arrays
@@ -292,12 +290,10 @@ pub fn j0_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
                 });
         } else {
             // Fallback for non-contiguous arrays
-            output
-                .par_iter_mut()
-                .zip(input.par_iter())
-                .for_each(|(out, &inp)| {
-                    *out = crate::bessel::j0(inp);
-                });
+            use ndarray::Zip;
+            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+                *out = crate::bessel::j0(inp);
+            });
         }
     } else {
         // Use sequential processing for small arrays
@@ -320,8 +316,8 @@ pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<
 
     if len > PARALLEL_THRESHOLD {
         // Use parallel + SIMD for very large arrays
-        let chunks = len / SIMD_CHUNK_SIZE;
-        let remainder = len % SIMD_CHUNK_SIZE;
+        let _chunks = len / SIMD_CHUNK_SIZE;
+        let _remainder = len % SIMD_CHUNK_SIZE;
 
         // For very large arrays, use a simpler parallel approach without complex SIMD chunking
         if let (Some(input_slice), Some(output_slice)) = (input.as_slice(), output.as_slice_mut()) {
@@ -333,12 +329,10 @@ pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<
                 });
         } else {
             // Fallback for non-contiguous arrays
-            output
-                .par_iter_mut()
-                .zip(input.par_iter())
-                .for_each(|(out, &inp)| {
-                    *out = crate::gamma::gamma(inp as f64) as f32;
-                });
+            use ndarray::Zip;
+            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+                *out = crate::gamma::gamma(inp as f64) as f32;
+            });
         }
     } else if len > 1000 {
         // Use SIMD for medium arrays
@@ -366,7 +360,7 @@ pub fn benchmark_parallel_performance(size: usize) -> SpecialResult<()> {
 
     // Sequential gamma
     let start = Instant::now();
-    let _sequential: Array1<f64> = data_f64.mapv(|x| crate::gamma::gamma(x));
+    let _sequential: Array1<f64> = data_f64.mapv(crate::gamma::gamma);
     let sequential_time = start.elapsed();
 
     // Parallel gamma
@@ -384,7 +378,7 @@ pub fn benchmark_parallel_performance(size: usize) -> SpecialResult<()> {
     let bessel_data: Array1<f64> = Array1::from_vec((0..size).map(|i| (i as f64) * 0.01).collect());
 
     let start = Instant::now();
-    let _sequential: Array1<f64> = bessel_data.mapv(|x| crate::bessel::j0(x));
+    let _sequential: Array1<f64> = bessel_data.mapv(crate::bessel::j0);
     let sequential_time = start.elapsed();
 
     let start = Instant::now();
@@ -445,8 +439,6 @@ pub fn benchmark_simd_performance(size: usize) -> SpecialResult<()> {
     // Create test data
     let data_f32: Array1<f32> =
         Array1::from_vec((0..size).map(|i| (i as f32) * 0.01 + 1.0).collect());
-    let data_f64: Array1<f64> =
-        Array1::from_vec((0..size).map(|i| (i as f64) * 0.01 + 1.0).collect());
 
     println!("Benchmarking SIMD performance with {} elements:", size);
 

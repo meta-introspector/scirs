@@ -2,10 +2,11 @@
 //!
 //! Basic benchmarks for array operations to validate performance.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use ndarray::{Array1, Array2};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
+use std::hint::black_box;
 
 fn bench_array_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_creation");

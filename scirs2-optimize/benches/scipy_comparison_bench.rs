@@ -3,15 +3,16 @@
 //! This benchmark suite tests various optimization algorithms against
 //! their SciPy counterparts on a variety of test problems.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_optimize::constrained::{minimize_constrained, Method as ConstrainedMethod};
+use std::hint::black_box;
 use scirs2_optimize::global::{differential_evolution, DifferentialEvolutionOptions};
-use scirs2_optimize::least_squares::{least_squares, Method as LeastSquaresMethod};
+use scirs2_optimize::least_squares::{least_squares};
 use scirs2_optimize::unconstrained::{minimize, Method, Options};
 use std::time::Duration;
 
 /// Standard test functions for optimization benchmarking
+#[allow(dead_code)]
 mod test_functions {
     use ndarray::ArrayView1;
 
@@ -118,6 +119,7 @@ mod test_functions {
 }
 
 /// Benchmark configuration
+#[allow(dead_code)]
 struct BenchmarkConfig {
     name: &'static str,
     function: fn(&ArrayView1<f64>) -> f64,
@@ -257,13 +259,15 @@ fn bench_dimensions(c: &mut Criterion) {
     group.finish();
 }
 
+type TestFunction = fn(&ArrayView1<f64>) -> f64;
+
 /// Benchmark global optimization methods
 fn bench_global_methods(c: &mut Criterion) {
     let mut group = c.benchmark_group("global");
     group.sample_size(20);
     group.measurement_time(Duration::from_secs(15));
 
-    let problems = vec![
+    let problems: Vec<(&str, TestFunction)> = vec![
         ("Rastrigin", test_functions::rastrigin),
         ("Ackley", test_functions::ackley),
     ];
@@ -275,12 +279,13 @@ fn bench_global_methods(c: &mut Criterion) {
             b.iter(|| {
                 let result = differential_evolution(
                     func,
-                    &bounds,
+                    bounds.clone(),
                     Some(DifferentialEvolutionOptions {
-                        population_size: 50,
-                        max_generations: 100,
+                        popsize: 50,
+                        maxiter: 100,
                         ..Default::default()
                     }),
+                    None, // strategy parameter
                 );
                 black_box(result)
             });
@@ -317,8 +322,9 @@ fn bench_least_squares(c: &mut Criterion) {
             .iter()
             .map(|&x| 2.0 + 3.0 * x + 0.1 * rand::random::<f64>())
             .collect();
-        let mut data = x_data;
-        data.extend(y_data);
+        let mut data_vec = x_data;
+        data_vec.extend(y_data);
+        let data = Array1::from_vec(data_vec);
 
         let x0 = array![0.0, 0.0];
 
@@ -330,10 +336,10 @@ fn bench_least_squares(c: &mut Criterion) {
                     let result = least_squares(
                         residual,
                         x0,
+                        scirs2_optimize::least_squares::Method::LevenbergMarquardt,
                         None::<fn(&[f64], &[f64]) -> ndarray::Array2<f64>>,
                         data,
                         Some(scirs2_optimize::least_squares::Options {
-                            method: LeastSquaresMethod::LevenbergMarquardt,
                             ..Default::default()
                         }),
                     );
@@ -346,7 +352,7 @@ fn bench_least_squares(c: &mut Criterion) {
     group.finish();
 }
 
-/// Main benchmark groups
+// Main benchmark groups
 criterion_group!(
     benches,
     bench_unconstrained_methods,
@@ -357,9 +363,9 @@ criterion_group!(
 
 criterion_main!(benches);
 
-/// Generate comparison report with SciPy results
-/// This would be run separately to generate a detailed comparison report
-#[cfg(feature = "generate_report")]
+// Generate comparison report with SciPy results
+// This would be run separately to generate a detailed comparison report
+#[allow(dead_code)]
 mod report {
     use super::*;
     use std::fs::File;

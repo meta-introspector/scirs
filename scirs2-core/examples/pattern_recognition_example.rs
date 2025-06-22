@@ -81,8 +81,10 @@ fn example_zigzag_detection() {
     println!("3. Zigzag Pattern Detection");
     println!("---------------------------");
 
-    let mut config = PatternRecognitionConfig::default();
-    config.min_history_size = 10; // Lower threshold for demonstration
+    let config = PatternRecognitionConfig {
+        min_history_size: 10, // Lower threshold for demonstration
+        ..Default::default()
+    };
     let mut recognizer = PatternRecognizer::new(config);
     recognizer.set_dimensions(vec![8, 8]);
 

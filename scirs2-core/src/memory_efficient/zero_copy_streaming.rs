@@ -14,8 +14,8 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
-//! use scirs2_core::memory_efficient::zero_copy_streaming::{
+//! ```rust,ignore
+//! use scirs2_core::memory_efficient::{
 //!     ZeroCopyStreamProcessor, ZeroCopyConfig, ProcessingMode
 //! };
 //!

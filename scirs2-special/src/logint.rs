@@ -22,7 +22,7 @@
 //!    Numerical Recipes in C++: The Art of Scientific Computing.
 
 use crate::optimizations::{exponential_integral_e1_pade, exponential_integral_pade, get_constant};
-use crate::validation::{check_positive, not_implemented};
+use crate::validation::check_positive;
 use crate::{SpecialError, SpecialResult};
 use num_complex::Complex64;
 use std::f64::consts::PI;
@@ -151,7 +151,7 @@ pub fn li_complex(z: Complex64) -> SpecialResult<Complex64> {
     // Check for domain error
     if z.norm() < f64::EPSILON {
         return Err(SpecialError::DomainError(
-            "Logarithmic integral is not defined at z = 0".to_string()
+            "Logarithmic integral is not defined at z = 0".to_string(),
         ));
     }
 

@@ -3,10 +3,9 @@
 //! This benchmark suite tests the performance of pattern detection algorithms
 //! under various access patterns and data sizes.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use scirs2_core::memory_efficient::{
-    ComplexPattern, Confidence, PatternRecognitionConfig, PatternRecognizer,
-};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use scirs2_core::memory_efficient::{ComplexPattern, PatternRecognitionConfig, PatternRecognizer};
+use std::hint::black_box;
 
 /// Simulate row-major access pattern
 fn generate_row_major_pattern(rows: usize, cols: usize) -> Vec<usize> {
@@ -42,6 +41,7 @@ fn generate_zigzag_pattern(rows: usize, cols: usize) -> Vec<usize> {
 }
 
 /// Simulate diagonal access pattern
+#[allow(dead_code)]
 fn generate_diagonal_pattern(rows: usize, cols: usize) -> Vec<usize> {
     let mut pattern = Vec::new();
     let min_dim = rows.min(cols);
@@ -75,7 +75,7 @@ fn generate_random_pattern(rows: usize, cols: usize, count: usize) -> Vec<usize>
     let mut rng = StdRng::seed_from_u64(42);
     let max_idx = rows * cols;
 
-    (0..count).map(|_| rng.gen_range(0..max_idx)).collect()
+    (0..count).map(|_| rng.random_range(0..max_idx)).collect()
 }
 
 /// Simulate stencil access pattern (5-point stencil)

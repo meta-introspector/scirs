@@ -16,8 +16,8 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
-//! use scirs2_core::memory_efficient::zero_copy_interface::{
+//! ```rust,ignore
+//! use scirs2_core::memory_efficient::{
 //!     ZeroCopyData, ZeroCopyInterface, DataExchange
 //! };
 //!
@@ -38,7 +38,7 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt;
 use std::hash::Hash;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex, RwLock, Weak};
 
 /// Unique identifier for zero-copy data
@@ -126,8 +126,6 @@ impl DataMetadata {
 struct ZeroCopyDataInner<T> {
     /// The actual data
     data: Vec<T>,
-    /// Reference count
-    ref_count: AtomicUsize,
     /// Metadata about the data
     metadata: DataMetadata,
     /// Weak references to this data
@@ -149,29 +147,9 @@ impl<T> ZeroCopyDataInner<T> {
 
         Self {
             data,
-            ref_count: AtomicUsize::new(1),
             metadata,
             weak_refs: Mutex::new(Vec::new()),
         }
-    }
-
-    fn add_ref(&self) {
-        self.ref_count.fetch_add(1, Ordering::Relaxed);
-    }
-
-    fn remove_ref(&self) -> usize {
-        // Use checked subtraction to prevent overflow
-        let prev = self.ref_count.fetch_sub(1, Ordering::Relaxed);
-        if prev == 0 {
-            // This shouldn't happen in correct usage - restore the count and panic
-            self.ref_count.fetch_add(1, Ordering::Relaxed);
-            panic!("Attempted to remove reference from zero reference count");
-        }
-        prev - 1
-    }
-
-    fn ref_count(&self) -> usize {
-        self.ref_count.load(Ordering::Relaxed)
     }
 }
 

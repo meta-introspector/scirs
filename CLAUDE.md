@@ -113,25 +113,102 @@
   - Use `scirs2-core::config` for configuration settings
   - Use `scirs2-core::constants` for mathematical and physical constants
   - Use `scirs2-core::parallel` for parallel processing (when feature-enabled)
-  - Use `scirs2-core::simd` for SIMD acceleration (when feature-enabled)
+  - Use `scirs2-core::simd_ops` for ALL SIMD operations - NEVER implement custom SIMD
+  - Use `scirs2-core::gpu` for ALL GPU operations - NEVER implement custom GPU kernels
   - Use `scirs2-core::utils` for common utility functions
+  - Use `scirs2-core::simd_ops::PlatformCapabilities` for platform detection
+  - Use `scirs2-core::simd_ops::AutoOptimizer` for automatic optimization selection
 - Before implementing new utility functions in module-specific crates, always check if similar functionality already exists in scirs2-core
 - When you find duplicate functionality that should be in scirs2-core, create a task to refactor it
+
+## Strict Acceleration Policy
+
+### SIMD Operations
+- **MANDATORY**: Use `scirs2-core::simd_ops::SimdUnifiedOps` trait for all SIMD operations
+- **FORBIDDEN**: Direct use of `wide`, `packed_simd`, or platform-specific SIMD intrinsics in modules
+- **FORBIDDEN**: Custom SIMD implementations in individual modules
+- All SIMD operations MUST go through the unified abstraction layer
+- Example usage:
+  ```rust
+  use scirs2_core::simd_ops::SimdUnifiedOps;
+  
+  // Good - uses core SIMD operations
+  let result = f32::simd_add(&a.view(), &b.view());
+  
+  // Bad - direct SIMD implementation
+  // let result = custom_simd_add(a, b);  // FORBIDDEN
+  ```
+
+### GPU Operations
+- **MANDATORY**: Use `scirs2-core::gpu` module for all GPU operations
+- **FORBIDDEN**: Direct CUDA/OpenCL/Metal API calls in individual modules
+- **FORBIDDEN**: Custom kernel implementations outside of core
+- GPU kernels must be registered in the core GPU kernel registry
+- Use feature flags to conditionally enable GPU support
+
+### BLAS Operations
+- **MANDATORY**: All BLAS operations go through `scirs2-core`
+- **CONFIGURED**: BLAS backend selection is handled by core's platform-specific configuration
+- **FORBIDDEN**: Direct dependency on BLAS libraries in individual modules
+- Modules should only depend on `scirs2-core` with appropriate features enabled
+
+### Platform Detection
+- **MANDATORY**: Use `scirs2-core::simd_ops::PlatformCapabilities::detect()` for capability detection
+- **FORBIDDEN**: Custom CPU feature detection in modules
+- **FORBIDDEN**: Duplicate platform detection code
+- Example:
+  ```rust
+  use scirs2_core::simd_ops::PlatformCapabilities;
+  
+  let caps = PlatformCapabilities::detect();
+  if caps.simd_available {
+      // Use SIMD path
+  }
+  ```
+
+### Optimization Selection
+- **MANDATORY**: Use `scirs2-core::simd_ops::AutoOptimizer` for automatic optimization selection
+- The optimizer decides whether to use GPU, SIMD, or scalar implementations based on:
+  - Problem size
+  - Available hardware capabilities
+  - Performance heuristics
+- Example:
+  ```rust
+  use scirs2_core::simd_ops::AutoOptimizer;
+  
+  let optimizer = AutoOptimizer::new();
+  if optimizer.should_use_gpu(problem_size) {
+      // Use GPU implementation from core
+  } else if optimizer.should_use_simd(problem_size) {
+      // Use SIMD implementation from core
+  } else {
+      // Use scalar implementation
+  }
 
 ## Performance Optimization Policy
 
 - For performance-critical code, ALWAYS use core-provided optimizations:
-  - SIMD: use `scirs2-core::simd` operations with feature flag enabled rather than custom SIMD implementations
+  - SIMD: use `scirs2-core::simd_ops` trait methods - NEVER implement custom SIMD
   - Parallelism: use `scirs2-core::parallel` with appropriate feature flag instead of direct Rayon usage
   - Memory efficiency: use `chunk_wise_op` and other core-provided memory-efficient algorithms
   - Caching: use `TTLSizedCache`, `CacheBuilder`, or `#[cached]` from core rather than custom caching solutions
+  - GPU: use `scirs2-core::gpu` module for all GPU operations
 - Each module should enable relevant core features in its Cargo.toml:
   ```toml
   [dependencies]
-  scirs2-core = { workspace = true, features = ["simd", "parallel"] }
+  scirs2-core = { workspace = true, features = ["simd", "parallel", "gpu"] }
   ```
 - Provide scalar fallbacks for operations that use SIMD or parallel processing
 - Never reimplement optimization code that exists in core modules
+
+## Refactoring Priority
+
+When you encounter code that violates these policies, prioritize refactoring in this order:
+1. **SIMD implementations** - Replace all custom SIMD with `scirs2-core::simd_ops`
+2. **GPU implementations** - Centralize all GPU kernels in `scirs2-core::gpu`
+3. **Platform detection** - Replace with `PlatformCapabilities::detect()`
+4. **BLAS operations** - Ensure all go through core
+5. **Parallel operations** - Replace direct Rayon usage with core abstractions
 
 ## Implementation Notes
 

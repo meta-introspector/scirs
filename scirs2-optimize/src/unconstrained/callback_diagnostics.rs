@@ -5,8 +5,7 @@
 
 use crate::error::OptimizeError;
 use crate::unconstrained::convergence_diagnostics::{
-    ConvergenceDiagnostics, DiagnosticCollector, DiagnosticOptions, IterationDiagnostic,
-    LineSearchDiagnostic,
+    ConvergenceDiagnostics, DiagnosticCollector, DiagnosticOptions, LineSearchDiagnostic,
 };
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, ArrayView1};
@@ -320,9 +319,12 @@ mod tests {
         let mut optimizer = DiagnosticOptimizer::new(options);
 
         // Add a simple callback
-        let mut callback_called = false;
+        use std::sync::atomic::{AtomicBool, Ordering};
+        use std::sync::Arc;
+        let callback_called = Arc::new(AtomicBool::new(false));
+        let callback_called_clone = callback_called.clone();
         optimizer.add_callback(Box::new(move |_info| {
-            callback_called = true;
+            callback_called_clone.store(true, Ordering::SeqCst);
             CallbackResult::Continue
         }));
 
@@ -347,6 +349,7 @@ mod tests {
 
         let result = optimizer.process_iteration(&info);
         assert!(matches!(result, CallbackResult::Continue));
+        assert!(callback_called.load(Ordering::SeqCst));
     }
 
     #[test]

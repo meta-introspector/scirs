@@ -198,7 +198,9 @@ pub mod constrained;
 pub mod global;
 pub mod jit_optimization;
 pub mod least_squares;
+pub mod ml_optimizers;
 pub mod multi_objective;
+pub mod neural_integration;
 pub mod parallel;
 pub mod roots;
 pub mod roots_anderson;
@@ -234,10 +236,15 @@ pub use least_squares::{
     bounded_least_squares, least_squares, robust_least_squares, separable_least_squares,
     total_least_squares, weighted_least_squares, BisquareLoss, CauchyLoss, HuberLoss,
 };
+pub use ml_optimizers::{
+    ml_problems, ADMMOptimizer, CoordinateDescentOptimizer, ElasticNetOptimizer,
+    GroupLassoOptimizer, LassoOptimizer,
+};
 pub use multi_objective::{
     scalarization, MultiObjectiveConfig, MultiObjectiveResult, MultiObjectiveSolution, NSGAII,
     NSGAIII,
 };
+pub use neural_integration::{optimizers, NeuralOptimizer, NeuralParameters, NeuralTrainer};
 pub use roots::root;
 pub use scalar::minimize_scalar;
 pub use sparse_numdiff::{sparse_hessian, sparse_jacobian, SparseFiniteDiffOptions};
@@ -281,9 +288,16 @@ pub mod prelude {
         SeparableOptions, SeparableResult, TLSMethod, TotalLeastSquaresOptions,
         TotalLeastSquaresResult, WeightedOptions,
     };
+    pub use crate::ml_optimizers::{
+        ml_problems, ADMMOptimizer, CoordinateDescentOptimizer, ElasticNetOptimizer,
+        GroupLassoOptimizer, LassoOptimizer,
+    };
     pub use crate::multi_objective::{
         scalarization, MultiObjectiveConfig, MultiObjectiveResult, MultiObjectiveSolution, NSGAII,
         NSGAIII,
+    };
+    pub use crate::neural_integration::{
+        optimizers, NeuralOptimizer, NeuralParameters, NeuralTrainer,
     };
     pub use crate::parallel::{
         parallel_evaluate_batch, parallel_finite_diff_gradient, ParallelOptions,

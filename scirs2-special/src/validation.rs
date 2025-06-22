@@ -18,16 +18,17 @@ where
 }
 
 /// Check if a value is non-negative (>= 0)
-pub fn check_non_negative<T>(value: T, name: &str) -> SpecialResult<T>
+pub fn _check_non_negative<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
 {
-    validation::check_non_negative(value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{} must be non-negative, got {}", name, value)))
+    validation::check_non_negative(value, name).map_err(|_| {
+        SpecialError::DomainError(format!("{} must be non-negative, got {}", name, value))
+    })
 }
 
 /// Check if a value is finite
-pub fn check_finite<T>(value: T, name: &str) -> SpecialResult<T>
+pub fn _check_finite<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
 {
@@ -36,25 +37,30 @@ where
 }
 
 /// Check if a value is within bounds (inclusive)
-pub fn check_in_bounds<T>(value: T, min: T, max: T, name: &str) -> SpecialResult<T>
+pub fn _check_in_bounds<T>(value: T, min: T, max: T, name: &str) -> SpecialResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy,
 {
-    validation::check_in_bounds(value, min, max, name)
-        .map_err(|_| SpecialError::DomainError(format!("{} must be in [{}, {}], got {}", name, min, max, value)))
+    validation::check_in_bounds(value, min, max, name).map_err(|_| {
+        SpecialError::DomainError(format!(
+            "{} must be in [{}, {}], got {}",
+            name, min, max, value
+        ))
+    })
 }
 
 /// Check if a probability value is valid (0 <= p <= 1)
-pub fn check_probability<T>(value: T, name: &str) -> SpecialResult<T>
+pub fn _check_probability<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
 {
-    validation::check_probability(value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{} must be in [0, 1], got {}", name, value)))
+    validation::check_probability(value, name).map_err(|_| {
+        SpecialError::DomainError(format!("{} must be in [0, 1], got {}", name, value))
+    })
 }
 
 /// Check if all values in an array are finite
-pub fn check_array_finite<S, D>(array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
+pub fn _check_array_finite<S, D>(array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
@@ -65,7 +71,7 @@ where
 }
 
 /// Check if an array is not empty
-pub fn check_not_empty<S, D>(array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
+pub fn _check_not_empty<S, D>(array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
@@ -75,7 +81,7 @@ where
 }
 
 /// Check if two arrays have the same shape
-pub fn check_same_shape<S1, S2, D1, D2>(
+pub fn _check_same_shape<S1, S2, D1, D2>(
     a: &ArrayBase<S1, D1>,
     a_name: &str,
     b: &ArrayBase<S2, D2>,
@@ -87,25 +93,29 @@ where
     D1: Dimension,
     D2: Dimension,
 {
-    validation::check_same_shape(a, a_name, b, b_name)
-        .map_err(|_| SpecialError::ValueError(format!(
+    validation::check_same_shape(a, a_name, b, b_name).map_err(|_| {
+        SpecialError::ValueError(format!(
             "{} and {} must have the same shape, got {:?} and {:?}",
-            a_name, b_name, a.shape(), b.shape()
-        )))
+            a_name,
+            b_name,
+            a.shape(),
+            b.shape()
+        ))
+    })
 }
 
 // Special function specific validations
 
 /// Check if order n is valid for special functions (non-negative integer or real)
-pub fn check_order<T>(n: T, name: &str) -> SpecialResult<T>
+pub fn _check_order<T>(n: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
 {
-    check_finite(n, name)
+    _check_finite(n, name)
 }
 
 /// Check if degree l is valid (non-negative integer)
-pub fn check_degree(l: i32, name: &str) -> SpecialResult<i32> {
+pub fn _check_degree(l: i32, name: &str) -> SpecialResult<i32> {
     if l < 0 {
         return Err(SpecialError::DomainError(format!(
             "{} must be non-negative, got {}",
@@ -116,7 +126,7 @@ pub fn check_degree(l: i32, name: &str) -> SpecialResult<i32> {
 }
 
 /// Check if order m is valid for associated functions (|m| <= l)
-pub fn check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
+pub fn _check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
     if m.abs() > l {
         return Err(SpecialError::DomainError(format!(
             "|m| must be <= l, got |{}| > {}",
@@ -127,18 +137,16 @@ pub fn check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
 }
 
 /// Check convergence parameters
-pub fn check_convergence_params(max_iter: usize, tolerance: f64) -> SpecialResult<()> {
+pub fn _check_convergence_params(max_iter: usize, tolerance: f64) -> SpecialResult<()> {
     if max_iter == 0 {
-        return Err(SpecialError::ValueError(
-            "max_iter must be > 0".to_string()
-        ));
+        return Err(SpecialError::ValueError("max_iter must be > 0".to_string()));
     }
     check_positive(tolerance, "tolerance")?;
     Ok(())
 }
 
 /// Helper to convert convergence failures to ConvergenceError
-pub fn convergence_error(function: &str, iterations: usize) -> SpecialError {
+pub fn _convergence_error(function: &str, iterations: usize) -> SpecialError {
     SpecialError::ConvergenceError(format!(
         "{} did not converge after {} iterations",
         function, iterations
@@ -146,7 +154,7 @@ pub fn convergence_error(function: &str, iterations: usize) -> SpecialError {
 }
 
 /// Helper to convert not implemented features to NotImplementedError
-pub fn not_implemented(feature: &str) -> SpecialError {
+pub fn _not_implemented(feature: &str) -> SpecialError {
     SpecialError::NotImplementedError(format!("{} is not yet implemented", feature))
 }
 

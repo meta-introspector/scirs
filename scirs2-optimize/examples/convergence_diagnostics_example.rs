@@ -1,6 +1,6 @@
 //! Example of using convergence diagnostics with optimization
 
-use ndarray::{array, Array1, ArrayView1};
+use ndarray::{array, ArrayView1};
 use scirs2_optimize::unconstrained::{
     minimize_bfgs, DiagnosticCollector, DiagnosticOptions, ExportFormat, LineSearchDiagnostic,
     Options,

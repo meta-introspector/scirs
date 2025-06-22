@@ -26,7 +26,7 @@ rand_distr = { workspace = true }
 rayon = { workspace = true }
 friedrich = { workspace = true }
 scirs2-sparse = { workspace = true }
-ndarray-linalg = { workspace = true }
+ndarray-linalg = { workspace = true, features = ["openblas-system"] }
 
 # Async dependencies (optional)
 tokio = { workspace = true, optional = true }

@@ -361,12 +361,17 @@ where
                     )
                 })?;
 
+                // Write header length first (8 bytes)
+                let header_len = header_bytes.len() as u64;
+                file.write_all(&header_len.to_le_bytes())
+                    .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
+
                 // Write header to file
                 file.write_all(&header_bytes)
                     .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
-                // Calculate total file size (header + data)
-                let header_size = header_bytes.len();
+                // Calculate total file size (header length + header + data)
+                let header_size = 8 + header_bytes.len(); // 8 bytes for header length + header bytes
                 let total_size = header_size + data_size;
 
                 // Set file length to accommodate header and data
@@ -374,9 +379,11 @@ where
                     .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
                 // Create a mutable memory mapping
+                // When we have a header, the actual data starts after the header
+                let data_offset = header_size + offset;
                 let mut mmap = unsafe {
                     MmapOptions::new()
-                        .offset(offset as u64)
+                        .offset(data_offset as u64)
                         .len(data_size)
                         .map_mut(&file)
                         .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?
@@ -400,7 +407,7 @@ where
                     shape,
                     file_path: file_path.to_path_buf(),
                     mode,
-                    offset,
+                    offset: data_offset, // Store the actual data offset, not the requested offset
                     size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),

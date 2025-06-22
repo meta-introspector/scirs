@@ -85,6 +85,8 @@ pub mod constants;
 pub mod error;
 #[cfg(feature = "gpu")]
 pub mod gpu;
+#[cfg(feature = "gpu")]
+pub mod gpu_registry;
 pub mod io;
 #[cfg(feature = "logging")]
 pub mod logging;
@@ -105,6 +107,7 @@ pub mod random;
 pub mod resource;
 #[cfg(feature = "simd")]
 pub mod simd;
+pub mod simd_ops;
 #[cfg(feature = "testing")]
 pub mod testing;
 // Universal Functions (ufuncs) module

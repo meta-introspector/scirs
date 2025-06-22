@@ -2,12 +2,12 @@
 //!
 //! This module provides SIMD-accelerated implementations of various matrix
 //! and vector norms for improved performance over scalar implementations.
+//! All SIMD operations are delegated to scirs2-core::simd_ops for unified optimization.
 
-// LinalgError and LinalgResult imports removed as they are not used in this module
 #[cfg(feature = "simd")]
 use ndarray::{ArrayView1, ArrayView2};
 #[cfg(feature = "simd")]
-use wide::{f32x8, f64x4};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 
 /// SIMD-accelerated Frobenius norm for f32 matrices
 ///
@@ -23,28 +23,15 @@ use wide::{f32x8, f64x4};
 /// * Frobenius norm of the matrix
 #[cfg(feature = "simd")]
 pub fn simd_frobenius_norm_f32(matrix: &ArrayView2<f32>) -> f32 {
-    let _n = matrix.len();
+    let mut sum_sq = 0.0f32;
 
-    if let Some(flat_data) = matrix.as_slice() {
-        // Process with SIMD when data is contiguous
-        simd_frobenius_norm_flat_f32(flat_data)
-    } else {
-        // Fallback for non-contiguous data using row-wise processing
-        let mut sum_sq = 0.0f32;
-
-        for row in matrix.rows() {
-            if let Some(row_slice) = row.as_slice() {
-                sum_sq += simd_vector_norm_squared_f32(row_slice);
-            } else {
-                // Fallback to scalar computation
-                for &val in row.iter() {
-                    sum_sq += val * val;
-                }
-            }
-        }
-
-        sum_sq.sqrt()
+    // Process row by row using unified SIMD operations
+    for row in matrix.rows() {
+        // Compute dot product of row with itself (sum of squares)
+        sum_sq += f32::simd_dot(&row, &row);
     }
+
+    sum_sq.sqrt()
 }
 
 /// SIMD-accelerated Frobenius norm for f64 matrices
@@ -61,28 +48,15 @@ pub fn simd_frobenius_norm_f32(matrix: &ArrayView2<f32>) -> f32 {
 /// * Frobenius norm of the matrix
 #[cfg(feature = "simd")]
 pub fn simd_frobenius_norm_f64(matrix: &ArrayView2<f64>) -> f64 {
-    let _n = matrix.len();
+    let mut sum_sq = 0.0f64;
 
-    if let Some(flat_data) = matrix.as_slice() {
-        // Process with SIMD when data is contiguous
-        simd_frobenius_norm_flat_f64(flat_data)
-    } else {
-        // Fallback for non-contiguous data using row-wise processing
-        let mut sum_sq = 0.0f64;
-
-        for row in matrix.rows() {
-            if let Some(row_slice) = row.as_slice() {
-                sum_sq += simd_vector_norm_squared_f64(row_slice);
-            } else {
-                // Fallback to scalar computation
-                for &val in row.iter() {
-                    sum_sq += val * val;
-                }
-            }
-        }
-
-        sum_sq.sqrt()
+    // Process row by row using unified SIMD operations
+    for row in matrix.rows() {
+        // Compute dot product of row with itself (sum of squares)
+        sum_sq += f64::simd_dot(&row, &row);
     }
+
+    sum_sq.sqrt()
 }
 
 /// SIMD-accelerated vector 2-norm (Euclidean norm) for f32
@@ -96,16 +70,8 @@ pub fn simd_frobenius_norm_f64(matrix: &ArrayView2<f64>) -> f64 {
 /// * Euclidean norm of the vector
 #[cfg(feature = "simd")]
 pub fn simd_vector_norm_f32(vector: &ArrayView1<f32>) -> f32 {
-    if let Some(data) = vector.as_slice() {
-        simd_vector_norm_squared_f32(data).sqrt()
-    } else {
-        // Fallback for non-contiguous data
-        let mut sum_sq = 0.0f32;
-        for &val in vector.iter() {
-            sum_sq += val * val;
-        }
-        sum_sq.sqrt()
-    }
+    // Use unified SIMD norm operation
+    f32::simd_norm(vector)
 }
 
 /// SIMD-accelerated vector 2-norm (Euclidean norm) for f64
@@ -119,16 +85,8 @@ pub fn simd_vector_norm_f32(vector: &ArrayView1<f32>) -> f32 {
 /// * Euclidean norm of the vector
 #[cfg(feature = "simd")]
 pub fn simd_vector_norm_f64(vector: &ArrayView1<f64>) -> f64 {
-    if let Some(data) = vector.as_slice() {
-        simd_vector_norm_squared_f64(data).sqrt()
-    } else {
-        // Fallback for non-contiguous data
-        let mut sum_sq = 0.0f64;
-        for &val in vector.iter() {
-            sum_sq += val * val;
-        }
-        sum_sq.sqrt()
-    }
+    // Use unified SIMD norm operation
+    f64::simd_norm(vector)
 }
 
 /// SIMD-accelerated vector 1-norm (Manhattan norm) for f32
@@ -142,12 +100,9 @@ pub fn simd_vector_norm_f64(vector: &ArrayView1<f64>) -> f64 {
 /// * 1-norm (sum of absolute values) of the vector
 #[cfg(feature = "simd")]
 pub fn simd_vector_norm1_f32(vector: &ArrayView1<f32>) -> f32 {
-    if let Some(data) = vector.as_slice() {
-        simd_vector_norm1_flat_f32(data)
-    } else {
-        // Fallback for non-contiguous data
-        vector.iter().map(|&x| x.abs()).sum()
-    }
+    // Compute absolute values then sum
+    let abs_vec = f32::simd_abs(vector);
+    f32::simd_sum(&abs_vec.view())
 }
 
 /// SIMD-accelerated vector 1-norm (Manhattan norm) for f64
@@ -161,12 +116,9 @@ pub fn simd_vector_norm1_f32(vector: &ArrayView1<f32>) -> f32 {
 /// * 1-norm (sum of absolute values) of the vector
 #[cfg(feature = "simd")]
 pub fn simd_vector_norm1_f64(vector: &ArrayView1<f64>) -> f64 {
-    if let Some(data) = vector.as_slice() {
-        simd_vector_norm1_flat_f64(data)
-    } else {
-        // Fallback for non-contiguous data
-        vector.iter().map(|&x| x.abs()).sum()
-    }
+    // Compute absolute values then sum
+    let abs_vec = f64::simd_abs(vector);
+    f64::simd_sum(&abs_vec.view())
 }
 
 /// SIMD-accelerated vector infinity norm (maximum absolute value) for f32
@@ -180,12 +132,9 @@ pub fn simd_vector_norm1_f64(vector: &ArrayView1<f64>) -> f64 {
 /// * Infinity norm (maximum absolute value) of the vector
 #[cfg(feature = "simd")]
 pub fn simd_vector_norm_inf_f32(vector: &ArrayView1<f32>) -> f32 {
-    if let Some(data) = vector.as_slice() {
-        simd_vector_norm_inf_flat_f32(data)
-    } else {
-        // Fallback for non-contiguous data
-        vector.iter().map(|&x| x.abs()).fold(0.0f32, f32::max)
-    }
+    // Compute absolute values then find maximum
+    let abs_vec = f32::simd_abs(vector);
+    f32::simd_max_element(&abs_vec.view())
 }
 
 /// SIMD-accelerated vector infinity norm (maximum absolute value) for f64
@@ -199,12 +148,9 @@ pub fn simd_vector_norm_inf_f32(vector: &ArrayView1<f32>) -> f32 {
 /// * Infinity norm (maximum absolute value) of the vector
 #[cfg(feature = "simd")]
 pub fn simd_vector_norm_inf_f64(vector: &ArrayView1<f64>) -> f64 {
-    if let Some(data) = vector.as_slice() {
-        simd_vector_norm_inf_flat_f64(data)
-    } else {
-        // Fallback for non-contiguous data
-        vector.iter().map(|&x| x.abs()).fold(0.0f64, f64::max)
-    }
+    // Compute absolute values then find maximum
+    let abs_vec = f64::simd_abs(vector);
+    f64::simd_max_element(&abs_vec.view())
 }
 
 /// SIMD-accelerated matrix 1-norm (maximum column sum) for f32
@@ -295,270 +241,7 @@ pub fn simd_matrix_norm_inf_f64(matrix: &ArrayView2<f64>) -> f64 {
     max_row_sum
 }
 
-// Helper functions for flat array processing
-
-/// SIMD computation of sum of squares for flat f32 array
-#[cfg(feature = "simd")]
-fn simd_frobenius_norm_flat_f32(data: &[f32]) -> f32 {
-    simd_vector_norm_squared_f32(data).sqrt()
-}
-
-/// SIMD computation of sum of squares for flat f64 array
-#[cfg(feature = "simd")]
-fn simd_frobenius_norm_flat_f64(data: &[f64]) -> f64 {
-    simd_vector_norm_squared_f64(data).sqrt()
-}
-
-/// SIMD computation of sum of squares for f32 vector
-#[cfg(feature = "simd")]
-fn simd_vector_norm_squared_f32(data: &[f32]) -> f32 {
-    let n = data.len();
-    let mut i = 0;
-    let chunk_size = 8;
-    let mut sum_vec = f32x8::splat(0.0);
-
-    // Process 8 elements at a time
-    while i + chunk_size <= n {
-        let chunk = [
-            data[i],
-            data[i + 1],
-            data[i + 2],
-            data[i + 3],
-            data[i + 4],
-            data[i + 5],
-            data[i + 6],
-            data[i + 7],
-        ];
-        let vec = f32x8::new(chunk);
-        sum_vec += vec * vec;
-        i += chunk_size;
-    }
-
-    // Extract sum from SIMD vector
-    let sum_arr: [f32; 8] = sum_vec.into();
-    let mut sum = sum_arr.iter().sum::<f32>();
-
-    // Process remaining elements
-    for &val in data.iter().skip(i) {
-        sum += val * val;
-    }
-
-    sum
-}
-
-/// SIMD computation of sum of squares for f64 vector
-#[cfg(feature = "simd")]
-fn simd_vector_norm_squared_f64(data: &[f64]) -> f64 {
-    let n = data.len();
-    let mut i = 0;
-    let chunk_size = 4;
-    let mut sum_vec = f64x4::splat(0.0);
-
-    // Process 4 elements at a time
-    while i + chunk_size <= n {
-        let chunk = [data[i], data[i + 1], data[i + 2], data[i + 3]];
-        let vec = f64x4::new(chunk);
-        sum_vec += vec * vec;
-        i += chunk_size;
-    }
-
-    // Extract sum from SIMD vector
-    let sum_arr: [f64; 4] = sum_vec.into();
-    let mut sum = sum_arr.iter().sum::<f64>();
-
-    // Process remaining elements
-    for &val in data.iter().skip(i) {
-        sum += val * val;
-    }
-
-    sum
-}
-
-/// SIMD computation of 1-norm for f32 vector
-#[cfg(feature = "simd")]
-fn simd_vector_norm1_flat_f32(data: &[f32]) -> f32 {
-    let n = data.len();
-    let mut i = 0;
-    let chunk_size = 8;
-    let mut sum_vec = f32x8::splat(0.0);
-
-    // Process 8 elements at a time
-    while i + chunk_size <= n {
-        let chunk = [
-            data[i],
-            data[i + 1],
-            data[i + 2],
-            data[i + 3],
-            data[i + 4],
-            data[i + 5],
-            data[i + 6],
-            data[i + 7],
-        ];
-        // Compute absolute values (simplified - would use actual SIMD abs in production)
-        let abs_vec = f32x8::new([
-            chunk[0].abs(),
-            chunk[1].abs(),
-            chunk[2].abs(),
-            chunk[3].abs(),
-            chunk[4].abs(),
-            chunk[5].abs(),
-            chunk[6].abs(),
-            chunk[7].abs(),
-        ]);
-        sum_vec += abs_vec;
-        i += chunk_size;
-    }
-
-    // Extract sum from SIMD vector
-    let sum_arr: [f32; 8] = sum_vec.into();
-    let mut sum = sum_arr.iter().sum::<f32>();
-
-    // Process remaining elements
-    for &val in data.iter().skip(i) {
-        sum += val.abs();
-    }
-
-    sum
-}
-
-/// SIMD computation of 1-norm for f64 vector
-#[cfg(feature = "simd")]
-fn simd_vector_norm1_flat_f64(data: &[f64]) -> f64 {
-    let n = data.len();
-    let mut i = 0;
-    let chunk_size = 4;
-    let mut sum_vec = f64x4::splat(0.0);
-
-    // Process 4 elements at a time
-    while i + chunk_size <= n {
-        let chunk = [data[i], data[i + 1], data[i + 2], data[i + 3]];
-        // Compute absolute values (simplified - would use actual SIMD abs in production)
-        let abs_vec = f64x4::new([
-            chunk[0].abs(),
-            chunk[1].abs(),
-            chunk[2].abs(),
-            chunk[3].abs(),
-        ]);
-        sum_vec += abs_vec;
-        i += chunk_size;
-    }
-
-    // Extract sum from SIMD vector
-    let sum_arr: [f64; 4] = sum_vec.into();
-    let mut sum = sum_arr.iter().sum::<f64>();
-
-    // Process remaining elements
-    for &val in data.iter().skip(i) {
-        sum += val.abs();
-    }
-
-    sum
-}
-
-/// SIMD computation of infinity norm for f32 vector
-#[cfg(feature = "simd")]
-fn simd_vector_norm_inf_flat_f32(data: &[f32]) -> f32 {
-    let n = data.len();
-    let mut i = 0;
-    let chunk_size = 8;
-    let mut max_vec = f32x8::splat(0.0);
-
-    // Process 8 elements at a time
-    while i + chunk_size <= n {
-        let chunk = [
-            data[i],
-            data[i + 1],
-            data[i + 2],
-            data[i + 3],
-            data[i + 4],
-            data[i + 5],
-            data[i + 6],
-            data[i + 7],
-        ];
-        // Compute absolute values (simplified - would use actual SIMD abs in production)
-        let abs_vec = f32x8::new([
-            chunk[0].abs(),
-            chunk[1].abs(),
-            chunk[2].abs(),
-            chunk[3].abs(),
-            chunk[4].abs(),
-            chunk[5].abs(),
-            chunk[6].abs(),
-            chunk[7].abs(),
-        ]);
-
-        // Element-wise maximum (simplified - would use SIMD max)
-        let max_arr: [f32; 8] = max_vec.into();
-        let abs_arr: [f32; 8] = abs_vec.into();
-        let new_max = [
-            max_arr[0].max(abs_arr[0]),
-            max_arr[1].max(abs_arr[1]),
-            max_arr[2].max(abs_arr[2]),
-            max_arr[3].max(abs_arr[3]),
-            max_arr[4].max(abs_arr[4]),
-            max_arr[5].max(abs_arr[5]),
-            max_arr[6].max(abs_arr[6]),
-            max_arr[7].max(abs_arr[7]),
-        ];
-        max_vec = f32x8::new(new_max);
-        i += chunk_size;
-    }
-
-    // Extract maximum from SIMD vector
-    let max_arr: [f32; 8] = max_vec.into();
-    let mut max_val = max_arr.iter().fold(0.0f32, |a, &b| a.max(b));
-
-    // Process remaining elements
-    for &val in data.iter().skip(i) {
-        max_val = max_val.max(val.abs());
-    }
-
-    max_val
-}
-
-/// SIMD computation of infinity norm for f64 vector
-#[cfg(feature = "simd")]
-fn simd_vector_norm_inf_flat_f64(data: &[f64]) -> f64 {
-    let n = data.len();
-    let mut i = 0;
-    let chunk_size = 4;
-    let mut max_vec = f64x4::splat(0.0);
-
-    // Process 4 elements at a time
-    while i + chunk_size <= n {
-        let chunk = [data[i], data[i + 1], data[i + 2], data[i + 3]];
-        // Compute absolute values (simplified - would use actual SIMD abs in production)
-        let abs_vec = f64x4::new([
-            chunk[0].abs(),
-            chunk[1].abs(),
-            chunk[2].abs(),
-            chunk[3].abs(),
-        ]);
-
-        // Element-wise maximum (simplified - would use SIMD max)
-        let max_arr: [f64; 4] = max_vec.into();
-        let abs_arr: [f64; 4] = abs_vec.into();
-        let new_max = [
-            max_arr[0].max(abs_arr[0]),
-            max_arr[1].max(abs_arr[1]),
-            max_arr[2].max(abs_arr[2]),
-            max_arr[3].max(abs_arr[3]),
-        ];
-        max_vec = f64x4::new(new_max);
-        i += chunk_size;
-    }
-
-    // Extract maximum from SIMD vector
-    let max_arr: [f64; 4] = max_vec.into();
-    let mut max_val = max_arr.iter().fold(0.0f64, |a, &b| a.max(b));
-
-    // Process remaining elements
-    for &val in data.iter().skip(i) {
-        max_val = max_val.max(val.abs());
-    }
-
-    max_val
-}
+// Note: Helper functions have been removed as we now use unified SIMD operations from scirs2-core
 
 #[cfg(all(test, feature = "simd"))]
 mod tests {

@@ -2,10 +2,11 @@
 //!
 //! A fast benchmark suite for getting concrete performance measurements
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::distance::{euclidean, manhattan, pdist};
+use std::hint::black_box;
 use std::time::Duration;
 
 // Simple data generator

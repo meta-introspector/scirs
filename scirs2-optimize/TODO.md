@@ -43,14 +43,14 @@ This module provides comprehensive optimization algorithms similar to SciPy's op
 ### Usability & Integration
 - [x] Comprehensive benchmarking suite against SciPy
 - [x] Advanced callback system for monitoring
-- [ ] Integration with scirs2-neural for ML optimization
+- [x] Integration with scirs2-neural for ML optimization
 - [ ] Visualization tools for optimization trajectories
 
 ### Advanced Methods  
 - [ ] GPU acceleration for suitable algorithms
 - [ ] Distributed optimization via MPI
 - [ ] Self-tuning parameter selection
-- [ ] Specialized ML optimizers (L1/group regularization)
+- [x] Specialized ML optimizers (L1/group regularization)
 
 ## 🔧 Technical Notes
 

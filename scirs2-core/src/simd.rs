@@ -668,8 +668,8 @@ pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
         "Arrays must have the same length for SIMD operations"
     );
 
-    let a_slice = a.as_slice().unwrap();
-    let b_slice = b.as_slice().unwrap();
+    // Check if arrays are contiguous
+    if let (Some(a_slice), Some(b_slice)) = (a.as_slice(), b.as_slice()) {
 
     let mut sum_vec = f32x8::splat(0.0);
     let mut i = 0;
@@ -704,16 +704,24 @@ pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
         i += chunk_size;
     }
 
-    // Sum up the SIMD vector
-    let sum_arr: [f32; 8] = sum_vec.into();
-    let mut result = sum_arr.iter().sum::<f32>();
+        // Sum up the SIMD vector
+        let sum_arr: [f32; 8] = sum_vec.into();
+        let mut result = sum_arr.iter().sum::<f32>();
 
-    // Process remaining elements
-    for j in i..n {
-        result += a[j] * b[j];
+        // Process remaining elements
+        for j in i..n {
+            result += a_slice[j] * b_slice[j];
+        }
+
+        result
+    } else {
+        // Fallback for non-contiguous arrays
+        let mut result = 0.0f32;
+        for i in 0..n {
+            result += a[i] * b[i];
+        }
+        result
     }
-
-    result
 }
 
 /// Compute dot product of two f64 arrays using SIMD
@@ -726,8 +734,8 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
         "Arrays must have the same length for SIMD operations"
     );
 
-    let a_slice = a.as_slice().unwrap();
-    let b_slice = b.as_slice().unwrap();
+    // Check if arrays are contiguous
+    if let (Some(a_slice), Some(b_slice)) = (a.as_slice(), b.as_slice()) {
 
     let mut sum_vec = f64x4::splat(0.0);
     let mut i = 0;
@@ -744,16 +752,24 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
         i += chunk_size;
     }
 
-    // Sum up the SIMD vector
-    let sum_arr: [f64; 4] = sum_vec.into();
-    let mut result = sum_arr.iter().sum::<f64>();
+        // Sum up the SIMD vector
+        let sum_arr: [f64; 4] = sum_vec.into();
+        let mut result = sum_arr.iter().sum::<f64>();
 
-    // Process remaining elements
-    for j in i..n {
-        result += a[j] * b[j];
+        // Process remaining elements
+        for j in i..n {
+            result += a_slice[j] * b_slice[j];
+        }
+
+        result
+    } else {
+        // Fallback for non-contiguous arrays
+        let mut result = 0.0f64;
+        for i in 0..n {
+            result += a[i] * b[i];
+        }
+        result
     }
-
-    result
 }
 
 /// Apply scalar multiplication to an f32 array using SIMD

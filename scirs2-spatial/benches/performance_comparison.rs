@@ -4,7 +4,6 @@
 //! comparing against reference implementations, and producing detailed
 //! performance reports with charts and statistics.
 
-use std::hint::black_box;
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
@@ -12,6 +11,7 @@ use scirs2_spatial::{
     simd_distance::{parallel_pdist, simd_euclidean_distance_batch, simd_knn_search},
     BallTree, KDTree,
 };
+use std::hint::black_box;
 use std::time::{Duration, Instant};
 
 /// Dataset generator for realistic spatial data patterns

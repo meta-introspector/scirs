@@ -60,7 +60,7 @@
 
 ## 🔮 Future Roadmap
 
-**Note**: The alpha phase is complete. The following features are planned for future releases:
+**Note**: The following features are planned for future releases:
 
 ### 🧠 Advanced ML Integration
 - [ ] Neural forecasting models (LSTM, Transformer, N-BEATS)
@@ -75,8 +75,8 @@
 - [ ] Streaming time series analysis
 
 ### 🔧 Code Quality & Refactoring
-- [ ] Refactor feature_selection.rs (2514 lines) into smaller modules per CLAUDE.md guidelines
-- [ ] Consider modularizing other large files if they exceed 2000 lines
+- [x] Refactor feature_selection.rs (2514 lines) into smaller modules per CLAUDE.md guidelines
+- [x] All source files now comply with <2000 line limit (largest is forecasting.rs at 1546 lines)
 
 ### 🌐 Domain-Specific Extensions
 - [ ] Financial time series toolkit (GARCH, technical indicators)

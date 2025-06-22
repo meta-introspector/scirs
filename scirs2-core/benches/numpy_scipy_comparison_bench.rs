@@ -3,10 +3,11 @@
 //! This benchmark suite compares scirs2-core performance against equivalent
 //! NumPy/SciPy operations to validate Beta 1 performance targets.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Axis};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
+use std::hint::black_box;
 use std::time::Duration;
 
 const SIZES: &[usize] = &[100, 1000, 10000, 100000];
@@ -237,7 +238,7 @@ fn bench_array_manipulation(c: &mut Criterion) {
             if rows * cols == size {
                 group.bench_with_input(BenchmarkId::new("reshape", size), &arr, |b, a| {
                     b.iter(|| {
-                        let result = a.clone().into_shape((rows, cols)).unwrap();
+                        let result = a.clone().into_shape_with_order((rows, cols)).unwrap();
                         black_box(result)
                     })
                 });

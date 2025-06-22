@@ -216,7 +216,6 @@ pub mod fast_paths {
             return Err("Invalid matrix dimensions");
         }
 
-
         // Tile sizes for cache optimization
         const TILE_M: usize = 64;
         const TILE_N: usize = 64;

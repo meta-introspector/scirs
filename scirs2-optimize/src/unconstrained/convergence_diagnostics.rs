@@ -11,9 +11,8 @@
 //! - Visualization data export
 
 use crate::error::OptimizeError;
-use crate::unconstrained::adaptive_convergence::ConvergenceStatus;
-use ndarray::{Array1, Array2, ArrayView1};
-use std::collections::{HashMap, VecDeque};
+use ndarray::ArrayView1;
+use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
 /// Comprehensive convergence diagnostics
@@ -666,32 +665,32 @@ impl DiagnosticCollector {
 
         score
     }
-    
+
     /// Count decreasing pairs in a VecDeque
     fn count_decreasing_pairs(&self, values: &VecDeque<f64>) -> usize {
         let mut count = 0;
         for i in 1..values.len() {
-            if values[i] < values[i-1] {
+            if values[i] < values[i - 1] {
                 count += 1;
             }
         }
         count
     }
-    
+
     /// Check if function values are stagnant
     fn is_f_stagnant(&self) -> bool {
         if self.f_history.len() < 2 {
             return false;
         }
-        
+
         let mut count = 0;
         let n = self.f_history.len().min(6); // Check last 5 pairs
         for i in (self.f_history.len() - n + 1)..self.f_history.len() {
-            if (self.f_history[i] - self.f_history[i-1]).abs() < 1e-12 {
+            if (self.f_history[i] - self.f_history[i - 1]).abs() < 1e-12 {
                 count += 1;
             }
         }
-        
+
         count >= n - 1 // All recent pairs are stagnant
     }
 
@@ -812,10 +811,10 @@ impl DiagnosticCollector {
 
         let mut sign_changes = 0;
         let mut diffs = Vec::new();
-        
+
         // Compute differences
         for i in 1..self.f_history.len() {
-            diffs.push(self.f_history[i] - self.f_history[i-1]);
+            diffs.push(self.f_history[i] - self.f_history[i - 1]);
         }
 
         for i in 1..diffs.len() {
@@ -1115,6 +1114,7 @@ impl ConvergenceDiagnostics {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ndarray::Array1;
 
     #[test]
     fn test_diagnostic_collector() {
