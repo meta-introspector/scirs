@@ -528,16 +528,9 @@ where
         workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         // Set up parallel configuration
-        let _pool = if let Some(n_workers) = workers {
-            Some(
-                rayon::ThreadPoolBuilder::new()
-                    .num_threads(n_workers)
-                    .build()
-                    .map_err(|e| InterpolateError::ComputationError(e.to_string()))?,
-            )
-        } else {
-            None
-        };
+        // Thread pool configuration is now handled globally by scirs2-core
+        // The workers parameter is preserved for future use but currently ignored
+        let _ = workers;
 
         // For simplicity, use sequential processing for now
         // A full parallel implementation would require thread-safe statistics collection

@@ -520,18 +520,10 @@ where
         let points = &self.points;
 
         // Configure thread pool based on config
-        let results: Result<Vec<_>, InterpolateError> = if let Some(num_threads) =
-            self.config.num_threads
-        {
-            // Use custom thread pool with specified number of threads
-            let pool = ThreadPoolBuilder::new()
-                .num_threads(num_threads)
-                .build()
-                .map_err(|_| {
-                    InterpolateError::ComputationError("Failed to create thread pool".to_string())
-                })?;
-
-            pool.install(|| {
+        let results: Result<Vec<_>, InterpolateError> =
+            if let Some(_num_threads) = self.config.num_threads {
+                // Thread pool configuration is now handled globally by scirs2-core
+                // The num_threads parameter is preserved for future use but currently ignored
                 (0..queries_owned.nrows())
                     .into_par_iter()
                     .map(|i| {
@@ -539,17 +531,16 @@ where
                         Self::parallel_brute_force_knn(&query, k, points)
                     })
                     .collect()
-            })
-        } else {
-            // Use default thread pool
-            (0..queries_owned.nrows())
-                .into_par_iter()
-                .map(|i| {
-                    let query = queries_owned.slice(ndarray::s![i, ..]);
-                    Self::parallel_brute_force_knn(&query, k, points)
-                })
-                .collect()
-        };
+            } else {
+                // Use default thread pool
+                (0..queries_owned.nrows())
+                    .into_par_iter()
+                    .map(|i| {
+                        let query = queries_owned.slice(ndarray::s![i, ..]);
+                        Self::parallel_brute_force_knn(&query, k, points)
+                    })
+                    .collect()
+            };
 
         results
     }

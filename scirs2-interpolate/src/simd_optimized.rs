@@ -49,8 +49,8 @@
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
+use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 use std::fmt::{Debug, Display};
-use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities};
 
 /// RBF kernel types for SIMD evaluation
 #[derive(Debug, Clone, Copy)]
@@ -90,11 +90,23 @@ impl SimdConfig {
     /// Detect SIMD capabilities on the current platform using core abstractions
     pub fn detect() -> Self {
         let caps = PlatformCapabilities::detect();
-        
+
         Self {
             simd_available: caps.simd_available,
-            f32_width: if caps.avx2_available { 8 } else if caps.simd_available { 4 } else { 1 },
-            f64_width: if caps.avx2_available { 4 } else if caps.simd_available { 2 } else { 1 },
+            f32_width: if caps.avx2_available {
+                8
+            } else if caps.simd_available {
+                4
+            } else {
+                1
+            },
+            f64_width: if caps.avx2_available {
+                4
+            } else if caps.simd_available {
+                2
+            } else {
+                1
+            },
             instruction_set: if caps.avx512_available {
                 "AVX512".to_string()
             } else if caps.avx2_available {
@@ -195,9 +207,10 @@ fn simd_rbf_evaluate_f64(
     kernel: RBFKernel,
     epsilon: f64,
 ) -> InterpolateResult<Array1<f64>> {
-    let config = SimdConfig::detect();
+    let optimizer = AutoOptimizer::new();
+    let problem_size = queries.nrows() * centers.nrows() * queries.ncols();
 
-    if config.simd_available && config.f64_width >= 2 {
+    if optimizer.should_use_simd(problem_size) {
         simd_rbf_evaluate_f64_vectorized(queries, centers, coefficients, kernel, epsilon)
     } else {
         let mut results = Array1::zeros(queries.nrows());
@@ -214,7 +227,6 @@ fn simd_rbf_evaluate_f64(
 }
 
 /// Vectorized f64 RBF evaluation using SIMD
-#[cfg(target_arch = "x86_64")]
 fn simd_rbf_evaluate_f64_vectorized(
     queries: &ArrayView2<f64>,
     centers: &ArrayView2<f64>,
@@ -223,259 +235,45 @@ fn simd_rbf_evaluate_f64_vectorized(
     epsilon: f64,
 ) -> InterpolateResult<Array1<f64>> {
     let n_queries = queries.nrows();
-    #[allow(unused_variables)]
     let n_centers = centers.nrows();
-    #[allow(unused_variables)]
     let dims = queries.ncols();
     let mut results = Array1::zeros(n_queries);
 
-    if is_x86_feature_detected!("avx2") {
-        unsafe {
-            simd_rbf_evaluate_avx2(
-                queries,
-                centers,
-                coefficients,
-                kernel,
-                epsilon,
-                &mut results,
-            )?;
+    // Use core SIMD operations for optimized computation
+    for q in 0..n_queries {
+        let query_row = queries.row(q);
+        let mut sum = 0.0;
+
+        for c in 0..n_centers {
+            let center_row = centers.row(c);
+
+            // Compute squared distance using SIMD operations
+            let diff = &query_row - &center_row;
+            let diff_arr = diff.to_owned();
+            let dist_sq = f64::simd_dot(&diff_arr.view(), &diff_arr.view());
+
+            // Apply kernel
+            let kernel_val = match kernel {
+                RBFKernel::Gaussian => (-dist_sq / (epsilon * epsilon)).exp(),
+                RBFKernel::Multiquadric => (dist_sq + epsilon * epsilon).sqrt(),
+                RBFKernel::InverseMultiquadric => 1.0 / (dist_sq + epsilon * epsilon).sqrt(),
+                RBFKernel::Linear => dist_sq.sqrt(),
+                RBFKernel::Cubic => {
+                    let r = dist_sq.sqrt();
+                    r * r * r
+                }
+            };
+
+            sum += coefficients[c] * kernel_val;
         }
-    } else if is_x86_feature_detected!("sse2") {
-        unsafe {
-            simd_rbf_evaluate_sse2(
-                queries,
-                centers,
-                coefficients,
-                kernel,
-                epsilon,
-                &mut results,
-            )?;
-        }
-    } else {
-        simd_rbf_evaluate_scalar(
-            &queries.view(),
-            &centers.view(),
-            coefficients,
-            kernel,
-            epsilon,
-            &mut results.view_mut(),
-        )?;
+
+        results[q] = sum;
     }
 
     Ok(results)
 }
 
-/// AVX2 implementation for f64 RBF evaluation
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "avx2")]
-unsafe fn simd_rbf_evaluate_avx2(
-    queries: &ArrayView2<f64>,
-    centers: &ArrayView2<f64>,
-    coefficients: &[f64],
-    kernel: RBFKernel,
-    epsilon: f64,
-    results: &mut Array1<f64>,
-) -> InterpolateResult<()> {
-    let n_queries = queries.nrows();
-    let n_centers = centers.nrows();
-    let dims = queries.ncols();
-
-    // Process 4 f64 values at a time with AVX2
-    let simd_width = 4;
-    let _epsilon_vec = _mm256_set1_pd(epsilon);
-    let epsilon_sq_vec = _mm256_set1_pd(epsilon * epsilon);
-
-    for q in 0..n_queries {
-        let mut result_vec = _mm256_setzero_pd();
-
-        // Process centers in chunks of 4
-        for c_chunk in (0..n_centers).step_by(simd_width) {
-            let chunk_size = (n_centers - c_chunk).min(simd_width);
-
-            if chunk_size == simd_width {
-                // Load coefficients
-                let coeff_vec = _mm256_loadu_pd(coefficients.as_ptr().add(c_chunk));
-
-                // Compute distances squared
-                let mut dist_sq_vec = _mm256_setzero_pd();
-
-                for d in 0..dims {
-                    let query_val = _mm256_set1_pd(queries[[q, d]]);
-                    let center_vals = _mm256_set_pd(
-                        centers[[c_chunk + 3, d]],
-                        centers[[c_chunk + 2, d]],
-                        centers[[c_chunk + 1, d]],
-                        centers[[c_chunk, d]],
-                    );
-
-                    let diff = _mm256_sub_pd(query_val, center_vals);
-                    dist_sq_vec = _mm256_fmadd_pd(diff, diff, dist_sq_vec);
-                }
-
-                // Apply RBF kernel
-                let kernel_vals = match kernel {
-                    RBFKernel::Gaussian => {
-                        let neg_dist_sq_eps = _mm256_div_pd(
-                            _mm256_sub_pd(_mm256_setzero_pd(), dist_sq_vec),
-                            epsilon_sq_vec,
-                        );
-                        simd_exp_pd(neg_dist_sq_eps)
-                    }
-                    RBFKernel::Multiquadric => {
-                        let r_sq_plus_eps_sq = _mm256_add_pd(dist_sq_vec, epsilon_sq_vec);
-                        simd_sqrt_pd(r_sq_plus_eps_sq)
-                    }
-                    RBFKernel::InverseMultiquadric => {
-                        let r_sq_plus_eps_sq = _mm256_add_pd(dist_sq_vec, epsilon_sq_vec);
-                        let sqrt_val = simd_sqrt_pd(r_sq_plus_eps_sq);
-                        _mm256_div_pd(_mm256_set1_pd(1.0), sqrt_val)
-                    }
-                    RBFKernel::Linear => simd_sqrt_pd(dist_sq_vec),
-                    RBFKernel::Cubic => {
-                        let r = simd_sqrt_pd(dist_sq_vec);
-                        _mm256_mul_pd(_mm256_mul_pd(r, r), r)
-                    }
-                };
-
-                // Multiply by coefficients and accumulate
-                let weighted = _mm256_mul_pd(kernel_vals, coeff_vec);
-                result_vec = _mm256_add_pd(result_vec, weighted);
-            } else {
-                // Handle remaining elements with scalar code
-                for c in c_chunk..c_chunk + chunk_size {
-                    let mut dist_sq = 0.0;
-                    for d in 0..dims {
-                        let diff = queries[[q, d]] - centers[[c, d]];
-                        dist_sq += diff * diff;
-                    }
-
-                    let kernel_val = evaluate_rbf_kernel_scalar(dist_sq.sqrt(), epsilon, kernel);
-                    results[q] += coefficients[c] * kernel_val;
-                }
-            }
-        }
-
-        // Horizontal sum of the SIMD result
-        let result_scalar = simd_horizontal_sum_pd(result_vec);
-        results[q] += result_scalar;
-    }
-
-    Ok(())
-}
-
-/// SSE2 implementation for f64 RBF evaluation
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "sse2")]
-unsafe fn simd_rbf_evaluate_sse2(
-    queries: &ArrayView2<f64>,
-    centers: &ArrayView2<f64>,
-    coefficients: &[f64],
-    kernel: RBFKernel,
-    epsilon: f64,
-    results: &mut Array1<f64>,
-) -> InterpolateResult<()> {
-    let n_queries = queries.nrows();
-    let n_centers = centers.nrows();
-    let dims = queries.ncols();
-
-    // Process 2 f64 values at a time with SSE2
-    let simd_width = 2;
-    let _epsilon_vec = _mm_set1_pd(epsilon);
-    let epsilon_sq_vec = _mm_set1_pd(epsilon * epsilon);
-
-    for q in 0..n_queries {
-        let mut result_vec = _mm_setzero_pd();
-
-        // Process centers in chunks of 2
-        for c_chunk in (0..n_centers).step_by(simd_width) {
-            let chunk_size = (n_centers - c_chunk).min(simd_width);
-
-            if chunk_size == simd_width {
-                // Load coefficients
-                let coeff_vec = _mm_loadu_pd(coefficients.as_ptr().add(c_chunk));
-
-                // Compute distances squared
-                let mut dist_sq_vec = _mm_setzero_pd();
-
-                for d in 0..dims {
-                    let query_val = _mm_set1_pd(queries[[q, d]]);
-                    let center_vals = _mm_set_pd(centers[[c_chunk + 1, d]], centers[[c_chunk, d]]);
-
-                    let diff = _mm_sub_pd(query_val, center_vals);
-                    let diff_sq = _mm_mul_pd(diff, diff);
-                    dist_sq_vec = _mm_add_pd(dist_sq_vec, diff_sq);
-                }
-
-                // Apply RBF kernel (simplified for SSE2)
-                let kernel_vals = match kernel {
-                    RBFKernel::Gaussian => {
-                        // Simplified Gaussian approximation for SSE2
-                        let neg_dist_sq_eps =
-                            _mm_div_pd(_mm_sub_pd(_mm_setzero_pd(), dist_sq_vec), epsilon_sq_vec);
-                        simd_exp_pd_sse2(neg_dist_sq_eps)
-                    }
-                    RBFKernel::Linear => simd_sqrt_pd_sse2(dist_sq_vec),
-                    _ => {
-                        // Fallback to scalar for complex kernels
-                        let mut scalar_vals = [0.0; 2];
-                        _mm_storeu_pd(scalar_vals.as_mut_ptr(), dist_sq_vec);
-                        let k1 = evaluate_rbf_kernel_scalar(scalar_vals[0].sqrt(), epsilon, kernel);
-                        let k2 = evaluate_rbf_kernel_scalar(scalar_vals[1].sqrt(), epsilon, kernel);
-                        _mm_set_pd(k2, k1)
-                    }
-                };
-
-                // Multiply by coefficients and accumulate
-                let weighted = _mm_mul_pd(kernel_vals, coeff_vec);
-                result_vec = _mm_add_pd(result_vec, weighted);
-            } else {
-                // Handle remaining elements with scalar code
-                for c in c_chunk..c_chunk + chunk_size {
-                    let mut dist_sq = 0.0;
-                    for d in 0..dims {
-                        let diff = queries[[q, d]] - centers[[c, d]];
-                        dist_sq += diff * diff;
-                    }
-
-                    let kernel_val = evaluate_rbf_kernel_scalar(dist_sq.sqrt(), epsilon, kernel);
-                    results[q] += coefficients[c] * kernel_val;
-                }
-            }
-        }
-
-        // Horizontal sum of the SSE2 result
-        let result_scalar = {
-            let sum_vec = _mm_hadd_pd(result_vec, result_vec);
-            let mut result = 0.0;
-            _mm_store_sd(&mut result, sum_vec);
-            result
-        };
-        results[q] += result_scalar;
-    }
-
-    Ok(())
-}
-
-/// Fallback implementation for non-x86_64 architectures
-#[cfg(not(target_arch = "x86_64"))]
-fn simd_rbf_evaluate_f64_vectorized(
-    queries: &ArrayView2<f64>,
-    centers: &ArrayView2<f64>,
-    coefficients: &[f64],
-    kernel: RBFKernel,
-    epsilon: f64,
-) -> InterpolateResult<Array1<f64>> {
-    let mut results = Array1::zeros(queries.nrows());
-    simd_rbf_evaluate_scalar(
-        &queries.view(),
-        &centers.view(),
-        coefficients,
-        kernel,
-        epsilon,
-        &mut results.view_mut(),
-    )?;
-    Ok(results)
-}
+/// Fallback implementation for all architectures
 
 /// Scalar fallback implementation
 fn simd_rbf_evaluate_scalar<F>(
@@ -585,204 +383,42 @@ where
 }
 
 /// SIMD-optimized distance matrix computation for f64 values
-#[cfg(feature = "simd")]
 fn simd_distance_matrix_f64_vectorized(
     points_a: &ArrayView2<f64>,
     points_b: &ArrayView2<f64>,
 ) -> InterpolateResult<Array2<f64>> {
-    let config = get_simd_config();
+    let n_a = points_a.nrows();
+    let n_b = points_b.nrows();
+    let dims = points_a.ncols();
+    let mut distances = Array2::zeros((n_a, n_b));
 
-    // Use the best available SIMD instruction set based on detected capabilities
-    #[cfg(target_arch = "x86_64")]
-    {
-        if config.instruction_set == "AVX2" {
-            return unsafe { simd_distance_matrix_avx2(points_a, points_b) };
-        } else if config.instruction_set == "AVX" || config.instruction_set == "SSE2" {
-            return unsafe { simd_distance_matrix_sse2(points_a, points_b) };
-        }
-    }
+    let optimizer = AutoOptimizer::new();
+    let problem_size = n_a * n_b * dims;
 
-    #[cfg(target_arch = "aarch64")]
-    {
-        if config.instruction_set == "NEON" {
-            return unsafe { simd_distance_matrix_neon(points_a, points_b) };
-        }
-    }
-
-    // Fallback to scalar implementation
-    simd_distance_matrix_scalar(points_a, points_b)
-}
-
-#[cfg(not(feature = "simd"))]
-fn simd_distance_matrix_f64_vectorized(
-    points_a: &ArrayView2<f64>,
-    points_b: &ArrayView2<f64>,
-) -> InterpolateResult<Array2<f64>> {
-    simd_distance_matrix_scalar(points_a, points_b)
-}
-
-/// AVX2-optimized distance matrix computation (processes 4 f64 values at once)
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "avx2")]
-#[allow(dead_code)]
-unsafe fn simd_distance_matrix_avx2(
-    points_a: &ArrayView2<f64>,
-    points_b: &ArrayView2<f64>,
-) -> InterpolateResult<Array2<f64>> {
-    #[cfg(target_arch = "x86_64")]
-    {
-        use std::arch::x86_64::*;
-
-        let n_a = points_a.nrows();
-        let n_b = points_b.nrows();
-        let dims = points_a.ncols();
-        let mut distances = Array2::zeros((n_a, n_b));
-
+    if optimizer.should_use_simd(problem_size) {
+        // Use SIMD operations for distance computation
         for i in 0..n_a {
+            let a_row = points_a.row(i);
             for j in 0..n_b {
-                let mut dist_sq_vec = _mm256_setzero_pd();
+                let b_row = points_b.row(j);
 
-                // Process 4 dimensions at a time
-                let mut d = 0;
-                while d + 4 <= dims {
-                    let a_vec = _mm256_loadu_pd(points_a.as_ptr().add(i * dims + d));
-                    let b_vec = _mm256_loadu_pd(points_b.as_ptr().add(j * dims + d));
-                    let diff = _mm256_sub_pd(a_vec, b_vec);
-                    dist_sq_vec = _mm256_fmadd_pd(diff, diff, dist_sq_vec);
-                    d += 4;
-                }
-
-                // Horizontal reduction: sum the 4 components
-                let sum_high = _mm256_extractf128_pd(dist_sq_vec, 1);
-                let sum_low = _mm256_extractf128_pd(dist_sq_vec, 0);
-                let sum_128 = _mm_add_pd(sum_low, sum_high);
-                let sum_final = _mm_hadd_pd(sum_128, sum_128);
-                let mut dist_sq: f64 = _mm_cvtsd_f64(sum_final);
-
-                // Handle remaining dimensions
-                for d in d..dims {
-                    let diff = points_a[[i, d]] - points_b[[j, d]];
-                    dist_sq += diff * diff;
-                }
+                // Compute squared distance using SIMD operations
+                let diff = &a_row - &b_row;
+                let diff_arr = diff.to_owned();
+                let dist_sq = f64::simd_dot(&diff_arr.view(), &diff_arr.view());
 
                 distances[[i, j]] = dist_sq.sqrt();
             }
         }
+    } else {
+        // Fallback to scalar implementation
+        return simd_distance_matrix_scalar(points_a, points_b);
+    }
 
-        Ok(distances)
-    }
-    #[cfg(not(target_arch = "x86_64"))]
-    {
-        simd_distance_matrix_scalar(points_a, points_b)
-    }
+    Ok(distances)
 }
 
-/// SSE2-optimized distance matrix computation (processes 2 f64 values at once)
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "sse2")]
-#[allow(dead_code)]
-unsafe fn simd_distance_matrix_sse2(
-    points_a: &ArrayView2<f64>,
-    points_b: &ArrayView2<f64>,
-) -> InterpolateResult<Array2<f64>> {
-    #[cfg(target_arch = "x86_64")]
-    {
-        use std::arch::x86_64::*;
-
-        let n_a = points_a.nrows();
-        let n_b = points_b.nrows();
-        let dims = points_a.ncols();
-        let mut distances = Array2::zeros((n_a, n_b));
-
-        for i in 0..n_a {
-            for j in 0..n_b {
-                let mut dist_sq_vec = _mm_setzero_pd();
-
-                // Process 2 dimensions at a time
-                let mut d = 0;
-                while d + 2 <= dims {
-                    let a_vec = _mm_loadu_pd(points_a.as_ptr().add(i * dims + d));
-                    let b_vec = _mm_loadu_pd(points_b.as_ptr().add(j * dims + d));
-                    let diff = _mm_sub_pd(a_vec, b_vec);
-                    dist_sq_vec = _mm_add_pd(dist_sq_vec, _mm_mul_pd(diff, diff));
-                    d += 2;
-                }
-
-                // Horizontal reduction
-                let sum_high = _mm_unpackhi_pd(dist_sq_vec, dist_sq_vec);
-                let sum_low = _mm_add_sd(dist_sq_vec, sum_high);
-                let mut dist_sq: f64 = _mm_cvtsd_f64(sum_low);
-
-                // Handle remaining dimension
-                if d < dims {
-                    let diff = points_a[[i, d]] - points_b[[j, d]];
-                    dist_sq += diff * diff;
-                }
-
-                distances[[i, j]] = dist_sq.sqrt();
-            }
-        }
-
-        Ok(distances)
-    }
-    #[cfg(not(target_arch = "x86_64"))]
-    {
-        simd_distance_matrix_scalar(points_a, points_b)
-    }
-}
-
-/// NEON-optimized distance matrix computation for ARM64
-#[cfg(target_arch = "aarch64")]
-#[target_feature(enable = "neon")]
-#[allow(dead_code)]
-unsafe fn simd_distance_matrix_neon(
-    points_a: &ArrayView2<f64>,
-    points_b: &ArrayView2<f64>,
-) -> InterpolateResult<Array2<f64>> {
-    #[cfg(target_arch = "aarch64")]
-    {
-        use std::arch::aarch64::*;
-
-        let n_a = points_a.nrows();
-        let n_b = points_b.nrows();
-        let dims = points_a.ncols();
-        let mut distances = Array2::zeros((n_a, n_b));
-
-        for i in 0..n_a {
-            for j in 0..n_b {
-                let mut dist_sq_vec = vdupq_n_f64(0.0);
-
-                // Process 2 dimensions at a time
-                let mut d = 0;
-                while d + 2 <= dims {
-                    let a_vec = vld1q_f64(points_a.as_ptr().add(i * dims + d));
-                    let b_vec = vld1q_f64(points_b.as_ptr().add(j * dims + d));
-                    let diff = vsubq_f64(a_vec, b_vec);
-                    dist_sq_vec = vfmaq_f64(dist_sq_vec, diff, diff);
-                    d += 2;
-                }
-
-                // Horizontal reduction
-                let sum = vaddvq_f64(dist_sq_vec);
-                let mut dist_sq = sum;
-
-                // Handle remaining dimension
-                if d < dims {
-                    let diff = points_a[[i, d]] - points_b[[j, d]];
-                    dist_sq += diff * diff;
-                }
-
-                distances[[i, j]] = dist_sq.sqrt();
-            }
-        }
-
-        Ok(distances)
-    }
-    #[cfg(not(target_arch = "aarch64"))]
-    {
-        simd_distance_matrix_scalar(points_a, points_b)
-    }
-}
+// Direct SIMD intrinsics implementations removed - all SIMD operations now go through core abstractions
 
 /// Scalar fallback implementation for distance matrix computation
 fn simd_distance_matrix_scalar<F>(
@@ -871,96 +507,7 @@ where
     scalar_bspline_basis_functions(knots, degree, x_values, span_indices, &mut basis_values)
 }
 
-/// SIMD-optimized B-spline basis function computation for f64 using AVX2
-#[cfg(all(feature = "simd", target_arch = "x86_64"))]
-unsafe fn simd_bspline_basis_avx2<F>(
-    knots: &ArrayView1<F>,
-    degree: usize,
-    x_values: &ArrayView1<F>,
-    span_indices: &[usize],
-    basis_values: &mut Array2<F>,
-) -> InterpolateResult<Array2<F>>
-where
-    F: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
-{
-    use wide::f64x4;
-
-    let n_points = x_values.len();
-    let n_basis = degree + 1;
-
-    // Process points in groups of 4 for SIMD
-    for chunk_start in (0..n_points).step_by(4) {
-        let chunk_end = (chunk_start + 4).min(n_points);
-        let chunk_size = chunk_end - chunk_start;
-
-        if chunk_size == 4 {
-            // Full SIMD processing
-            let x_vec = f64x4::new([
-                x_values[chunk_start].to_f64().unwrap_or(0.0),
-                x_values[chunk_start + 1].to_f64().unwrap_or(0.0),
-                x_values[chunk_start + 2].to_f64().unwrap_or(0.0),
-                x_values[chunk_start + 3].to_f64().unwrap_or(0.0),
-            ]);
-
-            // Compute basis functions for these 4 points simultaneously
-            let mut basis_chunk = vec![f64x4::ZERO; n_basis];
-            basis_chunk[0] = f64x4::splat(1.0);
-
-            for j in 1..=degree {
-                let mut saved = f64x4::ZERO;
-
-                for r in 0..j {
-                    let temp = basis_chunk[r];
-
-                    // Compute alpha values for all 4 points
-                    let mut alpha = f64x4::ZERO;
-                    for p in 0..4 {
-                        let span = span_indices[chunk_start + p];
-                        let knot_left = knots[span + 1 + r - j].to_f64().unwrap_or(0.0);
-                        let knot_right = knots[span + 1 + r].to_f64().unwrap_or(0.0);
-                        let denom = knot_right - knot_left;
-
-                        let alpha_val = if denom != 0.0 {
-                            (x_vec.as_array_ref()[p] - knot_left) / denom
-                        } else {
-                            0.0
-                        };
-
-                        // Set the appropriate element in the SIMD vector
-                        let mut alpha_array = *alpha.as_array_ref();
-                        alpha_array[p] = alpha_val;
-                        alpha = f64x4::new(alpha_array);
-                    }
-
-                    basis_chunk[r] = saved + (f64x4::splat(1.0) - alpha) * temp;
-                    saved = alpha * temp;
-                }
-                basis_chunk[j] = saved;
-            }
-
-            // Store results back to the output array
-            for p in 0..4 {
-                for b in 0..n_basis {
-                    let val = basis_chunk[b].as_array_ref()[p];
-                    basis_values[[chunk_start + p, b]] = F::from_f64(val).unwrap();
-                }
-            }
-        } else {
-            // Handle partial chunk with scalar computation
-            for p in chunk_start..chunk_end {
-                let span = span_indices[p];
-                let x = x_values[p];
-                let basis = compute_basis_functions_scalar(knots, degree, x, span)?;
-
-                for b in 0..n_basis {
-                    basis_values[[p, b]] = basis[b];
-                }
-            }
-        }
-    }
-
-    Ok(basis_values.to_owned())
-}
+// B-spline basis function AVX2 implementation removed - using scalar implementation only
 
 /// Scalar implementation of B-spline basis function computation
 fn scalar_bspline_basis_functions<F>(
@@ -1092,52 +639,7 @@ where
     mid
 }
 
-// SIMD helper functions for x86_64
-
-#[cfg(target_arch = "x86_64")]
-unsafe fn simd_exp_pd(x: __m256d) -> __m256d {
-    // Simplified exponential approximation for AVX2
-    // In a production implementation, this would use a more accurate approximation
-    let one = _mm256_set1_pd(1.0);
-    let x_clamped = _mm256_max_pd(
-        _mm256_set1_pd(-10.0),
-        _mm256_min_pd(x, _mm256_set1_pd(10.0)),
-    );
-    // Very rough approximation: exp(x) ≈ 1 + x + x²/2
-    let x_sq = _mm256_mul_pd(x_clamped, x_clamped);
-    let x_sq_half = _mm256_mul_pd(x_sq, _mm256_set1_pd(0.5));
-    _mm256_add_pd(_mm256_add_pd(one, x_clamped), x_sq_half)
-}
-
-#[cfg(target_arch = "x86_64")]
-unsafe fn simd_sqrt_pd(x: __m256d) -> __m256d {
-    _mm256_sqrt_pd(x)
-}
-
-#[cfg(target_arch = "x86_64")]
-unsafe fn simd_horizontal_sum_pd(x: __m256d) -> f64 {
-    let sum_high_low = _mm256_hadd_pd(x, x);
-    let sum_128 = _mm256_extractf128_pd(sum_high_low, 1);
-    let sum_64 = _mm_add_pd(_mm256_castpd256_pd128(sum_high_low), sum_128);
-    let mut result = 0.0;
-    _mm_store_sd(&mut result, sum_64);
-    result
-}
-
-#[cfg(target_arch = "x86_64")]
-unsafe fn simd_exp_pd_sse2(x: __m128d) -> __m128d {
-    // Simplified exponential approximation for SSE2
-    let one = _mm_set1_pd(1.0);
-    let x_clamped = _mm_max_pd(_mm_set1_pd(-10.0), _mm_min_pd(x, _mm_set1_pd(10.0)));
-    let x_sq = _mm_mul_pd(x_clamped, x_clamped);
-    let x_sq_half = _mm_mul_pd(x_sq, _mm_set1_pd(0.5));
-    _mm_add_pd(_mm_add_pd(one, x_clamped), x_sq_half)
-}
-
-#[cfg(target_arch = "x86_64")]
-unsafe fn simd_sqrt_pd_sse2(x: __m128d) -> __m128d {
-    _mm_sqrt_pd(x)
-}
+// SIMD helper functions removed - all operations now use core abstractions
 
 /// Get SIMD configuration information
 pub fn get_simd_config() -> SimdConfig {

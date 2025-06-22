@@ -60,7 +60,9 @@ impl WorkerPool {
     }
 
     /// Create a new worker pool with custom configuration
-    pub fn with_config(config: WorkerConfig) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn with_config(
+        config: WorkerConfig,
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         Ok(Self {
             config: Arc::new(Mutex::new(config)),
         })
@@ -76,7 +78,10 @@ impl WorkerPool {
     /// Set the number of worker threads
     ///
     /// Update configuration - actual thread management handled by core parallel abstractions
-    pub fn set_workers(&mut self, num_workers: usize) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub fn set_workers(
+        &mut self,
+        num_workers: usize,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut config = self.config.lock().unwrap();
         config.num_workers = num_workers;
         Ok(())

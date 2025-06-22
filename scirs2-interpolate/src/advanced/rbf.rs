@@ -210,19 +210,11 @@ impl<
 
         // Set up parallel workers if specified
         if use_parallel && workers > 0 {
-            let thread_pool = rayon::ThreadPoolBuilder::new()
-                .num_threads(workers)
-                .build()
-                .map_err(|e| {
-                    InterpolateError::ComputationError(format!(
-                        "Failed to create thread pool: {}",
-                        e
-                    ))
-                })?;
+            // Thread pool configuration is now handled globally by scirs2-core
+            // The number of threads is managed centrally
+            // Workers parameter is preserved for future use but currently ignored
 
-            thread_pool.install(|| {
-                Self::build_rbf_matrix_parallel(points, values, n_points, kernel, epsilon)
-            })
+            Self::build_rbf_matrix_parallel(points, values, n_points, kernel, epsilon)
         } else if use_parallel {
             // Use default Rayon configuration
             Self::build_rbf_matrix_parallel(points, values, n_points, kernel, epsilon)
@@ -266,7 +258,7 @@ impl<
     ) -> InterpolateResult<Self> {
         // Build the interpolation matrix A where A[i,j] = kernel(||x_i - x_j||)
         // Use parallel processing for matrix construction
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
         let matrix_data: Vec<F> = (0..n_points * n_points)
             .into_par_iter()
             .map(|idx| {

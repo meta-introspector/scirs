@@ -320,7 +320,7 @@ fn griddata_linear_parallel<F>(
 where
     F: Float + FromPrimitive + Debug + Clone + Send + Sync,
 {
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let n_queries = xi.nrows();
     let chunk_size = crate::parallel::estimate_chunk_size(n_queries, 2.0, config);
@@ -349,7 +349,7 @@ fn griddata_nearest_parallel<F>(
 where
     F: Float + FromPrimitive + Debug + Clone + Send + Sync,
 {
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let n_queries = xi.nrows();
     let chunk_size = crate::parallel::estimate_chunk_size(n_queries, 1.0, config);
@@ -377,7 +377,7 @@ fn griddata_cubic_parallel<F>(
 where
     F: Float + FromPrimitive + Debug + Clone + Send + Sync,
 {
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let n_queries = xi.nrows();
     let chunk_size = crate::parallel::estimate_chunk_size(n_queries, 5.0, config);
@@ -416,7 +416,7 @@ where
         + std::fmt::LowerExp
         + 'static,
 {
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     // First, set up the RBF interpolator (this is not parallelized)
     let rbf_interpolator = RBFInterpolator::new(

@@ -4,7 +4,7 @@
 //! ARMA errors, Trend, and Seasonal components.
 
 use ndarray::{Array1, Array2, ScalarOperand};
-use ndarray_linalg::Solve;
+// use ndarray_linalg::Solve;  // TODO: Replace with scirs2-core linear algebra when available
 use num_traits::{Float, FromPrimitive, NumCast};
 use std::fmt::Debug;
 
@@ -142,7 +142,7 @@ where
         + FromPrimitive
         + Debug
         + std::iter::Sum
-        + ndarray_linalg::Lapack
+        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ScalarOperand
         + NumCast,
 {
@@ -355,7 +355,7 @@ where
         + FromPrimitive
         + Debug
         + std::iter::Sum
-        + ndarray_linalg::Lapack
+        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ScalarOperand
         + NumCast,
 {
@@ -411,7 +411,7 @@ where
         + FromPrimitive
         + Debug
         + std::iter::Sum
-        + ndarray_linalg::Lapack
+        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ScalarOperand
         + NumCast,
 {
@@ -437,16 +437,21 @@ where
         }
 
         // Solve least squares: design_matrix * coeffs = ts
-        let coeffs = design_matrix
-            .t()
-            .dot(&design_matrix)
-            .solve(&design_matrix.t().dot(ts))
-            .map_err(|e| {
-                TimeSeriesError::DecompositionError(format!(
-                    "Failed to estimate Fourier coefficients: {}",
-                    e
-                ))
-            })?;
+        // TODO: Replace with scirs2-core matrix solve when available
+        // For now, use a simple least squares implementation
+        let xtx = design_matrix.t().dot(&design_matrix);
+        let xty = design_matrix.t().dot(ts);
+
+        // Simple regularized pseudo-inverse for stability
+        let n = xtx.shape()[0];
+        let mut xtx_reg = xtx.clone();
+        let lambda = F::from(1e-6).unwrap();
+        for i in 0..n {
+            xtx_reg[[i, i]] = xtx_reg[[i, i]] + lambda;
+        }
+
+        // TODO: This is a temporary implementation - use core linear algebra when available
+        let coeffs = simple_matrix_solve(&xtx_reg, &xty)?;
 
         // Extract coefficient pairs
         let mut seasonal_coeffs = Vec::new();
@@ -614,6 +619,75 @@ where
             / residual_variance.to_f64().unwrap_or(1.0);
 
     Ok((level, trend, seasonal_components, residuals, log_likelihood))
+}
+
+/// Simple matrix solve using Gaussian elimination
+/// TODO: Remove this when scirs2-core provides linear algebra functionality
+fn simple_matrix_solve<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
+where
+    F: Float + FromPrimitive + ScalarOperand,
+{
+    let n = a.shape()[0];
+    if n != a.shape()[1] || n != b.len() {
+        return Err(TimeSeriesError::DecompositionError(
+            "Matrix dimensions mismatch".to_string(),
+        ));
+    }
+
+    // Create augmented matrix
+    let mut aug = a.clone();
+    let mut rhs = b.clone();
+
+    // Forward elimination
+    for i in 0..n {
+        // Find pivot
+        let mut max_row = i;
+        for k in (i + 1)..n {
+            if aug[[k, i]].abs() > aug[[max_row, i]].abs() {
+                max_row = k;
+            }
+        }
+
+        // Swap rows
+        if max_row != i {
+            for j in 0..n {
+                let temp = aug[[i, j]];
+                aug[[i, j]] = aug[[max_row, j]];
+                aug[[max_row, j]] = temp;
+            }
+            let temp = rhs[i];
+            rhs[i] = rhs[max_row];
+            rhs[max_row] = temp;
+        }
+
+        // Check for singular matrix
+        if aug[[i, i]].abs() < F::from(1e-10).unwrap() {
+            return Err(TimeSeriesError::DecompositionError(
+                "Matrix is singular".to_string(),
+            ));
+        }
+
+        // Eliminate column
+        for k in (i + 1)..n {
+            let factor = aug[[k, i]] / aug[[i, i]];
+            for j in i..n {
+                aug[[k, j]] = aug[[k, j]] - factor * aug[[i, j]];
+            }
+            rhs[k] = rhs[k] - factor * rhs[i];
+        }
+    }
+
+    // Back substitution
+    let mut x = Array1::zeros(n);
+    for i in (0..n).rev() {
+        let mut sum = rhs[i];
+        for j in (i + 1)..n {
+            sum = sum - aug[[i, j]] * x[j];
+        }
+        x[i] = sum / aug[[i, i]];
+    }
+
+    Ok(x)
 }
 
 #[cfg(test)]

@@ -5,9 +5,9 @@
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use std::fmt::Debug;
-use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities, AutoOptimizer};
 use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
+use std::fmt::Debug;
 
 /// Compute Euclidean distances between all pairs of points using SIMD when available
 ///
@@ -29,13 +29,13 @@ where
 
     let caps = PlatformCapabilities::detect();
     let optimizer = AutoOptimizer::new();
-    
+
     if caps.simd_available && optimizer.should_use_simd(n_samples * n_features) {
         pairwise_euclidean_simd_optimized(data, &mut distances);
     } else {
         pairwise_euclidean_standard(data, &mut distances);
     }
-    
+
     distances
 }
 
@@ -74,17 +74,16 @@ where
         for j in (i + 1)..n_samples {
             let row_i = data.row(i);
             let row_j = data.row(j);
-            
+
             // Use SIMD operations for vector subtraction and norm calculation
             let diff = F::simd_sub(&row_i, &row_j);
             let distance = F::simd_norm(&diff.view());
-            
+
             distances[idx] = distance;
             idx += 1;
         }
     }
 }
-
 
 /// Compute distances from each point to a set of centroids using SIMD
 ///
@@ -109,16 +108,16 @@ where
     }
 
     let mut distances = Array2::zeros((n_samples, n_clusters));
-    
+
     let caps = PlatformCapabilities::detect();
     let optimizer = AutoOptimizer::new();
-    
+
     if caps.simd_available && optimizer.should_use_simd(n_samples * n_features) {
         distance_to_centroids_simd_optimized(data, centroids, &mut distances);
     } else {
         distance_to_centroids_standard(data, centroids, &mut distances);
     }
-    
+
     distances
 }
 
@@ -161,16 +160,15 @@ fn distance_to_centroids_simd_optimized<F>(
         for j in 0..n_clusters {
             let data_row = data.row(i);
             let centroid_row = centroids.row(j);
-            
+
             // Use SIMD operations for vector subtraction and norm calculation
             let diff = F::simd_sub(&data_row, &centroid_row);
             let distance = F::simd_norm(&diff.view());
-            
+
             distances[[i, j]] = distance;
         }
     }
 }
-
 
 /// Parallel distance matrix computation using core parallel operations
 ///
@@ -204,7 +202,7 @@ where
             .map(|(i, j)| {
                 let row_i = data.row(i);
                 let row_j = data.row(j);
-                
+
                 // Use SIMD operations for distance calculation
                 let diff = F::simd_sub(&row_i, &row_j);
                 F::simd_norm(&diff.view())

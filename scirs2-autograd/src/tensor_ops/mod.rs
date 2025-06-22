@@ -28,7 +28,7 @@ mod activation_ops;
 mod array_ops;
 pub(crate) mod basic_source_ops;
 pub(crate) mod binary_ops;
-mod blas_ffi;
+// mod blas_ffi; // Removed - all BLAS operations now go through scirs2-core
 pub(crate) mod const_gen_ops;
 mod conv_ops;
 pub(crate) mod dot_ops;

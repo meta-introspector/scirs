@@ -195,15 +195,7 @@ impl<T: Float> op::Op<T> for SubOp {
             let x0_elem = x0[ndarray::IxDyn(&[])];
             x1.map(move |&a| x0_elem - a)
         } else if shape0 == shape1 {
-            #[cfg(feature = "mkl")]
-            {
-                use crate::{same_type, tensor_ops::blas_ffi::*};
-                bin_op_same_shape!(vsSub, vdSub, -, x0, x1)
-            }
-            #[cfg(not(feature = "mkl"))]
-            {
-                x0 - x1
-            }
+            x0 - x1
         } else {
             x0 - x1
         };
@@ -273,15 +265,7 @@ impl<T: Float> op::Op<T> for DivOp {
             let rhs = T::one() / x1_elem;
             x0.mapv(|x0_elem| x0_elem * rhs)
         } else if shape0 == shape1 {
-            #[cfg(feature = "mkl")]
-            {
-                use crate::{same_type, tensor_ops::blas_ffi::*};
-                bin_op_same_shape!(vsDiv, vdDiv, /, x0, x1)
-            }
-            #[cfg(not(feature = "mkl"))]
-            {
-                x0 / x1
-            }
+            x0 / x1
         } else {
             x0 / x1
         };

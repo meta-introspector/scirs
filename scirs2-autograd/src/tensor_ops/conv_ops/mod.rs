@@ -15,13 +15,7 @@ pub mod conv2d;
 #[macro_use]
 pub mod conv2d_transpose;
 pub mod max_pool2d;
-#[cfg(feature = "blas")]
-use crate::tensor_ops::blas_ffi::*;
-#[cfg(feature = "blas")]
-use cblas_sys::{
-    CBLAS_LAYOUT::CblasRowMajor,
-    CBLAS_TRANSPOSE::{CblasNoTrans, CblasTrans},
-};
+// BLAS dependencies removed - all operations now use core abstractions or fallback implementations
 
 #[test]
 fn test_im2col_batch() {

@@ -9,7 +9,7 @@ use crate::sparse_fft::{
 };
 use num_complex::Complex64;
 use num_traits::NumCast;
-use scirs2_core::gpu::{GpuDevice, GpuKernel, GpuBackend};
+use scirs2_core::gpu::{GpuBackend, GpuDevice, GpuKernel};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::fmt::Debug;
 use std::time::Instant;
@@ -29,7 +29,7 @@ pub enum BufferLocation {
 /// Placeholder for buffer type - to be implemented with core GPU abstractions
 pub enum BufferType {
     Input,
-    Output, 
+    Output,
     Work,
 }
 
@@ -41,7 +41,7 @@ pub struct GpuStream {
 impl GpuStream {
     pub fn new(_device_id: i32) -> FFTResult<Self> {
         Err(FFTError::NotImplementedError(
-            "GPU streams need to be implemented with scirs2-core::gpu abstractions".to_string()
+            "GPU streams need to be implemented with scirs2-core::gpu abstractions".to_string(),
         ))
     }
 }
@@ -50,15 +50,22 @@ impl GpuStream {
 pub struct GpuMemoryManager;
 
 impl GpuMemoryManager {
-    pub fn allocate(&self, _size: usize, _location: BufferLocation, _buffer_type: BufferType) -> FFTResult<BufferDescriptor> {
+    pub fn allocate(
+        &self,
+        _size: usize,
+        _location: BufferLocation,
+        _buffer_type: BufferType,
+    ) -> FFTResult<BufferDescriptor> {
         Err(FFTError::NotImplementedError(
-            "GPU memory management needs to be implemented with scirs2-core::gpu abstractions".to_string()
+            "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
+                .to_string(),
         ))
     }
-    
+
     pub fn free(&self, _descriptor: BufferDescriptor) -> FFTResult<()> {
         Err(FFTError::NotImplementedError(
-            "GPU memory management needs to be implemented with scirs2-core::gpu abstractions".to_string()
+            "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
+                .to_string(),
         ))
     }
 }
@@ -66,7 +73,8 @@ impl GpuMemoryManager {
 /// Placeholder for global memory manager - to be implemented with core GPU abstractions
 pub fn get_global_memory_manager() -> FFTResult<GpuMemoryManager> {
     Err(FFTError::NotImplementedError(
-        "GPU memory management needs to be implemented with scirs2-core::gpu abstractions".to_string()
+        "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
+            .to_string(),
     ))
 }
 
@@ -88,7 +96,10 @@ impl GpuDeviceInfo {
     /// Create GPU device info using core abstractions
     pub fn new(device_id: usize) -> FFTResult<Self> {
         let device = GpuDevice::new(GpuBackend::default(), device_id);
-        Ok(Self { device, initialized: true })
+        Ok(Self {
+            device,
+            initialized: true,
+        })
     }
 
     /// Check if device is available
@@ -145,11 +156,7 @@ impl GpuContext {
         // Use the global memory manager to track allocations
         let manager = get_global_memory_manager()?;
 
-        manager.allocate(
-            size_bytes,
-            BufferLocation::Device,
-            BufferType::Work,
-        )
+        manager.allocate(size_bytes, BufferLocation::Device, BufferType::Work)
     }
 
     /// Free device memory

@@ -531,14 +531,7 @@ impl<T: Float> op::Op<T> for AddN {
         } else {
             let mut base = &ctx.input(0) + &ctx.input(1);
             for i in 2..inputs_len {
-                #[cfg(feature = "mkl")]
-                {
-                    inplace_add_impl(base.view_mut(), &ctx.input(i));
-                }
-                #[cfg(not(feature = "mkl"))]
-                {
-                    base += &ctx.input(i);
-                }
+                base += &ctx.input(i);
             }
             ctx.append_output(base);
         }

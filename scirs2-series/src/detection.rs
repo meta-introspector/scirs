@@ -510,7 +510,7 @@ where
         + FromPrimitive
         + Debug
         + std::iter::Sum
-        + ndarray_linalg::Lapack
+        // + ndarray_linalg::Lapack  // TODO: Replace with scirs2-core linear algebra trait when available
         + ndarray::ScalarOperand
         + num_traits::NumCast,
 {

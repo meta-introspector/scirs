@@ -283,19 +283,19 @@ fn simd_axpy_f32_impl(y: &mut ArrayViewMut1<f32>, a: f32, x: &ArrayView1<f32>) {
         while i + chunk_size <= n {
             let x_chunk = &x_slice[i..i + chunk_size];
             let y_chunk = &y_slice[i..i + chunk_size];
-            
+
             // Create views for SIMD operations
             let x_view = ArrayView1::from(x_chunk);
             let y_view = ArrayView1::from(y_chunk);
-            
+
             // Compute a * x using core SIMD
             let ax_result = f32::simd_scalar_mul(a, &x_view);
-            
+
             // Compute y + a*x and store back
             for (j, ax_val) in ax_result.iter().enumerate() {
                 y_slice[i + j] += ax_val;
             }
-            
+
             i += chunk_size;
         }
 
@@ -325,19 +325,19 @@ fn simd_axpy_f64_impl(y: &mut ArrayViewMut1<f64>, a: f64, x: &ArrayView1<f64>) {
         while i + chunk_size <= n {
             let x_chunk = &x_slice[i..i + chunk_size];
             let y_chunk = &y_slice[i..i + chunk_size];
-            
+
             // Create views for SIMD operations
             let x_view = ArrayView1::from(x_chunk);
             let y_view = ArrayView1::from(y_chunk);
-            
+
             // Compute a * x using core SIMD
             let ax_result = f64::simd_scalar_mul(a, &x_view);
-            
+
             // Compute y + a*x and store back
             for (j, ax_val) in ax_result.iter().enumerate() {
                 y_slice[i + j] += ax_val;
             }
-            
+
             i += chunk_size;
         }
 

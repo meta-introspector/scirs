@@ -12,7 +12,7 @@ use num_traits::Float;
 #[cfg(feature = "simd")]
 use ndarray::Array;
 #[cfg(feature = "simd")]
-use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities, AutoOptimizer};
+use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 
 /// SIMD-accelerated operations for neural networks
 #[cfg(feature = "simd")]

@@ -1,10 +1,8 @@
 use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op;
-#[cfg(feature = "mkl")]
-use crate::same_type;
+
 use crate::tensor::Tensor;
-#[cfg(feature = "mkl")]
-use crate::tensor_ops::blas_ffi::*;
+
 use crate::tensor_ops::*;
 use crate::Float;
 use ndarray;
@@ -78,14 +76,7 @@ pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
         .unwrap();
     // subtract `max` to prevent overflow
     let mut tmp = x - max;
-    #[cfg(feature = "mkl")]
-    {
-        crate::tensor_ops::math_ops::fast_inplace_exp_impl(&mut tmp);
-    }
-    #[cfg(not(feature = "mkl"))]
-    {
-        tmp.mapv_inplace(move |a| a.exp());
-    }
+    tmp.mapv_inplace(move |a| a.exp());
     // unwrap is safe
     let sum = tmp
         .sum_axis(ndarray::Axis(axis))
@@ -129,17 +120,10 @@ impl<T: Float> op::Op<T> for Softplus {
 impl<T: Float> op::Op<T> for Sigmoid {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let ret;
-        #[cfg(feature = "mkl")]
-        {
-            ret = fast_sigmoid_impl(&ctx.input(0));
-        }
-        #[cfg(not(feature = "mkl"))]
-        {
-            let half = T::from(0.5).unwrap();
-            ret = ctx
-                .input(0)
-                .mapv(move |a| ((a * half).tanh() * half) + half);
-        }
+        let half = T::from(0.5).unwrap();
+        ret = ctx
+            .input(0)
+            .mapv(move |a| ((a * half).tanh() * half) + half);
         ctx.append_output(ret);
         Ok(())
     }

@@ -6,8 +6,8 @@
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities, AutoOptimizer};
 use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 
 /// Configuration for hardware acceleration
 #[derive(Debug, Clone)]
@@ -87,7 +87,7 @@ impl HardwareAccelConfig {
 }
 
 /// Hardware capabilities detector (using core platform capabilities)
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct HardwareCapabilities {
     pub has_sse: bool,
     pub has_sse2: bool,
@@ -101,15 +101,18 @@ pub struct HardwareCapabilities {
     pub has_fma: bool,
     pub has_gpu: bool,
     pub gpu_memory: Option<usize>,
-    /// Core platform capabilities
-    pub core_caps: PlatformCapabilities,
+    // Store individual capabilities instead of the entire struct
+    pub simd_available: bool,
+    pub avx2_available: bool,
+    pub avx512_available: bool,
+    pub gpu_available: bool,
 }
 
 impl HardwareCapabilities {
     /// Detect hardware capabilities using core platform detection
     pub fn detect() -> Self {
         let core_caps = PlatformCapabilities::detect();
-        
+
         Self {
             has_sse: true, // Assume SSE is available if we're on x86_64 (legacy compatibility)
             has_sse2: core_caps.simd_available,
@@ -123,17 +126,20 @@ impl HardwareCapabilities {
             has_fma: core_caps.simd_available, // FMA is typically available with modern SIMD
             has_gpu: core_caps.gpu_available,
             gpu_memory: None, // GPU memory detection not implemented in core yet
-            core_caps,
+            simd_available: core_caps.simd_available,
+            avx2_available: core_caps.avx2_available,
+            avx512_available: core_caps.avx512_available,
+            gpu_available: core_caps.gpu_available,
         }
     }
 
     /// Get optimal vector width for current hardware
     pub fn optimal_vector_width(&self) -> VectorWidth {
-        if self.core_caps.avx512_available {
+        if self.avx512_available {
             VectorWidth::V512
-        } else if self.core_caps.avx2_available {
+        } else if self.avx2_available {
             VectorWidth::V256
-        } else if self.core_caps.simd_available {
+        } else if self.simd_available {
             VectorWidth::V128
         } else {
             VectorWidth::V128 // Conservative fallback
@@ -142,7 +148,7 @@ impl HardwareCapabilities {
 
     /// Check if SIMD is available
     pub fn simd_available(&self) -> bool {
-        self.core_caps.simd_available
+        self.simd_available
     }
 }
 
@@ -299,361 +305,7 @@ impl SimdDistanceMetrics {
         Ok(1.0 - cosine_similarity)
     }
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "avx2")]
-    unsafe fn euclidean_distance_avx2(&self, a: &[f64], b: &[f64]) -> f64 {
-        let mut sum = _mm256_setzero_pd();
-        let chunks = a.len() / 4;
 
-        for i in 0..chunks {
-            let offset = i * 4;
-            let va = _mm256_loadu_pd(a.as_ptr().add(offset));
-            let vb = _mm256_loadu_pd(b.as_ptr().add(offset));
-            let diff = _mm256_sub_pd(va, vb);
-            let squared = _mm256_mul_pd(diff, diff);
-            sum = _mm256_add_pd(sum, squared);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 4];
-        _mm256_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1] + result[2] + result[3];
-
-        // Handle remaining elements
-        for i in (chunks * 4)..a.len() {
-            let diff = a[i] - b[i];
-            total += diff * diff;
-        }
-
-        total.sqrt()
-    }
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "sse2")]
-    unsafe fn euclidean_distance_sse2(&self, a: &[f64], b: &[f64]) -> f64 {
-        let mut sum = _mm_setzero_pd();
-        let chunks = a.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let va = _mm_loadu_pd(a.as_ptr().add(offset));
-            let vb = _mm_loadu_pd(b.as_ptr().add(offset));
-            let diff = _mm_sub_pd(va, vb);
-            let squared = _mm_mul_pd(diff, diff);
-            sum = _mm_add_pd(sum, squared);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 2];
-        _mm_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1];
-
-        // Handle remaining elements
-        for i in (chunks * 2)..a.len() {
-            let diff = a[i] - b[i];
-            total += diff * diff;
-        }
-
-        total.sqrt()
-    }
-
-    // ARM64 NEON implementations
-    #[cfg(target_arch = "aarch64")]
-    #[target_feature(enable = "neon")]
-    unsafe fn euclidean_distance_neon(&self, a: &[f64], b: &[f64]) -> f64 {
-        let mut sum = vdupq_n_f64(0.0);
-        let chunks = a.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let va = vld1q_f64(a.as_ptr().add(offset));
-            let vb = vld1q_f64(b.as_ptr().add(offset));
-            let diff = vsubq_f64(va, vb);
-            let squared = vmulq_f64(diff, diff);
-            sum = vaddq_f64(sum, squared);
-        }
-
-        // Extract and sum the elements
-        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
-
-        // Handle remaining elements
-        for i in (chunks * 2)..a.len() {
-            let diff = a[i] - b[i];
-            total += diff * diff;
-        }
-
-        total.sqrt()
-    }
-
-    #[cfg(target_arch = "aarch64")]
-    #[target_feature(enable = "neon")]
-    unsafe fn manhattan_distance_neon(&self, a: &[f64], b: &[f64]) -> f64 {
-        let mut sum = vdupq_n_f64(0.0);
-        let chunks = a.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let va = vld1q_f64(a.as_ptr().add(offset));
-            let vb = vld1q_f64(b.as_ptr().add(offset));
-            let diff = vsubq_f64(va, vb);
-            let abs_diff = vabsq_f64(diff);
-            sum = vaddq_f64(sum, abs_diff);
-        }
-
-        // Extract and sum the elements
-        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
-
-        // Handle remaining elements
-        for i in (chunks * 2)..a.len() {
-            total += (a[i] - b[i]).abs();
-        }
-
-        total
-    }
-
-    #[cfg(target_arch = "aarch64")]
-    #[target_feature(enable = "neon")]
-    unsafe fn dot_product_neon(&self, a: &[f64], b: &[f64]) -> f64 {
-        let mut sum = vdupq_n_f64(0.0);
-        let chunks = a.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let va = vld1q_f64(a.as_ptr().add(offset));
-            let vb = vld1q_f64(b.as_ptr().add(offset));
-            let product = vmulq_f64(va, vb);
-            sum = vaddq_f64(sum, product);
-        }
-
-        // Extract and sum the elements
-        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
-
-        // Handle remaining elements
-        for i in (chunks * 2)..a.len() {
-            total += a[i] * b[i];
-        }
-
-        total
-    }
-
-    #[cfg(target_arch = "aarch64")]
-    #[target_feature(enable = "neon")]
-    unsafe fn sum_neon(&self, data: &[f64]) -> f64 {
-        let mut sum = vdupq_n_f64(0.0);
-        let chunks = data.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let v = vld1q_f64(data.as_ptr().add(offset));
-            sum = vaddq_f64(sum, v);
-        }
-
-        // Extract and sum the elements
-        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
-
-        // Handle remaining elements
-        for i in (chunks * 2)..data.len() {
-            total += data[i];
-        }
-
-        total
-    }
-
-    #[cfg(target_arch = "aarch64")]
-    #[target_feature(enable = "neon")]
-    unsafe fn sum_squared_differences_neon(&self, data: &[f64], mean: f64) -> f64 {
-        let mean_vec = vdupq_n_f64(mean);
-        let mut sum = vdupq_n_f64(0.0);
-        let chunks = data.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let v = vld1q_f64(data.as_ptr().add(offset));
-            let diff = vsubq_f64(v, mean_vec);
-            let squared = vmulq_f64(diff, diff);
-            sum = vaddq_f64(sum, squared);
-        }
-
-        // Extract and sum the elements
-        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
-
-        // Handle remaining elements
-        for i in (chunks * 2)..data.len() {
-            let diff = data[i] - mean;
-            total += diff * diff;
-        }
-
-        total
-    }
-
-    fn euclidean_distance_with_width(
-        &self,
-        a: &Array1<f64>,
-        b: &Array1<f64>,
-        width: VectorWidth,
-    ) -> Result<f64> {
-        let a_slice = a.as_slice().unwrap();
-        let b_slice = b.as_slice().unwrap();
-
-        let result = match width {
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            VectorWidth::V256 if self.capabilities.has_avx2 => unsafe {
-                self.euclidean_distance_avx2(a_slice, b_slice)
-            },
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            VectorWidth::V128 if self.capabilities.has_sse2 => unsafe {
-                self.euclidean_distance_sse2(a_slice, b_slice)
-            },
-            #[cfg(target_arch = "aarch64")]
-            VectorWidth::V128 => unsafe { self.euclidean_distance_neon(a_slice, b_slice) },
-            _ => {
-                // Fallback to standard implementation
-                return self.euclidean_distance_standard(a, b);
-            }
-        };
-
-        Ok(result)
-    }
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "avx2")]
-    unsafe fn manhattan_distance_avx2(&self, a: &[f64], b: &[f64]) -> f64 {
-        let mut sum = _mm256_setzero_pd();
-        let chunks = a.len() / 4;
-
-        for i in 0..chunks {
-            let offset = i * 4;
-            let va = _mm256_loadu_pd(a.as_ptr().add(offset));
-            let vb = _mm256_loadu_pd(b.as_ptr().add(offset));
-            let diff = _mm256_sub_pd(va, vb);
-
-            // Compute absolute value using bit manipulation
-            let sign_mask = _mm256_set1_pd(-0.0);
-            let abs_diff = _mm256_andnot_pd(sign_mask, diff);
-
-            sum = _mm256_add_pd(sum, abs_diff);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 4];
-        _mm256_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1] + result[2] + result[3];
-
-        // Handle remaining elements
-        for i in (chunks * 4)..a.len() {
-            total += (a[i] - b[i]).abs();
-        }
-
-        total
-    }
-
-    fn manhattan_distance_with_width(
-        &self,
-        a: &Array1<f64>,
-        b: &Array1<f64>,
-        width: VectorWidth,
-    ) -> Result<f64> {
-        let a_slice = a.as_slice().unwrap();
-        let b_slice = b.as_slice().unwrap();
-
-        let result = match width {
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            VectorWidth::V256 if self.capabilities.has_avx2 => unsafe {
-                self.manhattan_distance_avx2(a_slice, b_slice)
-            },
-            #[cfg(target_arch = "aarch64")]
-            VectorWidth::V128 => unsafe { self.manhattan_distance_neon(a_slice, b_slice) },
-            _ => {
-                // Fallback to standard implementation
-                return self.manhattan_distance_standard(a, b);
-            }
-        };
-
-        Ok(result)
-    }
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "avx2")]
-    unsafe fn dot_product_avx2(&self, a: &[f64], b: &[f64]) -> f64 {
-        let mut sum = _mm256_setzero_pd();
-        let chunks = a.len() / 4;
-
-        for i in 0..chunks {
-            let offset = i * 4;
-            let va = _mm256_loadu_pd(a.as_ptr().add(offset));
-            let vb = _mm256_loadu_pd(b.as_ptr().add(offset));
-            let product = _mm256_mul_pd(va, vb);
-            sum = _mm256_add_pd(sum, product);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 4];
-        _mm256_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1] + result[2] + result[3];
-
-        // Handle remaining elements
-        for i in (chunks * 4)..a.len() {
-            total += a[i] * b[i];
-        }
-
-        total
-    }
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "sse2")]
-    unsafe fn dot_product_sse2(&self, a: &[f64], b: &[f64]) -> f64 {
-        let mut sum = _mm_setzero_pd();
-        let chunks = a.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let va = _mm_loadu_pd(a.as_ptr().add(offset));
-            let vb = _mm_loadu_pd(b.as_ptr().add(offset));
-            let product = _mm_mul_pd(va, vb);
-            sum = _mm_add_pd(sum, product);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 2];
-        _mm_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1];
-
-        // Handle remaining elements
-        for i in (chunks * 2)..a.len() {
-            total += a[i] * b[i];
-        }
-
-        total
-    }
-
-    fn dot_product_with_width(
-        &self,
-        a: &Array1<f64>,
-        b: &Array1<f64>,
-        width: VectorWidth,
-    ) -> Result<f64> {
-        let a_slice = a.as_slice().unwrap();
-        let b_slice = b.as_slice().unwrap();
-
-        let result = match width {
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            VectorWidth::V256 if self.capabilities.has_avx2 => unsafe {
-                self.dot_product_avx2(a_slice, b_slice)
-            },
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            VectorWidth::V128 if self.capabilities.has_sse2 => unsafe {
-                self.dot_product_sse2(a_slice, b_slice)
-            },
-            #[cfg(target_arch = "aarch64")]
-            VectorWidth::V128 => unsafe { self.dot_product_neon(a_slice, b_slice) },
-            _ => {
-                // Fallback to standard implementation
-                return Ok(a.dot(b));
-            }
-        };
-
-        Ok(result)
-    }
 }
 
 impl Default for SimdDistanceMetrics {
@@ -734,29 +386,9 @@ impl SimdStatistics {
             return Ok(data.sum());
         }
 
-        let data_slice = data.as_slice().unwrap();
-        let result = {
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            {
-                if self.capabilities.has_avx2 {
-                    unsafe { self.sum_avx2(data_slice) }
-                } else if self.capabilities.has_sse2 {
-                    unsafe { self.sum_sse2(data_slice) }
-                } else {
-                    data.sum()
-                }
-            }
-            #[cfg(target_arch = "aarch64")]
-            {
-                unsafe { self.sum_neon(data_slice) }
-            }
-            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
-            {
-                data.sum()
-            }
-        };
-
-        Ok(result)
+        // Use unified SIMD operations for sum
+        let sum = f64::simd_sum(&data.view());
+        Ok(sum)
     }
 
     /// Compute sum of squared differences from mean using SIMD
@@ -769,191 +401,14 @@ impl SimdStatistics {
             return Ok(sum);
         }
 
-        let data_slice = data.as_slice().unwrap();
-        let result = {
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            {
-                if self.capabilities.has_avx2 {
-                    unsafe { self.sum_squared_differences_avx2(data_slice, mean) }
-                } else if self.capabilities.has_sse2 {
-                    unsafe { self.sum_squared_differences_sse2(data_slice, mean) }
-                } else {
-                    data.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
-                }
-            }
-            #[cfg(target_arch = "aarch64")]
-            {
-                unsafe { self.sum_squared_differences_neon(data_slice, mean) }
-            }
-            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
-            {
-                data.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
-            }
-        };
-
-        Ok(result)
+        // Use unified SIMD operations for sum of squared differences
+        let mean_array = Array1::from_elem(data.len(), mean);
+        let diff = f64::simd_sub(&data.view(), &mean_array.view());
+        let squared = f64::simd_mul(&diff.view(), &diff.view());
+        let sum = f64::simd_sum(&squared.view());
+        Ok(sum)
     }
 
-    // Private SIMD implementations
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "avx2")]
-    unsafe fn sum_avx2(&self, data: &[f64]) -> f64 {
-        let mut sum = _mm256_setzero_pd();
-        let chunks = data.len() / 4;
-
-        for i in 0..chunks {
-            let offset = i * 4;
-            let v = _mm256_loadu_pd(data.as_ptr().add(offset));
-            sum = _mm256_add_pd(sum, v);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 4];
-        _mm256_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1] + result[2] + result[3];
-
-        // Handle remaining elements
-        for i in (chunks * 4)..data.len() {
-            total += data[i];
-        }
-
-        total
-    }
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "sse2")]
-    unsafe fn sum_sse2(&self, data: &[f64]) -> f64 {
-        let mut sum = _mm_setzero_pd();
-        let chunks = data.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let v = _mm_loadu_pd(data.as_ptr().add(offset));
-            sum = _mm_add_pd(sum, v);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 2];
-        _mm_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1];
-
-        // Handle remaining elements
-        for i in (chunks * 2)..data.len() {
-            total += data[i];
-        }
-
-        total
-    }
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "avx2")]
-    unsafe fn sum_squared_differences_avx2(&self, data: &[f64], mean: f64) -> f64 {
-        let mean_vec = _mm256_set1_pd(mean);
-        let mut sum = _mm256_setzero_pd();
-        let chunks = data.len() / 4;
-
-        for i in 0..chunks {
-            let offset = i * 4;
-            let v = _mm256_loadu_pd(data.as_ptr().add(offset));
-            let diff = _mm256_sub_pd(v, mean_vec);
-            let squared = _mm256_mul_pd(diff, diff);
-            sum = _mm256_add_pd(sum, squared);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 4];
-        _mm256_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1] + result[2] + result[3];
-
-        // Handle remaining elements
-        for i in (chunks * 4)..data.len() {
-            let diff = data[i] - mean;
-            total += diff * diff;
-        }
-
-        total
-    }
-
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    #[target_feature(enable = "sse2")]
-    unsafe fn sum_squared_differences_sse2(&self, data: &[f64], mean: f64) -> f64 {
-        let mean_vec = _mm_set1_pd(mean);
-        let mut sum = _mm_setzero_pd();
-        let chunks = data.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let v = _mm_loadu_pd(data.as_ptr().add(offset));
-            let diff = _mm_sub_pd(v, mean_vec);
-            let squared = _mm_mul_pd(diff, diff);
-            sum = _mm_add_pd(sum, squared);
-        }
-
-        // Extract and sum the elements
-        let mut result = [0.0; 2];
-        _mm_storeu_pd(result.as_mut_ptr(), sum);
-        let mut total = result[0] + result[1];
-
-        // Handle remaining elements
-        for i in (chunks * 2)..data.len() {
-            let diff = data[i] - mean;
-            total += diff * diff;
-        }
-
-        total
-    }
-
-    // ARM64 NEON implementations for SimdStatistics
-    #[cfg(target_arch = "aarch64")]
-    #[target_feature(enable = "neon")]
-    unsafe fn sum_neon(&self, data: &[f64]) -> f64 {
-        let mut sum = vdupq_n_f64(0.0);
-        let chunks = data.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let v = vld1q_f64(data.as_ptr().add(offset));
-            sum = vaddq_f64(sum, v);
-        }
-
-        // Extract and sum the elements
-        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
-
-        // Handle remaining elements
-        for i in (chunks * 2)..data.len() {
-            total += data[i];
-        }
-
-        total
-    }
-
-    #[cfg(target_arch = "aarch64")]
-    #[target_feature(enable = "neon")]
-    unsafe fn sum_squared_differences_neon(&self, data: &[f64], mean: f64) -> f64 {
-        let mean_vec = vdupq_n_f64(mean);
-        let mut sum = vdupq_n_f64(0.0);
-        let chunks = data.len() / 2;
-
-        for i in 0..chunks {
-            let offset = i * 2;
-            let v = vld1q_f64(data.as_ptr().add(offset));
-            let diff = vsubq_f64(v, mean_vec);
-            let squared = vmulq_f64(diff, diff);
-            sum = vaddq_f64(sum, squared);
-        }
-
-        // Extract and sum the elements
-        let mut total = vgetq_lane_f64(sum, 0) + vgetq_lane_f64(sum, 1);
-
-        // Handle remaining elements
-        for i in (chunks * 2)..data.len() {
-            let diff = data[i] - mean;
-            total += diff * diff;
-        }
-
-        total
-    }
 }
 
 impl Default for SimdStatistics {

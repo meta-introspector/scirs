@@ -4,8 +4,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::regression::utils::*;
 use crate::regression::RegressionResults;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
-use ndarray_linalg::{LeastSquaresSvd, Scalar};
 use num_traits::Float;
+use scirs2_linalg::lstsq;
 use std::collections::HashSet;
 
 /// Direction for stepwise regression
@@ -167,10 +167,12 @@ where
     F: Float
         + std::iter::Sum<F>
         + std::ops::Div<Output = F>
-        + Scalar
         + std::fmt::Debug
+        + std::fmt::Display
         + 'static
-        + ndarray_linalg::Lapack,
+        + num_traits::NumAssign
+        + num_traits::One
+        + ndarray::ScalarOperand,
 {
     // Check input dimensions
     if x.nrows() != y.len() {
@@ -492,11 +494,12 @@ where
     F: Float
         + std::iter::Sum<F>
         + std::ops::Div<Output = F>
-        + Scalar
         + std::fmt::Debug
         + std::fmt::Display
         + 'static
-        + ndarray_linalg::Lapack,
+        + num_traits::NumAssign
+        + num_traits::One
+        + ndarray::ScalarOperand,
 {
     let n = x.nrows();
     let p = x.ncols();
@@ -510,18 +513,15 @@ where
     }
 
     // Solve least squares problem
-    let ls_result = match x.least_squares(y) {
-        Ok(beta) => beta,
+    let coefficients = match lstsq(x, y, None) {
+        Ok(result) => result.x,
         Err(e) => {
             return Err(StatsError::ComputationError(format!(
-                "Least squares computation failed: {}",
+                "Least squares computation failed: {:?}",
                 e
             )))
         }
     };
-
-    // Convert LeastSquaresResult to Array1
-    let coefficients = ls_result.solution.to_owned();
 
     // Calculate fitted values and residuals
     let fitted_values = x.dot(&coefficients);

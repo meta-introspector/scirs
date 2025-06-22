@@ -20,7 +20,8 @@ scirs2-core = { workspace = true, optional = true, features = ["linalg", "memory
 scirs2-metrics = { workspace = true, optional = true, default-features = false, features = ["neural_common"] }
 ndarray = { workspace = true }
 ndarray-stats-05 = { workspace = true }
-ndarray-linalg = { workspace = true, default-features = false }
+# BLAS dependencies removed - using core abstractions
+# ndarray-linalg = { workspace = true, default-features = false }
 ndarray-rand = { workspace = true }
 num-integer = { workspace = true }
 approx = { workspace = true }

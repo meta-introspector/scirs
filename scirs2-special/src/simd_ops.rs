@@ -10,7 +10,7 @@ use ndarray::{Array1, ArrayView1};
 use scirs2_core::simd::*;
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// SIMD-optimized gamma function for f32 arrays
 #[cfg(feature = "simd")]

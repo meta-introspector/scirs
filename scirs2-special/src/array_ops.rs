@@ -273,64 +273,33 @@ pub mod gpu {
 
     /// GPU buffer for array data
     pub struct GpuBuffer {
+        // TODO: Replace with scirs2_core::gpu abstractions
         #[cfg(feature = "gpu")]
-        buffer: wgpu::Buffer,
+        buffer: Option<()>, // Placeholder - should use core GPU abstractions
         size: usize,
     }
 
     /// GPU compute pipeline for special functions
     pub struct GpuPipeline {
+        // TODO: Replace with scirs2_core::gpu abstractions
         #[cfg(feature = "gpu")]
-        device: wgpu::Device,
+        device: Option<()>, // Placeholder - should use core GPU abstractions
         #[cfg(feature = "gpu")]
-        queue: wgpu::Queue,
+        queue: Option<()>, // Placeholder - should use core GPU abstractions
         #[cfg(feature = "gpu")]
-        pipeline: wgpu::ComputePipeline,
+        pipeline: Option<()>, // Placeholder - should use core GPU abstractions
     }
 
     impl GpuPipeline {
         /// Create a new GPU pipeline
         #[cfg(feature = "gpu")]
         pub async fn new() -> SpecialResult<Self> {
-            #[allow(unused_imports)]
-            use wgpu::util::DeviceExt;
-            use wgpu::*;
-
-            let instance = Instance::new(InstanceDescriptor::default());
-            let adapter = instance
-                .request_adapter(&RequestAdapterOptions::default())
-                .await
-                .ok_or_else(|| {
-                    SpecialError::ComputationError("Failed to get GPU adapter".to_string())
-                })?;
-
-            let (device, queue) = adapter
-                .request_device(&DeviceDescriptor::default(), None)
-                .await
-                .map_err(|e| {
-                    SpecialError::ComputationError(format!("Failed to get GPU device: {}", e))
-                })?;
-
-            // Create a simple compute shader for gamma function
-            let shader_source = include_str!("../shaders/gamma_compute.wgsl");
-            let shader_module = device.create_shader_module(ShaderModuleDescriptor {
-                label: Some("Gamma Compute Shader"),
-                source: ShaderSource::Wgsl(shader_source.into()),
-            });
-
-            let pipeline = device.create_compute_pipeline(&ComputePipelineDescriptor {
-                label: Some("Gamma Compute Pipeline"),
-                layout: None,
-                module: &shader_module,
-                entry_point: "main",
-                compilation_options: Default::default(),
-            });
-
-            Ok(Self {
-                device,
-                queue,
-                pipeline,
-            })
+            // TODO: Use scirs2_core::gpu for GPU operations
+            // This is a placeholder implementation that should be replaced
+            // with core GPU abstractions when available
+            Err(SpecialError::ComputationError(
+                "GPU operations should use scirs2_core::gpu abstractions".to_string(),
+            ))
         }
 
         /// Execute gamma function on GPU
@@ -339,6 +308,9 @@ pub mod gpu {
         where
             D: Dimension,
         {
+            // TODO: Use scirs2_core::gpu for GPU operations
+            // Temporarily disabled direct GPU implementation
+            /*
             use bytemuck;
             use wgpu::util::{BufferInitDescriptor, DeviceExt};
             use wgpu::*;
@@ -430,6 +402,9 @@ pub mod gpu {
                 .into_shape_with_order(input.dim())
                 .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?;
             Ok(result_array)
+            */
+            // Fallback to CPU implementation until core GPU abstractions are used
+            Ok(input.mapv(crate::gamma::gamma))
         }
 
         /// Execute gamma function on CPU as fallback
@@ -555,7 +530,7 @@ pub mod vectorized {
         if config.parallel && total_elements > config.chunk_size {
             #[cfg(feature = "parallel")]
             {
-                use rayon::prelude::*;
+                use scirs2_core::parallel_ops::*;
                 let data: Vec<f64> = input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::gamma::gamma(x)).collect();
                 let result_array = Array::from_vec(result)
@@ -609,7 +584,7 @@ pub mod vectorized {
         if config.parallel && input.len() > config.chunk_size {
             #[cfg(feature = "parallel")]
             {
-                use rayon::prelude::*;
+                use scirs2_core::parallel_ops::*;
                 let data: Vec<f64> = input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::erf::erf(x)).collect();
                 return Ok(Array::from_vec(result)
@@ -633,7 +608,7 @@ pub mod vectorized {
         if config.parallel && input.len() > config.chunk_size {
             #[cfg(feature = "parallel")]
             {
-                use rayon::prelude::*;
+                use scirs2_core::parallel_ops::*;
                 let data: Vec<u32> = input.iter().copied().collect();
                 let result: Vec<f64> = data
                     .par_iter()
@@ -758,7 +733,7 @@ pub mod vectorized {
         // Process in chunks to manage memory usage
         #[cfg(feature = "parallel")]
         if config.parallel {
-            use rayon::prelude::*;
+            use scirs2_core::parallel_ops::*;
             let data: Vec<T> = input.iter().cloned().collect();
             let processed: Vec<T> = data.into_par_iter().map(operation).collect();
             let result = Array::from_vec(processed)
