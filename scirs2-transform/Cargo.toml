@@ -11,7 +11,7 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
-scirs2-core = { workspace = true, features = ["validation"] }
+scirs2-core = { workspace = true, features = ["validation", "parallel"] }
 scirs2-linalg = { workspace = true }
 scirs2-stats = { workspace = true }
 ndarray = { workspace = true }
@@ -21,7 +21,7 @@ num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
 approx = { workspace = true }
-rayon = { workspace = true }
+# rayon = { workspace = true }  # Now use scirs2-core parallel abstractions
 rand = { workspace = true }
 
 # Future dependency for PandRS with appropriate abstractions

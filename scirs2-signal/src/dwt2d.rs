@@ -96,9 +96,9 @@ use ndarray::Array2;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
-// Import rayon for parallel processing when the "parallel" feature is enabled
+// Import parallel ops for parallel processing when the "parallel" feature is enabled
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 // use std::convert::TryInto;  // Not needed
 
 /// Type alias for column processing results to reduce complexity

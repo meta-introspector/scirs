@@ -121,7 +121,7 @@ extern crate num_traits;
 /// re-exported for convenience and version-compatibility
 pub extern crate rand;
 extern crate rand_distr;
-extern crate rayon;
+// extern crate rayon;  // Now use scirs2-core parallel abstractions
 extern crate rustc_hash;
 extern crate serde;
 extern crate serde_json;

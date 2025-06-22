@@ -189,7 +189,7 @@ impl ParallelPlanner {
                     let idx_val = *idx;
 
                     self.worker_pool.execute(move || {
-                        let thread_id = rayon::current_thread_index().unwrap_or(0);
+                        let thread_id = 0; // Thread ID tracking handled by core parallel abstractions
                         let start = Instant::now();
                         let plan = {
                             let mut planner_guard = planner.lock().unwrap();

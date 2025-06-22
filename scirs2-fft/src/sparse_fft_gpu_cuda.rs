@@ -9,10 +9,66 @@ use crate::sparse_fft::{
 };
 use num_complex::Complex64;
 use num_traits::NumCast;
-use scirs2_core::gpu::{GpuDevice, GpuKernel};
+use scirs2_core::gpu::{GpuDevice, GpuKernel, GpuBackend};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::fmt::Debug;
 use std::time::Instant;
+
+/// Placeholder for GPU buffer descriptor - to be implemented with core GPU abstractions
+pub struct BufferDescriptor {
+    size: usize,
+    id: u64,
+}
+
+/// Placeholder for buffer location - to be implemented with core GPU abstractions  
+pub enum BufferLocation {
+    Device,
+    Host,
+}
+
+/// Placeholder for buffer type - to be implemented with core GPU abstractions
+pub enum BufferType {
+    Input,
+    Output, 
+    Work,
+}
+
+/// Placeholder for GPU stream - to be implemented with core GPU abstractions
+pub struct GpuStream {
+    id: u64,
+}
+
+impl GpuStream {
+    pub fn new(_device_id: i32) -> FFTResult<Self> {
+        Err(FFTError::NotImplementedError(
+            "GPU streams need to be implemented with scirs2-core::gpu abstractions".to_string()
+        ))
+    }
+}
+
+/// Placeholder memory manager - to be implemented with core GPU abstractions
+pub struct GpuMemoryManager;
+
+impl GpuMemoryManager {
+    pub fn allocate(&self, _size: usize, _location: BufferLocation, _buffer_type: BufferType) -> FFTResult<BufferDescriptor> {
+        Err(FFTError::NotImplementedError(
+            "GPU memory management needs to be implemented with scirs2-core::gpu abstractions".to_string()
+        ))
+    }
+    
+    pub fn free(&self, _descriptor: BufferDescriptor) -> FFTResult<()> {
+        Err(FFTError::NotImplementedError(
+            "GPU memory management needs to be implemented with scirs2-core::gpu abstractions".to_string()
+        ))
+    }
+}
+
+/// Placeholder for global memory manager - to be implemented with core GPU abstractions
+pub fn get_global_memory_manager() -> FFTResult<GpuMemoryManager> {
+    Err(FFTError::NotImplementedError(
+        "GPU memory management needs to be implemented with scirs2-core::gpu abstractions".to_string()
+    ))
+}
 
 /// Check if GPU is available through core platform capabilities
 pub fn ensure_gpu_available() -> FFTResult<bool> {
@@ -21,68 +77,48 @@ pub fn ensure_gpu_available() -> FFTResult<bool> {
 }
 
 /// GPU device information using core abstractions
-#[derive(Debug, Clone)]
 pub struct GpuDeviceInfo {
     /// Device wrapped from core GPU module
-    device: Option<GpuDevice>,
+    pub device: GpuDevice,
+    /// Whether the device is initialized
+    pub initialized: bool,
 }
 
 impl GpuDeviceInfo {
     /// Create GPU device info using core abstractions
-    pub fn new() -> FFTResult<Self> {
-        let device = GpuDevice::default().ok();
-        Ok(Self { device })
+    pub fn new(device_id: usize) -> FFTResult<Self> {
+        let device = GpuDevice::new(GpuBackend::default(), device_id);
+        Ok(Self { device, initialized: true })
     }
 
     /// Check if device is available
     pub fn is_available(&self) -> bool {
-        self.device.is_some()
+        self.initialized
     }
-}
 }
 
 /// GPU context for FFT operations using core abstractions
-#[derive(Debug, Clone)]
 pub struct GpuContext {
-    /// GPU device from core module
-    device: Option<GpuDevice>,
+    /// Device ID
+    device_id: i32,
+    /// Device information
+    device_info: GpuDeviceInfo,
+    /// GPU stream
+    stream: GpuStream,
     /// Whether the context is initialized
     initialized: bool,
 }
 
-impl CUDAContext {
+impl GpuContext {
     /// Create a new CUDA context for the specified device
     pub fn new(device_id: i32) -> FFTResult<Self> {
         // In a real implementation, this would query the device and initialize CUDA
 
-        // Create dummy device info or query actual device if CUDA is available
-        let device_info = if cfg!(feature = "cuda") {
-            // Query CUDA device info (in a real implementation)
-            // For now, create dummy info
-            CUDADeviceInfo {
-                device_id,
-                name: format!("CUDA Device {}", device_id),
-                total_memory: 8 * 1024 * 1024 * 1024, // 8 GB
-                compute_capability: (8, 0),           // SM 8.0
-                multiprocessor_count: 30,
-                max_threads_per_block: 1024,
-                max_shared_memory_per_block: 48 * 1024, // 48 KB
-            }
-        } else {
-            // Create dummy device info
-            CUDADeviceInfo {
-                device_id,
-                name: format!("CUDA Device {}", device_id),
-                total_memory: 8 * 1024 * 1024 * 1024, // 8 GB
-                compute_capability: (8, 0),           // SM 8.0
-                multiprocessor_count: 30,
-                max_threads_per_block: 1024,
-                max_shared_memory_per_block: 48 * 1024, // 48 KB
-            }
-        };
+        // Create device info using core abstractions
+        let device_info = GpuDeviceInfo::new(device_id as usize)?;
 
         // Create stream
-        let stream = CUDAStream::new(device_id)?;
+        let stream = GpuStream::new(device_id)?;
 
         Ok(Self {
             device_id,
@@ -93,12 +129,12 @@ impl CUDAContext {
     }
 
     /// Get device information
-    pub fn device_info(&self) -> &CUDADeviceInfo {
+    pub fn device_info(&self) -> &GpuDeviceInfo {
         &self.device_info
     }
 
     /// Get stream
-    pub fn stream(&self) -> &CUDAStream {
+    pub fn stream(&self) -> &GpuStream {
         &self.stream
     }
 
@@ -108,11 +144,9 @@ impl CUDAContext {
 
         // Use the global memory manager to track allocations
         let manager = get_global_memory_manager()?;
-        let mut manager = manager.lock().unwrap();
 
-        manager.allocate_buffer(
+        manager.allocate(
             size_bytes,
-            1, // Element size = 1 byte
             BufferLocation::Device,
             BufferType::Work,
         )
@@ -124,9 +158,8 @@ impl CUDAContext {
 
         // Use the global memory manager to track allocations
         let manager = get_global_memory_manager()?;
-        let mut manager = manager.lock().unwrap();
 
-        manager.release_buffer(descriptor)
+        manager.free(descriptor)
     }
 
     /// Copy data from host to device
@@ -139,7 +172,7 @@ impl CUDAContext {
 
         // Check if sizes match
         let host_size_bytes = std::mem::size_of_val(host_data);
-        let device_size_bytes = device_buffer.size * device_buffer.element_size;
+        let device_size_bytes = device_buffer.size;
 
         if host_size_bytes > device_size_bytes {
             return Err(FFTError::DimensionError(format!(
@@ -161,7 +194,7 @@ impl CUDAContext {
 
         // Check if sizes match
         let host_size_bytes = std::mem::size_of_val(host_data);
-        let device_size_bytes = device_buffer.size * device_buffer.element_size;
+        let device_size_bytes = device_buffer.size;
 
         if device_size_bytes > host_size_bytes {
             return Err(FFTError::DimensionError(format!(
@@ -175,9 +208,9 @@ impl CUDAContext {
 }
 
 /// CUDA-accelerated sparse FFT implementation
-pub struct CUDASparseFFT {
+pub struct GpuSparseFFT {
     /// CUDA context
-    context: CUDAContext,
+    context: GpuContext,
     /// Sparse FFT configuration
     config: SparseFFTConfig,
     /// Buffer for input signal on device
@@ -188,14 +221,14 @@ pub struct CUDASparseFFT {
     output_indices_buffer: Option<BufferDescriptor>,
 }
 
-impl CUDASparseFFT {
+impl GpuSparseFFT {
     /// Create a new CUDA-accelerated sparse FFT processor
     pub fn new(device_id: i32, config: SparseFFTConfig) -> FFTResult<Self> {
-        // Initialize CUDA device and memory management
-        init_cuda_device()?;
+        // GPU device initialization handled by core GPU abstractions
+        // TODO: Use scirs2-core::gpu device initialization
 
         // Initialize CUDA context
-        let context = CUDAContext::new(device_id)?;
+        let context = GpuContext::new(device_id)?;
 
         Ok(Self {
             context,
@@ -212,13 +245,11 @@ impl CUDASparseFFT {
         self.free_buffers()?;
 
         // Get memory manager
-        let memory_manager_arc = get_global_memory_manager()?;
-        let mut memory_manager = memory_manager_arc.lock().unwrap();
+        let memory_manager = get_global_memory_manager()?;
 
         // Allocate input buffer
-        let input_buffer = memory_manager.allocate_buffer(
-            signal_size,
-            std::mem::size_of::<Complex64>(),
+        let input_buffer = memory_manager.allocate(
+            signal_size * std::mem::size_of::<Complex64>(),
             BufferLocation::Device,
             BufferType::Input,
         )?;
@@ -227,17 +258,15 @@ impl CUDASparseFFT {
         // Allocate output buffers (assuming worst case: all components are significant)
         let max_components = self.config.sparsity.min(signal_size);
 
-        let output_values_buffer = memory_manager.allocate_buffer(
-            max_components,
-            std::mem::size_of::<Complex64>(),
+        let output_values_buffer = memory_manager.allocate(
+            max_components * std::mem::size_of::<Complex64>(),
             BufferLocation::Device,
             BufferType::Output,
         )?;
         self.output_values_buffer = Some(output_values_buffer);
 
-        let output_indices_buffer = memory_manager.allocate_buffer(
-            max_components,
-            std::mem::size_of::<usize>(),
+        let output_indices_buffer = memory_manager.allocate(
+            max_components * std::mem::size_of::<usize>(),
             BufferLocation::Device,
             BufferType::Output,
         )?;
@@ -248,18 +277,17 @@ impl CUDASparseFFT {
 
     /// Free all buffers
     fn free_buffers(&mut self) -> FFTResult<()> {
-        if let Ok(memory_manager_arc) = get_global_memory_manager() {
-            let mut memory_manager = memory_manager_arc.lock().unwrap();
+        if let Ok(memory_manager) = get_global_memory_manager() {
             if let Some(buffer) = self.input_buffer.take() {
-                memory_manager.release_buffer(buffer)?;
+                memory_manager.free(buffer)?;
             }
 
             if let Some(buffer) = self.output_values_buffer.take() {
-                memory_manager.release_buffer(buffer)?;
+                memory_manager.free(buffer)?;
             }
 
             if let Some(buffer) = self.output_indices_buffer.take() {
-                memory_manager.release_buffer(buffer)?;
+                memory_manager.free(buffer)?;
             }
         }
 
@@ -348,7 +376,7 @@ impl CUDASparseFFT {
     }
 }
 
-impl Drop for CUDASparseFFT {
+impl Drop for GpuSparseFFT {
     fn drop(&mut self) {
         // Free all resources
         let _ = self.free_buffers();
@@ -382,10 +410,10 @@ pub fn cuda_sparse_fft<T>(
 where
     T: NumCast + Copy + Debug + 'static,
 {
-    // Check if CUDA is available
-    if !ensure_cuda_available()? {
+    // Check if GPU is available
+    if !ensure_gpu_available()? {
         return Err(FFTError::ComputationError(
-            "CUDA is not available. Either the 'cuda' feature is not enabled or CUDA hardware/drivers are not available.".to_string()
+            "GPU is not available. Either GPU features are not enabled or GPU hardware/drivers are not available.".to_string()
         ));
     }
 
@@ -398,16 +426,11 @@ where
         ..SparseFFTConfig::default()
     };
 
-    // Initialize memory manager if not already initialized
-    init_global_memory_manager(
-        crate::sparse_fft_gpu::GPUBackend::CUDA,
-        device_id,
-        crate::sparse_fft_gpu_memory::AllocationStrategy::CacheBySize,
-        1024 * 1024 * 1024, // 1 GB limit
-    )?;
+    // GPU memory manager initialization handled by core GPU abstractions
+    // TODO: Use scirs2-core::gpu memory management initialization
 
     // Create processor and perform computation
-    let mut processor = CUDASparseFFT::new(device_id, config)?;
+    let mut processor = GpuSparseFFT::new(device_id, config)?;
     processor.sparse_fft(signal)
 }
 
@@ -447,7 +470,7 @@ where
     };
 
     // Create processor
-    let mut processor = CUDASparseFFT::new(device_id, config)?;
+    let mut processor = GpuSparseFFT::new(device_id, config)?;
 
     // Process each signal
     let mut results = Vec::with_capacity(signals.len());
@@ -458,25 +481,17 @@ where
     Ok(results)
 }
 
-/// Initialize CUDA subsystem and get available CUDA devices
-pub fn get_cuda_devices() -> FFTResult<Vec<CUDADeviceInfo>> {
-    // In a real implementation, this would query all available CUDA devices
+/// Initialize GPU subsystem and get available GPU devices
+pub fn get_cuda_devices() -> FFTResult<Vec<GpuDeviceInfo>> {
+    // In a real implementation, this would query all available GPU devices through scirs2-core
 
-    // First check if CUDA is available
-    if !is_cuda_available() {
+    // First check if GPU is available
+    if !ensure_gpu_available().unwrap_or(false) {
         return Ok(Vec::new());
     }
 
-    // For now, return dummy data until actual CUDA implementation is complete
-    let devices = vec![CUDADeviceInfo {
-        device_id: 0,
-        name: "NVIDIA GeForce RTX 3080".to_string(),
-        total_memory: 10 * 1024 * 1024 * 1024, // 10 GB
-        compute_capability: (8, 6),            // SM 8.6
-        multiprocessor_count: 68,
-        max_threads_per_block: 1024,
-        max_shared_memory_per_block: 48 * 1024, // 48 KB
-    }];
+    // For now, return dummy data until actual GPU implementation is complete
+    let devices = vec![GpuDeviceInfo::new(0)?];
 
     Ok(devices)
 }
@@ -519,7 +534,7 @@ mod tests {
         assert!(!devices.is_empty());
 
         // Create a CUDA context
-        let context = CUDAContext::new(0).unwrap();
+        let context = GpuContext::new(0).unwrap();
         assert_eq!(context.device_id, 0);
         assert!(context.initialized);
     }

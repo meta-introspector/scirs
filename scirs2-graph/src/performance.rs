@@ -5,7 +5,7 @@
 
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -95,13 +95,8 @@ where
     E: EdgeWeight + Send + Sync,
     Ix: petgraph::graph::IndexType + Send + Sync,
 {
-    // Configure thread pool if needed
-    if let Some(num_threads) = config.num_threads {
-        rayon::ThreadPoolBuilder::new()
-            .num_threads(num_threads)
-            .build_global()
-            .map_err(|e| GraphError::AlgorithmError(format!("Thread pool error: {}", e)))?;
-    }
+    // Note: Thread pool configuration is handled globally by scirs2-core
+    // The num_threads config parameter is preserved for future use but currently ignored
 
     let nodes: Vec<_> = graph.nodes().into_iter().cloned().collect();
 
@@ -147,13 +142,8 @@ where
 {
     use crate::algorithms::shortest_path::shortest_path;
 
-    // Configure thread pool if needed
-    if let Some(num_threads) = config.num_threads {
-        rayon::ThreadPoolBuilder::new()
-            .num_threads(num_threads)
-            .build_global()
-            .map_err(|e| GraphError::AlgorithmError(format!("Thread pool error: {}", e)))?;
-    }
+    // Note: Thread pool configuration is handled globally by scirs2-core
+    // The num_threads config parameter is preserved for future use but currently ignored
 
     let all_nodes: Vec<_> = graph.nodes().into_iter().cloned().collect();
 

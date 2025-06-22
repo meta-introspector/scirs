@@ -11,7 +11,7 @@ use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
 use num_traits::{Float, NumCast};
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 use crate::error::{Result, TransformError};
 use crate::reduction::PCA;

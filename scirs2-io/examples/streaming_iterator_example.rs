@@ -338,7 +338,7 @@ fn demonstrate_parallel_streaming() -> Result<(), Box<dyn std::error::Error>> {
         true, // Has header
         |rows, chunk_id, _header| -> scirs2_io::error::Result<Vec<f64>> {
             // Simulate parallel processing within chunk
-            use rayon::prelude::*;
+            use scirs2_core::parallel_ops::*;
 
             let chunk_results: Vec<f64> = rows
                 .par_iter()

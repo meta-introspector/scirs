@@ -11,6 +11,7 @@
 use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use ndarray::{Array1, ArrayView1, ArrayViewMut1, Zip};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 
 /// SIMD-optimized ODE operations
 pub struct SimdOdeOps;
@@ -271,8 +272,6 @@ impl SimdOdeOps {
 /// SIMD-optimized vector addition with scaling: y = y + a * x
 #[cfg(feature = "simd")]
 fn simd_axpy_f32_impl(y: &mut ArrayViewMut1<f32>, a: f32, x: &ArrayView1<f32>) {
-    use wide::f32x8;
-
     let n = y.len();
     assert_eq!(n, x.len(), "Arrays must have the same length");
 
@@ -282,35 +281,21 @@ fn simd_axpy_f32_impl(y: &mut ArrayViewMut1<f32>, a: f32, x: &ArrayView1<f32>) {
 
         // Process 8 elements at a time
         while i + chunk_size <= n {
-            let a_vec = f32x8::splat(a);
-            let x_arr = [
-                x_slice[i],
-                x_slice[i + 1],
-                x_slice[i + 2],
-                x_slice[i + 3],
-                x_slice[i + 4],
-                x_slice[i + 5],
-                x_slice[i + 6],
-                x_slice[i + 7],
-            ];
-            let y_arr = [
-                y_slice[i],
-                y_slice[i + 1],
-                y_slice[i + 2],
-                y_slice[i + 3],
-                y_slice[i + 4],
-                y_slice[i + 5],
-                y_slice[i + 6],
-                y_slice[i + 7],
-            ];
-
-            let x_vec = f32x8::new(x_arr);
-            let y_vec = f32x8::new(y_arr);
-
-            let result_vec = y_vec + a_vec * x_vec;
-            let result_arr: [f32; 8] = result_vec.into();
-
-            y_slice[i..i + chunk_size].copy_from_slice(&result_arr);
+            let x_chunk = &x_slice[i..i + chunk_size];
+            let y_chunk = &y_slice[i..i + chunk_size];
+            
+            // Create views for SIMD operations
+            let x_view = ArrayView1::from(x_chunk);
+            let y_view = ArrayView1::from(y_chunk);
+            
+            // Compute a * x using core SIMD
+            let ax_result = f32::simd_scalar_mul(a, &x_view);
+            
+            // Compute y + a*x and store back
+            for (j, ax_val) in ax_result.iter().enumerate() {
+                y_slice[i + j] += ax_val;
+            }
+            
             i += chunk_size;
         }
 
@@ -329,8 +314,6 @@ fn simd_axpy_f32_impl(y: &mut ArrayViewMut1<f32>, a: f32, x: &ArrayView1<f32>) {
 /// SIMD-optimized vector addition with scaling: y = y + a * x (f64 version)
 #[cfg(feature = "simd")]
 fn simd_axpy_f64_impl(y: &mut ArrayViewMut1<f64>, a: f64, x: &ArrayView1<f64>) {
-    use wide::f64x4;
-
     let n = y.len();
     assert_eq!(n, x.len(), "Arrays must have the same length");
 
@@ -340,17 +323,21 @@ fn simd_axpy_f64_impl(y: &mut ArrayViewMut1<f64>, a: f64, x: &ArrayView1<f64>) {
 
         // Process 4 elements at a time
         while i + chunk_size <= n {
-            let a_vec = f64x4::splat(a);
-            let x_arr = [x_slice[i], x_slice[i + 1], x_slice[i + 2], x_slice[i + 3]];
-            let y_arr = [y_slice[i], y_slice[i + 1], y_slice[i + 2], y_slice[i + 3]];
-
-            let x_vec = f64x4::new(x_arr);
-            let y_vec = f64x4::new(y_arr);
-
-            let result_vec = y_vec + a_vec * x_vec;
-            let result_arr: [f64; 4] = result_vec.into();
-
-            y_slice[i..i + chunk_size].copy_from_slice(&result_arr);
+            let x_chunk = &x_slice[i..i + chunk_size];
+            let y_chunk = &y_slice[i..i + chunk_size];
+            
+            // Create views for SIMD operations
+            let x_view = ArrayView1::from(x_chunk);
+            let y_view = ArrayView1::from(y_chunk);
+            
+            // Compute a * x using core SIMD
+            let ax_result = f64::simd_scalar_mul(a, &x_view);
+            
+            // Compute y + a*x and store back
+            for (j, ax_val) in ax_result.iter().enumerate() {
+                y_slice[i + j] += ax_val;
+            }
+            
             i += chunk_size;
         }
 

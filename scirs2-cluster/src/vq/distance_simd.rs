@@ -1,14 +1,13 @@
 //! SIMD-accelerated distance computations for clustering algorithms
 //!
-//! This module provides highly optimized distance calculations using SIMD instructions
-//! where available, with fallbacks to standard implementations.
+//! This module provides highly optimized distance calculations using the unified
+//! SIMD operations from scirs2-core, with fallbacks to standard implementations.
 
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
-
-#[cfg(target_arch = "x86_64")]
-use std::arch::x86_64::*;
+use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities, AutoOptimizer};
+use scirs2_core::parallel_ops::*;
 
 /// Compute Euclidean distances between all pairs of points using SIMD when available
 ///
@@ -21,33 +20,22 @@ use std::arch::x86_64::*;
 /// * Condensed distance matrix as a 1D array
 pub fn pairwise_euclidean_simd<F>(data: ArrayView2<F>) -> Array1<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync,
+    F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
     let n_samples = data.shape()[0];
-    let _n_features = data.shape()[1];
+    let n_features = data.shape()[1];
     let n_distances = n_samples * (n_samples - 1) / 2;
-
     let mut distances = Array1::zeros(n_distances);
 
-    #[cfg(target_arch = "x86_64")]
-    {
-        if is_x86_feature_detected!("avx2") && std::mem::size_of::<F>() == 8 {
-            // Use AVX2 for f64
-            unsafe {
-                pairwise_euclidean_avx2_f64(data, &mut distances);
-            }
-            return distances;
-        } else if is_x86_feature_detected!("sse2") && std::mem::size_of::<F>() == 8 {
-            // Use SSE2 for f64
-            unsafe {
-                pairwise_euclidean_sse2_f64(data, &mut distances);
-            }
-            return distances;
-        }
+    let caps = PlatformCapabilities::detect();
+    let optimizer = AutoOptimizer::new();
+    
+    if caps.simd_available && optimizer.should_use_simd(n_samples * n_features) {
+        pairwise_euclidean_simd_optimized(data, &mut distances);
+    } else {
+        pairwise_euclidean_standard(data, &mut distances);
     }
-
-    // Fallback to standard implementation
-    pairwise_euclidean_standard(data, &mut distances);
+    
     distances
 }
 
@@ -73,128 +61,30 @@ where
     }
 }
 
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "avx2")]
-unsafe fn pairwise_euclidean_avx2_f64<F>(data: ArrayView2<F>, distances: &mut Array1<F>)
+/// SIMD-optimized pairwise Euclidean distance computation using unified operations
+fn pairwise_euclidean_simd_optimized<F>(data: ArrayView2<F>, distances: &mut Array1<F>)
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + SimdUnifiedOps,
 {
-    // This is a simplified implementation that assumes F is f64
-    // In a real implementation, you would need proper type handling
-    if std::mem::size_of::<F>() != 8 {
-        pairwise_euclidean_standard(data, distances);
-        return;
-    }
-
     let n_samples = data.shape()[0];
     let n_features = data.shape()[1];
-
-    // AVX2 processes 4 f64 values at once
-    let simd_width = 4;
-    let simd_features = (n_features / simd_width) * simd_width;
 
     let mut idx = 0;
     for i in 0..n_samples {
         for j in (i + 1)..n_samples {
-            let mut sum_vec = _mm256_setzero_pd();
-
-            // Process features in chunks of 4
-            let mut k = 0;
-            while k < simd_features {
-                // Load data points
-                let ptr_i = data.as_ptr().add(i * n_features + k) as *const f64;
-                let ptr_j = data.as_ptr().add(j * n_features + k) as *const f64;
-
-                let vec_i = _mm256_loadu_pd(ptr_i);
-                let vec_j = _mm256_loadu_pd(ptr_j);
-
-                // Compute difference
-                let diff = _mm256_sub_pd(vec_i, vec_j);
-
-                // Square the differences and accumulate
-                let diff_sq = _mm256_mul_pd(diff, diff);
-                sum_vec = _mm256_add_pd(sum_vec, diff_sq);
-
-                k += simd_width;
-            }
-
-            // Extract the sum from the SIMD register
-            let mut sum_array = [0.0; 4];
-            _mm256_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
-            let mut sum_sq = sum_array.iter().sum::<f64>();
-
-            // Handle remaining features
-            for k in simd_features..n_features {
-                let val_i = *((data.as_ptr().add(i * n_features + k)) as *const f64);
-                let val_j = *((data.as_ptr().add(j * n_features + k)) as *const f64);
-                let diff = val_i - val_j;
-                sum_sq += diff * diff;
-            }
-
-            distances[idx] = F::from_f64(sum_sq.sqrt()).unwrap();
+            let row_i = data.row(i);
+            let row_j = data.row(j);
+            
+            // Use SIMD operations for vector subtraction and norm calculation
+            let diff = F::simd_sub(&row_i, &row_j);
+            let distance = F::simd_norm(&diff.view());
+            
+            distances[idx] = distance;
             idx += 1;
         }
     }
 }
 
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "sse2")]
-unsafe fn pairwise_euclidean_sse2_f64<F>(data: ArrayView2<F>, distances: &mut Array1<F>)
-where
-    F: Float + FromPrimitive + Debug,
-{
-    // Similar to AVX2 but using SSE2 (2 f64 values at once)
-    if std::mem::size_of::<F>() != 8 {
-        pairwise_euclidean_standard(data, distances);
-        return;
-    }
-
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
-
-    // SSE2 processes 2 f64 values at once
-    let simd_width = 2;
-    let simd_features = (n_features / simd_width) * simd_width;
-
-    let mut idx = 0;
-    for i in 0..n_samples {
-        for j in (i + 1)..n_samples {
-            let mut sum_vec = _mm_setzero_pd();
-
-            // Process features in chunks of 2
-            let mut k = 0;
-            while k < simd_features {
-                let ptr_i = data.as_ptr().add(i * n_features + k) as *const f64;
-                let ptr_j = data.as_ptr().add(j * n_features + k) as *const f64;
-
-                let vec_i = _mm_loadu_pd(ptr_i);
-                let vec_j = _mm_loadu_pd(ptr_j);
-
-                let diff = _mm_sub_pd(vec_i, vec_j);
-                let diff_sq = _mm_mul_pd(diff, diff);
-                sum_vec = _mm_add_pd(sum_vec, diff_sq);
-
-                k += simd_width;
-            }
-
-            // Extract the sum
-            let mut sum_array = [0.0; 2];
-            _mm_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
-            let mut sum_sq = sum_array.iter().sum::<f64>();
-
-            // Handle remaining features
-            for k in simd_features..n_features {
-                let val_i = *((data.as_ptr().add(i * n_features + k)) as *const f64);
-                let val_j = *((data.as_ptr().add(j * n_features + k)) as *const f64);
-                let diff = val_i - val_j;
-                sum_sq += diff * diff;
-            }
-
-            distances[idx] = F::from_f64(sum_sq.sqrt()).unwrap();
-            idx += 1;
-        }
-    }
-}
 
 /// Compute distances from each point to a set of centroids using SIMD
 ///
@@ -208,7 +98,7 @@ where
 /// * Distance matrix (n_samples × n_clusters)
 pub fn distance_to_centroids_simd<F>(data: ArrayView2<F>, centroids: ArrayView2<F>) -> Array2<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync,
+    F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
     let n_samples = data.shape()[0];
     let n_clusters = centroids.shape()[0];
@@ -219,19 +109,16 @@ where
     }
 
     let mut distances = Array2::zeros((n_samples, n_clusters));
-
-    #[cfg(target_arch = "x86_64")]
-    {
-        if is_x86_feature_detected!("avx2") && std::mem::size_of::<F>() == 8 {
-            unsafe {
-                distance_to_centroids_avx2_f64(data, centroids, &mut distances);
-            }
-            return distances;
-        }
+    
+    let caps = PlatformCapabilities::detect();
+    let optimizer = AutoOptimizer::new();
+    
+    if caps.simd_available && optimizer.should_use_simd(n_samples * n_features) {
+        distance_to_centroids_simd_optimized(data, centroids, &mut distances);
+    } else {
+        distance_to_centroids_standard(data, centroids, &mut distances);
     }
-
-    // Fallback to standard implementation
-    distance_to_centroids_standard(data, centroids, &mut distances);
+    
     distances
 }
 
@@ -259,64 +146,33 @@ fn distance_to_centroids_standard<F>(
     }
 }
 
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "avx2")]
-unsafe fn distance_to_centroids_avx2_f64<F>(
+/// SIMD-optimized distance to centroids computation using unified operations
+fn distance_to_centroids_simd_optimized<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
     distances: &mut Array2<F>,
 ) where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + SimdUnifiedOps,
 {
-    if std::mem::size_of::<F>() != 8 {
-        distance_to_centroids_standard(data, centroids, distances);
-        return;
-    }
-
     let n_samples = data.shape()[0];
     let n_clusters = centroids.shape()[0];
-    let n_features = data.shape()[1];
-
-    let simd_width = 4;
-    let simd_features = (n_features / simd_width) * simd_width;
 
     for i in 0..n_samples {
         for j in 0..n_clusters {
-            let mut sum_vec = _mm256_setzero_pd();
-
-            let mut k = 0;
-            while k < simd_features {
-                let ptr_data = data.as_ptr().add(i * n_features + k) as *const f64;
-                let ptr_centroid = centroids.as_ptr().add(j * n_features + k) as *const f64;
-
-                let vec_data = _mm256_loadu_pd(ptr_data);
-                let vec_centroid = _mm256_loadu_pd(ptr_centroid);
-
-                let diff = _mm256_sub_pd(vec_data, vec_centroid);
-                let diff_sq = _mm256_mul_pd(diff, diff);
-                sum_vec = _mm256_add_pd(sum_vec, diff_sq);
-
-                k += simd_width;
-            }
-
-            let mut sum_array = [0.0; 4];
-            _mm256_storeu_pd(sum_array.as_mut_ptr(), sum_vec);
-            let mut sum_sq = sum_array.iter().sum::<f64>();
-
-            // Handle remaining features
-            for k in simd_features..n_features {
-                let val_data = *((data.as_ptr().add(i * n_features + k)) as *const f64);
-                let val_centroid = *((centroids.as_ptr().add(j * n_features + k)) as *const f64);
-                let diff = val_data - val_centroid;
-                sum_sq += diff * diff;
-            }
-
-            distances[[i, j]] = F::from_f64(sum_sq.sqrt()).unwrap();
+            let data_row = data.row(i);
+            let centroid_row = centroids.row(j);
+            
+            // Use SIMD operations for vector subtraction and norm calculation
+            let diff = F::simd_sub(&data_row, &centroid_row);
+            let distance = F::simd_norm(&diff.view());
+            
+            distances[[i, j]] = distance;
         }
     }
 }
 
-/// Parallel distance matrix computation using Rayon
+
+/// Parallel distance matrix computation using core parallel operations
 ///
 /// # Arguments
 ///
@@ -325,13 +181,10 @@ unsafe fn distance_to_centroids_avx2_f64<F>(
 /// # Returns
 ///
 /// * Condensed distance matrix
-#[cfg(feature = "rayon")]
 pub fn pairwise_euclidean_parallel<F>(data: ArrayView2<F>) -> Array1<F>
 where
-    F: Float + FromPrimitive + Debug + Send + Sync,
+    F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
-    use rayon::prelude::*;
-
     let n_samples = data.shape()[0];
     let n_distances = n_samples * (n_samples - 1) / 2;
 
@@ -343,29 +196,25 @@ where
         }
     }
 
-    // Compute distances in parallel
-    let distances: Vec<F> = pairs
-        .par_iter()
-        .map(|&(i, j)| {
-            let mut sum_sq = F::zero();
-            for k in 0..data.shape()[1] {
-                let diff = data[[i, k]] - data[[j, k]];
-                sum_sq = sum_sq + diff * diff;
-            }
-            sum_sq.sqrt()
-        })
-        .collect();
-
-    Array1::from_vec(distances)
-}
-
-#[cfg(not(feature = "rayon"))]
-pub fn pairwise_euclidean_parallel<F>(data: ArrayView2<F>) -> Array1<F>
-where
-    F: Float + FromPrimitive + Debug + Send + Sync,
-{
-    // Fallback to SIMD version when rayon is not available
-    pairwise_euclidean_simd(data)
+    // Use parallel operations from core
+    if is_parallel_enabled() && pairs.len() > 100 {
+        // Compute distances in parallel using core abstractions
+        let distances: Vec<F> = pairs
+            .into_par_iter()
+            .map(|(i, j)| {
+                let row_i = data.row(i);
+                let row_j = data.row(j);
+                
+                // Use SIMD operations for distance calculation
+                let diff = F::simd_sub(&row_i, &row_j);
+                F::simd_norm(&diff.view())
+            })
+            .collect();
+        Array1::from_vec(distances)
+    } else {
+        // Fallback to SIMD version for small problems or when parallel is disabled
+        pairwise_euclidean_simd(data)
+    }
 }
 
 #[cfg(test)]

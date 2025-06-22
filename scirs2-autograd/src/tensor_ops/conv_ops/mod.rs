@@ -6,7 +6,7 @@ use crate::tensor_ops::*;
 use crate::Float;
 use crate::Tensor;
 use ndarray;
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::f32;
 use std::slice;
 

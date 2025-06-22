@@ -6,7 +6,7 @@
 use super::{init_thread_pool, ThreadPoolError};
 use crate::Float;
 use ndarray::{Array, Axis, IxDyn, Zip};
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// Configuration for parallel operations
 #[derive(Debug, Clone)]

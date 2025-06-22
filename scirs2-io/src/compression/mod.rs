@@ -694,7 +694,7 @@ pub fn file_info_transparent<P: AsRef<Path>>(path: P) -> Result<FileCompressionI
 // Parallel Compression/Decompression
 //
 
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -754,7 +754,7 @@ pub fn compress_data_parallel(
 
     // Configure thread pool
     let num_threads = if config.num_threads == 0 {
-        rayon::current_num_threads()
+        num_threads()
     } else {
         config.num_threads
     };
@@ -836,7 +836,7 @@ pub fn decompress_data_parallel(
 
     // Configure thread pool
     let num_threads = if config.num_threads == 0 {
-        rayon::current_num_threads()
+        num_threads()
     } else {
         config.num_threads
     };

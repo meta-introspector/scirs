@@ -1817,7 +1817,7 @@ impl MemoryEfficientStft {
     where
         T: Float + NumCast + Debug + Send + Sync,
     {
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
 
         let chunk_size = self.calculate_chunk_size(signal.len());
         let window_length = self.stft.win.len();

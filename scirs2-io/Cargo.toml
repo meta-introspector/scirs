@@ -11,7 +11,7 @@ categories = ["science", "encoding"]
 
 [dependencies]
 ndarray = { workspace = true }
-scirs2-core = { workspace = true }
+scirs2-core = { workspace = true, features = ["parallel"] }
 byteorder = { workspace = true }
 image = { workspace = true }
 serde = { workspace = true }
@@ -37,7 +37,7 @@ glob = { workspace = true }
 netcdf3 = { workspace = true }
 kamadak-exif = { workspace = true }
 hdf5 = { workspace = true, optional = true }
-rayon = { workspace = true }
+# rayon = { workspace = true }  # Now use scirs2-core parallel abstractions
 thiserror = { workspace = true }
 tokio = { workspace = true, optional = true, features = ["fs", "io-util", "time", "rt"] }
 futures = { workspace = true, optional = true }

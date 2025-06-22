@@ -1,16 +1,13 @@
 //! Hardware acceleration utilities for metrics computation
 //!
 //! This module provides hardware-accelerated implementations of common metrics
-//! using SIMD vectorization, GPU compute shaders, and specialized hardware
-//! acceleration techniques for improved performance.
+//! using unified SIMD operations from scirs2-core for improved performance
+//! and cross-platform compatibility.
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-use std::arch::x86_64::*;
-
-#[cfg(target_arch = "aarch64")]
-use std::arch::aarch64::*;
+use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities, AutoOptimizer};
+use scirs2_core::parallel_ops::*;
 
 /// Configuration for hardware acceleration
 #[derive(Debug, Clone)]
@@ -89,8 +86,8 @@ impl HardwareAccelConfig {
     }
 }
 
-/// Hardware capabilities detector
-#[derive(Debug)]
+/// Hardware capabilities detector (using core platform capabilities)
+#[derive(Clone)]
 pub struct HardwareCapabilities {
     pub has_sse: bool,
     pub has_sse2: bool,
@@ -104,100 +101,48 @@ pub struct HardwareCapabilities {
     pub has_fma: bool,
     pub has_gpu: bool,
     pub gpu_memory: Option<usize>,
+    /// Core platform capabilities
+    pub core_caps: PlatformCapabilities,
 }
 
 impl HardwareCapabilities {
-    /// Detect hardware capabilities
+    /// Detect hardware capabilities using core platform detection
     pub fn detect() -> Self {
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        {
-            Self {
-                has_sse: is_x86_feature_detected!("sse"),
-                has_sse2: is_x86_feature_detected!("sse2"),
-                has_sse3: is_x86_feature_detected!("sse3"),
-                has_ssse3: is_x86_feature_detected!("ssse3"),
-                has_sse41: is_x86_feature_detected!("sse4.1"),
-                has_sse42: is_x86_feature_detected!("sse4.2"),
-                has_avx: is_x86_feature_detected!("avx"),
-                has_avx2: is_x86_feature_detected!("avx2"),
-                has_avx512f: is_x86_feature_detected!("avx512f"),
-                has_fma: is_x86_feature_detected!("fma"),
-                has_gpu: false, // TODO: Detect GPU capabilities
-                gpu_memory: None,
-            }
-        }
-        #[cfg(target_arch = "aarch64")]
-        {
-            Self {
-                has_sse: false,
-                has_sse2: false,
-                has_sse3: false,
-                has_ssse3: false,
-                has_sse41: false,
-                has_sse42: false,
-                has_avx: false,
-                has_avx2: false,
-                has_avx512f: false,
-                has_fma: std::arch::is_aarch64_feature_detected!("fp"),
-                has_gpu: false, // TODO: Detect GPU capabilities
-                gpu_memory: None,
-            }
-        }
-        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
-        {
-            Self {
-                has_sse: false,
-                has_sse2: false,
-                has_sse3: false,
-                has_ssse3: false,
-                has_sse41: false,
-                has_sse42: false,
-                has_avx: false,
-                has_avx2: false,
-                has_avx512f: false,
-                has_fma: false,
-                has_gpu: false,
-                gpu_memory: None,
-            }
+        let core_caps = PlatformCapabilities::detect();
+        
+        Self {
+            has_sse: true, // Assume SSE is available if we're on x86_64 (legacy compatibility)
+            has_sse2: core_caps.simd_available,
+            has_sse3: core_caps.simd_available,
+            has_ssse3: core_caps.simd_available,
+            has_sse41: core_caps.simd_available,
+            has_sse42: core_caps.simd_available,
+            has_avx: core_caps.avx2_available,
+            has_avx2: core_caps.avx2_available,
+            has_avx512f: core_caps.avx512_available,
+            has_fma: core_caps.simd_available, // FMA is typically available with modern SIMD
+            has_gpu: core_caps.gpu_available,
+            gpu_memory: None, // GPU memory detection not implemented in core yet
+            core_caps,
         }
     }
 
     /// Get optimal vector width for current hardware
     pub fn optimal_vector_width(&self) -> VectorWidth {
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        {
-            if self.has_avx512f {
-                VectorWidth::V512
-            } else if self.has_avx2 {
-                VectorWidth::V256
-            } else {
-                VectorWidth::V128 // SSE2 or fallback
-            }
-        }
-        #[cfg(target_arch = "aarch64")]
-        {
-            VectorWidth::V128 // NEON supports 128-bit vectors
-        }
-        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
-        {
+        if self.core_caps.avx512_available {
+            VectorWidth::V512
+        } else if self.core_caps.avx2_available {
+            VectorWidth::V256
+        } else if self.core_caps.simd_available {
+            VectorWidth::V128
+        } else {
             VectorWidth::V128 // Conservative fallback
         }
     }
 
     /// Check if SIMD is available
     pub fn simd_available(&self) -> bool {
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        {
-            self.has_sse2 // Minimum requirement for x86
-        }
-        #[cfg(target_arch = "aarch64")]
-        {
-            true // NEON is always available on AArch64
-        }
-        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
-        {
-            false // No SIMD support for other architectures
-        }
+        self.core_caps.simd_available
     }
 }
 
@@ -240,13 +185,10 @@ impl SimdDistanceMetrics {
             return self.euclidean_distance_standard(a, b);
         }
 
-        match self.config.vector_width {
-            VectorWidth::Auto => {
-                let optimal = self.capabilities.optimal_vector_width();
-                self.euclidean_distance_with_width(a, b, optimal)
-            }
-            width => self.euclidean_distance_with_width(a, b, width),
-        }
+        // Use unified SIMD operations for distance calculation
+        let diff = f64::simd_sub(&a.view(), &b.view());
+        let distance = f64::simd_norm(&diff.view());
+        Ok(distance)
     }
 
     /// Compute Manhattan distance using SIMD
@@ -264,13 +206,11 @@ impl SimdDistanceMetrics {
             return self.manhattan_distance_standard(a, b);
         }
 
-        match self.config.vector_width {
-            VectorWidth::Auto => {
-                let optimal = self.capabilities.optimal_vector_width();
-                self.manhattan_distance_with_width(a, b, optimal)
-            }
-            width => self.manhattan_distance_with_width(a, b, width),
-        }
+        // Use unified SIMD operations for Manhattan distance
+        let diff = f64::simd_sub(&a.view(), &b.view());
+        let abs_diff = f64::simd_abs(&diff.view());
+        let distance = f64::simd_sum(&abs_diff.view());
+        Ok(distance)
     }
 
     /// Compute cosine distance using SIMD
@@ -316,13 +256,9 @@ impl SimdDistanceMetrics {
             return Ok(a.dot(b));
         }
 
-        match self.config.vector_width {
-            VectorWidth::Auto => {
-                let optimal = self.capabilities.optimal_vector_width();
-                self.dot_product_with_width(a, b, optimal)
-            }
-            width => self.dot_product_with_width(a, b, width),
-        }
+        // Use unified SIMD operations for dot product
+        let dot_product = f64::simd_dot(&a.view(), &b.view());
+        Ok(dot_product)
     }
 
     /// Compute Euclidean norm using SIMD

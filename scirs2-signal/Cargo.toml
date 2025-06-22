@@ -11,7 +11,7 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
-scirs2-core = { workspace = true }
+scirs2-core = { workspace = true, features = ["parallel"] }
 ndarray = { workspace = true }
 num-traits = { workspace = true }
 num-complex = { workspace = true }
@@ -29,12 +29,12 @@ rand_distr = { workspace = true }
 plotly = { workspace = true }
 ndarray-linalg = { workspace = true }
 ndarray-rand = { workspace = true }
-# Optional rayon dependency for parallel processing
-rayon = { workspace = true, optional = true }
+# Optional rayon dependency for parallel processing - now handled by scirs2-core
+# rayon = { workspace = true, optional = true }
 
 [features]
 default = []
-parallel = ["rayon"]
+parallel = ["scirs2-core/parallel"]  # Use scirs2-core parallel abstractions
 
 [dev-dependencies]
 approx = { workspace = true }

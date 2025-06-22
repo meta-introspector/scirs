@@ -10,8 +10,8 @@ keywords = ["neural-network", "deep-learning", "scientific", "ai", "machine-lear
 categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
-# Core dependencies - temporarily use minimal features until core issues are resolved
-scirs2-core = { workspace = true, optional = true, features = ["linalg", "memory_efficient", "cache", "parallel"] }
+# Core dependencies - use SIMD and parallel features
+scirs2-core = { workspace = true, optional = true, features = ["linalg", "memory_efficient", "cache", "parallel", "simd"] }
 # Temporarily commented out for publishing
 # scirs2-linalg = { workspace = true, optional = true }
 # scirs2-optimize = { workspace = true, optional = true }
@@ -31,8 +31,6 @@ rand = { workspace = true }
 rand_distr = { workspace = true }
 rand_chacha = { workspace = true }
 # BLAS dependencies handled through scirs2-core
-rayon = { workspace = true, optional = true }
-wide = { workspace = true, optional = true }
 
 # AI/ML specific dependencies
 autograd = { workspace = true }
@@ -62,8 +60,8 @@ gpu = ["core"]  # GPU acceleration requires core
 memory_efficient = ["core"]  # Memory efficiency requires core
 memory_management = ["core"]  # Memory management features
 cache = ["core"]  # Caching features
-simd = ["core", "dep:wide"]  # SIMD acceleration requires core and wide
-rayon = ["dep:rayon"]  # Parallel processing support
+simd = ["core"]  # SIMD acceleration through core
+parallel = ["core"]  # Parallel processing through core
 # Features temporarily disabled for publishing
 # linalg = ["dep:scirs2-linalg"] 
 # optimize = ["dep:scirs2-optimize"]

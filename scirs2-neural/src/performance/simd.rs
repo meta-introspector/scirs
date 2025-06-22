@@ -1,8 +1,8 @@
 //! SIMD-accelerated operations for neural networks
 //!
 //! This module provides vectorized implementations of common neural network operations
-//! using SIMD (Single Instruction, Multiple Data) instructions for significant
-//! performance improvements. All functions are feature-gated with "simd" feature.
+//! using unified SIMD operations from scirs2-core for significant performance improvements
+//! and cross-platform compatibility. All functions are feature-gated with "simd" feature.
 
 use crate::error::{NeuralError, Result};
 use ndarray::{ArrayD, ArrayView, ArrayViewMut, IxDyn};
@@ -12,7 +12,7 @@ use num_traits::Float;
 #[cfg(feature = "simd")]
 use ndarray::Array;
 #[cfg(feature = "simd")]
-use wide::{f32x8, CmpGt};
+use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities, AutoOptimizer};
 
 /// SIMD-accelerated operations for neural networks
 #[cfg(feature = "simd")]
@@ -23,7 +23,13 @@ impl SIMDOperations {
     /// SIMD-accelerated ReLU activation for f32 arrays
     pub fn simd_relu_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
         if let Some(slice) = input.as_slice_mut() {
-            Self::simd_relu_f32_slice(slice);
+            // Use unified SIMD operations for ReLU
+            let caps = PlatformCapabilities::detect();
+            if caps.simd_available {
+                Self::simd_relu_f32_slice_unified(slice);
+            } else {
+                Self::simd_relu_f32_slice_fallback(slice);
+            }
         } else {
             input.mapv_inplace(|x| x.max(0.0));
         }

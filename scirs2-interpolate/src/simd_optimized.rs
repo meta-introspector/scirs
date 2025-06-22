@@ -50,17 +50,7 @@ use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::{Debug, Display};
-
-// Platform-specific SIMD imports
-#[cfg(target_arch = "x86_64")]
-use std::arch::x86_64::*;
-
-#[cfg(target_arch = "x86")]
-use std::arch::x86::*;
-
-#[cfg(target_arch = "aarch64")]
-#[allow(unused_imports)]
-use std::arch::aarch64::*;
+use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities};
 
 /// RBF kernel types for SIMD evaluation
 #[derive(Debug, Clone, Copy)]
@@ -97,49 +87,25 @@ impl Default for SimdConfig {
 }
 
 impl SimdConfig {
-    /// Detect SIMD capabilities on the current platform
+    /// Detect SIMD capabilities on the current platform using core abstractions
     pub fn detect() -> Self {
-        #[cfg(target_arch = "x86_64")]
-        {
-            if is_x86_feature_detected!("avx2") {
-                Self {
-                    simd_available: true,
-                    f32_width: 8, // AVX2: 256-bit / 32-bit = 8 f32s
-                    f64_width: 4, // AVX2: 256-bit / 64-bit = 4 f64s
-                    instruction_set: "AVX2".to_string(),
-                }
-            } else if is_x86_feature_detected!("avx") {
-                Self {
-                    simd_available: true,
-                    f32_width: 8,
-                    f64_width: 4,
-                    instruction_set: "AVX".to_string(),
-                }
-            } else if is_x86_feature_detected!("sse2") {
-                Self {
-                    simd_available: true,
-                    f32_width: 4, // SSE: 128-bit / 32-bit = 4 f32s
-                    f64_width: 2, // SSE: 128-bit / 64-bit = 2 f64s
-                    instruction_set: "SSE2".to_string(),
-                }
+        let caps = PlatformCapabilities::detect();
+        
+        Self {
+            simd_available: caps.simd_available,
+            f32_width: if caps.avx2_available { 8 } else if caps.simd_available { 4 } else { 1 },
+            f64_width: if caps.avx2_available { 4 } else if caps.simd_available { 2 } else { 1 },
+            instruction_set: if caps.avx512_available {
+                "AVX512".to_string()
+            } else if caps.avx2_available {
+                "AVX2".to_string()
+            } else if caps.neon_available {
+                "NEON".to_string()
+            } else if caps.simd_available {
+                "SIMD".to_string()
             } else {
-                Self::fallback()
-            }
-        }
-
-        #[cfg(target_arch = "aarch64")]
-        {
-            Self {
-                simd_available: true,
-                f32_width: 4, // NEON: 128-bit / 32-bit = 4 f32s
-                f64_width: 2, // NEON: 128-bit / 64-bit = 2 f64s
-                instruction_set: "NEON".to_string(),
-            }
-        }
-
-        #[cfg(not(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64")))]
-        {
-            Self::fallback()
+                "Scalar".to_string()
+            },
         }
     }
 

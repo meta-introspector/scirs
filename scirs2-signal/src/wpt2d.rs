@@ -62,10 +62,10 @@ use std::fmt::Debug;
 /// Type alias for 2D decomposition result (LL, LH, HL, HH)
 type Decompose2DResult = (Array2<f64>, Array2<f64>, Array2<f64>, Array2<f64>);
 
-// Import rayon for parallel processing when the "parallel" feature is enabled
+// Import parallel ops for parallel processing when the "parallel" feature is enabled
 #[cfg(feature = "parallel")]
 #[allow(unused_imports)]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// Represents a 2D wavelet packet node with its position in the tree and coefficient array.
 #[derive(Clone)]

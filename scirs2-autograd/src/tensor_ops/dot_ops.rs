@@ -259,7 +259,7 @@ fn batch_mat_mul_impl_fast<F: Float>(
     let c_batch_size: usize = c_shape[rank - 2..].iter().product();
 
     {
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
         use std::slice;
 
         // Use `c` for c-order and `f` for an f-order matrix
@@ -476,7 +476,7 @@ fn batch_mat_mul_impl_slow<F: Float>(
     let bp_init = rhs.as_ptr();
     let cp_init = c.as_mut_ptr();
 
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
     use std::slice;
 
     unsafe {

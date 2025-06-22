@@ -15,7 +15,7 @@ use rustfft::{num_complex::Complex, FftPlanner};
 use std::sync::Arc;
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// Configuration for parallel spectral processing
 #[derive(Debug, Clone)]
@@ -51,17 +51,7 @@ pub struct ParallelSpectralProcessor {
 impl ParallelSpectralProcessor {
     /// Create a new parallel spectral processor
     pub fn new(config: ParallelSpectralConfig) -> Self {
-        // Configure Rayon thread pool if specified
-        #[cfg(feature = "parallel")]
-        if let Some(num_threads) = config.num_threads {
-            rayon::ThreadPoolBuilder::new()
-                .num_threads(num_threads)
-                .build_global()
-                .unwrap_or_else(|_| {
-                    eprintln!("Warning: Could not set thread count to {}", num_threads);
-                });
-        }
-
+        // Note: Thread pool configuration is now handled globally by scirs2-core
         #[cfg(not(feature = "parallel"))]
         if config.num_threads.is_some() {
             eprintln!("Warning: Parallel feature not enabled, ignoring thread count configuration");
@@ -471,7 +461,7 @@ impl ParallelSpectralProcessor {
         let frames: Vec<usize> = (0..n_frames).collect();
 
         #[cfg(feature = "parallel")]
-        let chunk_size = (n_frames / rayon::current_num_threads()).max(1);
+        let chunk_size = (n_frames / num_threads()).max(1);
         #[cfg(not(feature = "parallel"))]
         let chunk_size = n_frames;
 

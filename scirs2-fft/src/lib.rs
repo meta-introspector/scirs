@@ -210,8 +210,8 @@ pub use sparse_fft_cuda_kernels_spectral_flatness::{
 };
 pub use sparse_fft_gpu::{gpu_batch_sparse_fft, gpu_sparse_fft, GPUBackend};
 pub use sparse_fft_gpu_cuda::{
-    cuda_batch_sparse_fft, cuda_sparse_fft, get_cuda_devices, CUDAContext, CUDADeviceInfo,
-    CUDAStream,
+    cuda_batch_sparse_fft, cuda_sparse_fft, get_cuda_devices, GpuContext, GpuDeviceInfo,
+    // CUDAStream - migrated to core GPU abstractions
 };
 pub use sparse_fft_gpu_kernels::{
     execute_sparse_fft_kernel, GPUKernel, KernelConfig, KernelFactory, KernelImplementation,
