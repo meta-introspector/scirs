@@ -7,7 +7,7 @@
 //! - Batch query processing
 //! - Multi-threaded search operations
 
-#[cfg(feature = "simd")]
+#[cfg(all(feature = "simd", target_arch = "x86_64"))]
 use wide::f64x4;
 
 use crate::error::{InterpolateError, InterpolateResult};

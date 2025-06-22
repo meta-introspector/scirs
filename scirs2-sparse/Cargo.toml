@@ -30,3 +30,7 @@ byteorder = { workspace = true }
 approx = { workspace = true }
 criterion = { workspace = true }
 tempfile = { workspace = true }
+
+[[bench]]
+name = "sparse_benchmarks"
+harness = false

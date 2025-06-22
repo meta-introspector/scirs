@@ -51,7 +51,7 @@ impl Default for SSAOptions {
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```
 /// use ndarray::array;
 /// use scirs2_series::decomposition::{ssa_decomposition, SSAOptions};
 ///

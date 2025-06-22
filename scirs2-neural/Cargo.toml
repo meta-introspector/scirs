@@ -98,6 +98,10 @@ path = "examples/activations_example.rs"
 name = "model_serialization_example"
 path = "examples/model_serialization_example.rs"
 
+[[bench]]
+name = "neural_benchmarks"
+harness = false
+
 [[example]]
 name = "advanced_optimizers_example"
 path = "examples/advanced_optimizers_example.rs"

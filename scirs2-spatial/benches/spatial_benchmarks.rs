@@ -5,9 +5,10 @@
 //! insights for optimization decisions and performance scaling analysis.
 
 use criterion::{
-    black_box, criterion_group, criterion_main, BenchmarkId, Criterion, PlotConfiguration,
+    criterion_group, criterion_main, BenchmarkId, Criterion, PlotConfiguration,
     Throughput,
 };
+use std::hint::black_box;
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{

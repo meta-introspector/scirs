@@ -516,6 +516,7 @@ pub struct BatchProcessorStats {
 pub struct MemoryEfficientLayer {
     /// Weight matrix stored in memory-efficient format
     #[cfg(feature = "memory_efficient")]
+    #[allow(dead_code)]
     weights: ArrayD<f32>,
 
     /// Bias vector
@@ -531,6 +532,7 @@ pub struct MemoryEfficientLayer {
 
     /// Buffer pool for temporary allocations
     #[cfg(feature = "memory_management")]
+    #[allow(dead_code)]
     buffer_pool: Arc<BufferPool>,
 
     /// Cache for activations (useful during training)
@@ -718,6 +720,7 @@ impl MemoryEfficientLayer {
 
 /// Processor for chunk-wise forward operations
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 struct ChunkForwardProcessor<'a> {
     weights: &'a ArrayD<f32>,
     bias: &'a ndarray::Array1<f32>,

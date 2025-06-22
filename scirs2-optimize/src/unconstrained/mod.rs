@@ -10,7 +10,9 @@ use std::fmt;
 pub mod adaptive_convergence;
 pub mod advanced_line_search;
 pub mod bfgs;
+pub mod callback_diagnostics;
 pub mod conjugate_gradient;
+pub mod convergence_diagnostics;
 pub mod efficient_sparse;
 pub mod lbfgs;
 pub mod line_search;
@@ -43,7 +45,16 @@ pub use advanced_line_search::{
     InterpolationStrategy, LineSearchMethod, LineSearchResult, LineSearchStats,
 };
 pub use bfgs::minimize_bfgs;
+pub use callback_diagnostics::{
+    CallbackInfo, CallbackResult, DiagnosticOptimizer, OptimizationCallback,
+    minimize_with_diagnostics, optimize_with_diagnostics,
+};
 pub use conjugate_gradient::minimize_conjugate_gradient;
+pub use convergence_diagnostics::{
+    ConvergenceDiagnostics, DiagnosticCollector, DiagnosticOptions, DiagnosticWarning,
+    ExportFormat, IterationDiagnostic, LineSearchDiagnostic, PerformanceMetrics,
+    ProblemAnalysis, ProblemDifficulty, WarningSeverity,
+};
 pub use efficient_sparse::{
     minimize_efficient_sparse_newton, EfficientSparseOptions, SparsityInfo,
 };

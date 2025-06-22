@@ -21,7 +21,9 @@ pub mod property_based;
 pub mod security;
 pub mod stress;
 
-use crate::error::{CoreError, CoreResult, ErrorContext};
+use crate::error::CoreResult;
+#[cfg(target_os = "linux")]
+use crate::error::{CoreError, ErrorContext};
 use std::time::{Duration, Instant};
 
 /// Test execution configuration
@@ -218,7 +220,10 @@ impl TestRunner {
 
         let start_time = Instant::now();
         let mut cases_executed = 0;
+        #[cfg(target_os = "linux")]
         let mut max_memory = 0;
+        #[cfg(not(target_os = "linux"))]
+        let max_memory = 0;
 
         for i in 0..self.config.iterations {
             // Check timeout
@@ -276,6 +281,7 @@ impl TestRunner {
 
     /// Get current memory usage (Linux-specific implementation)
     #[cfg(target_os = "linux")]
+    #[allow(dead_code)]
     fn get_memory_usage(&self) -> CoreResult<usize> {
         use std::fs;
 
@@ -308,6 +314,7 @@ impl TestRunner {
 
     /// Get current memory usage (fallback implementation)
     #[cfg(not(target_os = "linux"))]
+    #[allow(dead_code)]
     fn get_memory_usage(&self) -> CoreResult<usize> {
         // Fallback: return 0 (no monitoring on non-Linux systems)
         Ok(0)

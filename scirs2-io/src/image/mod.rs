@@ -366,7 +366,7 @@ pub fn resize_image(image_data: &ImageData, new_width: u32, new_height: u32) -> 
 /// ```
 pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
     let path = path.as_ref();
-    let reader = image::io::Reader::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let reader = image::ImageReader::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
 
     let reader = reader
         .with_guessed_format()

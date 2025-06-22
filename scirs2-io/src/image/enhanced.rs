@@ -277,7 +277,7 @@ impl EnhancedImageProcessor {
                         dynamic_img.as_bytes(),
                         width as u32,
                         height as u32,
-                        image::ColorType::Rgb8,
+                        image::ColorType::Rgb8.into(),
                     )
                     .map_err(|e| IoError::FileError(e.to_string()))?;
             }

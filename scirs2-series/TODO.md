@@ -50,7 +50,7 @@
 |--------|---------|---------------|
 | **Unit Tests** | ✅ | 137 tests, 100% pass rate |
 | **Integration Tests** | ✅ | 4 tests, 100% pass rate |
-| **Doc Tests** | ✅ | 43 tests, 100% pass rate |
+| **Doc Tests** | ✅ | 47 tests, 100% pass rate (all previously ignored tests now enabled) |
 | **Clippy Warnings** | ✅ | 0 warnings (production-ready) |
 | **API Documentation** | ✅ | 100% coverage with examples |
 | **Core Features** | ✅ | All major time series analysis capabilities |
@@ -58,9 +58,9 @@
 
 ---
 
-## 🔮 Future Roadmap (Post-Alpha)
+## 🔮 Future Roadmap
 
-**Note**: The alpha phase is complete. The following features are planned for future beta/stable releases:
+**Note**: The alpha phase is complete. The following features are planned for future releases:
 
 ### 🧠 Advanced ML Integration
 - [ ] Neural forecasting models (LSTM, Transformer, N-BEATS)
@@ -73,6 +73,10 @@
 - [ ] Distributed computing support
 - [ ] Out-of-core processing for massive datasets
 - [ ] Streaming time series analysis
+
+### 🔧 Code Quality & Refactoring
+- [ ] Refactor feature_selection.rs (2514 lines) into smaller modules per CLAUDE.md guidelines
+- [ ] Consider modularizing other large files if they exceed 2000 lines
 
 ### 🌐 Domain-Specific Extensions
 - [ ] Financial time series toolkit (GARCH, technical indicators)
@@ -105,6 +109,8 @@
   - Feature parity with leading Python libraries
   - Zero-warning codebase ready for production deployment
   - Comprehensive documentation and examples
+  - Fixed LAPACK linking issues for cross-platform compatibility
+  - All 47 doc tests now passing (previously 4 were ignored due to LAPACK issues)
 
 ### Next Phase: Beta Development
 - **Focus**: Advanced ML integration, performance optimization, domain-specific extensions
@@ -130,8 +136,9 @@
 - Idiomatic Rust code following best practices
 
 **Testing Coverage**: ✅ Comprehensive  
-- 137 unit tests, 4 integration tests, 43 doc tests
+- 137 unit tests, 4 integration tests, 47 doc tests
 - All tests passing with 100% success rate
+- All previously ignored doc tests now enabled and working
 
 **Performance**: ✅ Optimized
 - SIMD and parallel processing support

@@ -87,6 +87,7 @@ blas-src = { workspace = true, optional = true }
 approx = { workspace = true }
 criterion = { workspace = true }
 tempfile = { workspace = true }
+ndarray-rand = { workspace = true }
 
 [features]
 default = ["array", "serialization"]  # Enable array module by default
@@ -427,3 +428,28 @@ name = "performance_dashboards_demo"
 path = "examples/performance_dashboards_demo.rs"
 required-features = ["profiling"]
 
+[[example]]
+name = "pattern_recognition_example"
+path = "examples/pattern_recognition_example.rs"
+required-features = ["memory_efficient"]
+
+
+[[bench]]
+name = "array_protocol_bench"
+harness = false
+
+[[bench]]
+name = "validation_bench"
+harness = false
+
+[[bench]]
+name = "pattern_recognition_bench"
+harness = false
+
+[[bench]]
+name = "numpy_scipy_comparison_bench"
+harness = false
+
+[[bench]]
+name = "simple_array_bench"
+harness = false

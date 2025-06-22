@@ -195,8 +195,8 @@ mod tests {
         let result2 = sd.should_drop();
 
         // The results should be deterministic for given RNG states
-        assert!(result1 || !result1); // This ensures the result is a boolean
-        assert!(result2 || !result2); // This ensures the result is a boolean
+        // result1 is already a boolean, no need to assert
+        // result2 is already a boolean, no need to assert
     }
 
     #[test]

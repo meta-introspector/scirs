@@ -94,7 +94,7 @@ pub struct STRResult<F> {
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```
 /// use ndarray::array;
 /// use scirs2_series::decomposition::{str_decomposition, STROptions};
 ///

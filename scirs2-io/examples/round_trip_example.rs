@@ -307,7 +307,7 @@ fn test_serialization_round_trip(
 
     // Test data with various numeric characteristics
     let test_array = array![
-        [1.0, -2.5, 3.14159],
+        [1.0, -2.5, std::f64::consts::PI],
         [1e-10, 1e10, 0.0],
         [std::f64::consts::E, std::f64::consts::PI, 1.0 / 3.0]
     ];

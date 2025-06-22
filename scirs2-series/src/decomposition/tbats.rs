@@ -120,7 +120,7 @@ pub struct TBATSParameters {
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```
 /// use ndarray::array;
 /// use scirs2_series::decomposition::{tbats_decomposition, TBATSOptions};
 ///

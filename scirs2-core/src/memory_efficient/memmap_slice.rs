@@ -71,8 +71,8 @@ where
     /// This method materializes the slice by loading only the necessary data
     /// from the memory-mapped file.
     pub fn load(&self) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        // First, load the source array into memory
-        let source_array = self.source.as_array::<ndarray::IxDyn>()?;
+        // First, load the source array into memory with the correct dimension type
+        let source_array = self.source.as_array::<D>()?;
 
         // Then, apply the slice to get only the data we need
         let slice_result = source_array.slice(&self.slice_info);

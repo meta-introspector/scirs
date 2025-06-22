@@ -46,7 +46,7 @@ This module provides special functions similar to SciPy's special module.
 - [x] Complex mathematical properties validation in tests
 - [x] Benchmarking infrastructure for performance monitoring
 
-## Post-Alpha Roadmap (Future Versions)
+## Future Roadmap
 
 ### Performance & Optimization
 - [ ] Performance benchmarking against SciPy's special functions

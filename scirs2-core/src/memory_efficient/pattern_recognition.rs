@@ -379,33 +379,45 @@ impl PatternRecognizer {
             sorted
         };
 
-        for row_num in sorted_rows {
-            let mut cols_in_row = rows[&row_num].clone();
+        for row_num in &sorted_rows {
+            let mut cols_in_row = rows[row_num].clone();
             if cols_in_row.len() >= 2 {
                 // Sort by access order to see the actual traversal pattern
                 cols_in_row.sort_by_key(|(_, access_order)| *access_order);
 
                 // Determine direction within this row based on column progression
-                let first_col = cols_in_row[0].0;
-                let last_col = cols_in_row[cols_in_row.len() - 1].0;
-                let current_direction = if last_col > first_col {
-                    1 // Left to right
-                } else {
-                    -1 // Right to left
+                // Check if columns are accessed in increasing or decreasing order
+                let mut increasing = 0;
+                let mut decreasing = 0;
+                for i in 1..cols_in_row.len() {
+                    match cols_in_row[i].0.cmp(&cols_in_row[i - 1].0) {
+                        std::cmp::Ordering::Greater => increasing += 1,
+                        std::cmp::Ordering::Less => decreasing += 1,
+                        std::cmp::Ordering::Equal => {}
+                    }
+                }
+
+                let current_direction = match increasing.cmp(&decreasing) {
+                    std::cmp::Ordering::Greater => 1, // Left to right
+                    std::cmp::Ordering::Less => -1,   // Right to left
+                    std::cmp::Ordering::Equal => 0,   // No clear direction
                 };
 
                 // Check if direction alternates from previous row
-                if let Some(prev_direction) = last_row_direction {
-                    if current_direction != prev_direction {
-                        zigzag_evidence += 1;
+                if current_direction != 0 {
+                    if let Some(prev_direction) = last_row_direction {
+                        if current_direction != prev_direction && prev_direction != 0 {
+                            zigzag_evidence += 1;
+                        }
                     }
+                    last_row_direction = Some(current_direction);
                 }
-                last_row_direction = Some(current_direction);
             }
         }
 
         // To confirm zigzag, we need at least 2 direction changes (3 rows minimum)
-        if zigzag_evidence >= 2 {
+        // Also ensure we have seen enough rows to make this determination
+        if zigzag_evidence >= 2 && sorted_rows.len() >= 3 {
             let pattern = ComplexPattern::Zigzag;
 
             // Check if we already have this pattern
@@ -449,10 +461,13 @@ impl PatternRecognizer {
             }
         }
 
-        // Need at least half of the possible transitions to be diagonal
+        // Need a significant portion of transitions to be diagonal
         // For consecutive diagonal accesses, we expect (n-1) diagonal transitions
         let expected_transitions = indices.len().saturating_sub(1);
-        if diagonal_matches >= expected_transitions / 2 && diagonal_matches > 0 {
+        // Lower threshold: at least 1/3 of transitions or at least 3 diagonal matches
+        if (diagonal_matches >= expected_transitions / 3 || diagonal_matches >= 3)
+            && diagonal_matches > 0
+        {
             let pattern = ComplexPattern::DiagonalMajor;
 
             // Check if we already have this pattern
@@ -487,9 +502,12 @@ impl PatternRecognizer {
             }
         }
 
-        // Need at least half of the possible transitions to be anti-diagonal
+        // Need a significant portion of transitions to be anti-diagonal
         let expected_transitions = indices.len().saturating_sub(1);
-        if anti_diagonal_matches >= expected_transitions / 2 && anti_diagonal_matches > 0 {
+        // Lower threshold: at least 1/3 of transitions or at least 3 anti-diagonal matches
+        if (anti_diagonal_matches >= expected_transitions / 3 || anti_diagonal_matches >= 3)
+            && anti_diagonal_matches > 0
+        {
             let pattern = ComplexPattern::DiagonalMinor;
 
             // Check if we already have this pattern

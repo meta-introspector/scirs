@@ -23,13 +23,13 @@ fn main() {
         println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
         println!("cargo:rustc-link-search=native=/lib/x86_64-linux-gnu");
     }
-    
+
     #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
     {
         println!("cargo:rustc-link-search=native=/usr/lib/aarch64-linux-gnu");
         println!("cargo:rustc-link-search=native=/lib/aarch64-linux-gnu");
     }
-    
+
     // Add end-group to balance start-group
     #[cfg(target_os = "linux")]
     println!("cargo:rustc-link-arg=-Wl,--end-group");

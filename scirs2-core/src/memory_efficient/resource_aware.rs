@@ -508,9 +508,9 @@ impl SystemInfo for DefaultSystemInfo {
         // Try to get CPU usage if sysinfo is available
         #[cfg(feature = "sysinfo")]
         {
-            use sysinfo::{CpuExt, System, SystemExt};
+            use sysinfo::System;
             let mut system = System::new_all();
-            system.refresh_cpu();
+            system.refresh_cpu_all();
 
             // Calculate average CPU usage across all cores
             let cpu_usage: f64 = system
@@ -545,7 +545,7 @@ impl SystemInfo for DefaultSystemInfo {
         // Try to get memory info if sysinfo is available
         #[cfg(feature = "sysinfo")]
         {
-            use sysinfo::{System, SystemExt};
+            use sysinfo::System;
             let mut system = System::new_all();
             system.refresh_memory();
 
@@ -578,15 +578,15 @@ impl SystemInfo for DefaultSystemInfo {
         // Try to get IO stats if sysinfo is available
         #[cfg(feature = "sysinfo")]
         {
-            use sysinfo::{DiskExt, System, SystemExt};
-            let mut system = System::new_all();
-            system.refresh_disks_list();
+            use sysinfo::{Disks, System};
+            let _system = System::new_all();
+            let disks = Disks::new_with_refreshed_list();
 
             // Sum IO activity across all disks
             let mut total_ops = 0;
             let mut total_bytes = 0;
 
-            for disk in system.disks() {
+            for disk in disks.list() {
                 // Simple approximation of IO ops
                 total_ops += 1; // Just a placeholder since sysinfo doesn't have this info
                                 // Note: sysinfo disk API doesn't provide read/write bytes directly in recent versions

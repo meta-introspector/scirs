@@ -11,7 +11,7 @@
 pub mod performance;
 pub mod regression;
 
-use crate::error::{CoreError, CoreResult, ErrorContext};
+use crate::error::{CoreError, CoreResult};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 

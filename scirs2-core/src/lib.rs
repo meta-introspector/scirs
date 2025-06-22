@@ -74,6 +74,7 @@
 // Re-export modules
 #[cfg(feature = "array")]
 pub mod array;
+pub mod api_versioning;
 pub mod array_protocol;
 #[cfg(feature = "types")]
 pub mod batch_conversions;
@@ -96,6 +97,7 @@ pub mod ndarray_ext;
 pub mod numeric;
 #[cfg(feature = "parallel")]
 pub mod parallel;
+pub mod performance_optimization;
 #[cfg(feature = "profiling")]
 pub mod profiling;
 #[cfg(feature = "random")]

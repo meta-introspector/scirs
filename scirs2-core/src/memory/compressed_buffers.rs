@@ -149,7 +149,7 @@ where
 
     fn compress_lz4(data: &[u8], level: CompressionLevel) -> IoResult<Vec<u8>> {
         let mut encoder = Lz4EncoderBuilder::new()
-            .level(std::cmp::min(level.into(), 12) as u32)
+            .level(std::cmp::min(level.into(), 12))
             .build(Vec::new())?;
         encoder.write_all(data)?;
         Ok(encoder.finish().0)

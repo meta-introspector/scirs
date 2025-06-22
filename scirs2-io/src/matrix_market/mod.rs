@@ -1259,10 +1259,10 @@ mod tests {
         };
 
         // Test normal entry
-        let entry = parse_matrix_entry("1 2 3.14", &header).unwrap();
+        let entry = parse_matrix_entry(&format!("1 2 {}", std::f64::consts::PI), &header).unwrap();
         assert_eq!(entry.row, 0); // 0-based
         assert_eq!(entry.col, 1); // 0-based
-        assert!((entry.value - 3.14).abs() < 1e-10);
+        assert!((entry.value - std::f64::consts::PI).abs() < 1e-10);
 
         // Test pattern entry
         let mut pattern_header = header.clone();

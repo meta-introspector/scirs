@@ -55,6 +55,7 @@ mod orthogonal;
 mod parabolic;
 pub mod precision;
 mod property_tests;
+mod simd_ops;
 mod spherical_harmonics;
 mod spheroidal;
 mod statistical;
@@ -144,6 +145,13 @@ pub use wright::{wright_omega_optimized, wright_omega_real_optimized};
 pub use wright_bessel::{wright_bessel, wright_bessel_complex, wright_bessel_zeros};
 pub use wright_simplified::{wright_omega, wright_omega_real};
 pub use zeta::{hurwitz_zeta, zeta, zetac};
+
+// SIMD operations (when enabled)
+#[cfg(feature = "simd")]
+pub use simd_ops::{
+    exp_f32_simd, gamma_f32_simd, gamma_f64_simd, j0_f32_simd, erf_f32_simd,
+    vectorized_special_ops, benchmark_simd_performance,
+};
 
 // Error function and related functions
 pub mod erf;

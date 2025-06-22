@@ -1,3 +1,5 @@
+#![allow(clippy::approx_constant)]
+
 //! Statistical functions module
 //!
 //! This module provides implementations of various statistical algorithms,

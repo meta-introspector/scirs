@@ -61,10 +61,10 @@ fn demonstrate_basic_mat_v5() -> Result<(), Box<dyn std::error::Error>> {
 
     // Numeric arrays
     println!("  🔹 Creating numeric arrays:");
-    let double_array = Array1::from(vec![1.0, 2.0, 3.14159, -5.5]).into_dyn();
+    let double_array = Array1::from(vec![1.0, 2.0, std::f64::consts::PI, -5.5]).into_dyn();
     vars.insert("double_data".to_string(), MatType::Double(double_array));
 
-    let single_array = Array1::from(vec![1.0f32, 2.5f32, 3.14f32]).into_dyn();
+    let single_array = Array1::from(vec![1.0f32, 2.5f32, std::f32::consts::PI]).into_dyn();
     vars.insert("single_data".to_string(), MatType::Single(single_array));
 
     let int32_array = Array2::from_shape_fn((2, 3), |(i, j)| (i * 3 + j) as i32).into_dyn();
