@@ -55,8 +55,8 @@ tempfile = { workspace = true }
 # numrs_wrapper = { path = "../wrappers/numrs_wrapper", optional = true }
 
 [features]
-default = ["core", "openblas"]
-full = ["core", "gpu", "memory_efficient", "openblas"]  # Enhanced feature set
+default = ["core"]
+full = ["core", "gpu", "memory_efficient"]  # Enhanced feature set
 core = ["dep:scirs2-core"]
 gpu = ["core"]  # GPU acceleration requires core
 memory_efficient = ["core"]  # Memory efficiency requires core

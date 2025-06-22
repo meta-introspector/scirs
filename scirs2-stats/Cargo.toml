@@ -32,7 +32,7 @@ criterion = { workspace = true }
 plotters = { workspace = true }
 
 [features]
-default = ["openblas"]
+default = []
 # BLAS backends - these are mutually exclusive, managed through scirs2-core
 openblas = ["scirs2-core/openblas"]
 intel-mkl = ["scirs2-core/intel-mkl"]
