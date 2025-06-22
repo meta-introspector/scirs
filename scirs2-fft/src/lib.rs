@@ -161,6 +161,7 @@ pub use waterfall::{
 // Long-term goal implementations
 #[cfg(feature = "never")]
 pub mod distributed;
+pub mod gpu_kernel_stub;
 #[cfg(feature = "never")]
 pub mod optimized_fft;
 #[cfg(feature = "never")]

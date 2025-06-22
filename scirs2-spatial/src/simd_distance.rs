@@ -1,7 +1,7 @@
 //! SIMD-accelerated distance calculations for spatial operations
 //!
 //! This module provides high-performance implementations of distance calculations
-//! using SIMD (Single Instruction, Multiple Data) operations. These optimized
+//! using the unified SIMD operations from scirs2-core. These optimized
 //! functions can provide significant performance improvements for operations
 //! involving large datasets.
 //!
@@ -14,11 +14,8 @@
 //!
 //! # Architecture Support
 //!
-//! The SIMD operations are automatically detected at runtime and fall back
-//! to scalar implementations on unsupported hardware:
-//! - **x86_64**: SSE2, AVX, AVX2, AVX-512
-//! - **ARM**: NEON (AArch64)
-//! - **Fallback**: Pure Rust scalar implementation
+//! The SIMD operations are automatically detected and optimized by scirs2-core
+//! based on the available hardware capabilities.
 //!
 //! # Examples
 //!
@@ -39,28 +36,10 @@
 //! println!("Distance matrix shape: {:?}", dist_matrix.shape());
 //! ```
 
-use crate::distance::euclidean;
-#[cfg(test)]
-use crate::distance::manhattan;
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView2};
-use rayon::prelude::*;
-
-#[cfg(target_arch = "x86_64")]
-use std::arch::x86_64::*;
-
-/// SIMD vector size for different architectures
-#[cfg(target_arch = "x86_64")]
-#[allow(dead_code)]
-const SIMD_WIDTH: usize = 8; // AVX 256-bit / f32
-
-#[cfg(target_arch = "aarch64")]
-#[allow(dead_code)]
-const SIMD_WIDTH: usize = 4; // NEON 128-bit / f32
-
-#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
-#[allow(dead_code)]
-const SIMD_WIDTH: usize = 4; // Fallback
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 
 /// Supported distance metrics for SIMD operations
 #[derive(Debug, Clone, Copy)]
@@ -95,9 +74,6 @@ impl SimdMetric {
 ///
 /// # Returns
 /// * Euclidean distance between the points
-///
-/// # Safety
-/// This function uses unsafe SIMD intrinsics but provides safe fallbacks
 pub fn simd_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
     if a.len() != b.len() {
         return Err(SpatialError::ValueError(
@@ -105,8 +81,15 @@ pub fn simd_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
         ));
     }
 
-    let dist_sq = simd_squared_euclidean_distance(a, b)?;
-    Ok(dist_sq.sqrt())
+    // Convert slices to ArrayView for core ops
+    let a_view = ArrayView1::from(a);
+    let b_view = ArrayView1::from(b);
+
+    // Compute squared distance using SIMD operations
+    let diff = f64::simd_sub(&a_view, &b_view);
+    let squared = f64::simd_mul(&diff.view(), &diff.view());
+    let sum = f64::simd_sum(&squared.view());
+    Ok(sum.sqrt())
 }
 
 /// SIMD-accelerated squared Euclidean distance between two points
@@ -117,24 +100,13 @@ pub fn simd_squared_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f6
         ));
     }
 
-    #[cfg(target_arch = "x86_64")]
-    {
-        if is_x86_feature_detected!("avx2") {
-            return unsafe { avx2_squared_euclidean_distance(a, b) };
-        } else if is_x86_feature_detected!("sse2") {
-            return unsafe { sse2_squared_euclidean_distance(a, b) };
-        }
-    }
+    let a_view = ArrayView1::from(a);
+    let b_view = ArrayView1::from(b);
 
-    #[cfg(target_arch = "aarch64")]
-    {
-        if std::arch::is_aarch64_feature_detected!("neon") {
-            return unsafe { neon_squared_euclidean_distance(a, b) };
-        }
-    }
-
-    // Fallback to scalar implementation
-    scalar_squared_euclidean_distance(a, b)
+    // Compute squared distance using SIMD operations
+    let diff = f64::simd_sub(&a_view, &b_view);
+    let squared = f64::simd_mul(&diff.view(), &diff.view());
+    Ok(f64::simd_sum(&squared.view()))
 }
 
 /// SIMD-accelerated Manhattan distance between two points
@@ -145,24 +117,30 @@ pub fn simd_manhattan_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
         ));
     }
 
-    #[cfg(target_arch = "x86_64")]
-    {
-        if is_x86_feature_detected!("avx2") {
-            return unsafe { avx2_manhattan_distance(a, b) };
-        } else if is_x86_feature_detected!("sse2") {
-            return unsafe { sse2_manhattan_distance(a, b) };
-        }
+    let a_view = ArrayView1::from(a);
+    let b_view = ArrayView1::from(b);
+
+    // Compute Manhattan distance using SIMD operations
+    let diff = f64::simd_sub(&a_view, &b_view);
+    let abs_diff = f64::simd_abs(&diff.view());
+    Ok(f64::simd_sum(&abs_diff.view()))
+}
+
+/// SIMD-accelerated Chebyshev distance
+pub fn simd_chebyshev_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
+    if a.len() != b.len() {
+        return Err(SpatialError::ValueError(
+            "Points must have the same dimension".to_string(),
+        ));
     }
 
-    #[cfg(target_arch = "aarch64")]
-    {
-        if std::arch::is_aarch64_feature_detected!("neon") {
-            return unsafe { neon_manhattan_distance(a, b) };
-        }
-    }
+    let a_view = ArrayView1::from(a);
+    let b_view = ArrayView1::from(b);
 
-    // Fallback to scalar implementation
-    scalar_manhattan_distance(a, b)
+    // Compute Chebyshev distance using SIMD operations
+    let diff = f64::simd_sub(&a_view, &b_view);
+    let abs_diff = f64::simd_abs(&diff.view());
+    Ok(f64::simd_max_element(&abs_diff.view()))
 }
 
 /// Batch SIMD-accelerated Euclidean distance calculation
@@ -186,21 +164,21 @@ pub fn simd_euclidean_distance_batch(
     }
 
     let n_points = points1.nrows();
-    let mut distances = Array1::zeros(n_points);
 
-    // Process in parallel and collect results
+    // Use parallel computation with SIMD operations
     let distances_vec: Result<Vec<f64>, SpatialError> = (0..n_points)
         .into_par_iter()
         .map(|i| -> SpatialResult<f64> {
-            let p1 = points1.row(i).to_vec();
-            let p2 = points2.row(i).to_vec();
-            simd_euclidean_distance(&p1, &p2)
+            let p1 = points1.row(i);
+            let p2 = points2.row(i);
+            let diff = f64::simd_sub(&p1, &p2);
+            let squared = f64::simd_mul(&diff.view(), &diff.view());
+            let sum = f64::simd_sum(&squared.view());
+            Ok(sum.sqrt())
         })
         .collect();
 
-    distances.assign(&Array1::from(distances_vec?));
-
-    Ok(distances)
+    Ok(Array1::from(distances_vec?))
 }
 
 /// Parallel computation of pairwise distance matrix
@@ -220,7 +198,6 @@ pub fn parallel_pdist(points: &ArrayView2<f64>, metric: &str) -> SpatialResult<A
     }
 
     let n_distances = n_points * (n_points - 1) / 2;
-    let mut distances = Array1::zeros(n_distances);
 
     let metric_enum = match metric {
         "euclidean" => SimdMetric::Euclidean,
@@ -242,21 +219,36 @@ pub fn parallel_pdist(points: &ArrayView2<f64>, metric: &str) -> SpatialResult<A
             // Convert linear index to (i, j) pair
             let (i, j) = linear_to_condensed_indices(idx, n_points);
 
-            let p1 = points.row(i).to_vec();
-            let p2 = points.row(j).to_vec();
+            let p1 = points.row(i);
+            let p2 = points.row(j);
 
             match metric_enum {
-                SimdMetric::Euclidean => simd_euclidean_distance(&p1, &p2),
-                SimdMetric::Manhattan => simd_manhattan_distance(&p1, &p2),
-                SimdMetric::SquaredEuclidean => simd_squared_euclidean_distance(&p1, &p2),
-                SimdMetric::Chebyshev => simd_chebyshev_distance(&p1, &p2),
+                SimdMetric::Euclidean => {
+                    let diff = f64::simd_sub(&p1, &p2);
+                    let squared = f64::simd_mul(&diff.view(), &diff.view());
+                    let sum = f64::simd_sum(&squared.view());
+                    Ok(sum.sqrt())
+                }
+                SimdMetric::Manhattan => {
+                    let diff = f64::simd_sub(&p1, &p2);
+                    let abs_diff = f64::simd_abs(&diff.view());
+                    Ok(f64::simd_sum(&abs_diff.view()))
+                }
+                SimdMetric::SquaredEuclidean => {
+                    let diff = f64::simd_sub(&p1, &p2);
+                    let squared = f64::simd_mul(&diff.view(), &diff.view());
+                    Ok(f64::simd_sum(&squared.view()))
+                }
+                SimdMetric::Chebyshev => {
+                    let diff = f64::simd_sub(&p1, &p2);
+                    let abs_diff = f64::simd_abs(&diff.view());
+                    Ok(f64::simd_max_element(&abs_diff.view()))
+                }
             }
         })
         .collect();
 
-    distances.assign(&Array1::from(distances_vec?));
-
-    Ok(distances)
+    Ok(Array1::from(distances_vec?))
 }
 
 /// Parallel computation of cross-distance matrix
@@ -302,16 +294,33 @@ pub fn parallel_cdist(
         .enumerate()
         .par_bridge()
         .try_for_each(|(i, mut row)| -> SpatialResult<()> {
-            let p1 = points1.row(i).to_vec();
+            let p1 = points1.row(i);
 
             for (j, dist) in row.iter_mut().enumerate() {
-                let p2 = points2.row(j).to_vec();
+                let p2 = points2.row(j);
 
                 *dist = match metric_enum {
-                    SimdMetric::Euclidean => simd_euclidean_distance(&p1, &p2)?,
-                    SimdMetric::Manhattan => simd_manhattan_distance(&p1, &p2)?,
-                    SimdMetric::SquaredEuclidean => simd_squared_euclidean_distance(&p1, &p2)?,
-                    SimdMetric::Chebyshev => simd_chebyshev_distance(&p1, &p2)?,
+                    SimdMetric::Euclidean => {
+                        let diff = f64::simd_sub(&p1, &p2);
+                        let squared = f64::simd_mul(&diff.view(), &diff.view());
+                        let sum = f64::simd_sum(&squared.view());
+                        sum.sqrt()
+                    }
+                    SimdMetric::Manhattan => {
+                        let diff = f64::simd_sub(&p1, &p2);
+                        let abs_diff = f64::simd_abs(&diff.view());
+                        f64::simd_sum(&abs_diff.view())
+                    }
+                    SimdMetric::SquaredEuclidean => {
+                        let diff = f64::simd_sub(&p1, &p2);
+                        let squared = f64::simd_mul(&diff.view(), &diff.view());
+                        f64::simd_sum(&squared.view())
+                    }
+                    SimdMetric::Chebyshev => {
+                        let diff = f64::simd_sub(&p1, &p2);
+                        let abs_diff = f64::simd_abs(&diff.view());
+                        f64::simd_max_element(&abs_diff.view())
+                    }
                 };
             }
             Ok(())
@@ -375,27 +384,35 @@ pub fn simd_knn_search(
         .par_bridge()
         .try_for_each(
             |(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
-                let query_point = query_points.row(query_idx).to_vec();
+                let query_point = query_points.row(query_idx);
 
-                // Compute all distances for this query
+                // Compute all distances for this query using SIMD
                 let mut all_distances: Vec<(f64, usize)> = (0..n_data)
                     .map(|data_idx| {
-                        let data_point = data_points.row(data_idx).to_vec();
+                        let data_point = data_points.row(data_idx);
                         let dist = match metric_enum {
                             SimdMetric::Euclidean => {
-                                simd_euclidean_distance(&query_point, &data_point)
+                                let diff = f64::simd_sub(&query_point, &data_point);
+                                let squared = f64::simd_mul(&diff.view(), &diff.view());
+                                let sum = f64::simd_sum(&squared.view());
+                                sum.sqrt()
                             }
                             SimdMetric::Manhattan => {
-                                simd_manhattan_distance(&query_point, &data_point)
+                                let diff = f64::simd_sub(&query_point, &data_point);
+                                let abs_diff = f64::simd_abs(&diff.view());
+                                f64::simd_sum(&abs_diff.view())
                             }
                             SimdMetric::SquaredEuclidean => {
-                                simd_squared_euclidean_distance(&query_point, &data_point)
+                                let diff = f64::simd_sub(&query_point, &data_point);
+                                let squared = f64::simd_mul(&diff.view(), &diff.view());
+                                f64::simd_sum(&squared.view())
                             }
                             SimdMetric::Chebyshev => {
-                                simd_chebyshev_distance(&query_point, &data_point)
+                                let diff = f64::simd_sub(&query_point, &data_point);
+                                let abs_diff = f64::simd_abs(&diff.view());
+                                f64::simd_max_element(&abs_diff.view())
                             }
-                        }
-                        .unwrap_or(f64::INFINITY);
+                        };
                         (dist, data_idx)
                     })
                     .collect();
@@ -415,212 +432,6 @@ pub fn simd_knn_search(
         )?;
 
     Ok((indices, distances))
-}
-
-// Architecture-specific implementations
-
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "avx2")]
-unsafe fn avx2_squared_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    let mut sum = 0.0;
-    let chunks = a.len() / 4;
-
-    // Process 4 doubles at a time with AVX2
-    for i in 0..chunks {
-        let base_idx = i * 4;
-        let a_vec = _mm256_loadu_pd(a.as_ptr().add(base_idx));
-        let b_vec = _mm256_loadu_pd(b.as_ptr().add(base_idx));
-        let diff = _mm256_sub_pd(a_vec, b_vec);
-        let sq_diff = _mm256_mul_pd(diff, diff);
-
-        // Extract all 4 elements and sum them manually
-        let mut temp = [0.0; 4];
-        _mm256_storeu_pd(temp.as_mut_ptr(), sq_diff);
-        sum += temp[0] + temp[1] + temp[2] + temp[3];
-    }
-
-    // Handle remaining elements
-    for i in (chunks * 4)..a.len() {
-        let diff = a[i] - b[i];
-        sum += diff * diff;
-    }
-
-    Ok(sum)
-}
-
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "sse2")]
-unsafe fn sse2_squared_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    let mut sum = 0.0;
-    let chunks = a.len() / 2;
-
-    // Process 2 doubles at a time with SSE2
-    for i in 0..chunks {
-        let base_idx = i * 2;
-        let a_vec = _mm_loadu_pd(a.as_ptr().add(base_idx));
-        let b_vec = _mm_loadu_pd(b.as_ptr().add(base_idx));
-        let diff = _mm_sub_pd(a_vec, b_vec);
-        let sq_diff = _mm_mul_pd(diff, diff);
-
-        sum += _mm_cvtsd_f64(sq_diff) + _mm_cvtsd_f64(_mm_shuffle_pd(sq_diff, sq_diff, 1));
-    }
-
-    // Handle remaining elements
-    for i in (chunks * 2)..a.len() {
-        let diff = a[i] - b[i];
-        sum += diff * diff;
-    }
-
-    Ok(sum)
-}
-
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "avx2")]
-unsafe fn avx2_manhattan_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    let mut sum = 0.0;
-    let chunks = a.len() / 4;
-
-    // Create mask for absolute value (clear sign bit)
-    let abs_mask = _mm256_castsi256_pd(_mm256_set1_epi64x(0x7FFFFFFFFFFFFFFF_i64));
-
-    for i in 0..chunks {
-        let base_idx = i * 4;
-        let a_vec = _mm256_loadu_pd(a.as_ptr().add(base_idx));
-        let b_vec = _mm256_loadu_pd(b.as_ptr().add(base_idx));
-        let diff = _mm256_sub_pd(a_vec, b_vec);
-        let abs_diff = _mm256_and_pd(diff, abs_mask);
-
-        // Horizontal sum
-        let sum_vec = _mm256_hadd_pd(abs_diff, abs_diff);
-        let high = _mm256_extractf128_pd(sum_vec, 1);
-        let low = _mm256_castpd256_pd128(sum_vec);
-        let final_sum = _mm_add_pd(high, low);
-
-        sum += _mm_cvtsd_f64(final_sum) + _mm_cvtsd_f64(_mm_shuffle_pd(final_sum, final_sum, 1));
-    }
-
-    // Handle remaining elements
-    for i in (chunks * 4)..a.len() {
-        sum += (a[i] - b[i]).abs();
-    }
-
-    Ok(sum)
-}
-
-#[cfg(target_arch = "x86_64")]
-#[target_feature(enable = "sse2")]
-unsafe fn sse2_manhattan_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    let mut sum = 0.0;
-    let chunks = a.len() / 2;
-
-    // Create mask for absolute value
-    let abs_mask = _mm_castsi128_pd(_mm_set1_epi64x(0x7FFFFFFFFFFFFFFF_i64));
-
-    for i in 0..chunks {
-        let base_idx = i * 2;
-        let a_vec = _mm_loadu_pd(a.as_ptr().add(base_idx));
-        let b_vec = _mm_loadu_pd(b.as_ptr().add(base_idx));
-        let diff = _mm_sub_pd(a_vec, b_vec);
-        let abs_diff = _mm_and_pd(diff, abs_mask);
-
-        sum += _mm_cvtsd_f64(abs_diff) + _mm_cvtsd_f64(_mm_shuffle_pd(abs_diff, abs_diff, 1));
-    }
-
-    // Handle remaining elements
-    for i in (chunks * 2)..a.len() {
-        sum += (a[i] - b[i]).abs();
-    }
-
-    Ok(sum)
-}
-
-#[cfg(target_arch = "aarch64")]
-#[target_feature(enable = "neon")]
-unsafe fn neon_squared_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    use std::arch::aarch64::*;
-
-    let mut sum = 0.0;
-    let chunks = a.len() / 2;
-
-    for i in 0..chunks {
-        let base_idx = i * 2;
-        let a_vec = vld1q_f64(a.as_ptr().add(base_idx));
-        let b_vec = vld1q_f64(b.as_ptr().add(base_idx));
-        let diff = vsubq_f64(a_vec, b_vec);
-        let sq_diff = vmulq_f64(diff, diff);
-
-        sum += vgetq_lane_f64(sq_diff, 0) + vgetq_lane_f64(sq_diff, 1);
-    }
-
-    // Handle remaining elements
-    for i in (chunks * 2)..a.len() {
-        let diff = a[i] - b[i];
-        sum += diff * diff;
-    }
-
-    Ok(sum)
-}
-
-#[cfg(target_arch = "aarch64")]
-#[target_feature(enable = "neon")]
-unsafe fn neon_manhattan_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    use std::arch::aarch64::*;
-
-    let mut sum = 0.0;
-    let chunks = a.len() / 2;
-
-    for i in 0..chunks {
-        let base_idx = i * 2;
-        let a_vec = vld1q_f64(a.as_ptr().add(base_idx));
-        let b_vec = vld1q_f64(b.as_ptr().add(base_idx));
-        let diff = vsubq_f64(a_vec, b_vec);
-        let abs_diff = vabsq_f64(diff);
-
-        sum += vgetq_lane_f64(abs_diff, 0) + vgetq_lane_f64(abs_diff, 1);
-    }
-
-    // Handle remaining elements
-    for i in (chunks * 2)..a.len() {
-        sum += (a[i] - b[i]).abs();
-    }
-
-    Ok(sum)
-}
-
-// Scalar fallback implementations
-
-fn scalar_squared_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    let sum = a
-        .iter()
-        .zip(b.iter())
-        .map(|(x, y)| {
-            let diff = x - y;
-            diff * diff
-        })
-        .sum();
-    Ok(sum)
-}
-
-fn scalar_manhattan_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    let sum = a.iter().zip(b.iter()).map(|(x, y)| (x - y).abs()).sum();
-    Ok(sum)
-}
-
-/// SIMD-accelerated Chebyshev distance
-pub fn simd_chebyshev_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
-    if a.len() != b.len() {
-        return Err(SpatialError::ValueError(
-            "Points must have the same dimension".to_string(),
-        ));
-    }
-
-    let max_diff = a
-        .iter()
-        .zip(b.iter())
-        .map(|(x, y)| (x - y).abs())
-        .fold(0.0f64, f64::max);
-
-    Ok(max_diff)
 }
 
 /// Convert linear index to (i, j) indices for condensed distance matrix
@@ -654,7 +465,8 @@ pub mod bench {
         let start = Instant::now();
         for _ in 0..iterations {
             for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
-                let _dist = euclidean(row1.as_slice().unwrap(), row2.as_slice().unwrap());
+                let _dist =
+                    crate::distance::euclidean(row1.as_slice().unwrap(), row2.as_slice().unwrap());
             }
         }
         let scalar_time = start.elapsed().as_secs_f64();
@@ -673,25 +485,14 @@ pub mod bench {
     pub fn report_simd_features() {
         println!("SIMD Features Available:");
 
-        #[cfg(target_arch = "x86_64")]
-        {
-            println!("  SSE2: {}", is_x86_feature_detected!("sse2"));
-            println!("  AVX: {}", is_x86_feature_detected!("avx"));
-            println!("  AVX2: {}", is_x86_feature_detected!("avx2"));
-            println!("  AVX-512F: {}", is_x86_feature_detected!("avx512f"));
-        }
+        let caps = PlatformCapabilities::detect();
+        println!("  SIMD Available: {}", caps.simd_available);
+        println!("  GPU Available: {}", caps.gpu_available);
 
-        #[cfg(target_arch = "aarch64")]
-        {
-            println!(
-                "  NEON: {}",
-                std::arch::is_aarch64_feature_detected!("neon")
-            );
-        }
-
-        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
-        {
-            println!("  No SIMD features detected (using scalar fallbacks)");
+        if caps.simd_available {
+            println!("  AVX2: {}", caps.avx2_available);
+            println!("  AVX512: {}", caps.avx512_available);
+            println!("  NEON: {}", caps.neon_available);
         }
     }
 }
@@ -708,7 +509,7 @@ mod tests {
         let b = vec![4.0, 5.0, 6.0];
 
         let simd_dist = simd_euclidean_distance(&a, &b).unwrap();
-        let scalar_dist = euclidean(&a, &b);
+        let scalar_dist = crate::distance::euclidean(&a, &b);
 
         assert_relative_eq!(simd_dist, scalar_dist, epsilon = 1e-10);
     }
@@ -719,7 +520,7 @@ mod tests {
         let b = vec![4.0, 5.0, 6.0];
 
         let simd_dist = simd_manhattan_distance(&a, &b).unwrap();
-        let scalar_dist = manhattan(&a, &b);
+        let scalar_dist = crate::distance::manhattan(&a, &b);
 
         assert_relative_eq!(simd_dist, scalar_dist, epsilon = 1e-10);
     }
@@ -741,7 +542,7 @@ mod tests {
         for i in 0..3 {
             let p1 = points1.row(i).to_vec();
             let p2 = points2.row(i).to_vec();
-            let expected = euclidean(&p1, &p2);
+            let expected = crate::distance::euclidean(&p1, &p2);
             assert_relative_eq!(distances[i], expected, epsilon = 1e-10);
         }
     }
@@ -861,7 +662,7 @@ mod tests {
         let b = vec![1.0, 2.0, 3.0];
 
         let simd_dist = simd_euclidean_distance(&a, &b).unwrap();
-        let scalar_dist = euclidean(&a, &b);
+        let scalar_dist = crate::distance::euclidean(&a, &b);
 
         // Expected: sqrt(3 * 1^2) = sqrt(3) ≈ 1.732
         assert_relative_eq!(simd_dist, scalar_dist, epsilon = 1e-10);
@@ -872,7 +673,7 @@ mod tests {
         let b: Vec<f64> = (0..dim).map(|i| (i + 1) as f64).collect();
 
         let simd_dist = simd_euclidean_distance(&a, &b).unwrap();
-        let scalar_dist = euclidean(&a, &b);
+        let scalar_dist = crate::distance::euclidean(&a, &b);
 
         // Expected: sqrt(1000 * 1^2) = sqrt(1000) ≈ 31.62
         assert_relative_eq!(simd_dist, scalar_dist, epsilon = 1e-10);

@@ -73,7 +73,7 @@ use std::cmp::Ordering;
 // Rayon parallel processing currently not used in this module
 #[cfg(feature = "parallel")]
 #[allow(unused_imports)]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// A rectangle representing a hyperrectangle in k-dimensional space
 ///

@@ -108,7 +108,7 @@ pub enum GpuError {
     /// Backend is not supported
     #[error("GPU backend {0} is not supported")]
     UnsupportedBackend(GpuBackend),
-    
+
     /// Backend is not supported for a kernel
     #[error("GPU backend {0:?} is not supported for this kernel")]
     BackendNotSupported(GpuBackend),
@@ -161,17 +161,17 @@ impl GpuDevice {
     pub fn new(backend: GpuBackend, device_id: usize) -> Self {
         Self { backend, device_id }
     }
-    
+
     /// Get the backend type
     pub fn backend(&self) -> GpuBackend {
         self.backend
     }
-    
+
     /// Get the device ID
     pub fn id(&self) -> usize {
         self.device_id
     }
-    
+
     /// Compile a kernel from source
     pub fn compile_kernel(&self, source: &str, entry_point: &str) -> Result<GpuKernel, GpuError> {
         // Placeholder implementation
@@ -193,7 +193,7 @@ impl GpuKernel {
     pub fn backend(&self) -> GpuBackend {
         self.backend
     }
-    
+
     /// Get the entry point name
     pub fn entry_point(&self) -> &str {
         &self.entry_point
@@ -213,8 +213,11 @@ impl From<GpuError> for CoreError {
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::BackendNotSupported(backend) => CoreError::NotImplementedError(
-                ErrorContext::new(format!("GPU backend {:?} is not supported for this kernel", backend))
-                    .with_location(ErrorLocation::new(file!(), line!())),
+                ErrorContext::new(format!(
+                    "GPU backend {:?} is not supported for this kernel",
+                    backend
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
             ),
             GpuError::BackendNotImplemented(backend) => CoreError::NotImplementedError(
                 ErrorContext::new(format!("GPU backend {} is not implemented yet", backend))

@@ -23,7 +23,7 @@ This module provides comprehensive optimization algorithms similar to SciPy's op
 - **Parallel Computing**: Multi-threaded evaluation, parallel global optimization
 - **Memory Efficiency**: Large-scale sparse matrix handling, memory-efficient algorithms
 - **JIT Compilation**: Just-in-time optimization for performance-critical functions
-- **SIMD Operations**: Vectorized implementations for key algorithms
+- **SIMD Operations**: Migrated to scirs2-core unified SIMD abstraction layer (v0.1.0-alpha.5)
 - **Automatic Differentiation**: Forward and reverse mode AD support
 
 ### Specialized Capabilities
@@ -31,6 +31,15 @@ This module provides comprehensive optimization algorithms similar to SciPy's op
 - **Async Optimization**: Asynchronous parallel evaluation for slow functions
 - **Multi-start Strategies**: Clustering-based and systematic restart methods
 - **Weighted/Bounded/Total Least Squares**: Extended least squares variants
+
+## 🔄 Recent Changes (v0.1.0-alpha.5)
+
+### SIMD Migration
+- [x] Migrated all SIMD operations to use scirs2-core unified abstraction layer
+- [x] Replaced custom platform detection with PlatformCapabilities from core
+- [x] Removed direct x86_64 intrinsics usage
+- [x] Added compatibility wrappers for smooth transition
+- [x] All tests passing with new implementation
 
 ## 📋 More Enhancements
 

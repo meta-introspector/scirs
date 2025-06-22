@@ -5,10 +5,10 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{array, Array1, ArrayView1};
-use std::hint::black_box;
 use scirs2_optimize::global::{differential_evolution, DifferentialEvolutionOptions};
-use scirs2_optimize::least_squares::{least_squares};
+use scirs2_optimize::least_squares::least_squares;
 use scirs2_optimize::unconstrained::{minimize, Method, Options};
+use std::hint::black_box;
 use std::time::Duration;
 
 /// Standard test functions for optimization benchmarking

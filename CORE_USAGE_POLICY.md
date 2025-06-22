@@ -7,13 +7,14 @@ This document outlines the mandatory policies for using scirs2-core modules acro
 1. [Overview](#overview)
 2. [SIMD Operations Policy](#simd-operations-policy)
 3. [GPU Operations Policy](#gpu-operations-policy)
-4. [BLAS Operations Policy](#blas-operations-policy)
-5. [Platform Detection Policy](#platform-detection-policy)
-6. [Performance Optimization Policy](#performance-optimization-policy)
-7. [Error Handling Policy](#error-handling-policy)
-8. [Memory Management Policy](#memory-management-policy)
-9. [Refactoring Guidelines](#refactoring-guidelines)
-10. [Examples](#examples)
+4. [Parallel Processing Policy](#parallel-processing-policy)
+5. [BLAS Operations Policy](#blas-operations-policy)
+6. [Platform Detection Policy](#platform-detection-policy)
+7. [Performance Optimization Policy](#performance-optimization-policy)
+8. [Error Handling Policy](#error-handling-policy)
+9. [Memory Management Policy](#memory-management-policy)
+10. [Refactoring Guidelines](#refactoring-guidelines)
+11. [Examples](#examples)
 
 ## Overview
 
@@ -93,6 +94,63 @@ let kernel = device.compile_kernel(KERNEL_SOURCE)?;
 // INCORRECT - Direct CUDA usage
 // use cuda_sys::*;  // FORBIDDEN in modules
 ```
+
+## Parallel Processing Policy
+
+### Mandatory Rules
+
+1. **ALWAYS use `scirs2-core::parallel_ops`** for all parallel operations
+2. **NEVER add direct `rayon` dependency** to module Cargo.toml files
+3. **ALWAYS import via `use scirs2_core::parallel_ops::*`**
+4. **NEVER use `rayon::prelude::*` directly** in modules
+
+### Required Usage Pattern
+
+```rust
+// CORRECT - Uses core parallel abstractions
+use scirs2_core::parallel_ops::*;
+
+let results: Vec<i32> = (0..1000)
+    .into_par_iter()
+    .map(|x| x * x)
+    .collect();
+
+// INCORRECT - Direct Rayon usage
+// use rayon::prelude::*;  // FORBIDDEN in modules
+```
+
+### Features Provided
+
+The `parallel_ops` module provides:
+
+- **Full Rayon functionality** when `parallel` feature is enabled
+- **Sequential fallbacks** when `parallel` feature is disabled
+- **Helper functions**:
+  - `par_range(start, end)` - Create parallel iterator from range
+  - `par_chunks(slice, size)` - Process slices in parallel chunks
+  - `par_scope(closure)` - Execute in parallel scope
+  - `par_join(a, b)` - Execute two closures in parallel
+- **Runtime detection**:
+  - `is_parallel_enabled()` - Check if parallel processing is available
+  - `num_threads()` - Get number of threads for parallel operations
+
+### Module Dependencies
+
+```toml
+# CORRECT - Module Cargo.toml
+[dependencies]
+scirs2-core = { workspace = true, features = ["parallel"] }
+
+# INCORRECT - Direct Rayon dependency
+# rayon = { workspace = true }  # FORBIDDEN
+```
+
+### Benefits
+
+- **Unified behavior**: All modules respect the same feature flags
+- **Graceful degradation**: Sequential execution when parallel is disabled
+- **Zero overhead**: Direct re-export of Rayon when enabled
+- **Testing flexibility**: Easy to test both parallel and sequential paths
 
 ## BLAS Operations Policy
 
@@ -247,9 +305,9 @@ When encountering code that violates these policies, follow this priority order:
 
 1. **SIMD implementations** - Replace all custom SIMD with `scirs2-core::simd_ops`
 2. **GPU implementations** - Centralize all GPU kernels in `scirs2-core::gpu`
-3. **Platform detection** - Replace with `PlatformCapabilities::detect()`
-4. **BLAS operations** - Ensure all go through core
-5. **Parallel operations** - Replace direct Rayon usage with core abstractions
+3. **Parallel operations** - Replace direct Rayon usage with `scirs2-core::parallel_ops`
+4. **Platform detection** - Replace with `PlatformCapabilities::detect()`
+5. **BLAS operations** - Ensure all go through core
 6. **Caching mechanisms** - Replace custom caching with core implementations
 7. **Error types** - Base on core error types
 8. **Validation** - Use core validation functions
@@ -303,6 +361,40 @@ pub fn get_optimization_info() -> String {
         "Available optimizations: {}",
         caps.summary()
     )
+}
+```
+
+### Example 4: Parallel Processing
+
+```rust
+use scirs2_core::parallel_ops::*;
+use ndarray::{Array1, ArrayView1};
+
+pub fn parallel_distance_matrix(points: &ArrayView1<f64>) -> Array1<f64> {
+    // Works with or without parallel feature
+    let distances: Vec<f64> = (0..points.len())
+        .into_par_iter()
+        .map(|i| {
+            // Complex computation for each point
+            compute_distance(points[i])
+        })
+        .collect();
+    
+    Array1::from_vec(distances)
+}
+
+pub fn adaptive_processing(data: &[f64]) -> f64 {
+    if is_parallel_enabled() && data.len() > 1000 {
+        // Use parallel processing for large datasets
+        data.into_par_iter()
+            .map(|&x| x * x)
+            .sum::<f64>()
+    } else {
+        // Use sequential for small datasets
+        data.iter()
+            .map(|&x| x * x)
+            .sum()
+    }
 }
 ```
 

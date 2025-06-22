@@ -189,7 +189,7 @@
 
 - For performance-critical code, ALWAYS use core-provided optimizations:
   - SIMD: use `scirs2-core::simd_ops` trait methods - NEVER implement custom SIMD
-  - Parallelism: use `scirs2-core::parallel` with appropriate feature flag instead of direct Rayon usage
+  - Parallelism: use `scirs2-core::parallel_ops` instead of direct Rayon usage
   - Memory efficiency: use `chunk_wise_op` and other core-provided memory-efficient algorithms
   - Caching: use `TTLSizedCache`, `CacheBuilder`, or `#[cached]` from core rather than custom caching solutions
   - GPU: use `scirs2-core::gpu` module for all GPU operations
@@ -200,6 +200,25 @@
   ```
 - Provide scalar fallbacks for operations that use SIMD or parallel processing
 - Never reimplement optimization code that exists in core modules
+
+### Parallel Processing Policy
+
+- **MANDATORY**: Use `scirs2-core::parallel_ops` for all parallel operations
+- **FORBIDDEN**: Direct dependency on `rayon` in module Cargo.toml files
+- **REQUIRED**: Import parallel functionality via `use scirs2_core::parallel_ops::*`
+- The parallel_ops module provides:
+  - Full Rayon functionality when `parallel` feature is enabled
+  - Sequential fallbacks when `parallel` feature is disabled
+  - Helper functions: `par_range()`, `par_chunks()`, `par_scope()`, `par_join()`
+  - Runtime checks: `is_parallel_enabled()`, `num_threads()`
+- Example migration:
+  ```rust
+  // Old - direct Rayon usage
+  use rayon::prelude::*;
+  
+  // New - use core abstractions
+  use scirs2_core::parallel_ops::*;
+  ```
 
 ## Refactoring Priority
 

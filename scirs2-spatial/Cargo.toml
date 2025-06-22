@@ -11,11 +11,11 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
+scirs2-core = { workspace = true, features = ["simd", "parallel"] }
 ndarray = { workspace = true }
 num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
-rayon = { workspace = true }
 num = { workspace = true }
 approx = { workspace = true }
 

@@ -670,39 +670,38 @@ pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
 
     // Check if arrays are contiguous
     if let (Some(a_slice), Some(b_slice)) = (a.as_slice(), b.as_slice()) {
+        let mut sum_vec = f32x8::splat(0.0);
+        let mut i = 0;
+        let chunk_size = 8;
 
-    let mut sum_vec = f32x8::splat(0.0);
-    let mut i = 0;
-    let chunk_size = 8;
+        while i + chunk_size <= n {
+            let a_arr = [
+                a_slice[i],
+                a_slice[i + 1],
+                a_slice[i + 2],
+                a_slice[i + 3],
+                a_slice[i + 4],
+                a_slice[i + 5],
+                a_slice[i + 6],
+                a_slice[i + 7],
+            ];
+            let b_arr = [
+                b_slice[i],
+                b_slice[i + 1],
+                b_slice[i + 2],
+                b_slice[i + 3],
+                b_slice[i + 4],
+                b_slice[i + 5],
+                b_slice[i + 6],
+                b_slice[i + 7],
+            ];
 
-    while i + chunk_size <= n {
-        let a_arr = [
-            a_slice[i],
-            a_slice[i + 1],
-            a_slice[i + 2],
-            a_slice[i + 3],
-            a_slice[i + 4],
-            a_slice[i + 5],
-            a_slice[i + 6],
-            a_slice[i + 7],
-        ];
-        let b_arr = [
-            b_slice[i],
-            b_slice[i + 1],
-            b_slice[i + 2],
-            b_slice[i + 3],
-            b_slice[i + 4],
-            b_slice[i + 5],
-            b_slice[i + 6],
-            b_slice[i + 7],
-        ];
+            let a_vec = f32x8::new(a_arr);
+            let b_vec = f32x8::new(b_arr);
+            sum_vec += a_vec * b_vec;
 
-        let a_vec = f32x8::new(a_arr);
-        let b_vec = f32x8::new(b_arr);
-        sum_vec += a_vec * b_vec;
-
-        i += chunk_size;
-    }
+            i += chunk_size;
+        }
 
         // Sum up the SIMD vector
         let sum_arr: [f32; 8] = sum_vec.into();
@@ -736,21 +735,20 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
 
     // Check if arrays are contiguous
     if let (Some(a_slice), Some(b_slice)) = (a.as_slice(), b.as_slice()) {
+        let mut sum_vec = f64x4::splat(0.0);
+        let mut i = 0;
+        let chunk_size = 4;
 
-    let mut sum_vec = f64x4::splat(0.0);
-    let mut i = 0;
-    let chunk_size = 4;
+        while i + chunk_size <= n {
+            let a_arr = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
+            let b_arr = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
 
-    while i + chunk_size <= n {
-        let a_arr = [a_slice[i], a_slice[i + 1], a_slice[i + 2], a_slice[i + 3]];
-        let b_arr = [b_slice[i], b_slice[i + 1], b_slice[i + 2], b_slice[i + 3]];
+            let a_vec = f64x4::new(a_arr);
+            let b_vec = f64x4::new(b_arr);
+            sum_vec += a_vec * b_vec;
 
-        let a_vec = f64x4::new(a_arr);
-        let b_vec = f64x4::new(b_arr);
-        sum_vec += a_vec * b_vec;
-
-        i += chunk_size;
-    }
+            i += chunk_size;
+        }
 
         // Sum up the SIMD vector
         let sum_arr: [f64; 4] = sum_vec.into();

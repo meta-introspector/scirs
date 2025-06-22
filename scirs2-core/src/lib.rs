@@ -99,6 +99,8 @@ pub mod ndarray_ext;
 pub mod numeric;
 #[cfg(feature = "parallel")]
 pub mod parallel;
+#[cfg(feature = "parallel")]
+pub mod parallel_ops;
 pub mod performance_optimization;
 #[cfg(feature = "profiling")]
 pub mod profiling;
@@ -221,6 +223,13 @@ pub use crate::metrics::{
 pub use crate::numeric::*;
 #[cfg(feature = "parallel")]
 pub use crate::parallel::*;
+#[cfg(feature = "parallel")]
+pub use crate::parallel_ops::{
+    is_parallel_enabled, num_threads, par_chunks, par_chunks_mut, par_join, par_range, par_scope,
+};
+// Re-export all parallel traits and types
+#[cfg(feature = "parallel")]
+pub use crate::parallel_ops::*;
 #[cfg(feature = "profiling")]
 pub use crate::profiling::{profiling_memory_tracker, Profiler};
 #[cfg(feature = "random")]

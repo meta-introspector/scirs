@@ -47,7 +47,10 @@ impl KernelId {
     /// Get a string representation suitable for kernel naming
     pub fn as_kernel_name(&self) -> String {
         match &self.variant {
-            Some(variant) => format!("{}_{}_{}__{}", self.module, self.operation, self.dtype, variant),
+            Some(variant) => format!(
+                "{}_{}_{}__{}",
+                self.module, self.operation, self.dtype, variant
+            ),
             None => format!("{}_{}__{}", self.module, self.operation, self.dtype),
         }
     }
@@ -113,10 +116,10 @@ impl KernelRegistry {
     fn register_builtin_kernels(&mut self) {
         // Register BLAS kernels
         self.register_blas_kernels();
-        
+
         // Register reduction kernels
         self.register_reduction_kernels();
-        
+
         // Register utility kernels
         self.register_utility_kernels();
     }
@@ -133,7 +136,11 @@ impl KernelRegistry {
 
     /// Get a compiled kernel for the current device
     #[cfg(feature = "gpu")]
-    pub fn get_kernel(&mut self, id: &KernelId, device: &GpuDevice) -> Result<Arc<GpuKernel>, GpuError> {
+    pub fn get_kernel(
+        &mut self,
+        id: &KernelId,
+        device: &GpuDevice,
+    ) -> Result<Arc<GpuKernel>, GpuError> {
         let device_id = device.id();
         let cache_key = (id.clone(), device_id);
 
@@ -145,10 +152,13 @@ impl KernelRegistry {
         }
 
         // Find appropriate source for the device's backend
-        let sources = self.sources.get(id)
+        let sources = self
+            .sources
+            .get(id)
             .ok_or_else(|| GpuError::KernelNotFound(id.as_kernel_name()))?;
 
-        let source = sources.iter()
+        let source = sources
+            .iter()
             .find(|s| s.backend == device.backend())
             .ok_or_else(|| GpuError::BackendNotSupported(device.backend()))?;
 
@@ -157,10 +167,13 @@ impl KernelRegistry {
         let kernel = Arc::new(kernel);
 
         // Cache the compiled kernel
-        self.compiled_cache.insert(cache_key, CompiledKernel {
-            kernel: kernel.clone(),
-            device_id,
-        });
+        self.compiled_cache.insert(
+            cache_key,
+            CompiledKernel {
+                kernel: kernel.clone(),
+                device_id,
+            },
+        );
 
         Ok(kernel)
     }

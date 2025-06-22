@@ -355,8 +355,8 @@ impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
     pub fn new(rho: F) -> Self {
         Self {
             rho,
-            eps_pri: F::from(1e-4).unwrap(),
-            eps_dual: F::from(1e-4).unwrap(),
+            eps_pri: F::from(1e-3).unwrap(),
+            eps_dual: F::from(1e-3).unwrap(),
             max_iter: 1000,
         }
     }
@@ -384,8 +384,13 @@ impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
             let grad_loss = loss_grad(&x.view(), data);
             let grad_augmented = &grad_loss + &((&x - &z + &u) * self.rho);
 
-            // Simple gradient step for x (could use more sophisticated solver)
-            let lr = F::from(0.01).unwrap();
+            // Adaptive learning rate for better convergence
+            let grad_norm = grad_augmented.mapv(|g| g * g).sum().sqrt();
+            let lr = if grad_norm > F::epsilon() {
+                F::one() / (F::one() + self.rho)
+            } else {
+                F::from(0.1).unwrap()
+            };
             x = &x - &(&grad_augmented * lr);
 
             // z-update: soft thresholding
@@ -408,12 +413,13 @@ impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
             let r_norm = (&x - &z).mapv(|xi| xi * xi).sum().sqrt(); // Primal residual
             let s_norm = ((&z - &z_old) * self.rho).mapv(|xi| xi * xi).sum().sqrt(); // Dual residual
 
-            let eps_pri_thresh = self.eps_pri
-                * F::max(
-                    x.mapv(|xi| xi * xi).sum().sqrt(),
-                    z.mapv(|xi| xi * xi).sum().sqrt(),
-                );
-            let eps_dual_thresh = self.eps_dual * (self.rho * u.mapv(|xi| xi * xi).sum().sqrt());
+            let x_norm = x.mapv(|xi| xi * xi).sum().sqrt();
+            let z_norm = z.mapv(|xi| xi * xi).sum().sqrt();
+            let u_norm = u.mapv(|xi| xi * xi).sum().sqrt();
+
+            let eps_pri_thresh =
+                self.eps_pri * (F::sqrt(F::from(n).unwrap()) + F::max(x_norm, z_norm));
+            let eps_dual_thresh = self.eps_dual * F::sqrt(F::from(n).unwrap()) * self.rho * u_norm;
 
             if r_norm < eps_pri_thresh && s_norm < eps_dual_thresh {
                 return Ok(OptimizeResult {
