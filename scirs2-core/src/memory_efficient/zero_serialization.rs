@@ -1185,13 +1185,11 @@ mod tests {
     fn test_zero_copy_serializable_f32() {
         let value: f32 = 3.5;
 
-        unsafe {
-            let bytes = value.to_ne_bytes();
-            assert_eq!(bytes.len(), 4);
+        let bytes = value.to_ne_bytes();
+        assert_eq!(bytes.len(), 4);
 
-            let deserialized = f32::from_ne_bytes(bytes);
-            assert_eq!(value, deserialized);
-        }
+        let deserialized = f32::from_ne_bytes(bytes);
+        assert_eq!(value, deserialized);
     }
 
     #[test]

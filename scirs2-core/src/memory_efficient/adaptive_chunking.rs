@@ -8,7 +8,7 @@
 use super::chunked::ChunkingStrategy;
 use super::memmap::MemoryMappedArray;
 use super::memmap_chunks::MemoryMappedChunks;
-use crate::error::CoreResult;
+use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 // use ndarray::Dimension; // Currently unused
 use std::time::Duration;
 
@@ -222,8 +222,25 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A>
         // Calculate element size
         let element_size = std::mem::size_of::<A>();
 
+        // Prevent division by zero for zero-sized types
+        if element_size == 0 {
+            return Err(CoreError::InvalidArgument(
+                ErrorContext::new("Cannot chunk zero-sized type".to_string())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ));
+        }
+
         // Calculate initial chunk size based on target memory usage
-        let mut chunk_size = params.target_memory_usage / element_size;
+        // Use checked division to prevent arithmetic overflow
+        let mut chunk_size = params
+            .target_memory_usage
+            .checked_div(element_size)
+            .ok_or_else(|| {
+                CoreError::ComputationError(
+                    ErrorContext::new("Arithmetic overflow in chunk size calculation".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                )
+            })?;
 
         // Apply min/max constraints
         chunk_size = chunk_size.clamp(params.min_chunk_size, params.max_chunk_size);
@@ -244,8 +261,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A>
         // Create final chunking strategy
         let strategy = ChunkingStrategy::Fixed(chunk_size);
 
-        // Calculate estimated memory per chunk
-        let estimated_memory = chunk_size * element_size;
+        // Calculate estimated memory per chunk using checked multiplication
+        let estimated_memory = chunk_size.checked_mul(element_size).ok_or_else(|| {
+            CoreError::ComputationError(
+                ErrorContext::new("Arithmetic overflow in memory estimation".to_string())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            )
+        })?;
 
         Ok(AdaptiveChunkingResult {
             strategy,
@@ -334,8 +356,10 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A>
                 let row_length = self.shape[1];
 
                 if chunk_size >= row_length && chunk_size % row_length != 0 {
-                    // Adjust to a multiple of row length for better cache behavior
-                    let new_size = (chunk_size / row_length) * row_length;
+                    // Adjust to a multiple of row length for better cache behavior using checked arithmetic
+                    let new_size = (chunk_size / row_length)
+                        .checked_mul(row_length)
+                        .unwrap_or(chunk_size); // Fallback to original size on overflow
                     if new_size >= params.min_chunk_size {
                         chunk_size = new_size;
                         decision_factors.push(format!(
@@ -346,13 +370,21 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A>
                 }
             }
             3 => {
-                // For 3D arrays, try to align with planes or rows
-                let plane_size = self.shape[1] * self.shape[2];
+                // For 3D arrays, try to align with planes or rows using checked arithmetic
+                let plane_size = self.shape[1].checked_mul(self.shape[2]).unwrap_or_else(|| {
+                    decision_factors.push(
+                        "3D array: Overflow in plane size calculation, using row alignment"
+                            .to_string(),
+                    );
+                    self.shape[2] // Fallback to row-based chunking
+                });
                 let row_length = self.shape[2];
 
                 if chunk_size >= plane_size && chunk_size % plane_size != 0 {
-                    // Adjust to a multiple of plane size for better cache behavior
-                    let new_size = (chunk_size / plane_size) * plane_size;
+                    // Adjust to a multiple of plane size for better cache behavior using checked arithmetic
+                    let new_size = (chunk_size / plane_size)
+                        .checked_mul(plane_size)
+                        .unwrap_or(chunk_size); // Fallback to original size on overflow
                     if new_size >= params.min_chunk_size {
                         chunk_size = new_size;
                         decision_factors.push(format!(
@@ -361,8 +393,10 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A>
                         ));
                     }
                 } else if chunk_size >= row_length && chunk_size % row_length != 0 {
-                    // Adjust to a multiple of row length
-                    let new_size = (chunk_size / row_length) * row_length;
+                    // Adjust to a multiple of row length using checked arithmetic
+                    let new_size = (chunk_size / row_length)
+                        .checked_mul(row_length)
+                        .unwrap_or(chunk_size); // Fallback to original size on overflow
                     if new_size >= params.min_chunk_size {
                         chunk_size = new_size;
                         decision_factors.push(format!(
@@ -393,8 +427,13 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A>
             let total_elements = self.size;
 
             // Ideally, we want at least num_workers * 2 chunks for good load balancing
-            let target_num_chunks = num_workers * 2;
-            let ideal_chunk_size = total_elements / target_num_chunks;
+            // Use checked arithmetic to prevent overflow
+            let target_num_chunks = num_workers.checked_mul(2).unwrap_or(num_workers);
+            let ideal_chunk_size = if target_num_chunks > 0 {
+                total_elements / target_num_chunks
+            } else {
+                total_elements // Fallback for edge cases
+            };
 
             if ideal_chunk_size >= params.min_chunk_size
                 && ideal_chunk_size <= params.max_chunk_size

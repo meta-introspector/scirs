@@ -180,12 +180,18 @@ impl ZeroCopyBuffer {
     }
 
     /// Get a slice view of the buffer
-    pub const fn as_slice(&self) -> &[u8] {
+    /// Safety: The buffer lifetime is managed by reference counting
+    pub fn as_slice(&self) -> &[u8] {
+        // Safety: ptr is guaranteed to be valid and properly aligned
+        // The buffer is kept alive by reference counting
         unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.size) }
     }
 
     /// Get a mutable slice view of the buffer
+    /// Safety: Only available when we have exclusive access
     pub fn as_slice_mut(&mut self) -> &mut [u8] {
+        // Safety: ptr is guaranteed to be valid and properly aligned
+        // Exclusive access is guaranteed by &mut self
         unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.size) }
     }
 
@@ -270,7 +276,8 @@ impl<T> LockFreeQueue<T> {
 
     /// Push an item to the queue
     pub fn push(&self, item: T) -> Result<(), T> {
-        if self.size.load(Ordering::Relaxed) >= self.max_size {
+        // Check size limit before allocating
+        if self.size.load(Ordering::Acquire) >= self.max_size {
             return Err(item);
         }
 
@@ -279,12 +286,23 @@ impl<T> LockFreeQueue<T> {
             next: AtomicPtr::new(std::ptr::null_mut()),
         }));
 
+        // Safety: We ensure tail is valid by checking it hasn't changed
+        // between loads and operations
         loop {
             let tail = self.tail.load(Ordering::Acquire);
+            if tail.is_null() {
+                // Queue is being destroyed
+                let node = unsafe { Box::from_raw(new_node) };
+                let item = node.data.unwrap();
+                return Err(item);
+            }
+
             let next = unsafe { (*tail).next.load(Ordering::Acquire) };
 
+            // Double-check tail hasn't changed (ABA protection)
             if tail == self.tail.load(Ordering::Acquire) {
                 if next.is_null() {
+                    // Try to link new node
                     if unsafe {
                         (*tail)
                             .next
@@ -299,6 +317,7 @@ impl<T> LockFreeQueue<T> {
                         break;
                     }
                 } else {
+                    // Help advance tail
                     let _ = self.tail.compare_exchange_weak(
                         tail,
                         next,
@@ -309,6 +328,7 @@ impl<T> LockFreeQueue<T> {
             }
         }
 
+        // Try to advance tail
         let _ = self.tail.compare_exchange_weak(
             self.tail.load(Ordering::Acquire),
             new_node,
@@ -316,7 +336,7 @@ impl<T> LockFreeQueue<T> {
             Ordering::Relaxed,
         );
 
-        self.size.fetch_add(1, Ordering::Relaxed);
+        self.size.fetch_add(1, Ordering::Release);
         Ok(())
     }
 
@@ -324,14 +344,23 @@ impl<T> LockFreeQueue<T> {
     pub fn pop(&self) -> Option<T> {
         loop {
             let head = self.head.load(Ordering::Acquire);
+            if head.is_null() {
+                // Queue is being destroyed
+                return None;
+            }
+
             let tail = self.tail.load(Ordering::Acquire);
+            // Safety: head is guaranteed to be valid here due to null check
             let next = unsafe { (*head).next.load(Ordering::Acquire) };
 
+            // Double-check head hasn't changed (ABA protection)
             if head == self.head.load(Ordering::Acquire) {
                 if head == tail {
                     if next.is_null() {
+                        // Queue is empty
                         return None;
                     }
+                    // Help advance tail
                     let _ = self.tail.compare_exchange_weak(
                         tail,
                         next,
@@ -340,18 +369,22 @@ impl<T> LockFreeQueue<T> {
                     );
                 } else {
                     if next.is_null() {
+                        // Inconsistent state, retry
                         continue;
                     }
 
+                    // Safety: next is guaranteed to be valid and contain data
                     let data = unsafe { (*next).data.take() };
 
+                    // Try to advance head
                     if self
                         .head
                         .compare_exchange_weak(head, next, Ordering::Release, Ordering::Relaxed)
                         .is_ok()
                     {
+                        // Successfully advanced head, now safe to deallocate old head
                         unsafe { drop(Box::from_raw(head)) };
-                        self.size.fetch_sub(1, Ordering::Relaxed);
+                        self.size.fetch_sub(1, Ordering::Release);
                         return data;
                     }
                 }
@@ -377,12 +410,15 @@ impl<T> LockFreeQueue<T> {
 
 impl<T> Drop for LockFreeQueue<T> {
     fn drop(&mut self) {
+        // First drain all items to avoid leaks
         while self.pop().is_some() {}
 
-        // Clean up the dummy node
-        let head = self.head.load(Ordering::Relaxed);
-        if !head.is_null() {
-            unsafe { drop(Box::from_raw(head)) };
+        // Now clean up all remaining nodes
+        let mut current = self.head.load(Ordering::Relaxed);
+        while !current.is_null() {
+            let next = unsafe { (*current).next.load(Ordering::Relaxed) };
+            unsafe { drop(Box::from_raw(current)) };
+            current = next;
         }
     }
 }

@@ -19,6 +19,7 @@ scirs2-integrate/*.txt
 scirs2-vision/examples/output/*
 !scirs2-vision/examples/output/.gitignore
 !scirs2-vision/examples/output/.gitkeep
+output/*
 
 # Documentation
 target/doc/

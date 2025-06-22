@@ -1,12 +1,18 @@
 //! Benchmarks for validation system performance
 
+#[cfg(feature = "data_validation")]
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+
+#[cfg(feature = "data_validation")]
 use ndarray::{Array1, Array2};
+
+#[cfg(feature = "data_validation")]
 use scirs2_core::validation::data::{
     ArrayValidationConstraints, Constraint, ConstraintBuilder, DataType, ValidationConfig,
     ValidationSchema, Validator,
 };
 
+#[cfg(feature = "data_validation")]
 fn bench_simple_validation(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -36,6 +42,7 @@ fn bench_simple_validation(c: &mut Criterion) {
     });
 }
 
+#[cfg(feature = "data_validation")]
 fn bench_complex_constraints(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -75,6 +82,7 @@ fn bench_complex_constraints(c: &mut Criterion) {
     });
 }
 
+#[cfg(feature = "data_validation")]
 fn bench_array_validation(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config.clone()).unwrap();
@@ -97,6 +105,7 @@ fn bench_array_validation(c: &mut Criterion) {
     group.finish();
 }
 
+#[cfg(feature = "data_validation")]
 fn bench_pattern_matching(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -121,6 +130,7 @@ fn bench_pattern_matching(c: &mut Criterion) {
     });
 }
 
+#[cfg(feature = "data_validation")]
 fn bench_constraint_builder(c: &mut Criterion) {
     let mut group = c.benchmark_group("constraint_builder");
 
@@ -147,6 +157,7 @@ fn bench_constraint_builder(c: &mut Criterion) {
     group.finish();
 }
 
+#[cfg(feature = "data_validation")]
 fn bench_large_or_constraint(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -178,6 +189,7 @@ fn bench_large_or_constraint(c: &mut Criterion) {
     group.finish();
 }
 
+#[cfg(feature = "data_validation")]
 fn bench_cache_performance(c: &mut Criterion) {
     // FIXME: ValidationConfig doesn't have with_cache_enabled method
     let config = ValidationConfig::default();
@@ -234,6 +246,7 @@ fn bench_cache_performance(c: &mut Criterion) {
     group.finish();
 }
 
+#[cfg(feature = "data_validation")]
 fn bench_quality_report_generation(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -257,6 +270,7 @@ fn bench_quality_report_generation(c: &mut Criterion) {
     group.finish();
 }
 
+#[cfg(feature = "data_validation")]
 criterion_group!(
     benches,
     bench_simple_validation,
@@ -268,4 +282,11 @@ criterion_group!(
     bench_cache_performance,
     bench_quality_report_generation
 );
+
+#[cfg(feature = "data_validation")]
 criterion_main!(benches);
+
+#[cfg(not(feature = "data_validation"))]
+fn main() {
+    // No benchmarks to run without data_validation feature
+}

@@ -361,7 +361,7 @@ impl PatternRecognizer {
         let indices: Vec<_> = self.history.iter().cloned().collect();
 
         // Check for zigzag pattern
-        let mut zigzag_matches = 0;
+        let mut zigzag_matches: usize = 0;
         let mut row_changes = Vec::new();
 
         for i in 1..indices.len() {
@@ -384,7 +384,7 @@ impl PatternRecognizer {
                     || (prev_direction < 0 && curr_direction > 0)
                 {
                     row_changes.push((prev_row, curr_row));
-                    zigzag_matches += 1;
+                    zigzag_matches = zigzag_matches.saturating_add(1);
                 }
             }
         }

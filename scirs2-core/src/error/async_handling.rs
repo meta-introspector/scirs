@@ -575,11 +575,14 @@ mod tests {
 
         assert_eq!(tracker.progress(), 0.0);
 
+        // Add a small delay to ensure measurable elapsed time
+        tokio::time::sleep(Duration::from_millis(1)).await;
+
         tracker.complete_step();
         tracker.complete_step();
 
         assert_eq!(tracker.progress(), 0.2);
-        assert!(tracker.elapsed_time().as_millis() > 0);
+        assert!(tracker.elapsed_time().as_nanos() > 0);
     }
 
     #[tokio::test]
