@@ -8,7 +8,9 @@ use crate::error::{FFTError, FFTResult};
 use crate::sparse_fft::{SparseFFTAlgorithm, SparseFFTResult, WindowFunction};
 use crate::sparse_fft_gpu_cuda::CUDAContext;
 use crate::sparse_fft_gpu_kernels::{GPUKernel, KernelConfig, KernelStats};
-use crate::sparse_fft_gpu_memory::{is_cuda_available, BufferDescriptor};
+use crate::sparse_fft_gpu_memory::BufferDescriptor;
+#[cfg(feature = "cuda")]
+use crate::sparse_fft_gpu_memory::is_cuda_available;
 
 use num_complex::Complex64;
 use num_traits::NumCast;
