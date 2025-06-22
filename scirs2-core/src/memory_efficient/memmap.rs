@@ -7,7 +7,7 @@
 //! Based on `NumPy`'s memmap implementation, this provides similar functionality in Rust.
 
 use super::validation;
-use crate::error::{CoreError, ErrorContext, ErrorLocation};
+use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use bincode::{deserialize, serialize};
 use memmap2::{Mmap, MmapMut, MmapOptions};
 use ndarray::{Array, ArrayBase, Data, Dimension, IxDyn};
@@ -121,6 +121,16 @@ impl<A> MemoryMappedArray<A>
 where
     A: Clone + Copy + 'static + Send + Sync + Send + Sync,
 {
+    /// Create a new reference to the same memory-mapped file
+    pub fn clone_ref(&self) -> CoreResult<Self> {
+        // Re-open the file with the same parameters
+        Self::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
+            None,
+            &self.file_path,
+            self.mode,
+            self.offset,
+        )
+    }
     /// Validate safety preconditions and create a slice from raw parts
     ///
     /// # Safety

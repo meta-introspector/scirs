@@ -1,9 +1,10 @@
 //! Minimal Performance Benchmark - Quick Results
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::distance::{euclidean, pdist};
+use std::hint::black_box;
 use std::time::Duration;
 
 fn generate_test_data(n_points: usize, dimensions: usize) -> Array2<f64> {

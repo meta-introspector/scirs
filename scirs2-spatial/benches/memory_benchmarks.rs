@@ -4,7 +4,8 @@
 //! tracking peak memory consumption, allocation patterns, and
 //! cache performance for spatial operations.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use std::hint::black_box;
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{

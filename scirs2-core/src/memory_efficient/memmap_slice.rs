@@ -71,14 +71,42 @@ where
     /// This method materializes the slice by loading only the necessary data
     /// from the memory-mapped file.
     pub fn load(&self) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        // First, load the source array into memory with the correct dimension type
-        let source_array = self.source.as_array::<D>()?;
+        use ndarray::IxDyn;
 
-        // Then, apply the slice to get only the data we need
-        let slice_result = source_array.slice(&self.slice_info);
+        // First, load the source array into memory as dynamic dimension
+        let source_array = self.source.as_array::<IxDyn>()?;
 
-        // Convert to owned array to detach from the source
-        Ok(slice_result.to_owned())
+        // Convert SliceInfo to a slice arg that can be used with IxDyn
+        let slice_elements = self.slice_info.as_ref();
+
+        // Apply the slice using ndarray's slicing
+        let sliced = source_array.slice_each_axis(|ax| {
+            if ax.axis.index() < slice_elements.len() {
+                match &slice_elements[ax.axis.index()] {
+                    SliceInfoElem::Slice { start, end, step } => {
+                        let start = *start as usize;
+                        let end = end.map(|e| e as usize).unwrap_or(ax.len);
+                        let step = *step as usize;
+                        ndarray::Slice::new(start as isize, Some(end as isize), step as isize)
+                    }
+                    SliceInfoElem::Index(idx) => ndarray::Slice::new(*idx, Some(*idx + 1), 1),
+                    _ => ndarray::Slice::new(0, None, 1),
+                }
+            } else {
+                ndarray::Slice::new(0, None, 1)
+            }
+        });
+
+        // Convert to the target dimension type
+        let owned = sliced.to_owned();
+
+        // Try to convert from dynamic to fixed dimension
+        match owned.into_dimensionality::<D>() {
+            Ok(array) => Ok(array),
+            Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
+                "Failed to convert sliced array to target dimension type",
+            ))),
+        }
     }
 }
 
@@ -180,12 +208,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
             })?
         };
 
-        let source = MemoryMappedArray::new::<ndarray::OwnedRepr<A>, ndarray::Ix1>(
-            None,
-            &self.file_path,
-            self.mode,
-            self.offset,
-        )?;
+        // Create a new reference to the same memory-mapped file
+        let source = self.clone_ref()?;
         Ok(MemoryMappedSlice::new(source, slice_info))
     }
 
@@ -265,12 +289,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
             })?
         };
 
-        let source = MemoryMappedArray::new::<ndarray::OwnedRepr<A>, ndarray::Ix2>(
-            None,
-            &self.file_path,
-            self.mode,
-            self.offset,
-        )?;
+        // Create a new reference to the same memory-mapped file
+        let source = self.clone_ref()?;
         Ok(MemoryMappedSlice::new(source, slice_info))
     }
 }

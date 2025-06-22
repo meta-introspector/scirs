@@ -46,14 +46,14 @@ pub use advanced_line_search::{
 };
 pub use bfgs::minimize_bfgs;
 pub use callback_diagnostics::{
-    CallbackInfo, CallbackResult, DiagnosticOptimizer, OptimizationCallback,
-    minimize_with_diagnostics, optimize_with_diagnostics,
+    minimize_with_diagnostics, optimize_with_diagnostics, CallbackInfo, CallbackResult,
+    DiagnosticOptimizer, OptimizationCallback,
 };
 pub use conjugate_gradient::minimize_conjugate_gradient;
 pub use convergence_diagnostics::{
     ConvergenceDiagnostics, DiagnosticCollector, DiagnosticOptions, DiagnosticWarning,
-    ExportFormat, IterationDiagnostic, LineSearchDiagnostic, PerformanceMetrics,
-    ProblemAnalysis, ProblemDifficulty, WarningSeverity,
+    ExportFormat, IterationDiagnostic, LineSearchDiagnostic, PerformanceMetrics, ProblemAnalysis,
+    ProblemDifficulty, WarningSeverity,
 };
 pub use efficient_sparse::{
     minimize_efficient_sparse_newton, EfficientSparseOptions, SparsityInfo,

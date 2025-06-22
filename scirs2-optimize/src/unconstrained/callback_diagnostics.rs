@@ -5,8 +5,8 @@
 
 use crate::error::OptimizeError;
 use crate::unconstrained::convergence_diagnostics::{
-    ConvergenceDiagnostics, DiagnosticCollector, DiagnosticOptions,
-    LineSearchDiagnostic, IterationDiagnostic,
+    ConvergenceDiagnostics, DiagnosticCollector, DiagnosticOptions, IterationDiagnostic,
+    LineSearchDiagnostic,
 };
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, ArrayView1};
@@ -94,7 +94,7 @@ impl DiagnosticOptimizer {
     pub fn add_convergence_monitor(&mut self, patience: usize, min_improvement: f64) {
         let mut best_f = f64::INFINITY;
         let mut no_improvement_count = 0;
-        
+
         self.add_callback(Box::new(move |info| {
             if info.f < best_f - min_improvement {
                 best_f = info.f;
@@ -102,7 +102,7 @@ impl DiagnosticOptimizer {
             } else {
                 no_improvement_count += 1;
             }
-            
+
             if no_improvement_count >= patience {
                 CallbackResult::StopWithMessage("Early stopping: no improvement")
             } else {
@@ -125,8 +125,9 @@ impl DiagnosticOptimizer {
     /// Process callbacks and update diagnostics
     pub fn process_iteration(&mut self, info: &CallbackInfo) -> CallbackResult {
         // Update diagnostic collector
-        if let (Some(step), Some(direction), Some(line_search)) = 
-            (&info.step, &info.direction, &info.line_search) {
+        if let (Some(step), Some(direction), Some(line_search)) =
+            (&info.step, &info.direction, &info.line_search)
+        {
             self.collector.borrow_mut().record_iteration(
                 info.f,
                 &info.grad.view(),
@@ -149,7 +150,10 @@ impl DiagnosticOptimizer {
 
     /// Get final diagnostics
     pub fn get_diagnostics(self) -> ConvergenceDiagnostics {
-        self.collector.take().finalize()
+        let collector = Rc::try_unwrap(self.collector)
+            .expect("Failed to unwrap Rc")
+            .into_inner();
+        collector.finalize()
     }
 }
 
@@ -163,21 +167,25 @@ pub fn optimize_with_diagnostics<F, O>(
 ) -> Result<(OptimizeResult<f64>, ConvergenceDiagnostics), OptimizeError>
 where
     F: FnMut(&ArrayView1<f64>) -> f64 + Clone,
-    O: FnOnce(F, Array1<f64>, &mut DiagnosticOptimizer) -> Result<OptimizeResult<f64>, OptimizeError>,
+    O: FnOnce(
+        F,
+        Array1<f64>,
+        &mut DiagnosticOptimizer,
+    ) -> Result<OptimizeResult<f64>, OptimizeError>,
 {
     let mut diagnostic_optimizer = DiagnosticOptimizer::new(diagnostic_options);
-    
+
     // Add user callbacks
     for callback in callbacks {
         diagnostic_optimizer.add_callback(callback);
     }
-    
+
     // Run optimization
     let result = optimizer_fn(fun, x0, &mut diagnostic_optimizer)?;
-    
+
     // Get diagnostics
     let diagnostics = diagnostic_optimizer.get_diagnostics();
-    
+
     Ok((result, diagnostics))
 }
 
@@ -194,21 +202,21 @@ where
     let mut x = x0.clone();
     let mut f = fun(&x.view());
     let mut iteration = 0;
-    
+
     // Simplified optimization loop for demonstration
     loop {
         // Compute gradient (simplified - would use finite differences or AD)
         let grad = finite_diff_gradient(&mut fun, &x.view(), 1e-8);
-        
+
         // Compute search direction (simplified - just negative gradient)
         let direction = -&grad;
-        
+
         // Line search (simplified)
         let alpha = 0.1;
         let step = alpha * &direction;
         let x_new = &x + &step;
         let f_new = fun(&x_new.view());
-        
+
         // Create callback info
         let callback_info = CallbackInfo {
             iteration,
@@ -227,10 +235,10 @@ where
             }),
             elapsed_time: diagnostic_optimizer.start_time.elapsed(),
         };
-        
+
         // Process callbacks
         match diagnostic_optimizer.process_iteration(&callback_info) {
-            CallbackResult::Continue => {},
+            CallbackResult::Continue => {}
             CallbackResult::Stop => break,
             CallbackResult::StopWithMessage(msg) => {
                 return Ok(OptimizeResult {
@@ -247,22 +255,22 @@ where
                 });
             }
         }
-        
+
         // Check convergence
         if grad.mapv(|x| x.abs()).sum() < options.gtol {
             break;
         }
-        
+
         // Update state
         x = x_new;
         f = f_new;
         iteration += 1;
-        
+
         if iteration >= options.max_iter {
             break;
         }
     }
-    
+
     Ok(OptimizeResult {
         x,
         fun: f,
@@ -290,7 +298,7 @@ where
     let mut grad = Array1::zeros(n);
     let f0 = fun(x);
     let mut x_pert = x.to_owned();
-    
+
     for i in 0..n {
         let h = eps * (1.0 + x[i].abs());
         x_pert[i] = x[i] + h;
@@ -298,26 +306,26 @@ where
         grad[i] = (f_plus - f0) / h;
         x_pert[i] = x[i];
     }
-    
+
     grad
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_diagnostic_optimizer() {
         let options = DiagnosticOptions::default();
         let mut optimizer = DiagnosticOptimizer::new(options);
-        
+
         // Add a simple callback
         let mut callback_called = false;
         optimizer.add_callback(Box::new(move |_info| {
             callback_called = true;
             CallbackResult::Continue
         }));
-        
+
         // Create test callback info
         let info = CallbackInfo {
             iteration: 0,
@@ -336,18 +344,18 @@ mod tests {
             }),
             elapsed_time: std::time::Duration::from_secs(0),
         };
-        
+
         let result = optimizer.process_iteration(&info);
         assert!(matches!(result, CallbackResult::Continue));
     }
-    
+
     #[test]
     fn test_early_stopping_callback() {
         let options = DiagnosticOptions::default();
         let mut optimizer = DiagnosticOptimizer::new(options);
-        
+
         optimizer.add_convergence_monitor(2, 0.1);
-        
+
         // Create test info with no improvement
         let info = CallbackInfo {
             iteration: 0,
@@ -359,11 +367,17 @@ mod tests {
             line_search: None,
             elapsed_time: std::time::Duration::from_secs(0),
         };
-        
+
         // First two iterations should continue
-        assert!(matches!(optimizer.process_iteration(&info), CallbackResult::Continue));
-        assert!(matches!(optimizer.process_iteration(&info), CallbackResult::Continue));
-        
+        assert!(matches!(
+            optimizer.process_iteration(&info),
+            CallbackResult::Continue
+        ));
+        assert!(matches!(
+            optimizer.process_iteration(&info),
+            CallbackResult::Continue
+        ));
+
         // Third iteration with no improvement should stop
         let result = optimizer.process_iteration(&info);
         assert!(matches!(result, CallbackResult::StopWithMessage(_)));

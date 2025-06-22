@@ -5,10 +5,8 @@
 //! insights for optimization decisions and performance scaling analysis.
 
 use criterion::{
-    criterion_group, criterion_main, BenchmarkId, Criterion, PlotConfiguration,
-    Throughput,
+    criterion_group, criterion_main, BenchmarkId, Criterion, PlotConfiguration, Throughput,
 };
-use std::hint::black_box;
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{
@@ -19,6 +17,7 @@ use scirs2_spatial::{
     },
     BallTree, KDTree,
 };
+use std::hint::black_box;
 use std::time::Duration;
 
 // Benchmark configuration constants

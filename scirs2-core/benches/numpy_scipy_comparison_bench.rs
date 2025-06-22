@@ -5,8 +5,8 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Axis};
-use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
+use ndarray_rand::RandomExt;
 use std::time::Duration;
 
 const SIZES: &[usize] = &[100, 1000, 10000, 100000];
@@ -388,4 +388,3 @@ criterion_group!(
     bench_memory_ops
 );
 criterion_main!(benches);
-

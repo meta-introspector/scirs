@@ -7,15 +7,25 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::Array1;
 use scirs2_special::{
     // Airy functions
-    ai, bi,
-    // Bessel functions
-    i0, j0, j1, jn, jv, spherical_jn,
-    // Error functions
-    erf, erfc,
+    ai,
     // Gamma functions
-    beta, digamma, gamma, gammaln,
+    beta,
+    bi,
+    digamma,
+    // Error functions
+    erf,
+    erfc,
+    gamma,
+    gammaln,
+    // Bessel functions
+    i0,
+    j0,
+    j1,
+    jn,
+    jv,
     // Lambert W
     lambert_w_real,
+    spherical_jn,
 };
 use std::fs;
 use std::path::Path;
@@ -249,9 +259,7 @@ fn bench_array_like_operations(c: &mut Criterion) {
     let small_values: Vec<f64> = (0..100).map(|i| i as f64 * 0.1 + 1.0).collect();
     group.bench_function("gamma_small_array", |b| {
         b.iter(|| {
-            let results: Vec<f64> = small_values.iter()
-                .map(|&x| gamma(black_box(x)))
-                .collect();
+            let results: Vec<f64> = small_values.iter().map(|&x| gamma(black_box(x))).collect();
             black_box(results);
         })
     });
@@ -260,9 +268,7 @@ fn bench_array_like_operations(c: &mut Criterion) {
     let large_values: Vec<f64> = (0..10000).map(|i| i as f64 * 0.001 + 1.0).collect();
     group.bench_function("gamma_large_array", |b| {
         b.iter(|| {
-            let results: Vec<f64> = large_values.iter()
-                .map(|&x| gamma(black_box(x)))
-                .collect();
+            let results: Vec<f64> = large_values.iter().map(|&x| gamma(black_box(x))).collect();
             black_box(results);
         })
     });
@@ -287,9 +293,7 @@ fn bench_array_vs_scalar(c: &mut Criterion) {
     // Array-like operations with collect
     group.bench_function("array_like_gamma_1000", |b| {
         b.iter(|| {
-            let results: Vec<f64> = values.iter()
-                .map(|&x| gamma(black_box(x)))
-                .collect();
+            let results: Vec<f64> = values.iter().map(|&x| gamma(black_box(x))).collect();
             black_box(results);
         })
     });
@@ -309,9 +313,7 @@ fn bench_memory_usage(c: &mut Criterion) {
             &values,
             |b, vals| {
                 b.iter(|| {
-                    let results: Vec<f64> = vals.iter()
-                        .map(|&x| gamma(black_box(x)))
-                        .collect();
+                    let results: Vec<f64> = vals.iter().map(|&x| gamma(black_box(x))).collect();
                     black_box(results);
                 })
             },

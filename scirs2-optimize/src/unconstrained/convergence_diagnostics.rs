@@ -282,6 +282,7 @@ pub enum WarningSeverity {
 }
 
 /// Diagnostic collector for gathering convergence information
+#[derive(Debug)]
 pub struct DiagnosticCollector {
     /// Options
     options: DiagnosticOptions,
@@ -348,14 +349,15 @@ impl Default for DiagnosticOptions {
 impl DiagnosticCollector {
     /// Create a new diagnostic collector
     pub fn new(options: DiagnosticOptions) -> Self {
+        let history_window = options.history_window;
         Self {
             options,
             iterations: Vec::new(),
             start_time: Instant::now(),
-            f_history: VecDeque::with_capacity(options.history_window),
-            grad_history: VecDeque::with_capacity(options.history_window),
-            step_history: VecDeque::with_capacity(options.history_window),
-            condition_history: VecDeque::with_capacity(options.history_window),
+            f_history: VecDeque::with_capacity(history_window),
+            grad_history: VecDeque::with_capacity(history_window),
+            step_history: VecDeque::with_capacity(history_window),
+            condition_history: VecDeque::with_capacity(history_window),
             current_iteration: 0,
         }
     }
@@ -370,13 +372,17 @@ impl DiagnosticCollector {
         line_search_info: LineSearchDiagnostic,
     ) {
         let iteration_start = Instant::now();
-        
+
         // Update histories
-        self.update_history(f_value, grad.mapv(|x| x.abs()).sum(), step.mapv(|x| x.abs()).sum());
-        
+        self.update_history(
+            f_value,
+            grad.mapv(|x| x.abs()).sum(),
+            step.mapv(|x| x.abs()).sum(),
+        );
+
         // Compute convergence metrics
         let convergence_metrics = self.compute_convergence_metrics(f_value, grad, step);
-        
+
         // Create iteration diagnostic
         let diagnostic = IterationDiagnostic {
             iteration: self.current_iteration,
@@ -390,7 +396,7 @@ impl DiagnosticCollector {
             total_time: self.start_time.elapsed(),
             memory_usage: None, // Could be implemented with system calls
         };
-        
+
         self.iterations.push(diagnostic);
         self.current_iteration += 1;
     }
@@ -401,12 +407,12 @@ impl DiagnosticCollector {
         if self.f_history.len() > self.options.history_window {
             self.f_history.pop_front();
         }
-        
+
         self.grad_history.push_back(grad_norm);
         if self.grad_history.len() > self.options.history_window {
             self.grad_history.pop_front();
         }
-        
+
         self.step_history.push_back(step_size);
         if self.step_history.len() > self.options.history_window {
             self.step_history.pop_front();
@@ -427,16 +433,16 @@ impl DiagnosticCollector {
         } else {
             f_abs_change
         };
-        
+
         let grad_norm = grad.mapv(|x| x.abs()).sum();
         let grad_rel_norm = grad_norm / (1.0 + f_value.abs());
-        
+
         let step_norm = step.mapv(|x| x.abs()).sum();
         let x_norm = 1.0; // Would need current x to compute properly
         let x_rel_change = step_norm / (1.0 + x_norm);
-        
+
         let optimality = grad_norm;
-        
+
         ConvergenceMetrics {
             f_rel_change,
             f_abs_change,
@@ -453,7 +459,7 @@ impl DiagnosticCollector {
         let convergence_analysis = self.analyze_convergence();
         let problem_analysis = self.analyze_problem();
         let warnings = self.generate_warnings();
-        
+
         ConvergenceDiagnostics {
             iterations: self.iterations,
             performance_metrics,
@@ -467,24 +473,24 @@ impl DiagnosticCollector {
     fn compute_performance_metrics(&self) -> PerformanceMetrics {
         let total_iterations = self.iterations.len();
         let total_time = self.start_time.elapsed();
-        
+
         let total_fev = self.iterations.iter().map(|it| it.line_search.n_fev).sum();
         let total_gev = self.iterations.iter().map(|it| it.line_search.n_gev).sum();
-        
+
         let avg_iteration_time = if total_iterations > 0 {
             total_time / total_iterations as u32
         } else {
             Duration::from_secs(0)
         };
-        
+
         let fev_rate = if total_time.as_secs_f64() > 0.0 {
             total_fev as f64 / total_time.as_secs_f64()
         } else {
             0.0
         };
-        
+
         let efficiency = self.compute_efficiency_metrics();
-        
+
         PerformanceMetrics {
             total_iterations,
             total_fev,
@@ -499,40 +505,50 @@ impl DiagnosticCollector {
 
     /// Compute efficiency metrics
     fn compute_efficiency_metrics(&self) -> EfficiencyMetrics {
-        let total_progress = if let (Some(first), Some(last)) = (self.f_history.front(), self.f_history.back()) {
-            (first - last).abs()
-        } else {
-            0.0
-        };
-        
+        let total_progress =
+            if let (Some(first), Some(last)) = (self.f_history.front(), self.f_history.back()) {
+                (first - last).abs()
+            } else {
+                0.0
+            };
+
         let total_fev: usize = self.iterations.iter().map(|it| it.line_search.n_fev).sum();
         let total_gev: usize = self.iterations.iter().map(|it| it.line_search.n_gev).sum();
-        
+
         let progress_per_fev = if total_fev > 0 {
             total_progress / total_fev as f64
         } else {
             0.0
         };
-        
+
         let progress_per_gev = if total_gev > 0 {
             total_progress / total_gev as f64
         } else {
             0.0
         };
-        
-        let line_search_efficiency = self.iterations.iter()
+
+        let line_search_efficiency = self
+            .iterations
+            .iter()
             .filter(|it| it.line_search.alpha_init > 0.0)
             .map(|it| it.line_search.alpha / it.line_search.alpha_init)
-            .sum::<f64>() / self.iterations.len().max(1) as f64;
-        
-        let step_acceptance_rate = self.iterations.iter()
+            .sum::<f64>()
+            / self.iterations.len().max(1) as f64;
+
+        let step_acceptance_rate = self
+            .iterations
+            .iter()
             .filter(|it| it.line_search.success)
-            .count() as f64 / self.iterations.len().max(1) as f64;
-        
-        let avg_reduction_ratio = self.iterations.iter()
+            .count() as f64
+            / self.iterations.len().max(1) as f64;
+
+        let avg_reduction_ratio = self
+            .iterations
+            .iter()
             .map(|it| it.convergence_metrics.f_rel_change)
-            .sum::<f64>() / self.iterations.len().max(1) as f64;
-        
+            .sum::<f64>()
+            / self.iterations.len().max(1) as f64;
+
         EfficiencyMetrics {
             progress_per_fev,
             progress_per_gev,
@@ -549,7 +565,7 @@ impl DiagnosticCollector {
         let confidence_score = self.compute_confidence_score();
         let convergence_phase = self.detect_convergence_phase();
         let stagnation = self.analyze_stagnation();
-        
+
         ConvergenceAnalysis {
             convergence_rate,
             predicted_iterations,
@@ -564,11 +580,11 @@ impl DiagnosticCollector {
         if self.f_history.len() < 3 {
             return ConvergenceRate::Unclear;
         }
-        
+
         // Use last few iterations to estimate rate
         let window = 5.min(self.f_history.len());
         let recent_f: Vec<f64> = self.f_history.iter().rev().take(window).copied().collect();
-        
+
         // Simple linear regression on log scale
         if let Some(rate) = self.compute_rate_from_history(&recent_f) {
             if rate > 1.5 {
@@ -590,18 +606,18 @@ impl DiagnosticCollector {
         if values.len() < 2 {
             return None;
         }
-        
+
         // Simple rate estimation
         let mut rates = Vec::new();
         for i in 1..values.len() {
-            if values[i-1] > 0.0 && values[i] > 0.0 {
-                let rate = values[i].ln() / values[i-1].ln();
+            if values[i - 1] > 0.0 && values[i] > 0.0 {
+                let rate = values[i].ln() / values[i - 1].ln();
                 if rate.is_finite() {
                     rates.push(rate);
                 }
             }
         }
-        
+
         if rates.is_empty() {
             None
         } else {
@@ -617,7 +633,7 @@ impl DiagnosticCollector {
                 if *last_grad < 1e-5 {
                     return Some(0); // Already converged
                 }
-                
+
                 // Estimate based on current reduction rate
                 if self.iterations.len() > 2 {
                     let recent_rate = self.iterations.last()?.convergence_metrics.f_rel_change;
@@ -637,22 +653,46 @@ impl DiagnosticCollector {
         if self.iterations.len() < 5 {
             return 0.0;
         }
-        
+
         let mut score = 1.0;
-        
+
         // Check for consistent function decrease
-        let decreasing_count = self.f_history.windows(2)
-            .filter(|w| w[1] < w[0])
-            .count();
+        let decreasing_count = self.count_decreasing_pairs(&self.f_history);
         score *= decreasing_count as f64 / self.f_history.len().max(1) as f64;
-        
+
         // Check for consistent gradient decrease
-        let grad_decreasing = self.grad_history.windows(2)
-            .filter(|w| w[1] < w[0])
-            .count();
+        let grad_decreasing = self.count_decreasing_pairs(&self.grad_history);
         score *= grad_decreasing as f64 / self.grad_history.len().max(1) as f64;
-        
+
         score
+    }
+    
+    /// Count decreasing pairs in a VecDeque
+    fn count_decreasing_pairs(&self, values: &VecDeque<f64>) -> usize {
+        let mut count = 0;
+        for i in 1..values.len() {
+            if values[i] < values[i-1] {
+                count += 1;
+            }
+        }
+        count
+    }
+    
+    /// Check if function values are stagnant
+    fn is_f_stagnant(&self) -> bool {
+        if self.f_history.len() < 2 {
+            return false;
+        }
+        
+        let mut count = 0;
+        let n = self.f_history.len().min(6); // Check last 5 pairs
+        for i in (self.f_history.len() - n + 1)..self.f_history.len() {
+            if (self.f_history[i] - self.f_history[i-1]).abs() < 1e-12 {
+                count += 1;
+            }
+        }
+        
+        count >= n - 1 // All recent pairs are stagnant
     }
 
     /// Detect current convergence phase
@@ -660,12 +700,14 @@ impl DiagnosticCollector {
         if self.iterations.is_empty() {
             return ConvergencePhase::Exploration;
         }
-        
+
         let last_grad = self.grad_history.back().copied().unwrap_or(1.0);
-        let last_f_change = self.iterations.last()
+        let last_f_change = self
+            .iterations
+            .last()
             .map(|it| it.convergence_metrics.f_rel_change)
             .unwrap_or(1.0);
-        
+
         if last_grad < 1e-8 && last_f_change < 1e-10 {
             ConvergencePhase::Converged
         } else if self.is_stagnated() {
@@ -684,14 +726,15 @@ impl DiagnosticCollector {
         if self.f_history.len() < 5 {
             return false;
         }
-        
+
         let recent = self.f_history.iter().rev().take(5);
         let values: Vec<f64> = recent.copied().collect();
-        let max_diff = values.windows(2)
+        let max_diff = values
+            .windows(2)
             .map(|w| (w[1] - w[0]).abs())
             .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .unwrap_or(0.0);
-        
+
         max_diff < 1e-12
     }
 
@@ -701,7 +744,7 @@ impl DiagnosticCollector {
         let stagnant_iterations = self.count_stagnant_iterations();
         let stagnation_type = self.detect_stagnation_type();
         let recommendations = self.generate_stagnation_recommendations(&stagnation_type);
-        
+
         StagnationAnalysis {
             is_stagnated,
             stagnant_iterations,
@@ -728,26 +771,28 @@ impl DiagnosticCollector {
         if !self.is_stagnated() {
             return StagnationType::None;
         }
-        
+
         // Check for oscillation
         if self.is_oscillating() {
             return StagnationType::Oscillation;
         }
-        
+
         // Check for line search failures
-        let ls_failures = self.iterations.iter().rev().take(5)
+        let ls_failures = self
+            .iterations
+            .iter()
+            .rev()
+            .take(5)
             .filter(|it| !it.line_search.success)
             .count();
         if ls_failures >= 3 {
             return StagnationType::LineSearchFailure;
         }
-        
+
         // Check gradient vs function stagnation
-        let grad_stagnant = self.grad_history.iter().rev().take(5)
-            .all(|&g| g < 1e-10);
-        let f_stagnant = self.f_history.windows(2).rev().take(5)
-            .all(|w| (w[1] - w[0]).abs() < 1e-12);
-        
+        let grad_stagnant = self.grad_history.iter().rev().take(5).all(|&g| g < 1e-10);
+        let f_stagnant = self.is_f_stagnant();
+
         if grad_stagnant && f_stagnant {
             StagnationType::NumericalLimit
         } else if f_stagnant {
@@ -764,18 +809,21 @@ impl DiagnosticCollector {
         if self.f_history.len() < 4 {
             return false;
         }
-        
+
         let mut sign_changes = 0;
-        let diffs: Vec<f64> = self.f_history.windows(2)
-            .map(|w| w[1] - w[0])
-            .collect();
+        let mut diffs = Vec::new();
         
+        // Compute differences
+        for i in 1..self.f_history.len() {
+            diffs.push(self.f_history[i] - self.f_history[i-1]);
+        }
+
         for i in 1..diffs.len() {
-            if diffs[i-1] * diffs[i] < 0.0 {
+            if diffs[i - 1] * diffs[i] < 0.0 {
                 sign_changes += 1;
             }
         }
-        
+
         sign_changes >= diffs.len() / 2
     }
 
@@ -816,7 +864,7 @@ impl DiagnosticCollector {
         let conditioning = self.analyze_conditioning();
         let noise_level = self.estimate_noise_level();
         let features = self.detect_problem_features();
-        
+
         ProblemAnalysis {
             difficulty,
             conditioning,
@@ -828,32 +876,38 @@ impl DiagnosticCollector {
     /// Assess problem difficulty
     fn assess_difficulty(&self) -> ProblemDifficulty {
         let mut difficulty_score = 0.0;
-        
+
         // Factor 1: Convergence rate
-        if matches!(self.estimate_convergence_rate(), ConvergenceRate::Sublinear(_) | ConvergenceRate::Unclear) {
+        if matches!(
+            self.estimate_convergence_rate(),
+            ConvergenceRate::Sublinear(_) | ConvergenceRate::Unclear
+        ) {
             difficulty_score += 2.0;
         }
-        
+
         // Factor 2: Line search performance
-        let ls_efficiency = self.iterations.iter()
+        let ls_efficiency = self
+            .iterations
+            .iter()
             .map(|it| it.line_search.alpha / it.line_search.alpha_init.max(1e-10))
-            .sum::<f64>() / self.iterations.len().max(1) as f64;
+            .sum::<f64>()
+            / self.iterations.len().max(1) as f64;
         if ls_efficiency < 0.1 {
             difficulty_score += 2.0;
         } else if ls_efficiency < 0.5 {
             difficulty_score += 1.0;
         }
-        
+
         // Factor 3: Stagnation
         if self.is_stagnated() {
             difficulty_score += 1.5;
         }
-        
+
         // Factor 4: Oscillation
         if self.is_oscillating() {
             difficulty_score += 1.5;
         }
-        
+
         if difficulty_score < 1.0 {
             ProblemDifficulty::Easy
         } else if difficulty_score < 3.0 {
@@ -870,7 +924,7 @@ impl DiagnosticCollector {
         let condition_history = self.condition_history.iter().copied().collect();
         let condition_number = self.condition_history.back().copied();
         let is_ill_conditioned = condition_number.map(|c| c > 1e6).unwrap_or(false);
-        
+
         ConditioningAnalysis {
             condition_number,
             condition_history,
@@ -883,20 +937,23 @@ impl DiagnosticCollector {
         if self.f_history.len() < 10 {
             return None;
         }
-        
+
         // Simple noise estimation: look at variance in function values
         let mean = self.f_history.iter().sum::<f64>() / self.f_history.len() as f64;
-        let variance = self.f_history.iter()
+        let variance = self
+            .f_history
+            .iter()
             .map(|&f| (f - mean).powi(2))
-            .sum::<f64>() / self.f_history.len() as f64;
-        
+            .sum::<f64>()
+            / self.f_history.len() as f64;
+
         Some(variance.sqrt())
     }
 
     /// Detect problem features
     fn detect_problem_features(&self) -> Vec<ProblemFeature> {
         let mut features = Vec::new();
-        
+
         // Check conditioning
         if let Some(cond) = self.condition_history.back() {
             if *cond < 100.0 {
@@ -905,14 +962,14 @@ impl DiagnosticCollector {
                 features.push(ProblemFeature::IllConditioned);
             }
         }
-        
+
         // Check for noise
         if let Some(noise) = self.estimate_noise_level() {
             if noise > 1e-3 {
                 features.push(ProblemFeature::Noisy);
             }
         }
-        
+
         // Check for strong nonlinearity (high variation in step sizes)
         if self.step_history.len() > 5 {
             let step_variance = self.compute_variance(&self.step_history);
@@ -920,17 +977,19 @@ impl DiagnosticCollector {
                 features.push(ProblemFeature::StronglyNonlinear);
             }
         }
-        
+
         // Check for narrow valleys (small steps with large gradients)
         if self.iterations.len() > 5 {
-            let narrow_valley_indicators = self.iterations.iter()
+            let narrow_valley_indicators = self
+                .iterations
+                .iter()
                 .filter(|it| it.step_size < 1e-3 && it.grad_norm > 1.0)
                 .count();
             if narrow_valley_indicators > self.iterations.len() / 2 {
                 features.push(ProblemFeature::NarrowValleys);
             }
         }
-        
+
         features
     }
 
@@ -939,17 +998,15 @@ impl DiagnosticCollector {
         if values.is_empty() {
             return 0.0;
         }
-        
+
         let mean = values.iter().sum::<f64>() / values.len() as f64;
-        values.iter()
-            .map(|&v| (v - mean).powi(2))
-            .sum::<f64>() / values.len() as f64
+        values.iter().map(|&v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64
     }
 
     /// Generate warnings
     fn generate_warnings(&self) -> Vec<DiagnosticWarning> {
         let mut warnings = Vec::new();
-        
+
         // Check for poor line search performance
         if let Some(last_it) = self.iterations.last() {
             if !last_it.line_search.success {
@@ -964,7 +1021,7 @@ impl DiagnosticCollector {
                 });
             }
         }
-        
+
         // Check for stagnation
         if self.is_stagnated() {
             warnings.push(DiagnosticWarning {
@@ -978,19 +1035,24 @@ impl DiagnosticCollector {
                 ],
             });
         }
-        
+
         // Check for numerical issues
-        if self.grad_history.back().map(|&g| g < 1e-15).unwrap_or(false) {
+        if self
+            .grad_history
+            .back()
+            .map(|&g| g < 1e-15)
+            .unwrap_or(false)
+        {
             warnings.push(DiagnosticWarning {
                 severity: WarningSeverity::Info,
                 message: "Gradient norm is near machine precision".to_string(),
                 iteration: self.current_iteration,
                 recommendations: vec![
-                    "Solution may be optimal within numerical precision".to_string(),
+                    "Solution may be optimal within numerical precision".to_string()
                 ],
             });
         }
-        
+
         warnings
     }
 }
@@ -1000,19 +1062,24 @@ impl ConvergenceDiagnostics {
     /// Export to JSON format
     pub fn to_json(&self) -> Result<String, OptimizeError> {
         // In real implementation, would use serde_json
-        Ok(format!("{{\"total_iterations\": {}}}", self.performance_metrics.total_iterations))
+        Ok(format!(
+            "{{\"total_iterations\": {}}}",
+            self.performance_metrics.total_iterations
+        ))
     }
-    
+
     /// Export to CSV format
     pub fn to_csv(&self) -> Result<String, OptimizeError> {
         let mut csv = String::from("iteration,f_value,grad_norm,step_size\n");
         for it in &self.iterations {
-            csv.push_str(&format!("{},{},{},{}\n", 
-                it.iteration, it.f_value, it.grad_norm, it.step_size));
+            csv.push_str(&format!(
+                "{},{},{},{}\n",
+                it.iteration, it.f_value, it.grad_norm, it.step_size
+            ));
         }
         Ok(csv)
     }
-    
+
     /// Export iteration history as arrays for plotting
     pub fn to_arrays(&self) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
         let f_values: Vec<f64> = self.iterations.iter().map(|it| it.f_value).collect();
@@ -1020,7 +1087,7 @@ impl ConvergenceDiagnostics {
         let step_sizes: Vec<f64> = self.iterations.iter().map(|it| it.step_size).collect();
         (f_values, grad_norms, step_sizes)
     }
-    
+
     /// Generate summary report
     pub fn summary_report(&self) -> String {
         format!(
@@ -1048,16 +1115,16 @@ impl ConvergenceDiagnostics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_diagnostic_collector() {
         let mut collector = DiagnosticCollector::new(DiagnosticOptions::default());
-        
+
         // Simulate some iterations
         let grad = Array1::from_vec(vec![1.0, 2.0]);
         let step = Array1::from_vec(vec![0.1, 0.2]);
         let direction = Array1::from_vec(vec![-1.0, -2.0]);
-        
+
         let ls_info = LineSearchDiagnostic {
             n_fev: 3,
             n_gev: 1,
@@ -1066,18 +1133,18 @@ mod tests {
             success: true,
             wolfe_satisfied: (true, true),
         };
-        
+
         collector.record_iteration(10.0, &grad.view(), &step.view(), &direction.view(), ls_info);
-        
+
         let diagnostics = collector.finalize();
         assert_eq!(diagnostics.iterations.len(), 1);
         assert_eq!(diagnostics.performance_metrics.total_iterations, 1);
     }
-    
+
     #[test]
     fn test_convergence_rate_estimation() {
         let collector = DiagnosticCollector::new(DiagnosticOptions::default());
-        
+
         // Test rate computation
         let values = vec![1.0, 0.1, 0.01, 0.001];
         let rate = collector.compute_rate_from_history(&values);

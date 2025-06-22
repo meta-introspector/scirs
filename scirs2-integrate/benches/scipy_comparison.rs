@@ -4,12 +4,12 @@
 //! implementations and SciPy's integrate module for various problem types.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::hint::black_box;
 use ndarray::{Array1, Array2};
 use scirs2_integrate::cubature::{cubature, CubatureOptions};
 use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use scirs2_integrate::quad::{quad, QuadOptions};
+use std::hint::black_box;
 
 /// Test problems for ODE benchmarking
 mod ode_problems {

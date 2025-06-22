@@ -4,7 +4,7 @@
 //! comparing against reference implementations, and producing detailed
 //! performance reports with charts and statistics.
 
-use criterion::black_box;
+use std::hint::black_box;
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::{

@@ -21,7 +21,11 @@ pub struct Version {
 impl Version {
     /// Create a new version
     pub const fn new(major: u32, minor: u32, patch: u32) -> Self {
-        Self { major, minor, patch }
+        Self {
+            major,
+            minor,
+            patch,
+        }
     }
 
     /// Current version of scirs2-core
@@ -30,8 +34,9 @@ impl Version {
     /// Check if this version is compatible with another
     pub fn is_compatible_with(&self, other: &Version) -> bool {
         // Same major version and greater or equal minor/patch
-        self.major == other.major && (self.minor > other.minor || 
-            (self.minor == other.minor && self.patch >= other.patch))
+        self.major == other.major
+            && (self.minor > other.minor
+                || (self.minor == other.minor && self.patch >= other.patch))
     }
 }
 
@@ -53,8 +58,8 @@ pub trait Versioned {
 
     /// Check if this API is available in a given version
     fn is_available_in(version: &Version) -> bool {
-        version.is_compatible_with(&Self::since_version()) &&
-            Self::deprecated_version()
+        version.is_compatible_with(&Self::since_version())
+            && Self::deprecated_version()
                 .map(|dep| version < &dep)
                 .unwrap_or(true)
     }
@@ -97,7 +102,9 @@ pub struct ApiEntry {
 impl VersionRegistry {
     /// Create a new version registry
     pub fn new() -> Self {
-        Self { entries: Vec::new() }
+        Self {
+            entries: Vec::new(),
+        }
     }
 
     /// Register a new API
@@ -138,10 +145,8 @@ impl VersionRegistry {
         self.entries
             .iter()
             .filter(|entry| {
-                version.is_compatible_with(&entry.since) &&
-                    entry.deprecated
-                        .map(|dep| version < &dep)
-                        .unwrap_or(true)
+                version.is_compatible_with(&entry.since)
+                    && entry.deprecated.map(|dep| version < &dep).unwrap_or(true)
             })
             .collect()
     }
@@ -150,11 +155,7 @@ impl VersionRegistry {
     pub fn deprecated_apis(&self, version: &Version) -> Vec<&ApiEntry> {
         self.entries
             .iter()
-            .filter(|entry| {
-                entry.deprecated
-                    .map(|dep| version >= &dep)
-                    .unwrap_or(false)
-            })
+            .filter(|entry| entry.deprecated.map(|dep| version >= &dep).unwrap_or(false))
             .collect()
     }
 
@@ -163,11 +164,12 @@ impl VersionRegistry {
         let mut guide = format!("Migration Guide: {} → {}\n\n", from, to);
 
         // Find removed APIs
-        let removed: Vec<_> = self.entries
+        let removed: Vec<_> = self
+            .entries
             .iter()
             .filter(|e| {
-                from.is_compatible_with(&e.since) &&
-                    e.deprecated.map(|d| to >= &d && from < &d).unwrap_or(false)
+                from.is_compatible_with(&e.since)
+                    && e.deprecated.map(|d| to >= &d && from < &d).unwrap_or(false)
             })
             .collect();
 
@@ -183,18 +185,19 @@ impl VersionRegistry {
         }
 
         // Find new APIs
-        let new_apis: Vec<_> = self.entries
+        let new_apis: Vec<_> = self
+            .entries
             .iter()
-            .filter(|e| {
-                to.is_compatible_with(&e.since) && !from.is_compatible_with(&e.since)
-            })
+            .filter(|e| to.is_compatible_with(&e.since) && !from.is_compatible_with(&e.since))
             .collect();
 
         if !new_apis.is_empty() {
             guide.push_str("## New APIs\n\n");
             for api in new_apis {
-                guide.push_str(&format!("- **{}** ({}) - Since {}\n", 
-                    api.name, api.module, api.since));
+                guide.push_str(&format!(
+                    "- **{}** ({}) - Since {}\n",
+                    api.name, api.module, api.since
+                ));
             }
         }
 
@@ -244,17 +247,15 @@ mod tests {
     #[test]
     fn test_version_registry() {
         let mut registry = VersionRegistry::new();
-        
+
         registry
             .register_api("Array", "core", Version::new(0, 1, 0))
             .register_api("Matrix", "linalg", Version::new(0, 1, 0))
             .register_api("OldArray", "core", Version::new(0, 1, 0));
 
-        registry.deprecate_api(
-            "OldArray",
-            Version::new(0, 2, 0),
-            Some("Array".to_string()),
-        ).unwrap();
+        registry
+            .deprecate_api("OldArray", Version::new(0, 2, 0), Some("Array".to_string()))
+            .unwrap();
 
         let v0_1_0 = Version::new(0, 1, 0);
         let v0_2_0 = Version::new(0, 2, 0);
@@ -276,22 +277,21 @@ mod tests {
     #[test]
     fn test_migration_guide() {
         let mut registry = VersionRegistry::new();
-        
+
         registry
             .register_api("Feature1", "module1", Version::new(0, 1, 0))
             .register_api("Feature2", "module2", Version::new(0, 2, 0))
             .register_api("OldFeature", "module1", Version::new(0, 1, 0));
 
-        registry.deprecate_api(
-            "OldFeature",
-            Version::new(0, 2, 0),
-            Some("Feature2".to_string()),
-        ).unwrap();
+        registry
+            .deprecate_api(
+                "OldFeature",
+                Version::new(0, 2, 0),
+                Some("Feature2".to_string()),
+            )
+            .unwrap();
 
-        let guide = registry.migration_guide(
-            &Version::new(0, 1, 0),
-            &Version::new(0, 2, 0),
-        );
+        let guide = registry.migration_guide(&Version::new(0, 1, 0), &Version::new(0, 2, 0));
 
         assert!(guide.contains("Removed APIs"));
         assert!(guide.contains("OldFeature"));

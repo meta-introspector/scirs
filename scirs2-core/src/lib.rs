@@ -72,9 +72,9 @@
 //! * `all`: Enable all features except backend-specific ones
 
 // Re-export modules
+pub mod api_versioning;
 #[cfg(feature = "array")]
 pub mod array;
-pub mod api_versioning;
 pub mod array_protocol;
 #[cfg(feature = "types")]
 pub mod batch_conversions;

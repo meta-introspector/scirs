@@ -60,6 +60,7 @@ mod spherical_harmonics;
 mod spheroidal;
 mod statistical;
 mod struve;
+mod validation;
 mod wright;
 mod wright_bessel;
 mod wright_simplified;
@@ -149,9 +150,19 @@ pub use zeta::{hurwitz_zeta, zeta, zetac};
 // SIMD operations (when enabled)
 #[cfg(feature = "simd")]
 pub use simd_ops::{
-    exp_f32_simd, gamma_f32_simd, gamma_f64_simd, j0_f32_simd, erf_f32_simd,
-    vectorized_special_ops, benchmark_simd_performance,
+    benchmark_simd_performance, erf_f32_simd, exp_f32_simd, gamma_f32_simd, gamma_f64_simd,
+    j0_f32_simd, vectorized_special_ops,
 };
+
+// Parallel operations (when enabled)
+#[cfg(feature = "parallel")]
+pub use simd_ops::{
+    adaptive_gamma_processing, benchmark_parallel_performance, gamma_f64_parallel, j0_f64_parallel,
+};
+
+// Combined SIMD+Parallel operations (when both enabled)
+#[cfg(all(feature = "simd", feature = "parallel"))]
+pub use simd_ops::gamma_f32_simd_parallel;
 
 // Error function and related functions
 pub mod erf;

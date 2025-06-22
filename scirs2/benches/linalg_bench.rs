@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use std::hint::black_box;
 use ndarray::array;
 use scirs2::linalg::{det, inv, matrix_norm};
+use std::hint::black_box;
 
 fn bench_det(c: &mut Criterion) {
     let a = array![[1.0, 2.0], [3.0, 4.0]];

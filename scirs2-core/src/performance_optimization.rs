@@ -6,12 +6,6 @@
 use std::hint;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-#[cfg(feature = "simd")]
-use crate::simd::{SimdAccelerator, SimdLevel};
-
-#[cfg(feature = "parallel")]
-use crate::parallel::ParallelPolicy;
-
 /// Performance hints for critical code paths
 pub struct PerformanceHints;
 
@@ -87,6 +81,7 @@ impl AdaptiveOptimizer {
 
     /// Check if parallel execution should be used for given size
     #[inline]
+    #[allow(unused_variables)]
     pub fn should_use_parallel(&self, size: usize) -> bool {
         #[cfg(feature = "parallel")]
         {
@@ -100,11 +95,11 @@ impl AdaptiveOptimizer {
 
     /// Check if SIMD should be used for given size
     #[inline]
+    #[allow(unused_variables)]
     pub fn should_use_simd(&self, size: usize) -> bool {
         #[cfg(feature = "simd")]
         {
-            size >= self.simd_threshold.load(Ordering::Relaxed) &&
-                SimdAccelerator::is_available()
+            size >= self.simd_threshold.load(Ordering::Relaxed)
         }
         #[cfg(not(feature = "simd"))]
         {
@@ -116,10 +111,11 @@ impl AdaptiveOptimizer {
     pub fn update_thresholds(&self, operation: &str, size: usize, duration_ns: u64) {
         // Simple heuristic: adjust thresholds based on operation efficiency
         let ops_per_ns = size as f64 / duration_ns as f64;
-        
+
         if operation.contains("parallel") && ops_per_ns < 0.1 {
             // Parallel overhead too high, increase threshold
-            self.parallel_threshold.fetch_add(size / 10, Ordering::Relaxed);
+            self.parallel_threshold
+                .fetch_add(size / 10, Ordering::Relaxed);
         } else if operation.contains("simd") && ops_per_ns < 1.0 {
             // SIMD not efficient enough, increase threshold
             self.simd_threshold.fetch_add(size / 10, Ordering::Relaxed);
@@ -132,7 +128,7 @@ impl AdaptiveOptimizer {
         // Calculate chunk size based on cache line size and element size
         let element_size = std::mem::size_of::<T>();
         let elements_per_cache_line = self.cache_line_size / element_size.max(1);
-        
+
         // Use multiple cache lines for better performance
         elements_per_cache_line * 16
     }
@@ -150,6 +146,7 @@ pub mod fast_paths {
 
     /// Optimized array addition for f64
     #[inline]
+    #[allow(unused_variables)]
     pub fn add_f64_arrays(a: &[f64], b: &[f64], result: &mut [f64]) -> Result<(), &'static str> {
         if a.len() != b.len() || a.len() != result.len() {
             return Err("Array lengths must match");
@@ -160,9 +157,8 @@ pub mod fast_paths {
 
         #[cfg(feature = "simd")]
         if optimizer.should_use_simd(len) {
-            // Use SIMD operations from simd module
-            use crate::simd::SimdAccelerator;
-            let accelerator = SimdAccelerator::new();
+            // For now, just use scalar implementation
+            // TODO: Use SIMD operations when available
             for i in 0..len {
                 result[i] = a[i] + b[i];
             }
@@ -172,7 +168,8 @@ pub mod fast_paths {
         #[cfg(feature = "parallel")]
         if optimizer.should_use_parallel(len) {
             use rayon::prelude::*;
-            result.par_chunks_mut(optimizer.optimal_chunk_size::<f64>())
+            result
+                .par_chunks_mut(optimizer.optimal_chunk_size::<f64>())
                 .zip(a.par_chunks(optimizer.optimal_chunk_size::<f64>()))
                 .zip(b.par_chunks(optimizer.optimal_chunk_size::<f64>()))
                 .for_each(|((r_chunk, a_chunk), b_chunk)| {
@@ -185,7 +182,6 @@ pub mod fast_paths {
 
         // Scalar fallback with loop unrolling
         let chunks = len / 8;
-        let remainder = len % 8;
 
         for i in 0..chunks {
             let idx = i * 8;
@@ -220,8 +216,7 @@ pub mod fast_paths {
             return Err("Invalid matrix dimensions");
         }
 
-        let optimizer = AdaptiveOptimizer::new();
-        
+
         // Tile sizes for cache optimization
         const TILE_M: usize = 64;
         const TILE_N: usize = 64;
@@ -230,33 +225,11 @@ pub mod fast_paths {
         // Clear result matrix
         c.fill(0.0);
 
-        #[cfg(feature = "parallel")]
-        if optimizer.should_use_parallel(m * n) {
-            use rayon::prelude::*;
-            
-            (0..m).into_par_iter().step_by(TILE_M).for_each(|i0| {
-                for j0 in (0..n).step_by(TILE_N) {
-                    for k0 in (0..k).step_by(TILE_K) {
-                        // Compute tile boundaries
-                        let i_max = (i0 + TILE_M).min(m);
-                        let j_max = (j0 + TILE_N).min(n);
-                        let k_max = (k0 + TILE_K).min(k);
-
-                        // Compute tile
-                        for i in i0..i_max {
-                            for j in j0..j_max {
-                                let mut sum = c[i * n + j];
-                                for k_idx in k0..k_max {
-                                    sum += a[i * k + k_idx] * b[k_idx * n + j];
-                                }
-                                c[i * n + j] = sum;
-                            }
-                        }
-                    }
-                }
-            });
-            return Ok(());
-        }
+        // TODO: Fix parallel implementation to properly handle mutable borrowing
+        // #[cfg(feature = "parallel")]
+        // if optimizer.should_use_parallel(m * n) {
+        //     ...
+        // }
 
         // Serial tiled implementation
         for i0 in (0..m).step_by(TILE_M) {
@@ -286,20 +259,20 @@ pub mod fast_paths {
 /// Memory access pattern optimizer
 pub struct MemoryAccessOptimizer {
     /// Stride detection for array access
-    stride_detector: StrideDetector,
+    _stride_detector: StrideDetector,
 }
 
 #[derive(Default)]
 struct StrideDetector {
-    last_address: Option<usize>,
-    detected_stride: Option<isize>,
-    confidence: f32,
+    _last_address: Option<usize>,
+    _detected_stride: Option<isize>,
+    _confidence: f32,
 }
 
 impl MemoryAccessOptimizer {
     pub fn new() -> Self {
         Self {
-            stride_detector: StrideDetector::default(),
+            _stride_detector: StrideDetector::default(),
         }
     }
 
@@ -352,11 +325,14 @@ mod tests {
     #[test]
     fn test_adaptive_optimizer() {
         let optimizer = AdaptiveOptimizer::new();
-        
+
         // Test threshold detection
         assert!(!optimizer.should_use_parallel(100));
+
+        // Only test parallel execution if the feature is enabled
+        #[cfg(feature = "parallel")]
         assert!(optimizer.should_use_parallel(100_000));
-        
+
         // Test chunk size calculation
         let chunk_size = optimizer.optimal_chunk_size::<f64>();
         assert!(chunk_size > 0);
@@ -370,7 +346,7 @@ mod tests {
         let mut result = vec![0.0; 1000];
 
         fast_paths::add_f64_arrays(&a, &b, &mut result).unwrap();
-        
+
         for val in result {
             assert_eq!(val, 3.0);
         }
@@ -379,7 +355,7 @@ mod tests {
     #[test]
     fn test_memory_access_pattern() {
         let mut optimizer = MemoryAccessOptimizer::new();
-        
+
         // Sequential access
         let addresses: Vec<*const f64> = (0..10)
             .map(|i| (i * std::mem::size_of::<f64>()) as *const f64)

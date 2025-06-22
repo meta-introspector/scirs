@@ -4,10 +4,10 @@
 //! without complex dependencies.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use std::hint::black_box;
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_spatial::distance::{euclidean, manhattan, pdist};
+use std::hint::black_box;
 use std::time::Duration;
 
 // Simple data generator

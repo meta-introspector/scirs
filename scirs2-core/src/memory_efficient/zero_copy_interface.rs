@@ -248,12 +248,12 @@ where
 
     /// Get the reference count
     pub fn ref_count(&self) -> usize {
-        self.inner.ref_count()
+        Arc::strong_count(&self.inner)
     }
 
     /// Check if this is the only reference to the data
     pub fn is_unique(&self) -> bool {
-        self.ref_count() == 1
+        Arc::strong_count(&self.inner) == 1
     }
 
     /// Create a view of part of the data
@@ -284,7 +284,6 @@ where
 
 impl<T> Clone for ZeroCopyData<T> {
     fn clone(&self) -> Self {
-        self.inner.add_ref();
         Self {
             inner: self.inner.clone(),
             id: self.id,
@@ -292,13 +291,7 @@ impl<T> Clone for ZeroCopyData<T> {
     }
 }
 
-impl<T> Drop for ZeroCopyData<T> {
-    fn drop(&mut self) {
-        if self.inner.remove_ref() == 0 {
-            // Last reference dropped - data will be deallocated
-        }
-    }
-}
+// Drop implementation is not needed - Arc handles reference counting automatically
 
 /// Weak reference to zero-copy data
 #[derive(Debug)]
