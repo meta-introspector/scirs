@@ -8,6 +8,12 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # Reduce parallel jobs to save memory and disk space
+  CARGO_BUILD_JOBS: 2
+  # Disable incremental compilation to save ~1-2GB
+  CARGO_INCREMENTAL: 0
+  # Reduce debug info size
+  CARGO_PROFILE_DEV_DEBUG: 1
 
 jobs:
   test:
@@ -15,6 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      # Free up ~14GB of system disk space
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker system prune -af
+          df -h
       
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
