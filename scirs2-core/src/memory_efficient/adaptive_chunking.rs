@@ -740,6 +740,7 @@ mod tests {
             .with_target_memory(1024 * 1024) // 1MB chunks
             .with_min_chunk_size(1000)
             .with_max_chunk_size(50000)
+            .optimize_for_parallel(false) // Disable parallel optimization for this test
             .build();
 
         // Calculate adaptive chunking

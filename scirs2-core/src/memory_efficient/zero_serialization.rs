@@ -627,6 +627,21 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         // Write header
         file.write_all(&header_bytes)?;
 
+        // Calculate current position and add padding for data alignment
+        let current_pos = 8 + header_len as usize; // 8 bytes for length + header
+        let alignment = std::mem::align_of::<A>();
+        let padding_needed = if current_pos % alignment == 0 {
+            0
+        } else {
+            alignment - (current_pos % alignment)
+        };
+        
+        // Write padding bytes
+        if padding_needed > 0 {
+            let padding = vec![0u8; padding_needed];
+            file.write_all(&padding)?;
+        }
+
         // Get array bytes
         let array_bytes = self.as_bytes_slice()?;
 
@@ -686,8 +701,15 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
             ));
         }
 
-        // Calculate data offset (8 bytes for header length + header bytes)
-        let data_offset = 8 + header_len;
+        // Calculate data offset (8 bytes for header length + header bytes + alignment padding)
+        let base_offset = 8 + header_len;
+        let alignment = std::mem::align_of::<A>();
+        let padding_needed = if base_offset % alignment == 0 {
+            0
+        } else {
+            alignment - (base_offset % alignment)
+        };
+        let data_offset = base_offset + padding_needed;
 
         // Memory map file at the offset of the actual data
         match mode {

@@ -160,7 +160,14 @@ impl<T> ZeroCopyDataInner<T> {
     }
 
     fn remove_ref(&self) -> usize {
-        self.ref_count.fetch_sub(1, Ordering::Relaxed) - 1
+        // Use checked subtraction to prevent overflow
+        let prev = self.ref_count.fetch_sub(1, Ordering::Relaxed);
+        if prev == 0 {
+            // This shouldn't happen in correct usage - restore the count and panic
+            self.ref_count.fetch_add(1, Ordering::Relaxed);
+            panic!("Attempted to remove reference from zero reference count");
+        }
+        prev - 1
     }
 
     fn ref_count(&self) -> usize {

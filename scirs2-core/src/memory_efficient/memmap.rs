@@ -121,6 +121,71 @@ impl<A> MemoryMappedArray<A>
 where
     A: Clone + Copy + 'static + Send + Sync + Send + Sync,
 {
+    /// Validate safety preconditions and create a slice from raw parts
+    /// 
+    /// # Safety
+    /// This method performs comprehensive validation before creating the slice
+    fn validate_slice_creation(&self, ptr: *const A, mmap_len: usize) -> Result<&[A], CoreError> {
+        // Validate safety preconditions for from_raw_parts
+        if ptr.is_null() {
+            return Err(CoreError::MemoryError(
+                ErrorContext::new("Memory map pointer is null".to_string())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            ));
+        }
+        
+        // Check alignment
+        if (ptr as usize) % std::mem::align_of::<A>() != 0 {
+            return Err(CoreError::MemoryError(
+                ErrorContext::new(format!(
+                    "Memory map pointer is not properly aligned for type {} (alignment: {}, address: 0x{:x})",
+                    std::any::type_name::<A>(),
+                    std::mem::align_of::<A>(),
+                    ptr as usize
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
+            ));
+        }
+        
+        // Check size bounds to prevent overflow
+        let element_size = std::mem::size_of::<A>();
+        if element_size > 0 && self.size > isize::MAX as usize / element_size {
+            return Err(CoreError::MemoryError(
+                ErrorContext::new(format!(
+                    "Array size {} exceeds maximum safe size for slice creation",
+                    self.size
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
+            ));
+        }
+        
+        // Check that we don't exceed the memory map bounds
+        let total_bytes = self.size.checked_mul(element_size).ok_or_else(|| {
+            CoreError::MemoryError(
+                ErrorContext::new("Array size calculation overflows".to_string())
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            )
+        })?;
+        
+        if total_bytes > mmap_len {
+            return Err(CoreError::MemoryError(
+                ErrorContext::new(format!(
+                    "Requested array size {} bytes exceeds memory map size {} bytes",
+                    total_bytes, mmap_len
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
+            ));
+        }
+        
+        // Now it's safe to create the slice
+        // SAFETY: We have validated:
+        // 1. ptr is not null
+        // 2. ptr is properly aligned for type A
+        // 3. self.size * element_size <= isize::MAX
+        // 4. the memory region is valid (within the memory map bounds)
+        Ok(unsafe { slice::from_raw_parts(ptr, self.size) })
+    }
+
     /// Open an existing memory-mapped array file
     pub fn open(file_path: &Path, _shape: &[usize]) -> Result<Self, CoreError> {
         open_mmap::<A, IxDyn>(file_path, AccessMode::ReadOnly, 0)
@@ -411,12 +476,12 @@ where
             (Some(view), _) => {
                 // Read-only view
                 let ptr = view.as_ptr() as *const A;
-                unsafe { slice::from_raw_parts(ptr, self.size) }
+                self.validate_slice_creation(ptr, view.len())?
             }
             (_, Some(view)) => {
-                // Mutable view
+                // Mutable view 
                 let ptr = view.as_ptr() as *const A;
-                unsafe { slice::from_raw_parts(ptr, self.size) }
+                self.validate_slice_creation(ptr, view.len())?
             }
             _ => {
                 return Err(CoreError::ValidationError(
@@ -477,6 +542,64 @@ where
         // Get a mutable slice to the memory-mapped data
         let data_slice = if let Some(view) = &mut self.mmap_view_mut {
             let ptr = view.as_mut_ptr() as *mut A;
+            
+            // Validate safety preconditions for from_raw_parts_mut
+            if ptr.is_null() {
+                return Err(CoreError::MemoryError(
+                    ErrorContext::new("Memory map pointer is null".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                ));
+            }
+            
+            // Check alignment
+            if (ptr as usize) % std::mem::align_of::<A>() != 0 {
+                return Err(CoreError::MemoryError(
+                    ErrorContext::new(format!(
+                        "Memory map pointer is not properly aligned for type {} (alignment: {}, address: 0x{:x})",
+                        std::any::type_name::<A>(),
+                        std::mem::align_of::<A>(),
+                        ptr as usize
+                    ))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+                ));
+            }
+            
+            // Check size bounds to prevent overflow
+            let element_size = std::mem::size_of::<A>();
+            if element_size > 0 && self.size > isize::MAX as usize / element_size {
+                return Err(CoreError::MemoryError(
+                    ErrorContext::new(format!(
+                        "Array size {} exceeds maximum safe size for slice creation",
+                        self.size
+                    ))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+                ));
+            }
+            
+            // Check that we don't exceed the memory map bounds
+            let total_bytes = self.size.checked_mul(element_size).ok_or_else(|| {
+                CoreError::MemoryError(
+                    ErrorContext::new("Array size calculation overflows".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                )
+            })?;
+            
+            if total_bytes > view.len() {
+                return Err(CoreError::MemoryError(
+                    ErrorContext::new(format!(
+                        "Requested array size {} bytes exceeds memory map size {} bytes",
+                        total_bytes, view.len()
+                    ))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+                ));
+            }
+            
+            // Now it's safe to create the slice
+            // SAFETY: We have validated:
+            // 1. ptr is not null
+            // 2. ptr is properly aligned for type A
+            // 3. self.size * element_size <= isize::MAX
+            // 4. the memory region is valid (within the memory map bounds)
             unsafe { slice::from_raw_parts_mut(ptr, self.size) }.to_vec()
         } else {
             return Err(CoreError::ValidationError(

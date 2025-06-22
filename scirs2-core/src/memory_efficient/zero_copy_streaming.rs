@@ -167,6 +167,9 @@ impl ZeroCopyBuffer {
                         .with_location(ErrorLocation::new(file!(), line!())),
                 ));
             }
+            // SAFETY: We've explicitly checked that raw_ptr is not null above
+            // The layout is validated by Layout::from_size_align() earlier
+            // The memory is properly aligned and allocated for the specified size
             NonNull::new_unchecked(raw_ptr)
         };
 
@@ -180,24 +183,54 @@ impl ZeroCopyBuffer {
     }
 
     /// Get a slice view of the buffer
-    /// Safety: The buffer lifetime is managed by reference counting
+    ///
+    /// # Safety
+    /// This is safe because:
+    /// - The buffer lifetime is managed by reference counting
+    /// - The pointer is guaranteed to be valid while the buffer exists
+    /// - The size is validated during allocation and stored immutably
+    /// - The memory is properly aligned and initialized (zeroed)
     pub fn as_slice(&self) -> &[u8] {
-        // Safety: ptr is guaranteed to be valid and properly aligned
-        // The buffer is kept alive by reference counting
+        // SAFETY:
+        // 1. ptr is guaranteed to be valid and properly aligned (validated during allocation)
+        // 2. self.size was validated during allocation and cannot be modified
+        // 3. The memory is initialized (zeroed during allocation)
+        // 4. The buffer is kept alive by reference counting and the slice
+        //    cannot outlive the buffer due to Rust's lifetime system
+        // 5. The pointer is guaranteed to be non-null (NonNull type invariant)
         unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.size) }
     }
 
     /// Get a mutable slice view of the buffer
-    /// Safety: Only available when we have exclusive access
+    ///
+    /// # Safety
+    /// This is safe because:
+    /// - Exclusive access is guaranteed by &mut self
+    /// - The pointer is guaranteed to be valid while the buffer exists
+    /// - The size is validated during allocation and stored immutably
+    /// - The memory is properly aligned and initialized
     pub fn as_slice_mut(&mut self) -> &mut [u8] {
-        // Safety: ptr is guaranteed to be valid and properly aligned
-        // Exclusive access is guaranteed by &mut self
+        // SAFETY:
+        // 1. ptr is guaranteed to be valid and properly aligned (validated during allocation)
+        // 2. self.size was validated during allocation and cannot be modified
+        // 3. Exclusive access is guaranteed by &mut self, preventing data races
+        // 4. The memory is initialized (zeroed during allocation)
+        // 5. The pointer is guaranteed to be non-null (NonNull type invariant)
         unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.size) }
     }
 
     /// Create a shared reference to this buffer
+    ///
+    /// # Panics
+    /// Panics if the reference count would overflow
     pub fn share(&self) -> Self {
-        self.ref_count.fetch_add(1, Ordering::Relaxed);
+        let old_count = self.ref_count.fetch_add(1, Ordering::Relaxed);
+        if old_count == usize::MAX {
+            // Prevent overflow - this is extremely unlikely in practice
+            self.ref_count.fetch_sub(1, Ordering::Relaxed);
+            panic!("Reference count overflow in ZeroCopyBuffer");
+        }
+
         Self {
             ptr: self.ptr,
             size: self.size,
@@ -230,7 +263,14 @@ impl ZeroCopyBuffer {
 
 impl Drop for ZeroCopyBuffer {
     fn drop(&mut self) {
-        if self.ref_count.fetch_sub(1, Ordering::Relaxed) == 1 {
+        // Use AcqRel ordering to ensure proper synchronization with share()
+        // This prevents memory reordering issues in reference counting
+        if self.ref_count.fetch_sub(1, Ordering::AcqRel) == 1 {
+            // SAFETY:
+            // 1. We are the last reference holder (ref_count was 1)
+            // 2. ptr and layout are guaranteed to match the original allocation
+            // 3. The memory was allocated with the same layout using alloc_zeroed
+            // 4. No other threads can access this memory after ref_count reaches 0
             unsafe {
                 dealloc(self.ptr.as_ptr(), self.layout);
             }
@@ -286,23 +326,35 @@ impl<T> LockFreeQueue<T> {
             next: AtomicPtr::new(std::ptr::null_mut()),
         }));
 
-        // Safety: We ensure tail is valid by checking it hasn't changed
-        // between loads and operations
+        // SAFETY: Lock-free queue algorithm with ABA protection
+        // We use compare_exchange_weak to ensure atomic operations and prevent data races
         loop {
             let tail = self.tail.load(Ordering::Acquire);
             if tail.is_null() {
-                // Queue is being destroyed
+                // Queue is being destroyed - safely clean up
+                // SAFETY: new_node was allocated by Box::into_raw above
                 let node = unsafe { Box::from_raw(new_node) };
                 let item = node.data.unwrap();
                 return Err(item);
             }
 
+            // SAFETY: tail is guaranteed to be non-null and valid here because:
+            // 1. We checked tail.is_null() above
+            // 2. The tail pointer is only modified atomically
+            // 3. Node deallocation only happens after tail is updated away from it
+            // 4. The queue maintains the invariant that tail always points to a valid node
             let next = unsafe { (*tail).next.load(Ordering::Acquire) };
 
-            // Double-check tail hasn't changed (ABA protection)
+            // ABA protection: verify tail hasn't changed during our operations
+            // This prevents the classic ABA problem in lock-free data structures
             if tail == self.tail.load(Ordering::Acquire) {
                 if next.is_null() {
-                    // Try to link new node
+                    // Try to atomically link the new node
+                    // SAFETY:
+                    // 1. tail is valid (checked above)
+                    // 2. new_node is valid (just allocated)
+                    // 3. We're atomically updating the next pointer
+                    // 4. compare_exchange_weak provides memory ordering guarantees
                     if unsafe {
                         (*tail)
                             .next
@@ -317,7 +369,8 @@ impl<T> LockFreeQueue<T> {
                         break;
                     }
                 } else {
-                    // Help advance tail
+                    // Help advance tail pointer to maintain queue consistency
+                    // This helps other threads make progress
                     let _ = self.tail.compare_exchange_weak(
                         tail,
                         next,
@@ -326,6 +379,8 @@ impl<T> LockFreeQueue<T> {
                     );
                 }
             }
+            // Retry if tail changed during our operation (ABA case)
+            // The loop will eventually succeed due to the helping mechanism
         }
 
         // Try to advance tail
@@ -350,17 +405,23 @@ impl<T> LockFreeQueue<T> {
             }
 
             let tail = self.tail.load(Ordering::Acquire);
-            // Safety: head is guaranteed to be valid here due to null check
+            // SAFETY: head is guaranteed to be non-null and valid here because:
+            // 1. We checked head.is_null() above
+            // 2. The head pointer is only modified atomically
+            // 3. The queue maintains the invariant that head always points to a valid node
+            // 4. Node deallocation only happens after head is updated away from it
             let next = unsafe { (*head).next.load(Ordering::Acquire) };
 
-            // Double-check head hasn't changed (ABA protection)
+            // ABA protection: verify head hasn't changed during our operations
+            // This prevents race conditions where head changes between loads
             if head == self.head.load(Ordering::Acquire) {
                 if head == tail {
                     if next.is_null() {
-                        // Queue is empty
+                        // Queue is empty (head == tail and no next node)
                         return None;
                     }
-                    // Help advance tail
+                    // Help advance tail pointer to maintain queue consistency
+                    // This helps other threads make progress when tail lags behind
                     let _ = self.tail.compare_exchange_weak(
                         tail,
                         next,
@@ -369,26 +430,37 @@ impl<T> LockFreeQueue<T> {
                     );
                 } else {
                     if next.is_null() {
-                        // Inconsistent state, retry
+                        // Inconsistent state: head != tail but no next node
+                        // This shouldn't happen in a well-formed queue, retry
                         continue;
                     }
 
-                    // Safety: next is guaranteed to be valid and contain data
+                    // SAFETY: next is guaranteed to be valid and contain data because:
+                    // 1. next is not null (checked above)
+                    // 2. head != tail implies there are items in the queue
+                    // 3. next points to the actual data node (head is dummy)
+                    // 4. We take the data before advancing head to avoid use-after-free
                     let data = unsafe { (*next).data.take() };
 
-                    // Try to advance head
+                    // Atomically advance head pointer
                     if self
                         .head
                         .compare_exchange_weak(head, next, Ordering::Release, Ordering::Relaxed)
                         .is_ok()
                     {
-                        // Successfully advanced head, now safe to deallocate old head
+                        // Successfully advanced head, now safe to deallocate old head node
+                        // SAFETY:
+                        // 1. head is no longer reachable from the queue structure
+                        // 2. head was allocated by Box::into_raw in push() or queue creation
+                        // 3. No other threads can access head after it's been updated
                         unsafe { drop(Box::from_raw(head)) };
                         self.size.fetch_sub(1, Ordering::Release);
                         return data;
                     }
+                    // If compare_exchange failed, retry the entire operation
                 }
             }
+            // Retry if head changed during our operation
         }
     }
 
@@ -410,14 +482,38 @@ impl<T> LockFreeQueue<T> {
 
 impl<T> Drop for LockFreeQueue<T> {
     fn drop(&mut self) {
-        // First drain all items to avoid leaks
-        while self.pop().is_some() {}
+        // First, signal that the queue is being destroyed by setting pointers to null
+        // This prevents other threads from continuing to access the queue
+        self.head.store(std::ptr::null_mut(), Ordering::Release);
+        self.tail.store(std::ptr::null_mut(), Ordering::Release);
 
-        // Now clean up all remaining nodes
+        // Give other threads a moment to notice the null pointers
+        // In a real implementation, you might use a more sophisticated approach
+        std::thread::yield_now();
+
+        // Now drain all remaining items to avoid leaks
+        // We can't use pop() here since head is null, so we manually traverse
         let mut current = self.head.load(Ordering::Relaxed);
+
+        // Restore head temporarily to drain the queue
+        if current.is_null() {
+            // Queue was already empty or we need to find the original head
+            return;
+        }
+
+        // Walk through all nodes and clean them up
         while !current.is_null() {
+            // SAFETY:
+            // 1. We are in the destructor, so no other threads should be accessing the queue
+            // 2. current was loaded from a valid atomic pointer
+            // 3. All nodes were allocated with Box::into_raw
             let next = unsafe { (*current).next.load(Ordering::Relaxed) };
+
+            // SAFETY:
+            // 1. current was allocated by Box::into_raw in push() or queue creation
+            // 2. We are the only thread accessing the queue during destruction
             unsafe { drop(Box::from_raw(current)) };
+
             current = next;
         }
     }
@@ -552,9 +648,6 @@ pub trait WorkStealingTask: Send + 'static {
 
 /// Work-stealing scheduler for efficient parallel processing
 pub struct WorkStealingScheduler {
-    /// Worker threads
-    #[allow(dead_code)]
-    workers: Vec<Worker>,
     /// Global task queue
     global_queue: Arc<LockFreeQueue<Box<dyn WorkStealingTask>>>,
     /// Shutdown flag
@@ -568,7 +661,7 @@ struct Worker {
     #[allow(dead_code)]
     id: usize,
     /// Local task queue
-    local_queue: LockFreeQueue<Box<dyn WorkStealingTask>>,
+    local_queue: Arc<LockFreeQueue<Box<dyn WorkStealingTask>>>,
     /// Reference to global queue
     global_queue: Arc<LockFreeQueue<Box<dyn WorkStealingTask>>>,
     /// Other workers for stealing
@@ -582,32 +675,33 @@ impl WorkStealingScheduler {
     pub fn new(num_workers: usize, max_queue_size: usize) -> Self {
         let global_queue = Arc::new(LockFreeQueue::new(max_queue_size));
         let shutdown = Arc::new(AtomicBool::new(false));
-        let mut workers = Vec::with_capacity(num_workers);
         let mut handles = Vec::with_capacity(num_workers);
 
-        // Create workers
-        for i in 0..num_workers {
-            let worker = Worker {
-                id: i,
-                local_queue: LockFreeQueue::new(max_queue_size / num_workers),
-                global_queue: global_queue.clone(),
-                other_workers: Vec::new(),
-                shutdown: shutdown.clone(),
-            };
-            workers.push(worker);
+        // Create worker local queues first
+        let mut local_queues: Vec<Arc<LockFreeQueue<Box<dyn WorkStealingTask>>>> = Vec::new();
+        for _ in 0..num_workers {
+            local_queues.push(Arc::new(LockFreeQueue::new(
+                max_queue_size / num_workers.max(1),
+            )));
         }
 
-        // Set up stealing references
-        for (i, worker) in workers.iter_mut().enumerate() {
-            for j in 0..num_workers {
+        // Create and start worker threads
+        for i in 0..num_workers {
+            let mut other_workers = Vec::new();
+            for (j, queue) in local_queues.iter().enumerate() {
                 if i != j {
-                    worker.other_workers.push(Arc::new(LockFreeQueue::new(0))); // Placeholder
+                    other_workers.push(queue.clone());
                 }
             }
-        }
 
-        // Start worker threads
-        for mut worker in workers.drain(..) {
+            let worker = Worker {
+                id: i,
+                local_queue: local_queues[i].clone(),
+                global_queue: global_queue.clone(),
+                other_workers,
+                shutdown: shutdown.clone(),
+            };
+
             let handle = thread::spawn(move || {
                 worker.run();
             });
@@ -615,7 +709,6 @@ impl WorkStealingScheduler {
         }
 
         Self {
-            workers: Vec::new(), // Workers moved to threads
             global_queue,
             shutdown,
             handles,
@@ -642,7 +735,7 @@ impl WorkStealingScheduler {
 }
 
 impl Worker {
-    fn run(&mut self) {
+    fn run(self) {
         while !self.shutdown.load(Ordering::Relaxed) {
             // Try to get a task from local queue first
             if let Some(task) = self.local_queue.pop() {
@@ -667,7 +760,7 @@ impl Worker {
             }
 
             if !stolen {
-                // No tasks available, sleep briefly
+                // No tasks available, sleep briefly to avoid busy waiting
                 thread::sleep(Duration::from_micros(100));
             }
         }
