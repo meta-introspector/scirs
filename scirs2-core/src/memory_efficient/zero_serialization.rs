@@ -397,9 +397,15 @@ impl_zerocopy_serializable!(f32, 4, "f32");
 #[cfg(feature = "float64")]
 impl_zerocopy_serializable!(f64, 8, "f64");
 
-// Default f64 implementation when no specific float feature is enabled
+// Default implementations when no specific float features are enabled
+// This ensures that f32 and f64 work out of the box for basic usage
 #[cfg(all(not(feature = "float32"), not(feature = "float64")))]
-impl_zerocopy_serializable!(f64, 8, "f64");
+mod default_float_impls {
+    use super::*;
+
+    impl_zerocopy_serializable!(f32, 4, "f32");
+    impl_zerocopy_serializable!(f64, 8, "f64");
+}
 
 // Integer implementations with non-overlapping feature flags
 
@@ -442,6 +448,7 @@ impl_zerocopy_serializable!(i64, 8, "i64");
 impl_zerocopy_serializable!(u64, 8, "u64");
 
 // Default implementations when no specific integer features are enabled
+// This ensures that i32 and u32 work out of the box for basic usage
 #[cfg(all(
     not(feature = "all_ints"),
     not(feature = "int32"),
@@ -449,20 +456,14 @@ impl_zerocopy_serializable!(u64, 8, "u64");
     not(feature = "int64"),
     not(feature = "uint64")
 ))]
-impl_zerocopy_serializable!(i32, 4, "i32");
+mod default_int_impls {
+    use super::*;
 
-#[cfg(all(
-    not(feature = "all_ints"),
-    not(feature = "int32"),
-    not(feature = "uint32"),
-    not(feature = "int64"),
-    not(feature = "uint64")
-))]
-impl_zerocopy_serializable!(u32, 4, "u32");
+    impl_zerocopy_serializable!(i32, 4, "i32");
+    impl_zerocopy_serializable!(u32, 4, "u32");
+}
 
-// This default implementation block is no longer needed as we have handled
-// the default cases directly in the conditional compilation flags above.
-// The approach ensures that at minimum, we'll have f64, i32, and u32 types
+// This approach ensures that at minimum, we'll have f32, f64, i32, and u32 types
 // available even if no specific feature flags are enabled.
 
 /// Metadata for zero-copy serialized arrays

@@ -268,7 +268,7 @@ required-features = ["memory_efficient"]
 [[example]]
 name = "memory_mapped_zerocopy_serialization"
 path = "examples/memory_mapped_zerocopy_serialization.rs"
-required-features = ["memory_efficient", "serialization"]
+required-features = ["memory_efficient", "serialization", "float32", "float64", "all_ints"]
 
 [[example]]
 name = "scientific_arrays_example"

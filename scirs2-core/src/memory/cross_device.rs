@@ -574,12 +574,21 @@ impl CrossDeviceMemoryManager {
             total_allocations += 1;
         }
 
-        // Update available/total memory from devices
+        // Update available/total memory from devices and ensure all devices are included
         for (device_type, device) in devices.iter() {
-            if let Some(device_stats) = stats_by_device.get_mut(device_type) {
-                device_stats.available_bytes = device.available_memory().unwrap_or(0);
-                device_stats.total_bytes = device.total_memory().unwrap_or(0);
-            }
+            let device_stats =
+                stats_by_device
+                    .entry(device_type.clone())
+                    .or_insert(DeviceMemoryStats {
+                        device_type: device_type.clone(),
+                        allocated_bytes: 0,
+                        allocation_count: 0,
+                        available_bytes: 0,
+                        total_bytes: 0,
+                    });
+
+            device_stats.available_bytes = device.available_memory().unwrap_or(0);
+            device_stats.total_bytes = device.total_memory().unwrap_or(0);
         }
 
         MemoryStatistics {

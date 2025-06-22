@@ -330,22 +330,69 @@ impl DatasetCorrelation {
         if let Some(indices) = self.index_correlations.get(&primary_index) {
             indices.iter().take(max_count).copied().collect()
         } else {
-            // If no specific index correlation, return nearby indices based on the primary index
-            let mut nearby = Vec::with_capacity(max_count);
+            // Try to detect patterns from existing correlations
+            if let Some(predicted) = self.predict_from_pattern(primary_index, max_count) {
+                predicted
+            } else {
+                // If no pattern detected, return nearby indices based on the primary index
+                let mut nearby = Vec::with_capacity(max_count);
 
-            // Add the exact same index first
-            nearby.push(primary_index);
+                // Add the exact same index first
+                nearby.push(primary_index);
 
-            // Add some nearby indices
-            for i in 1..=max_count / 2 {
-                if primary_index >= i {
-                    nearby.push(primary_index - i);
+                // Add some nearby indices
+                for i in 1..=max_count / 2 {
+                    if primary_index >= i {
+                        nearby.push(primary_index - i);
+                    }
+                    nearby.push(primary_index + i);
                 }
-                nearby.push(primary_index + i);
-            }
 
-            nearby.into_iter().take(max_count).collect()
+                nearby.into_iter().take(max_count).collect()
+            }
         }
+    }
+
+    /// Predict related indices based on patterns in existing correlations.
+    fn predict_from_pattern(&self, primary_index: usize, _max_count: usize) -> Option<Vec<usize>> {
+        // Need at least 2 data points to detect a pattern
+        if self.index_correlations.len() < 2 {
+            return None;
+        }
+
+        // Collect known correlations as (primary, related) pairs
+        let mut correlations: Vec<(usize, usize)> = Vec::new();
+        for (&primary, related_indices) in &self.index_correlations {
+            // Use the first related index as the primary correlation
+            if let Some(&first_related) = related_indices.first() {
+                correlations.push((primary, first_related));
+            }
+        }
+
+        // Sort by primary index
+        correlations.sort_by_key(|(primary, _)| *primary);
+
+        // Try to detect a linear pattern: related = primary * scale + offset
+        if correlations.len() >= 2 {
+            let (p1, r1) = correlations[0];
+            let (p2, r2) = correlations[1];
+
+            // Calculate slope (scale factor)
+            if p2 != p1 {
+                let scale = (r2 as f64 - r1 as f64) / (p2 as f64 - p1 as f64);
+                let offset = r1 as f64 - scale * p1 as f64;
+
+                // Predict the related index
+                let predicted_related = (scale * primary_index as f64 + offset).round() as usize;
+
+                // Validate the prediction makes sense (positive and reasonable)
+                if predicted_related < 1_000_000 {
+                    return Some(vec![predicted_related]);
+                }
+            }
+        }
+
+        None
     }
 }
 
@@ -437,49 +484,46 @@ impl CrossFilePrefetchManager {
     /// Update correlations based on a new access.
     fn update_correlations(&mut self, access: &DataAccess) {
         let current_time = Instant::now();
-        let window_start = current_time - self.config.correlation_window;
+        let correlation_window = Duration::from_millis(100); // Shorter window for temporal correlation
 
-        // Collect recent accesses within the correlation window
-        let recent_accesses: Vec<_> = self
-            .access_history
-            .iter()
-            .filter(|record| {
-                record.timestamp >= window_start && record.access.dataset != access.dataset
-                // Only different datasets
-            })
-            .collect();
-
-        // Group by dataset
-        let mut dataset_accesses: HashMap<&DatasetId, Vec<&AccessRecord>> = HashMap::new();
-        for record in &recent_accesses {
-            dataset_accesses
-                .entry(&record.access.dataset)
-                .or_default()
-                .push(record);
-        }
-
-        // Update correlations for each dataset
-        for (related_dataset, records) in dataset_accesses {
-            // Check if we have enough occurrences
-            if records.len() < self.config.min_occurrences {
+        // Look for recent accesses from other datasets that could be correlated
+        // We want to find accesses that happened just before this one
+        let recent_threshold = current_time - correlation_window;
+        
+        // Find the most recent access from each other dataset
+        let mut recent_by_dataset: HashMap<&DatasetId, &AccessRecord> = HashMap::new();
+        
+        for record in self.access_history.iter().rev() {
+            // Skip if too old
+            if record.timestamp < recent_threshold {
+                break;
+            }
+            
+            // Skip if same dataset
+            if record.access.dataset == access.dataset {
                 continue;
             }
+            
+            // Record the most recent access from this dataset
+            if !recent_by_dataset.contains_key(&record.access.dataset) {
+                recent_by_dataset.insert(&record.access.dataset, record);
+            }
+        }
 
-            // Extract indices from the related dataset
-            let related_indices: Vec<usize> = records.iter().map(|r| r.access.index).collect();
-
-            // Get or create correlation
+        // Create correlations: recent access predicts current access
+        for (related_dataset, recent_record) in recent_by_dataset {
+            // Get or create correlation from related dataset to current dataset
             let correlation = self
                 .correlations
-                .entry(access.dataset.clone())
-                .or_default()
                 .entry(related_dataset.clone())
+                .or_default()
+                .entry(access.dataset.clone())
                 .or_insert_with(|| {
-                    DatasetCorrelation::new(access.dataset.clone(), related_dataset.clone())
+                    DatasetCorrelation::new(related_dataset.clone(), access.dataset.clone())
                 });
 
-            // Update the correlation
-            correlation.update(access.index, &related_indices);
+            // Update the correlation: recent_index predicts current_index
+            correlation.update(recent_record.access.index, &[access.index]);
         }
 
         // Clean up expired correlations

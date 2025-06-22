@@ -589,6 +589,7 @@ impl AdaptivePatternTracker {
 
         if is_sequential {
             self.current_pattern = AccessPattern::Sequential;
+            self.update_strategy_from_pattern();
             return;
         }
 
@@ -629,6 +630,7 @@ impl AdaptivePatternTracker {
                 if stride > 0 {
                     self.current_pattern = AccessPattern::Strided(stride);
                     self.stride = Some(stride);
+                    self.update_strategy_from_pattern();
                     return;
                 }
             }
@@ -638,12 +640,16 @@ impl AdaptivePatternTracker {
         if let Some(dims) = self.dimensions.clone() {
             if !self.detect_dimensional_patterns(&dims).is_empty() {
                 self.current_pattern = AccessPattern::Custom;
+                self.update_strategy_from_pattern();
                 return;
             }
         }
 
         // No regular pattern detected
         self.current_pattern = AccessPattern::Random;
+
+        // Update strategy based on detected pattern
+        self.update_strategy_from_pattern();
     }
 
     /// Get the blocks to prefetch based on the current strategy.

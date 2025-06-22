@@ -152,25 +152,8 @@ where
             validation::check_not_empty(array)?;
             (array.shape().to_vec(), array.len())
         } else {
-            // If no data is provided, the file must exist and contain a valid header
-            let file = File::open(file_path)
-                .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
-
-            // First read just enough bytes for a small header (we'll read more if needed)
-            let mut header_buffer = Vec::new();
-            let mut reader = std::io::BufReader::new(file);
-            reader
-                .read_to_end(&mut header_buffer)
-                .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
-
-            // Try to deserialize the header
-            let header: MemoryMappedHeader = deserialize(&header_buffer).map_err(|e| {
-                CoreError::ValidationError(
-                    ErrorContext::new(format!("Failed to deserialize header: {e}"))
-                        .with_location(ErrorLocation::new(file!(), line!())),
-                )
-            })?;
-
+            // If no data is provided, try to read the file header
+            let (header, _) = read_header::<A>(file_path)?;
             (header.shape, header.total_elements)
         };
 
@@ -702,32 +685,110 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
     let mut file =
         File::open(file_path).map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
-    // Read the entire file to a buffer
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer)
+    // Try to read the file as a proper memory-mapped file with header
+    // First, check if the file is large enough to contain a header
+    let file_metadata = file.metadata()
         .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
+    let file_size = file_metadata.len() as usize;
 
-    // Since we may be having problems with header deserialization,
-    // let's take a more robust approach for the test environment.
-    // For real applications, proper serialization would be implemented.
-    // For now, let's just create a default header with reasonable values
-    let header = MemoryMappedHeader {
-        element_size: std::mem::size_of::<A>(),
-        shape: vec![buffer.len() / std::mem::size_of::<A>()],
-        total_elements: buffer.len() / std::mem::size_of::<A>(),
-    };
+    if file_size < 8 {
+        // File is too small to have a proper header, treat as raw data
+        let element_size = std::mem::size_of::<A>();
+        let total_elements = file_size / element_size;
+        
+        let header = MemoryMappedHeader {
+            element_size,
+            shape: vec![total_elements],
+            total_elements,
+        };
 
-    // Calculate header size
-    let header_size = serialize(&header)
-        .map_err(|e| {
-            CoreError::ValidationError(
-                ErrorContext::new(format!("Failed to serialize header: {}", e))
-                    .with_location(ErrorLocation::new(file!(), line!())),
-            )
-        })?
-        .len();
+        return Ok((header, 0)); // No header offset for raw files
+    }
 
-    Ok((header, header_size))
+    // Try to read as a proper memory-mapped file with header
+    // Read header length (first 8 bytes)
+    let mut header_len_bytes = [0u8; 8];
+    if file.read_exact(&mut header_len_bytes).is_err() {
+        // Failed to read header length, treat as raw data
+        let element_size = std::mem::size_of::<A>();
+        let total_elements = file_size / element_size;
+        
+        let header = MemoryMappedHeader {
+            element_size,
+            shape: vec![total_elements],
+            total_elements,
+        };
+
+        return Ok((header, 0)); // No header offset for raw files
+    }
+
+    let header_len = u64::from_ne_bytes(header_len_bytes) as usize;
+
+    // Sanity check: header length should be reasonable
+    if header_len > file_size || header_len > 1024 * 1024 {
+        // Header length is unreasonable, treat as raw data
+        let element_size = std::mem::size_of::<A>();
+        let total_elements = file_size / element_size;
+        
+        let header = MemoryMappedHeader {
+            element_size,
+            shape: vec![total_elements],
+            total_elements,
+        };
+
+        return Ok((header, 0)); // No header offset for raw files
+    }
+
+    // Read header data
+    let mut header_bytes = vec![0u8; header_len];
+    if file.read_exact(&mut header_bytes).is_err() {
+        // Failed to read header, treat as raw data
+        let element_size = std::mem::size_of::<A>();
+        let total_elements = file_size / element_size;
+        
+        let header = MemoryMappedHeader {
+            element_size,
+            shape: vec![total_elements],
+            total_elements,
+        };
+
+        return Ok((header, 0)); // No header offset for raw files
+    }
+
+    // Try to deserialize header
+    match deserialize::<MemoryMappedHeader>(&header_bytes) {
+        Ok(header) => {
+            // Validate header makes sense
+            if header.element_size == std::mem::size_of::<A>() {
+                Ok((header, 8 + header_len))
+            } else {
+                // Header element size doesn't match, treat as raw data
+                let element_size = std::mem::size_of::<A>();
+                let total_elements = file_size / element_size;
+                
+                let fallback_header = MemoryMappedHeader {
+                    element_size,
+                    shape: vec![total_elements],
+                    total_elements,
+                };
+
+                Ok((fallback_header, 0)) // No header offset for raw files
+            }
+        }
+        Err(_) => {
+            // Failed to deserialize header, treat as raw data
+            let element_size = std::mem::size_of::<A>();
+            let total_elements = file_size / element_size;
+            
+            let header = MemoryMappedHeader {
+                element_size,
+                shape: vec![total_elements],
+                total_elements,
+            };
+
+            Ok((header, 0)) // No header offset for raw files
+        }
+    }
 }
 
 /// Create a memory-mapped array from an existing file
