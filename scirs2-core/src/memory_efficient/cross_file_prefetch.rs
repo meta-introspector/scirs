@@ -489,21 +489,21 @@ impl CrossFilePrefetchManager {
         // Look for recent accesses from other datasets that could be correlated
         // We want to find accesses that happened just before this one
         let recent_threshold = current_time - correlation_window;
-        
+
         // Find the most recent access from each other dataset
         let mut recent_by_dataset: HashMap<&DatasetId, &AccessRecord> = HashMap::new();
-        
+
         for record in self.access_history.iter().rev() {
             // Skip if too old
             if record.timestamp < recent_threshold {
                 break;
             }
-            
+
             // Skip if same dataset
             if record.access.dataset == access.dataset {
                 continue;
             }
-            
+
             // Record the most recent access from this dataset
             if !recent_by_dataset.contains_key(&record.access.dataset) {
                 recent_by_dataset.insert(&record.access.dataset, record);

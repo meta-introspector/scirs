@@ -479,8 +479,8 @@ struct ZeroCopyHeader {
     pub shape: Vec<usize>,
     /// Total number of elements
     pub total_elements: usize,
-    /// Optional extra metadata
-    pub metadata: Option<serde_json::Value>,
+    /// Optional extra metadata as JSON string
+    pub metadata_json: Option<String>,
 }
 
 /// An extension trait for MemoryMappedArray to support zero-copy serialization and deserialization.
@@ -586,13 +586,23 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         let path = path.as_ref();
 
         // Create header
+        let metadata_json = metadata
+            .map(|m| serde_json::to_string(&m))
+            .transpose()
+            .map_err(|e| {
+                CoreError::ValidationError(
+                    ErrorContext::new(format!("Failed to serialize metadata: {}", e))
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                )
+            })?;
+
         let header = ZeroCopyHeader {
             type_name: std::any::type_name::<A>().to_string(),
             type_identifier: A::type_identifier().to_string(),
             element_size: mem::size_of::<A>(),
             shape: self.shape.clone(),
             total_elements: self.size,
-            metadata,
+            metadata_json,
         };
 
         // Serialize header
@@ -906,8 +916,16 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
             )
         })?;
 
-        // Return metadata or empty object if none
-        Ok(header.metadata.unwrap_or_else(|| serde_json::json!({})))
+        // Parse metadata JSON or return empty object if none
+        match header.metadata_json {
+            Some(json_str) => serde_json::from_str(&json_str).map_err(|e| {
+                CoreError::ValidationError(
+                    ErrorContext::new(format!("Failed to parse metadata JSON: {}", e))
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                )
+            }),
+            None => Ok(serde_json::json!({})),
+        }
     }
 
     /// Get a read-only view of the array as an ndarray Array.
@@ -1015,7 +1033,12 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         })?;
 
         // Update metadata
-        header.metadata = Some(metadata.clone());
+        header.metadata_json = Some(serde_json::to_string(&metadata).map_err(|e| {
+            CoreError::ValidationError(
+                ErrorContext::new(format!("Failed to serialize metadata: {}", e))
+                    .with_location(ErrorLocation::new(file!(), line!())),
+            )
+        })?);
 
         // Serialize updated header
         let new_header_bytes = bincode::serialize(&header).map_err(|e| {
@@ -1047,7 +1070,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
 
             // Then save it to a temporary file
             let temp_path = PathBuf::from(format!("{}.temp", path.display()));
-            array.save_zero_copy(&temp_path, Some(metadata))?;
+            array.save_zero_copy(&temp_path, Some(metadata.clone()))?;
 
             // Replace the original file with the temporary file
             std::fs::rename(&temp_path, path)?;

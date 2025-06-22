@@ -687,7 +687,8 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
 
     // Try to read the file as a proper memory-mapped file with header
     // First, check if the file is large enough to contain a header
-    let file_metadata = file.metadata()
+    let file_metadata = file
+        .metadata()
         .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
     let file_size = file_metadata.len() as usize;
 
@@ -695,7 +696,7 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
         // File is too small to have a proper header, treat as raw data
         let element_size = std::mem::size_of::<A>();
         let total_elements = file_size / element_size;
-        
+
         let header = MemoryMappedHeader {
             element_size,
             shape: vec![total_elements],
@@ -712,7 +713,7 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
         // Failed to read header length, treat as raw data
         let element_size = std::mem::size_of::<A>();
         let total_elements = file_size / element_size;
-        
+
         let header = MemoryMappedHeader {
             element_size,
             shape: vec![total_elements],
@@ -729,7 +730,7 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
         // Header length is unreasonable, treat as raw data
         let element_size = std::mem::size_of::<A>();
         let total_elements = file_size / element_size;
-        
+
         let header = MemoryMappedHeader {
             element_size,
             shape: vec![total_elements],
@@ -745,7 +746,7 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
         // Failed to read header, treat as raw data
         let element_size = std::mem::size_of::<A>();
         let total_elements = file_size / element_size;
-        
+
         let header = MemoryMappedHeader {
             element_size,
             shape: vec![total_elements],
@@ -765,7 +766,7 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
                 // Header element size doesn't match, treat as raw data
                 let element_size = std::mem::size_of::<A>();
                 let total_elements = file_size / element_size;
-                
+
                 let fallback_header = MemoryMappedHeader {
                     element_size,
                     shape: vec![total_elements],
@@ -779,7 +780,7 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
             // Failed to deserialize header, treat as raw data
             let element_size = std::mem::size_of::<A>();
             let total_elements = file_size / element_size;
-            
+
             let header = MemoryMappedHeader {
                 element_size,
                 shape: vec![total_elements],
