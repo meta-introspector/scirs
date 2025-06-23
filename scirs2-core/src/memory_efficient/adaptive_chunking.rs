@@ -249,7 +249,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A>
         chunk_size = chunk_size.min(total_elements);
 
         // Consider dimensionality-specific adjustments
-        let decision_factors = self.optimize_for_dimensionality(chunk_size, &params)?;
+        let (chunk_size, decision_factors) = self.optimize_for_dimensionality(chunk_size, &params)?;
 
         // Factor in parallel processing if requested
         let (chunk_size, decision_factors) = if params.optimize_for_parallel {
@@ -342,7 +342,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A>
         &self,
         initial_chunk_size: usize,
         params: &AdaptiveChunkingParams,
-    ) -> CoreResult<Vec<String>> {
+    ) -> CoreResult<(usize, Vec<String>)> {
         let mut decision_factors = Vec::new();
         let mut chunk_size = initial_chunk_size;
 
@@ -411,7 +411,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A>
             }
         }
 
-        Ok(decision_factors)
+        Ok((chunk_size, decision_factors))
     }
 
     /// Optimize chunking for parallel processing.

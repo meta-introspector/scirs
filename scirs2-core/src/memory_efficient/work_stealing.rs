@@ -1009,7 +1009,7 @@ pub fn create_io_intensive_scheduler() -> CoreResult<WorkStealingScheduler> {
     WorkStealingScheduler::new(config)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parallel"))]
 mod tests {
     use super::*;
     use std::sync::atomic::AtomicU32;
