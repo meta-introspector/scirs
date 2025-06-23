@@ -869,7 +869,7 @@ mod tests {
     }
 
     #[test]
-    fn test_retry_executor() {
+    fn test_recovery_retry_executor() {
         let executor = RetryExecutor::new(RecoveryStrategy::LinearBackoff {
             max_attempts: 3,
             delay: Duration::from_millis(1),

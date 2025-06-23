@@ -3,11 +3,14 @@
 //! This module provides vectorized implementations of common neural network operations
 //! using unified SIMD operations from scirs2-core for significant performance improvements
 //! and cross-platform compatibility. All functions are feature-gated with "simd" feature.
+//!
+//! IMPORTANT: All SIMD operations are delegated to scirs2-core's unified SIMD abstraction layer
+//! in compliance with the project-wide SIMD policy. Direct use of SIMD intrinsics is FORBIDDEN.
 
 use crate::error::{NeuralError, Result};
-use ndarray::{ArrayD, ArrayView, ArrayViewMut, IxDyn};
+use ndarray::{ArrayD, ArrayView, ArrayViewMut, IxDyn, Array1};
 #[allow(unused_imports)]
-use num_traits::Float;
+use num_traits::{Float, FromPrimitive, Zero};
 
 #[cfg(feature = "simd")]
 use ndarray::Array;
@@ -25,7 +28,7 @@ impl SIMDOperations {
         if let Some(slice) = input.as_slice_mut() {
             // Use unified SIMD operations for ReLU
             let caps = PlatformCapabilities::detect();
-            if caps.simd_available {
+            if caps.simd_available && f32::simd_available() {
                 Self::simd_relu_f32_slice_unified(slice);
             } else {
                 Self::simd_relu_f32_slice_fallback(slice);
@@ -35,32 +38,24 @@ impl SIMDOperations {
         }
     }
 
-    /// SIMD-accelerated ReLU for f32 slice
-    fn simd_relu_f32_slice(slice: &mut [f32]) {
-        let mut i = 0;
-        let chunk_size = 8;
-        let zero = f32x8::splat(0.0);
-
-        while i + chunk_size <= slice.len() {
-            let values = [
-                slice[i],
-                slice[i + 1],
-                slice[i + 2],
-                slice[i + 3],
-                slice[i + 4],
-                slice[i + 5],
-                slice[i + 6],
-                slice[i + 7],
-            ];
-            let vec = f32x8::new(values);
-            let result = vec.cmp_gt(zero).blend(vec, zero);
-            let result_arr: [f32; 8] = result.into();
-            slice[i..i + chunk_size].copy_from_slice(&result_arr);
-            i += chunk_size;
+    /// SIMD-accelerated ReLU for f32 slice using unified operations
+    fn simd_relu_f32_slice_unified(slice: &mut [f32]) {
+        // Convert slice to Array1 for SIMD operations
+        let arr = Array1::from_vec(slice.to_vec());
+        let zero_arr = Array1::zeros(arr.len());
+        
+        // Use unified SIMD max operation
+        let result = f32::simd_max(&arr.view(), &zero_arr.view());
+        
+        // Copy result back to slice
+        for (i, &val) in result.iter().enumerate() {
+            slice[i] = val;
         }
-
-        // Process remaining elements
-        for val in &mut slice[i..] {
+    }
+    
+    /// Fallback ReLU implementation
+    fn simd_relu_f32_slice_fallback(slice: &mut [f32]) {
+        for val in slice.iter_mut() {
             *val = val.max(0.0);
         }
     }
@@ -75,40 +70,39 @@ impl SIMDOperations {
     /// SIMD-accelerated sigmoid activation for f32 arrays
     pub fn simd_sigmoid_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
         if let Some(slice) = input.as_slice_mut() {
-            Self::simd_sigmoid_f32_slice(slice);
+            let caps = PlatformCapabilities::detect();
+            if caps.simd_available && f32::simd_available() {
+                Self::simd_sigmoid_f32_slice_unified(slice);
+            } else {
+                Self::simd_sigmoid_f32_slice_fallback(slice);
+            }
         } else {
             input.mapv_inplace(|x| 1.0 / (1.0 + (-x).exp()));
         }
     }
 
-    /// SIMD-accelerated sigmoid for f32 slice
-    fn simd_sigmoid_f32_slice(slice: &mut [f32]) {
-        let mut i = 0;
-        let chunk_size = 8;
-        let one = f32x8::splat(1.0);
-
-        while i + chunk_size <= slice.len() {
-            let values = [
-                slice[i],
-                slice[i + 1],
-                slice[i + 2],
-                slice[i + 3],
-                slice[i + 4],
-                slice[i + 5],
-                slice[i + 6],
-                slice[i + 7],
-            ];
-            let vec = f32x8::new(values);
-            let neg_vec = -vec;
-            let exp_vec = neg_vec.exp();
-            let result = one / (one + exp_vec);
-            let result_arr: [f32; 8] = result.into();
-            slice[i..i + chunk_size].copy_from_slice(&result_arr);
-            i += chunk_size;
+    /// SIMD-accelerated sigmoid for f32 slice using unified operations
+    fn simd_sigmoid_f32_slice_unified(slice: &mut [f32]) {
+        // For sigmoid, we need to compute 1 / (1 + exp(-x))
+        // Using core SIMD operations
+        let arr = Array1::from_vec(slice.to_vec());
+        
+        // Compute -x
+        let neg_arr = Array1::from_elem(arr.len(), -1.0f32);
+        let neg_x = f32::simd_mul(&arr.view(), &neg_arr.view());
+        
+        // Apply sigmoid element-wise (no direct SIMD exp available)
+        let result: Array1<f32> = neg_x.mapv(|x| 1.0 / (1.0 + x.exp()));
+        
+        // Copy result back to slice
+        for (i, &val) in result.iter().enumerate() {
+            slice[i] = val;
         }
-
-        // Process remaining elements
-        for val in &mut slice[i..] {
+    }
+    
+    /// Fallback sigmoid implementation
+    fn simd_sigmoid_f32_slice_fallback(slice: &mut [f32]) {
+        for val in slice.iter_mut() {
             *val = 1.0 / (1.0 + (-*val).exp());
         }
     }
@@ -123,40 +117,32 @@ impl SIMDOperations {
     /// SIMD-accelerated tanh activation for f32 arrays
     pub fn simd_tanh_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
         if let Some(slice) = input.as_slice_mut() {
-            Self::simd_tanh_f32_slice(slice);
+            let caps = PlatformCapabilities::detect();
+            if caps.simd_available && f32::simd_available() {
+                Self::simd_tanh_f32_slice_unified(slice);
+            } else {
+                Self::simd_tanh_f32_slice_fallback(slice);
+            }
         } else {
             input.mapv_inplace(|x| x.tanh());
         }
     }
 
-    /// SIMD-accelerated tanh for f32 slice
-    fn simd_tanh_f32_slice(slice: &mut [f32]) {
-        let mut i = 0;
-        let chunk_size = 8;
-
-        while i + chunk_size <= slice.len() {
-            let values = [
-                slice[i],
-                slice[i + 1],
-                slice[i + 2],
-                slice[i + 3],
-                slice[i + 4],
-                slice[i + 5],
-                slice[i + 6],
-                slice[i + 7],
-            ];
-            let vec = f32x8::new(values);
-            // Manual tanh implementation: tanh(x) = (e^x - e^-x) / (e^x + e^-x)
-            let pos_exp = vec.exp();
-            let neg_exp = (-vec).exp();
-            let result = (pos_exp - neg_exp) / (pos_exp + neg_exp);
-            let result_arr: [f32; 8] = result.into();
-            slice[i..i + chunk_size].copy_from_slice(&result_arr);
-            i += chunk_size;
+    /// SIMD-accelerated tanh for f32 slice using unified operations
+    fn simd_tanh_f32_slice_unified(slice: &mut [f32]) {
+        // For tanh, we apply element-wise since no direct SIMD tanh
+        let arr = Array1::from_vec(slice.to_vec());
+        let result = arr.mapv(|x| x.tanh());
+        
+        // Copy result back to slice
+        for (i, &val) in result.iter().enumerate() {
+            slice[i] = val;
         }
-
-        // Process remaining elements
-        for val in &mut slice[i..] {
+    }
+    
+    /// Fallback tanh implementation
+    fn simd_tanh_f32_slice_fallback(slice: &mut [f32]) {
+        for val in slice.iter_mut() {
             *val = val.tanh();
         }
     }
@@ -172,7 +158,12 @@ impl SIMDOperations {
     pub fn simd_gelu_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         let mut result = input.to_owned();
         if let Some(slice) = result.as_slice_mut() {
-            Self::simd_gelu_f32_slice(slice);
+            let caps = PlatformCapabilities::detect();
+            if caps.simd_available && f32::simd_available() {
+                Self::simd_gelu_f32_slice_unified(slice);
+            } else {
+                Self::simd_gelu_f32_slice_fallback(slice);
+            }
         } else {
             result.mapv_inplace(|x| {
                 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh())
@@ -181,42 +172,45 @@ impl SIMDOperations {
         result
     }
 
-    /// SIMD-accelerated GELU for f32 slice (approximation)
-    fn simd_gelu_f32_slice(slice: &mut [f32]) {
-        let mut i = 0;
-        let chunk_size = 8;
-        let half = f32x8::splat(0.5);
-        let one = f32x8::splat(1.0);
-        let coeff1 = f32x8::splat(0.797_884_6); // sqrt(2/π)
-        let coeff2 = f32x8::splat(0.044715);
-
-        while i + chunk_size <= slice.len() {
-            let values = [
-                slice[i],
-                slice[i + 1],
-                slice[i + 2],
-                slice[i + 3],
-                slice[i + 4],
-                slice[i + 5],
-                slice[i + 6],
-                slice[i + 7],
-            ];
-            let x = f32x8::new(values);
-            let x_sq = x * x;
-            let x_cube = x * x_sq;
-            let inner = x * coeff1 * (one + coeff2 * x_cube);
-            // Manual tanh implementation for GELU: tanh(x) = (e^x - e^-x) / (e^x + e^-x)
-            let pos_exp = inner.exp();
-            let neg_exp = (-inner).exp();
-            let tanh_val = (pos_exp - neg_exp) / (pos_exp + neg_exp);
-            let result = half * x * (one + tanh_val);
-            let result_arr: [f32; 8] = result.into();
-            slice[i..i + chunk_size].copy_from_slice(&result_arr);
-            i += chunk_size;
+    /// SIMD-accelerated GELU for f32 slice using unified operations
+    fn simd_gelu_f32_slice_unified(slice: &mut [f32]) {
+        // GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
+        // Using core SIMD for parts of the computation
+        let arr = Array1::from_vec(slice.to_vec());
+        
+        // Compute x^2 and x^3 using SIMD
+        let x_sq = f32::simd_mul(&arr.view(), &arr.view());
+        let x_cube = f32::simd_mul(&x_sq.view(), &arr.view());
+        
+        // Compute 0.044715 * x^3
+        let coeff2_arr = Array1::from_elem(arr.len(), 0.044715f32);
+        let term2 = f32::simd_mul(&coeff2_arr.view(), &x_cube.view());
+        
+        // Compute x + 0.044715 * x^3
+        let inner1 = f32::simd_add(&arr.view(), &term2.view());
+        
+        // Compute sqrt(2/π) * (x + 0.044715 * x^3)
+        let coeff1_arr = Array1::from_elem(arr.len(), 0.797_884_6f32);
+        let inner2 = f32::simd_mul(&coeff1_arr.view(), &inner1.view());
+        
+        // Apply tanh and complete GELU computation
+        let tanh_vals = inner2.mapv(|x| x.tanh());
+        let one_arr = Array1::from_elem(arr.len(), 1.0f32);
+        let factor = f32::simd_add(&one_arr.view(), &tanh_vals.view());
+        
+        let half_arr = Array1::from_elem(arr.len(), 0.5f32);
+        let temp = f32::simd_mul(&half_arr.view(), &arr.view());
+        let result = f32::simd_mul(&temp.view(), &factor.view());
+        
+        // Copy result back to slice
+        for (i, &val) in result.iter().enumerate() {
+            slice[i] = val;
         }
-
-        // Process remaining elements
-        for val in &mut slice[i..] {
+    }
+    
+    /// Fallback GELU implementation
+    fn simd_gelu_f32_slice_fallback(slice: &mut [f32]) {
+        for val in slice.iter_mut() {
             let x = *val;
             *val = 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh());
         }
@@ -226,42 +220,36 @@ impl SIMDOperations {
     pub fn simd_swish_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         let mut result = input.to_owned();
         if let Some(slice) = result.as_slice_mut() {
-            Self::simd_swish_f32_slice(slice);
+            let caps = PlatformCapabilities::detect();
+            if caps.simd_available && f32::simd_available() {
+                Self::simd_swish_f32_slice_unified(slice);
+            } else {
+                Self::simd_swish_f32_slice_fallback(slice);
+            }
         } else {
             result.mapv_inplace(|x| x / (1.0 + (-x).exp()));
         }
         result
     }
 
-    /// SIMD-accelerated Swish for f32 slice
-    fn simd_swish_f32_slice(slice: &mut [f32]) {
-        let mut i = 0;
-        let chunk_size = 8;
-        let one = f32x8::splat(1.0);
-
-        while i + chunk_size <= slice.len() {
-            let values = [
-                slice[i],
-                slice[i + 1],
-                slice[i + 2],
-                slice[i + 3],
-                slice[i + 4],
-                slice[i + 5],
-                slice[i + 6],
-                slice[i + 7],
-            ];
-            let x = f32x8::new(values);
-            let neg_x = -x;
-            let exp_neg_x = neg_x.exp();
-            let sigmoid = one / (one + exp_neg_x);
-            let result = x * sigmoid;
-            let result_arr: [f32; 8] = result.into();
-            slice[i..i + chunk_size].copy_from_slice(&result_arr);
-            i += chunk_size;
+    /// SIMD-accelerated Swish for f32 slice using unified operations
+    fn simd_swish_f32_slice_unified(slice: &mut [f32]) {
+        // Swish(x) = x * sigmoid(x) = x / (1 + exp(-x))
+        let arr = Array1::from_vec(slice.to_vec());
+        
+        // Compute sigmoid(x) = 1 / (1 + exp(-x))
+        // Since we don't have direct SIMD exp, we apply element-wise
+        let result = arr.mapv(|x| x / (1.0 + (-x).exp()));
+        
+        // Copy result back to slice
+        for (i, &val) in result.iter().enumerate() {
+            slice[i] = val;
         }
-
-        // Process remaining elements
-        for val in &mut slice[i..] {
+    }
+    
+    /// Fallback Swish implementation
+    fn simd_swish_f32_slice_fallback(slice: &mut [f32]) {
+        for val in slice.iter_mut() {
             let x = *val;
             *val = x / (1.0 + (-x).exp());
         }
@@ -294,77 +282,33 @@ impl SIMDOperations {
         Ok(result)
     }
 
-    /// SIMD softmax for f32 slice
+    /// SIMD softmax for f32 slice using unified operations
     fn simd_softmax_f32_slice(input: &[f32], result: &mut [f32]) {
         if input.is_empty() {
             return;
         }
 
         // Find maximum for numerical stability
+        let input_arr = Array1::from_vec(input.to_vec());
         let max_val = input.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
-
-        // Compute exp(x - max) using SIMD
-        let mut i = 0;
-        let chunk_size = 8;
-        let max_vec = f32x8::splat(max_val);
-        let mut sum = 0.0f32;
-
-        // First pass: compute exp(x - max) and accumulate sum
-        while i + chunk_size <= input.len() {
-            let input_vals = [
-                input[i],
-                input[i + 1],
-                input[i + 2],
-                input[i + 3],
-                input[i + 4],
-                input[i + 5],
-                input[i + 6],
-                input[i + 7],
-            ];
-            let input_vec = f32x8::new(input_vals);
-            let shifted = input_vec - max_vec;
-            let exp_vec = shifted.exp();
-            let exp_arr: [f32; 8] = exp_vec.into();
-
-            for (j, &val) in exp_arr.iter().enumerate() {
-                result[i + j] = val;
-                sum += val;
-            }
-            i += chunk_size;
-        }
-
-        // Process remaining elements
-        for idx in i..input.len() {
-            let exp_val = (input[idx] - max_val).exp();
-            result[idx] = exp_val;
-            sum += exp_val;
-        }
-
-        // Second pass: divide by sum using SIMD
-        let sum_vec = f32x8::splat(sum);
-        i = 0;
-
-        while i + chunk_size <= result.len() {
-            let exp_vals = [
-                result[i],
-                result[i + 1],
-                result[i + 2],
-                result[i + 3],
-                result[i + 4],
-                result[i + 5],
-                result[i + 6],
-                result[i + 7],
-            ];
-            let exp_vec = f32x8::new(exp_vals);
-            let softmax_vec = exp_vec / sum_vec;
-            let softmax_arr: [f32; 8] = softmax_vec.into();
-            result[i..i + chunk_size].copy_from_slice(&softmax_arr);
-            i += chunk_size;
-        }
-
-        // Process remaining elements
-        for val in &mut result[i..] {
-            *val /= sum;
+        let max_arr = Array1::from_elem(input.len(), max_val);
+        
+        // Compute x - max using SIMD
+        let shifted = f32::simd_sub(&input_arr.view(), &max_arr.view());
+        
+        // Apply exp element-wise (no direct SIMD exp)
+        let exp_arr = shifted.mapv(|x| x.exp());
+        
+        // Sum all exp values
+        let sum = f32::simd_sum(&exp_arr.view());
+        
+        // Divide by sum using SIMD
+        let sum_arr = Array1::from_elem(exp_arr.len(), sum);
+        let softmax_result = f32::simd_div(&exp_arr.view(), &sum_arr.view());
+        
+        // Copy result
+        for (i, &val) in softmax_result.iter().enumerate() {
+            result[i] = val;
         }
     }
 
@@ -398,59 +342,29 @@ impl SIMDOperations {
         }
     }
 
-    /// SIMD cross-entropy for f32 slices
+    /// SIMD cross-entropy for f32 slices using unified operations
     fn simd_cross_entropy_f32_slices(predictions: &[f32], targets: &[f32], epsilon: f32) -> f32 {
-        let mut i = 0;
-        let chunk_size = 8;
-        let eps_vec = f32x8::splat(epsilon);
-        let one_minus_eps = f32x8::splat(1.0 - epsilon);
-        let mut loss_vec = f32x8::splat(0.0);
         let len = predictions.len().min(targets.len());
-
-        while i + chunk_size <= len {
-            let pred_vals = [
-                predictions[i],
-                predictions[i + 1],
-                predictions[i + 2],
-                predictions[i + 3],
-                predictions[i + 4],
-                predictions[i + 5],
-                predictions[i + 6],
-                predictions[i + 7],
-            ];
-            let target_vals = [
-                targets[i],
-                targets[i + 1],
-                targets[i + 2],
-                targets[i + 3],
-                targets[i + 4],
-                targets[i + 5],
-                targets[i + 6],
-                targets[i + 7],
-            ];
-
-            let pred_vec = f32x8::new(pred_vals);
-            let target_vec = f32x8::new(target_vals);
-
-            // Clamp predictions to [epsilon, 1-epsilon]
-            let clamped_pred = pred_vec.max(eps_vec).min(one_minus_eps);
-            let log_pred = clamped_pred.ln();
-            let loss_chunk = -(target_vec * log_pred);
-            loss_vec += loss_chunk;
-
-            i += chunk_size;
-        }
-
-        // Sum the SIMD loss vector
-        let loss_arr: [f32; 8] = loss_vec.into();
-        let mut total_loss: f32 = loss_arr.iter().sum();
-
-        // Process remaining elements
-        for idx in i..len {
-            let clamped_pred = predictions[idx].max(epsilon).min(1.0 - epsilon);
-            total_loss -= targets[idx] * clamped_pred.ln();
-        }
-
+        let pred_arr = Array1::from_vec(predictions[..len].to_vec());
+        let target_arr = Array1::from_vec(targets[..len].to_vec());
+        
+        // Clamp predictions to [epsilon, 1-epsilon] using SIMD
+        let eps_arr = Array1::from_elem(len, epsilon);
+        let one_minus_eps_arr = Array1::from_elem(len, 1.0 - epsilon);
+        
+        let clamped_lower = f32::simd_max(&pred_arr.view(), &eps_arr.view());
+        let clamped_pred = f32::simd_min(&clamped_lower.view(), &one_minus_eps_arr.view());
+        
+        // Apply ln element-wise (no direct SIMD ln)
+        let log_pred = clamped_pred.mapv(|x| x.ln());
+        
+        // Compute -target * log(pred) using SIMD
+        let neg_target_arr = f32::simd_scalar_mul(&target_arr.view(), -1.0);
+        let loss_values = f32::simd_mul(&neg_target_arr.view(), &log_pred.view());
+        
+        // Sum all loss values
+        let total_loss = f32::simd_sum(&loss_values.view());
+        
         total_loss / len as f32
     }
 
@@ -515,53 +429,17 @@ impl SIMDOperations {
         column
     }
 
-    /// SIMD-accelerated dot product
+    /// SIMD-accelerated dot product using unified operations
     fn simd_dot_product_f32(a: &[f32], b: &[f32]) -> f32 {
-        let mut i = 0;
-        let chunk_size = 8;
-        let mut sum_vec = f32x8::splat(0.0);
         let len = a.len().min(b.len());
-
-        while i + chunk_size <= len {
-            let a_vals = [
-                a[i],
-                a[i + 1],
-                a[i + 2],
-                a[i + 3],
-                a[i + 4],
-                a[i + 5],
-                a[i + 6],
-                a[i + 7],
-            ];
-            let b_vals = [
-                b[i],
-                b[i + 1],
-                b[i + 2],
-                b[i + 3],
-                b[i + 4],
-                b[i + 5],
-                b[i + 6],
-                b[i + 7],
-            ];
-
-            let a_vec = f32x8::new(a_vals);
-            let b_vec = f32x8::new(b_vals);
-            let product = a_vec * b_vec;
-            sum_vec += product;
-
-            i += chunk_size;
-        }
-
-        // Sum the SIMD vector
-        let sum_arr: [f32; 8] = sum_vec.into();
-        let mut total: f32 = sum_arr.iter().sum();
-
-        // Process remaining elements
-        for idx in i..len {
-            total += a[idx] * b[idx];
-        }
-
-        total
+        let a_arr = Array1::from_vec(a[..len].to_vec());
+        let b_arr = Array1::from_vec(b[..len].to_vec());
+        
+        // Compute element-wise product using SIMD
+        let product = f32::simd_mul(&a_arr.view(), &b_arr.view());
+        
+        // Sum all products using SIMD
+        f32::simd_sum(&product.view())
     }
 
     /// SIMD-accelerated element-wise addition
@@ -577,12 +455,20 @@ impl SIMDOperations {
 
         let mut result = Array::zeros(a.raw_dim());
 
-        if let (Some(a_slice), Some(b_slice), Some(result_slice)) =
-            (a.as_slice(), b.as_slice(), result.as_slice_mut())
-        {
-            Self::simd_add_f32_slices(a_slice, b_slice, result_slice);
+        let caps = PlatformCapabilities::detect();
+        if caps.simd_available && f32::simd_available() {
+            if let (Some(a_slice), Some(b_slice), Some(result_slice)) =
+                (a.as_slice(), b.as_slice(), result.as_slice_mut())
+            {
+                Self::simd_add_f32_slices(a_slice, b_slice, result_slice);
+            } else {
+                // Fallback for non-contiguous arrays
+                for ((a_val, b_val), result_val) in a.iter().zip(b.iter()).zip(result.iter_mut()) {
+                    *result_val = a_val + b_val;
+                }
+            }
         } else {
-            // Fallback for non-contiguous arrays
+            // Fallback for non-SIMD
             for ((a_val, b_val), result_val) in a.iter().zip(b.iter()).zip(result.iter_mut()) {
                 *result_val = a_val + b_val;
             }
@@ -591,46 +477,18 @@ impl SIMDOperations {
         Ok(result)
     }
 
-    /// SIMD element-wise addition for slices
+    /// SIMD element-wise addition for slices using unified operations
     fn simd_add_f32_slices(a: &[f32], b: &[f32], result: &mut [f32]) {
-        let mut i = 0;
-        let chunk_size = 8;
         let len = a.len().min(b.len()).min(result.len());
-
-        while i + chunk_size <= len {
-            let a_vals = [
-                a[i],
-                a[i + 1],
-                a[i + 2],
-                a[i + 3],
-                a[i + 4],
-                a[i + 5],
-                a[i + 6],
-                a[i + 7],
-            ];
-            let b_vals = [
-                b[i],
-                b[i + 1],
-                b[i + 2],
-                b[i + 3],
-                b[i + 4],
-                b[i + 5],
-                b[i + 6],
-                b[i + 7],
-            ];
-
-            let a_vec = f32x8::new(a_vals);
-            let b_vec = f32x8::new(b_vals);
-            let result_vec = a_vec + b_vec;
-            let result_arr: [f32; 8] = result_vec.into();
-
-            result[i..i + chunk_size].copy_from_slice(&result_arr);
-            i += chunk_size;
-        }
-
-        // Process remaining elements
-        for idx in i..len {
-            result[idx] = a[idx] + b[idx];
+        let a_arr = Array1::from_vec(a[..len].to_vec());
+        let b_arr = Array1::from_vec(b[..len].to_vec());
+        
+        // Add using SIMD
+        let sum = f32::simd_add(&a_arr.view(), &b_arr.view());
+        
+        // Copy result
+        for (i, &val) in sum.iter().enumerate() {
+            result[i] = val;
         }
     }
 

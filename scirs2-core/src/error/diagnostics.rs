@@ -1031,7 +1031,7 @@ mod tests {
     }
 
     #[test]
-    fn test_error_diagnostics() {
+    fn test_diagnostics_error_diagnostics() {
         let diagnostics = ErrorDiagnostics::new();
         let error = CoreError::MemoryError(ErrorContext::new("Out of memory"));
 

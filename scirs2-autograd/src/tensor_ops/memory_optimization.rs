@@ -628,8 +628,8 @@ impl MemoryOptimizer {
     pub fn end_session() -> (MemoryTrackerStats, MemoryPoolStats) {
         let tracking_stats = get_memory_tracking_stats();
         let pool_stats = get_memory_pool_stats();
-        disable_memory_tracking();
-        reset_memory_tracking();
+        // Don't disable tracking or reset stats here - let the caller decide
+        // This prevents interference with other code that expects tracking to remain enabled
         (tracking_stats, pool_stats)
     }
 

@@ -684,6 +684,13 @@ mod tests {
         ];
 
         let result = perspective_correct(&image, &corners, (100, 100));
+        
+        // This test requires ndarray-linalg for homography estimation
+        // When ndarray-linalg is not available, the function should return an error
+        #[cfg(feature = "ndarray-linalg")]
         assert!(result.is_ok());
+        
+        #[cfg(not(feature = "ndarray-linalg"))]
+        assert!(result.is_err());
     }
 }

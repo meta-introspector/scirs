@@ -772,7 +772,7 @@ mod tests {
     }
 
     #[test]
-    fn test_retry_executor() {
+    fn test_circuit_breaker_retry_executor() {
         let policy = RetryPolicy {
             max_attempts: 3,
             base_delay: Duration::from_millis(1), // Short delay for testing

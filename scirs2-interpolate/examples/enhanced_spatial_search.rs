@@ -5,13 +5,14 @@
 //! - Optimized KdTree and BallTree with early termination
 //! - SIMD-accelerated distance computations
 //! - Cache-friendly memory layouts
-//! - Adaptive search strategies
 //! - Batch and parallel query processing
 
-use ndarray::Array2;
+use ndarray::{Array2, ArrayView2, Axis};
 use scirs2_interpolate::spatial::{
-    AdaptiveSearchStrategy, BatchQueryProcessor, CacheFriendlyIndex, KdTree, SIMDDistanceCalculator,
+    BallTree, CacheFriendlyKNN, KdTree, OptimizedSpatialSearch, SimdDistanceOps,
 };
+#[cfg(feature = "parallel")]
+use scirs2_interpolate::spatial::ParallelQueryProcessor;
 use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,16 +35,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 2. Demonstrate SIMD distance calculations
     demonstrate_simd_distances(&points, &queries)?;
 
-    // 3. Show cache-friendly indexing benefits
-    demonstrate_cache_friendly_index(&points, &queries)?;
+    // 3. Show cache-friendly search
+    demonstrate_cache_friendly_search(&points, &queries)?;
 
-    // 4. Test adaptive search strategy
-    demonstrate_adaptive_search(&points, &queries)?;
-
-    // 5. Batch query processing
+    // 4. Test batch query processing
     demonstrate_batch_processing(&points, &queries)?;
 
-    // 6. Performance scaling analysis
+    // 5. Performance scaling analysis
     performance_scaling_analysis()?;
 
     Ok(())
@@ -152,11 +150,10 @@ fn demonstrate_simd_distances(
 
     let query = queries.row(0);
     let query_slice = query.as_slice().unwrap();
-    let simd_calc = SIMDDistanceCalculator::new();
 
     // Time SIMD distance calculation
     let start = Instant::now();
-    let distances = simd_calc.batch_squared_distances_simd(query_slice, &points.view());
+    let distances = SimdDistanceOps::batch_distances_to_query(&points.view(), query_slice);
     let simd_time = start.elapsed();
 
     // Time scalar distance calculation for comparison
@@ -203,87 +200,41 @@ fn demonstrate_simd_distances(
     Ok(())
 }
 
-fn demonstrate_cache_friendly_index(
+fn demonstrate_cache_friendly_search(
     points: &Array2<f64>,
     queries: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n3. Cache-Friendly Index Performance");
+    println!("\n3. Cache-Friendly Search Performance");
     println!("-----------------------------------");
 
-    let cache_index = CacheFriendlyIndex::new(&points.view())?;
+    let cache_knn = CacheFriendlyKNN::new(1000);
     let query = queries.row(0);
     let query_slice = query.as_slice().unwrap();
     let k = 10;
 
+    // Create KdTree for search
+    let kdtree = KdTree::new(points.to_owned())?;
+
     // Time cache-friendly search
     let start = Instant::now();
-    let cache_result = cache_index.k_nearest_neighbors(query_slice, k)?;
+    let cache_result = cache_knn.find_k_nearest(&kdtree, query_slice, k)?;
     let cache_time = start.elapsed();
 
     // Compare with standard approach
-    let kdtree = KdTree::new(points.to_owned())?;
     let start = Instant::now();
     let standard_result = kdtree.k_nearest_neighbors(query_slice, k)?;
     let standard_time = start.elapsed();
 
     println!(
-        "Cache-friendly index: {:?} (found {} neighbors)",
+        "Cache-friendly search: {:?} (found {} neighbors)",
         cache_time,
         cache_result.len()
     );
     println!(
-        "Standard index:       {:?} (found {} neighbors)",
+        "Standard search:       {:?} (found {} neighbors)",
         standard_time,
         standard_result.len()
     );
-
-    // Test batch distance computation
-    let start = Instant::now();
-    let _batch_distances = cache_index.batch_distances(query_slice);
-    let batch_time = start.elapsed();
-
-    println!(
-        "Batch distance calc:  {:?} ({} distances)",
-        batch_time,
-        points.nrows()
-    );
-
-    Ok(())
-}
-
-fn demonstrate_adaptive_search(
-    points: &Array2<f64>,
-    queries: &Array2<f64>,
-) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n4. Adaptive Search Strategy");
-    println!("---------------------------");
-
-    let mut adaptive_strategy = AdaptiveSearchStrategy::new(&points.view())?;
-    let query = queries.row(0);
-    let query_slice = query.as_slice().unwrap();
-
-    // Perform several searches with different k values
-    for k in [1, 5, 10, 50] {
-        let start = Instant::now();
-        let result = adaptive_strategy.adaptive_k_nearest_neighbors(query_slice, k)?;
-        let search_time = start.elapsed();
-
-        println!(
-            "k={:2}: {:?} (found {} neighbors)",
-            k,
-            search_time,
-            result.len()
-        );
-    }
-
-    // Show statistics
-    let stats = adaptive_strategy.stats();
-    println!("\nAdaptive Search Statistics:");
-    println!("  Total queries:      {}", stats.total_queries);
-    println!("  KdTree queries:     {}", stats.kdtree_queries);
-    println!("  BallTree queries:   {}", stats.balltree_queries);
-    println!("  Brute force queries:{}", stats.brute_force_queries);
-    println!("  Avg query time:     {:.2} ns", stats.avg_query_time_ns);
 
     Ok(())
 }
@@ -292,17 +243,15 @@ fn demonstrate_batch_processing(
     points: &Array2<f64>,
     queries: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n5. Batch Query Processing");
+    println!("\n4. Batch Query Processing");
     println!("-------------------------");
 
-    let mut batch_processor = BatchQueryProcessor::new(&points.view())?.with_batch_size(16);
-
+    let kdtree = KdTree::new(points.to_owned())?;
     let k = 5;
 
     // Sequential processing
     let start = Instant::now();
     let mut sequential_results = Vec::new();
-    let kdtree = KdTree::new(points.to_owned())?;
     for i in 0..queries.nrows() {
         let query = queries.row(i);
         let query_slice = query.as_slice().unwrap();
@@ -311,9 +260,9 @@ fn demonstrate_batch_processing(
     }
     let sequential_time = start.elapsed();
 
-    // Batch processing
+    // Batch processing using OptimizedSpatialSearch trait
     let start = Instant::now();
-    let batch_results = batch_processor.batch_k_nearest_neighbors(&queries.view(), k)?;
+    let batch_results = kdtree.batch_k_nearest_neighbors(&queries.view(), k)?;
     let batch_time = start.elapsed();
 
     println!(
@@ -332,6 +281,25 @@ fn demonstrate_batch_processing(
         println!("✓ Batch speedup: {:.2}x", speedup);
     }
 
+    // Test parallel processing if available
+    #[cfg(feature = "parallel")]
+    {
+        let start = Instant::now();
+        let parallel_results = kdtree.parallel_k_nearest_neighbors(&queries.view(), k, None)?;
+        let parallel_time = start.elapsed();
+        
+        println!(
+            "Parallel processing:   {:?} ({} queries)",
+            parallel_time,
+            queries.nrows()
+        );
+        
+        if parallel_time < sequential_time {
+            let speedup = sequential_time.as_nanos() as f64 / parallel_time.as_nanos() as f64;
+            println!("✓ Parallel speedup: {:.2}x", speedup);
+        }
+    }
+
     // Verify results
     let results_match = sequential_results.len() == batch_results.len()
         && sequential_results
@@ -347,7 +315,7 @@ fn demonstrate_batch_processing(
 }
 
 fn performance_scaling_analysis() -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n6. Performance Scaling Analysis");
+    println!("\n5. Performance Scaling Analysis");
     println!("-------------------------------");
 
     let dimensions = [2, 5, 10, 20];
@@ -362,13 +330,13 @@ fn performance_scaling_analysis() -> Result<(), Box<dyn std::error::Error>> {
         for &n_dims in &dimensions {
             let (points, queries) = generate_test_data(n_points, 10, n_dims)?;
 
-            // Test adaptive strategy
-            let mut adaptive_strategy = AdaptiveSearchStrategy::new(&points.view())?;
+            // Test KdTree performance
+            let kdtree = KdTree::new(points.clone())?;
             let query = queries.row(0);
             let query_slice = query.as_slice().unwrap();
 
             let start = Instant::now();
-            let _result = adaptive_strategy.adaptive_k_nearest_neighbors(query_slice, 10)?;
+            let _result = kdtree.k_nearest_neighbors(query_slice, 10)?;
             let elapsed = start.elapsed();
 
             print!(" {:5.1}μs |", elapsed.as_nanos() as f64 / 1000.0);
@@ -378,9 +346,38 @@ fn performance_scaling_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\nKey observations:");
     println!("- Low dimensions (2D-5D): KdTree performs best");
-    println!("- Medium dimensions (10D): BallTree often preferred");
-    println!("- High dimensions (20D+): Brute force may be optimal");
-    println!("- Adaptive strategy automatically chooses the best method");
+    println!("- Medium dimensions (10D): Performance starts to degrade");
+    println!("- High dimensions (20D+): Consider BallTree or approximate methods");
+
+    // Test BallTree comparison
+    println!("\n6. KdTree vs BallTree Comparison");
+    println!("---------------------------------");
+    
+    let (points, queries) = generate_test_data(500, 10, 10)?;
+    let query = queries.row(0);
+    let query_slice = query.as_slice().unwrap();
+    let k = 10;
+    
+    // KdTree
+    let kdtree = KdTree::new(points.clone())?;
+    let start = Instant::now();
+    let _kd_result = kdtree.k_nearest_neighbors(query_slice, k)?;
+    let kd_time = start.elapsed();
+    
+    // BallTree
+    let balltree = BallTree::new(points.clone())?;
+    let start = Instant::now();
+    let _ball_result = balltree.k_nearest_neighbors(query_slice, k)?;
+    let ball_time = start.elapsed();
+    
+    println!("KdTree:   {:?}", kd_time);
+    println!("BallTree: {:?}", ball_time);
+    
+    if kd_time < ball_time {
+        println!("✓ KdTree is faster for this dataset");
+    } else {
+        println!("✓ BallTree is faster for this dataset");
+    }
 
     Ok(())
 }
@@ -396,8 +393,7 @@ mod tests {
         // Test that all methods work
         assert!(compare_knn_methods(&points, &queries).is_ok());
         assert!(demonstrate_simd_distances(&points, &queries).is_ok());
-        assert!(demonstrate_cache_friendly_index(&points, &queries).is_ok());
-        assert!(demonstrate_adaptive_search(&points, &queries).is_ok());
+        assert!(demonstrate_cache_friendly_search(&points, &queries).is_ok());
         assert!(demonstrate_batch_processing(&points, &queries).is_ok());
     }
 
