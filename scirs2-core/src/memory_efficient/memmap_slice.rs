@@ -108,15 +108,74 @@ where
             }
         });
 
-        // Convert to the target dimension type
+        // Convert to owned array
         let owned = sliced.to_owned();
 
-        // Try to convert from dynamic to fixed dimension
-        match owned.into_dimensionality::<D>() {
-            Ok(array) => Ok(array),
-            Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
-                "Failed to convert sliced array to target dimension type",
-            ))),
+        // For 2D slices, we know the expected shape
+        if D::NDIM == Some(2) && slice_elements.len() == 2 {
+            // Calculate the shape from the slice elements
+            let mut new_shape = Vec::new();
+            for (i, elem) in slice_elements.iter().enumerate() {
+                match elem {
+                    SliceInfoElem::Slice { start, end, step } => {
+                        let start = *start as usize;
+                        // Safely get the dimension size, defaulting to a reasonable value if out of bounds
+                        let dim_size = if i < self.source.shape.len() {
+                            self.source.shape[i]
+                        } else {
+                            // This shouldn't happen for properly constructed slices
+                            1
+                        };
+                        let end = end.map(|e| e as usize).unwrap_or(dim_size);
+                        let step = *step as usize;
+                        let len = (end - start + step - 1) / step;
+                        new_shape.push(len);
+                    }
+                    SliceInfoElem::Index(_) => {
+                        // Index reduces dimension, but we're expecting a 2D result
+                        new_shape.push(1);
+                    }
+                    _ => {}
+                }
+            }
+
+            // Create the properly shaped array
+            if new_shape.len() == 2 {
+                // Debug output
+                eprintln!("DEBUG: Trying to reshape from {:?} to {:?}", owned.shape(), (new_shape[0], new_shape[1]));
+                eprintln!("DEBUG: owned.len() = {}, new_shape product = {}", owned.len(), new_shape[0] * new_shape[1]);
+                
+                let reshaped = owned.into_shape((new_shape[0], new_shape[1])).map_err(|e| {
+                    CoreError::ShapeError(ErrorContext::new(format!(
+                        "Failed to reshape sliced array: {}",
+                        e
+                    )))
+                })?;
+                
+                // Convert to the target dimension type
+                match reshaped.into_dimensionality::<D>() {
+                    Ok(array) => Ok(array),
+                    Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
+                        "Failed to convert reshaped array to target dimension type",
+                    ))),
+                }
+            } else {
+                // Try the original conversion
+                match owned.into_dimensionality::<D>() {
+                    Ok(array) => Ok(array),
+                    Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
+                        "Failed to convert sliced array to target dimension type",
+                    ))),
+                }
+            }
+        } else {
+            // For other dimensions, try direct conversion
+            match owned.into_dimensionality::<D>() {
+                Ok(array) => Ok(array),
+                Err(_) => Err(CoreError::ShapeError(ErrorContext::new(
+                    "Failed to convert sliced array to target dimension type",
+                ))),
+            }
         }
     }
 }
@@ -362,6 +421,10 @@ mod tests {
         let mmap =
             MemoryMappedArray::<f64>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
 
+        // Debug: print shape info
+        println!("mmap.shape: {:?}", mmap.shape);
+        println!("mmap.size: {}", mmap.size);
+
         // Debug: print original array to verify
         let orig_array = mmap.as_array::<ndarray::Ix2>().unwrap();
         println!("Original array (first 5x10):");
@@ -380,6 +443,10 @@ mod tests {
         // Create a slice
         let slice = mmap.slice_2d(2..5, 3..7).unwrap();
 
+        // Debug: print slice info
+        println!("slice.source.shape: {:?}", slice.source.shape);
+        println!("slice_info: {:?}", slice.slice_info.as_ref());
+        
         // Load the slice data
         let array = slice.load().unwrap();
 

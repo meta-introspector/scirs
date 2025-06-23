@@ -123,27 +123,70 @@ where
 {
     /// Create a new reference to the same memory-mapped file
     pub fn clone_ref(&self) -> CoreResult<Self> {
-        // Try to read the header to determine if this is a header-based file
-        match read_header::<A>(&self.file_path) {
-            Ok((_header, data_offset)) => {
-                // File has a header, use the proper offset
-                // Re-open with the header-aware offset
-                Self::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-                    None,
-                    &self.file_path,
-                    self.mode,
-                    data_offset,
-                )
+        // Create a new MemoryMappedArray with the same parameters
+        // This will properly initialize the mmap views
+        let element_size = mem::size_of::<A>();
+        let data_size = self.size * element_size;
+        
+        // Open file based on access mode
+        match self.mode {
+            AccessMode::ReadOnly => {
+                let file = File::open(&self.file_path)
+                    .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
+                
+                let mmap = unsafe {
+                    MmapOptions::new()
+                        .offset(self.offset as u64)
+                        .len(data_size)
+                        .map(&file)
+                        .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?
+                };
+                
+                Ok(Self {
+                    shape: self.shape.clone(),
+                    file_path: self.file_path.clone(),
+                    mode: self.mode,
+                    offset: self.offset,
+                    size: self.size,
+                    mmap_view: Some(mmap),
+                    mmap_view_mut: None,
+                    is_temp: false,
+                    _phantom: PhantomData,
+                })
             }
-            Err(_) => {
-                // No header or invalid header, assume raw file
-                // Re-open with the original offset
-                Self::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-                    None,
-                    &self.file_path,
-                    self.mode,
-                    self.offset,
-                )
+            AccessMode::ReadWrite | AccessMode::CopyOnWrite => {
+                let file = OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .open(&self.file_path)
+                    .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
+                
+                let mmap = unsafe {
+                    MmapOptions::new()
+                        .offset(self.offset as u64)
+                        .len(data_size)
+                        .map_mut(&file)
+                        .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?
+                };
+                
+                Ok(Self {
+                    shape: self.shape.clone(),
+                    file_path: self.file_path.clone(),
+                    mode: self.mode,
+                    offset: self.offset,
+                    size: self.size,
+                    mmap_view: None,
+                    mmap_view_mut: Some(mmap),
+                    is_temp: false,
+                    _phantom: PhantomData,
+                })
+            }
+            AccessMode::Write => {
+                // For Write mode, we typically shouldn't clone
+                Err(CoreError::InvalidArgument(
+                    ErrorContext::new("Cannot clone a write-only memory-mapped array".to_string())
+                        .with_location(ErrorLocation::new(file!(), line!()))
+                ))
             }
         }
     }
