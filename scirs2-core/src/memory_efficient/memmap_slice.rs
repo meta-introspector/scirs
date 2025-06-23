@@ -73,10 +73,19 @@ where
     /// This method materializes the slice by loading only the necessary data
     /// from the memory-mapped file.
     pub fn load(&self) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        use ndarray::IxDyn;
+        use ndarray::{IxDyn, ShapeBuilder};
 
-        // First, load the source array into memory as dynamic dimension
-        let source_array = self.source.as_array::<IxDyn>()?;
+        // Get the raw data slice
+        let data_slice = self.source.as_slice();
+
+        // Create a dynamic array with the proper shape
+        let shape = IxDyn(&self.source.shape);
+        let source_array = ndarray::ArrayView::from_shape(shape, data_slice).map_err(|e| {
+            CoreError::ShapeError(ErrorContext::new(format!(
+                "Failed to create array view: {}",
+                e
+            )))
+        })?;
 
         // Convert SliceInfo to a slice arg that can be used with IxDyn
         let slice_elements = self.slice_info.as_ref();
@@ -299,6 +308,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
 
 #[cfg(test)]
 mod tests {
+    use super::super::create_mmap;
     use super::*;
     use ndarray::Array2;
     use std::fs::File;
@@ -344,12 +354,28 @@ mod tests {
         // Create a test 2D array and save it to a file using the proper method
         let data = Array2::<f64>::from_shape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
 
-        // Create a memory-mapped array from the data
-        let _mmap =
-            MemoryMappedArray::<f64>::new(Some(&data), &file_path, AccessMode::Write, 0).unwrap();
+        // Use save_array which handles headers correctly
+        use super::super::zero_serialization::ZeroCopySerialization;
+        MemoryMappedArray::<f64>::save_array(&data, &file_path, None).unwrap();
 
-        // Reopen for reading to ensure the data is properly flushed
-        let mmap = MemoryMappedArray::<f64>::open(&file_path, &[10, 10]).unwrap();
+        // Open using open_zero_copy which handles headers correctly
+        let mmap =
+            MemoryMappedArray::<f64>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
+
+        // Debug: print original array to verify
+        let orig_array = mmap.as_array::<ndarray::Ix2>().unwrap();
+        println!("Original array (first 5x10):");
+        for i in 0..5 {
+            print!("Row {}: ", i);
+            for j in 0..10 {
+                print!("{:4.0} ", orig_array[[i, j]]);
+            }
+            print!("   Expected: ");
+            for j in 0..10 {
+                print!("{:4} ", i * 10 + j);
+            }
+            println!();
+        }
 
         // Create a slice
         let slice = mmap.slice_2d(2..5, 3..7).unwrap();
@@ -359,9 +385,27 @@ mod tests {
 
         // Check that the slice contains the expected data
         assert_eq!(array.shape(), &[3, 4]);
+
+        // Debug: print the slice content
+        println!("Slice content:");
         for i in 0..3 {
             for j in 0..4 {
-                assert_eq!(array[[i, j]], ((i + 2) * 10 + (j + 3)) as f64);
+                print!("{:6.1} ", array[[i, j]]);
+            }
+            println!();
+        }
+
+        for i in 0..3 {
+            for j in 0..4 {
+                let expected = ((i + 2) * 10 + (j + 3)) as f64;
+                let actual = array[[i, j]];
+                if actual != expected {
+                    println!(
+                        "Mismatch at [{}, {}]: expected {}, got {}",
+                        i, j, expected, actual
+                    );
+                }
+                assert_eq!(actual, expected);
             }
         }
     }
@@ -376,12 +420,8 @@ mod tests {
         // Create a test 2D array and save it to a file using the proper method
         let data = Array2::<f64>::from_shape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
 
-        // Create a memory-mapped array from the data
-        let _mmap =
-            MemoryMappedArray::<f64>::new(Some(&data), &file_path, AccessMode::Write, 0).unwrap();
-
-        // Reopen for reading to ensure the data is properly flushed
-        let mmap = MemoryMappedArray::<f64>::open(&file_path, &[10, 10]).unwrap();
+        // Create a memory-mapped array with proper header
+        let mmap = create_mmap::<f64, _, _>(&data, &file_path, AccessMode::Write, 0).unwrap();
 
         // Create a slice using ndarray's s![] macro
         use ndarray::s;

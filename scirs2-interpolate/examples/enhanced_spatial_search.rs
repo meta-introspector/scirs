@@ -8,11 +8,11 @@
 //! - Batch and parallel query processing
 
 use ndarray::{Array2, ArrayView2, Axis};
+#[cfg(feature = "parallel")]
+use scirs2_interpolate::spatial::ParallelQueryProcessor;
 use scirs2_interpolate::spatial::{
     BallTree, CacheFriendlyKNN, KdTree, OptimizedSpatialSearch, SimdDistanceOps,
 };
-#[cfg(feature = "parallel")]
-use scirs2_interpolate::spatial::ParallelQueryProcessor;
 use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -287,13 +287,13 @@ fn demonstrate_batch_processing(
         let start = Instant::now();
         let parallel_results = kdtree.parallel_k_nearest_neighbors(&queries.view(), k, None)?;
         let parallel_time = start.elapsed();
-        
+
         println!(
             "Parallel processing:   {:?} ({} queries)",
             parallel_time,
             queries.nrows()
         );
-        
+
         if parallel_time < sequential_time {
             let speedup = sequential_time.as_nanos() as f64 / parallel_time.as_nanos() as f64;
             println!("✓ Parallel speedup: {:.2}x", speedup);
@@ -352,27 +352,27 @@ fn performance_scaling_analysis() -> Result<(), Box<dyn std::error::Error>> {
     // Test BallTree comparison
     println!("\n6. KdTree vs BallTree Comparison");
     println!("---------------------------------");
-    
+
     let (points, queries) = generate_test_data(500, 10, 10)?;
     let query = queries.row(0);
     let query_slice = query.as_slice().unwrap();
     let k = 10;
-    
+
     // KdTree
     let kdtree = KdTree::new(points.clone())?;
     let start = Instant::now();
     let _kd_result = kdtree.k_nearest_neighbors(query_slice, k)?;
     let kd_time = start.elapsed();
-    
+
     // BallTree
     let balltree = BallTree::new(points.clone())?;
     let start = Instant::now();
     let _ball_result = balltree.k_nearest_neighbors(query_slice, k)?;
     let ball_time = start.elapsed();
-    
+
     println!("KdTree:   {:?}", kd_time);
     println!("BallTree: {:?}", ball_time);
-    
+
     if kd_time < ball_time {
         println!("✓ KdTree is faster for this dataset");
     } else {

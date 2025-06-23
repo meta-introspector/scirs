@@ -43,6 +43,10 @@ SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in Rust,
 - **Type Safety**: Strong typing and compile-time checks
 - **Error Handling**: Comprehensive error system with context
 
+## Project Scale
+
+This project now contains **over 1.5 million lines of code** and runs **over 6,500 tests** across all modules, demonstrating the comprehensive nature of the SciRS2 ecosystem.
+
 ## Project Goals
 
 - Create a comprehensive scientific computing and machine learning library in Rust

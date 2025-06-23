@@ -662,16 +662,18 @@ impl WorkStealingScheduler {
 
         self.start_time = Some(Instant::now());
 
+        // Replace workers with empty vec temporarily
+        let workers = std::mem::take(&mut self.workers);
+
         // Start worker threads
-        for worker in &self.workers {
+        for worker in workers {
             let worker_id = worker.id;
-            let worker_ref = unsafe { std::ptr::read(worker as *const Worker) };
             let result_sender = self.result_sender.clone();
 
             let handle = thread::Builder::new()
                 .name(format!("worker-{}", worker_id))
                 .spawn(move || {
-                    worker_ref.run(result_sender);
+                    worker.run(result_sender);
                 })
                 .map_err(|e| {
                     CoreError::StreamError(

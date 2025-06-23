@@ -321,7 +321,7 @@ mod memory_optimization_tests {
 
         // Should have some statistics
         assert!(tracking_stats.enabled || pool_stats.enabled);
-        
+
         // Clean up after the test
         T::disable_memory_tracking();
         T::reset_memory_tracking();

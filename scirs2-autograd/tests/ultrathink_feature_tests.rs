@@ -364,11 +364,15 @@ mod graph_enhancement_tests {
         // Check if cache has been used
         let final_stats = T::get_cache_stats();
         println!("Cache stats: {:?}", final_stats);
-        
+
         // TODO: The test is expecting 1 entry but getting 3. This seems to be because
         // the evaluation process might be creating additional cached operations internally.
         // For now, we'll check that at least one operation was cached.
-        assert!(final_stats.entries >= 1, "Expected at least one cached operation, got {}", final_stats.entries);
+        assert!(
+            final_stats.entries >= 1,
+            "Expected at least one cached operation, got {}",
+            final_stats.entries
+        );
     }
 
     #[test]

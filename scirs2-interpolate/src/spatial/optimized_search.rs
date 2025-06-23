@@ -90,7 +90,7 @@ impl SimdDistanceOps {
         F: Float + FromPrimitive,
     {
         assert_eq!(a.len(), b.len(), "Vectors must have the same dimension");
-        
+
         a.iter()
             .zip(b.iter())
             .map(|(&x, &y)| {
@@ -102,10 +102,7 @@ impl SimdDistanceOps {
 
     /// Batch compute distances from multiple points to a single query
     #[cfg(feature = "simd")]
-    pub fn batch_distances_to_query<F>(
-        points: &ArrayView2<F>,
-        query: &[F],
-    ) -> Vec<F>
+    pub fn batch_distances_to_query<F>(points: &ArrayView2<F>, query: &[F]) -> Vec<F>
     where
         F: Float + FromPrimitive + SimdUnifiedOps,
     {
@@ -120,10 +117,7 @@ impl SimdDistanceOps {
 
     /// Batch compute distances without SIMD
     #[cfg(not(feature = "simd"))]
-    pub fn batch_distances_to_query<F>(
-        points: &ArrayView2<F>,
-        query: &[F],
-    ) -> Vec<F>
+    pub fn batch_distances_to_query<F>(points: &ArrayView2<F>, query: &[F]) -> Vec<F>
     where
         F: Float + FromPrimitive,
     {
@@ -189,7 +183,7 @@ impl<F: Float + FromPrimitive + Send + Sync> ParallelQueryProcessor<F> {
     /// Create a new parallel query processor
     pub fn new(num_workers: Option<usize>) -> Self {
         use scirs2_core::parallel_ops::num_threads;
-        
+
         Self {
             num_workers: num_workers.unwrap_or_else(num_threads),
             _phantom: std::marker::PhantomData,
@@ -237,9 +231,9 @@ where
         workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         use scirs2_core::parallel_ops::*;
-        
+
         let queries_vec: Vec<_> = queries.axis_iter(Axis(0)).collect();
-        
+
         par_scope(|_| {
             queries_vec
                 .into_par_iter()
@@ -312,9 +306,9 @@ where
         workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         use scirs2_core::parallel_ops::*;
-        
+
         let queries_vec: Vec<_> = queries.axis_iter(Axis(0)).collect();
-        
+
         par_scope(|_| {
             queries_vec
                 .into_par_iter()
@@ -379,7 +373,7 @@ mod tests {
         let distances = SimdDistanceOps::batch_distances_to_query(&points.view(), &query);
 
         assert_eq!(distances.len(), 3);
-        assert_eq!(distances[0], 5.0);  // (1-0)^2 + (2-0)^2 = 5
+        assert_eq!(distances[0], 5.0); // (1-0)^2 + (2-0)^2 = 5
         assert_eq!(distances[1], 25.0); // (3-0)^2 + (4-0)^2 = 25
         assert_eq!(distances[2], 61.0); // (5-0)^2 + (6-0)^2 = 61
     }

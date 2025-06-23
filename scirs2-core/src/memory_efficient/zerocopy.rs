@@ -9,6 +9,7 @@ use super::chunked::ChunkingStrategy;
 use super::memmap::{AccessMode, MemoryMappedArray};
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use ndarray;
+use num_traits::Zero;
 use std::ops::{Add, Div, Mul, Sub};
 
 /// Trait for zero-copy operations on memory-mapped arrays.
@@ -206,7 +207,7 @@ pub trait ZeroCopyOps<A: Clone + Copy + 'static + Send + Sync> {
         A: Add<Output = A> + Div<Output = A> + From<u8> + From<usize>;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A>
     for MemoryMappedArray<A>
 {
     fn map_zero_copy<F>(&self, f: F) -> CoreResult<MemoryMappedArray<A>>
@@ -226,7 +227,19 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
         temp_file.as_file().set_len(file_size as u64)?;
         drop(temp_file); // Close the file before memory-mapping it
 
-        // Create the output memory-mapped array
+        // Create the output memory-mapped array with zeros to initialize the header
+        // First create with Write mode to initialize
+        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&self.shape));
+        {
+            let _ = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
+                Some(&zeros),
+                &temp_path,
+                AccessMode::Write,
+                0,
+            )?;
+        }
+
+        // Now reopen in ReadWrite mode to allow modifications
         let mut output = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
             None,
             &temp_path,
@@ -359,7 +372,19 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ZeroCopyOps<A>
         temp_file.as_file().set_len(file_size as u64)?;
         drop(temp_file); // Close the file before memory-mapping it
 
-        // Create the output memory-mapped array
+        // Create the output memory-mapped array with zeros to initialize the header
+        // First create with Write mode to initialize
+        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&self.shape));
+        {
+            let _ = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
+                Some(&zeros),
+                &temp_path,
+                AccessMode::Write,
+                0,
+            )?;
+        }
+
+        // Now reopen in ReadWrite mode to allow modifications
         let mut output = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
             None,
             &temp_path,
@@ -564,7 +589,7 @@ pub trait BroadcastOps<A: Clone + Copy + 'static + Send + Sync> {
         F: Fn(A, A) -> A + Send + Sync;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> BroadcastOps<A>
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<A>
     for MemoryMappedArray<A>
 {
     fn broadcast_op<F>(&self, other: &Self, f: F) -> CoreResult<MemoryMappedArray<A>>
@@ -626,7 +651,19 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> BroadcastOps<A>
         temp_file.as_file().set_len(file_size as u64)?;
         drop(temp_file); // Close the file before memory-mapping it
 
-        // Create the output memory-mapped array
+        // Create the output memory-mapped array with zeros to initialize the header
+        // First create with Write mode to initialize
+        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&self.shape));
+        {
+            let _ = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
+                Some(&zeros),
+                &temp_path,
+                AccessMode::Write,
+                0,
+            )?;
+        }
+
+        // Now reopen in ReadWrite mode to allow modifications
         let mut output = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
             None,
             &temp_path,
@@ -716,7 +753,7 @@ pub trait ArithmeticOps<A: Clone + Copy + 'static + Send + Sync> {
         A: Div<Output = A>;
 }
 
-impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> ArithmeticOps<A>
+impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ArithmeticOps<A>
     for MemoryMappedArray<A>
 {
     fn add(&self, other: &Self) -> CoreResult<MemoryMappedArray<A>>
@@ -762,16 +799,13 @@ mod tests {
         let dir = tempdir().unwrap();
         let file_path = dir.path().join("test_map.bin");
 
-        // Create a test array and save it to a file
-        let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
-        let mut file = File::create(&file_path).unwrap();
-        for val in &data {
-            file.write_all(&val.to_ne_bytes()).unwrap();
-        }
-        drop(file);
+        // Create a test array and save it with proper header using save_array
+        let data = ndarray::Array1::from_vec((0..1000).map(|i| i as f64).collect());
+        MemoryMappedArray::<f64>::save_array(&data, &file_path, None).unwrap();
 
-        // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::open(&file_path, &[1000]).unwrap();
+        // Open the file for zero-copy operations
+        let mmap =
+            MemoryMappedArray::<f64>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
 
         // Map operation: double each element
         let result = mmap.map_zero_copy(|x| x * 2.0).unwrap();
@@ -814,25 +848,18 @@ mod tests {
         let file_path1 = dir.path().join("test_combine1.bin");
         let file_path2 = dir.path().join("test_combine2.bin");
 
-        // Create two test arrays and save them to files
-        let data1: Vec<f64> = (0..1000).map(|i| i as f64).collect();
-        let data2: Vec<f64> = (0..1000).map(|i| (i * 2) as f64).collect();
+        // Create two test arrays and save them with proper headers using save_array
+        let data1 = ndarray::Array1::from_vec((0..1000).map(|i| i as f64).collect());
+        let data2 = ndarray::Array1::from_vec((0..1000).map(|i| (i * 2) as f64).collect());
 
-        let mut file1 = File::create(&file_path1).unwrap();
-        for val in &data1 {
-            file1.write_all(&val.to_ne_bytes()).unwrap();
-        }
-        drop(file1);
+        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
 
-        let mut file2 = File::create(&file_path2).unwrap();
-        for val in &data2 {
-            file2.write_all(&val.to_ne_bytes()).unwrap();
-        }
-        drop(file2);
-
-        // Create memory-mapped arrays
-        let mmap1 = MemoryMappedArray::<f64>::open(&file_path1, &[1000]).unwrap();
-        let mmap2 = MemoryMappedArray::<f64>::open(&file_path2, &[1000]).unwrap();
+        // Open the files for zero-copy operations
+        let mmap1 =
+            MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly).unwrap();
+        let mmap2 =
+            MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly).unwrap();
 
         // Combine operation: add the arrays
         let result = mmap1.combine_zero_copy(&mmap2, |a, b| a + b).unwrap();
@@ -878,25 +905,18 @@ mod tests {
         let file_path1 = dir.path().join("test_arithmetic1.bin");
         let file_path2 = dir.path().join("test_arithmetic2.bin");
 
-        // Create two test arrays and save them to files
-        let data1: Vec<f64> = (0..100).map(|i| i as f64).collect();
-        let data2: Vec<f64> = (0..100).map(|i| (i + 5) as f64).collect();
+        // Create two test arrays and save them with proper headers using save_array
+        let data1 = ndarray::Array1::from_vec((0..100).map(|i| i as f64).collect());
+        let data2 = ndarray::Array1::from_vec((0..100).map(|i| (i + 5) as f64).collect());
 
-        let mut file1 = File::create(&file_path1).unwrap();
-        for val in &data1 {
-            file1.write_all(&val.to_ne_bytes()).unwrap();
-        }
-        drop(file1);
+        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
 
-        let mut file2 = File::create(&file_path2).unwrap();
-        for val in &data2 {
-            file2.write_all(&val.to_ne_bytes()).unwrap();
-        }
-        drop(file2);
-
-        // Create memory-mapped arrays
-        let mmap1 = MemoryMappedArray::<f64>::open(&file_path1, &[100]).unwrap();
-        let mmap2 = MemoryMappedArray::<f64>::open(&file_path2, &[100]).unwrap();
+        // Open the files for zero-copy operations
+        let mmap1 =
+            MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly).unwrap();
+        let mmap2 =
+            MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly).unwrap();
 
         // Test addition
         let add_result = mmap1.add(&mmap2).unwrap();
@@ -938,24 +958,17 @@ mod tests {
 
         // Create a 2D array (3x4) and a 1D array (4)
         let data1 = Array2::<f64>::from_shape_fn((3, 4), |(i, j)| (i * 4 + j) as f64);
-        let data2: Vec<f64> = (0..4).map(|i| (i + 1) as f64).collect();
+        let data2 = ndarray::Array1::from_vec((0..4).map(|i| (i + 1) as f64).collect());
 
-        // Save the arrays to files
-        let mut file1 = File::create(&file_path1).unwrap();
-        for val in data1.iter() {
-            file1.write_all(&val.to_ne_bytes()).unwrap();
-        }
-        drop(file1);
+        // Save the arrays with proper headers using save_array
+        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
 
-        let mut file2 = File::create(&file_path2).unwrap();
-        for val in &data2 {
-            file2.write_all(&val.to_ne_bytes()).unwrap();
-        }
-        drop(file2);
-
-        // Create memory-mapped arrays
-        let mmap1 = MemoryMappedArray::<f64>::open(&file_path1, &[3, 4]).unwrap();
-        let mmap2 = MemoryMappedArray::<f64>::open(&file_path2, &[4]).unwrap();
+        // Open the files for zero-copy operations
+        let mmap1 =
+            MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly).unwrap();
+        let mmap2 =
+            MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly).unwrap();
 
         // Test broadcasting
         let result = mmap1.broadcast_op(&mmap2, |a, b| a * b).unwrap();

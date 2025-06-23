@@ -121,7 +121,8 @@ where
     pub fn new(knots: Array1<T>, coefficients: Array1<T>) -> InterpolateResult<Self> {
         if knots.len() != coefficients.len() + 4 {
             return Err(crate::error::InterpolateError::InvalidInput {
-                message: "For cubic B-spline, knots.len() must equal coefficients.len() + 4".to_string(),
+                message: "For cubic B-spline, knots.len() must equal coefficients.len() + 4"
+                    .to_string(),
             });
         }
         Ok(Self {
@@ -263,7 +264,13 @@ mod tests {
         let knots = array![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0];
         let coefficients = array![1.0, 2.0, 3.0, 4.0];
 
-        let spline = BSpline::new(&knots.view(), &coefficients.view(), 3, ExtrapolateMode::Extrapolate).unwrap();
+        let spline = BSpline::new(
+            &knots.view(),
+            &coefficients.view(),
+            3,
+            ExtrapolateMode::Extrapolate,
+        )
+        .unwrap();
         let mut evaluator = SimdBSplineEvaluator::new(spline);
 
         let points = vec![0.0, 0.25, 0.5, 0.75, 1.0];

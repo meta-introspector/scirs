@@ -10,6 +10,7 @@ use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 use ndarray::{Array1, Array2};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
+use scirs2_linalg::solve;
 use std::f64::consts::PI;
 
 /// Non-rigid transformation interface
@@ -131,49 +132,22 @@ impl ThinPlateSpline {
             target_y[i] = target_points[i].1;
         }
 
-        // TODO: Replace with proper linear solver
-        // For now, return an error
-        return Err(VisionError::LinAlgError(
-            "TPS solve not implemented without ndarray-linalg".to_string(),
-        ));
-        /*
-        // Solve the linear system for x and y mappings
-        use ndarray_linalg::solve::Solve;
+        // Solve the linear system for x and y mappings using scirs2-linalg
+        let coef_x = solve(&l.view(), &target_x.view(), None).map_err(|e| {
+            VisionError::LinAlgError(format!("Failed to solve for x coefficients: {}", e))
+        })?;
 
-        let coef_x = match Solve::solve(&l, &target_x) {
-            Ok(coef) => coef,
-            Err(e) => {
-                return Err(VisionError::LinAlgError(format!(
-                    "Failed to solve for x coefficients: {}",
-                    e
-                )))
-            }
-        };
+        let coef_y = solve(&l.view(), &target_y.view(), None).map_err(|e| {
+            VisionError::LinAlgError(format!("Failed to solve for y coefficients: {}", e))
+        })?;
 
-        let coef_y = match Solve::solve(&l, &target_y) {
-            Ok(coef) => coef,
-            Err(e) => {
-                return Err(VisionError::LinAlgError(format!(
-                    "Failed to solve for y coefficients: {}",
-                    e
-                )))
-            }
-        };
-        */
-
-        #[allow(unreachable_code)]
-        {
-            let coef_x = Array1::zeros(n + 3);
-            let coef_y = Array1::zeros(n + 3);
-
-            Ok(Self {
-                source_points: source_points.to_vec(),
-                target_points: target_points.to_vec(),
-                coef_x,
-                coef_y,
-                lambda,
-            })
-        }
+        Ok(Self {
+            source_points: source_points.to_vec(),
+            target_points: target_points.to_vec(),
+            coef_x,
+            coef_y,
+            lambda,
+        })
     }
 
     /// Get the regularization parameter

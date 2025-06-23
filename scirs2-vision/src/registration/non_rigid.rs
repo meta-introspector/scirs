@@ -6,7 +6,7 @@
 use crate::error::{Result, VisionError};
 use crate::registration::{identity_transform, Point2D, RegistrationParams, RegistrationResult};
 use ndarray::{Array1, Array2};
-// use ndarray_linalg::LeastSquaresSvd; // TODO: Replace with alternative
+use scirs2_linalg::lstsq;
 
 /// Thin Plate Spline transformation for non-rigid registration
 #[derive(Debug, Clone)]
@@ -72,48 +72,34 @@ impl ThinPlateSpline {
             target_y[i] = target_points[i].y;
         }
 
-        // TODO: Replace with proper least squares solver
-        // For now, return an error
-        return Err(VisionError::OperationError(
-            "TPS solve not implemented without ndarray-linalg".to_string(),
-        ));
-        /*
-        let weights_x = k_matrix
-            .least_squares(&target_x)
-            .map_err(|e| VisionError::OperationError(format!("TPS solve failed for x: {}", e)))?
-            .solution;
+        // Use scirs2-linalg's least squares solver
+        let result_x = lstsq(&k_matrix.view(), &target_x.view(), None)
+            .map_err(|e| VisionError::OperationError(format!("TPS solve failed for x: {}", e)))?;
+        let weights_x = result_x.x;
 
-        let weights_y = k_matrix
-            .least_squares(&target_y)
-            .map_err(|e| VisionError::OperationError(format!("TPS solve failed for y: {}", e)))?
-            .solution;
-        */
+        let result_y = lstsq(&k_matrix.view(), &target_y.view(), None)
+            .map_err(|e| VisionError::OperationError(format!("TPS solve failed for y: {}", e)))?;
+        let weights_y = result_y.x;
 
         // Extract weights and affine parameters
-        #[allow(unreachable_code)]
-        {
-            let weights_x = Array1::zeros(n + 3);
-            let weights_y = Array1::zeros(n + 3);
+        let mut weights = Array2::zeros((n, 2));
+        let mut affine_params = Array2::zeros((3, 2));
 
-            let mut weights = Array2::zeros((n, 2));
-            let mut affine_params = Array2::zeros((3, 2));
-
-            for i in 0..n {
-                weights[[i, 0]] = weights_x[i];
-                weights[[i, 1]] = weights_y[i];
-            }
-
-            for i in 0..3 {
-                affine_params[[i, 0]] = weights_x[n + i];
-                affine_params[[i, 1]] = weights_y[n + i];
-            }
-
-            Ok(ThinPlateSpline {
-                control_points: source_points.to_vec(),
-                weights,
-                affine_params,
-            })
+        for i in 0..n {
+            weights[[i, 0]] = weights_x[i];
+            weights[[i, 1]] = weights_y[i];
         }
+
+        for i in 0..3 {
+            affine_params[[i, 0]] = weights_x[n + i];
+            affine_params[[i, 1]] = weights_y[n + i];
+        }
+
+        Ok(ThinPlateSpline {
+            control_points: source_points.to_vec(),
+            weights,
+            affine_params,
+        })
     }
 
     /// Transform a point using the TPS transformation
@@ -222,94 +208,108 @@ pub fn register_non_rigid_regularized(
         ));
     }
 
-    // TODO: Replace with proper least squares solver
-    // For now, return an error at the start of the function
-    return Err(VisionError::OperationError(
-        "Regularized TPS solve not implemented without ndarray-linalg".to_string(),
-    ));
+    let source_pts: Vec<Point2D> = source_points
+        .iter()
+        .map(|&(x, y)| Point2D::new(x, y))
+        .collect();
 
-    #[allow(unreachable_code)]
-    {
-        let source_pts: Vec<Point2D> = source_points
-            .iter()
-            .map(|&(x, y)| Point2D::new(x, y))
-            .collect();
+    let target_pts: Vec<Point2D> = target_points
+        .iter()
+        .map(|&(x, y)| Point2D::new(x, y))
+        .collect();
 
-        let target_pts: Vec<Point2D> = target_points
-            .iter()
-            .map(|&(x, y)| Point2D::new(x, y))
-            .collect();
+    let n = source_pts.len();
 
-        let n = source_pts.len();
+    // Build regularized TPS system
+    let mut k_matrix = Array2::zeros((n + 3, n + 3));
 
-        // Build regularized TPS system
-        let mut k_matrix = Array2::zeros((n + 3, n + 3));
-
-        // Fill K matrix with regularization
-        for i in 0..n {
-            for j in 0..n {
-                if i == j {
-                    k_matrix[[i, j]] = _regularization_weight;
-                } else {
-                    let dist_sq = (source_pts[i].x - source_pts[j].x).powi(2)
-                        + (source_pts[i].y - source_pts[j].y).powi(2);
-                    if dist_sq > 0.0 {
-                        k_matrix[[i, j]] = dist_sq * (dist_sq.ln());
-                    }
+    // Fill K matrix with regularization
+    for i in 0..n {
+        for j in 0..n {
+            if i == j {
+                k_matrix[[i, j]] = _regularization_weight;
+            } else {
+                let dist_sq = (source_pts[i].x - source_pts[j].x).powi(2)
+                    + (source_pts[i].y - source_pts[j].y).powi(2);
+                if dist_sq > 0.0 {
+                    k_matrix[[i, j]] = dist_sq * (dist_sq.ln());
                 }
             }
         }
-
-        // Fill P matrix (affine part)
-        for i in 0..n {
-            k_matrix[[i, n]] = 1.0;
-            k_matrix[[i, n + 1]] = source_pts[i].x;
-            k_matrix[[i, n + 2]] = source_pts[i].y;
-
-            k_matrix[[n, i]] = 1.0;
-            k_matrix[[n + 1, i]] = source_pts[i].x;
-            k_matrix[[n + 2, i]] = source_pts[i].y;
-        }
-
-        // Create target vectors
-        let mut target_x = Array1::zeros(n + 3);
-        let mut target_y = Array1::zeros(n + 3);
-
-        for i in 0..n {
-            target_x[i] = target_pts[i].x;
-            target_y[i] = target_pts[i].y;
-        }
-
-        // TODO: Replace with proper least squares solver
-        // For now, return an error at the start of the function
-        return Err(VisionError::OperationError(
-            "Regularized TPS solve not implemented without ndarray-linalg".to_string(),
-        ));
-        /*
-        let _weights_x = k_matrix
-            .least_squares(&target_x)
-            .map_err(|e| VisionError::OperationError(format!("Regularized TPS solve failed: {}", e)))?
-            .solution;
-        */
-
-        // Calculate error (simplified for this example)
-        let mut total_error = 0.0;
-        for (i, &source_pt) in source_pts.iter().enumerate() {
-            let target_pt = target_pts[i];
-            let error =
-                ((source_pt.x - target_pt.x).powi(2) + (source_pt.y - target_pt.y).powi(2)).sqrt();
-            total_error += error;
-        }
-        let final_cost = total_error / source_pts.len() as f64;
-
-        Ok(RegistrationResult {
-            transform: identity_transform(),
-            final_cost,
-            iterations: 1,
-            converged: true,
-            inliers: (0..source_points.len()).collect(),
-        })
     }
+
+    // Fill P matrix (affine part)
+    for i in 0..n {
+        k_matrix[[i, n]] = 1.0;
+        k_matrix[[i, n + 1]] = source_pts[i].x;
+        k_matrix[[i, n + 2]] = source_pts[i].y;
+
+        k_matrix[[n, i]] = 1.0;
+        k_matrix[[n + 1, i]] = source_pts[i].x;
+        k_matrix[[n + 2, i]] = source_pts[i].y;
+    }
+
+    // Create target vectors
+    let mut target_x = Array1::zeros(n + 3);
+    let mut target_y = Array1::zeros(n + 3);
+
+    for i in 0..n {
+        target_x[i] = target_pts[i].x;
+        target_y[i] = target_pts[i].y;
+    }
+
+    // Use scirs2-linalg's least squares solver
+    let result_x = lstsq(&k_matrix.view(), &target_x.view(), None).map_err(|e| {
+        VisionError::OperationError(format!("Regularized TPS solve failed for x: {}", e))
+    })?;
+    let weights_x = result_x.x;
+
+    let result_y = lstsq(&k_matrix.view(), &target_y.view(), None).map_err(|e| {
+        VisionError::OperationError(format!("Regularized TPS solve failed for y: {}", e))
+    })?;
+    let weights_y = result_y.x;
+
+    // Extract weights and affine parameters
+    let mut weights = Array2::zeros((n, 2));
+    let mut affine_params = Array2::zeros((3, 2));
+
+    for i in 0..n {
+        weights[[i, 0]] = weights_x[i];
+        weights[[i, 1]] = weights_y[i];
+    }
+
+    affine_params[[0, 0]] = weights_x[n];
+    affine_params[[1, 0]] = weights_x[n + 1];
+    affine_params[[2, 0]] = weights_x[n + 2];
+    affine_params[[0, 1]] = weights_y[n];
+    affine_params[[1, 1]] = weights_y[n + 1];
+    affine_params[[2, 1]] = weights_y[n + 2];
+
+    // Create TPS
+    let tps = ThinPlateSpline {
+        control_points: source_pts.clone(),
+        weights,
+        affine_params,
+    };
+
+    // Calculate error
+    let mut total_error = 0.0;
+    for (i, &source_pt) in source_pts.iter().enumerate() {
+        let transformed = tps.transform_point(source_pt);
+        let target_pt = target_pts[i];
+        let error =
+            ((transformed.x - target_pt.x).powi(2) + (transformed.y - target_pt.y).powi(2)).sqrt();
+        total_error += error;
+    }
+    let final_cost = total_error / source_pts.len() as f64;
+
+    Ok(RegistrationResult {
+        transform: identity_transform(),
+        final_cost,
+        iterations: 1,
+        converged: true,
+        inliers: (0..source_points.len()).collect(),
+    })
 }
 
 #[cfg(test)]

@@ -968,7 +968,10 @@ mod tests {
             match result {
                 Err(GpuError::UnsupportedBackend(_)) => {}
                 Err(GpuError::BackendNotAvailable(_)) => {} // Also accept this error
-                Err(e) => panic!("Expected UnsupportedBackend or BackendNotAvailable error, got: {:?}", e),
+                Err(e) => panic!(
+                    "Expected UnsupportedBackend or BackendNotAvailable error, got: {:?}",
+                    e
+                ),
                 Ok(_) => panic!("Expected error, got Ok"),
             }
         }

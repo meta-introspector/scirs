@@ -60,13 +60,25 @@ pub fn detect_gpu_backends() -> GpuDetectionResult {
     }
 
     // Determine recommended backend
-    let recommended_backend = if devices.iter().any(|d: &GpuInfo| d.backend == GpuBackend::Cuda) {
+    let recommended_backend = if devices
+        .iter()
+        .any(|d: &GpuInfo| d.backend == GpuBackend::Cuda)
+    {
         GpuBackend::Cuda
-    } else if devices.iter().any(|d: &GpuInfo| d.backend == GpuBackend::Rocm) {
+    } else if devices
+        .iter()
+        .any(|d: &GpuInfo| d.backend == GpuBackend::Rocm)
+    {
         GpuBackend::Rocm
-    } else if devices.iter().any(|d: &GpuInfo| d.backend == GpuBackend::Metal) {
+    } else if devices
+        .iter()
+        .any(|d: &GpuInfo| d.backend == GpuBackend::Metal)
+    {
         GpuBackend::Metal
-    } else if devices.iter().any(|d: &GpuInfo| d.backend == GpuBackend::OpenCL) {
+    } else if devices
+        .iter()
+        .any(|d: &GpuInfo| d.backend == GpuBackend::OpenCL)
+    {
         GpuBackend::OpenCL
     } else {
         GpuBackend::Cpu
@@ -395,7 +407,10 @@ mod tests {
 
         // Should always have at least CPU fallback
         assert!(!result.devices.is_empty());
-        assert!(result.devices.iter().any(|d: &GpuInfo| d.backend == GpuBackend::Cpu));
+        assert!(result
+            .devices
+            .iter()
+            .any(|d: &GpuInfo| d.backend == GpuBackend::Cpu));
 
         // Should have a recommended backend
         match result.recommended_backend {
@@ -557,7 +572,11 @@ mod tests {
         let result = detect_gpu_backends();
 
         // If we have multiple backends, the recommended should follow preference
-        if result.devices.iter().any(|d: &GpuInfo| d.backend == GpuBackend::Cuda) {
+        if result
+            .devices
+            .iter()
+            .any(|d: &GpuInfo| d.backend == GpuBackend::Cuda)
+        {
             // If CUDA is available, it should be preferred
             let optimal = initialize_optimal_backend().unwrap();
             if result

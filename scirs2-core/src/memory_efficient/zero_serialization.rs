@@ -1437,13 +1437,14 @@ mod tests {
             assert_eq!(loaded_array[&idx], data[&idx]);
         }
 
-        // Also test reading as a flattened 1D array
-        let loaded_flat = loaded.readonly_array::<ndarray::Ix1>().unwrap();
+        // Also test reading data directly as slice
+        let loaded_slice = loaded.as_slice();
         let data_standard = data.as_standard_layout();
-        let data_flat = data_standard.to_shape(data.len()).unwrap();
+        let data_slice = data_standard.as_slice().unwrap();
 
-        for i in 0..data.len() {
-            assert_eq!(loaded_flat[i], data_flat[i]);
+        assert_eq!(loaded_slice.len(), data_slice.len());
+        for i in 0..data_slice.len() {
+            assert_eq!(loaded_slice[i], data_slice[i]);
         }
     }
 
@@ -1650,10 +1651,10 @@ mod tests {
 
         // Modify array through copy-on-write view
         {
-            let mut array = cow_mmap.as_array_mut::<ndarray::Ix2>().unwrap();
+            let mut array_view = cow_mmap.as_array_mut::<ndarray::Ix2>().unwrap();
             // Set diagonal to 100
             for i in 0..10 {
-                array[[i, i]] = 100.0;
+                array_view[[i, i]] = 100.0;
             }
         }
 

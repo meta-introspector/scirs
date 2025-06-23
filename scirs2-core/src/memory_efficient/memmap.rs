@@ -123,13 +123,29 @@ where
 {
     /// Create a new reference to the same memory-mapped file
     pub fn clone_ref(&self) -> CoreResult<Self> {
-        // Re-open the file with the same parameters
-        Self::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
-            None,
-            &self.file_path,
-            self.mode,
-            self.offset,
-        )
+        // Try to read the header to determine if this is a header-based file
+        match read_header::<A>(&self.file_path) {
+            Ok((_header, data_offset)) => {
+                // File has a header, use the proper offset
+                // Re-open with the header-aware offset
+                Self::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
+                    None,
+                    &self.file_path,
+                    self.mode,
+                    data_offset,
+                )
+            }
+            Err(_) => {
+                // No header or invalid header, assume raw file
+                // Re-open with the original offset
+                Self::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
+                    None,
+                    &self.file_path,
+                    self.mode,
+                    self.offset,
+                )
+            }
+        }
     }
     /// Validate safety preconditions and create a slice from raw parts
     ///
@@ -196,9 +212,72 @@ where
         Ok(unsafe { slice::from_raw_parts(ptr, self.size) })
     }
 
+    /// Get the underlying slice of data
+    pub fn as_slice(&self) -> &[A] {
+        match (&self.mmap_view, &self.mmap_view_mut) {
+            (Some(view), _) => {
+                let ptr = view.as_ptr() as *const A;
+                // SAFETY: The memory map is valid for the lifetime of self
+                unsafe { slice::from_raw_parts(ptr, self.size) }
+            }
+            (_, Some(view)) => {
+                let ptr = view.as_ptr() as *const A;
+                // SAFETY: The memory map is valid for the lifetime of self
+                unsafe { slice::from_raw_parts(ptr, self.size) }
+            }
+            _ => &[],
+        }
+    }
+
     /// Open an existing memory-mapped array file
-    pub fn open(file_path: &Path, _shape: &[usize]) -> Result<Self, CoreError> {
-        open_mmap::<A, IxDyn>(file_path, AccessMode::ReadOnly, 0)
+    pub fn open(file_path: &Path, shape: &[usize]) -> Result<Self, CoreError> {
+        // Calculate total elements
+        let size = shape.iter().product();
+
+        // Open the file for reading
+        let file = File::open(file_path)
+            .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
+
+        // Get file size
+        let file_metadata = file
+            .metadata()
+            .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
+        let file_size = file_metadata.len() as usize;
+
+        // Calculate expected data size
+        let element_size = mem::size_of::<A>();
+        let data_size = size * element_size;
+
+        // Check if file has enough data
+        if data_size > file_size {
+            return Err(CoreError::ValidationError(
+                ErrorContext::new(format!(
+                    "File too small for specified shape: need {} bytes, but file is only {} bytes",
+                    data_size, file_size
+                ))
+                .with_location(ErrorLocation::new(file!(), line!())),
+            ));
+        }
+
+        // Create memory mapping
+        let mmap = unsafe {
+            MmapOptions::new()
+                .len(data_size)
+                .map(&file)
+                .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?
+        };
+
+        Ok(Self {
+            shape: shape.to_vec(),
+            file_path: file_path.to_path_buf(),
+            mode: AccessMode::ReadOnly,
+            offset: 0,
+            size,
+            mmap_view: Some(mmap),
+            mmap_view_mut: None,
+            is_temp: false,
+            _phantom: PhantomData,
+        })
     }
 
     /// Create a new memory-mapped array from an existing array
@@ -534,16 +613,16 @@ where
         Ok(array)
     }
 
-    /// Get a mutable view of the array data as an ndarray Array with the given dimension
+    /// Get a mutable view of the array data as an ndarray ArrayViewMut with the given dimension
     ///
     /// # Returns
     ///
-    /// A mutable ndarray Array view of the memory-mapped data
+    /// A mutable ndarray ArrayViewMut of the memory-mapped data
     ///
     /// # Errors
     ///
     /// Returns an error if the array is in read-only mode
-    pub fn as_array_mut<D>(&mut self) -> Result<Array<A, D>, CoreError>
+    pub fn as_array_mut<D>(&mut self) -> Result<ndarray::ArrayViewMut<A, D>, CoreError>
     where
         D: Dimension,
     {
@@ -618,7 +697,7 @@ where
             // 2. ptr is properly aligned for type A
             // 3. self.size * element_size <= isize::MAX
             // 4. the memory region is valid (within the memory map bounds)
-            unsafe { slice::from_raw_parts_mut(ptr, self.size) }.to_vec()
+            unsafe { slice::from_raw_parts_mut(ptr, self.size) }
         } else {
             return Err(CoreError::ValidationError(
                 ErrorContext::new("Mutable memory map is not initialized".to_string())
@@ -626,20 +705,17 @@ where
             ));
         };
 
-        // No need to create a separate dimension object - use the from_shape_vec method on Array directly
-        // This approach works because we're not trying to use the dimension directly
-        let shape_vec = self.shape.clone();
-
-        // Create an array from the memory-mapped data
-        let array = Array::from_shape_vec(shape_vec, data_slice).map_err(|e| {
-            CoreError::ShapeError(
-                ErrorContext::new(format!("Cannot reshape data: {}", e))
-                    .with_location(ErrorLocation::new(file!(), line!())),
-            )
-        })?;
+        // Create a mutable array view from the memory-mapped data
+        let array_view = ndarray::ArrayViewMut::from_shape(self.shape.clone(), data_slice)
+            .map_err(|e| {
+                CoreError::ShapeError(
+                    ErrorContext::new(format!("Cannot reshape data: {}", e))
+                        .with_location(ErrorLocation::new(file!(), line!())),
+                )
+            })?;
 
         // Convert to the requested dimension type
-        let array = array.into_dimensionality::<D>().map_err(|e| {
+        let array_view = array_view.into_dimensionality::<D>().map_err(|e| {
             CoreError::ShapeError(
                 ErrorContext::new(format!(
                     "Failed to convert array to requested dimension type: {}",
@@ -649,7 +725,7 @@ where
             )
         })?;
 
-        Ok(array)
+        Ok(array_view)
     }
 
     /// Flush changes to disk if the array is writable

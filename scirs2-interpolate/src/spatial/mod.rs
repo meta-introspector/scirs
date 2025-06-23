@@ -70,6 +70,6 @@ pub use enhanced_search::{
     IndexType, SearchConfig,
 };
 pub use kdtree::KdTree;
-pub use optimized_search::{CacheFriendlyKNN, OptimizedSpatialSearch, SimdDistanceOps};
 #[cfg(feature = "parallel")]
 pub use optimized_search::ParallelQueryProcessor;
+pub use optimized_search::{CacheFriendlyKNN, OptimizedSpatialSearch, SimdDistanceOps};

@@ -8,7 +8,7 @@
 //! in compliance with the project-wide SIMD policy. Direct use of SIMD intrinsics is FORBIDDEN.
 
 use crate::error::{NeuralError, Result};
-use ndarray::{ArrayD, ArrayView, ArrayViewMut, IxDyn, Array1};
+use ndarray::{Array1, ArrayD, ArrayView, ArrayViewMut, IxDyn};
 #[allow(unused_imports)]
 use num_traits::{Float, FromPrimitive, Zero};
 
@@ -43,16 +43,16 @@ impl SIMDOperations {
         // Convert slice to Array1 for SIMD operations
         let arr = Array1::from_vec(slice.to_vec());
         let zero_arr = Array1::zeros(arr.len());
-        
+
         // Use unified SIMD max operation
         let result = f32::simd_max(&arr.view(), &zero_arr.view());
-        
+
         // Copy result back to slice
         for (i, &val) in result.iter().enumerate() {
             slice[i] = val;
         }
     }
-    
+
     /// Fallback ReLU implementation
     fn simd_relu_f32_slice_fallback(slice: &mut [f32]) {
         for val in slice.iter_mut() {
@@ -86,20 +86,20 @@ impl SIMDOperations {
         // For sigmoid, we need to compute 1 / (1 + exp(-x))
         // Using core SIMD operations
         let arr = Array1::from_vec(slice.to_vec());
-        
+
         // Compute -x
         let neg_arr = Array1::from_elem(arr.len(), -1.0f32);
         let neg_x = f32::simd_mul(&arr.view(), &neg_arr.view());
-        
+
         // Apply sigmoid element-wise (no direct SIMD exp available)
         let result: Array1<f32> = neg_x.mapv(|x| 1.0 / (1.0 + x.exp()));
-        
+
         // Copy result back to slice
         for (i, &val) in result.iter().enumerate() {
             slice[i] = val;
         }
     }
-    
+
     /// Fallback sigmoid implementation
     fn simd_sigmoid_f32_slice_fallback(slice: &mut [f32]) {
         for val in slice.iter_mut() {
@@ -133,13 +133,13 @@ impl SIMDOperations {
         // For tanh, we apply element-wise since no direct SIMD tanh
         let arr = Array1::from_vec(slice.to_vec());
         let result = arr.mapv(|x| x.tanh());
-        
+
         // Copy result back to slice
         for (i, &val) in result.iter().enumerate() {
             slice[i] = val;
         }
     }
-    
+
     /// Fallback tanh implementation
     fn simd_tanh_f32_slice_fallback(slice: &mut [f32]) {
         for val in slice.iter_mut() {
@@ -177,37 +177,37 @@ impl SIMDOperations {
         // GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
         // Using core SIMD for parts of the computation
         let arr = Array1::from_vec(slice.to_vec());
-        
+
         // Compute x^2 and x^3 using SIMD
         let x_sq = f32::simd_mul(&arr.view(), &arr.view());
         let x_cube = f32::simd_mul(&x_sq.view(), &arr.view());
-        
+
         // Compute 0.044715 * x^3
         let coeff2_arr = Array1::from_elem(arr.len(), 0.044715f32);
         let term2 = f32::simd_mul(&coeff2_arr.view(), &x_cube.view());
-        
+
         // Compute x + 0.044715 * x^3
         let inner1 = f32::simd_add(&arr.view(), &term2.view());
-        
+
         // Compute sqrt(2/π) * (x + 0.044715 * x^3)
         let coeff1_arr = Array1::from_elem(arr.len(), 0.797_884_6f32);
         let inner2 = f32::simd_mul(&coeff1_arr.view(), &inner1.view());
-        
+
         // Apply tanh and complete GELU computation
         let tanh_vals = inner2.mapv(|x| x.tanh());
         let one_arr = Array1::from_elem(arr.len(), 1.0f32);
         let factor = f32::simd_add(&one_arr.view(), &tanh_vals.view());
-        
+
         let half_arr = Array1::from_elem(arr.len(), 0.5f32);
         let temp = f32::simd_mul(&half_arr.view(), &arr.view());
         let result = f32::simd_mul(&temp.view(), &factor.view());
-        
+
         // Copy result back to slice
         for (i, &val) in result.iter().enumerate() {
             slice[i] = val;
         }
     }
-    
+
     /// Fallback GELU implementation
     fn simd_gelu_f32_slice_fallback(slice: &mut [f32]) {
         for val in slice.iter_mut() {
@@ -236,17 +236,17 @@ impl SIMDOperations {
     fn simd_swish_f32_slice_unified(slice: &mut [f32]) {
         // Swish(x) = x * sigmoid(x) = x / (1 + exp(-x))
         let arr = Array1::from_vec(slice.to_vec());
-        
+
         // Compute sigmoid(x) = 1 / (1 + exp(-x))
         // Since we don't have direct SIMD exp, we apply element-wise
         let result = arr.mapv(|x| x / (1.0 + (-x).exp()));
-        
+
         // Copy result back to slice
         for (i, &val) in result.iter().enumerate() {
             slice[i] = val;
         }
     }
-    
+
     /// Fallback Swish implementation
     fn simd_swish_f32_slice_fallback(slice: &mut [f32]) {
         for val in slice.iter_mut() {
@@ -292,20 +292,20 @@ impl SIMDOperations {
         let input_arr = Array1::from_vec(input.to_vec());
         let max_val = input.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
         let max_arr = Array1::from_elem(input.len(), max_val);
-        
+
         // Compute x - max using SIMD
         let shifted = f32::simd_sub(&input_arr.view(), &max_arr.view());
-        
+
         // Apply exp element-wise (no direct SIMD exp)
         let exp_arr = shifted.mapv(|x| x.exp());
-        
+
         // Sum all exp values
         let sum = f32::simd_sum(&exp_arr.view());
-        
+
         // Divide by sum using SIMD
         let sum_arr = Array1::from_elem(exp_arr.len(), sum);
         let softmax_result = f32::simd_div(&exp_arr.view(), &sum_arr.view());
-        
+
         // Copy result
         for (i, &val) in softmax_result.iter().enumerate() {
             result[i] = val;
@@ -347,24 +347,24 @@ impl SIMDOperations {
         let len = predictions.len().min(targets.len());
         let pred_arr = Array1::from_vec(predictions[..len].to_vec());
         let target_arr = Array1::from_vec(targets[..len].to_vec());
-        
+
         // Clamp predictions to [epsilon, 1-epsilon] using SIMD
         let eps_arr = Array1::from_elem(len, epsilon);
         let one_minus_eps_arr = Array1::from_elem(len, 1.0 - epsilon);
-        
+
         let clamped_lower = f32::simd_max(&pred_arr.view(), &eps_arr.view());
         let clamped_pred = f32::simd_min(&clamped_lower.view(), &one_minus_eps_arr.view());
-        
+
         // Apply ln element-wise (no direct SIMD ln)
         let log_pred = clamped_pred.mapv(|x| x.ln());
-        
+
         // Compute -target * log(pred) using SIMD
         let neg_target_arr = f32::simd_scalar_mul(&target_arr.view(), -1.0);
         let loss_values = f32::simd_mul(&neg_target_arr.view(), &log_pred.view());
-        
+
         // Sum all loss values
         let total_loss = f32::simd_sum(&loss_values.view());
-        
+
         total_loss / len as f32
     }
 
@@ -434,10 +434,10 @@ impl SIMDOperations {
         let len = a.len().min(b.len());
         let a_arr = Array1::from_vec(a[..len].to_vec());
         let b_arr = Array1::from_vec(b[..len].to_vec());
-        
+
         // Compute element-wise product using SIMD
         let product = f32::simd_mul(&a_arr.view(), &b_arr.view());
-        
+
         // Sum all products using SIMD
         f32::simd_sum(&product.view())
     }
@@ -482,10 +482,10 @@ impl SIMDOperations {
         let len = a.len().min(b.len()).min(result.len());
         let a_arr = Array1::from_vec(a[..len].to_vec());
         let b_arr = Array1::from_vec(b[..len].to_vec());
-        
+
         // Add using SIMD
         let sum = f32::simd_add(&a_arr.view(), &b_arr.view());
-        
+
         // Copy result
         for (i, &val) in sum.iter().enumerate() {
             result[i] = val;

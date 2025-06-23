@@ -249,11 +249,18 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> AdaptiveChunking<A>
         chunk_size = chunk_size.min(total_elements);
 
         // Consider dimensionality-specific adjustments
-        let (chunk_size, decision_factors) = self.optimize_for_dimensionality(chunk_size, &params)?;
+        let (chunk_size, mut decision_factors) =
+            self.optimize_for_dimensionality(chunk_size, &params)?;
 
         // Factor in parallel processing if requested
         let (chunk_size, decision_factors) = if params.optimize_for_parallel {
-            self.optimize_for_parallel_processing(chunk_size, decision_factors, &params)
+            let (parallel_chunk_size, parallel_factors) =
+                self.optimize_for_parallel_processing(chunk_size, decision_factors, &params);
+            // Re-apply dimensionality optimization after parallel adjustment
+            let (final_chunk_size, mut final_factors) =
+                self.optimize_for_dimensionality(parallel_chunk_size, &params)?;
+            final_factors.extend(parallel_factors);
+            (final_chunk_size, final_factors)
         } else {
             (chunk_size, decision_factors)
         };
@@ -355,16 +362,35 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedArray<A>
                 // For 2D arrays, try to align with rows when possible
                 let row_length = self.shape[1];
 
-                if chunk_size >= row_length && chunk_size % row_length != 0 {
-                    // Adjust to a multiple of row length for better cache behavior using checked arithmetic
-                    let new_size = (chunk_size / row_length)
-                        .checked_mul(row_length)
-                        .unwrap_or(chunk_size); // Fallback to original size on overflow
-                    if new_size >= params.min_chunk_size {
-                        chunk_size = new_size;
+                if chunk_size >= row_length {
+                    // If chunk size is larger than row length, adjust to be a multiple
+                    if chunk_size % row_length != 0 {
+                        // Adjust to a multiple of row length for better cache behavior using checked arithmetic
+                        let new_size = (chunk_size / row_length)
+                            .checked_mul(row_length)
+                            .unwrap_or(chunk_size); // Fallback to original size on overflow
+                        if new_size >= params.min_chunk_size {
+                            chunk_size = new_size;
+                            decision_factors.push(format!(
+                                "2D array: Adjusted chunk size to {} (multiple of row length {})",
+                                chunk_size, row_length
+                            ));
+                        }
+                    }
+                } else {
+                    // If chunk size is smaller than row length, round up to row length
+                    // to ensure we process complete rows
+                    if row_length <= params.max_chunk_size {
+                        chunk_size = row_length;
                         decision_factors.push(format!(
-                            "2D array: Adjusted chunk size to {} (multiple of row length {})",
-                            chunk_size, row_length
+                            "2D array: Adjusted chunk size to row length {}",
+                            row_length
+                        ));
+                    } else {
+                        // Row length exceeds max chunk size, keep original chunk size
+                        decision_factors.push(format!(
+                            "2D array: Row length {} exceeds max chunk size, keeping chunk size {}",
+                            row_length, chunk_size
                         ));
                     }
                 }
