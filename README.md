@@ -66,6 +66,7 @@ SciRS2 adopts a modular architecture with separate crates for different function
 # Core Scientific Computing Modules
 ├── Cargo.toml                # Workspace configuration
 ├── scirs2-core/              # Core utilities and common functionality
+├── scirs2-autograd/          # Automatic differentiation engine
 ├── scirs2-linalg/            # Linear algebra module
 ├── scirs2-integrate/         # Numerical integration
 ├── scirs2-interpolate/       # Interpolation algorithms
@@ -84,7 +85,6 @@ SciRS2 adopts a modular architecture with separate crates for different function
 ├── scirs2-datasets/          # Sample datasets and loaders
 
 # AI/ML Modules
-├── scirs2-autograd/          # Automatic differentiation engine
 ├── scirs2-neural/            # Neural network building blocks
 ├── scirs2-optim/             # ML-specific optimization algorithms
 ├── scirs2-graph/             # Graph processing algorithms
@@ -182,6 +182,7 @@ Each module has its own README with detailed documentation and is available on c
 ### Core Modules
 - [**scirs2-core**](scirs2-core/README.md): Core utilities and common functionality [![crates.io](https://img.shields.io/crates/v/scirs2-core.svg)](https://crates.io/crates/scirs2-core)
 - [**scirs2-linalg**](scirs2-linalg/README.md): Linear algebra module [![crates.io](https://img.shields.io/crates/v/scirs2-linalg.svg)](https://crates.io/crates/scirs2-linalg)
+- [**scirs2-autograd**](scirs2-autograd/README.md): Automatic differentiation engine [![crates.io](https://img.shields.io/crates/v/scirs2-autograd.svg)](https://crates.io/crates/scirs2-autograd)
 - [**scirs2-integrate**](scirs2-integrate/README.md): Numerical integration [![crates.io](https://img.shields.io/crates/v/scirs2-integrate.svg)](https://crates.io/crates/scirs2-integrate)
 - [**scirs2-interpolate**](scirs2-interpolate/README.md): Interpolation algorithms [![crates.io](https://img.shields.io/crates/v/scirs2-interpolate.svg)](https://crates.io/crates/scirs2-interpolate)
 - [**scirs2-optimize**](scirs2-optimize/README.md): Optimization algorithms [![crates.io](https://img.shields.io/crates/v/scirs2-optimize.svg)](https://crates.io/crates/scirs2-optimize)
@@ -199,7 +200,6 @@ Each module has its own README with detailed documentation and is available on c
 - [**scirs2-datasets**](scirs2-datasets/README.md): Sample datasets and loaders [![crates.io](https://img.shields.io/crates/v/scirs2-datasets.svg)](https://crates.io/crates/scirs2-datasets)
 
 ### AI/ML Modules
-- [**scirs2-autograd**](scirs2-autograd/README.md): Automatic differentiation engine [![crates.io](https://img.shields.io/crates/v/scirs2-autograd.svg)](https://crates.io/crates/scirs2-autograd)
 - [**scirs2-neural**](scirs2-neural/README.md): Neural network building blocks [![crates.io](https://img.shields.io/crates/v/scirs2-neural.svg)](https://crates.io/crates/scirs2-neural)
 - [**scirs2-optim**](scirs2-optim/README.md): ML-specific optimization algorithms [![crates.io](https://img.shields.io/crates/v/scirs2-optim.svg)](https://crates.io/crates/scirs2-optim)
 - [**scirs2-graph**](scirs2-graph/README.md): Graph processing algorithms [![crates.io](https://img.shields.io/crates/v/scirs2-graph.svg)](https://crates.io/crates/scirs2-graph)
