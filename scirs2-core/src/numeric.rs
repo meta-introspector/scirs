@@ -747,6 +747,16 @@ pub mod precision_tracking;
 /// Specialized numeric types for scientific domains
 pub mod scientific_types;
 
+/// Arbitrary precision numerical computation support
+#[cfg(feature = "arbitrary-precision")]
+pub mod arbitrary_precision;
+
+/// Numerical stability improvements
+pub mod stability;
+
+/// Stable numerical algorithms
+pub mod stable_algorithms;
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -4,7 +4,7 @@ use ndarray::{Array, Array1, Array2, Dimension, Ix2, IxDyn};
 
 use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, Result};
-use scirs2_core::{parallel, CoreError};
+use scirs2_core::{parallel_ops, CoreError};
 
 /// Apply a gaussian filter to an n-dimensional array of f64 values
 ///
@@ -489,7 +489,7 @@ where
         };
 
         // Use parallel_map from scirs2-core for parallel processing
-        let results = parallel::parallel_map(&indices, parallel_convolve)?;
+        let results = parallel_ops::parallel_map_result(&indices, parallel_convolve)?;
 
         // Apply results to output array
         for (pos, value) in results {

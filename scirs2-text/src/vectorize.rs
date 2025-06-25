@@ -7,7 +7,7 @@ use crate::error::{Result, TextError};
 use crate::tokenize::{Tokenizer, WordTokenizer};
 use crate::vocabulary::Vocabulary;
 use ndarray::{Array1, Array2, Axis};
-use scirs2_core::parallel;
+use scirs2_core::parallel_ops;
 use std::collections::HashMap;
 
 /// Trait for text vectorizers
@@ -148,7 +148,7 @@ impl Vectorizer for CountVectorizer {
         let texts_owned: Vec<String> = texts.iter().map(|&s| s.to_string()).collect();
         let self_clone = self.clone();
 
-        let vectors = parallel::parallel_map(&texts_owned, move |text| {
+        let vectors = parallel_ops::parallel_map_result(&texts_owned, move |text| {
             self_clone.transform(text).map_err(|e| {
                 // Convert TextError to CoreError
                 scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(

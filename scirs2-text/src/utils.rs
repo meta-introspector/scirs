@@ -4,7 +4,7 @@
 
 use crate::error::{Result, TextError};
 use crate::tokenize::Tokenizer;
-use scirs2_core::parallel;
+use scirs2_core::parallel_ops;
 use std::collections::HashMap;
 
 /// Count the frequency of tokens in a text
@@ -77,7 +77,7 @@ where
     let texts_owned: Vec<String> = texts.iter().map(|&s| s.to_string()).collect();
     let tokenizer_boxed = tokenizer.clone_box();
 
-    let token_counts = parallel::parallel_map(&texts_owned, move |text| {
+    let token_counts = parallel_ops::parallel_map_result(&texts_owned, move |text| {
         count_tokens(text, &*tokenizer_boxed).map_err(|e| {
             // Convert TextError to CoreError
             scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(

@@ -314,7 +314,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static> Gamma<F> {
         }
 
         // For larger sample sizes, use parallel implementation with scirs2-core's parallel module
-        use scirs2_core::parallel::parallel_map;
+        use scirs2_core::parallel_ops::parallel_map;
 
         // Clone distribution parameters for thread safety
         let shape_f64 = <f64 as NumCast>::from(self.shape).unwrap();
@@ -329,11 +329,8 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static> Gamma<F> {
             let mut rng = rand::rng();
             let rand_distr = RandGamma::new(shape_f64, 1.0 / scale_f64).unwrap();
             let sample = rand_distr.sample(&mut rng);
-            Ok(F::from(sample).unwrap() + loc)
-        })
-        .map_err(|e| {
-            StatsError::ComputationError(format!("Failed to generate samples in parallel: {}", e))
-        })?;
+            F::from(sample).unwrap() + loc
+        });
 
         Ok(samples)
     }

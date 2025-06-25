@@ -9,8 +9,11 @@ use std::fmt::Debug;
 
 #[cfg(feature = "simd")]
 // SIMD functions are imported on-demand where needed
+
+// Import parallel_map 
+// Note: This is conditional on whether scirs2_core was built with parallel feature
 #[cfg(feature = "parallel")]
-use scirs2_core::parallel::parallel_map;
+use scirs2_core::parallel_ops::parallel_map;
 
 use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, Result};

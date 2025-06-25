@@ -718,7 +718,8 @@ where
     {
         if let Some(num_workers) = workers {
             // Set thread pool size
-            let pool = scirs2_core::parallel_ops::ThreadPoolBuilder::new()
+            use scirs2_core::parallel_ops::ThreadPoolBuilder;
+            let pool = ThreadPoolBuilder::new()
                 .num_threads(num_workers)
                 .build()
                 .map_err(|_| {

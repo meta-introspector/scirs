@@ -17,7 +17,7 @@ use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
 #[cfg(feature = "parallel")]
-use scirs2_core::parallel_ops::*;
+use scirs2_core::parallel_ops::{*, ThreadPoolBuilder};
 
 /// Options for parallel Monte Carlo integration
 #[derive(Debug, Clone)]

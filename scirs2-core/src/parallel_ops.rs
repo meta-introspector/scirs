@@ -20,6 +20,10 @@
 #[cfg(feature = "parallel")]
 pub use rayon::prelude::*;
 
+// Re-export ThreadPoolBuilder and ThreadPool when parallel is enabled
+#[cfg(feature = "parallel")]
+pub use rayon::{ThreadPoolBuilder, ThreadPool};
+
 // When parallel is disabled, provide sequential fallbacks
 #[cfg(not(feature = "parallel"))]
 mod sequential_fallbacks {
@@ -215,6 +219,49 @@ pub fn par_chunks_mut<T: Send>(
 #[cfg(not(feature = "parallel"))]
 pub fn par_chunks_mut<T>(slice: &mut [T], chunk_size: usize) -> std::slice::ChunksMut<'_, T> {
     slice.chunks_mut(chunk_size)
+}
+
+/// Simple parallel map function that returns Result type
+#[cfg(feature = "parallel")]
+pub fn parallel_map<T, U, F>(items: &[T], f: F) -> Vec<U>
+where
+    T: Sync,
+    U: Send,
+    F: Fn(&T) -> U + Sync + Send,
+{
+    use rayon::prelude::*;
+    items.par_iter().map(f).collect()
+}
+
+/// Sequential fallback for parallel_map
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_map<T, U, F>(items: &[T], f: F) -> Vec<U>
+where
+    F: Fn(&T) -> U,
+{
+    items.iter().map(f).collect()
+}
+
+/// Parallel map function that handles Results
+#[cfg(feature = "parallel")]
+pub fn parallel_map_result<T, U, E, F>(items: &[T], f: F) -> Result<Vec<U>, E>
+where
+    T: Sync,
+    U: Send,
+    E: Send,
+    F: Fn(&T) -> Result<U, E> + Sync + Send,
+{
+    use rayon::prelude::*;
+    items.par_iter().map(f).collect()
+}
+
+/// Sequential fallback for parallel_map_result
+#[cfg(not(feature = "parallel"))]
+pub fn parallel_map_result<T, U, E, F>(items: &[T], f: F) -> Result<Vec<U>, E>
+where
+    F: Fn(&T) -> Result<U, E>,
+{
+    items.iter().map(f).collect()
 }
 
 /// Check if parallel processing is available

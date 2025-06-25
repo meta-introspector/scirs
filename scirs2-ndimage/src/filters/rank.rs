@@ -2,7 +2,7 @@
 
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::{Float, FromPrimitive, Zero};
-use scirs2_core::{parallel, simd, CoreError};
+use scirs2_core::{parallel_ops, simd, CoreError};
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
@@ -357,7 +357,7 @@ where
         };
 
         let indices: Vec<usize> = (0..input.len()).collect();
-        let parallel_results = parallel::parallel_map(&indices, process_window)?;
+        let parallel_results = parallel_ops::parallel_map_result(&indices, process_window)?;
 
         // Copy the results to the output array
         for (i, val) in parallel_results.iter().enumerate() {
@@ -670,7 +670,7 @@ where
         };
 
         let indices: Vec<usize> = (0..input.len()).collect();
-        let results = parallel::parallel_map(&indices, process_window)?;
+        let results = parallel_ops::parallel_map_result(&indices, process_window)?;
 
         // Apply results to output array
         for (idx, val) in results {
@@ -749,7 +749,7 @@ where
         };
 
         let row_indices: Vec<usize> = (0..rows).collect();
-        let results = parallel::parallel_map(&row_indices, process_row)?;
+        let results = parallel_ops::parallel_map_result(&row_indices, process_row)?;
 
         // Copy the results to the output array
         for (i, row) in results.iter().enumerate() {

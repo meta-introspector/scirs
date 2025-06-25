@@ -72,6 +72,12 @@ objc2-metal-performance-shaders = { workspace = true, optional = true }  # MPS i
 reqwest = { workspace = true, optional = true }  # HTTP client for tracing export
 sha2 = { workspace = true, optional = true }  # Cryptographic hash functions
 
+# Arbitrary precision dependencies
+num-bigint = { workspace = true, optional = true }  # Arbitrary precision integers
+num-rational = { workspace = true, optional = true }  # Exact rational arithmetic
+rug = { workspace = true, optional = true }  # High-performance arbitrary precision
+gmp-mpfr-sys = { workspace = true, optional = true }  # Low-level GMP/MPFR bindings
+
 # Platform-specific BLAS backend configuration
 # macOS: Use Accelerate framework by default (when linalg feature is enabled)
 [target.'cfg(target_os = "macos")'.dependencies]
@@ -157,11 +163,12 @@ crypto = []  # Cryptographic features (placeholder)
 compression = ["flate2"]  # Compression support
 database = []  # Database integration features
 production = ["observability", "versioning", "leak_detection", "data_validation"]  # All production features
+arbitrary-precision = ["num-bigint", "num-rational", "rug", "gmp-mpfr-sys"]  # Arbitrary precision arithmetic
 all = [
     "simd", "parallel", "cache", "validation", "logging",
     "gpu", "cuda", "memory_management", "memory_efficient", "memory_compression",
     "array", "profiling", "random", "types", "ufuncs", "testing", "benchmarking",
-    "array_protocol_all", "production"
+    "array_protocol_all", "production", "arbitrary-precision"
 ]  # Enable all features except mutually exclusive BLAS backends
 # NOTE: BLAS backends (openblas, intel-mkl, netlib) are mutually exclusive
 # Use --features openblas (default), --features intel-mkl, or --features netlib
@@ -461,4 +468,14 @@ harness = false
 [[example]]
 name = "parallel_ops_example"
 path = "examples/parallel_ops_example.rs"
+required-features = ["parallel"]
+
+[[example]]
+name = "arbitrary_precision_example"
+path = "examples/arbitrary_precision_example.rs"
+required-features = ["arbitrary-precision"]
+
+[[example]]
+name = "advanced_parallel_processing"
+path = "examples/advanced_parallel_processing.rs"
 required-features = ["parallel"]

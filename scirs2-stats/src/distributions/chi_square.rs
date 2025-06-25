@@ -259,7 +259,7 @@ impl<F: Float + NumCast + Send + Sync + 'static> ChiSquare<F> {
         }
 
         // For larger sample sizes, use parallel implementation with scirs2-core's parallel module
-        use scirs2_core::parallel::parallel_map;
+        use scirs2_core::parallel_ops::parallel_map;
 
         // Clone distribution parameters for thread safety
         let df_f64 = <f64 as NumCast>::from(self.df).unwrap();
@@ -274,11 +274,8 @@ impl<F: Float + NumCast + Send + Sync + 'static> ChiSquare<F> {
             let mut rng = rand::rng();
             let rand_distr = RandChiSquared::new(df_f64).unwrap();
             let sample = rand_distr.sample(&mut rng);
-            Ok(F::from(sample).unwrap() * scale + loc)
-        })
-        .map_err(|e| {
-            StatsError::ComputationError(format!("Failed to generate samples in parallel: {}", e))
-        })?;
+            F::from(sample).unwrap() * scale + loc
+        });
 
         Ok(samples)
     }

@@ -1,10 +1,16 @@
 //! Advanced parallel processing and scheduling
 //!
-//! This module re-exports all functionality from the main parallel.rs file
-//! and adds a work-stealing scheduler for more efficient thread utilization.
+//! This module provides comprehensive parallel processing capabilities including:
+//! - Work-stealing scheduler for efficient thread utilization
+//! - Custom partitioning strategies for different data distributions
+//! - Nested parallelism with controlled resource usage
+//! - Load balancing and adaptive scheduling
 
 mod scheduler;
+mod partitioning;
+mod nested;
 
+// Re-export scheduler functionality
 pub use scheduler::{
     create_work_stealing_scheduler, create_work_stealing_scheduler_with_workers, get_worker_id,
     CloneableTask, ParallelTask, SchedulerConfig, SchedulerConfigBuilder, SchedulerStats,
@@ -12,5 +18,19 @@ pub use scheduler::{
     WorkStealingScheduler,
 };
 
-// Re-export the parallel_map function from the scheduler module
-pub use self::scheduler::parallel::par_map as parallel_map;
+// Re-export partitioning functionality
+pub use partitioning::{
+    DataDistribution, PartitionStrategy, PartitionerConfig, DataPartitioner,
+    LoadBalancer,
+};
+
+// Re-export nested parallelism functionality
+pub use nested::{
+    ResourceLimits, NestedContext, ResourceManager, ResourceUsageStats,
+    NestedScope, NestedPolicy, NestedConfig,
+    nested_scope, nested_scope_with_limits, with_nested_policy,
+    current_nesting_level, is_nested_parallelism_allowed,
+    adaptive_par_for_each, adaptive_par_map,
+};
+
+// Note: parallel_map is now provided by parallel_ops module for simpler usage
