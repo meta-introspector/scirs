@@ -9,7 +9,8 @@
 
 use crate::error::{IoError, Result};
 use crate::image::{ColorMode, ImageData, ImageFormat};
-use ndarray::Array3;
+use ndarray::{Array3, ArrayView1, ArrayViewMut1};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -316,15 +317,57 @@ impl EnhancedImageProcessor {
 
         let mut gray_data = Array3::zeros((height, width, 3));
 
+        // Process image in rows for better cache locality and SIMD efficiency
         for y in 0..height {
+            // Extract row data for SIMD processing
+            let row_size = width * 3;
+            let mut r_values = vec![0f32; width];
+            let mut g_values = vec![0f32; width];
+            let mut b_values = vec![0f32; width];
+            
+            // Extract RGB values for the entire row
             for x in 0..width {
-                let r = image.data[[y, x, 0]] as f32;
-                let g = image.data[[y, x, 1]] as f32;
-                let b = image.data[[y, x, 2]] as f32;
-
-                // Use luminance formula: 0.299*R + 0.587*G + 0.114*B
-                let gray = (0.299 * r + 0.587 * g + 0.114 * b) as u8;
-
+                r_values[x] = image.data[[y, x, 0]] as f32;
+                g_values[x] = image.data[[y, x, 1]] as f32;
+                b_values[x] = image.data[[y, x, 2]] as f32;
+            }
+            
+            // Create coefficient arrays for SIMD multiplication
+            let r_coeff = vec![0.299f32; width];
+            let g_coeff = vec![0.587f32; width];
+            let b_coeff = vec![0.114f32; width];
+            
+            // Use SIMD operations for luminance calculation
+            // First multiply each channel by its coefficient
+            let mut r_weighted = vec![0f32; width];
+            let mut g_weighted = vec![0f32; width];
+            let mut b_weighted = vec![0f32; width];
+            
+            let r_values_view = ArrayView1::from(&r_values);
+            let g_values_view = ArrayView1::from(&g_values);
+            let b_values_view = ArrayView1::from(&b_values);
+            let r_coeff_view = ArrayView1::from(&r_coeff);
+            let g_coeff_view = ArrayView1::from(&g_coeff);
+            let b_coeff_view = ArrayView1::from(&b_coeff);
+            
+            f32::simd_mul(&r_values_view, &r_coeff_view, &mut ArrayViewMut1::from(&mut r_weighted));
+            f32::simd_mul(&g_values_view, &g_coeff_view, &mut ArrayViewMut1::from(&mut g_weighted));
+            f32::simd_mul(&b_values_view, &b_coeff_view, &mut ArrayViewMut1::from(&mut b_weighted));
+            
+            // Add the weighted values together
+            let mut gray_values = vec![0f32; width];
+            let r_weighted_view = ArrayView1::from(&r_weighted);
+            let g_weighted_view = ArrayView1::from(&g_weighted);
+            let b_weighted_view = ArrayView1::from(&b_weighted);
+            
+            f32::simd_add(&r_weighted_view, &g_weighted_view, &mut ArrayViewMut1::from(&mut gray_values));
+            let gray_values_view = ArrayView1::from(&gray_values);
+            let mut gray_values_final = gray_values.clone();
+            f32::simd_add(&gray_values_view, &b_weighted_view, &mut ArrayViewMut1::from(&mut gray_values_final));
+            
+            // Store the grayscale values back to the output array
+            for x in 0..width {
+                let gray = gray_values_final[x].clamp(0.0, 255.0) as u8;
                 gray_data[[y, x, 0]] = gray;
                 gray_data[[y, x, 1]] = gray;
                 gray_data[[y, x, 2]] = gray;

@@ -21,6 +21,7 @@ mod gaussian;
 mod generic;
 mod median;
 mod memory_efficient;
+mod memory_efficient_v2;
 mod rank;
 mod tests;
 mod uniform;

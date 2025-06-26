@@ -3,6 +3,17 @@
 //! SLIC is a superpixel algorithm that clusters pixels in the combined
 //! five-dimensional color and image plane space to efficiently generate
 //! compact, nearly uniform superpixels.
+//!
+//! # Performance Characteristics
+//!
+//! - Time complexity: O(N) where N is the number of pixels (linear in image size)
+//! - Space complexity: O(N + K) where K is the number of superpixels
+//! - The algorithm typically converges in 10 iterations
+//! - Search region is limited to 2S × 2S area around each cluster center (where S = sqrt(N/K))
+//!
+//! # References
+//!
+//! - Achanta, R., Shaji, A., Smith, K., Lucchi, A., Fua, P. and Süsstrunk, S., 2012. SLIC superpixels compared to state-of-the-art superpixel methods. IEEE transactions on pattern analysis and machine intelligence, 34(11), pp.2274-2282.
 
 use crate::error::{Result, VisionError};
 use image::{DynamicImage, RgbImage};

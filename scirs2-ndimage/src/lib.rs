@@ -6,12 +6,15 @@
 // Public modules
 pub mod backend;
 pub mod chunked;
+pub mod chunked_v2;
+pub mod domain_specific;
 pub mod error;
 pub mod features;
 pub mod filters;
 pub mod interpolation;
 pub mod measurements;
 pub mod memory_management;
+pub mod mmap_io;
 pub mod morphology;
 pub mod segmentation;
 pub mod streaming;
@@ -22,12 +25,26 @@ pub use self::error::*;
 
 // Feature detection module exports
 pub use self::features::{
-    canny, edge_detector, edge_detector_simple, fast_corners, gradient_edges, harris_corners,
-    laplacian_edges, sobel_edges, EdgeDetectionAlgorithm, EdgeDetectionConfig, GradientMethod,
+    canny,
+    edge_detector,
+    edge_detector_simple,
+    fast_corners,
+    gradient_edges,
+    harris_corners,
+    laplacian_edges,
+    sobel_edges,
+    BatchNormParams,
+    EdgeDetectionAlgorithm,
+    EdgeDetectionConfig,
+    FeatureDetectorWeights,
+    GradientMethod,
     // Machine learning-based detection
-    LearnedEdgeDetector, LearnedKeypointDescriptor, SemanticFeatureExtractor,
-    ObjectProposalGenerator, ObjectProposal, MLDetectorConfig,
-    FeatureDetectorWeights, BatchNormParams,
+    LearnedEdgeDetector,
+    LearnedKeypointDescriptor,
+    MLDetectorConfig,
+    ObjectProposal,
+    ObjectProposalGenerator,
+    SemanticFeatureExtractor,
 };
 
 // Filters module exports
@@ -43,14 +60,27 @@ pub use self::filters::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
 // Segmentation module exports
 pub use self::segmentation::{
-    adaptive_threshold, marker_watershed, otsu_threshold, threshold_binary, watershed,
-    AdaptiveMethod,
+    active_contour,
+    adaptive_threshold,
+    chan_vese,
+    chan_vese_multiphase,
+    checkerboard_level_set,
+    create_circle_contour,
+    create_ellipse_contour,
     // Advanced segmentation algorithms
-    graph_cuts, GraphCutsParams, InteractiveGraphCuts,
-    active_contour, create_circle_contour, create_ellipse_contour, 
-    mask_to_contour, smooth_contour, ActiveContourParams,
-    chan_vese, chan_vese_multiphase, mask_to_level_set, 
-    checkerboard_level_set, ChanVeseParams,
+    graph_cuts,
+    marker_watershed,
+    mask_to_contour,
+    mask_to_level_set,
+    otsu_threshold,
+    smooth_contour,
+    threshold_binary,
+    watershed,
+    ActiveContourParams,
+    AdaptiveMethod,
+    ChanVeseParams,
+    GraphCutsParams,
+    InteractiveGraphCuts,
 };
 
 // Interpolation module exports
@@ -98,4 +128,17 @@ pub use self::threading::{
 // Streaming exports
 pub use self::streaming::{
     stream_process_file, StreamConfig, StreamProcessor, StreamableOp, StreamingGaussianFilter,
+};
+
+// Domain-specific imaging exports
+pub use self::domain_specific::{
+    medical::{
+        detect_lung_nodules, enhance_bone_structure, frangi_vesselness, Nodule,
+        VesselEnhancementParams,
+    },
+    microscopy::{
+        colocalization_analysis, detect_nuclei, segment_cells, CellInfo, CellSegmentationParams,
+        ColocalizationMetrics, ThresholdMethod,
+    },
+    satellite::{compute_ndvi, detect_clouds, detect_water_bodies, pan_sharpen, PanSharpenMethod},
 };

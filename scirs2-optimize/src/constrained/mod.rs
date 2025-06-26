@@ -5,8 +5,7 @@
 //!
 //! ## Example
 //!
-//! ```ignore
-//! # FIXME: This doctest requires LAPACK libraries to be linked
+//! ```no_run
 //! use ndarray::{array, Array1};
 //! use scirs2_optimize::constrained::{minimize_constrained, Method, Constraint};
 //!
@@ -37,6 +36,8 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! Note: This function requires LAPACK libraries to be linked for certain optimization methods.
 
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
@@ -215,8 +216,7 @@ impl<F> Constraint<F> {
 ///
 /// # Example
 ///
-/// ```ignore
-/// # FIXME: This doctest requires LAPACK libraries to be linked
+/// ```no_run
 /// use ndarray::array;
 /// use scirs2_optimize::constrained::{minimize_constrained, Method, Constraint};
 ///

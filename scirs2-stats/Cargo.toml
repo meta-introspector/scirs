@@ -38,3 +38,15 @@ default = []
 openblas = ["scirs2-core/openblas"]
 intel-mkl = ["scirs2-core/intel-mkl"]
 netlib = ["scirs2-core/netlib"]
+
+[[bench]]
+name = "distributions"
+harness = false
+
+[[bench]]
+name = "statistical_tests"
+harness = false
+
+[[bench]]
+name = "scipy_comparison"
+harness = false

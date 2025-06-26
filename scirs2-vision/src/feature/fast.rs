@@ -3,6 +3,10 @@
 //! FAST is a corner detection method designed to be computational efficient
 //! while maintaining good detection quality. It examines a circle of pixels
 //! around a candidate point to determine if it's a corner.
+//!
+//! # References
+//!
+//! - Rosten, E. and Drummond, T., 2006, May. Machine learning for high-speed corner detection. In European conference on computer vision (pp. 430-443). Springer, Berlin, Heidelberg.
 
 use crate::error::Result;
 use crate::feature::image_to_array;

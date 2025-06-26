@@ -132,8 +132,8 @@ impl ThinPlateSpline {
             target_y[i] = target_points[i].1;
         }
 
-        // TODO: Replace with proper linear solver
-        // For now, return an error
+        // This functionality is currently disabled as it requires linear algebra solvers
+        // The code is preserved for future implementation when appropriate dependencies are available
         return Err(VisionError::LinAlgError(
             "TPS solve not implemented without ndarray-linalg".to_string(),
         ));

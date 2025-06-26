@@ -13,6 +13,7 @@
 
 use ndarray::{Array, Array2, ArrayBase, IxDyn};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
@@ -1195,4 +1196,131 @@ where
     A: for<'de> Deserialize<'de> + Clone,
 {
     deserialize_array(path, SerializationFormat::MessagePack)
+}
+
+/// Zero-copy serialization of contiguous arrays
+///
+/// This function provides efficient serialization of contiguous arrays
+/// without intermediate copying. It writes data directly from the array's
+/// memory layout to the output file.
+///
+/// # Arguments
+///
+/// * `path` - Path to the output file
+/// * `array` - Array to serialize (must be in standard layout)
+/// * `format` - Serialization format
+///
+/// # Returns
+///
+/// * `Result<()>` - Success or error
+///
+/// # Note
+///
+/// This function requires the array to be in standard (C-contiguous) layout.
+/// For non-contiguous arrays, use the regular `serialize_array` function.
+pub fn serialize_array_zero_copy<P, A, S>(
+    path: P,
+    array: &ArrayBase<S, IxDyn>,
+    format: SerializationFormat,
+) -> Result<()>
+where
+    P: AsRef<Path>,
+    A: Serialize + bytemuck::Pod,
+    S: ndarray::Data<Elem = A>,
+{
+    if !array.is_standard_layout() {
+        return Err(IoError::FormatError(
+            "Array must be in standard layout for zero-copy serialization".to_string(),
+        ));
+    }
+
+    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let mut writer = BufWriter::new(file);
+
+    // Write metadata header
+    let shape = array.shape().to_vec();
+    let metadata = ArrayMetadata {
+        shape: shape.clone(),
+        dtype: std::any::type_name::<A>().to_string(),
+        order: 'C',
+        metadata: HashMap::new(),
+    };
+
+    match format {
+        SerializationFormat::Binary => {
+            // Write metadata
+            bincode::serialize_into(&mut writer, &metadata)
+                .map_err(|e| IoError::SerializationError(e.to_string()))?;
+
+            // Write data directly from array memory
+            if let Some(slice) = array.as_slice() {
+                let bytes = bytemuck::cast_slice(slice);
+                writer
+                    .write_all(bytes)
+                    .map_err(|e| IoError::FileError(e.to_string()))?;
+            }
+        }
+        _ => {
+            // For non-binary formats, fall back to regular serialization
+            // as they require element-by-element conversion
+            return serialize_array(path, array, format);
+        }
+    }
+
+    writer
+        .flush()
+        .map_err(|e| IoError::FileError(e.to_string()))?;
+    Ok(())
+}
+
+/// Zero-copy deserialization into a memory-mapped array view
+///
+/// This function provides efficient deserialization by memory-mapping
+/// the file and returning a view into the mapped memory, avoiding
+/// data copying entirely.
+///
+/// # Arguments
+///
+/// * `path` - Path to the input file
+///
+/// # Returns
+///
+/// * `Result<(ArrayMetadata, memmap2::Mmap)>` - Metadata and memory map
+///
+/// # Safety
+///
+/// The returned memory map must outlive any array views created from it.
+pub fn deserialize_array_zero_copy<P>(
+    path: P,
+) -> Result<(ArrayMetadata, memmap2::Mmap)>
+where
+    P: AsRef<Path>,
+{
+    use std::io::Read;
+    
+    let mut file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+    
+    // Read metadata size hint (first 8 bytes)
+    let mut size_buf = [0u8; 8];
+    file.read_exact(&mut size_buf)
+        .map_err(|e| IoError::FileError(e.to_string()))?;
+    let metadata_size = u64::from_le_bytes(size_buf) as usize;
+    
+    // Read metadata
+    let mut metadata_buf = vec![0u8; metadata_size];
+    file.read_exact(&mut metadata_buf)
+        .map_err(|e| IoError::FileError(e.to_string()))?;
+    
+    let metadata: ArrayMetadata = bincode::deserialize(&metadata_buf)
+        .map_err(|e| IoError::DeserializationError(e.to_string()))?;
+    
+    // Memory-map the rest of the file (data portion)
+    let mmap = unsafe {
+        memmap2::MmapOptions::new()
+            .offset(8 + metadata_size as u64)
+            .map(&file)
+            .map_err(|e| IoError::FileError(e.to_string()))?
+    };
+    
+    Ok((metadata, mmap))
 }

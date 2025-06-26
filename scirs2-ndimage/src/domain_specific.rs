@@ -1,0 +1,884 @@
+//! Domain-specific imaging functions
+//!
+//! This module provides specialized image processing functions for different domains:
+//! medical imaging, satellite/remote sensing, and microscopy.
+
+use ndarray::{Array2, Array3, ArrayView2, ArrayView3, Axis};
+use num_traits::{Float, FromPrimitive};
+use std::fmt::Debug;
+
+use crate::error::{NdimageError, NdimageResult};
+use crate::filters::{gaussian_filter, median_filter, uniform_filter, BorderMode};
+use crate::interpolation::{rotate, zoom, InterpolationOrder};
+use crate::measurements::{center_of_mass, label, moments};
+use crate::morphology::{binary_closing, binary_opening, grey_dilation, grey_erosion};
+
+/// Medical imaging functions
+pub mod medical {
+    use super::*;
+
+    /// Parameters for vessel enhancement
+    #[derive(Clone, Debug)]
+    pub struct VesselEnhancementParams {
+        /// Scales at which to compute vesselness
+        pub scales: Vec<f64>,
+        /// Frangi filter parameters
+        pub alpha: f64, // Plate-like structures suppression
+        pub beta: f64,  // Blob-like structures suppression
+        pub gamma: f64, // Background suppression
+    }
+
+    impl Default for VesselEnhancementParams {
+        fn default() -> Self {
+            Self {
+                scales: vec![1.0, 2.0, 3.0, 4.0],
+                alpha: 0.5,
+                beta: 0.5,
+                gamma: 15.0,
+            }
+        }
+    }
+
+    /// Enhance blood vessels using Frangi filter
+    pub fn frangi_vesselness<T>(
+        image: &ArrayView2<T>,
+        params: Option<VesselEnhancementParams>,
+    ) -> NdimageResult<Array2<f64>>
+    where
+        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    {
+        let params = params.unwrap_or_default();
+        let (height, width) = image.dim();
+        let mut vesselness = Array2::zeros((height, width));
+
+        // Convert to f64
+        let img = image.mapv(|x| x.to_f64().unwrap_or(0.0));
+
+        // Compute vesselness at each scale
+        for &scale in &params.scales {
+            // Compute Hessian matrix components
+            let smoothed = gaussian_filter(&img, &[scale, scale], None, None, None)?;
+            let hessian = compute_hessian_2d(&smoothed.view(), scale)?;
+
+            // Compute eigenvalues at each pixel
+            for i in 0..height {
+                for j in 0..width {
+                    let hxx = hessian.0[[i, j]];
+                    let hxy = hessian.1[[i, j]];
+                    let hyy = hessian.2[[i, j]];
+
+                    // Eigenvalues of 2x2 symmetric matrix
+                    let trace = hxx + hyy;
+                    let det = hxx * hyy - hxy * hxy;
+                    let discriminant = trace * trace - 4.0 * det;
+
+                    if discriminant >= 0.0 {
+                        let sqrt_disc = discriminant.sqrt();
+                        let lambda1 = (trace + sqrt_disc) / 2.0;
+                        let lambda2 = (trace - sqrt_disc) / 2.0;
+
+                        // Order eigenvalues by magnitude
+                        let (l1, l2) = if lambda1.abs() > lambda2.abs() {
+                            (lambda1, lambda2)
+                        } else {
+                            (lambda2, lambda1)
+                        };
+
+                        // Frangi vesselness measure
+                        if l2 < 0.0 {
+                            // Dark vessels on bright background
+                            let rb = l1.abs() / l2.abs().max(1e-10);
+                            let s = (l1 * l1 + l2 * l2).sqrt();
+
+                            let v = (1.0 - (-rb * rb / (2.0 * params.beta * params.beta)).exp())
+                                * (-s * s / (2.0 * params.gamma * params.gamma)).exp();
+
+                            vesselness[[i, j]] = vesselness[[i, j]].max(v);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(vesselness)
+    }
+
+    /// Compute Hessian matrix components
+    fn compute_hessian_2d(
+        image: &ArrayView2<f64>,
+        scale: f64,
+    ) -> NdimageResult<(Array2<f64>, Array2<f64>, Array2<f64>)> {
+        let (height, width) = image.dim();
+        let mut hxx = Array2::zeros((height, width));
+        let mut hxy = Array2::zeros((height, width));
+        let mut hyy = Array2::zeros((height, width));
+
+        // Scale-normalized second derivatives
+        let norm = scale * scale;
+
+        for i in 2..height - 2 {
+            for j in 2..width - 2 {
+                // Second derivatives using central differences
+                hxx[[i, j]] = (image[[i, j + 1]] - 2.0 * image[[i, j]] + image[[i, j - 1]]) * norm;
+                hyy[[i, j]] = (image[[i + 1, j]] - 2.0 * image[[i, j]] + image[[i - 1, j]]) * norm;
+                hxy[[i, j]] =
+                    (image[[i + 1, j + 1]] - image[[i + 1, j - 1]] - image[[i - 1, j + 1]]
+                        + image[[i - 1, j - 1]])
+                        * norm
+                        / 4.0;
+            }
+        }
+
+        Ok((hxx, hxy, hyy))
+    }
+
+    /// Bone structure enhancement using morphological operations
+    pub fn enhance_bone_structure<T>(
+        image: &ArrayView2<T>,
+        kernel_size: usize,
+    ) -> NdimageResult<Array2<T>>
+    where
+        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    {
+        // Top-hat transform to enhance bright structures
+        let structure = crate::morphology::disk_structure(kernel_size)?;
+        let opened = grey_opening(image, Some(&structure.view()), None, None)?;
+        let top_hat = image.to_owned() - opened;
+
+        // Enhance contrast
+        let enhanced = image.to_owned() + top_hat * T::from(2.0).unwrap();
+
+        Ok(enhanced)
+    }
+
+    /// Lung nodule detection (simplified)
+    pub fn detect_lung_nodules<T>(
+        ct_slice: &ArrayView2<T>,
+        min_size: usize,
+        max_size: usize,
+    ) -> NdimageResult<Vec<Nodule>>
+    where
+        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    {
+        let mut nodules = Vec::new();
+
+        // Threshold to segment lung tissue
+        let threshold = T::from(-500.0).unwrap(); // Typical HU value for lung tissue
+        let lung_mask = ct_slice.mapv(|x| x > threshold);
+
+        // Apply morphological operations to clean up
+        let cleaned = binary_closing(&lung_mask.view(), None, Some(3))?;
+        let cleaned = binary_opening(&cleaned.view(), None, Some(2))?;
+
+        // Find connected components
+        let (labels, num_features) = label(&cleaned.view(), None)?;
+
+        // Analyze each component
+        for i in 1..=num_features {
+            let component_mask = labels.mapv(|x| x == i);
+            let size = component_mask.iter().filter(|&&x| x).count();
+
+            if size >= min_size && size <= max_size {
+                // Compute properties
+                let com = center_of_mass(&ct_slice.view(), Some(&component_mask.view()))?;
+
+                // Simple circularity measure
+                let coords: Vec<(usize, usize)> = component_mask
+                    .indexed_iter()
+                    .filter(|(_, &val)| val)
+                    .map(|((y, x), _)| (y, x))
+                    .collect();
+
+                let (cy, cx) = com;
+                let mean_radius = coords
+                    .iter()
+                    .map(|&(y, x)| {
+                        let dy = y as f64 - cy;
+                        let dx = x as f64 - cx;
+                        (dy * dy + dx * dx).sqrt()
+                    })
+                    .sum::<f64>()
+                    / coords.len() as f64;
+
+                let radius_variance = coords
+                    .iter()
+                    .map(|&(y, x)| {
+                        let dy = y as f64 - cy;
+                        let dx = x as f64 - cx;
+                        let r = (dy * dy + dx * dx).sqrt();
+                        (r - mean_radius).powi(2)
+                    })
+                    .sum::<f64>()
+                    / coords.len() as f64;
+
+                let circularity = 1.0 / (1.0 + radius_variance / mean_radius.powi(2));
+
+                nodules.push(Nodule {
+                    center: com,
+                    size,
+                    circularity,
+                    mean_intensity: ct_slice
+                        .indexed_iter()
+                        .filter(|((y, x), _)| component_mask[[*y, *x]])
+                        .map(|(_, &val)| val.to_f64().unwrap())
+                        .sum::<f64>()
+                        / size as f64,
+                });
+            }
+        }
+
+        Ok(nodules)
+    }
+
+    /// Detected nodule information
+    #[derive(Clone, Debug)]
+    pub struct Nodule {
+        pub center: (f64, f64),
+        pub size: usize,
+        pub circularity: f64,
+        pub mean_intensity: f64,
+    }
+}
+
+/// Satellite and remote sensing imaging functions
+pub mod satellite {
+    use super::*;
+
+    /// Compute Normalized Difference Vegetation Index (NDVI)
+    pub fn compute_ndvi<T>(
+        red_band: &ArrayView2<T>,
+        nir_band: &ArrayView2<T>,
+    ) -> NdimageResult<Array2<f64>>
+    where
+        T: Float + FromPrimitive,
+    {
+        if red_band.dim() != nir_band.dim() {
+            return Err(NdimageError::DimensionError(
+                "Red and NIR bands must have same dimensions".into(),
+            ));
+        }
+
+        let (height, width) = red_band.dim();
+        let mut ndvi = Array2::zeros((height, width));
+
+        for i in 0..height {
+            for j in 0..width {
+                let red = red_band[[i, j]].to_f64().unwrap_or(0.0);
+                let nir = nir_band[[i, j]].to_f64().unwrap_or(0.0);
+
+                let denominator = nir + red;
+                if denominator.abs() > 1e-10 {
+                    ndvi[[i, j]] = (nir - red) / denominator;
+                } else {
+                    ndvi[[i, j]] = 0.0;
+                }
+            }
+        }
+
+        Ok(ndvi)
+    }
+
+    /// Detect water bodies using spectral indices
+    pub fn detect_water_bodies<T>(
+        green_band: &ArrayView2<T>,
+        nir_band: &ArrayView2<T>,
+        threshold: Option<f64>,
+    ) -> NdimageResult<Array2<bool>>
+    where
+        T: Float + FromPrimitive,
+    {
+        // Compute Normalized Difference Water Index (NDWI)
+        let ndwi = compute_ndwi(green_band, nir_band)?;
+
+        // Apply threshold
+        let threshold = threshold.unwrap_or(0.3);
+        let water_mask = ndwi.mapv(|x| x > threshold);
+
+        // Clean up small patches
+        let cleaned = binary_opening(&water_mask.view(), None, Some(2))?;
+        let cleaned = binary_closing(&cleaned.view(), None, Some(3))?;
+
+        Ok(cleaned)
+    }
+
+    /// Compute Normalized Difference Water Index (NDWI)
+    fn compute_ndwi<T>(
+        green_band: &ArrayView2<T>,
+        nir_band: &ArrayView2<T>,
+    ) -> NdimageResult<Array2<f64>>
+    where
+        T: Float + FromPrimitive,
+    {
+        if green_band.dim() != nir_band.dim() {
+            return Err(NdimageError::DimensionError(
+                "Green and NIR bands must have same dimensions".into(),
+            ));
+        }
+
+        let (height, width) = green_band.dim();
+        let mut ndwi = Array2::zeros((height, width));
+
+        for i in 0..height {
+            for j in 0..width {
+                let green = green_band[[i, j]].to_f64().unwrap_or(0.0);
+                let nir = nir_band[[i, j]].to_f64().unwrap_or(0.0);
+
+                let denominator = green + nir;
+                if denominator.abs() > 1e-10 {
+                    ndwi[[i, j]] = (green - nir) / denominator;
+                } else {
+                    ndwi[[i, j]] = 0.0;
+                }
+            }
+        }
+
+        Ok(ndwi)
+    }
+
+    /// Cloud detection in satellite imagery
+    pub fn detect_clouds<T>(
+        image: &ArrayView3<T>, // Multi-spectral image
+        brightness_threshold: f64,
+        temperature_threshold: Option<f64>,
+    ) -> NdimageResult<Array2<bool>>
+    where
+        T: Float + FromPrimitive,
+    {
+        if image.dim().2 < 3 {
+            return Err(NdimageError::InvalidInput(
+                "Image must have at least 3 spectral bands".into(),
+            ));
+        }
+
+        let (height, width, _) = image.dim();
+        let mut cloud_mask = Array2::default((height, width));
+
+        // Simple brightness test (clouds are bright in visible bands)
+        for i in 0..height {
+            for j in 0..width {
+                let brightness = (0..3)
+                    .map(|k| image[[i, j, k]].to_f64().unwrap_or(0.0))
+                    .sum::<f64>()
+                    / 3.0;
+
+                if brightness > brightness_threshold {
+                    cloud_mask[[i, j]] = true;
+                }
+            }
+        }
+
+        // Thermal test if thermal band is available
+        if let Some(temp_thresh) = temperature_threshold {
+            if image.dim().2 > 3 {
+                // Assume 4th band is thermal
+                for i in 0..height {
+                    for j in 0..width {
+                        let temp = image[[i, j, 3]].to_f64().unwrap_or(0.0);
+                        if cloud_mask[[i, j]] && temp > temp_thresh {
+                            cloud_mask[[i, j]] = false; // Not a cloud if too warm
+                        }
+                    }
+                }
+            }
+        }
+
+        // Morphological cleaning
+        let cleaned = binary_closing(&cloud_mask.view(), None, Some(5))?;
+
+        Ok(cleaned)
+    }
+
+    /// Pan-sharpening: merge high-resolution panchromatic with low-resolution multispectral
+    pub fn pan_sharpen<T>(
+        pan_image: &ArrayView2<T>,
+        multi_spectral: &ArrayView3<T>,
+        method: PanSharpenMethod,
+    ) -> NdimageResult<Array3<T>>
+    where
+        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    {
+        let (pan_h, pan_w) = pan_image.dim();
+        let (ms_h, ms_w, num_bands) = multi_spectral.dim();
+
+        // Compute scale factor
+        let scale_y = pan_h as f64 / ms_h as f64;
+        let scale_x = pan_w as f64 / ms_w as f64;
+
+        match method {
+            PanSharpenMethod::IHS => {
+                // Intensity-Hue-Saturation method
+                let mut sharpened = Array3::zeros((pan_h, pan_w, num_bands));
+
+                // Upsample multispectral to pan resolution
+                for band in 0..num_bands {
+                    let ms_band = multi_spectral.slice(ndarray::s![.., .., band]);
+                    let upsampled = zoom(
+                        &ms_band,
+                        &[scale_y, scale_x],
+                        InterpolationOrder::Cubic,
+                        None,
+                    )?;
+                    sharpened
+                        .slice_mut(ndarray::s![.., .., band])
+                        .assign(&upsampled);
+                }
+
+                // Compute intensity from multispectral
+                let mut intensity = Array2::zeros((pan_h, pan_w));
+                for i in 0..pan_h {
+                    for j in 0..pan_w {
+                        let sum: T = (0..num_bands)
+                            .map(|k| sharpened[[i, j, k]])
+                            .fold(T::zero(), |a, b| a + b);
+                        intensity[[i, j]] = sum / T::from(num_bands).unwrap();
+                    }
+                }
+
+                // Replace intensity with pan
+                for i in 0..pan_h {
+                    for j in 0..pan_w {
+                        let ratio = if intensity[[i, j]] > T::from(1e-10).unwrap() {
+                            pan_image[[i, j]] / intensity[[i, j]]
+                        } else {
+                            T::one()
+                        };
+
+                        for k in 0..num_bands {
+                            sharpened[[i, j, k]] = sharpened[[i, j, k]] * ratio;
+                        }
+                    }
+                }
+
+                Ok(sharpened)
+            }
+
+            PanSharpenMethod::Brovey => {
+                // Brovey transform
+                let mut sharpened = Array3::zeros((pan_h, pan_w, num_bands));
+
+                // Upsample and apply Brovey transform
+                for band in 0..num_bands {
+                    let ms_band = multi_spectral.slice(ndarray::s![.., .., band]);
+                    let upsampled = zoom(
+                        &ms_band,
+                        &[scale_y, scale_x],
+                        InterpolationOrder::Cubic,
+                        None,
+                    )?;
+
+                    // Compute sum of all bands at low resolution
+                    let mut ms_sum = Array2::zeros((ms_h, ms_w));
+                    for k in 0..num_bands {
+                        ms_sum += &multi_spectral.slice(ndarray::s![.., .., k]);
+                    }
+
+                    // Upsample sum
+                    let sum_upsampled = zoom(
+                        &ms_sum.view(),
+                        &[scale_y, scale_x],
+                        InterpolationOrder::Cubic,
+                        None,
+                    )?;
+
+                    // Apply Brovey transform
+                    for i in 0..pan_h {
+                        for j in 0..pan_w {
+                            if sum_upsampled[[i, j]] > T::from(1e-10).unwrap() {
+                                sharpened[[i, j, band]] =
+                                    upsampled[[i, j]] * pan_image[[i, j]] / sum_upsampled[[i, j]];
+                            } else {
+                                sharpened[[i, j, band]] = upsampled[[i, j]];
+                            }
+                        }
+                    }
+                }
+
+                Ok(sharpened)
+            }
+        }
+    }
+
+    /// Pan-sharpening method
+    #[derive(Clone, Debug)]
+    pub enum PanSharpenMethod {
+        IHS,    // Intensity-Hue-Saturation
+        Brovey, // Brovey transform
+    }
+}
+
+/// Microscopy imaging functions
+pub mod microscopy {
+    use super::*;
+
+    /// Parameters for cell segmentation
+    #[derive(Clone, Debug)]
+    pub struct CellSegmentationParams {
+        /// Minimum cell area in pixels
+        pub min_area: usize,
+        /// Maximum cell area in pixels
+        pub max_area: usize,
+        /// Threshold method
+        pub threshold_method: ThresholdMethod,
+        /// Morphological cleanup iterations
+        pub cleanup_iterations: usize,
+    }
+
+    impl Default for CellSegmentationParams {
+        fn default() -> Self {
+            Self {
+                min_area: 50,
+                max_area: 5000,
+                threshold_method: ThresholdMethod::Otsu,
+                cleanup_iterations: 2,
+            }
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub enum ThresholdMethod {
+        Otsu,
+        Adaptive,
+        Fixed(f64),
+    }
+
+    /// Segment cells in microscopy images
+    pub fn segment_cells<T>(
+        image: &ArrayView2<T>,
+        params: Option<CellSegmentationParams>,
+    ) -> NdimageResult<(Array2<i32>, Vec<CellInfo>)>
+    where
+        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    {
+        let params = params.unwrap_or_default();
+
+        // Apply threshold
+        let binary = match params.threshold_method {
+            ThresholdMethod::Otsu => crate::segmentation::otsu_threshold(image)?,
+            ThresholdMethod::Adaptive => crate::segmentation::adaptive_threshold(
+                image,
+                21,
+                crate::segmentation::AdaptiveMethod::Gaussian,
+                T::from(5.0).unwrap(),
+            )?,
+            ThresholdMethod::Fixed(thresh) => image.mapv(|x| x > T::from(thresh).unwrap()),
+        };
+
+        // Morphological cleanup
+        let mut cleaned = binary;
+        for _ in 0..params.cleanup_iterations {
+            cleaned = binary_opening(&cleaned.view(), None, Some(3))?;
+            cleaned = binary_closing(&cleaned.view(), None, Some(3))?;
+        }
+
+        // Label connected components
+        let (labels, num_cells) = label(&cleaned.view(), None)?;
+
+        // Analyze each cell
+        let mut cell_info = Vec::new();
+        let mut filtered_labels = Array2::zeros(labels.dim());
+        let mut new_label = 1;
+
+        for i in 1..=num_cells {
+            let mask = labels.mapv(|x| x == i);
+            let area = mask.iter().filter(|&&x| x).count();
+
+            if area >= params.min_area && area <= params.max_area {
+                // Compute cell properties
+                let com = center_of_mass(&image.view(), Some(&mask.view()))?;
+                let moments_result =
+                    moments(&mask.mapv(|x| if x { 1.0 } else { 0.0 }).view(), None)?;
+
+                // Compute eccentricity from moments
+                let m00 = moments_result.spatial[[0, 0]];
+                let m20 = moments_result.central[[2, 0]];
+                let m02 = moments_result.central[[0, 2]];
+                let m11 = moments_result.central[[1, 1]];
+
+                let a = m20 / m00;
+                let b = 2.0 * m11 / m00;
+                let c = m02 / m00;
+
+                let discriminant = (a - c) * (a - c) + b * b;
+                let eccentricity = if discriminant > 0.0 {
+                    let sqrt_disc = discriminant.sqrt();
+                    let lambda1 = (a + c + sqrt_disc) / 2.0;
+                    let lambda2 = (a + c - sqrt_disc) / 2.0;
+
+                    if lambda1 > 0.0 {
+                        (1.0 - lambda2 / lambda1).sqrt()
+                    } else {
+                        0.0
+                    }
+                } else {
+                    0.0
+                };
+
+                // Update filtered labels
+                for ((y, x), &val) in labels.indexed_iter() {
+                    if val == i {
+                        filtered_labels[[y, x]] = new_label;
+                    }
+                }
+
+                cell_info.push(CellInfo {
+                    label: new_label,
+                    area,
+                    center: com,
+                    eccentricity,
+                    mean_intensity: image
+                        .indexed_iter()
+                        .filter(|((y, x), _)| mask[[*y, *x]])
+                        .map(|(_, &val)| val.to_f64().unwrap())
+                        .sum::<f64>()
+                        / area as f64,
+                });
+
+                new_label += 1;
+            }
+        }
+
+        Ok((filtered_labels, cell_info))
+    }
+
+    /// Information about a segmented cell
+    #[derive(Clone, Debug)]
+    pub struct CellInfo {
+        pub label: i32,
+        pub area: usize,
+        pub center: (f64, f64),
+        pub eccentricity: f64,
+        pub mean_intensity: f64,
+    }
+
+    /// Detect and count nuclei in fluorescence microscopy
+    pub fn detect_nuclei<T>(
+        dapi_channel: &ArrayView2<T>,
+        min_size: usize,
+        max_size: usize,
+    ) -> NdimageResult<(Array2<i32>, usize)>
+    where
+        T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    {
+        // Preprocess with median filter to reduce noise
+        let denoised = median_filter(dapi_channel, &[3, 3], None, None)?;
+
+        // Enhance nuclei using top-hat transform
+        let structure = crate::morphology::disk_structure(10)?;
+        let background = grey_opening(&denoised.view(), Some(&structure.view()), None, None)?;
+        let enhanced = &denoised - &background;
+
+        // Threshold using Otsu's method
+        let binary = crate::segmentation::otsu_threshold(&enhanced.view())?;
+
+        // Fill holes in nuclei
+        let filled = crate::morphology::binary_fill_holes(&binary.view())?;
+
+        // Remove small objects
+        let cleaned = crate::morphology::remove_small_objects(&filled.view(), min_size)?;
+
+        // Label nuclei
+        let (mut labels, num_features) = label(&cleaned.view(), None)?;
+
+        // Filter by size
+        let mut valid_count = 0;
+        for i in 1..=num_features {
+            let size = labels.iter().filter(|&&x| x == i).count();
+            if size < min_size || size > max_size {
+                // Remove this nucleus
+                labels.mapv_inplace(|x| if x == i { 0 } else { x });
+            } else {
+                valid_count += 1;
+            }
+        }
+
+        Ok((labels, valid_count))
+    }
+
+    /// Colocalization analysis for multi-channel microscopy
+    pub fn colocalization_analysis<T>(
+        channel1: &ArrayView2<T>,
+        channel2: &ArrayView2<T>,
+        threshold1: Option<T>,
+        threshold2: Option<T>,
+    ) -> NdimageResult<ColocalizationMetrics>
+    where
+        T: Float + FromPrimitive,
+    {
+        if channel1.dim() != channel2.dim() {
+            return Err(NdimageError::DimensionError(
+                "Channels must have same dimensions".into(),
+            ));
+        }
+
+        // Apply thresholds
+        let thresh1 = threshold1.unwrap_or_else(|| {
+            let mean = channel1.mean().unwrap_or(T::zero());
+            let std = channel1.std(T::zero());
+            mean + std
+        });
+
+        let thresh2 = threshold2.unwrap_or_else(|| {
+            let mean = channel2.mean().unwrap_or(T::zero());
+            let std = channel2.std(T::zero());
+            mean + std
+        });
+
+        // Create masks
+        let mask1 = channel1.mapv(|x| x > thresh1);
+        let mask2 = channel2.mapv(|x| x > thresh2);
+
+        // Compute overlap
+        let overlap = mask1
+            .iter()
+            .zip(mask2.iter())
+            .filter(|(&a, &b)| a && b)
+            .count();
+
+        let area1 = mask1.iter().filter(|&&x| x).count();
+        let area2 = mask2.iter().filter(|&&x| x).count();
+
+        // Compute Manders coefficients
+        let mut m1 = 0.0;
+        let mut m2 = 0.0;
+        let mut sum1 = 0.0;
+        let mut sum2 = 0.0;
+
+        for ((y, x), &val1) in channel1.indexed_iter() {
+            let val2 = channel2[[y, x]];
+
+            if mask1[[y, x]] {
+                sum1 += val1.to_f64().unwrap();
+                if mask2[[y, x]] {
+                    m1 += val1.to_f64().unwrap();
+                }
+            }
+
+            if mask2[[y, x]] {
+                sum2 += val2.to_f64().unwrap();
+                if mask1[[y, x]] {
+                    m2 += val2.to_f64().unwrap();
+                }
+            }
+        }
+
+        let manders_m1 = if sum1 > 0.0 { m1 / sum1 } else { 0.0 };
+        let manders_m2 = if sum2 > 0.0 { m2 / sum2 } else { 0.0 };
+
+        // Compute Pearson correlation
+        let mean1 = channel1.mean().unwrap_or(T::zero()).to_f64().unwrap();
+        let mean2 = channel2.mean().unwrap_or(T::zero()).to_f64().unwrap();
+
+        let mut cov = 0.0;
+        let mut var1 = 0.0;
+        let mut var2 = 0.0;
+
+        for ((y, x), &val1) in channel1.indexed_iter() {
+            if mask1[[y, x]] || mask2[[y, x]] {
+                let v1 = val1.to_f64().unwrap() - mean1;
+                let v2 = channel2[[y, x]].to_f64().unwrap() - mean2;
+
+                cov += v1 * v2;
+                var1 += v1 * v1;
+                var2 += v2 * v2;
+            }
+        }
+
+        let pearson = if var1 > 0.0 && var2 > 0.0 {
+            cov / (var1.sqrt() * var2.sqrt())
+        } else {
+            0.0
+        };
+
+        Ok(ColocalizationMetrics {
+            overlap_coefficient: overlap as f64 / (area1.min(area2) as f64).max(1.0),
+            manders_m1,
+            manders_m2,
+            pearson_correlation: pearson,
+            overlap_area: overlap,
+        })
+    }
+
+    /// Colocalization analysis results
+    #[derive(Clone, Debug)]
+    pub struct ColocalizationMetrics {
+        pub overlap_coefficient: f64,
+        pub manders_m1: f64,
+        pub manders_m2: f64,
+        pub pearson_correlation: f64,
+        pub overlap_area: usize,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::arr2;
+
+    #[test]
+    fn test_ndvi() {
+        let red = arr2(&[[0.1, 0.2, 0.3], [0.2, 0.3, 0.4], [0.3, 0.4, 0.5]]);
+
+        let nir = arr2(&[[0.5, 0.6, 0.7], [0.6, 0.7, 0.8], [0.7, 0.8, 0.9]]);
+
+        let ndvi = satellite::compute_ndvi(&red.view(), &nir.view()).unwrap();
+
+        // Check NDVI values are in expected range
+        for &val in ndvi.iter() {
+            assert!(val >= -1.0 && val <= 1.0);
+            assert!(val > 0.0); // Should be positive for healthy vegetation
+        }
+    }
+
+    #[test]
+    fn test_frangi_vesselness() {
+        // Create a simple vessel-like structure
+        let mut image = Array2::zeros((50, 50));
+
+        // Horizontal vessel
+        for i in 24..26 {
+            for j in 10..40 {
+                image[[i, j]] = 1.0;
+            }
+        }
+
+        // Vertical vessel
+        for i in 10..40 {
+            for j in 24..26 {
+                image[[i, j]] = 1.0;
+            }
+        }
+
+        let vesselness = medical::frangi_vesselness(&image.view(), None).unwrap();
+
+        // Check that vessel regions have high response
+        assert!(vesselness[[25, 25]] > 0.0);
+    }
+
+    #[test]
+    fn test_cell_segmentation() {
+        // Create synthetic cell image
+        let mut image = Array2::zeros((100, 100));
+
+        // Add some circular "cells"
+        for cy in [25, 75] {
+            for cx in [25, 75] {
+                for i in 0..100 {
+                    for j in 0..100 {
+                        let dy = i as f64 - cy as f64;
+                        let dx = j as f64 - cx as f64;
+                        let r = (dy * dy + dx * dx).sqrt();
+
+                        if r < 10.0 {
+                            image[[i, j]] = 1.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        let (labels, cells) = microscopy::segment_cells(&image.view(), None).unwrap();
+
+        assert_eq!(cells.len(), 4); // Should detect 4 cells
+        assert!(labels.max() == Some(&4));
+    }
+}

@@ -3,6 +3,10 @@
 //! An improvement over the Harris corner detector that uses a simpler
 //! corner score calculation based on the minimum eigenvalue of the
 //! structure tensor matrix.
+//!
+//! # References
+//!
+//! - Shi, J. and Tomasi, C., 1994, June. Good features to track. In 1994 Proceedings of IEEE conference on computer vision and pattern recognition (pp. 593-600). IEEE.
 
 use crate::error::{Result, VisionError};
 use crate::feature::image_to_array;

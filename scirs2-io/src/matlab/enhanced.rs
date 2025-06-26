@@ -183,79 +183,198 @@ impl EnhancedMatFile {
 
         match mat_type {
             MatType::Double(array) => {
-                file.create_dataset_from_array(name, array, Some(options))?;
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("double".to_string()))?;
             }
             MatType::Single(array) => {
-                // Convert to f64 for HDF5 compatibility
-                let f64_array = array.mapv(|x| x as f64);
-                file.create_dataset_from_array(name, &f64_array, Some(options))?;
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("single".to_string()))?;
+            }
+            MatType::Int8(array) => {
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("int8".to_string()))?;
+            }
+            MatType::Int16(array) => {
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("int16".to_string()))?;
             }
             MatType::Int32(array) => {
-                // Convert to f64 for HDF5 compatibility
-                let f64_array = array.mapv(|x| x as f64);
-                file.create_dataset_from_array(name, &f64_array, Some(options))?;
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("int32".to_string()))?;
             }
-            // Add other numeric types as needed
+            MatType::Int64(array) => {
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("int64".to_string()))?;
+            }
+            MatType::UInt8(array) => {
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("uint8".to_string()))?;
+            }
+            MatType::UInt16(array) => {
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("uint16".to_string()))?;
+            }
+            MatType::UInt32(array) => {
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("uint32".to_string()))?;
+            }
+            MatType::UInt64(array) => {
+                file.create_dataset_from_array(name, array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("uint64".to_string()))?;
+            }
+            MatType::Logical(array) => {
+                // Convert bool to u8 for storage
+                let u8_array = array.mapv(|x| if x { 1u8 } else { 0u8 });
+                file.create_dataset_from_array(name, &u8_array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("logical".to_string()))?;
+            }
             MatType::Char(string) => {
-                // Create a dataset for the string
-                // Convert string to byte array for storage
-                let bytes = string.as_bytes();
-                let array = ndarray::Array1::from_vec(bytes.to_vec()).into_dyn();
-                file.create_dataset_from_array(name, &array, Some(options))?;
-
-                // Add attribute to indicate this is a string
-                // TODO: Find the correct way to set attributes on datasets
-                // if let Ok(dataset) = file.get_dataset(&format!("/{}", name)) {
-                //     dataset
-                //         .set_attribute("matlab_class", AttributeValue::String("char".to_string()));
-                // }
+                // MATLAB stores strings as UTF-16
+                let utf16_data: Vec<u16> = string.encode_utf16().collect();
+                let array = ndarray::Array1::from_vec(utf16_data).into_dyn();
+                file.create_dataset_from_array(name, &array, Some(options.clone()))?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("char".to_string()))?;
             }
-            _ => {
-                return Err(IoError::Other(format!(
-                    "MatType {:?} not yet supported in v7.3 format",
-                    std::any::type_name::<MatType>()
-                )));
+            MatType::Cell(cells) => {
+                // Create a group for the cell array
+                file.create_group(name)?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("cell".to_string()))?;
+                
+                // Store cell array dimensions
+                let dims = vec![cells.len() as i64];
+                file.set_attribute(name, "MATLAB_dims", AttributeValue::Array(dims))?;
+                
+                // Write each cell
+                for (i, cell_value) in cells.iter().enumerate() {
+                    let cell_name = format!("{}/cell_{}", name, i);
+                    self.write_mat_type_to_hdf5(file, &cell_name, cell_value)?;
+                }
+            }
+            MatType::Struct(fields) => {
+                // Create a group for the struct
+                file.create_group(name)?;
+                file.set_attribute(name, "MATLAB_class", AttributeValue::String("struct".to_string()))?;
+                
+                // Store field names
+                let field_names: Vec<String> = fields.keys().cloned().collect();
+                file.set_attribute(name, "MATLAB_fields", AttributeValue::StringArray(field_names))?;
+                
+                // Write each field
+                for (field_name, field_value) in fields {
+                    let field_path = format!("{}/{}", name, field_name);
+                    self.write_mat_type_to_hdf5(file, &field_path, field_value)?;
+                }
             }
         }
+        
+        // Add MATLAB-specific metadata
+        file.set_attribute(name, "MATLAB_int_decode", AttributeValue::Integer(2))?;
+        
         Ok(())
     }
 
     /// Read a MatType from HDF5 file
     #[cfg(feature = "hdf5")]
     fn read_mat_type_from_hdf5(&self, file: &HDF5File, name: &str) -> Result<MatType> {
-        // Try to read as dataset first
-        match file.read_dataset(name) {
-            Ok(array) => Ok(MatType::Double(array)),
-            Err(_) => {
-                // Try to read as string from dataset
-                // First check if it's a string dataset by looking for matlab_class attribute
-                if let Ok(dataset) = file.get_dataset(&format!("/{}", name)) {
-                    if let Some(AttributeValue::String(class)) =
-                        dataset.get_attribute("matlab_class")
-                    {
-                        if class == "char" {
-                            // Read the byte data and convert back to string
-                            match file.read_dataset(name) {
-                                Ok(array) => {
-                                    let bytes: Vec<u8> = array.iter().map(|&x| x as u8).collect();
-                                    match String::from_utf8(bytes) {
-                                        Ok(string) => Ok(MatType::Char(string)),
-                                        Err(_) => Err(IoError::Other(
-                                            "Invalid UTF-8 string data".to_string(),
-                                        )),
-                                    }
-                                }
-                                Err(e) => Err(e),
+        // First, check if it's a group (struct or cell array)
+        if file.is_group(name) {
+            // Get the MATLAB class attribute
+            if let Some(AttributeValue::String(class)) = file.get_attribute(name, "MATLAB_class") {
+                match class.as_str() {
+                    "cell" => {
+                        // Read cell array
+                        let mut cells = Vec::new();
+                        if let Some(AttributeValue::Array(dims)) = file.get_attribute(name, "MATLAB_dims") {
+                            let num_cells = dims[0] as usize;
+                            for i in 0..num_cells {
+                                let cell_name = format!("{}/cell_{}", name, i);
+                                let cell_value = self.read_mat_type_from_hdf5(file, &cell_name)?;
+                                cells.push(cell_value);
                             }
-                        } else {
-                            Err(IoError::Other(format!("Unknown MATLAB class: {}", class)))
                         }
-                    } else {
-                        Err(IoError::Other(format!("No class attribute for: {}", name)))
+                        Ok(MatType::Cell(cells))
                     }
-                } else {
-                    Err(IoError::Other(format!("Cannot read variable: {}", name)))
+                    "struct" => {
+                        // Read struct
+                        let mut fields = HashMap::new();
+                        if let Some(AttributeValue::StringArray(field_names)) = file.get_attribute(name, "MATLAB_fields") {
+                            for field_name in field_names {
+                                let field_path = format!("{}/{}", name, field_name);
+                                let field_value = self.read_mat_type_from_hdf5(file, &field_path)?;
+                                fields.insert(field_name, field_value);
+                            }
+                        }
+                        Ok(MatType::Struct(fields))
+                    }
+                    _ => Err(IoError::Other(format!("Unknown MATLAB group class: {}", class)))
                 }
+            } else {
+                Err(IoError::Other(format!("No MATLAB_class attribute for group: {}", name)))
+            }
+        } else {
+            // It's a dataset
+            if let Some(AttributeValue::String(class)) = file.get_attribute(name, "MATLAB_class") {
+                match class.as_str() {
+                    "double" => {
+                        let array: ArrayD<f64> = file.read_dataset(name)?;
+                        Ok(MatType::Double(array))
+                    }
+                    "single" => {
+                        let array: ArrayD<f32> = file.read_dataset(name)?;
+                        Ok(MatType::Single(array))
+                    }
+                    "int8" => {
+                        let array: ArrayD<i8> = file.read_dataset(name)?;
+                        Ok(MatType::Int8(array))
+                    }
+                    "int16" => {
+                        let array: ArrayD<i16> = file.read_dataset(name)?;
+                        Ok(MatType::Int16(array))
+                    }
+                    "int32" => {
+                        let array: ArrayD<i32> = file.read_dataset(name)?;
+                        Ok(MatType::Int32(array))
+                    }
+                    "int64" => {
+                        let array: ArrayD<i64> = file.read_dataset(name)?;
+                        Ok(MatType::Int64(array))
+                    }
+                    "uint8" => {
+                        let array: ArrayD<u8> = file.read_dataset(name)?;
+                        Ok(MatType::UInt8(array))
+                    }
+                    "uint16" => {
+                        let array: ArrayD<u16> = file.read_dataset(name)?;
+                        Ok(MatType::UInt16(array))
+                    }
+                    "uint32" => {
+                        let array: ArrayD<u32> = file.read_dataset(name)?;
+                        Ok(MatType::UInt32(array))
+                    }
+                    "uint64" => {
+                        let array: ArrayD<u64> = file.read_dataset(name)?;
+                        Ok(MatType::UInt64(array))
+                    }
+                    "logical" => {
+                        let array: ArrayD<u8> = file.read_dataset(name)?;
+                        let bool_array = array.mapv(|x| x != 0);
+                        Ok(MatType::Logical(bool_array))
+                    }
+                    "char" => {
+                        // Read UTF-16 data
+                        let array: ArrayD<u16> = file.read_dataset(name)?;
+                        let utf16_data: Vec<u16> = array.iter().cloned().collect();
+                        let string = String::from_utf16(&utf16_data)
+                            .map_err(|_| IoError::Other("Invalid UTF-16 string data".to_string()))?;
+                        Ok(MatType::Char(string))
+                    }
+                    _ => Err(IoError::Other(format!("Unknown MATLAB class: {}", class)))
+                }
+            } else {
+                // No class attribute, try to infer from data type
+                // Default to double for backward compatibility
+                let array: ArrayD<f64> = file.read_dataset(name)?;
+                Ok(MatType::Double(array))
             }
         }
     }
@@ -283,12 +402,28 @@ pub fn read_mat_enhanced<P: AsRef<Path>>(
     enhanced_file.read(path)
 }
 
-/// Create a complex number MatType (placeholder for future implementation)
-pub fn create_complex_array(_real: ArrayD<f64>, _imag: ArrayD<f64>) -> Result<MatType> {
-    // TODO: Implement complex number support
-    Err(IoError::Other(
-        "Complex array support not yet implemented".to_string(),
-    ))
+/// Create a complex number MatType
+pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatType> {
+    use num_complex::Complex64;
+    
+    if real.shape() != imag.shape() {
+        return Err(IoError::FormatError(
+            "Real and imaginary parts must have the same shape".to_string(),
+        ));
+    }
+    
+    // Create a complex array by combining real and imaginary parts
+    let complex_array = ArrayD::from_shape_fn(real.raw_dim(), |idx| {
+        Complex64::new(real[&idx], imag[&idx])
+    });
+    
+    // For now, store as a struct with real and imag fields
+    // This is how MATLAB v7.3 stores complex data internally
+    let mut fields = HashMap::new();
+    fields.insert("real".to_string(), MatType::Double(real));
+    fields.insert("imag".to_string(), MatType::Double(imag));
+    
+    Ok(MatType::Struct(fields))
 }
 
 /// Create a cell array MatType
@@ -299,6 +434,182 @@ pub fn create_cell_array(cells: Vec<MatType>) -> MatType {
 /// Create a structure MatType
 pub fn create_struct(fields: HashMap<String, MatType>) -> MatType {
     MatType::Struct(fields)
+}
+
+/// Advanced v7.3+ features for large data handling
+pub struct MatV73Features;
+
+impl MatV73Features {
+    /// Create a chunked dataset for streaming large arrays
+    #[cfg(feature = "hdf5")]
+    pub fn create_chunked_dataset<P: AsRef<Path>>(
+        path: P,
+        name: &str,
+        shape: &[usize],
+        chunk_size: &[usize],
+    ) -> Result<()> {
+        let mut file = HDF5File::create(path)?;
+        
+        let mut options = DatasetOptions::default();
+        options.chunk_shape = Some(chunk_size.to_vec());
+        options.compression = Some(CompressionOptions {
+            algorithm: "gzip".to_string(),
+            level: Some(6),
+        });
+        
+        // Create an empty dataset with the specified shape
+        let total_elements: usize = shape.iter().product();
+        let zeros = vec![0.0f64; total_elements];
+        let array = ArrayD::from_shape_vec(IxDyn(shape), zeros)
+            .map_err(|e| IoError::Other(e.to_string()))?;
+        
+        file.create_dataset_from_array(name, &array, Some(options))?;
+        file.set_attribute(name, "MATLAB_class", AttributeValue::String("double".to_string()))?;
+        file.set_attribute(name, "MATLAB_v73_chunked", AttributeValue::Boolean(true))?;
+        
+        file.close()?;
+        Ok(())
+    }
+    
+    /// Write data to a specific hyperslab in a chunked dataset
+    #[cfg(feature = "hdf5")]
+    pub fn write_hyperslab<P: AsRef<Path>>(
+        path: P,
+        dataset_name: &str,
+        data: &ArrayD<f64>,
+        offset: &[usize],
+    ) -> Result<()> {
+        let mut file = HDF5File::open(path, FileMode::ReadWrite)?;
+        
+        // Write data to the specified offset
+        file.write_dataset_slice(dataset_name, data, offset)?;
+        
+        file.close()?;
+        Ok(())
+    }
+    
+    /// Read a specific hyperslab from a chunked dataset
+    #[cfg(feature = "hdf5")]
+    pub fn read_hyperslab<P: AsRef<Path>>(
+        path: P,
+        dataset_name: &str,
+        offset: &[usize],
+        shape: &[usize],
+    ) -> Result<ArrayD<f64>> {
+        let file = HDF5File::open(path, FileMode::ReadOnly)?;
+        
+        // Read data from the specified offset and shape
+        let array = file.read_dataset_slice(dataset_name, offset, shape)?;
+        
+        Ok(array)
+    }
+    
+    /// Create a virtual dataset that references multiple files
+    #[cfg(feature = "hdf5")]
+    pub fn create_virtual_dataset<P: AsRef<Path>>(
+        path: P,
+        name: &str,
+        source_files: Vec<String>,
+        source_datasets: Vec<String>,
+    ) -> Result<()> {
+        if source_files.len() != source_datasets.len() {
+            return Err(IoError::FormatError(
+                "Number of source files must match number of source datasets".to_string(),
+            ));
+        }
+        
+        let mut file = HDF5File::create(path)?;
+        
+        // Store virtual dataset metadata
+        file.set_attribute(name, "MATLAB_class", AttributeValue::String("double".to_string()))?;
+        file.set_attribute(name, "MATLAB_v73_virtual", AttributeValue::Boolean(true))?;
+        file.set_attribute(name, "source_files", AttributeValue::StringArray(source_files))?;
+        file.set_attribute(name, "source_datasets", AttributeValue::StringArray(source_datasets))?;
+        
+        file.close()?;
+        Ok(())
+    }
+}
+
+/// Support for sparse matrices in v7.3 format
+pub struct MatV73Sparse;
+
+impl MatV73Sparse {
+    /// Write a sparse matrix in v7.3 format
+    #[cfg(feature = "hdf5")]
+    pub fn write_sparse<P: AsRef<Path>>(
+        path: P,
+        name: &str,
+        data: &crate::sparse::SparseArray,
+    ) -> Result<()> {
+        let mut file = HDF5File::create(path)?;
+        
+        // Create a group for the sparse matrix
+        file.create_group(name)?;
+        file.set_attribute(name, "MATLAB_class", AttributeValue::String("sparse".to_string()))?;
+        file.set_attribute(name, "MATLAB_sparse_nrows", AttributeValue::Integer(data.shape[0] as i64))?;
+        file.set_attribute(name, "MATLAB_sparse_ncols", AttributeValue::Integer(data.shape[1] as i64))?;
+        
+        // Write the sparse data components
+        let row_path = format!("{}/ir", name);  // row indices
+        let col_path = format!("{}/jc", name);  // column pointers
+        let data_path = format!("{}/data", name);  // non-zero values
+        
+        // Convert to MATLAB's CSC format
+        let (row_indices, col_ptrs, values) = data.to_csc();
+        
+        // Write components
+        let row_array = ArrayD::from_shape_vec(IxDyn(&[row_indices.len()]), row_indices)
+            .map_err(|e| IoError::Other(e.to_string()))?;
+        let col_array = ArrayD::from_shape_vec(IxDyn(&[col_ptrs.len()]), col_ptrs)
+            .map_err(|e| IoError::Other(e.to_string()))?;
+        let data_array = ArrayD::from_shape_vec(IxDyn(&[values.len()]), values)
+            .map_err(|e| IoError::Other(e.to_string()))?;
+        
+        file.create_dataset_from_array(&row_path, &row_array, None)?;
+        file.create_dataset_from_array(&col_path, &col_array, None)?;
+        file.create_dataset_from_array(&data_path, &data_array, None)?;
+        
+        file.close()?;
+        Ok(())
+    }
+    
+    /// Read a sparse matrix from v7.3 format
+    #[cfg(feature = "hdf5")]
+    pub fn read_sparse<P: AsRef<Path>>(
+        path: P,
+        name: &str,
+    ) -> Result<crate::sparse::SparseArray> {
+        let file = HDF5File::open(path, FileMode::ReadOnly)?;
+        
+        // Read sparse matrix metadata
+        let nrows = match file.get_attribute(name, "MATLAB_sparse_nrows") {
+            Some(AttributeValue::Integer(n)) => n as usize,
+            _ => return Err(IoError::Other("Missing sparse matrix rows".to_string())),
+        };
+        
+        let ncols = match file.get_attribute(name, "MATLAB_sparse_ncols") {
+            Some(AttributeValue::Integer(n)) => n as usize,
+            _ => return Err(IoError::Other("Missing sparse matrix cols".to_string())),
+        };
+        
+        // Read sparse data components
+        let row_indices: ArrayD<i32> = file.read_dataset(&format!("{}/ir", name))?;
+        let col_ptrs: ArrayD<i32> = file.read_dataset(&format!("{}/jc", name))?;
+        let values: ArrayD<f64> = file.read_dataset(&format!("{}/data", name))?;
+        
+        // Convert from CSC format
+        let row_vec: Vec<usize> = row_indices.iter().map(|&x| x as usize).collect();
+        let col_vec: Vec<usize> = col_ptrs.iter().map(|&x| x as usize).collect();
+        let val_vec: Vec<f64> = values.iter().cloned().collect();
+        
+        crate::sparse::SparseArray::from_csc(
+            row_vec,
+            col_vec,
+            val_vec,
+            vec![nrows, ncols],
+        )
+    }
 }
 
 #[cfg(test)]

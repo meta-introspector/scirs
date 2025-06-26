@@ -401,6 +401,37 @@ where
     Weibull::new(shape, scale, loc)
 }
 
+/// Create a Weibull distribution with the given parameters.
+///
+/// This is an alias for `weibull()` to match SciPy's naming convention
+/// for the minimum value (Type III) Weibull distribution.
+///
+/// # Arguments
+///
+/// * `shape` - Shape parameter (k > 0)
+/// * `scale` - Scale parameter (lambda > 0)
+/// * `loc` - Location parameter (default: 0)
+///
+/// # Returns
+///
+/// * A Weibull distribution object
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_stats::distributions;
+///
+/// let w = distributions::weibull_min(2.0f64, 1.0, 0.0).unwrap();
+/// let pdf_at_one = w.pdf(1.0);
+/// assert!((pdf_at_one - 0.73575888).abs() < 1e-7);
+/// ```
+pub fn weibull_min<F>(shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
+where
+    F: num_traits::Float + num_traits::NumCast,
+{
+    weibull(shape, scale, loc)
+}
+
 /// Create a Pareto distribution with the given parameters.
 ///
 /// This is a convenience function to create a Pareto distribution with
@@ -549,6 +580,34 @@ where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Bernoulli::new(p)
+}
+
+/// Create a Bernoulli distribution with the given parameter.
+///
+/// This is an alias for `bernoulli()` to match SciPy's abbreviated naming convention.
+///
+/// # Arguments
+///
+/// * `p` - Success probability (0 ≤ p ≤ 1)
+///
+/// # Returns
+///
+/// * A Bernoulli distribution object
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_stats::distributions;
+///
+/// let b = distributions::bern(0.3f64).unwrap();
+/// let pmf_at_one = b.pmf(1.0);
+/// assert!((pmf_at_one - 0.3).abs() < 1e-7);
+/// ```
+pub fn bern<F>(p: F) -> StatsResult<Bernoulli<F>>
+where
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
+{
+    bernoulli(p)
 }
 
 /// Create a Binomial distribution with the given parameters.

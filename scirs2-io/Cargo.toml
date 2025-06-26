@@ -11,7 +11,7 @@ categories = ["science", "encoding"]
 
 [dependencies]
 ndarray = { workspace = true }
-scirs2-core = { workspace = true, features = ["parallel"] }
+scirs2-core = { workspace = true, features = ["parallel", "simd"] }
 byteorder = { workspace = true }
 image = { workspace = true }
 serde = { workspace = true }

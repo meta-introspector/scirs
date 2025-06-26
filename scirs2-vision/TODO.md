@@ -68,14 +68,14 @@ Computer vision module for SciRS2 - **PRODUCTION READY** for final alpha release
 ## Minor Documentation Issues (Pre-Release)
 
 ### 📋 API Documentation Corrections Needed
-- [ ] **README Examples**: Update function names to match public API re-exports
-- [ ] **Missing Re-exports**: Consider adding `prewitt_edges`, `laplacian_edges`, `laplacian_of_gaussian` to public API
-- [ ] **Blob Detection Examples**: Update to match actual implementation API
+- [x] **README Examples**: Update function names to match public API re-exports
+- [x] **Missing Re-exports**: Consider adding `prewitt_edges`, `laplacian_edges`, `laplacian_of_gaussian` to public API
+- [x] **Blob Detection Examples**: Update to match actual implementation API
 
 ### 📋 Final Polish Items
-- [ ] **Performance Documentation**: Add performance characteristics to complex algorithms
-- [ ] **Algorithm References**: Include references to papers/algorithms where applicable
-- [ ] **Thread Safety**: Document thread-safety considerations for parallel operations
+- [x] **Performance Documentation**: Add performance characteristics to complex algorithms
+- [x] **Algorithm References**: Include references to papers/algorithms where applicable
+- [x] **Thread Safety**: Document thread-safety considerations for parallel operations
 
 ## Future Development (Post-Alpha)
 

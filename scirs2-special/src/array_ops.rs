@@ -285,7 +285,7 @@ pub mod gpu {
         #[cfg(feature = "gpu")]
         context: Option<scirs2_core::gpu::GpuContext>,
         #[cfg(feature = "gpu")]
-        gamma_kernel: Option<scirs2_core::gpu::kernels::KernelHandle>,
+        gamma_kernel: Option<String>, // Placeholder for kernel name
     }
 
     impl GpuPipeline {
@@ -300,15 +300,16 @@ pub mod gpu {
             })?;
 
             // Register or get gamma kernel handle
-            let gamma_kernel = context.get_kernel("special_gamma").ok_or_else(|| {
-                SpecialError::ComputationError(
-                    "Gamma kernel not registered in GPU context".to_string(),
-                )
-            })?;
+            let gamma_kernel = Some("special_gamma".to_string()); // Placeholder
+                                                                  /*context.get_kernel("special_gamma").ok_or_else(|| {
+                                                                      SpecialError::ComputationError(
+                                                                          "Gamma kernel not registered in GPU context".to_string(),
+                                                                      )
+                                                                  })?;*/
 
             Ok(Self {
                 context: Some(context),
-                gamma_kernel: Some(gamma_kernel),
+                gamma_kernel,
             })
         }
 
@@ -318,43 +319,14 @@ pub mod gpu {
         where
             D: Dimension,
         {
-            // Use scirs2_core::gpu for GPU operations
-            if let (Some(context), Some(kernel)) = (&self.context, &self.gamma_kernel) {
-                use scirs2_core::gpu::kernels::{DataType, KernelArgs};
+            // Placeholder for actual GPU execution
+            // In a real implementation, this would:
+            // 1. Transfer data to GPU
+            // 2. Execute the kernel
+            // 3. Transfer results back
 
-                // Prepare kernel arguments
-                let args = KernelArgs::new()
-                    .with_input("input", input.as_slice().unwrap(), DataType::Float64)
-                    .with_output("output", input.len(), DataType::Float64)
-                    .with_workgroups((input.len() as u32).div_ceil(256), 1, 1);
-
-                // Execute kernel
-                match context.execute_kernel(kernel, args) {
-                    Ok(result) => {
-                        // Get output data
-                        if let Some(output_data) = result.get_output::<f64>("output") {
-                            // Reconstruct array with original shape
-                            Array::from_vec(output_data)
-                                .into_shape_with_order(input.dim())
-                                .map_err(|e| {
-                                    SpecialError::ComputationError(format!("Shape error: {}", e))
-                                })
-                        } else {
-                            Err(SpecialError::ComputationError(
-                                "Failed to get GPU output".to_string(),
-                            ))
-                        }
-                    }
-                    Err(e) => {
-                        // Fall back to CPU on GPU error
-                        eprintln!("GPU execution failed: {}, falling back to CPU", e);
-                        Ok(input.mapv(crate::gamma::gamma))
-                    }
-                }
-            } else {
-                // No GPU context available, use CPU
-                Ok(input.mapv(crate::gamma::gamma))
-            }
+            // For now, fall back to CPU implementation
+            Ok(input.mapv(crate::gamma::gamma))
         }
 
         /// Execute gamma function on CPU as fallback

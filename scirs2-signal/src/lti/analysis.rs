@@ -529,8 +529,7 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: Index bounds error in complete_kalman_decomposition
+/// ```
 /// use scirs2_signal::lti::{systems::StateSpace, analysis::complete_kalman_decomposition};
 ///
 /// let ss = StateSpace::new(
@@ -538,6 +537,7 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
 ///     vec![1.0, 0.0], vec![0.0], None
 /// ).unwrap();
 /// let decomp = complete_kalman_decomposition(&ss).unwrap();
+/// assert!(decomp.co_dimension + decomp.c_no_dimension + decomp.nc_o_dimension + decomp.nc_no_dimension == 2);
 /// ```
 pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDecomposition> {
     let n = ss.n_states;

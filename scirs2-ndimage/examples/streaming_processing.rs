@@ -11,10 +11,10 @@ use std::path::Path;
 fn main() {
     // Example 1: Process a large image file with streaming Gaussian filter
     process_large_image_gaussian();
-    
+
     // Example 2: Process with Fourier domain filters
     process_large_image_fourier();
-    
+
     // Example 3: Custom streaming operation
     process_with_custom_op();
 }
@@ -22,7 +22,7 @@ fn main() {
 /// Process a large image with streaming Gaussian filter
 fn process_large_image_gaussian() {
     println!("Processing large image with streaming Gaussian filter...");
-    
+
     // Configure streaming with 256MB chunks
     let config = StreamConfig {
         chunk_size: 256 * 1024 * 1024,
@@ -31,16 +31,16 @@ fn process_large_image_gaussian() {
         cache_chunks: 4,
         temp_dir: Some("/tmp".to_string()),
     };
-    
+
     // Create streaming Gaussian filter
     let op = StreamingGaussianFilter::new(vec![5.0, 5.0], Some(4.0));
-    
+
     // Process a hypothetical large image file
     // In a real scenario, these would be actual file paths
     let input_path = Path::new("large_image_10gb.raw");
     let output_path = Path::new("large_image_filtered.raw");
     let shape = &[50000, 50000]; // 50k x 50k image
-    
+
     // This would process the image in chunks without loading it all into memory
     println!("Would process image of size {:?} in chunks...", shape);
     // stream_process_file::<f64, ndarray::Ix2, _>(
@@ -55,18 +55,18 @@ fn process_large_image_gaussian() {
 /// Process with Fourier domain filters
 fn process_large_image_fourier() {
     println!("\nProcessing with Fourier domain filters...");
-    
+
     let config = StreamConfig {
         chunk_size: 512 * 1024 * 1024, // Larger chunks for FFT efficiency
-        overlap: vec![8, 8], // Minimal overlap for Fourier filters
+        overlap: vec![8, 8],           // Minimal overlap for Fourier filters
         ..Default::default()
     };
-    
+
     let input_path = Path::new("large_image.raw");
     let output_path = Path::new("large_image_fourier_gaussian.raw");
     let shape = &[30000, 30000];
     let sigma = &[10.0, 10.0];
-    
+
     // This would apply Fourier Gaussian filter to large images
     println!("Would apply Fourier Gaussian with sigma {:?}...", sigma);
     // fourier_gaussian_file::<f64>(
@@ -81,12 +81,12 @@ fn process_large_image_fourier() {
 /// Custom streaming operation
 fn process_with_custom_op() {
     println!("\nProcessing with custom streaming operation...");
-    
+
     // Custom edge enhancement operation
     struct EdgeEnhancementOp {
         strength: f64,
     }
-    
+
     impl StreamableOp<f64, ndarray::Ix2> for EdgeEnhancementOp {
         fn apply_chunk(
             &self,
@@ -94,16 +94,16 @@ fn process_with_custom_op() {
         ) -> scirs2_ndimage::NdimageResult<Array2<f64>> {
             // Apply Laplacian for edge detection
             let edges = scirs2_ndimage::laplace(chunk.to_owned(), None)?;
-            
+
             // Enhance edges
             let enhanced = chunk.to_owned() - edges * self.strength;
             Ok(enhanced)
         }
-        
+
         fn required_overlap(&self) -> Vec<usize> {
             vec![3, 3] // Need 3 pixel overlap for Laplacian
         }
-        
+
         fn merge_overlap(
             &self,
             _output: &mut ndarray::ArrayViewMut2<f64>,
@@ -114,10 +114,10 @@ fn process_with_custom_op() {
             Ok(())
         }
     }
-    
+
     let op = EdgeEnhancementOp { strength: 0.5 };
     let config = StreamConfig::default();
-    
+
     println!("Custom edge enhancement operation configured with strength 0.5");
     // Would process with custom operation...
 }
@@ -127,7 +127,7 @@ mod tests {
     use super::*;
     use ndarray::arr2;
     use scirs2_ndimage::StreamProcessor;
-    
+
     #[test]
     fn test_streaming_small_array() {
         // Test with a small array to verify functionality
@@ -137,19 +137,19 @@ mod tests {
             [9.0, 10.0, 11.0, 12.0],
             [13.0, 14.0, 15.0, 16.0],
         ]);
-        
+
         let config = StreamConfig {
             chunk_size: 64, // Very small chunks for testing
             overlap: vec![1, 1],
             ..Default::default()
         };
-        
+
         let processor = StreamProcessor::<f64>::new(config);
         let op = StreamingGaussianFilter::new(vec![1.0, 1.0], None);
-        
+
         let result = processor.process_in_memory(&input.view(), op).unwrap();
         assert_eq!(result.shape(), input.shape());
-        
+
         // Check that values are smoothed
         assert!(result[[1, 1]] != input[[1, 1]]);
     }

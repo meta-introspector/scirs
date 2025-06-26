@@ -3,6 +3,7 @@
 //! This module provides functionality for the Exponential distribution.
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_messages::validation;
 use crate::sampling::SampleableDistribution;
 use crate::traits::distribution::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
@@ -42,11 +43,7 @@ impl<F: Float + NumCast + Debug> Exponential<F> {
     /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
     /// ```
     pub fn new(rate: F, loc: F) -> StatsResult<Self> {
-        if rate <= F::zero() {
-            return Err(StatsError::DomainError(
-                "Rate parameter must be positive".to_string(),
-            ));
-        }
+        validation::ensure_positive(rate, "Rate parameter")?;
 
         // Set scale = 1/rate
         let scale = F::one() / rate;

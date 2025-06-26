@@ -1,0 +1,362 @@
+//! Memory-mapped I/O operations for large images
+//!
+//! This module provides functions for loading and saving large images using
+//! memory-mapped arrays, enabling processing of datasets that don't fit in RAM.
+
+use ndarray::{Array, ArrayView, Dimension, Ix1, Ix2, Ix3, IxDyn};
+use num_traits::{Float, FromPrimitive, NumCast};
+use std::path::Path;
+
+use scirs2_core::error::CoreResult;
+use scirs2_core::memory_efficient::{
+    create_mmap, AccessMode, ChunkingStrategy, MemoryMappedArray, MemoryMappedChunkIter,
+    MemoryMappedChunks,
+};
+
+use crate::error::{NdimageError, NdimageResult};
+
+/// Load an image as a memory-mapped array
+///
+/// This function creates a memory-mapped array from a file, allowing you to work
+/// with images larger than available RAM.
+///
+/// # Arguments
+///
+/// * `path` - Path to the image file
+/// * `shape` - Expected shape of the image
+/// * `offset` - Byte offset in the file where image data starts
+/// * `access` - Access mode (Read, Write, or Copy)
+///
+/// # Returns
+///
+/// A memory-mapped array that can be used like a regular ndarray
+pub fn load_image_mmap<T, D, P>(
+    path: P,
+    shape: &[usize],
+    offset: usize,
+    access: AccessMode,
+) -> NdimageResult<MemoryMappedArray<T>>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+    D: Dimension,
+    P: AsRef<Path>,
+{
+    // Calculate total size
+    let total_elements: usize = shape.iter().product();
+    let element_size = std::mem::size_of::<T>();
+    let total_bytes = total_elements * element_size;
+
+    // Check if file exists and has correct size
+    let file_size = std::fs::metadata(path.as_ref())
+        .map_err(|e| NdimageError::IOError(format!("Failed to get file metadata: {}", e)))?
+        .len() as usize;
+
+    if file_size < offset + total_bytes {
+        return Err(NdimageError::InvalidInput(format!(
+            "File too small: expected at least {} bytes, got {}",
+            offset + total_bytes,
+            file_size
+        )));
+    }
+
+    // Create a dummy array for shape information
+    let dummy_array = Array::<T, IxDyn>::zeros(IxDyn(shape));
+
+    // Create memory-mapped array
+    let mmap = create_mmap(&dummy_array.view(), path.as_ref(), access, offset)
+        .map_err(|e| NdimageError::IOError(format!("Failed to create memory map: {}", e)))?;
+
+    Ok(mmap)
+}
+
+/// Save an array as a memory-mapped file
+///
+/// This function creates a new file and maps it to memory, then copies the array data.
+///
+/// # Arguments
+///
+/// * `array` - Array to save
+/// * `path` - Path where to save the file
+/// * `offset` - Byte offset in the file where to start writing
+///
+/// # Returns
+///
+/// A memory-mapped array pointing to the saved data
+pub fn save_image_mmap<T, D, P>(
+    array: &ArrayView<T, D>,
+    path: P,
+    offset: usize,
+) -> NdimageResult<MemoryMappedArray<T>>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+    D: Dimension,
+    P: AsRef<Path>,
+{
+    // Create memory-mapped array with write access
+    let mmap = create_mmap(array, path.as_ref(), AccessMode::Write, offset)
+        .map_err(|e| NdimageError::IOError(format!("Failed to create memory map: {}", e)))?;
+
+    Ok(mmap)
+}
+
+/// Create a temporary memory-mapped array for intermediate results
+///
+/// This is useful for operations that produce large intermediate results.
+///
+/// # Arguments
+///
+/// * `shape` - Shape of the array to create
+///
+/// # Returns
+///
+/// A memory-mapped array backed by a temporary file
+pub fn create_temp_mmap<T>(
+    shape: &[usize],
+) -> NdimageResult<(MemoryMappedArray<T>, tempfile::TempPath)>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+{
+    use tempfile::NamedTempFile;
+
+    // Create temporary file
+    let temp_file = NamedTempFile::new()
+        .map_err(|e| NdimageError::IOError(format!("Failed to create temp file: {}", e)))?;
+
+    let temp_path = temp_file.into_temp_path();
+
+    // Create dummy array for shape
+    let dummy_array = Array::<T, IxDyn>::zeros(IxDyn(shape));
+
+    // Create memory-mapped array
+    let mmap = create_mmap(&dummy_array.view(), &temp_path, AccessMode::Write, 0)
+        .map_err(|e| NdimageError::IOError(format!("Failed to create memory map: {}", e)))?;
+
+    Ok((mmap, temp_path))
+}
+
+/// Process a memory-mapped image in chunks
+///
+/// This function provides a convenient way to process large memory-mapped images
+/// using chunked processing.
+///
+/// # Arguments
+///
+/// * `mmap` - Memory-mapped array containing the image
+/// * `strategy` - Chunking strategy to use
+/// * `processor` - Function to process each chunk
+///
+/// # Returns
+///
+/// Results from processing each chunk
+pub fn process_mmap_chunks<T, R, F>(
+    mmap: &MemoryMappedArray<T>,
+    strategy: ChunkingStrategy,
+    processor: F,
+) -> NdimageResult<Vec<R>>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+    F: Fn(&[T], usize) -> R,
+    R: Send,
+{
+    let results = mmap.process_chunks(strategy, processor);
+    Ok(results)
+}
+
+/// Iterator over chunks of a memory-mapped image
+///
+/// This provides a lazy way to process large images chunk by chunk.
+pub struct MmapChunkIterator<'a, T>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+{
+    mmap: &'a MemoryMappedArray<T>,
+    strategy: ChunkingStrategy,
+}
+
+impl<'a, T> MmapChunkIterator<'a, T>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+{
+    pub fn new(mmap: &'a MemoryMappedArray<T>, strategy: ChunkingStrategy) -> Self {
+        Self { mmap, strategy }
+    }
+
+    /// Get an iterator over chunks
+    pub fn iter(&self) -> impl Iterator<Item = Array<T, Ix1>> + '_ {
+        self.mmap.chunks(self.strategy.clone())
+    }
+}
+
+/// Configuration for memory-mapped image processing
+#[derive(Debug, Clone)]
+pub struct MmapConfig {
+    /// Maximum size (in bytes) before automatically using memory mapping
+    pub auto_mmap_threshold: usize,
+    /// Default chunking strategy
+    pub default_chunk_strategy: ChunkingStrategy,
+    /// Whether to use parallel processing for chunks
+    pub parallel: bool,
+    /// Whether to prefetch chunks
+    pub prefetch: bool,
+}
+
+impl Default for MmapConfig {
+    fn default() -> Self {
+        Self {
+            auto_mmap_threshold: 100 * 1024 * 1024, // 100 MB
+            default_chunk_strategy: ChunkingStrategy::Auto,
+            parallel: true,
+            prefetch: true,
+        }
+    }
+}
+
+/// Smart image loader that automatically decides between regular and memory-mapped loading
+pub fn smart_load_image<T, D, P>(
+    path: P,
+    shape: &[usize],
+    config: Option<MmapConfig>,
+) -> NdimageResult<ImageData<T, D>>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+    D: Dimension + 'static,
+    P: AsRef<Path>,
+{
+    let config = config.unwrap_or_default();
+
+    // Calculate expected size
+    let total_elements: usize = shape.iter().product();
+    let total_bytes = total_elements * std::mem::size_of::<T>();
+
+    if total_bytes > config.auto_mmap_threshold {
+        // Use memory-mapped loading for large files
+        let mmap = load_image_mmap::<T, D, P>(path, shape, 0, AccessMode::Read)?;
+        Ok(ImageData::MemoryMapped(mmap))
+    } else {
+        // Load into regular array for small files
+        // This would need actual image loading implementation
+        return Err(NdimageError::Unimplemented(
+            "Regular image loading not implemented in this example".into(),
+        ));
+    }
+}
+
+/// Enum to hold either regular or memory-mapped image data
+pub enum ImageData<T, D>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+    D: Dimension,
+{
+    Regular(Array<T, D>),
+    MemoryMapped(MemoryMappedArray<T>),
+}
+
+impl<T, D> ImageData<T, D>
+where
+    T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
+    D: Dimension + 'static,
+{
+    /// Get a view of the image data
+    pub fn view(&self) -> NdimageResult<ArrayView<T, D>> {
+        match self {
+            ImageData::Regular(array) => Ok(array.view()),
+            ImageData::MemoryMapped(mmap) => mmap
+                .as_array::<D>()
+                .map_err(|e| NdimageError::ProcessingError(format!("Failed to get view: {}", e))),
+        }
+    }
+
+    /// Check if this is memory-mapped
+    pub fn is_mmap(&self) -> bool {
+        matches!(self, ImageData::MemoryMapped(_))
+    }
+
+    /// Get the shape
+    pub fn shape(&self) -> Vec<usize> {
+        match self {
+            ImageData::Regular(array) => array.shape().to_vec(),
+            ImageData::MemoryMapped(mmap) => mmap.shape().to_vec(),
+        }
+    }
+}
+
+/// Example: Process a large image file using memory mapping
+pub fn process_large_image_example<P: AsRef<Path>>(
+    input_path: P,
+    output_path: P,
+    shape: &[usize],
+) -> NdimageResult<()> {
+    // Load input as memory-mapped
+    let input_mmap = load_image_mmap::<f64, Ix2, _>(input_path, shape, 0, AccessMode::Read)?;
+
+    // Create output memory-mapped array
+    let output_mmap = save_image_mmap(
+        &Array::<f64, IxDyn>::zeros(IxDyn(shape)).view(),
+        output_path,
+        0,
+    )?;
+
+    // Process in chunks
+    let chunk_results = input_mmap.process_chunks(
+        ChunkingStrategy::FixedBytes(10 * 1024 * 1024), // 10 MB chunks
+        |chunk_data, chunk_idx| {
+            // Example: Apply some transformation
+            let processed: Vec<f64> = chunk_data.iter().map(|&x| x * 2.0 + 1.0).collect();
+            (chunk_idx, processed)
+        },
+    );
+
+    // Write results back (would need proper implementation)
+    println!("Processed {} chunks", chunk_results.len());
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::Array2;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_create_temp_mmap() {
+        let shape = vec![100, 100];
+        let (mmap, _temp_path) = create_temp_mmap::<f64>(&shape).unwrap();
+
+        assert_eq!(mmap.shape(), &shape);
+        assert_eq!(mmap.size(), 10000);
+    }
+
+    #[test]
+    fn test_save_and_load_mmap() {
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("test_image.bin");
+
+        // Create test data
+        let data = Array2::<f64>::from_elem((50, 50), 3.14);
+
+        // Save as memory-mapped
+        let saved_mmap = save_image_mmap(&data.view(), &file_path, 0).unwrap();
+        assert_eq!(saved_mmap.shape(), &[50, 50]);
+
+        // Load back
+        let loaded_mmap =
+            load_image_mmap::<f64, Ix2, _>(&file_path, &[50, 50], 0, AccessMode::Read).unwrap();
+
+        // Verify data
+        let loaded_view = loaded_mmap.as_array::<Ix2>().unwrap();
+        assert_eq!(loaded_view[[25, 25]], 3.14);
+    }
+
+    #[test]
+    fn test_mmap_chunk_iterator() {
+        let shape = vec![1000];
+        let (mmap, _temp_path) = create_temp_mmap::<f64>(&shape).unwrap();
+
+        let iterator = MmapChunkIterator::new(&mmap, ChunkingStrategy::Fixed(100));
+        let chunks: Vec<_> = iterator.iter().collect();
+
+        assert_eq!(chunks.len(), 10);
+        assert_eq!(chunks[0].len(), 100);
+    }
+}

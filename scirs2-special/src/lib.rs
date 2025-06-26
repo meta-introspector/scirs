@@ -22,13 +22,42 @@
 //! * Wright Omega function
 //! * Logarithmic integral
 //!
+//! ## Performance Features
+//!
+//! * **GPU Acceleration** (with `gpu` feature): Automatically accelerates array operations
+//!   on supported hardware for gamma, Bessel, and error functions
+//! * **Memory-Efficient Processing**: Chunked processing for large arrays to avoid
+//!   memory overflow and improve cache efficiency
+//! * **SIMD Optimizations**: Vectorized implementations for improved performance
+//! * **Parallel Processing**: Multi-threaded execution for large arrays
+//!
 //! ## Examples
 //!
+//! Basic usage:
 //! ```
 //! use scirs2_special::gamma;
 //!
 //! let gamma_value = gamma(5.0f64);
 //! assert!((gamma_value - 24.0).abs() < 1e-10);
+//! ```
+//!
+//! Memory-efficient processing for large arrays:
+//! ```no_run
+//! use ndarray::Array1;
+//! use scirs2_special::memory_efficient::gamma_chunked;
+//!
+//! let large_array = Array1::linspace(0.1, 10.0, 1_000_000);
+//! let result = gamma_chunked(&large_array, None).unwrap();
+//! ```
+//!
+//! GPU acceleration (requires `gpu` feature):
+//! ```ignore
+//! use ndarray::Array1;
+//! use scirs2_special::gpu_ops::gamma_gpu;
+//!
+//! let input = Array1::linspace(0.1, 10.0, 100_000);
+//! let mut output = Array1::zeros(100_000);
+//! gamma_gpu(&input.view(), &mut output.view_mut()).unwrap();
 //! ```
 
 // Export error types
@@ -43,13 +72,17 @@ mod combinatorial;
 mod constants;
 mod coulomb;
 mod elliptic;
+mod erf;
 mod fresnel;
 mod gamma;
+#[cfg(feature = "gpu")]
+pub mod gpu_ops;
 mod hypergeometric;
 mod kelvin;
 mod lambert;
 mod logint;
 mod mathieu;
+pub mod memory_efficient;
 pub mod optimizations;
 mod orthogonal;
 mod parabolic;
@@ -165,7 +198,6 @@ pub use simd_ops::{
 pub use simd_ops::gamma_f32_simd_parallel;
 
 // Error function and related functions
-pub mod erf;
 pub use erf::{erf, erfc, erfcinv, erfinv};
 
 #[cfg(test)]

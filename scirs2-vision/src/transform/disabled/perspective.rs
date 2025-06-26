@@ -93,8 +93,8 @@ impl PerspectiveTransform {
             a[[idx, 8]] = -v;
         }
 
-        // TODO: Replace with proper SVD implementation
-        // For now, use a simple direct eigenvector solution for smallest eigenvalue
+        // This functionality is currently disabled as it requires SVD implementation
+        // The code is preserved for future implementation when appropriate dependencies are available
         let h = compute_homography_from_system(&a)?;
 
         // Create homography matrix

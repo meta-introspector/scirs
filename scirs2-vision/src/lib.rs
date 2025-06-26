@@ -2,6 +2,20 @@
 //!
 //! This module provides computer vision functionality that builds on top of the
 //! scirs2-ndimage module, including image processing, feature detection, and segmentation.
+//!
+//! # Thread Safety
+//!
+//! All functions in this module are thread-safe and can be called concurrently on different images.
+//! When the `parallel` feature is enabled (via scirs2-core), many algorithms will automatically
+//! utilize multiple CPU cores for improved performance on large images. Key parallel optimizations include:
+//!
+//! - Gradient computations in edge detection algorithms
+//! - Pixel-wise operations in preprocessing functions
+//! - Feature detection algorithms that process image regions independently
+//! - Segmentation algorithms with parallelizable clustering steps
+//!
+//! Note that while functions are thread-safe, mutable image data should not be shared between threads
+//! without proper synchronization.
 
 #![warn(missing_docs)]
 
@@ -42,8 +56,10 @@ pub use feature::{
     array_to_image,
     descriptor::{detect_and_compute, match_descriptors, Descriptor, KeyPoint},
     harris_corners, image_to_array,
+    laplacian::{laplacian_edges, laplacian_of_gaussian},
     log_blob::{log_blob_detect, log_blobs_to_image, LogBlob, LogBlobConfig},
     orb::{detect_and_compute_orb, match_orb_descriptors, OrbConfig, OrbDescriptor},
+    prewitt::prewitt_edges,
     sobel_edges,
 };
 // Re-export with unique name to avoid ambiguity

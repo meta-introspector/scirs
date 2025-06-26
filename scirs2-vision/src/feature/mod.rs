@@ -168,16 +168,24 @@ pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
 
 /// Detect corners using a Harris corner detector
 ///
+/// The Harris corner detector is a corner detection operator that is commonly
+/// used in computer vision algorithms to extract corners and infer features
+/// of an image.
+///
 /// # Arguments
 ///
 /// * `img` - Input image
 /// * `block_size` - Size of the window for corner detection
-/// * `k` - Harris detector free parameter
+/// * `k` - Harris detector free parameter (typically 0.04-0.06)
 /// * `threshold` - Threshold for corner detection
 ///
 /// # Returns
 ///
 /// * Result containing an image with corners marked
+///
+/// # References
+///
+/// - Harris, C. and Stephens, M., 1988, August. A combined corner and edge detector. In Alvey vision conference (Vol. 15, No. 50, pp. 10-5244).
 pub fn harris_corners(
     img: &DynamicImage,
     block_size: usize,

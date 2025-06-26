@@ -3,6 +3,17 @@
 //! This module provides a generic RANSAC implementation that can be used
 //! for robust estimation of model parameters in the presence of outliers,
 //! with specific applications to homography estimation and feature matching.
+//!
+//! # Performance Characteristics
+//!
+//! - Time complexity: O(n × k) where n is the number of iterations and k is the cost of evaluating each model
+//! - Space complexity: O(p) where p is the number of data points
+//! - The algorithm uses early termination based on confidence level to reduce unnecessary iterations
+//! - Parallel evaluation of inliers when enabled via the `parallel` feature
+//!
+//! # References
+//!
+//! - Fischler, M.A. and Bolles, R.C., 1981. Random sample consensus: a paradigm for model fitting with applications to image analysis and automated cartography. Communications of the ACM, 24(6), pp.381-395.
 
 use crate::error::Result;
 use ndarray::{Array1, Array2};

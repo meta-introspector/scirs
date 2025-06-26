@@ -415,3 +415,129 @@ where
 
     Ok(results)
 }
+
+/// Zero-copy compression of contiguous arrays
+///
+/// This function provides efficient compression of contiguous arrays
+/// by processing data directly from the array's memory layout without
+/// intermediate copying.
+///
+/// # Arguments
+///
+/// * `array` - Array to compress (must be in standard layout)
+/// * `algorithm` - Compression algorithm to use
+/// * `level` - Compression level (algorithm-specific)
+/// * `chunk_size` - Size of chunks for processing
+///
+/// # Returns
+///
+/// * `Result<CompressedArray>` - Compressed array or error
+///
+/// # Note
+///
+/// This function requires the array to be in standard (C-contiguous) layout.
+pub fn compress_array_zero_copy<A, S>(
+    array: &ArrayBase<S, IxDyn>,
+    algorithm: CompressionAlgorithm,
+    level: i32,
+    chunk_size: usize,
+) -> Result<CompressedArray>
+where
+    A: Serialize + Clone + bytemuck::Pod,
+    S: ndarray::Data<Elem = A>,
+{
+    if !array.is_standard_layout() {
+        return Err(IoError::FormatError(
+            "Array must be in standard layout for zero-copy compression".to_string(),
+        ));
+    }
+
+    let mut compressed_chunks = Vec::new();
+    let mut total_original_size = 0;
+    let mut total_compressed_size = 0;
+
+    // Get the raw slice for zero-copy access
+    if let Some(slice) = array.as_slice() {
+        let bytes = bytemuck::cast_slice(slice);
+        let bytes_per_chunk = chunk_size * std::mem::size_of::<A>();
+
+        // Process the array in chunks without copying
+        for chunk_bytes in bytes.chunks(bytes_per_chunk) {
+            // Compress the chunk directly from the slice
+            let compressed_chunk = compress_data(chunk_bytes, algorithm, level)?;
+
+            // Track sizes
+            total_original_size += chunk_bytes.len();
+            total_compressed_size += compressed_chunk.len();
+
+            // Add to compressed chunks collection
+            compressed_chunks.push(compressed_chunk);
+        }
+    }
+
+    // Create metadata
+    let metadata = CompressedArrayMetadata {
+        shape: array.shape().to_vec(),
+        dtype: std::any::type_name::<A>().to_string(),
+        element_size: std::mem::size_of::<A>(),
+        algorithm: format!("{:?}", algorithm),
+        original_size: total_original_size,
+        compressed_size: total_compressed_size,
+        compression_ratio: total_original_size as f64 / total_compressed_size as f64,
+        compression_level: level,
+        chunks: compressed_chunks.len(),
+        chunk_size,
+    };
+
+    Ok(CompressedArray {
+        metadata,
+        data: compressed_chunks,
+    })
+}
+
+/// Decompress array with zero-copy optimization for the output
+///
+/// This function decompresses array data and returns it as a contiguous
+/// array that can be used with zero-copy operations.
+///
+/// # Arguments
+///
+/// * `compressed` - Compressed array to decompress
+///
+/// # Returns
+///
+/// * `Result<Array<A, IxDyn>>` - Decompressed array or error
+pub fn decompress_array_zero_copy<A>(compressed: &CompressedArray) -> Result<Array<A, IxDyn>>
+where
+    A: for<'de> Deserialize<'de> + Clone + bytemuck::Pod,
+{
+    let algorithm = match compressed.metadata.algorithm.as_str() {
+        "Gzip" => CompressionAlgorithm::Gzip,
+        "Lz4" => CompressionAlgorithm::Lz4,
+        "Zstd" => CompressionAlgorithm::Zstd,
+        "Bzip2" => CompressionAlgorithm::Bzip2,
+        _ => {
+            return Err(IoError::FormatError(format!(
+                "Unknown compression algorithm: {}",
+                compressed.metadata.algorithm
+            )))
+        }
+    };
+
+    // Pre-allocate the output array with the exact size needed
+    let total_elements: usize = compressed.metadata.shape.iter().product();
+    let mut decompressed_data = Vec::with_capacity(total_elements);
+
+    // Decompress all chunks directly into the pre-allocated buffer
+    for chunk in &compressed.data {
+        let decompressed_chunk = decompress_data(chunk, algorithm)?;
+        
+        // Instead of deserializing to Vec<A> then copying, interpret bytes directly
+        let elements = bytemuck::cast_slice::<u8, A>(&decompressed_chunk);
+        decompressed_data.extend_from_slice(elements);
+    }
+
+    // Create array from the decompressed data without additional copying
+    Array::from_shape_vec(IxDyn(&compressed.metadata.shape), decompressed_data)
+        .map_err(|e| IoError::DeserializationError(e.to_string()))
+}

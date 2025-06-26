@@ -2,6 +2,18 @@
 //!
 //! This module implements the ORB algorithm for feature detection and description.
 //! ORB provides a fast binary descriptor that is rotation invariant.
+//!
+//! # Performance Characteristics
+//!
+//! - Time complexity: O(N × L) where N is the number of pixels and L is the number of pyramid levels
+//! - Space complexity: O(N × L) for storing the image pyramid
+//! - FAST corner detection: O(N) per pyramid level
+//! - Descriptor computation: O(K × P) where K is the number of keypoints and P is the patch size
+//! - Binary descriptors enable very fast matching using Hamming distance
+//!
+//! # References
+//!
+//! - Rublee, E., Rabaud, V., Konolige, K. and Bradski, G., 2011, November. ORB: An efficient alternative to SIFT or SURF. In 2011 International conference on computer vision (pp. 2564-2571). IEEE.
 
 use crate::error::Result;
 use crate::feature::{image_to_array, KeyPoint};

@@ -6,6 +6,21 @@
 //!
 //! This module provides functionality for edge detection in images using the Canny algorithm,
 //! which is known for its good detection, localization, and single response properties.
+//!
+//! # Performance Characteristics
+//!
+//! - Time complexity: O(N × M) where N×M is the image size
+//! - Space complexity: O(N × M) for storing intermediate gradient and edge maps
+//! - Gaussian smoothing: O(N × M × K) where K is the kernel size (proportional to sigma)
+//! - Non-maximum suppression: O(N × M) single pass
+//! - Hysteresis thresholding: O(N × M) using connected component analysis
+//! - The algorithm is parallelizable for gradient computation when the `parallel` feature is enabled
+//!
+//! # Thread Safety
+//!
+//! The Canny edge detection functions are thread-safe and can be called concurrently
+//! on different images. When the `parallel` feature is enabled, gradient computations
+//! are automatically parallelized using Rayon.
 
 use crate::error::{Result, VisionError};
 use image::{DynamicImage, GrayImage};

@@ -1483,14 +1483,14 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::kendallr;
+/// use scirs2_stats::kendalltau;
 ///
 /// // Create two datasets with a perfect negative ordinal relationship
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 ///
 /// // Calculate Kendall tau correlation coefficient and p-value
-/// let (tau, p_value) = kendallr(&x.view(), &y.view(), "b", "two-sided").unwrap();
+/// let (tau, p_value) = kendalltau(&x.view(), &y.view(), "b", "two-sided").unwrap();
 ///
 /// println!("Kendall tau correlation coefficient: {}", tau);
 /// println!("Two-sided p-value: {}", p_value);
@@ -1498,7 +1498,7 @@ where
 /// // Perfect negative ordinal association (tau should be -1.0)
 /// assert!((tau - (-1.0f64)).abs() < 1e-10f64);
 /// ```
-pub fn kendallr<F, D>(
+pub fn kendalltau<F, D>(
     x: &ArrayBase<D, Ix1>,
     y: &ArrayBase<D, Ix1>,
     method: &str,

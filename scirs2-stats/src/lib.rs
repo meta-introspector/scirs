@@ -307,6 +307,7 @@
 
 // Export error types
 pub mod error;
+pub mod error_messages;
 pub use error::{StatsError, StatsResult};
 
 // Module substructure following SciPy's organization
@@ -320,13 +321,14 @@ pub mod traits; // Trait definitions for distributions and statistical objects
 
 // Core functions for descriptive statistics
 mod descriptive;
+mod descriptive_simd;
 pub use descriptive::*;
+pub use descriptive_simd::{mean_simd, variance_simd, std_simd, descriptive_stats_simd};
 
 // Statistical tests module
 pub mod tests;
 pub use tests::anova::{one_way_anova, tukey_hsd};
 pub use tests::chi2_test::{chi2_gof, chi2_independence, chi2_yates};
-pub use tests::nonparametric::mann_whitney as mannwhitneyu;
 pub use tests::nonparametric::{friedman, kruskal_wallis, mann_whitney, wilcoxon};
 pub use tests::normality::{anderson_darling, dagostino_k2, ks_2samp, shapiro_wilk};
 pub use tests::ttest::{
@@ -338,7 +340,7 @@ pub use tests::*;
 mod correlation;
 pub use correlation::intraclass::icc;
 pub use correlation::{
-    corrcoef, kendall_tau, kendallr, partial_corr, partial_corrr, pearson_r, pearsonr,
+    corrcoef, kendall_tau, kendalltau, partial_corr, partial_corrr, pearson_r, pearsonr,
     point_biserial, point_biserialr, spearman_r, spearmanr,
 };
 
