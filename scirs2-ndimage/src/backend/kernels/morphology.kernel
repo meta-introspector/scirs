@@ -1,0 +1,81 @@
+// Morphological operations kernels for GPU execution
+
+__kernel void erosion_2d(
+    __global const float* input,
+    __global const float* structure,
+    __global float* output,
+    const int height,
+    const int width,
+    const int struct_height,
+    const int struct_width
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    int shalf_h = struct_height / 2;
+    int shalf_w = struct_width / 2;
+    
+    float min_val = INFINITY;
+    
+    // Apply erosion
+    for (int sy = 0; sy < struct_height; sy++) {
+        for (int sx = 0; sx < struct_width; sx++) {
+            // Check if structuring element is active at this position
+            if (structure[sy * struct_width + sx] > 0.0f) {
+                // Calculate input coordinates
+                int ix = x + sx - shalf_w;
+                int iy = y + sy - shalf_h;
+                
+                // Skip if outside boundaries
+                if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
+                    float val = input[iy * width + ix];
+                    min_val = fmin(min_val, val);
+                }
+            }
+        }
+    }
+    
+    output[y * width + x] = min_val;
+}
+
+__kernel void dilation_2d(
+    __global const float* input,
+    __global const float* structure,
+    __global float* output,
+    const int height,
+    const int width,
+    const int struct_height,
+    const int struct_width
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    int shalf_h = struct_height / 2;
+    int shalf_w = struct_width / 2;
+    
+    float max_val = -INFINITY;
+    
+    // Apply dilation
+    for (int sy = 0; sy < struct_height; sy++) {
+        for (int sx = 0; sx < struct_width; sx++) {
+            // Check if structuring element is active at this position
+            if (structure[sy * struct_width + sx] > 0.0f) {
+                // Calculate input coordinates (note: we flip the structure)
+                int ix = x - sx + shalf_w;
+                int iy = y - sy + shalf_h;
+                
+                // Skip if outside boundaries
+                if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
+                    float val = input[iy * width + ix];
+                    max_val = fmax(max_val, val);
+                }
+            }
+        }
+    }
+    
+    output[y * width + x] = max_val;
+}

@@ -1,0 +1,58 @@
+// Median filter kernel for GPU execution
+// Uses a simple sorting network for small window sizes
+
+__kernel void median_filter_2d(
+    __global const float* input,
+    __global float* output,
+    const int height,
+    const int width,
+    const int filter_height,
+    const int filter_width
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    int fhalf_h = filter_height / 2;
+    int fhalf_w = filter_width / 2;
+    int window_size = filter_height * filter_width;
+    
+    // Local array for window values (max size 25 for 5x5 filter)
+    float window[25];
+    int count = 0;
+    
+    // Collect values in the window
+    for (int dy = -fhalf_h; dy <= fhalf_h; dy++) {
+        for (int dx = -fhalf_w; dx <= fhalf_w; dx++) {
+            int px = clamp(x + dx, 0, width - 1);
+            int py = clamp(y + dy, 0, height - 1);
+            
+            if (count < 25) {
+                window[count++] = input[py * width + px];
+            }
+        }
+    }
+    
+    // Simple bubble sort for small arrays
+    // For larger windows, a more efficient algorithm would be used
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = 0; j < count - i - 1; j++) {
+            if (window[j] > window[j + 1]) {
+                float temp = window[j];
+                window[j] = window[j + 1];
+                window[j + 1] = temp;
+            }
+        }
+    }
+    
+    // Select median value
+    float median;
+    if (count % 2 == 0) {
+        median = (window[count/2 - 1] + window[count/2]) * 0.5f;
+    } else {
+        median = window[count/2];
+    }
+    
+    output[y * width + x] = median;
+}

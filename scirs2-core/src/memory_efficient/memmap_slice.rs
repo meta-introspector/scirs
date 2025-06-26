@@ -277,7 +277,7 @@ where
                 }
                 SliceInfoElem::Index(idx) => {
                     // Index reduces dimension, return a 0-d array
-                    view.slice(ndarray::s![*idx..*idx+1]).to_owned()
+                    view.slice(ndarray::s![*idx..*idx + 1]).to_owned()
                 }
                 _ => view.to_owned(),
             };
@@ -339,7 +339,8 @@ where
                 ) => {
                     let row_end = re.unwrap_or(view.shape()[0] as isize);
                     let col_end = ce.unwrap_or(view.shape()[1] as isize);
-                    view.slice(ndarray::s![*rs..row_end;*rstep, *cs..col_end;*cstep]).to_owned()
+                    view.slice(ndarray::s![*rs..row_end;*rstep, *cs..col_end;*cstep])
+                        .to_owned()
                 }
                 (
                     SliceInfoElem::Index(ridx),
@@ -351,7 +352,8 @@ where
                 ) => {
                     let col_end = ce.unwrap_or(view.shape()[1] as isize);
                     // Keep 2D by using range instead of index
-                    view.slice(ndarray::s![*ridx..*ridx+1, *cs..col_end;*cstep]).to_owned()
+                    view.slice(ndarray::s![*ridx..*ridx+1, *cs..col_end;*cstep])
+                        .to_owned()
                 }
                 (
                     SliceInfoElem::Slice {
@@ -363,11 +365,13 @@ where
                 ) => {
                     let row_end = re.unwrap_or(view.shape()[0] as isize);
                     // Keep 2D by using range instead of index
-                    view.slice(ndarray::s![*rs..row_end;*rstep, *cidx..*cidx+1]).to_owned()
+                    view.slice(ndarray::s![*rs..row_end;*rstep, *cidx..*cidx+1])
+                        .to_owned()
                 }
                 (SliceInfoElem::Index(ridx), SliceInfoElem::Index(cidx)) => {
                     // Keep 2D by using ranges instead of indices
-                    view.slice(ndarray::s![*ridx..*ridx+1, *cidx..*cidx+1]).to_owned()
+                    view.slice(ndarray::s![*ridx..*ridx + 1, *cidx..*cidx + 1])
+                        .to_owned()
                 }
                 _ => view.to_owned(),
             };

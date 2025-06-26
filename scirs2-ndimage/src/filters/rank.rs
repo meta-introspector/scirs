@@ -450,7 +450,11 @@ fn swap<T: PartialOrd>(arr: &mut [T], i: usize, j: usize) {
 }
 
 /// Optimization for f32 arrays with window size 3
-fn optimize_for_f32_size3<T>(input: &Array1<T>, rank: usize, mode: &BorderMode) -> NdimageResult<Array1<T>>
+fn optimize_for_f32_size3<T>(
+    input: &Array1<T>,
+    rank: usize,
+    mode: &BorderMode,
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
 {
@@ -470,165 +474,48 @@ where
     let pad_width = vec![(radius, radius)];
     let padded_input = pad_array(&input_f32, &pad_width, mode, None)?;
 
-    // We'll use SIMD processing for larger arrays and when the data is contiguous
-    // SIMD processing is handled through Cargo.toml feature flags
-    if false {
-        // Disabled because padded_input is not used
-        // Convert padded input to slice for efficient SIMD processing
-        let padded_slice = padded_input.as_slice().unwrap_or_else(|| {
-            // Fallback if for some reason we can't get a slice
-            padded_input.as_slice_memory_order().unwrap()
-        });
+    // Process the data sequentially - SIMD operations must use scirs2-core::simd_ops
+    // according to project policy (custom SIMD implementations are forbidden in modules)
+    let mut results = Vec::with_capacity(input.len());
 
-        // Process in chunks of 4 elements using SIMD when possible
-        let chunk_size = 4;
-        let simd_limit = ((input.len() / chunk_size) * chunk_size) as isize;
+    for i in 0..input.len() {
+        let center = i + radius;
 
-        // Process SIMD chunks sequentially - we're already using SIMD parallelism
-        let mut results = Vec::with_capacity(input.len());
+        // Extract 3 elements for the window
+        let a = padded_input[center - 1];
+        let b = padded_input[center];
+        let c = padded_input[center + 1];
 
-        for i in (0..simd_limit as usize).step_by(chunk_size) {
-            let mut chunk_results = Vec::with_capacity(chunk_size);
+        // Sort 3 elements (simple sorting network)
+        let (min, mid, max) = sort3(a, b, c);
 
-            // Process 4 sets of 3-element windows with SIMD
-            let idx_a0 = i + radius - 1;
-            let idx_b0 = i + radius;
-            let idx_c0 = i + radius + 1;
+        // Select element based on rank
+        let val = match rank {
+            0 => min,
+            1 => mid,
+            2 => max,
+            _ => unreachable!(), // Window size 3 can only have ranks 0, 1, 2
+        };
 
-            let idx_a1 = idx_a0 + 1;
-            let idx_b1 = idx_b0 + 1;
-            let idx_c1 = idx_c0 + 1;
-
-            let idx_a2 = idx_a0 + 2;
-            let idx_b2 = idx_b0 + 2;
-            let idx_c2 = idx_c0 + 2;
-
-            let idx_a3 = idx_a0 + 3;
-            let idx_b3 = idx_b0 + 3;
-            let idx_c3 = idx_c0 + 3;
-
-            // Load each window component as a separate vector
-            let a_arr = Array1::from_vec(vec![
-                padded_slice[idx_a0],
-                padded_slice[idx_a1],
-                padded_slice[idx_a2],
-                padded_slice[idx_a3],
-            ]);
-
-            let b_arr = Array1::from_vec(vec![
-                padded_slice[idx_b0],
-                padded_slice[idx_b1],
-                padded_slice[idx_b2],
-                padded_slice[idx_b3],
-            ]);
-
-            let c_arr = Array1::from_vec(vec![
-                padded_slice[idx_c0],
-                padded_slice[idx_c1],
-                padded_slice[idx_c2],
-                padded_slice[idx_c3],
-            ]);
-
-            // Use Core's SIMD functions to implement the sorting network
-            let min_ab = simd::simd_minimum_f32(&a_arr.view(), &b_arr.view());
-            let max_ab = simd::simd_maximum_f32(&a_arr.view(), &b_arr.view());
-
-            // SIMD sorting network for three elements
-            let min_abc = simd::simd_minimum_f32(&min_ab.view(), &c_arr.view());
-
-            // For mid element, we need max(min(max_ab, c), min_ab)
-            let max_ab_min_c = simd::simd_minimum_f32(&max_ab.view(), &c_arr.view());
-            let mid_abc = simd::simd_maximum_f32(&max_ab_min_c.view(), &min_ab.view());
-
-            let max_abc = simd::simd_maximum_f32(&max_ab.view(), &c_arr.view());
-
-            // Select result based on rank
-            let result_vec = match rank {
-                0 => min_abc,
-                1 => mid_abc,
-                2 => max_abc,
-                _ => unreachable!(),
-            };
-
-            // Store results in our vector
-            for j in 0..chunk_size {
-                if i + j < input.len() {
-                    chunk_results.push((i + j, result_vec[j]));
-                }
-            }
-
-            // Add chunk results to our main results vector
-            results.extend(chunk_results);
-        }
-
-        // Now we can safely update the output array
-        for (idx, val) in results {
-            output_f32[idx] = val;
-        }
-
-        // Handle remaining elements serially
-        for i in simd_limit as usize..input.len() {
-            let center = i + radius;
-
-            // Extract 3 elements
-            let a = padded_input[center - 1];
-            let b = padded_input[center];
-            let c = padded_input[center + 1];
-
-            // Sort using sorting network
-            let (min, mid, max) = sort3(a, b, c);
-
-            // Select based on rank
-            output_f32[i] = match rank {
-                0 => min,
-                1 => mid,
-                2 => max,
-                _ => unreachable!(),
-            };
-        }
-    } else {
-        // For smaller arrays or non-contiguous data, use sequential processing
-        // Since arrays are small, parallel overhead would outweigh benefits
-        let mut results = Vec::with_capacity(input.len());
-
-        for i in 0..input.len() {
-            let center = i + radius;
-
-            // Extract 3 elements for the window
-            let a = padded_input[center - 1];
-            let b = padded_input[center];
-            let c = padded_input[center + 1];
-
-            // Sort 3 elements (simple sorting network)
-            let (min, mid, max) = sort3(a, b, c);
-
-            // Select element based on rank
-            let val = match rank {
-                0 => min,
-                1 => mid,
-                2 => max,
-                _ => unreachable!(), // Window size 3 can only have ranks 0, 1, 2
-            };
-
-            results.push((i, val));
-        }
-
-        // Apply results
-        for (idx, val) in results {
-            output_f32[idx] = val;
-        }
+        results.push((i, val));
     }
 
-    #[allow(unreachable_code)]
-    {
-        // Convert back to type T
-        let output = output_f32.mapv(|x| T::from_f32(x).unwrap());
-        Ok(output)
+    // Apply results
+    for (idx, val) in results {
+        output_f32[idx] = val;
     }
+
+    // Convert back to type T
+    let output = output_f32.mapv(|x| T::from_f32(x).unwrap());
+    Ok(output)
 }
 
 /// Optimization for f32 arrays with window size 5
-fn optimize_for_f32_size5<T>(input: &Array1<T>, rank: usize, mode: &BorderMode) -> NdimageResult<Array1<T>>
+fn optimize_for_f32_size5<T>(
+    input: &Array1<T>,
+    rank: usize,
+    mode: &BorderMode,
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
 {

@@ -1,0 +1,43 @@
+// Gaussian blur kernel for GPU execution
+// This kernel can be compiled for CUDA, OpenCL, or Metal
+
+__kernel void gaussian_blur_2d(
+    __global const float* input,
+    __global float* output,
+    const float sigma_x,
+    const float sigma_y,
+    const int height,
+    const int width
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    // Calculate kernel radius based on sigma
+    int radius_x = (int)(3.0f * sigma_x);
+    int radius_y = (int)(3.0f * sigma_y);
+    
+    float sum = 0.0f;
+    float weight_sum = 0.0f;
+    
+    // Apply Gaussian filter
+    for (int dy = -radius_y; dy <= radius_y; dy++) {
+        for (int dx = -radius_x; dx <= radius_x; dx++) {
+            // Clamp to image boundaries
+            int px = clamp(x + dx, 0, width - 1);
+            int py = clamp(y + dy, 0, height - 1);
+            
+            // Calculate Gaussian weight
+            float dist_sq = (dx * dx) / (sigma_x * sigma_x) + (dy * dy) / (sigma_y * sigma_y);
+            float weight = exp(-0.5f * dist_sq);
+            
+            // Accumulate weighted sum
+            sum += input[py * width + px] * weight;
+            weight_sum += weight;
+        }
+    }
+    
+    // Normalize and write output
+    output[y * width + x] = sum / weight_sum;
+}

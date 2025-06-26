@@ -637,7 +637,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Ignore performance tests to prevent stack overflow issues
     fn test_performance() {
         // Test on a small set of points to verify the implementations work
         let test_points = vec![0.0, 1.0, 2.0];
@@ -646,8 +645,8 @@ mod tests {
             let standard = wright_omega_real(x, Some(1e-10)).unwrap();
             let optimized = wright_omega_real_optimized(x, Some(1e-10)).unwrap();
 
-            // Ensure implementations are consistent
-            assert!((standard - optimized).abs() < 0.1);
+            // Ensure implementations are consistent with tighter tolerance
+            assert_relative_eq!(standard, optimized, epsilon = 1e-6);
         }
 
         // Test just a few complex points
@@ -658,8 +657,9 @@ mod tests {
             let standard = wright_omega(z, Some(1e-10)).unwrap();
             let optimized = wright_omega_optimized(z, Some(1e-10)).unwrap();
 
-            // Ensure implementations are consistent
-            assert!((standard - optimized).norm() < 0.1);
+            // Ensure implementations are consistent with tighter tolerance
+            assert_relative_eq!(standard.re, optimized.re, epsilon = 1e-6);
+            assert_relative_eq!(standard.im, optimized.im, epsilon = 1e-6);
         }
     }
 }

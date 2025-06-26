@@ -3,6 +3,9 @@
 //! This module provides filters that operate in the Fourier domain,
 //! which can be more efficient for certain operations, especially
 //! with large kernels or when multiple filters are applied.
+//!
+//! For very large datasets that don't fit in memory, use the streaming
+//! variants of these functions (e.g., `fourier_gaussian_streaming`).
 
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_complex::Complex64;
@@ -294,7 +297,11 @@ where
 }
 
 /// Apply 2D uniform filter in Fourier domain
-fn fourier_uniform_2d<T>(input: &Array2<T>, size_y: usize, size_x: usize) -> NdimageResult<Array2<T>>
+fn fourier_uniform_2d<T>(
+    input: &Array2<T>,
+    size_y: usize,
+    size_x: usize,
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
@@ -364,7 +371,11 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
-pub fn fourier_ellipsoid<T, D>(input: &Array<T, D>, size: &[T], mode: &str) -> NdimageResult<Array<T, D>>
+pub fn fourier_ellipsoid<T, D>(
+    input: &Array<T, D>,
+    size: &[T],
+    mode: &str,
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -774,5 +785,134 @@ mod tests {
         assert!(shifted[19] < 0.5);
         assert!(shifted[40] > 0.0);
         assert!(shifted[40] < 0.5);
+    }
+}
+
+// Streaming implementations for large datasets
+use crate::streaming::{OverlapInfo, StreamConfig, StreamProcessor, StreamableOp};
+use ndarray::{ArrayView, ArrayViewMut};
+use std::path::Path;
+
+/// Streaming Fourier Gaussian filter for large datasets
+pub struct StreamingFourierGaussian<T> {
+    sigma: Vec<T>,
+}
+
+impl<T: Float + FromPrimitive + NumCast + Debug + Clone> StreamingFourierGaussian<T> {
+    pub fn new(sigma: Vec<T>) -> Self {
+        Self { sigma }
+    }
+}
+
+impl<T, D> StreamableOp<T, D> for StreamingFourierGaussian<T>
+where
+    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    fn apply_chunk(&self, chunk: &ArrayView<T, D>) -> NdimageResult<Array<T, D>> {
+        fourier_gaussian(&chunk.to_owned(), &self.sigma, None)
+    }
+
+    fn required_overlap(&self) -> Vec<usize> {
+        // Fourier filters need minimal overlap due to periodic boundary conditions
+        vec![8; self.sigma.len()]
+    }
+
+    fn merge_overlap(
+        &self,
+        _output: &mut ArrayViewMut<T, D>,
+        _new_chunk: &ArrayView<T, D>,
+        _overlap_info: &OverlapInfo,
+    ) -> NdimageResult<()> {
+        // Fourier domain filters handle boundaries naturally
+        Ok(())
+    }
+}
+
+/// Process a large image file with Fourier Gaussian filter
+pub fn fourier_gaussian_file<T>(
+    input_path: &Path,
+    output_path: &Path,
+    shape: &[usize],
+    sigma: &[T],
+    config: Option<StreamConfig>,
+) -> NdimageResult<()>
+where
+    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
+{
+    let op = StreamingFourierGaussian::new(sigma.to_vec());
+    let config = config.unwrap_or_else(|| StreamConfig {
+        chunk_size: 256 * 1024 * 1024, // 256MB chunks for FFT efficiency
+        ..Default::default()
+    });
+
+    let processor = StreamProcessor::<T>::new(config);
+
+    // Dynamic dispatch based on dimensionality
+    match shape.len() {
+        1 => processor.process_file::<ndarray::Ix1, _>(input_path, output_path, shape, op),
+        2 => processor.process_file::<ndarray::Ix2, _>(input_path, output_path, shape, op),
+        3 => processor.process_file::<ndarray::Ix3, _>(input_path, output_path, shape, op),
+        _ => processor.process_file::<ndarray::IxDyn, _>(input_path, output_path, shape, op),
+    }
+}
+
+/// Streaming Fourier uniform filter
+pub struct StreamingFourierUniform<T> {
+    size: Vec<T>,
+}
+
+impl<T: Float + FromPrimitive + NumCast + Debug + Clone> StreamingFourierUniform<T> {
+    pub fn new(size: Vec<T>) -> Self {
+        Self { size }
+    }
+}
+
+impl<T, D> StreamableOp<T, D> for StreamingFourierUniform<T>
+where
+    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    fn apply_chunk(&self, chunk: &ArrayView<T, D>) -> NdimageResult<Array<T, D>> {
+        fourier_uniform(&chunk.to_owned(), &self.size)
+    }
+
+    fn required_overlap(&self) -> Vec<usize> {
+        self.size
+            .iter()
+            .map(|&s| s.to_usize().unwrap_or(1))
+            .collect()
+    }
+
+    fn merge_overlap(
+        &self,
+        _output: &mut ArrayViewMut<T, D>,
+        _new_chunk: &ArrayView<T, D>,
+        _overlap_info: &OverlapInfo,
+    ) -> NdimageResult<()> {
+        Ok(())
+    }
+}
+
+/// Process a large image file with Fourier uniform filter
+pub fn fourier_uniform_file<T>(
+    input_path: &Path,
+    output_path: &Path,
+    shape: &[usize],
+    size: &[T],
+    config: Option<StreamConfig>,
+) -> NdimageResult<()>
+where
+    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
+{
+    let op = StreamingFourierUniform::new(size.to_vec());
+    let config = config.unwrap_or_default();
+    let processor = StreamProcessor::<T>::new(config);
+
+    match shape.len() {
+        1 => processor.process_file::<ndarray::Ix1, _>(input_path, output_path, shape, op),
+        2 => processor.process_file::<ndarray::Ix2, _>(input_path, output_path, shape, op),
+        3 => processor.process_file::<ndarray::Ix3, _>(input_path, output_path, shape, op),
+        _ => processor.process_file::<ndarray::IxDyn, _>(input_path, output_path, shape, op),
     }
 }

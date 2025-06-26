@@ -610,7 +610,10 @@ where
 }
 
 // Helper function to apply 4-connected Laplace filter (for 2D arrays)
-fn laplace_2d_4connected<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn laplace_2d_4connected<T>(
+    input: &Array<T, Ix2>,
+    mode: &BorderMode,
+) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -630,7 +633,10 @@ where
 }
 
 // Helper function to apply 8-connected Laplace filter (for 2D arrays)
-fn laplace_2d_8connected<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn laplace_2d_8connected<T>(
+    input: &Array<T, Ix2>,
+    mode: &BorderMode,
+) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {

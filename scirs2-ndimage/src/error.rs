@@ -48,6 +48,14 @@ pub enum NdimageError {
     #[error("{0}")]
     CoreError(#[from] CoreError),
 
+    /// IO error
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+
+    /// Shape building error
+    #[error("Shape error: {0}")]
+    ShapeError(#[from] ndarray::ShapeError),
+
     /// Other error
     #[error("Error: {0}")]
     Other(String),

@@ -12,6 +12,7 @@ pub use bilateral::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
 mod bilateral;
 mod boundary_handler;
+mod boundary_optimized;
 mod convolve;
 mod edge;
 mod extrema;
@@ -24,6 +25,7 @@ mod rank;
 mod tests;
 mod uniform;
 mod utils;
+mod vectorized;
 
 // Convolve module exports
 pub use convolve::{
@@ -73,6 +75,18 @@ pub use boundary_handler::{
 // Memory-efficient filter exports
 pub use memory_efficient::{
     gaussian_filter_chunked, median_filter_chunked, uniform_filter_chunked,
+};
+
+// Optimized boundary handling exports
+pub use boundary_optimized::{
+    apply_filter2d_optimized, convolve1d_optimized, convolve2d_optimized, Boundary1D, Boundary2D,
+    OptimizedBoundaryOps,
+};
+
+// Vectorized batch processing exports
+pub use vectorized::{
+    apply_filter_batch, convolve_batch, gaussian_filter_batch, median_filter_batch, sobel_batch,
+    BatchConfig,
 };
 
 /// Border handling modes for filters

@@ -151,7 +151,10 @@ fn add_connected_indices(
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Iterated structuring element
-pub fn iterate_structure<D>(structure: &Array<bool, D>, iterations: usize) -> NdimageResult<Array<bool, D>>
+pub fn iterate_structure<D>(
+    structure: &Array<bool, D>,
+    iterations: usize,
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension,
 {

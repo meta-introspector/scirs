@@ -205,7 +205,6 @@ fn test_rotation_spline_slerp() {
 }
 
 #[test]
-#[ignore] // The implementation has precision issues
 fn test_rotation_spline_cubic() {
     // Create a rotation spline
     let rotations = vec![

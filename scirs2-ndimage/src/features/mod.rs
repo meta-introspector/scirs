@@ -5,10 +5,18 @@
 
 mod corners;
 mod edges;
+mod ml_detection;
 
 // Re-export submodule components
 pub use self::corners::{fast_corners, harris_corners};
 pub use self::edges::{
     canny, edge_detector, edge_detector_simple, gradient_edges, laplacian_edges, sobel_edges,
     EdgeDetectionAlgorithm, EdgeDetectionConfig, GradientMethod,
+};
+
+// Machine learning-based detection
+pub use self::ml_detection::{
+    LearnedEdgeDetector, LearnedKeypointDescriptor, SemanticFeatureExtractor,
+    ObjectProposalGenerator, ObjectProposal, MLDetectorConfig,
+    FeatureDetectorWeights, BatchNormParams,
 };

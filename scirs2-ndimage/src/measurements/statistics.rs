@@ -184,7 +184,10 @@ where
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - Count of elements for each label
-pub fn count_labels<D>(labels: &Array<usize, D>, index: Option<&[usize]>) -> NdimageResult<Array1<usize>>
+pub fn count_labels<D>(
+    labels: &Array<usize, D>,
+    index: Option<&[usize]>,
+) -> NdimageResult<Array1<usize>>
 where
     D: Dimension,
 {

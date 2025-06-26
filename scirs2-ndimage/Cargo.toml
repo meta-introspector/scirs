@@ -11,7 +11,7 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
-scirs2-core = { workspace = true, features = ["validation"] }
+scirs2-core = { workspace = true, features = ["validation", "memory_efficient"] }
 scirs2-interpolate = { workspace = true }
 scirs2-fft = { workspace = true }
 ndarray = { workspace = true }
@@ -21,6 +21,7 @@ thiserror = { workspace = true }
 ndarray-rand = { workspace = true }
 approx = { workspace = true }
 cached = { workspace = true }
+tempfile = { workspace = true }
 
 [features]
 default = []
@@ -45,3 +46,9 @@ harness = false
 [[bench]]
 name = "distance_transform_bench"
 harness = false
+
+[[example]]
+name = "streaming_processing"
+
+[[example]]
+name = "gpu_backend"

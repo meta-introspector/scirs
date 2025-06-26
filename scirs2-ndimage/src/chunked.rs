@@ -242,7 +242,10 @@ fn generate_chunk_positions(
 }
 
 /// Extract a chunk from the array
-fn extract_chunk<T, D>(array: &ArrayView<T, D>, position: &ChunkPosition) -> NdimageResult<Array<T, D>>
+fn extract_chunk<T, D>(
+    array: &ArrayView<T, D>,
+    position: &ChunkPosition,
+) -> NdimageResult<Array<T, D>>
 where
     T: Clone,
     D: Dimension,

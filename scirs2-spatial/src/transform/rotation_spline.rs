@@ -645,21 +645,38 @@ impl RotationSpline {
     }
 
     /// Calculate angular velocity using Slerp interpolation
-    fn angular_velocity_slerp(&self, _t: f64, idx: usize) -> Array1<f64> {
+    fn angular_velocity_slerp(&self, t: f64, idx: usize) -> Array1<f64> {
         let t0 = self.times[idx];
         let t1 = self.times[idx + 1];
         let dt = t1 - t0;
+        let normalized_t = (t - t0) / dt;
 
         // Get rotations at the endpoints of the segment
         let r0 = &self.rotations[idx];
         let r1 = &self.rotations[idx + 1];
 
-        // Calculate the delta rotation
+        // Calculate the delta rotation from r0 to r1
         let delta_rot = r0.inv().compose(r1);
-        let delta_rotvec = delta_rot.as_rotvec();
 
-        // Angular velocity is the rotation vector divided by time
-        delta_rotvec / dt
+        // Convert to axis-angle representation
+        let (axis, angle) = delta_rot.as_axis_angle();
+
+        // For slerp, the angular velocity is constant and equals angle/dt along the axis
+        // The angular velocity vector in the current frame is:
+        // ω = (angle / dt) * axis
+
+        // However, we need to transform this to the frame at time t
+        // First interpolate to get the rotation at time t
+        let slerp = Slerp::new(r0.clone(), r1.clone()).unwrap();
+        let rot_t = slerp.interpolate(normalized_t);
+
+        // The angular velocity in the global frame is the axis scaled by angular rate
+        let angular_rate = angle / dt;
+        let omega_global = axis * angular_rate;
+
+        // Transform to the body frame at time t
+        // ω_body = R(t)^T * ω_global
+        rot_t.inv().apply(&omega_global.view())
     }
 
     /// Calculate angular velocity using cubic spline interpolation
@@ -688,21 +705,27 @@ impl RotationSpline {
         let vel0 = &velocities[idx];
         let vel1 = &velocities[idx + 1];
 
-        // Compute the derivative of the cubic polynomial
-        let b = vel0.clone();
-        let c = 2.0 * (rotvec1.clone() - rotvec0.clone() - b.clone() - vel1.clone() * dt);
-        let d = 3.0 * (vel1.clone() * dt + rotvec0.clone() + b.clone() - rotvec1.clone());
+        // Hermite cubic spline coefficients
+        let h00 = 2.0 * normalized_t.powi(3) - 3.0 * normalized_t.powi(2) + 1.0;
+        let h10 = normalized_t.powi(3) - 2.0 * normalized_t.powi(2) + normalized_t;
+        let h01 = -2.0 * normalized_t.powi(3) + 3.0 * normalized_t.powi(2);
+        let h11 = normalized_t.powi(3) - normalized_t.powi(2);
 
-        // Evaluate the derivative
-        let mut result = b.clone();
-        let term1 = &c * normalized_t;
-        let term2 = &d * (normalized_t * normalized_t);
+        // Derivatives of Hermite basis functions
+        let dh00_dt = (6.0 * normalized_t.powi(2) - 6.0 * normalized_t) / dt;
+        let dh10_dt = (3.0 * normalized_t.powi(2) - 4.0 * normalized_t + 1.0) / dt;
+        let dh01_dt = (-6.0 * normalized_t.powi(2) + 6.0 * normalized_t) / dt;
+        let dh11_dt = (3.0 * normalized_t.powi(2) - 2.0 * normalized_t) / dt;
 
-        result = &result + &term1;
-        result = &result + &term2;
+        // Compute derivative of rotation vector interpolation
+        let mut d_rotvec_dt = rotvec0 * dh00_dt;
+        d_rotvec_dt += vel0 * dt * dh10_dt;
+        d_rotvec_dt += rotvec1 * dh01_dt;
+        d_rotvec_dt += vel1 * dt * dh11_dt;
 
-        // Scale by 1/dt to get the actual velocity
-        result / dt
+        // The derivative gives us the angular velocity in the rotation vector space
+        // This is already the angular velocity we want
+        d_rotvec_dt
     }
 
     /// Calculate the angular acceleration at a specific time

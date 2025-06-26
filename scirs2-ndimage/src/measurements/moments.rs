@@ -175,7 +175,10 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - Array of normalized moments
-pub fn normalized_moments<T, D>(input: &Array<T, D>, order: usize) -> NdimageResult<Array<T, ndarray::Ix1>>
+pub fn normalized_moments<T, D>(
+    input: &Array<T, D>,
+    order: usize,
+) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,

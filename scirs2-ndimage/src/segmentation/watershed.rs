@@ -86,7 +86,10 @@ impl<T: PartialOrd> Ord for PriorityPoint<T> {
 ///
 /// let segmented = watershed(&image, &markers).unwrap();
 /// ```
-pub fn watershed<T>(image: &Array<T, Ix2>, markers: &Array<i32, Ix2>) -> NdimageResult<Array<i32, Ix2>>
+pub fn watershed<T>(
+    image: &Array<T, Ix2>,
+    markers: &Array<i32, Ix2>,
+) -> NdimageResult<Array<i32, Ix2>>
 where
     T: Float + NumAssign + std::fmt::Debug,
 {
