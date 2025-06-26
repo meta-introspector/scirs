@@ -1009,16 +1009,17 @@ mod tests {
 
     #[test]
     fn test_thin_plate_spline_model() {
-        let latitudes = Array1::from_vec(vec![40.0, 41.0, 42.0, 43.0, 44.0]);
-        let longitudes = Array1::from_vec(vec![-74.0, -75.0, -76.0, -77.0, -78.0]);
-        let elevations = Array1::from_vec(vec![100.0, 200.0, 300.0, 400.0, 500.0]);
+        // Use non-collinear points for thin plate spline
+        let latitudes = Array1::from_vec(vec![40.0, 41.0, 40.5, 41.5, 40.8]);
+        let longitudes = Array1::from_vec(vec![-74.0, -74.5, -75.0, -74.2, -74.8]);
+        let elevations = Array1::from_vec(vec![100.0, 200.0, 150.0, 250.0, 180.0]);
 
         let mut interpolator = GeospatialInterpolator::new()
             .with_interpolation_model(InterpolationModel::ThinPlateSpline);
 
         let fit_result =
             interpolator.fit(&latitudes.view(), &longitudes.view(), &elevations.view());
-        assert!(fit_result.is_ok());
+        assert!(fit_result.is_ok(), "Failed to fit thin plate spline: {:?}", fit_result.err());
 
         let query_lats = Array1::from_vec(vec![40.5]);
         let query_lons = Array1::from_vec(vec![-74.5]);

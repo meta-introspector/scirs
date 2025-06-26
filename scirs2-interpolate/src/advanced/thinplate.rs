@@ -195,24 +195,27 @@ where
             b[i] = y[i];
         }
 
-        // Solve the system
-        #[cfg(feature = "linalg")]
+        // Solve the system using scirs2-linalg
         let coeffs_full = {
-            use ndarray_linalg::Solve;
+            use scirs2_linalg::solve;
             let a_f64 = a.mapv(|x| x.to_f64().unwrap());
             let b_f64 = b.mapv(|x| x.to_f64().unwrap());
-            match a_f64.solve(&b_f64) {
+            match solve(&a_f64.view(), &b_f64.view(), None) {
                 Ok(solution) => solution.mapv(|x| T::from_f64(x).unwrap()),
                 Err(_) => {
-                    return Err(InterpolateError::LinalgError(
-                        "failed to solve linear system".to_string(),
-                    ));
+                    // If the system is singular or near-singular, try SVD-based solution
+                    use scirs2_linalg::lstsq;
+                    match lstsq(&a_f64.view(), &b_f64.view(), None) {
+                        Ok(result) => result.x.mapv(|x| T::from_f64(x).unwrap()),
+                        Err(_) => {
+                            return Err(InterpolateError::LinalgError(
+                                "failed to solve linear system".to_string(),
+                            ));
+                        }
+                    }
                 }
             }
         };
-
-        #[cfg(not(feature = "linalg"))]
-        let coeffs_full = b;
 
         // Extract coefficients
         let coeffs = coeffs_full.slice(s![0..n_points]).to_owned();
@@ -370,16 +373,21 @@ mod tests {
         // Function values: f(x,y) = x^2 + y^2
         let values = array![0.0, 1.0, 1.0, 2.0];
 
-        // FIXME: ThinPlateSpline has numerical instability issues. For now, just verify it builds correctly.
         let tps = ThinPlateSpline::new(&points.view(), &values.view(), 0.0);
         assert!(tps.is_ok());
-
-        // TODO: Fix the numerical issues to allow for exact fitting
         let tps = tps.unwrap();
 
-        // Test that we can call evaluate without errors
+        // Test that we can evaluate at the original points
         let result = tps.evaluate(&points.view());
         assert!(result.is_ok());
+        let interpolated = result.unwrap();
+        
+        // Check exact fit at the data points
+        for i in 0..values.len() {
+            assert!((interpolated[i] - values[i]).abs() < 1e-10, 
+                    "ThinPlateSpline should fit exactly at point {}: {} vs {}", 
+                    i, interpolated[i], values[i]);
+        }
     }
 
     #[test]
@@ -394,13 +402,24 @@ mod tests {
         // Function values with noise: f(x,y) = x^2 + y^2 + noise
         let values = array![0.0, 1.0, 1.0, 2.0, 0.6]; // 0.5 + 0.1 noise
 
-        // FIXME: ThinPlateSpline smoothing has numerical issues. Just test building.
         let tps_exact = ThinPlateSpline::new(&points.view(), &values.view(), 0.0);
         let tps_smooth = ThinPlateSpline::new(&points.view(), &values.view(), 0.1);
 
         assert!(tps_exact.is_ok());
         assert!(tps_smooth.is_ok());
-
-        // TODO: Fix numerical issues for proper smoothing tests
+        
+        let tps_exact = tps_exact.unwrap();
+        let tps_smooth = tps_smooth.unwrap();
+        
+        // Test evaluation at original points
+        let _result_exact = tps_exact.evaluate(&points.view()).unwrap();
+        let result_smooth = tps_smooth.evaluate(&points.view()).unwrap();
+        
+        // With smoothing, the fit shouldn't be exact, but should still be reasonable
+        for i in 0..values.len() {
+            assert!((result_smooth[i] - values[i]).abs() < 0.5, 
+                    "Smoothed TPS value at point {} should be close to original: {} vs {}", 
+                    i, result_smooth[i], values[i]);
+        }
     }
 }

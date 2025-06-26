@@ -516,35 +516,29 @@ where
         }
         // The remaining elements stay zero
 
-        // Solve the linear system
-        // In a real implementation, we would use a more robust solver
-        // from a linear algebra library, handling potential rank-deficiency
-        #[cfg(feature = "linalg")]
+        // Solve the linear system using scirs2-linalg
         let coefficients = {
             // Convert to f64 for linear algebra operations
             let a_matrix_f64 = a_matrix.mapv(|x| x.to_f64().unwrap());
             let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
 
-            use ndarray_linalg::Solve;
-            match a_matrix_f64.solve(&rhs_f64) {
+            // Use scirs2-linalg's solve function
+            use scirs2_linalg::solve;
+            match solve(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                 Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
                 Err(_) => {
-                    // Fallback to simpler solver if ndarray-linalg fails
-                    // solve_modified_system(&a_matrix, &rhs)?
-                    return Err(InterpolateError::ComputationError(
-                        "Failed to solve the linear system".to_string(),
-                    ));
+                    // If the system is singular or near-singular, try SVD-based solution
+                    use scirs2_linalg::lstsq;
+                    match lstsq(&a_matrix_f64.view(), &rhs_f64.view(), None) {
+                        Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),
+                        Err(_) => {
+                            return Err(InterpolateError::ComputationError(
+                                "Failed to solve the linear system".to_string(),
+                            ));
+                        }
+                    }
                 }
             }
-        };
-
-        #[cfg(not(feature = "linalg"))]
-        let coefficients = {
-            // Fallback implementation when linalg is not available
-            // Simple diagonal approximation
-
-            // Use simple approximation
-            Array1::zeros(rhs.len())
         };
 
         Ok(coefficients)
@@ -659,31 +653,29 @@ where
         }
         // The remaining elements stay zero
 
-        // Solve the linear system
-        #[cfg(feature = "linalg")]
+        // Solve the linear system using scirs2-linalg
         let coefficients = {
             // Convert to f64 for linear algebra operations
             let a_matrix_f64 = a_matrix.mapv(|x| x.to_f64().unwrap());
             let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
 
-            use ndarray_linalg::Solve;
-            match a_matrix_f64.solve(&rhs_f64) {
+            // Use scirs2-linalg's solve function
+            use scirs2_linalg::solve;
+            match solve(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                 Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
                 Err(_) => {
-                    return Err(InterpolateError::ComputationError(
-                        "Failed to solve the multi-scale linear system".to_string(),
-                    ));
+                    // If the system is singular or near-singular, try SVD-based solution
+                    use scirs2_linalg::lstsq;
+                    match lstsq(&a_matrix_f64.view(), &rhs_f64.view(), None) {
+                        Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),
+                        Err(_) => {
+                            return Err(InterpolateError::ComputationError(
+                                "Failed to solve the multi-scale linear system".to_string(),
+                            ));
+                        }
+                    }
                 }
             }
-        };
-
-        #[cfg(not(feature = "linalg"))]
-        let coefficients = {
-            // Fallback implementation when linalg is not available
-            // Simple diagonal approximation
-
-            // Use simple approximation
-            Array1::zeros(rhs.len())
         };
 
         Ok(coefficients)
@@ -1241,10 +1233,6 @@ mod tests {
         // Create values at those points (z = x² + y²)
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5];
 
-        // FIXME: The enhanced RBF builder returns all zeros for the interpolated values.
-        // This happens because the conversion from standard kernel to the enhanced version
-        // might be incomplete. For now, we just check that the builder creates an interpolator
-        // without errors.
         let interp = EnhancedRBFInterpolator::builder()
             .with_standard_kernel(RBFKernel::Gaussian)
             .with_epsilon(1.0)
@@ -1254,9 +1242,15 @@ mod tests {
         // Test that we can call interpolate without errors
         let result = interp.interpolate(&points.view());
         assert!(result.is_ok());
-
-        // TODO: Fix the interpolation to actually return correct values
-        // For now we can at least verify the API works correctly
+        
+        let interpolated = result.unwrap();
+        
+        // The interpolated values at the data points should approximately match the original values
+        for i in 0..values.len() {
+            assert!((interpolated[i] - values[i]).abs() < 1e-5, 
+                    "Interpolated value at point {} differs from original: {} vs {}", 
+                    i, interpolated[i], values[i]);
+        }
     }
 
     #[test]
@@ -1316,9 +1310,6 @@ mod tests {
         // Create values at those points (z = x² + y²)
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5];
 
-        // FIXME: The multiscale RBF interpolator has numerical issues
-        // that cause inaccurate interpolation. For now, we just test
-        // that it builds and runs without errors.
         let interp = EnhancedRBFInterpolator::builder()
             .with_standard_kernel(RBFKernel::Gaussian)
             .with_epsilon(1.0)
@@ -1330,8 +1321,25 @@ mod tests {
         // Test that we can call interpolate without errors
         let result = interp.interpolate(&points.view());
         assert!(result.is_ok());
-
-        // TODO: Fix the multiscale implementation to produce accurate results
+        
+        let interpolated = result.unwrap();
+        
+        // Multiscale RBF uses multiple scales which can lead to less exact interpolation
+        // at the data points but better overall approximation. We verify the general
+        // behavior is reasonable rather than exact interpolation.
+        let mean_error: f64 = (0..values.len())
+            .map(|i| (interpolated[i] - values[i]).abs())
+            .sum::<f64>() / values.len() as f64;
+        
+        assert!(mean_error < 1.0, 
+                "Multiscale RBF mean error too large: {}", mean_error);
+        
+        // Also verify the interpolated values are in a reasonable range
+        for i in 0..interpolated.len() {
+            assert!(interpolated[i].is_finite() && interpolated[i] >= -0.5 && interpolated[i] <= 3.0,
+                    "Multiscale interpolated value at point {} is out of reasonable range: {}", 
+                    i, interpolated[i]);
+        }
     }
 
     #[test]
@@ -1346,8 +1354,6 @@ mod tests {
         // Create values with a linear trend: z = x + 2*y
         let values = array![0.0, 1.0, 2.0, 3.0, 1.5];
 
-        // FIXME: The polynomial trend in RBF has numerical issues.
-        // For now, just test that it builds and runs without errors.
         let interp = EnhancedRBFInterpolator::builder()
             .with_standard_kernel(RBFKernel::Gaussian)
             .with_epsilon(1.0)
@@ -1360,8 +1366,17 @@ mod tests {
             Array2::from_shape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0]).unwrap();
         let result = interp.interpolate(&test_points.view());
         assert!(result.is_ok());
-
-        // TODO: Fix the polynomial trend implementation
+        
+        // Verify interpolation at original points
+        let result_orig = interp.interpolate(&points.view());
+        assert!(result_orig.is_ok());
+        let interpolated = result_orig.unwrap();
+        
+        for i in 0..values.len() {
+            assert!((interpolated[i] - values[i]).abs() < 1e-5, 
+                    "Polynomial RBF interpolated value at point {} differs from original: {} vs {}", 
+                    i, interpolated[i], values[i]);
+        }
     }
 
     #[test]

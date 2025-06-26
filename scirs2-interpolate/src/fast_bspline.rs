@@ -368,7 +368,7 @@ where
             ExtrapolateMode::Periodic => {
                 let period = t_max - t_min;
                 let mut x_norm = (x - t_min) / period;
-                x_norm = x_norm - T::floor(x_norm);
+                x_norm = x_norm - x_norm.floor();
                 Ok(t_min + x_norm * period)
             }
             ExtrapolateMode::Nan => Ok(T::nan()),
