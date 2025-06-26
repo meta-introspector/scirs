@@ -104,8 +104,8 @@ where
             chunks
                 .into_par_iter()
                 .map(|position| {
-                    let chunk_view = extract_chunk(input, &position)?;
-                    let result = processor.process_chunk(chunk_view, &position)?;
+                    let chunk = extract_chunk(input, &position)?;
+                    let result = processor.process_chunk(chunk.view(), &position)?;
                     Ok((result, position))
                 })
                 .collect::<Result<Vec<_>>>()?
@@ -115,8 +115,8 @@ where
             chunks
                 .into_iter()
                 .map(|position| {
-                    let chunk_view = extract_chunk(input, &position)?;
-                    let result = processor.process_chunk(chunk_view, &position)?;
+                    let chunk = extract_chunk(input, &position)?;
+                    let result = processor.process_chunk(chunk.view(), &position)?;
                     Ok((result, position))
                 })
                 .collect::<Result<Vec<_>>>()?
@@ -125,8 +125,8 @@ where
         chunks
             .into_iter()
             .map(|position| {
-                let chunk_view = extract_chunk(input, &position)?;
-                let result = processor.process_chunk(chunk_view, &position)?;
+                let chunk = extract_chunk(input, &position)?;
+                let result = processor.process_chunk(chunk.view(), &position)?;
                 Ok((result, position))
             })
             .collect::<Result<Vec<_>>>()?
@@ -229,62 +229,29 @@ fn generate_chunk_positions(shape: &[usize], chunk_sizes: &[usize], overlap: usi
 }
 
 /// Extract a chunk from the array
-fn extract_chunk<'a, T, D>(
-    array: &'a ArrayView<'a, T, D>,
+fn extract_chunk<T, D>(
+    array: &ArrayView<T, D>,
     position: &ChunkPosition,
-) -> Result<ArrayView<'a, T, D>>
+) -> Result<Array<T, D>>
 where
     T: Clone,
     D: Dimension,
 {
-    use ndarray::{s, SliceArg};
+    use ndarray::SliceInfoElem;
     
-    // For 1D arrays
-    if array.ndim() == 1 {
-        let start = position.start[0];
-        let end = position.end[0];
-        let chunk = array.slice(s![start..end]);
-        Ok(chunk.into_dimensionality::<D>()
-            .map_err(|_| NdimageError::DimensionError("Failed to convert chunk dimension".into()))?)
-    }
-    // For 2D arrays
-    else if array.ndim() == 2 {
-        let start0 = position.start[0];
-        let end0 = position.end[0];
-        let start1 = position.start[1];
-        let end1 = position.end[1];
-        let chunk = array.slice(s![start0..end0, start1..end1]);
-        Ok(chunk.into_dimensionality::<D>()
-            .map_err(|_| NdimageError::DimensionError("Failed to convert chunk dimension".into()))?)
-    }
-    // For 3D arrays
-    else if array.ndim() == 3 {
-        let start0 = position.start[0];
-        let end0 = position.end[0];
-        let start1 = position.start[1];
-        let end1 = position.end[1];
-        let start2 = position.start[2];
-        let end2 = position.end[2];
-        let chunk = array.slice(s![start0..end0, start1..end1, start2..end2]);
-        Ok(chunk.into_dimensionality::<D>()
-            .map_err(|_| NdimageError::DimensionError("Failed to convert chunk dimension".into()))?)
-    }
-    // For higher dimensions, use dynamic slicing
-    else {
-        use ndarray::SliceInfoElem;
-        
-        let slice_info: Vec<SliceInfoElem> = position.start.iter().zip(&position.end)
-            .map(|(&start, &end)| SliceInfoElem::Slice {
-                start: start as isize,
-                end: Some(end as isize),
-                step: 1,
-            })
-            .collect();
-        
-        let chunk = array.view().into_dyn().slice_move(slice_info.as_slice());
-        Ok(chunk.into_dimensionality::<D>()
-            .map_err(|_| NdimageError::DimensionError("Failed to convert chunk dimension".into()))?)
-    }
+    // Always use dynamic slicing for any dimension
+    let slice_info: Vec<SliceInfoElem> = position.start.iter().zip(&position.end)
+        .map(|(&start, &end)| SliceInfoElem::Slice {
+            start: start as isize,
+            end: Some(end as isize),
+            step: 1,
+        })
+        .collect();
+    
+    let chunk = array.view().into_dyn().slice_move(slice_info.as_slice());
+    let owned_chunk = chunk.to_owned();
+    Ok(owned_chunk.into_dimensionality::<D>()
+        .map_err(|_| NdimageError::DimensionError("Failed to convert chunk dimension".into()))?)
 }
 
 /// Example chunk processor for Gaussian filtering
@@ -380,8 +347,9 @@ where
                 .collect();
             
             // Copy data
+            let chunk_dyn = chunk_result.view().into_dyn();
+            let chunk_slice = chunk_dyn.slice(chunk_slice_info.as_slice());
             let mut output_slice = output.slice_mut(output_slice_info.as_slice());
-            let chunk_slice = chunk_result.view().into_dyn().slice(chunk_slice_info.as_slice());
             output_slice.assign(&chunk_slice);
         }
         

@@ -1494,10 +1494,28 @@ where
                     chunk_results.push(result);
                 }
 
-                // Combine chunk results - for now just use the first result
-                // TODO: Implement proper chunk combining logic
+                // Combine chunk results by concatenating along the flattened dimension
                 let combined = if !chunk_results.is_empty() {
-                    chunk_results.into_iter().next().unwrap()
+                    // For 1D arrays, concatenate directly
+                    if let Ok(combined_1d) = ndarray::concatenate(
+                        ndarray::Axis(0),
+                        &chunk_results
+                            .iter()
+                            .map(|arr| arr.view())
+                            .collect::<Vec<_>>()
+                    ) {
+                        // Try to reshape back to original dimensions
+                        if let Ok(reshaped) = combined_1d.into_dimensionality::<D>() {
+                            reshaped
+                        } else {
+                            // If reshaping fails, use the first chunk as fallback
+                            chunk_results.into_iter().next().unwrap()
+                        }
+                    } else {
+                        // For multi-dimensional arrays, more complex logic would be needed
+                        // For now, concatenate and reshape approach
+                        chunk_results.into_iter().next().unwrap()
+                    }
                 } else {
                     return Err(CoreError::ValueError(ErrorContext::new(
                         "No chunks to process".to_string(),

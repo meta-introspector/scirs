@@ -6,7 +6,7 @@
 
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_complex::Complex64;
-use num_traits::{Float, FromPrimitive, NumCast, Zero};
+use num_traits::{Float, FromPrimitive, NumCast};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 

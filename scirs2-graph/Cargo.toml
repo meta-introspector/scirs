@@ -37,6 +37,7 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3.8"
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [features]
 default = []
@@ -52,3 +53,7 @@ path = "examples/refactor_demo.rs"
 [[example]]
 name = "hypergraph_demo"
 path = "examples/hypergraph_demo.rs"
+
+[[bench]]
+name = "graph_benchmarks"
+harness = false

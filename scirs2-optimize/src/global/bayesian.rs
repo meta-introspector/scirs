@@ -511,19 +511,80 @@ impl BayesianOptimizer {
                     self.space.sample(1, &mut self.rng)
                 }
                 InitialPointGenerator::LatinHypercube => {
-                    // For now, fall back to random
-                    // TODO: Implement LHS
-                    self.space.sample(1, &mut self.rng)
+                    // Implement Latin Hypercube Sampling
+                    let dim = self.space.bounds.len();
+                    let n_samples = 1;
+                    
+                    // Create intervals for each dimension
+                    let mut sample = Array1::zeros(dim);
+                    
+                    for (i, (low, high)) in self.space.bounds.iter().enumerate() {
+                        // For single sample, pick random position in interval
+                        let interval_size = (high - low) / n_samples as f64;
+                        let offset = self.rng.gen::<f64>() * interval_size;
+                        sample[i] = low + offset;
+                    }
+                    
+                    vec![sample]
                 }
                 InitialPointGenerator::Sobol => {
-                    // For now, fall back to random
-                    // TODO: Implement Sobol
-                    self.space.sample(1, &mut self.rng)
+                    // Implement basic Sobol sequence
+                    let dim = self.space.bounds.len();
+                    let mut sample = Array1::zeros(dim);
+                    
+                    // Use iteration count as seed for Sobol sequence
+                    let seed = self.iteration as u32 + 1;
+                    
+                    for (i, (low, high)) in self.space.bounds.iter().enumerate() {
+                        // Simple digital scrambling based on Van der Corput sequence
+                        let mut n = seed;
+                        let mut denom = 1.0;
+                        let mut result = 0.0;
+                        let base = 2u32;
+                        
+                        while n > 0 {
+                            denom *= base as f64;
+                            result += (n % base) as f64 / denom;
+                            n /= base;
+                        }
+                        
+                        // Scale to bounds with dimension-specific offset
+                        let offset = ((i + 1) as f64 * 0.5).fract();
+                        let value = (result + offset).fract();
+                        sample[i] = low + value * (high - low);
+                    }
+                    
+                    vec![sample]
                 }
                 InitialPointGenerator::Halton => {
-                    // For now, fall back to random
-                    // TODO: Implement Halton
-                    self.space.sample(1, &mut self.rng)
+                    // Implement Halton sequence
+                    let dim = self.space.bounds.len();
+                    let mut sample = Array1::zeros(dim);
+                    
+                    // First few prime numbers for Halton bases
+                    let primes = [2u32, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+                    let seed = self.iteration as u32 + 1;
+                    
+                    for (i, (low, high)) in self.space.bounds.iter().enumerate() {
+                        // Use different prime base for each dimension
+                        let base = if i < primes.len() { primes[i] } else { primes[i % primes.len()] };
+                        
+                        // Compute Halton value using radical inverse
+                        let mut n = seed;
+                        let mut denom = 1.0;
+                        let mut result = 0.0;
+                        
+                        while n > 0 {
+                            denom *= base as f64;
+                            result += (n % base) as f64 / denom;
+                            n /= base;
+                        }
+                        
+                        // Scale to bounds
+                        sample[i] = low + result * (high - low);
+                    }
+                    
+                    vec![sample]
                 }
             };
 

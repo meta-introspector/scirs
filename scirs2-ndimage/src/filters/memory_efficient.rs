@@ -31,7 +31,7 @@ impl<T> UniformChunkProcessor<T> {
 impl<T, D> ChunkProcessor<T, D> for UniformChunkProcessor<T>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + std::ops::AddAssign + std::ops::DivAssign + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     fn process_chunk(&mut self, chunk: ArrayView<T, D>, _position: &ChunkPosition) -> Result<Array<T, D>> {
         uniform_filter(&chunk.to_owned(), &self.size, Some(self.border_mode), None)
@@ -43,7 +43,8 @@ where
     }
     
     fn combine_chunks(&self, results: Vec<(Array<T, D>, ChunkPosition)>, output_shape: &[usize]) -> Result<Array<T, D>> {
-        combine_chunks_with_overlap(results, output_shape, self.required_overlap())
+        let overlap = <Self as ChunkProcessor<T, D>>::required_overlap(self);
+        combine_chunks_with_overlap(results, output_shape, overlap)
     }
 }
 
@@ -67,7 +68,7 @@ impl<T> MedianChunkProcessor<T> {
 impl<T, D> ChunkProcessor<T, D> for MedianChunkProcessor<T>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + PartialOrd + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     fn process_chunk(&mut self, chunk: ArrayView<T, D>, _position: &ChunkPosition) -> Result<Array<T, D>> {
         median_filter(&chunk.to_owned(), &self.size, Some(self.border_mode))
@@ -79,7 +80,8 @@ where
     }
     
     fn combine_chunks(&self, results: Vec<(Array<T, D>, ChunkPosition)>, output_shape: &[usize]) -> Result<Array<T, D>> {
-        combine_chunks_with_overlap(results, output_shape, self.required_overlap())
+        let overlap = <Self as ChunkProcessor<T, D>>::required_overlap(self);
+        combine_chunks_with_overlap(results, output_shape, overlap)
     }
 }
 
@@ -105,7 +107,7 @@ pub fn uniform_filter_chunked<T, D>(
 ) -> Result<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + std::ops::AddAssign + std::ops::DivAssign + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
     let mut processor = UniformChunkProcessor::new(size.to_vec(), border_mode);
@@ -134,7 +136,7 @@ pub fn median_filter_chunked<T, D>(
 ) -> Result<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + PartialOrd + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
     let mut processor = MedianChunkProcessor::new(size.to_vec(), border_mode);
@@ -165,7 +167,7 @@ pub fn gaussian_filter_chunked<T, D>(
 ) -> Result<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + Zero + 'static,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
     let mut processor = crate::chunked::GaussianChunkProcessor::new(
@@ -184,7 +186,7 @@ fn combine_chunks_with_overlap<T, D>(
 ) -> Result<Array<T, D>>
 where
     T: Clone + Zero,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     use ndarray::SliceInfoElem;
     
@@ -232,8 +234,9 @@ where
             .collect();
         
         // Copy data
+        let chunk_dyn = chunk_result.view().into_dyn();
+        let chunk_slice = chunk_dyn.slice(chunk_slice_info.as_slice());
         let mut output_slice = output.slice_mut(output_slice_info.as_slice());
-        let chunk_slice = chunk_result.view().into_dyn().slice(chunk_slice_info.as_slice());
         output_slice.assign(&chunk_slice);
     }
     

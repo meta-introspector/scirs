@@ -273,33 +273,39 @@ pub mod gpu {
 
     /// GPU buffer for array data
     pub struct GpuBuffer {
-        // TODO: Replace with scirs2_core::gpu abstractions
+        // Use scirs2_core GPU abstractions
         #[cfg(feature = "gpu")]
-        buffer: Option<()>, // Placeholder - should use core GPU abstractions
+        buffer: Option<scirs2_core::gpu::GpuBuffer<f64>>,
         size: usize,
     }
 
     /// GPU compute pipeline for special functions
     pub struct GpuPipeline {
-        // TODO: Replace with scirs2_core::gpu abstractions
+        // Use scirs2_core GPU abstractions
         #[cfg(feature = "gpu")]
-        device: Option<()>, // Placeholder - should use core GPU abstractions
+        context: Option<scirs2_core::gpu::GpuContext>,
         #[cfg(feature = "gpu")]
-        queue: Option<()>, // Placeholder - should use core GPU abstractions
-        #[cfg(feature = "gpu")]
-        pipeline: Option<()>, // Placeholder - should use core GPU abstractions
+        gamma_kernel: Option<scirs2_core::gpu::kernels::KernelHandle>,
     }
 
     impl GpuPipeline {
         /// Create a new GPU pipeline
         #[cfg(feature = "gpu")]
         pub async fn new() -> SpecialResult<Self> {
-            // TODO: Use scirs2_core::gpu for GPU operations
-            // This is a placeholder implementation that should be replaced
-            // with core GPU abstractions when available
-            Err(SpecialError::ComputationError(
-                "GPU operations should use scirs2_core::gpu abstractions".to_string(),
-            ))
+            // Use scirs2_core::gpu for GPU operations
+            use scirs2_core::gpu::{GpuContext, GpuBackend};
+            
+            let context = GpuContext::new(GpuBackend::default())
+                .map_err(|e| SpecialError::ComputationError(format!("Failed to create GPU context: {}", e)))?;
+            
+            // Register or get gamma kernel handle
+            let gamma_kernel = context.get_kernel("special_gamma")
+                .ok_or_else(|| SpecialError::ComputationError("Gamma kernel not registered in GPU context".to_string()))?;
+            
+            Ok(Self {
+                context: Some(context),
+                gamma_kernel: Some(gamma_kernel),
+            })
         }
 
         /// Execute gamma function on GPU
@@ -308,19 +314,39 @@ pub mod gpu {
         where
             D: Dimension,
         {
-            // TODO: Use scirs2_core::gpu for GPU operations
-            // Temporarily disabled direct GPU implementation
-            /*
-            use bytemuck;
-            use wgpu::util::{BufferInitDescriptor, DeviceExt};
-            use wgpu::*;
-
-            let data: Vec<f32> = input.iter().map(|&x| x as f32).collect();
-            let size = data.len() * std::mem::size_of::<f32>();
-
-            // Create input buffer
-            let input_buffer = self.device.create_buffer_init(&BufferInitDescriptor {
-                label: Some("Input Buffer"),
+            // Use scirs2_core::gpu for GPU operations
+            if let (Some(context), Some(kernel)) = (&self.context, &self.gamma_kernel) {
+                use scirs2_core::gpu::kernels::{KernelArgs, DataType};
+                
+                // Prepare kernel arguments
+                let args = KernelArgs::new()
+                    .with_input("input", input.as_slice().unwrap(), DataType::Float64)
+                    .with_output("output", input.len(), DataType::Float64)
+                    .with_workgroups((input.len() as u32).div_ceil(256), 1, 1);
+                
+                // Execute kernel
+                match context.execute_kernel(kernel, args) {
+                    Ok(result) => {
+                        // Get output data
+                        if let Some(output_data) = result.get_output::<f64>("output") {
+                            // Reconstruct array with original shape
+                            Array::from_vec(output_data)
+                                .into_shape_with_order(input.dim())
+                                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))
+                        } else {
+                            Err(SpecialError::ComputationError("Failed to get GPU output".to_string()))
+                        }
+                    }
+                    Err(e) => {
+                        // Fall back to CPU on GPU error
+                        eprintln!("GPU execution failed: {}, falling back to CPU", e);
+                        Ok(input.mapv(crate::gamma::gamma))
+                    }
+                }
+            } else {
+                // No GPU context available, use CPU
+                Ok(input.mapv(crate::gamma::gamma))
+            }
                 contents: bytemuck::cast_slice(&data),
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
             });

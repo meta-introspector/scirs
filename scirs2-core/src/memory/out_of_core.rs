@@ -1153,11 +1153,52 @@ impl OutOfCoreManager {
         let arrays = self.arrays.read().unwrap();
         let total_arrays = arrays.len();
 
-        // TODO: Aggregate statistics from all arrays
+        // Aggregate statistics from all arrays
+        let mut total_memory_usage = 0;
+        let mut total_cached_chunks = 0;
+        
+        // Since arrays are stored as dyn Any, we need to maintain statistics separately
+        // or use a trait-based approach. For now, we iterate through known array types.
+        // In a production system, we would maintain a separate statistics registry.
+        
+        // Try common types - this is a limitation of the current design
+        for (_id, array_box) in arrays.iter() {
+            // Try f64 arrays
+            if let Some(array) = array_box.downcast_ref::<Arc<OutOfCoreArray<f64>>>() {
+                let stats = array.get_statistics();
+                total_memory_usage += stats.cache_stats.memory_usage;
+                total_cached_chunks += stats.cache_stats.cached_chunks;
+            }
+            // Try f32 arrays  
+            else if let Some(array) = array_box.downcast_ref::<Arc<OutOfCoreArray<f32>>>() {
+                let stats = array.get_statistics();
+                total_memory_usage += stats.cache_stats.memory_usage;
+                total_cached_chunks += stats.cache_stats.cached_chunks;
+            }
+            // Try i32 arrays
+            else if let Some(array) = array_box.downcast_ref::<Arc<OutOfCoreArray<i32>>>() {
+                let stats = array.get_statistics();
+                total_memory_usage += stats.cache_stats.memory_usage;
+                total_cached_chunks += stats.cache_stats.cached_chunks;
+            }
+            // Try i64 arrays
+            else if let Some(array) = array_box.downcast_ref::<Arc<OutOfCoreArray<i64>>>() {
+                let stats = array.get_statistics();
+                total_memory_usage += stats.cache_stats.memory_usage;
+                total_cached_chunks += stats.cache_stats.cached_chunks;
+            }
+            // Try u8 arrays (common for image data)
+            else if let Some(array) = array_box.downcast_ref::<Arc<OutOfCoreArray<u8>>>() {
+                let stats = array.get_statistics();
+                total_memory_usage += stats.cache_stats.memory_usage;
+                total_cached_chunks += stats.cache_stats.cached_chunks;
+            }
+        }
+
         ManagerStatistics {
             total_arrays,
-            total_memory_usage: 0,
-            total_cached_chunks: 0,
+            total_memory_usage,
+            total_cached_chunks,
         }
     }
 }
