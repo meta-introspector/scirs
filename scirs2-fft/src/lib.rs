@@ -213,7 +213,7 @@ pub use sparse_fft_gpu_cuda::{
     cuda_batch_sparse_fft,
     cuda_sparse_fft,
     get_cuda_devices,
-    GpuContext,
+    FftGpuContext,
     GpuDeviceInfo,
     // CUDAStream - migrated to core GPU abstractions
 };

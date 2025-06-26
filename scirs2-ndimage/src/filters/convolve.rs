@@ -4,7 +4,7 @@ use ndarray::{Array, Array1, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use super::BorderMode;
+use super::{convolve_optimized as convolve_opt, BorderMode};
 use crate::error::{NdimageError, Result};
 
 /// Apply a uniform filter (box filter or moving average) to an n-dimensional array
@@ -187,6 +187,41 @@ where
     }
 
     Ok(output)
+}
+
+/// Convolve an n-dimensional array with a filter kernel using optimized boundary handling
+///
+/// This version uses virtual boundary handling to avoid creating padded arrays,
+/// which is more memory-efficient for large arrays.
+///
+/// # Arguments
+///
+/// * `input` - Input array to convolve
+/// * `weights` - Convolution kernel
+/// * `mode` - Border handling mode (defaults to Reflect)
+/// * `use_optimization` - Whether to use the optimized implementation
+///
+/// # Returns
+///
+/// * `Result<Array<T, D>>` - Convolved array
+pub fn convolve_fast<T, D, E>(
+    input: &Array<T, D>,
+    weights: &Array<T, E>,
+    mode: Option<BorderMode>,
+    use_optimization: bool,
+) -> Result<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone + Send + Sync,
+    D: Dimension,
+    E: Dimension,
+{
+    if use_optimization {
+        // Use the optimized implementation
+        convolve_opt(input, weights, mode.unwrap_or(BorderMode::Reflect), None)
+    } else {
+        // Use the standard implementation
+        convolve(input, weights, mode)
+    }
 }
 
 /// Apply a 1D correlation along the specified axis

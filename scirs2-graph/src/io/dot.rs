@@ -108,10 +108,13 @@ where
     let mut graph = Graph::new();
     let mut state = ParseState::Header;
     let mut graph_type = None;
+    let mut in_multiline_comment = false;
 
     for (line_num, line_result) in reader.lines().enumerate() {
         let line = line_result?;
-        let line = remove_comments(&line).trim().to_string();
+        let (processed_line, comment_continues) = remove_comments(&line, in_multiline_comment);
+        in_multiline_comment = comment_continues;
+        let line = processed_line.trim().to_string();
 
         if line.is_empty() {
             continue;
@@ -177,10 +180,13 @@ where
     let mut graph = DiGraph::new();
     let mut state = ParseState::Header;
     let mut graph_type = None;
+    let mut in_multiline_comment = false;
 
     for (line_num, line_result) in reader.lines().enumerate() {
         let line = line_result?;
-        let line = remove_comments(&line).trim().to_string();
+        let (processed_line, comment_continues) = remove_comments(&line, in_multiline_comment);
+        in_multiline_comment = comment_continues;
+        let line = processed_line.trim().to_string();
 
         if line.is_empty() {
             continue;
@@ -338,25 +344,43 @@ where
 
 // Helper functions
 
-/// Remove comments from a line
-fn remove_comments(line: &str) -> String {
-    // Remove // comments
-    if let Some(pos) = line.find("//") {
-        return line[..pos].to_string();
-    }
-
-    // TODO: Handle /* */ comments properly (they can span multiple lines)
-    if let Some(start) = line.find("/*") {
-        if let Some(end) = line.find("*/") {
-            if end > start {
-                return format!("{}{}", &line[..start], &line[end + 2..]);
+/// Remove comments from a line, handling multi-line /* */ comments
+/// Returns (processed_line, is_still_in_multiline_comment)
+fn remove_comments(line: &str, in_multiline_comment: bool) -> (String, bool) {
+    let mut result = String::new();
+    let mut chars = line.chars().peekable();
+    let mut in_comment = in_multiline_comment;
+    
+    while let Some(ch) = chars.next() {
+        if in_comment {
+            // We're inside a multi-line comment, look for */
+            if ch == '*' && chars.peek() == Some(&'/') {
+                chars.next(); // consume '/'
+                in_comment = false;
+            }
+            // Skip characters inside comment
+        } else {
+            // Not in a comment, check for comment start
+            if ch == '/' {
+                if let Some(&next_ch) = chars.peek() {
+                    if next_ch == '/' {
+                        // Single-line comment, skip rest of line
+                        break;
+                    } else if next_ch == '*' {
+                        // Multi-line comment start
+                        chars.next(); // consume '*'
+                        in_comment = true;
+                        continue;
+                    }
+                }
+            }
+            if !in_comment {
+                result.push(ch);
             }
         }
-        // If /* found but no matching */, remove everything after /*
-        return line[..start].to_string();
     }
-
-    line.to_string()
+    
+    (result, in_comment)
 }
 
 /// Parse the header line to determine graph type

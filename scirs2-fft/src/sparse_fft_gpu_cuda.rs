@@ -110,9 +110,11 @@ impl GpuDeviceInfo {
     }
 }
 
-/// GPU context for FFT operations using core abstractions
+/// FFT-specific GPU context wrapping scirs2-core GPU context
 #[allow(dead_code)]
-pub struct GpuContext {
+pub struct FftGpuContext {
+    /// Core GPU context
+    core_context: scirs2_core::gpu::GpuContext,
     /// Device ID
     device_id: i32,
     /// Device information
@@ -123,10 +125,13 @@ pub struct GpuContext {
     initialized: bool,
 }
 
-impl GpuContext {
-    /// Create a new CUDA context for the specified device
+impl FftGpuContext {
+    /// Create a new FFT GPU context for the specified device
     pub fn new(device_id: i32) -> FFTResult<Self> {
-        // In a real implementation, this would query the device and initialize CUDA
+        // Create core GPU context
+        let gpu_backend = scirs2_core::gpu::GpuBackend::Cuda;
+        let core_context = scirs2_core::gpu::GpuContext::new(gpu_backend)
+            .map_err(|e| FFTError::ComputationError(e.to_string()))?;
 
         // Create device info using core abstractions
         let device_info = GpuDeviceInfo::new(device_id as usize)?;
@@ -135,6 +140,7 @@ impl GpuContext {
         let stream = GpuStream::new(device_id)?;
 
         Ok(Self {
+            core_context,
             device_id,
             device_info,
             stream,
@@ -219,8 +225,8 @@ impl GpuContext {
 
 /// CUDA-accelerated sparse FFT implementation
 pub struct GpuSparseFFT {
-    /// CUDA context
-    context: GpuContext,
+    /// FFT GPU context
+    context: FftGpuContext,
     /// Sparse FFT configuration
     config: SparseFFTConfig,
     /// Buffer for input signal on device
@@ -234,11 +240,8 @@ pub struct GpuSparseFFT {
 impl GpuSparseFFT {
     /// Create a new CUDA-accelerated sparse FFT processor
     pub fn new(device_id: i32, config: SparseFFTConfig) -> FFTResult<Self> {
-        // GPU device initialization handled by core GPU abstractions
-        // TODO: Use scirs2-core::gpu device initialization
-
-        // Initialize CUDA context
-        let context = GpuContext::new(device_id)?;
+        // Use FftGpuContext which wraps scirs2-core::gpu
+        let context = FftGpuContext::new(device_id)?;
 
         Ok(Self {
             context,
@@ -436,8 +439,8 @@ where
         ..SparseFFTConfig::default()
     };
 
-    // GPU memory manager initialization handled by core GPU abstractions
-    // TODO: Use scirs2-core::gpu memory management initialization
+    // GPU memory manager initialization is handled by FftGpuContext
+    // which uses scirs2-core::gpu internally
 
     // Create processor and perform computation
     let mut processor = GpuSparseFFT::new(device_id, config)?;

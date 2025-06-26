@@ -11,12 +11,15 @@ pub use bilateral::bilateral_filter;
 pub use bilateral::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
 mod bilateral;
+mod boundary_handler;
 mod convolve;
 mod edge;
 mod extrema;
+mod fourier;
 mod gaussian;
 mod generic;
 mod median;
+mod memory_efficient;
 mod rank;
 mod tests;
 mod uniform;
@@ -24,7 +27,7 @@ mod utils;
 
 // Convolve module exports
 pub use convolve::{
-    convolve,
+    convolve, convolve_fast,
     // Re-export the uniform_filter from convolve with a different name
     uniform_filter as convolve_uniform_filter,
 };
@@ -34,6 +37,9 @@ pub use edge::{gradient_magnitude, laplace, prewitt, roberts, scharr, sobel};
 
 // Extrema module exports (new implementation)
 pub use extrema::{maximum_filter, minimum_filter};
+
+// Fourier module exports
+pub use fourier::{fourier_ellipsoid, fourier_gaussian, fourier_shift, fourier_uniform};
 
 // Gaussian module exports
 pub use gaussian::{gaussian_filter, gaussian_filter_f32, gaussian_filter_f64};
@@ -57,6 +63,16 @@ pub use uniform::{uniform_filter, uniform_filter_separable};
 
 // Utils module exports
 pub use utils::*;
+
+// Boundary handler exports
+pub use boundary_handler::{
+    apply_filter_with_boundary, convolve_optimized, BoundaryHandler, VirtualBoundaryHandler,
+};
+
+// Memory-efficient filter exports
+pub use memory_efficient::{
+    gaussian_filter_chunked, median_filter_chunked, uniform_filter_chunked,
+};
 
 /// Border handling modes for filters
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

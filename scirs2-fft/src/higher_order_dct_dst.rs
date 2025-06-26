@@ -428,6 +428,13 @@ mod tests {
         // DCT-V max reconstruction error logged but not printed in tests
 
         // TODO: Fix DCT-V/IDCT-V implementation to be more numerically stable
+        // Current implementation uses FFT-based forward transform and direct sum inverse,
+        // which can accumulate numerical errors. Potential solutions:
+        // 1. Use more stable recursive algorithms (e.g., Strang's fast DCT-V)
+        // 2. Implement both forward and inverse using consistent FFT-based approach
+        // 3. Use higher precision intermediate calculations
+        // 4. Apply proper scaling factors throughout the computation
+        // Reference: "A Fast Cosine Transform in One and Two Dimensions" by Strang (1999)
     }
 
     #[test]

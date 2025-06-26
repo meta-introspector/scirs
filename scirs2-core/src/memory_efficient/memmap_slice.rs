@@ -95,10 +95,9 @@ where
             if ax.axis.index() < slice_elements.len() {
                 match &slice_elements[ax.axis.index()] {
                     SliceInfoElem::Slice { start, end, step } => {
-                        let start = *start as usize;
-                        let end = end.map(|e| e as usize).unwrap_or(ax.len);
-                        let step = *step as usize;
-                        ndarray::Slice::new(start as isize, Some(end as isize), step as isize)
+                        // Keep values as isize to avoid conversion issues
+                        let end_val = end.map(|e| e).unwrap_or(ax.len as isize);
+                        ndarray::Slice::new(*start, Some(end_val), *step)
                     }
                     SliceInfoElem::Index(idx) => ndarray::Slice::new(*idx, Some(*idx + 1), 1),
                     _ => ndarray::Slice::new(0, None, 1),
@@ -118,17 +117,37 @@ where
             for (i, elem) in slice_elements.iter().enumerate() {
                 match elem {
                     SliceInfoElem::Slice { start, end, step } => {
-                        let start = *start as usize;
                         // Safely get the dimension size, defaulting to a reasonable value if out of bounds
                         let dim_size = if i < self.source.shape.len() {
-                            self.source.shape[i]
+                            self.source.shape[i] as isize
                         } else {
                             // This shouldn't happen for properly constructed slices
                             1
                         };
-                        let end = end.map(|e| e as usize).unwrap_or(dim_size);
-                        let step = *step as usize;
-                        let len = (end - start).div_ceil(step);
+                        
+                        // Handle negative indices properly
+                        let actual_start = if *start < 0 {
+                            (dim_size + *start).max(0) as usize
+                        } else {
+                            (*start).min(dim_size) as usize
+                        };
+                        
+                        let actual_end = if let Some(e) = end {
+                            if *e < 0 {
+                                (dim_size + *e).max(0) as usize
+                            } else {
+                                (*e).min(dim_size) as usize
+                            }
+                        } else {
+                            dim_size as usize
+                        };
+                        
+                        let step_size = (*step).abs() as usize;
+                        let len = if step_size > 0 {
+                            (actual_end.saturating_sub(actual_start)).div_ceil(step_size)
+                        } else {
+                            0
+                        };
                         new_shape.push(len);
                     }
                     SliceInfoElem::Index(_) => {

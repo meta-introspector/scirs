@@ -113,9 +113,7 @@ impl CZT {
         }
 
         let chirp_array = Array1::from_vec(chirp_vec);
-        // TODO: Fix FFT reference once fft module is properly resolved
-        //let fwk2_vec = fft(&chirp_array.to_vec(), None)?;
-        let fwk2_vec = vec![Complex::new(0.0, 0.0); chirp_array.len()];
+        let fwk2_vec = crate::fft::fft(&chirp_array.to_vec(), None)?;
         let fwk2 = Array1::from_vec(fwk2_vec);
 
         Ok(CZT {
@@ -242,9 +240,7 @@ impl CZT {
         padded.slice_mut(s![..self.n]).assign(&x_weighted);
 
         // Forward FFT
-        // TODO: Fix FFT reference once fft module is properly resolved
-        //let x_fft_vec = fft(&padded.to_vec(), None)?;
-        let x_fft_vec = vec![Complex::new(0.0, 0.0); padded.len()];
+        let x_fft_vec = crate::fft::fft(&padded.to_vec(), None)?;
         let x_fft = Array1::from_vec(x_fft_vec);
 
         // Multiply by pre-computed FFT of reciprocal chirp
@@ -253,9 +249,7 @@ impl CZT {
             .map_collect(|&xi, &fi| xi * fi);
 
         // Inverse FFT
-        // TODO: Fix FFT reference once fft module is properly resolved
-        //let y_full_vec = ifft(&product.to_vec(), None)?;
-        let y_full_vec = vec![Complex::new(0.0, 0.0); product.len()];
+        let y_full_vec = crate::fft::ifft(&product.to_vec(), None)?;
         let y_full = Array1::from_vec(y_full_vec);
 
         // Extract relevant portion and multiply by w_k^2
@@ -394,9 +388,7 @@ mod tests {
         assert_eq!(czt_result.ndim(), 1);
         let czt_result_1d: Array1<Complex<f64>> = czt_result.into_dimensionality().unwrap();
 
-        // TODO: Fix FFT reference once fft module is properly resolved
-        //let fft_result_vec = fft(&x.to_vec(), None).unwrap();
-        let fft_result_vec = vec![Complex::new(0.0, 0.0); x.len()];
+        let fft_result_vec = crate::fft::fft(&x.to_vec(), None).unwrap();
         let fft_result = Array1::from_vec(fft_result_vec);
 
         for i in 0..n {

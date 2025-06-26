@@ -49,9 +49,25 @@ where
     let result = rfft_basic(input, n)?;
 
     // Apply normalization if requested
-    if let Some(_norm_str) = norm {
-        // TODO: Apply normalization based on norm_str when supported
-        // For now, just return the result without additional normalization
+    if let Some(norm_str) = norm {
+        let mut result_mut = result;
+        let n = input.len();
+        match norm_str {
+            "backward" => {
+                let scale = 1.0 / (n as f64);
+                result_mut.iter_mut().for_each(|c| *c *= scale);
+            }
+            "ortho" => {
+                let scale = 1.0 / (n as f64).sqrt();
+                result_mut.iter_mut().for_each(|c| *c *= scale);
+            }
+            "forward" => {
+                let scale = 1.0 / (n as f64);
+                result_mut.iter_mut().for_each(|c| *c *= scale);
+            }
+            _ => {} // No normalization for unrecognized mode
+        }
+        return Ok(result_mut);
     }
 
     Ok(result)
@@ -99,9 +115,25 @@ where
     let result = irfft_basic(input, n)?;
 
     // Apply normalization if requested
-    if let Some(_norm_str) = norm {
-        // TODO: Apply normalization based on norm_str when supported
-        // For now, just return the result without additional normalization
+    if let Some(norm_str) = norm {
+        let mut result_mut = result;
+        let n = input.len();
+        match norm_str {
+            "backward" => {
+                let scale = 1.0 / (n as f64);
+                result_mut.iter_mut().for_each(|c| *c *= scale);
+            }
+            "ortho" => {
+                let scale = 1.0 / (n as f64).sqrt();
+                result_mut.iter_mut().for_each(|c| *c *= scale);
+            }
+            "forward" => {
+                let scale = 1.0 / (n as f64);
+                result_mut.iter_mut().for_each(|c| *c *= scale);
+            }
+            _ => {} // No normalization for unrecognized mode
+        }
+        return Ok(result_mut);
     }
 
     Ok(result)
@@ -122,6 +154,8 @@ where
 
     if caps.gpu_available && optimizer.should_use_gpu(size) {
         // TODO: Use GPU implementation when available in core
+        // GPU FFT would require scirs2_core::gpu to support FFT kernels
+        // For now, fall back to SIMD implementation
         rfft_simd(input, n, norm)
     } else {
         rfft_simd(input, n, norm)
@@ -139,6 +173,8 @@ where
 
     if caps.gpu_available && optimizer.should_use_gpu(size) {
         // TODO: Use GPU implementation when available in core
+        // GPU FFT would require scirs2_core::gpu to support FFT kernels
+        // For now, fall back to SIMD implementation
         irfft_simd(input, n, norm)
     } else {
         irfft_simd(input, n, norm)

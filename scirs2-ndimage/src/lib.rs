@@ -4,6 +4,7 @@
 //! It includes filters, interpolation, measurements, morphology, feature detection, and segmentation functions.
 
 // Public modules
+pub mod chunked;
 pub mod error;
 pub mod features;
 pub mod filters;
@@ -24,8 +25,9 @@ pub use self::features::{
 // Filters module exports
 pub use self::filters::{
     bilateral_filter, convolve, filter_functions, gaussian_filter, gaussian_filter_f32,
-    gaussian_filter_f64, generic_filter, laplace, maximum_filter, median_filter, minimum_filter,
-    percentile_filter, rank_filter, sobel, uniform_filter, BorderMode,
+    gaussian_filter_f64, gaussian_filter_chunked, generic_filter, laplace, maximum_filter, 
+    median_filter, median_filter_chunked, minimum_filter, percentile_filter, rank_filter, 
+    sobel, uniform_filter, uniform_filter_chunked, BorderMode,
 };
 
 #[cfg(feature = "simd")]
@@ -57,4 +59,9 @@ pub use self::morphology::{
     generate_binary_structure, grey_closing, grey_dilation, grey_erosion, grey_opening,
     iterate_structure, label, morphological_gradient, morphological_laplace, remove_small_holes,
     remove_small_objects, white_tophat, Connectivity, MorphBorderMode,
+};
+
+// Chunked processing exports
+pub use self::chunked::{
+    process_chunked, ChunkConfig, ChunkProcessor, GaussianChunkProcessor,
 };
