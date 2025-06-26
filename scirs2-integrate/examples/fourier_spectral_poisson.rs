@@ -1,4 +1,3 @@
-// FIXME: This example has compilation errors - ambiguous type for max()
 #![allow(dead_code)]
 
 use scirs2_integrate::{

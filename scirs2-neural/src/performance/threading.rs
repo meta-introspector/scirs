@@ -6,7 +6,7 @@
 use crate::error::{NeuralError, Result};
 use ndarray::{Array, ArrayD};
 #[cfg(feature = "parallel")]
-use scirs2_core::parallel_ops::{*, ThreadPoolBuilder};
+use scirs2_core::parallel_ops::{ThreadPoolBuilder, *};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;

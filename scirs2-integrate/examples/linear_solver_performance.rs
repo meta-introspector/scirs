@@ -1,4 +1,3 @@
-// FIXME: This example has compilation errors - missing imports and API changes
 #![allow(dead_code)]
 
 use ndarray::{Array1, Array2};

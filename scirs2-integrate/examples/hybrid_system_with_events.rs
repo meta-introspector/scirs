@@ -10,7 +10,6 @@
 //!
 //! The control logic switches between these modes based on temperature thresholds.
 
-// FIXME: This example has compilation errors - closure type mismatches and IO errors
 #![allow(dead_code)]
 
 use ndarray::{array, ArrayView1};

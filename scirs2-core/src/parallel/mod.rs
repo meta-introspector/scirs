@@ -6,9 +6,9 @@
 //! - Nested parallelism with controlled resource usage
 //! - Load balancing and adaptive scheduling
 
-mod scheduler;
-mod partitioning;
 mod nested;
+mod partitioning;
+mod scheduler;
 
 // Re-export scheduler functionality
 pub use scheduler::{
@@ -20,17 +20,14 @@ pub use scheduler::{
 
 // Re-export partitioning functionality
 pub use partitioning::{
-    DataDistribution, PartitionStrategy, PartitionerConfig, DataPartitioner,
-    LoadBalancer,
+    DataDistribution, DataPartitioner, LoadBalancer, PartitionStrategy, PartitionerConfig,
 };
 
 // Re-export nested parallelism functionality
 pub use nested::{
-    ResourceLimits, NestedContext, ResourceManager, ResourceUsageStats,
-    NestedScope, NestedPolicy, NestedConfig,
-    nested_scope, nested_scope_with_limits, with_nested_policy,
-    current_nesting_level, is_nested_parallelism_allowed,
-    adaptive_par_for_each, adaptive_par_map,
+    adaptive_par_for_each, adaptive_par_map, current_nesting_level, is_nested_parallelism_allowed,
+    nested_scope, nested_scope_with_limits, with_nested_policy, NestedConfig, NestedContext,
+    NestedPolicy, NestedScope, ResourceLimits, ResourceManager, ResourceUsageStats,
 };
 
 // Note: parallel_map is now provided by parallel_ops module for simpler usage

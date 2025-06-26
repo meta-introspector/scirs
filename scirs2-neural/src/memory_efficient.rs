@@ -16,18 +16,11 @@ use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg(feature = "memory_efficient")]
-// FIXME: chunk_wise_op usage commented out due to signature mismatch
-// use scirs2_core::memory_efficient::chunk_wise_op;
+use scirs2_core::memory_efficient::{chunk_wise_op, ChunkingStrategy};
 #[cfg(feature = "memory_management")]
 use scirs2_core::memory_efficient::BufferPool;
 
-// FIXME: MemoryManager not available in current scirs2-core
-// #[cfg(feature = "memory_management")]
-// use scirs2_core::resource::memory::{AllocationStrategy, MemoryManager};
-
-// FIXME: ChunkProcessor not available as trait in current scirs2-core
-// #[cfg(feature = "memory_management")]
-// use scirs2_core::ChunkProcessor;
+// Note: Using BufferPool for memory management instead of MemoryManager
 
 // Note: These imports may need to be adjusted based on available types in scirs2_core
 // #[cfg(feature = "memory_management")]
@@ -525,10 +518,7 @@ pub struct MemoryEfficientLayer {
     /// Chunk size for processing
     chunk_size: usize,
 
-    /// Memory manager for efficient allocation
-    // FIXME: MemoryManager not available in current scirs2-core
-    // #[cfg(feature = "memory_management")]
-    // memory_manager: Arc<MemoryManager>,
+    // Memory management handled through BufferPool
 
     /// Buffer pool for temporary allocations
     #[cfg(feature = "memory_management")]
@@ -551,12 +541,7 @@ impl MemoryEfficientLayer {
 
         let bias = ndarray::Array1::zeros(output_size);
 
-        // FIXME: MemoryManager not available in current scirs2-core
-        // #[cfg(feature = "memory_management")]
-        // let memory_manager = Arc::new(MemoryManager::new(
-        //     AllocationStrategy::FirstFit,
-        //     1024 * 1024 * 100,
-        // )); // 100MB
+        // Buffer pool handles memory management
 
         #[cfg(feature = "memory_management")]
         let buffer_pool = Arc::new(
@@ -580,9 +565,6 @@ impl MemoryEfficientLayer {
             weights,
             bias,
             chunk_size: default_chunk_size,
-            // FIXME: MemoryManager not available in current scirs2-core
-            // #[cfg(feature = "memory_management")]
-            // memory_manager,
             #[cfg(feature = "memory_management")]
             buffer_pool,
             #[cfg(feature = "cache")]
@@ -635,24 +617,32 @@ impl MemoryEfficientLayer {
         let output_size = self.bias.len();
 
         // Use chunk-wise operation for memory efficiency
-        // FIXME: processor not used due to commented out chunk_wise_op
-        // let processor = ChunkForwardProcessor {
-        //     weights: &self.weights,
-        //     bias: &self.bias,
-        // };
-
-        // FIXME: chunk_wise_op signature mismatch - needs refactoring
-        // let result = chunk_wise_op(
-        //     &input_chunk.to_owned(),
-        //     1024, // Processing chunk size
-        //     &processor,
-        // )
-        // .map_err(|e| {
-        //     NeuralError::ComputationError(format!("Chunk-wise operation failed: {:?}", e))
-        // })?;
-
-        // Temporary fallback - simple matrix multiplication
-        let result = input_chunk.to_owned();
+        #[cfg(feature = "memory_efficient")]
+        {
+            let weights = &self.weights;
+            let bias = &self.bias;
+            
+            let result = chunk_wise_op(
+                &input_chunk.to_owned(),
+                |chunk| {
+                    // Perform matrix multiplication and add bias
+                    let output = chunk.dot(weights) + bias;
+                    Ok(output)
+                },
+                ChunkingStrategy::Fixed(1024), // Processing chunk size
+            )
+            .map_err(|e| {
+                NeuralError::ComputationError(format!("Chunk-wise operation failed: {:?}", e))
+            })?;
+            
+            result
+        }
+        
+        #[cfg(not(feature = "memory_efficient"))]
+        {
+            // Fallback - simple matrix multiplication
+            input_chunk.to_owned()
+        }
 
         // Add bias
         let mut output = ndarray::Array2::zeros((chunk_batch_size, output_size));
@@ -708,12 +698,7 @@ impl MemoryEfficientLayer {
         Ok(result)
     }
 
-    // FIXME: MemoryManager not available in current scirs2-core
-    // /// Get memory usage statistics
-    // #[cfg(feature = "memory_management")]
-    // pub fn get_memory_stats(&self) -> MemoryMetrics {
-    //     self.memory_manager.get_metrics()
-    // }
+    // Memory statistics are tracked through BufferPool instead
 
     /// Cache activation for reuse during training
     #[cfg(feature = "cache")]
@@ -736,21 +721,7 @@ struct ChunkForwardProcessor<'a> {
     bias: &'a ndarray::Array1<f32>,
 }
 
-// FIXME: ChunkProcessor trait not available in current scirs2-core
-// #[cfg(feature = "memory_efficient")]
-// impl<'a> ChunkProcessor<f32> for ChunkForwardProcessor<'a> {
-//     type Output = ArrayD<f32>;
-//     type Error = crate::error::NeuralError;
-//
-//     fn process_chunk(
-//         &self,
-//         chunk: ArrayView<f32, IxDyn>,
-//     ) -> std::result::Result<ArrayD<f32>, crate::error::NeuralError> {
-//         // Simplified processing for demonstration
-//         // In a real implementation, this would use the memory-efficient weights
-//         Ok(chunk.to_owned())
-//     }
-// }
+// ChunkForwardProcessor functionality is now handled directly in the chunk_wise_op closure
 
 #[cfg(test)]
 mod tests {

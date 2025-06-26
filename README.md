@@ -287,7 +287,7 @@ SciRS2 and all its modules are available on [crates.io](https://crates.io/crates
 ```toml
 # Add the main integration crate for all functionality
 [dependencies]
-scirs2 = "0.1.0-alpha.6"
+scirs2 = "0.1.0-beta.1"
 ```
 
 Or include only the specific modules you need:
@@ -295,16 +295,16 @@ Or include only the specific modules you need:
 ```toml
 [dependencies]
 # Core utilities
-scirs2-core = "0.1.0-alpha.6"
+scirs2-core = "0.1.0-beta.1"
 
 # Scientific computing modules
-scirs2-linalg = "0.1.0-alpha.6"
-scirs2-stats = "0.1.0-alpha.6"
-scirs2-optimize = "0.1.0-alpha.6"
+scirs2-linalg = "0.1.0-beta.1"
+scirs2-stats = "0.1.0-beta.1"
+scirs2-optimize = "0.1.0-beta.1"
 
 # AI/ML modules
-scirs2-neural = "0.1.0-alpha.6"
-scirs2-autograd = "0.1.0-alpha.6"
+scirs2-neural = "0.1.0-beta.1"
+scirs2-autograd = "0.1.0-beta.1"
 ```
 
 ### Example Usage
@@ -419,6 +419,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## Current Status (Beta 1)
+
+### 🎉 New in Beta 1
+
+#### Phase 7 Parallel Processing Enhancements
+- **Custom Partitioning Strategies**: Optimized data distribution for different workloads
+- **Work-Stealing Scheduler**: Efficient thread utilization with dynamic load balancing
+- **Nested Parallelism**: Controlled resource usage for complex parallel computations
+- **Adaptive Parallel Execution**: Smart switching between parallel and sequential execution
+
+#### Advanced Numerical Capabilities
+- **Arbitrary Precision Arithmetic**: Complete implementation with GMP/MPFR backend
+  - ArbitraryInt, ArbitraryFloat, ArbitraryRational, ArbitraryComplex types
+  - Configurable precision contexts
+  - Seamless integration with existing numeric types
+- **Numerical Stability Improvements**: 
+  - Kahan, Neumaier, and pairwise summation algorithms
+  - Welford's online variance computation
+  - Stable matrix operations (QR, Cholesky, Gaussian elimination)
+  - Log-sum-exp trick for overflow prevention
+  - Iterative solvers (Conjugate Gradient, GMRES)
+
 ## Current Status
 
 ### Stable Modules
@@ -474,6 +496,9 @@ SciRS2 provides:
 - **Computer Vision Registration**: Rigid, affine, homography, and non-rigid registration algorithms with RANSAC robustness
 - **Performance Benchmarking**: Automated benchmarking framework with SciPy comparison and optimization tools
 - **Numerical Precision**: High-precision eigenvalue solvers and optimized numerical algorithms
+- **Parallel Processing**: Enhanced work-stealing scheduler, custom partitioning strategies, and nested parallelism
+- **Arbitrary Precision**: Complete arbitrary precision arithmetic with GMP/MPFR backend
+- **Numerical Stability**: Comprehensive algorithms for stable computation including Kahan summation and log-sum-exp
 
 ### Installation
 
@@ -481,10 +506,10 @@ All SciRS2 modules are available on crates.io. Add the modules you need to your 
 
 ```toml
 [dependencies]
-scirs2 = "0.1.0-alpha.6"  # Core library with all modules
+scirs2 = "0.1.0-beta.1"  # Core library with all modules
 # Or individual modules:
-scirs2-linalg = "0.1.0-alpha.6"  # Linear algebra
-scirs2-stats = "0.1.0-alpha.6"   # Statistics
+scirs2-linalg = "0.1.0-beta.1"  # Linear algebra
+scirs2-stats = "0.1.0-beta.1"   # Statistics
 # ... and more
 ```
 

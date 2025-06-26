@@ -390,8 +390,7 @@ where
 /// # Examples
 ///
 /// Simple example with an obvious outlier:
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::ransac;
 ///
@@ -412,8 +411,7 @@ where
 /// ```
 ///
 /// Simpler example with fewer dimensions:
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::ransac;
 ///
@@ -850,8 +848,7 @@ where
 /// # Examples
 ///
 /// Basic example with an outlier:
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::huber_regression;
 ///
@@ -872,8 +869,7 @@ where
 /// ```
 ///
 /// Using custom epsilon and regularization:
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::huber_regression;
 ///

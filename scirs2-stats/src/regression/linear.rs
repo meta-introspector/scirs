@@ -24,8 +24,7 @@ use scirs2_linalg::{lstsq, svd};
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::multilinear_regression;
 ///
@@ -158,8 +157,7 @@ where
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::linear_regression;
 ///

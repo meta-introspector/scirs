@@ -21,9 +21,8 @@ use crate::{
 };
 use num_bigint::BigInt;
 use rug::{
-    float::Round,
-    ops::Pow,
-    Complex as RugComplex, Float as RugFloat, Integer as RugInteger, Rational as RugRational,
+    float::Round, ops::Pow, Complex as RugComplex, Float as RugFloat, Integer as RugInteger,
+    Rational as RugRational,
 };
 use std::cmp::Ordering;
 use std::fmt;
@@ -371,7 +370,9 @@ impl ArbitraryFloat {
                 value: RugFloat::with_val(prec, incomplete),
                 context,
             })
-            .map_err(|e| CoreError::ValidationError(ErrorContext::new(format!("Parse error: {}", e))))
+            .map_err(|e| {
+                CoreError::ValidationError(ErrorContext::new(format!("Parse error: {}", e)))
+            })
     }
 
     /// Get the precision in bits
@@ -575,7 +576,12 @@ impl fmt::Display for ArbitraryFloat {
 
 impl fmt::Debug for ArbitraryFloat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ArbitraryFloat({}, {} bits)", self.value, self.precision())
+        write!(
+            f,
+            "ArbitraryFloat({}, {} bits)",
+            self.value,
+            self.precision()
+        )
     }
 }
 
@@ -937,8 +943,7 @@ impl fmt::Debug for ArbitraryComplex {
         write!(
             f,
             "ArbitraryComplex({}, {} bits)",
-            self,
-            self.context.float_precision
+            self, self.context.float_precision
         )
     }
 }
@@ -1101,8 +1106,9 @@ impl ArbitraryPrecisionBuilder {
     pub fn track_precision(mut self, track: bool) -> Self {
         self.context.track_precision = track;
         if track && self.context.precision_context.is_none() {
-            self.context.precision_context =
-                Some(PrecisionContext::new(self.context.float_precision as f64 / 3.32));
+            self.context.precision_context = Some(PrecisionContext::new(
+                self.context.float_precision as f64 / 3.32,
+            ));
         }
         self
     }

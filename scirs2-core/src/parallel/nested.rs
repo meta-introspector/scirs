@@ -4,10 +4,8 @@
 //! resource management to prevent thread explosion and maintain performance.
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::parallel::scheduler::{SchedulerConfigBuilder, WorkStealingScheduler};
 use crate::parallel_ops::*;
-use crate::parallel::scheduler::{
-    WorkStealingScheduler, SchedulerConfigBuilder,
-};
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
@@ -15,13 +13,14 @@ use std::sync::{Arc, Mutex, RwLock};
 thread_local! {
     /// Thread-local nesting level
     static NESTING_LEVEL: RefCell<usize> = RefCell::new(0);
-    
+
     /// Thread-local parent context
     static PARENT_CONTEXT: RefCell<Option<Arc<NestedContext>>> = RefCell::new(None);
 }
 
 /// Global resource manager for nested parallelism
-static GLOBAL_RESOURCE_MANAGER: std::sync::OnceLock<Arc<ResourceManager>> = std::sync::OnceLock::new();
+static GLOBAL_RESOURCE_MANAGER: std::sync::OnceLock<Arc<ResourceManager>> =
+    std::sync::OnceLock::new();
 
 /// Get or create the global resource manager
 fn get_resource_manager() -> Arc<ResourceManager> {
@@ -126,24 +125,24 @@ impl NestedContext {
     pub fn try_acquire_threads(&self, requested: usize) -> usize {
         let max_at_level = self.max_threads_at_level();
         let resource_manager = get_resource_manager();
-        
+
         // Check global limit
         let available_global = resource_manager.try_acquire_threads(requested);
-        
+
         // Check level limit
         let current = self.active_threads.load(Ordering::Relaxed);
         let available_at_level = max_at_level.saturating_sub(current);
-        
+
         // Take minimum of all constraints
         let granted = requested.min(available_global).min(available_at_level);
-        
+
         if granted > 0 {
             self.active_threads.fetch_add(granted, Ordering::Relaxed);
         } else {
             // Return any globally acquired threads if we can't use them
             resource_manager.release_threads(available_global);
         }
-        
+
         granted
     }
 
@@ -211,21 +210,16 @@ impl ResourceManager {
     /// Try to acquire threads from the global pool
     pub fn try_acquire_threads(&self, requested: usize) -> usize {
         let mut acquired = 0;
-        
+
         // Simple atomic loop to acquire threads
         for _ in 0..requested {
             let current = self.total_threads.load(Ordering::Relaxed);
             let max_threads = num_cpus::get() * 2; // Global limit
-            
+
             if current < max_threads {
                 if self
                     .total_threads
-                    .compare_exchange(
-                        current,
-                        current + 1,
-                        Ordering::Acquire,
-                        Ordering::Relaxed,
-                    )
+                    .compare_exchange(current, current + 1, Ordering::Acquire, Ordering::Relaxed)
                     .is_ok()
                 {
                     acquired += 1;
@@ -237,7 +231,7 @@ impl ResourceManager {
                 break;
             }
         }
-        
+
         acquired
     }
 
@@ -249,9 +243,11 @@ impl ResourceManager {
     /// Update memory usage
     pub fn update_memory_usage(&self, bytes: isize) {
         if bytes > 0 {
-            self.memory_used.fetch_add(bytes as usize, Ordering::Relaxed);
+            self.memory_used
+                .fetch_add(bytes as usize, Ordering::Relaxed);
         } else {
-            self.memory_used.fetch_sub((-bytes) as usize, Ordering::Relaxed);
+            self.memory_used
+                .fetch_sub((-bytes) as usize, Ordering::Relaxed);
         }
     }
 
@@ -297,20 +293,20 @@ impl<'a> NestedScope<'a> {
         PARENT_CONTEXT.with(|ctx| {
             *ctx.borrow_mut() = Some(self.context.clone());
         });
-        
+
         // Set nesting level
         NESTING_LEVEL.with(|level| {
             *level.borrow_mut() = self.context.level;
         });
-        
+
         // Execute the function
         let result = f();
-        
+
         // Clear thread-local state
         PARENT_CONTEXT.with(|ctx| {
             *ctx.borrow_mut() = None;
         });
-        
+
         Ok(result)
     }
 
@@ -323,11 +319,8 @@ impl<'a> NestedScope<'a> {
         R: Send,
     {
         // Convert to parallel iterator once
-        let results: Vec<R> = items
-            .into_par_iter()
-            .map(f)
-            .collect();
-        
+        let results: Vec<R> = items.into_par_iter().map(f).collect();
+
         Ok(results)
     }
 }
@@ -355,25 +348,22 @@ where
     F: FnOnce(&NestedScope) -> CoreResult<R>,
 {
     // Check if we're already in a nested context
-    let context = PARENT_CONTEXT.with(|ctx| {
-        ctx.borrow().as_ref().map(|parent| {
-            parent.create_child()
-        })
-    }).transpose()?.unwrap_or_else(|| {
-        Arc::new(NestedContext::new(limits))
-    });
-    
+    let context = PARENT_CONTEXT
+        .with(|ctx| ctx.borrow().as_ref().map(|parent| parent.create_child()))
+        .transpose()?
+        .unwrap_or_else(|| Arc::new(NestedContext::new(limits)));
+
     // Try to acquire threads
     let requested_threads = context.max_threads_at_level();
     let acquired_threads = context.try_acquire_threads(requested_threads);
-    
+
     // Create scope
     let scope = NestedScope {
         context,
         acquired_threads,
         _phantom: std::marker::PhantomData,
     };
-    
+
     // Execute function
     f(&scope)
 }
@@ -467,9 +457,7 @@ where
     F: FnOnce() -> CoreResult<R>,
 {
     match config.policy {
-        NestedPolicy::Allow => {
-            nested_scope_with_limits(config.limits, |_scope| f())
-        }
+        NestedPolicy::Allow => nested_scope_with_limits(config.limits, |_scope| f()),
         NestedPolicy::Sequential => {
             // Force sequential execution
             NESTING_LEVEL.with(|level| {
@@ -502,9 +490,9 @@ where
 /// Get parent level scheduler if available
 fn get_parent_scheduler() -> Option<Arc<Mutex<WorkStealingScheduler>>> {
     PARENT_CONTEXT.with(|ctx| {
-        ctx.borrow().as_ref().and_then(|context| {
-            context.scheduler.clone()
-        })
+        ctx.borrow()
+            .as_ref()
+            .and_then(|context| context.scheduler.clone())
     })
 }
 
@@ -517,8 +505,9 @@ mod tests {
         let result = nested_scope(|scope| {
             let data: Vec<i32> = (0..100).collect();
             scope.par_iter(data, |x| x * 2)
-        }).unwrap();
-        
+        })
+        .unwrap();
+
         assert_eq!(result.len(), 100);
         assert_eq!(result[0], 0);
         assert_eq!(result[50], 100);
@@ -528,20 +517,24 @@ mod tests {
     fn test_nesting_levels() {
         nested_scope(|outer_scope| {
             assert_eq!(current_nesting_level(), 0);
-            
+
             outer_scope.execute(|| {
                 nested_scope(|inner_scope| {
                     assert_eq!(current_nesting_level(), 1);
-                    
+
                     inner_scope.execute(|| {
                         nested_scope(|_deepest_scope| {
                             assert_eq!(current_nesting_level(), 2);
                             Ok(())
                         })
                     })
-                }).unwrap()
+                })
+                .unwrap()
             })
-        }).unwrap().unwrap().unwrap();
+        })
+        .unwrap()
+        .unwrap()
+        .unwrap();
     }
 
     #[test]
@@ -552,13 +545,13 @@ mod tests {
             threads_per_level: vec![2, 1],
             ..Default::default()
         };
-        
+
         let result = nested_scope_with_limits(limits, |scope| {
             let context = &scope.context;
             assert!(context.max_threads_at_level() <= 2);
             Ok(42)
         });
-        
+
         assert_eq!(result.unwrap(), 42);
     }
 
@@ -568,14 +561,14 @@ mod tests {
             policy: NestedPolicy::Sequential,
             ..Default::default()
         };
-        
+
         let result = with_nested_policy(config, || {
             // This should run sequentially even if we try parallel
             let data: Vec<i32> = (0..10).collect();
             let sum: i32 = data.into_par_iter().sum();
             Ok(sum)
         });
-        
+
         assert_eq!(result.unwrap(), 45);
     }
 
@@ -585,16 +578,14 @@ mod tests {
             policy: NestedPolicy::Deny,
             ..Default::default()
         };
-        
+
         // Top level should work
         let result = with_nested_policy(config.clone(), || Ok(1));
         assert!(result.is_ok());
-        
+
         // Nested should fail
-        let result = nested_scope(|_scope| {
-            with_nested_policy(config, || Ok(2))
-        });
-        
+        let result = nested_scope(|_scope| with_nested_policy(config, || Ok(2)));
+
         assert!(result.is_err());
     }
 }

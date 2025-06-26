@@ -33,8 +33,7 @@ type PreprocessingResult<F> = (Array2<F>, F, Array1<F>, Array1<F>);
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::ridge_regression;
 ///
@@ -464,8 +463,7 @@ where
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::lasso_regression;
 ///
@@ -821,8 +819,7 @@ where
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::elastic_net;
 ///
@@ -1224,8 +1221,7 @@ where
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::{array, Array2};
 /// use scirs2_stats::group_lasso;
 ///

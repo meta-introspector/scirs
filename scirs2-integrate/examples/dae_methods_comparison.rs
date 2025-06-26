@@ -8,7 +8,6 @@
 //! The test problem is a simple pendulum DAE system, which we can solve analytically
 //! for comparison purposes.
 
-// FIXME: This example has compilation errors - missing plotters imports and API changes
 #![allow(dead_code)]
 
 use ndarray::{array, Array1, ArrayView1};

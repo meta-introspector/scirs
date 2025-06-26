@@ -1,4 +1,4 @@
-# scirs2-series - Final Alpha Release (0.1.0-alpha.6)
+# scirs2-series - Final Alpha Release (0.1.0-beta.1)
 
 🚀 **PRODUCTION READY** - This module provides comprehensive time series analysis functionality with feature parity to pandas and statsmodels, ready for production use.
 
@@ -100,7 +100,7 @@
 
 ## 📋 Development Notes
 
-### Alpha Phase Completion (0.1.0-alpha.6)
+### Alpha Phase Completion (0.1.0-beta.1)
 - **Start Date**: Early development phase
 - **Completion Date**: Current release  
 - **Key Achievements**: 

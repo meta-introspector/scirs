@@ -1,11 +1,11 @@
 [package]
 name = "scirs2-signal"
 version.workspace = true
-edition = "2021"
-authors = ["SciRS2 Team"]
-description = "Signal processing module for SciRS2"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/cool-japan/scirs"
+edition.workspace = true
+authors.workspace = true
+description = "Signal processing module for SciRS2 (scirs2-signal)"
+license.workspace = true
+repository.workspace = true
 keywords = ["signal-processing", "filter", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 

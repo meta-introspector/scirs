@@ -6,15 +6,15 @@
 //! - Nested parallelism with resource control
 //! - Load balancing and adaptive scheduling
 
+use scirs2_core::error::CoreResult;
 #[cfg(feature = "parallel")]
 use scirs2_core::parallel::{
-    DataDistribution, DataPartitioner, LoadBalancer, NestedConfig, NestedPolicy,
-    PartitionerConfig, ResourceLimits, SchedulerConfigBuilder, TaskPriority,
-    WorkStealingScheduler, nested_scope, nested_scope_with_limits, with_nested_policy,
+    nested_scope, nested_scope_with_limits, with_nested_policy, DataDistribution, DataPartitioner,
+    LoadBalancer, NestedConfig, NestedPolicy, PartitionerConfig, ResourceLimits,
+    SchedulerConfigBuilder, TaskPriority, WorkStealingScheduler,
 };
 #[cfg(feature = "parallel")]
 use scirs2_core::parallel_ops::*;
-use scirs2_core::error::CoreResult;
 use std::time::{Duration, Instant};
 
 fn main() -> CoreResult<()> {
@@ -24,7 +24,7 @@ fn main() -> CoreResult<()> {
         println!("Run with: cargo run --example advanced_parallel_processing --features parallel");
         return Ok(());
     }
-    
+
     #[cfg(feature = "parallel")]
     {
         println!("=== Advanced Parallel Processing Examples ===\n");
@@ -145,7 +145,7 @@ fn example_work_stealing_scheduler() -> CoreResult<()> {
 
     // Wait for completion
     std::thread::sleep(Duration::from_secs(2));
-    
+
     let stats = scheduler.get_stats();
     println!("\nScheduler Statistics:");
     println!("  Tasks submitted: {}", stats.tasks_submitted);
@@ -175,8 +175,10 @@ fn example_nested_parallelism() -> CoreResult<()> {
 
     // Execute with nested parallelism
     let result = nested_scope_with_limits(limits, |outer_scope| {
-        println!("Outer level (depth 0) - max threads: {}", 
-                 outer_scope.context.max_threads_at_level());
+        println!(
+            "Outer level (depth 0) - max threads: {}",
+            outer_scope.context.max_threads_at_level()
+        );
 
         // Parallel processing at outer level
         let outer_data: Vec<i32> = (0..100).collect();
@@ -184,22 +186,26 @@ fn example_nested_parallelism() -> CoreResult<()> {
             // Nested parallel operation
             nested_scope(|inner_scope| {
                 println!("  Inner level (depth 1) - processing item {}", x);
-                
+
                 let inner_data: Vec<i32> = (0..10).collect();
-                let inner_sum: i32 = inner_scope.par_iter(inner_data, |y| {
-                    // Deeply nested operation
-                    nested_scope(|deep_scope| {
-                        let deep_data: Vec<i32> = (0..5).collect();
-                        deep_scope.par_iter(deep_data, |z| z * 2)
-                    }).unwrap_or_else(|_| vec![0; 5])
-                      .iter()
-                      .sum::<i32>()
-                }).unwrap_or_else(|_| vec![0; 10])
-                  .iter()
-                  .sum();
-                
+                let inner_sum: i32 = inner_scope
+                    .par_iter(inner_data, |y| {
+                        // Deeply nested operation
+                        nested_scope(|deep_scope| {
+                            let deep_data: Vec<i32> = (0..5).collect();
+                            deep_scope.par_iter(deep_data, |z| z * 2)
+                        })
+                        .unwrap_or_else(|_| vec![0; 5])
+                        .iter()
+                        .sum::<i32>()
+                    })
+                    .unwrap_or_else(|_| vec![0; 10])
+                    .iter()
+                    .sum();
+
                 Ok(x * inner_sum)
-            }).unwrap_or(0)
+            })
+            .unwrap_or(0)
         })?;
 
         println!("\nOuter results computed: {} items", outer_results.len());
@@ -222,10 +228,10 @@ fn example_load_balancing() -> CoreResult<()> {
 
     // Simulate workload execution with varying times
     let partition_times = vec![
-        vec![100, 95, 105, 98],    // Partition 0: consistent ~100ms
-        vec![200, 190, 210, 195],  // Partition 1: consistent ~200ms
-        vec![150, 145, 155, 148],  // Partition 2: consistent ~150ms
-        vec![50, 55, 45, 52],      // Partition 3: consistent ~50ms
+        vec![100, 95, 105, 98],   // Partition 0: consistent ~100ms
+        vec![200, 190, 210, 195], // Partition 1: consistent ~200ms
+        vec![150, 145, 155, 148], // Partition 2: consistent ~150ms
+        vec![50, 55, 45, 52],     // Partition 3: consistent ~50ms
     ];
 
     println!("Initial execution times (ms):");
@@ -265,7 +271,7 @@ fn example_complex_nested_computation() -> CoreResult<()> {
 
     for (policy, name) in policies {
         println!("\nTesting with {} policy:", name);
-        
+
         let config = NestedConfig {
             policy,
             limits: ResourceLimits {
@@ -281,7 +287,7 @@ fn example_complex_nested_computation() -> CoreResult<()> {
             // Simulate matrix multiplication with nested loops
             let size = 50;
             let mut result = 0i64;
-            
+
             // Outer parallel loop
             let outer_vec: Vec<usize> = (0..size).collect();
             let outer_sum: i64 = outer_vec
@@ -293,16 +299,14 @@ fn example_complex_nested_computation() -> CoreResult<()> {
                         .into_par_iter()
                         .map(|j| {
                             // Inner loop (always sequential at this depth)
-                            let inner_sum: i64 = (0..size)
-                                .map(|k| (i * j * k) as i64)
-                                .sum();
+                            let inner_sum: i64 = (0..size).map(|k| (i * j * k) as i64).sum();
                             inner_sum
                         })
                         .sum();
                     middle_sum
                 })
                 .sum();
-            
+
             result += outer_sum;
             Ok(result)
         });
@@ -329,17 +333,23 @@ fn print_partition_info<T>(partitions: &[Vec<T>]) {
     for (i, partition) in partitions.iter().enumerate() {
         println!("    Partition {}: {} elements", i, partition.len());
     }
-    
+
     // Calculate load balance
     if !partitions.is_empty() {
         let sizes: Vec<usize> = partitions.iter().map(|p| p.len()).collect();
         let min_size = *sizes.iter().min().unwrap_or(&0);
         let max_size = *sizes.iter().max().unwrap_or(&0);
         let avg_size = sizes.iter().sum::<usize>() / sizes.len();
-        
-        println!("  Load balance: min={}, max={}, avg={}", min_size, max_size, avg_size);
+
+        println!(
+            "  Load balance: min={}, max={}, avg={}",
+            min_size, max_size, avg_size
+        );
         if min_size > 0 {
-            println!("  Imbalance factor: {:.2}", max_size as f64 / min_size as f64);
+            println!(
+                "  Imbalance factor: {:.2}",
+                max_size as f64 / min_size as f64
+            );
         }
     }
 }

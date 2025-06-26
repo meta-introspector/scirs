@@ -24,8 +24,7 @@ use scirs2_linalg::lstsq;
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: This doc test requires LAPACK/BLAS to be linked properly
+/// ```
 /// use ndarray::array;
 /// use scirs2_stats::polyfit;
 ///

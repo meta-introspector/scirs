@@ -151,23 +151,26 @@ where
 
         // Convert data to float values for analysis
         let values: Vec<f64> = data.iter().map(|&x| x.into()).collect();
-        
+
         // Calculate basic statistics
         let n = values.len() as f64;
         let mean = values.iter().copied().sum::<f64>() / n;
-        
+
         // Calculate variance and standard deviation
-        let variance = values.iter()
+        let variance = values
+            .iter()
             .map(|&x| {
                 let diff = x - mean;
                 diff * diff
             })
-            .sum::<f64>() / n;
+            .sum::<f64>()
+            / n;
         let std_dev = variance.sqrt();
-        
+
         // Calculate skewness
         let skewness = if std_dev > 0.0 {
-            let sum_cubed = values.iter()
+            let sum_cubed = values
+                .iter()
                 .map(|&x| {
                     let z = (x - mean) / std_dev;
                     z * z * z
@@ -177,10 +180,11 @@ where
         } else {
             0.0
         };
-        
+
         // Calculate kurtosis to detect bimodality
         let kurtosis = if std_dev > 0.0 {
-            let sum_fourth = values.iter()
+            let sum_fourth = values
+                .iter()
                 .map(|&x| {
                     let z = (x - mean) / std_dev;
                     z * z * z * z
@@ -190,19 +194,14 @@ where
         } else {
             0.0
         };
-        
+
         // Determine distribution type based on statistics
         if skewness.abs() < 0.5 && kurtosis.abs() < 1.0 {
             // Approximately normal
-            DataDistribution::Gaussian {
-                mean,
-                std_dev,
-            }
+            DataDistribution::Gaussian { mean, std_dev }
         } else if skewness.abs() > 2.0 {
             // Heavily skewed
-            DataDistribution::Skewed {
-                skewness,
-            }
+            DataDistribution::Skewed { skewness }
         } else if kurtosis < -1.0 {
             // Negative kurtosis may indicate bimodality
             // Simple bimodal detection - in practice would use more sophisticated methods
@@ -224,37 +223,43 @@ where
         data_size: usize,
     ) -> CoreResult<PartitionStrategy> {
         let num_partitions = self.config.num_partitions;
-        
+
         match distribution {
             DataDistribution::Uniform => {
                 // Equal-sized partitions work well for uniform data
                 Ok(PartitionStrategy::EqualSize)
             }
-            
+
             DataDistribution::Skewed { skewness } => {
                 // Create weighted partitions based on skewness
                 let weights = self.calculate_skewed_weights(*skewness, num_partitions)?;
                 Ok(PartitionStrategy::Weighted { weights })
             }
-            
+
             DataDistribution::Gaussian { mean, std_dev } => {
                 // Create range-based partitions using quantiles
-                let boundaries = self.calculate_gaussian_boundaries(*mean, *std_dev, num_partitions)?;
+                let boundaries =
+                    self.calculate_gaussian_boundaries(*mean, *std_dev, num_partitions)?;
                 Ok(PartitionStrategy::RangeBased { boundaries })
             }
-            
+
             DataDistribution::PowerLaw { alpha } => {
                 // Use logarithmic partitioning for power law
                 let weights = self.calculate_power_law_weights(*alpha, num_partitions)?;
                 Ok(PartitionStrategy::Weighted { weights })
             }
-            
-            DataDistribution::Bimodal { mean1, mean2, mix_ratio } => {
+
+            DataDistribution::Bimodal {
+                mean1,
+                mean2,
+                mix_ratio,
+            } => {
                 // Create partitions around the two modes
-                let boundaries = self.calculate_bimodal_boundaries(*mean1, *mean2, *mix_ratio, num_partitions)?;
+                let boundaries =
+                    self.calculate_bimodal_boundaries(*mean1, *mean2, *mix_ratio, num_partitions)?;
                 Ok(PartitionStrategy::RangeBased { boundaries })
             }
-            
+
             DataDistribution::Custom { .. } => {
                 // For custom distributions, use dynamic partitioning
                 let initial_sizes = vec![data_size / num_partitions; num_partitions];
@@ -267,45 +272,41 @@ where
     }
 
     /// Partition data according to the given strategy
-    pub fn partition(
-        &self,
-        data: &[T],
-        strategy: &PartitionStrategy,
-    ) -> CoreResult<Vec<Vec<T>>> {
+    pub fn partition(&self, data: &[T], strategy: &PartitionStrategy) -> CoreResult<Vec<Vec<T>>> {
         let data_size = data.len();
         let num_partitions = self.config.num_partitions;
-        
+
         if data_size < num_partitions * self.config.min_partition_size {
             // Not enough data to partition effectively
             return Ok(vec![data.to_vec()]);
         }
-        
+
         match strategy {
-            PartitionStrategy::EqualSize => {
-                self.partition_equal_size(data)
-            }
-            
-            PartitionStrategy::Weighted { weights } => {
-                self.partition_weighted(data, weights)
-            }
-            
+            PartitionStrategy::EqualSize => self.partition_equal_size(data),
+
+            PartitionStrategy::Weighted { weights } => self.partition_weighted(data, weights),
+
             PartitionStrategy::Dynamic { initial_sizes, .. } => {
                 self.partition_dynamic(data, initial_sizes)
             }
-            
-            PartitionStrategy::Hierarchical { levels, branching_factor } => {
-                self.partition_hierarchical(data, *levels, *branching_factor)
-            }
-            
+
+            PartitionStrategy::Hierarchical {
+                levels,
+                branching_factor,
+            } => self.partition_hierarchical(data, *levels, *branching_factor),
+
             PartitionStrategy::RangeBased { boundaries: _ } => {
                 // Range-based partitioning requires specific trait bounds
                 // For now, return an error if T doesn't meet requirements
                 Err(CoreError::InvalidArgument(
-                    ErrorContext::new("Range-based partitioning requires PartialOrd + Into<f64> + Copy traits".to_string())
-                        .with_location(ErrorLocation::new(file!(), line!())),
+                    ErrorContext::new(
+                        "Range-based partitioning requires PartialOrd + Into<f64> + Copy traits"
+                            .to_string(),
+                    )
+                    .with_location(ErrorLocation::new(file!(), line!())),
                 ))
             }
-            
+
             PartitionStrategy::HashBased { num_buckets: _ } => {
                 // Hash-based partitioning requires Hash trait
                 // For now, return an error if T doesn't implement Hash
@@ -321,11 +322,11 @@ where
     fn partition_equal_size(&self, data: &[T]) -> CoreResult<Vec<Vec<T>>> {
         let chunk_size = (data.len() + self.config.num_partitions - 1) / self.config.num_partitions;
         let mut partitions = Vec::with_capacity(self.config.num_partitions);
-        
+
         for chunk in data.chunks(chunk_size) {
             partitions.push(chunk.to_vec());
         }
-        
+
         Ok(partitions)
     }
 
@@ -337,7 +338,7 @@ where
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         let total_weight: f64 = weights.iter().sum();
         if total_weight <= 0.0 {
             return Err(CoreError::InvalidArgument(
@@ -345,28 +346,28 @@ where
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         let mut partitions = Vec::with_capacity(self.config.num_partitions);
         let mut start = 0;
-        
+
         for weight in weights {
             let size = ((weight / total_weight) * data.len() as f64) as usize;
             let end = (start + size).min(data.len());
-            
+
             if start < data.len() {
                 partitions.push(data[start..end].to_vec());
             }
-            
+
             start = end;
         }
-        
+
         // Add any remaining elements to the last partition
         if start < data.len() && !partitions.is_empty() {
             if let Some(last) = partitions.last_mut() {
                 last.extend_from_slice(&data[start..]);
             }
         }
-        
+
         Ok(partitions)
     }
 
@@ -376,7 +377,7 @@ where
         // In a full implementation, this would monitor progress and adjust
         let mut partitions = Vec::with_capacity(initial_sizes.len());
         let mut start = 0;
-        
+
         for &size in initial_sizes {
             let end = (start + size).min(data.len());
             if start < data.len() {
@@ -384,7 +385,7 @@ where
             }
             start = end;
         }
-        
+
         Ok(partitions)
     }
 
@@ -401,16 +402,16 @@ where
                     .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
-        
+
         // Calculate total number of leaf partitions
         let num_leaves = branching_factor.pow(levels as u32);
         let chunk_size = (data.len() + num_leaves - 1) / num_leaves;
-        
+
         let mut partitions = Vec::with_capacity(num_leaves);
         for chunk in data.chunks(chunk_size) {
             partitions.push(chunk.to_vec());
         }
-        
+
         Ok(partitions)
     }
 
@@ -420,21 +421,21 @@ where
         T: PartialOrd + Into<f64> + Copy,
     {
         let mut partitions = vec![Vec::new(); boundaries.len() + 1];
-        
+
         for &item in data {
             let value: f64 = item.into();
             let mut partition_idx = boundaries.len();
-            
+
             for (i, &boundary) in boundaries.iter().enumerate() {
                 if value <= boundary {
                     partition_idx = i;
                     break;
                 }
             }
-            
+
             partitions[partition_idx].push(item);
         }
-        
+
         Ok(partitions)
     }
 
@@ -445,9 +446,9 @@ where
     {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::Hasher;
-        
+
         let mut partitions = vec![Vec::new(); num_buckets];
-        
+
         for item in data {
             let mut hasher = DefaultHasher::new();
             item.hash(&mut hasher);
@@ -455,17 +456,21 @@ where
             let bucket = (hash % num_buckets as u64) as usize;
             partitions[bucket].push(item.clone());
         }
-        
+
         Ok(partitions)
     }
 
     /// Calculate weights for skewed distribution
-    fn calculate_skewed_weights(&self, skewness: f64, num_partitions: usize) -> CoreResult<Vec<f64>> {
+    fn calculate_skewed_weights(
+        &self,
+        skewness: f64,
+        num_partitions: usize,
+    ) -> CoreResult<Vec<f64>> {
         let mut weights = Vec::with_capacity(num_partitions);
-        
+
         // Use exponential weights for skewed distributions
         let base = 1.0 + skewness.abs() / 10.0;
-        
+
         for i in 0..num_partitions {
             let weight = if skewness > 0.0 {
                 // Right skew - more weight on early partitions
@@ -476,7 +481,7 @@ where
             };
             weights.push(weight);
         }
-        
+
         Ok(weights)
     }
 
@@ -488,7 +493,7 @@ where
         num_partitions: usize,
     ) -> CoreResult<Vec<f64>> {
         let mut boundaries = Vec::with_capacity(num_partitions - 1);
-        
+
         // Use simplified quantile approximation for normal distribution
         // For a standard normal distribution, we can use the inverse error function
         for i in 1..num_partitions {
@@ -507,20 +512,24 @@ where
             let boundary = mean + z_score * std_dev;
             boundaries.push(boundary);
         }
-        
+
         Ok(boundaries)
     }
 
     /// Calculate weights for power law distribution
-    fn calculate_power_law_weights(&self, alpha: f64, num_partitions: usize) -> CoreResult<Vec<f64>> {
+    fn calculate_power_law_weights(
+        &self,
+        alpha: f64,
+        num_partitions: usize,
+    ) -> CoreResult<Vec<f64>> {
         let mut weights = Vec::with_capacity(num_partitions);
-        
+
         for i in 0..num_partitions {
             // Power law: weight ∝ (i+1)^(-alpha)
             let weight = ((i + 1) as f64).powf(-alpha);
             weights.push(weight);
         }
-        
+
         Ok(weights)
     }
 
@@ -533,27 +542,27 @@ where
         num_partitions: usize,
     ) -> CoreResult<Vec<f64>> {
         let mut boundaries = Vec::with_capacity(num_partitions - 1);
-        
+
         // Split partitions between the two modes
         let partitions_mode1 = ((num_partitions as f64) * mix_ratio) as usize;
         let partitions_mode2 = num_partitions - partitions_mode1;
-        
+
         // Create boundaries around first mode
         let range1 = (mean2 - mean1).abs() * 0.5;
         for i in 1..partitions_mode1 {
             let boundary = mean1 - range1 * 0.5 + (range1 / partitions_mode1 as f64) * i as f64;
             boundaries.push(boundary);
         }
-        
+
         // Boundary between modes
         boundaries.push((mean1 + mean2) / 2.0);
-        
+
         // Create boundaries around second mode
         for i in 1..partitions_mode2 {
             let boundary = mean2 - range1 * 0.5 + (range1 / partitions_mode2 as f64) * i as f64;
             boundaries.push(boundary);
         }
-        
+
         boundaries.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
         Ok(boundaries)
     }
@@ -583,7 +592,7 @@ impl LoadBalancer {
     pub fn record_execution_time(&mut self, partition_id: usize, duration: Duration) {
         if partition_id < self.execution_times.len() {
             self.execution_times[partition_id].push(duration);
-            
+
             // Keep only recent history (last 10 measurements)
             if self.execution_times[partition_id].len() > 10 {
                 self.execution_times[partition_id].remove(0);
@@ -594,7 +603,7 @@ impl LoadBalancer {
     /// Calculate new weights based on execution history
     pub fn rebalance(&mut self) -> Vec<f64> {
         let mut avg_times = Vec::with_capacity(self.weights.len());
-        
+
         // Calculate average execution time for each partition
         for times in &self.execution_times {
             if times.is_empty() {
@@ -605,11 +614,11 @@ impl LoadBalancer {
                 avg_times.push(avg);
             }
         }
-        
+
         // Calculate total average time
         let total_avg: f64 = avg_times.iter().sum();
         let mean_time = total_avg / avg_times.len() as f64;
-        
+
         // Adjust weights inversely proportional to execution time
         for (i, &avg_time) in avg_times.iter().enumerate() {
             if avg_time > mean_time * self.target_imbalance {
@@ -619,11 +628,11 @@ impl LoadBalancer {
                 // This partition is too fast, increase its weight
                 self.weights[i] *= 1.1;
             }
-            
+
             // Keep weights within reasonable bounds
             self.weights[i] = self.weights[i].clamp(0.1, 10.0);
         }
-        
+
         self.weights.clone()
     }
 
@@ -631,15 +640,16 @@ impl LoadBalancer {
     pub fn get_imbalance_factor(&self) -> f64 {
         let mut min_time = f64::MAX;
         let mut max_time = 0.0;
-        
+
         for times in &self.execution_times {
             if !times.is_empty() {
-                let avg: f64 = times.iter().map(|d| d.as_secs_f64()).sum::<f64>() / times.len() as f64;
+                let avg: f64 =
+                    times.iter().map(|d| d.as_secs_f64()).sum::<f64>() / times.len() as f64;
                 min_time = min_time.min(avg);
                 max_time = f64::max(max_time, avg);
             }
         }
-        
+
         if min_time > 0.0 {
             max_time / min_time
         } else {
@@ -656,7 +666,7 @@ mod tests {
     fn test_uniform_distribution_detection() {
         let partitioner = DataPartitioner::<f64>::default();
         let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
-        
+
         let distribution = partitioner.analyze_distribution(&data);
         match distribution {
             DataDistribution::Uniform | DataDistribution::Gaussian { .. } => {
@@ -672,7 +682,7 @@ mod tests {
         // Create heavily skewed data
         let mut data = vec![1.0; 900];
         data.extend(vec![100.0; 100]);
-        
+
         let distribution = partitioner.analyze_distribution(&data);
         match distribution {
             DataDistribution::Skewed { skewness } => {
@@ -690,7 +700,7 @@ mod tests {
         };
         let partitioner = DataPartitioner::<i32>::new(config);
         let data: Vec<i32> = (0..100).collect();
-        
+
         let partitions = partitioner.partition_equal_size(&data).unwrap();
         assert_eq!(partitions.len(), 4);
         assert_eq!(partitions[0].len(), 25);
@@ -706,7 +716,7 @@ mod tests {
         let partitioner = DataPartitioner::<i32>::new(config);
         let data: Vec<i32> = (0..90).collect();
         let weights = vec![1.0, 2.0, 3.0];
-        
+
         let partitions = partitioner.partition_weighted(&data, &weights).unwrap();
         assert_eq!(partitions.len(), 3);
         assert_eq!(partitions[0].len(), 15); // 1/6 of 90
@@ -717,16 +727,16 @@ mod tests {
     #[test]
     fn test_load_balancer() {
         let mut balancer = LoadBalancer::new(3, 1.2);
-        
+
         // Record some execution times
         use std::time::Duration;
         balancer.record_execution_time(0, Duration::from_millis(100));
         balancer.record_execution_time(1, Duration::from_millis(200));
         balancer.record_execution_time(2, Duration::from_millis(150));
-        
+
         let new_weights = balancer.rebalance();
         assert_eq!(new_weights.len(), 3);
-        
+
         // Partition 1 was slowest, should have reduced weight
         assert!(new_weights[1] < new_weights[0]);
     }

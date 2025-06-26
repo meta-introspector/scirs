@@ -25,10 +25,10 @@ use std::fmt::Debug;
 pub trait StableComputation: Float + Debug {
     /// Machine epsilon for this type
     fn machine_epsilon() -> Self;
-    
+
     /// Safe reciprocal that handles near-zero values
     fn safe_recip(self) -> Self;
-    
+
     /// Check if the value is effectively zero (within epsilon)
     fn is_effectively_zero(self) -> bool;
 }
@@ -37,7 +37,7 @@ impl StableComputation for f32 {
     fn machine_epsilon() -> Self {
         f32::EPSILON
     }
-    
+
     fn safe_recip(self) -> Self {
         if self.abs() < Self::machine_epsilon() * cast::<f64, Self>(10.0).unwrap_or(Self::zero()) {
             Self::zero()
@@ -45,7 +45,7 @@ impl StableComputation for f32 {
             self.recip()
         }
     }
-    
+
     fn is_effectively_zero(self) -> bool {
         self.abs() < Self::machine_epsilon() * cast::<f64, Self>(10.0).unwrap_or(Self::zero())
     }
@@ -55,7 +55,7 @@ impl StableComputation for f64 {
     fn machine_epsilon() -> Self {
         f64::EPSILON
     }
-    
+
     fn safe_recip(self) -> Self {
         if self.abs() < Self::machine_epsilon() * cast::<f64, Self>(10.0).unwrap_or(Self::zero()) {
             Self::zero()
@@ -63,7 +63,7 @@ impl StableComputation for f64 {
             self.recip()
         }
     }
-    
+
     fn is_effectively_zero(self) -> bool {
         self.abs() < Self::machine_epsilon() * cast::<f64, Self>(10.0).unwrap_or(Self::zero())
     }
@@ -86,7 +86,7 @@ impl<T: Float> KahanSum<T> {
             compensation: T::zero(),
         }
     }
-    
+
     /// Add a value to the sum
     pub fn add(&mut self, value: T) {
         let y = value - self.compensation;
@@ -94,12 +94,12 @@ impl<T: Float> KahanSum<T> {
         self.compensation = (t - self.sum) - y;
         self.sum = t;
     }
-    
+
     /// Get the accumulated sum
     pub fn sum(&self) -> T {
         self.sum
     }
-    
+
     /// Reset the accumulator
     pub fn reset(&mut self) {
         self.sum = T::zero();
@@ -121,10 +121,10 @@ pub fn neumaier_sum<T: Float>(values: &[T]) -> T {
     if values.is_empty() {
         return T::zero();
     }
-    
+
     let mut sum = values[0];
     let mut compensation = T::zero();
-    
+
     for &value in &values[1..] {
         let t = sum + value;
         if sum.abs() >= value.abs() {
@@ -134,7 +134,7 @@ pub fn neumaier_sum<T: Float>(values: &[T]) -> T {
         }
         sum = t;
     }
-    
+
     sum + compensation
 }
 
@@ -144,7 +144,7 @@ pub fn neumaier_sum<T: Float>(values: &[T]) -> T {
 /// compared to sequential summation.
 pub fn pairwise_sum<T: Float>(values: &[T]) -> T {
     const SEQUENTIAL_THRESHOLD: usize = 128;
-    
+
     match values.len() {
         0 => T::zero(),
         1 => values[0],
@@ -166,13 +166,15 @@ pub fn pairwise_sum<T: Float>(values: &[T]) -> T {
 /// Stable mean calculation using compensated summation
 pub fn stable_mean<T: Float>(values: &[T]) -> CoreResult<T> {
     if values.is_empty() {
-        return Err(CoreError::ValidationError(ErrorContext::new("Cannot compute mean of empty array")));
+        return Err(CoreError::ValidationError(ErrorContext::new(
+            "Cannot compute mean of empty array",
+        )));
     }
-    
-    let n = T::from(values.len()).ok_or_else(|| {
+
+    let n = cast::<usize, T>(values.len()).ok_or_else(|| {
         CoreError::TypeError(ErrorContext::new("Failed to convert array length to float"))
     })?;
-    
+
     Ok(neumaier_sum(values) / n)
 }
 
@@ -194,16 +196,16 @@ impl<T: Float> WelfordVariance<T> {
             m2: T::zero(),
         }
     }
-    
+
     /// Add a value to the accumulator
     pub fn add(&mut self, value: T) {
         self.count += 1;
         let delta = value - self.mean;
-        self.mean = self.mean + delta / T::from(self.count).unwrap();
+        self.mean = self.mean + delta / cast::<usize, T>(self.count).unwrap_or(T::one());
         let delta2 = value - self.mean;
         self.m2 = self.m2 + delta * delta2;
     }
-    
+
     /// Get the current mean
     pub fn mean(&self) -> Option<T> {
         if self.count > 0 {
@@ -212,25 +214,25 @@ impl<T: Float> WelfordVariance<T> {
             None
         }
     }
-    
+
     /// Get the sample variance (Bessel's correction applied)
     pub fn variance(&self) -> Option<T> {
         if self.count > 1 {
-            Some(self.m2 / T::from(self.count - 1).unwrap())
+            Some(self.m2 / cast::<usize, T>(self.count - 1).unwrap_or(T::one()))
         } else {
             None
         }
     }
-    
+
     /// Get the population variance
     pub fn population_variance(&self) -> Option<T> {
         if self.count > 0 {
-            Some(self.m2 / T::from(self.count).unwrap())
+            Some(self.m2 / cast::<usize, T>(self.count).unwrap_or(T::one()))
         } else {
             None
         }
     }
-    
+
     /// Get the standard deviation
     pub fn std_dev(&self) -> Option<T> {
         self.variance().map(|v| v.sqrt())
@@ -248,17 +250,17 @@ pub fn stable_variance<T: Float>(values: &[T], ddof: usize) -> CoreResult<T> {
     let n = values.len();
     if n <= ddof {
         return Err(CoreError::ValidationError(ErrorContext::new(
-            "Not enough values for the given degrees of freedom"
+            "Not enough values for the given degrees of freedom",
         )));
     }
-    
+
     // First pass: compute mean with compensated summation
     let mean = stable_mean(values)?;
-    
+
     // Second pass: compute sum of squared deviations with compensation
     let mut sum_sq = T::zero();
     let mut compensation = T::zero();
-    
+
     for &value in values {
         let deviation = value - mean;
         let sq_deviation = deviation * deviation;
@@ -267,11 +269,11 @@ pub fn stable_variance<T: Float>(values: &[T], ddof: usize) -> CoreResult<T> {
         compensation = (t - sum_sq) - y;
         sum_sq = t;
     }
-    
-    let divisor = T::from(n - ddof).ok_or_else(|| {
+
+    let divisor = cast::<usize, T>(n - ddof).ok_or_else(|| {
         CoreError::TypeError(ErrorContext::new("Failed to convert divisor to float"))
     })?;
-    
+
     Ok(sum_sq / divisor)
 }
 
@@ -282,20 +284,20 @@ pub fn log_sum_exp<T: Float>(values: &[T]) -> T {
     if values.is_empty() {
         return T::neg_infinity();
     }
-    
+
     // Find maximum value
     let max_val = values.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
-    
+
     if max_val.is_infinite() && max_val < T::zero() {
         return max_val; // All values are -inf
     }
-    
+
     // Compute log(sum(exp(x - max))) + max
     let mut sum = T::zero();
     for &value in values {
         sum = sum + (value - max_val).exp();
     }
-    
+
     max_val + sum.ln()
 }
 
@@ -306,25 +308,25 @@ pub fn stable_softmax<T: Float>(values: &[T]) -> Vec<T> {
     if values.is_empty() {
         return vec![];
     }
-    
+
     // Find maximum for numerical stability
     let max_val = values.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
-    
+
     // Compute exp(x - max)
     let mut exp_values = Vec::with_capacity(values.len());
     let mut sum = T::zero();
-    
+
     for &value in values {
         let exp_val = (value - max_val).exp();
         exp_values.push(exp_val);
         sum = sum + exp_val;
     }
-    
+
     // Normalize
     for exp_val in &mut exp_values {
         *exp_val = *exp_val / sum;
     }
-    
+
     exp_values
 }
 
@@ -336,7 +338,9 @@ pub fn log1p_stable<T: Float>(x: T) -> T {
         let x2 = x * x;
         let x3 = x2 * x;
         let x4 = x3 * x;
-        x - x2 / cast::<f64, T>(2.0).unwrap_or(T::one()) + x3 / cast::<f64, T>(3.0).unwrap_or(T::one()) - x4 / cast::<f64, T>(4.0).unwrap_or(T::one())
+        x - x2 / cast::<f64, T>(2.0).unwrap_or(T::one())
+            + x3 / cast::<f64, T>(3.0).unwrap_or(T::one())
+            - x4 / cast::<f64, T>(4.0).unwrap_or(T::one())
     } else {
         (T::one() + x).ln()
     }
@@ -349,7 +353,9 @@ pub fn expm1_stable<T: Float>(x: T) -> T {
         let x2 = x * x;
         let x3 = x2 * x;
         let x4 = x3 * x;
-        x + x2 / cast::<f64, T>(2.0).unwrap_or(T::one()) + x3 / cast::<f64, T>(6.0).unwrap_or(T::one()) + x4 / cast::<f64, T>(24.0).unwrap_or(T::one())
+        x + x2 / cast::<f64, T>(2.0).unwrap_or(T::one())
+            + x3 / cast::<f64, T>(6.0).unwrap_or(T::one())
+            + x4 / cast::<f64, T>(24.0).unwrap_or(T::one())
     } else {
         x.exp() - T::one()
     }
@@ -359,7 +365,7 @@ pub fn expm1_stable<T: Float>(x: T) -> T {
 pub fn hypot_stable<T: Float>(x: T, y: T) -> T {
     let x_abs = x.abs();
     let y_abs = y.abs();
-    
+
     if x_abs > y_abs {
         if x_abs.is_zero() {
             T::zero()
@@ -379,12 +385,13 @@ pub fn hypot_stable<T: Float>(x: T, y: T) -> T {
 ///
 /// Reduces angle to [-π, π] range while preserving precision for large angles.
 pub fn reduce_angle<T: Float>(angle: T) -> T {
-    let two_pi = cast::<f64, T>(2.0).unwrap_or(T::one()) * cast::<f64, T>(std::f64::consts::PI).unwrap_or(T::one());
+    let two_pi = cast::<f64, T>(2.0).unwrap_or(T::one())
+        * cast::<f64, T>(std::f64::consts::PI).unwrap_or(T::one());
     let pi = cast::<f64, T>(std::f64::consts::PI).unwrap_or(T::one());
-    
+
     // First reduce to [0, 2π]
     let reduced = angle % two_pi;
-    
+
     // Then shift to [-π, π]
     if reduced > pi {
         reduced - two_pi
@@ -398,22 +405,26 @@ pub fn reduce_angle<T: Float>(angle: T) -> T {
 /// Stable computation of (a*b) % m avoiding overflow
 pub fn mulmod_stable<T: Float>(a: T, b: T, m: T) -> CoreResult<T> {
     check_positive(m.to_f64().unwrap(), "modulus")?;
-    
+
     if a.is_zero() || b.is_zero() {
         return Ok(T::zero());
     }
-    
+
     let a_mod = a % m;
     let b_mod = b % m;
-    
+
     // Check if multiplication would overflow
     let max_val = T::max_value();
     if a_mod.abs() > max_val / b_mod.abs() {
         // Use addition-based multiplication for large values
         let mut result = T::zero();
         let mut b_remaining = b_mod.abs();
-        let b_sign = if b_mod < T::zero() { -T::one() } else { T::one() };
-        
+        let b_sign = if b_mod < T::zero() {
+            -T::one()
+        } else {
+            T::one()
+        };
+
         while b_remaining > T::zero() {
             if b_remaining >= T::one() {
                 result = (result + a_mod) % m;
@@ -423,7 +434,7 @@ pub fn mulmod_stable<T: Float>(a: T, b: T, m: T) -> CoreResult<T> {
                 break;
             }
         }
-        
+
         Ok(result * b_sign)
     } else {
         Ok((a_mod * b_mod) % m)
@@ -453,31 +464,34 @@ pub fn log_sigmoid_stable<T: Float>(x: T) -> T {
 /// Cross entropy loss with numerical stability
 pub fn cross_entropy_stable<T: Float>(predictions: &[T], targets: &[T]) -> CoreResult<T> {
     if predictions.len() != targets.len() {
-        return Err(CoreError::ValidationError(ErrorContext::new("Predictions and targets must have same length")));
+        return Err(CoreError::ValidationError(ErrorContext::new(
+            "Predictions and targets must have same length",
+        )));
     }
-    
+
     let mut loss = T::zero();
     let epsilon = cast::<f64, T>(1e-15).unwrap_or(T::epsilon()); // Small value to prevent log(0)
-    
+
     for (pred, target) in predictions.iter().zip(targets.iter()) {
         // Clip predictions to prevent log(0)
         let pred_clipped = pred.max(epsilon).min(T::one() - epsilon);
-        loss = loss - (*target * pred_clipped.ln() + (T::one() - *target) * (T::one() - pred_clipped).ln());
+        loss = loss
+            - (*target * pred_clipped.ln() + (T::one() - *target) * (T::one() - pred_clipped).ln());
     }
-    
+
     Ok(loss / cast::<usize, T>(predictions.len()).unwrap_or(T::one()))
 }
 
 /// Stable matrix norm computation
 pub fn stable_matrix_norm<T: Float>(matrix: &ArrayView2<T>, ord: MatrixNorm) -> CoreResult<T> {
     validate_matrix_not_empty(matrix)?;
-    
+
     match ord {
         MatrixNorm::Frobenius => {
             // Use compensated summation for Frobenius norm
             let mut sum = T::zero();
             let mut compensation = T::zero();
-            
+
             for &value in matrix.iter() {
                 let sq = value * value;
                 let y = sq - compensation;
@@ -485,29 +499,29 @@ pub fn stable_matrix_norm<T: Float>(matrix: &ArrayView2<T>, ord: MatrixNorm) -> 
                 compensation = (t - sum) - y;
                 sum = t;
             }
-            
+
             Ok(sum.sqrt())
         }
         MatrixNorm::One => {
             // Maximum absolute column sum
             let mut max_sum = T::zero();
-            
+
             for col in matrix.axis_iter(Axis(1)) {
                 let col_sum = stable_norm_1(&col.to_vec());
                 max_sum = max_sum.max(col_sum);
             }
-            
+
             Ok(max_sum)
         }
         MatrixNorm::Infinity => {
             // Maximum absolute row sum
             let mut max_sum = T::zero();
-            
+
             for row in matrix.axis_iter(Axis(0)) {
                 let row_sum = stable_norm_1(&row.to_vec());
                 max_sum = max_sum.max(row_sum);
             }
-            
+
             Ok(max_sum)
         }
     }
@@ -528,7 +542,7 @@ pub enum MatrixNorm {
 fn stable_norm_1<T: Float>(values: &[T]) -> T {
     let mut sum = T::zero();
     let mut compensation = T::zero();
-    
+
     for &value in values {
         let abs_val = value.abs();
         let y = abs_val - compensation;
@@ -536,7 +550,7 @@ fn stable_norm_1<T: Float>(values: &[T]) -> T {
         compensation = (t - sum) - y;
         sum = t;
     }
-    
+
     sum
 }
 
@@ -545,45 +559,47 @@ pub fn stable_norm_2<T: Float>(values: &[T]) -> T {
     if values.is_empty() {
         return T::zero();
     }
-    
+
     // Find maximum absolute value for scaling
     let max_abs = values.iter().fold(T::zero(), |max, &x| max.max(x.abs()));
-    
+
     if max_abs.is_zero() {
         return T::zero();
     }
-    
+
     // Compute scaled norm
     let mut sum = T::zero();
     for &value in values {
         let scaled = value / max_abs;
         sum = sum + scaled * scaled;
     }
-    
+
     max_abs * sum.sqrt()
 }
 
 /// Condition number estimation using 1-norm
 pub fn condition_number_estimate<T: Float>(matrix: &ArrayView2<T>) -> CoreResult<T> {
     validate_matrix_not_empty(matrix)?;
-    
+
     if matrix.nrows() != matrix.ncols() {
-        return Err(CoreError::ValidationError(ErrorContext::new("Matrix must be square for condition number")));
+        return Err(CoreError::ValidationError(ErrorContext::new(
+            "Matrix must be square for condition number",
+        )));
     }
-    
+
     // Compute 1-norm of matrix
     let norm_a = stable_matrix_norm(matrix, MatrixNorm::One)?;
-    
+
     // Estimate norm of inverse using power method
     // This is a simplified version - a full implementation would use LAPACK's condition estimator
     let n = matrix.nrows();
     let mut x = Array1::from_elem(n, T::one() / cast::<usize, T>(n).unwrap_or(T::one()));
     let mut y = Array1::zeros(n);
-    
+
     // Power iteration to estimate ||A^{-1}||_1
     let max_iter = 10;
     let mut norm_inv_estimate = T::zero();
-    
+
     for _ in 0..max_iter {
         // y = A^T x
         for i in 0..n {
@@ -592,7 +608,7 @@ pub fn condition_number_estimate<T: Float>(matrix: &ArrayView2<T>) -> CoreResult
                 y[i] = y[i] + matrix[[j, i]] * x[j];
             }
         }
-        
+
         // Normalize y
         let y_norm = stable_norm_1(&y.to_vec());
         if y_norm > T::zero() {
@@ -600,21 +616,23 @@ pub fn condition_number_estimate<T: Float>(matrix: &ArrayView2<T>) -> CoreResult
                 y[i] = y[i] / y_norm;
             }
         }
-        
+
         // Solve A z = y (simplified - would use LU decomposition)
         // For now, just estimate
         norm_inv_estimate = norm_inv_estimate.max(y_norm);
-        
+
         x.assign(&y);
     }
-    
+
     Ok(norm_a * norm_inv_estimate)
 }
 
 /// Helper function to validate matrix is not empty
 fn validate_matrix_not_empty<T>(matrix: &ArrayView2<T>) -> CoreResult<()> {
     if matrix.is_empty() {
-        return Err(CoreError::ValidationError(ErrorContext::new("Matrix cannot be empty")));
+        return Err(CoreError::ValidationError(ErrorContext::new(
+            "Matrix cannot be empty",
+        )));
     }
     Ok(())
 }
@@ -624,32 +642,32 @@ pub fn binomial_stable(n: u64, k: u64) -> CoreResult<f64> {
     if k > n {
         return Ok(0.0);
     }
-    
+
     let k = k.min(n - k); // Take advantage of symmetry
-    
+
     if k == 0 {
         return Ok(1.0);
     }
-    
+
     // Use log-space computation for large values
     if n > 20 {
         let mut log_result = 0.0;
-        
+
         for i in 0..k {
             log_result += (n - i) as f64;
             log_result -= (i + 1) as f64;
         }
-        
+
         Ok(log_result.exp())
     } else {
         // Direct computation for small values
         let mut result = 1.0;
-        
+
         for i in 0..k {
             result *= (n - i) as f64;
             result /= (i + 1) as f64;
         }
-        
+
         Ok(result)
     }
 }
@@ -659,24 +677,27 @@ pub fn factorial_stable(n: u64) -> CoreResult<f64> {
     if n == 0 || n == 1 {
         return Ok(1.0);
     }
-    
+
     // Use Stirling's approximation for large n
     if n > 170 {
         // For n > 170, n! overflows f64, so use log-space
         let n_f64 = n as f64;
-        let log_factorial = n_f64 * n_f64.ln() - n_f64 + 0.5 * (2.0 * std::f64::consts::PI * n_f64).ln();
+        let log_factorial =
+            n_f64 * n_f64.ln() - n_f64 + 0.5 * (2.0 * std::f64::consts::PI * n_f64).ln();
         return Ok(log_factorial.exp());
     }
-    
+
     // Direct computation with overflow check
     let mut result = 1.0;
     for i in 2..=n {
         result *= i as f64;
         if !result.is_finite() {
-            return Err(CoreError::ComputationError(ErrorContext::new("Factorial overflow")));
+            return Err(CoreError::ComputationError(ErrorContext::new(
+                "Factorial overflow",
+            )));
         }
     }
-    
+
     Ok(result)
 }
 
@@ -684,79 +705,79 @@ pub fn factorial_stable(n: u64) -> CoreResult<f64> {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    
+
     #[test]
     fn test_kahan_sum() {
         let values = vec![1.0, 1e-15, 1e-15, 1e-15, 1e-15];
         let mut kahan = KahanSum::new();
-        
+
         for v in &values {
             kahan.add(*v);
         }
-        
+
         let naive_sum: f64 = values.iter().sum();
         let kahan_sum = kahan.sum();
-        
+
         // Kahan sum should be more accurate
         assert!(kahan_sum > naive_sum);
     }
-    
+
     #[test]
     fn test_neumaier_sum() {
         let values = vec![1e20, 1.0, -1e20];
         let sum = neumaier_sum(&values);
         assert_relative_eq!(sum, 1.0, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_pairwise_sum() {
         let values: Vec<f64> = (0..1000).map(|i| 0.1 + 0.001 * i as f64).collect();
         let sum = pairwise_sum(&values);
-        
+
         // Compare with known result
         let expected = values.iter().sum::<f64>();
         assert_relative_eq!(sum, expected, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_welford_variance() {
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let mut welford = WelfordVariance::new();
-        
+
         for &v in &values {
             welford.add(v);
         }
-        
+
         assert_relative_eq!(welford.mean().unwrap(), 3.0, epsilon = 1e-10);
         assert_relative_eq!(welford.variance().unwrap(), 2.5, epsilon = 1e-10);
         assert_relative_eq!(welford.std_dev().unwrap(), 2.5_f64.sqrt(), epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_log_sum_exp() {
         let values = vec![1000.0, 1000.0, 1000.0];
         let result = log_sum_exp(&values);
         let expected = 1000.0 + 3.0_f64.ln();
         assert_relative_eq!(result, expected, epsilon = 1e-10);
-        
+
         // Test with empty array
         let empty: Vec<f64> = vec![];
         assert!(log_sum_exp(&empty).is_infinite());
     }
-    
+
     #[test]
     fn test_stable_softmax() {
         let values = vec![1000.0, 1000.0, 1000.0];
         let softmax = stable_softmax(&values);
-        
+
         for &p in &softmax {
             assert_relative_eq!(p, 1.0 / 3.0, epsilon = 1e-10);
         }
-        
+
         let sum: f64 = softmax.iter().sum();
         assert_relative_eq!(sum, 1.0, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_hypot_stable() {
         // Test with large values that would overflow with naive x² + y²
@@ -765,39 +786,39 @@ mod tests {
         let result = hypot_stable(x, y);
         let expected = 2.0_f64.sqrt() * 1e200;
         assert_relative_eq!(result, expected, epsilon = 1e-10);
-        
+
         // Test with zero
         assert_eq!(hypot_stable(0.0, 5.0), 5.0);
         assert_eq!(hypot_stable(3.0, 0.0), 3.0);
     }
-    
+
     #[test]
     fn test_sigmoid_stable() {
         // Test large positive value
         let result = sigmoid_stable(100.0);
         assert_relative_eq!(result, 1.0, epsilon = 1e-10);
-        
+
         // Test large negative value
         let result = sigmoid_stable(-100.0);
         assert!(result > 0.0 && result < 1e-40);
-        
+
         // Test zero
         assert_relative_eq!(sigmoid_stable(0.0), 0.5, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_reduce_angle() {
         use std::f64::consts::PI;
-        
+
         // Test angle reduction
         assert_relative_eq!(reduce_angle(3.0 * PI), -PI, epsilon = 1e-10);
         assert_relative_eq!(reduce_angle(5.0 * PI), PI, epsilon = 1e-10);
         assert_relative_eq!(reduce_angle(-3.0 * PI), PI, epsilon = 1e-10);
-        
+
         // Test angle already in range
         assert_relative_eq!(reduce_angle(PI / 2.0), PI / 2.0, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_stable_norm_2() {
         // Test with values that would overflow
@@ -805,37 +826,37 @@ mod tests {
         let norm = stable_norm_2(&values);
         let expected = 3.0_f64.sqrt() * 1e200;
         assert_relative_eq!(norm, expected, epsilon = 1e-10);
-        
+
         // Test with very small values
         let small_values = vec![1e-200, 1e-200, 1e-200];
         let small_norm = stable_norm_2(&small_values);
         let expected_small = 3.0_f64.sqrt() * 1e-200;
         assert_relative_eq!(small_norm, expected_small, epsilon = 1e-10);
     }
-    
+
     #[test]
     fn test_binomial_stable() {
         // Test small values
         assert_eq!(binomial_stable(5, 2).unwrap(), 10.0);
         assert_eq!(binomial_stable(10, 3).unwrap(), 120.0);
-        
+
         // Test edge cases
         assert_eq!(binomial_stable(5, 0).unwrap(), 1.0);
         assert_eq!(binomial_stable(5, 5).unwrap(), 1.0);
         assert_eq!(binomial_stable(5, 6).unwrap(), 0.0);
-        
+
         // Test large values
         let large_result = binomial_stable(100, 50).unwrap();
         assert!(large_result.is_finite() && large_result > 0.0);
     }
-    
+
     #[test]
     fn test_factorial_stable() {
         // Test small values
         assert_eq!(factorial_stable(0).unwrap(), 1.0);
         assert_eq!(factorial_stable(1).unwrap(), 1.0);
         assert_eq!(factorial_stable(5).unwrap(), 120.0);
-        
+
         // Test larger value
         assert_relative_eq!(factorial_stable(10).unwrap(), 3628800.0, epsilon = 1e-10);
     }

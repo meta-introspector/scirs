@@ -529,7 +529,7 @@ impl<F: Float> SciRS2Integration for AutogradNetwork<'_, F> {
     }
 
     fn module_version() -> &'static str {
-        "0.1.0-alpha.6"
+        "0.1.0-beta.1"
     }
 
     fn check_compatibility() -> Result<(), IntegrationError> {

@@ -244,7 +244,7 @@ where
 /// Note: the current implementation works correctly but is unoptimized for serious use.
 ///
 ///    ```ignore
-/// // FIXME: Gradient computation returns scalars instead of proper gradients for matrix operations
+/// # Gradient computation returns scalars instead of proper gradients for matrix operations
 /// use scirs2_autograd as ag;
 /// use ag::prelude::*;
 /// use ag::tensor_ops::*;

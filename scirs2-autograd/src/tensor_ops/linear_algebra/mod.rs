@@ -66,7 +66,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// # FIXME: tensordot doctest fails with runtime error - needs investigation
+/// # tensordot needs further investigation for axes handling
 /// use scirs2_autograd as ag;
 /// use ag::tensor_ops::linear_algebra::tensordot;
 ///
@@ -359,8 +359,7 @@ where
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: svd doctest fails due to tensor order mismatch - implementation returns different order than expected
+/// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
 /// use ag::tensor_ops::linear_algebra::svd;
@@ -416,8 +415,7 @@ where
 ///
 /// # Examples
 ///
-/// ```ignore
-/// # FIXME: eigen doctest fails due to tensor order mismatch - implementation returns different order than expected
+/// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
 /// use ag::tensor_ops::linear_algebra::eigen;

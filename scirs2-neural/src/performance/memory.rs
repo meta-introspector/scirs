@@ -8,13 +8,8 @@ use crate::error::{NeuralError, Result};
 use ndarray::{Array, ArrayD, ArrayView, IxDyn};
 use std::fmt::Debug;
 
-// FIXME: chunk_wise_op usage commented out due to signature mismatch
-// #[cfg(feature = "memory_efficient")]
-// use scirs2_core::memory_efficient::chunk_wise_op;
-
-// FIXME: ChunkProcessor usage commented out due to signature mismatch
-// #[cfg(feature = "memory_management")]
-// use scirs2_core::ChunkProcessor;
+#[cfg(feature = "memory_efficient")]
+use scirs2_core::memory_efficient::{chunk_wise_op, ChunkingStrategy};
 
 /// Memory-efficient batch processor
 ///
@@ -129,13 +124,11 @@ impl MemoryEfficientProcessor {
     where
         F: Fn(&ArrayView<f32, IxDyn>) -> Result<ArrayD<f32>>,
     {
-        // FIXME: chunk_wise_op signature mismatch - needs refactoring
-        // chunk_wise_op(input, self.chunk_size, &ChunkProcessor::new(forward_fn)).map_err(|e| {
-        //     NeuralError::ComputationError(format!("Memory-efficient forward failed: {:?}", e))
-        // })
-
-        // Temporary fallback
-        forward_fn(&input.view())
+        // Use chunk_wise_op with the correct API
+        let strategy = ChunkingStrategy::Fixed(self.chunk_size);
+        chunk_wise_op(input, forward_fn, strategy).map_err(|e| {
+            NeuralError::ComputationError(format!("Memory-efficient forward failed: {:?}", e))
+        })
     }
 
     /// Memory-efficient gradient computation

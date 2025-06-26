@@ -121,35 +121,46 @@ macro_rules! impl_cmp_op {
                         )
                     }
 
-                    let size0: usize = shape0.iter().product();
-                    let size1: usize = shape1.iter().product();
-
-                    // Whether broadcast of x0 and x1 is needed or not is depends on
-                    // their shapes.
-                    // FIXME: Is this cond branch ok?
-                    if size0 < size1 {
-                        let mut result = NdArray::zeros(shape1);
-                        Zip::from(&mut result)
-                            .and_broadcast(x0)
-                            .and(x1)
-                            .for_each(|r, a, b| *r = $assign(a.clone(), b.clone()));
-                        result
-                    } else if size0 > size1 {
-                        panic!(
-                            "Tensor ranks mismatch: {}({}'s lhs input) vs {}({}'s rhs input)",
-                            shape0.len(),
-                            $name,
-                            shape1.len(),
-                            $name
-                        );
-                    } else {
-                        // same
-                        let mut result = NdArray::zeros(shape0);
-                        Zip::from(&mut result)
-                            .and(x0)
-                            .and(x1)
-                            .for_each(|r, a, b| *r = $assign(a.clone(), b.clone()));
-                        result
+                    // Try to broadcast the arrays
+                    // First try broadcasting x0 to x1's shape
+                    match x0.broadcast(shape1) {
+                        Some(x0_broadcast) => {
+                            let mut result = NdArray::zeros(shape1);
+                            Zip::from(&mut result)
+                                .and(&x0_broadcast)
+                                .and(x1)
+                                .for_each(|r, a, b| *r = $assign(a.clone(), b.clone()));
+                            result
+                        }
+                        None => {
+                            // Try broadcasting x1 to x0's shape
+                            match x1.broadcast(shape0) {
+                                Some(x1_broadcast) => {
+                                    let mut result = NdArray::zeros(shape0);
+                                    Zip::from(&mut result)
+                                        .and(x0)
+                                        .and(&x1_broadcast)
+                                        .for_each(|r, a, b| *r = $assign(a.clone(), b.clone()));
+                                    result
+                                }
+                                None => {
+                                    // If neither works, check if they have the same shape
+                                    if shape0 == shape1 {
+                                        let mut result = NdArray::zeros(shape0);
+                                        Zip::from(&mut result)
+                                            .and(x0)
+                                            .and(x1)
+                                            .for_each(|r, a, b| *r = $assign(a.clone(), b.clone()));
+                                        result
+                                    } else {
+                                        panic!(
+                                            "Cannot broadcast shapes {:?} and {:?} for operation {}",
+                                            shape0, shape1, $name
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 };
 

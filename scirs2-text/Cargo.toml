@@ -1,11 +1,11 @@
 [package]
 name = "scirs2-text"
 version.workspace = true
-edition = "2021"
-authors = ["SciRS2 Team"]
-license = "MIT OR Apache-2.0"
-description = "Text processing module for SciRS2"
-repository = "https://github.com/cool-japan/scirs"
+edition.workspace = true
+authors.workspace = true
+description = "Text processing module for SciRS2 (scirs2-text)"
+license.workspace = true
+repository.workspace = true
 keywords = ["text", "nlp", "scientific", "ai", "machine-learning"]
 categories = ["science", "mathematics", "algorithms"]
 

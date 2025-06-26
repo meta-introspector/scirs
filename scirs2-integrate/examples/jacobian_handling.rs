@@ -118,8 +118,8 @@ fn main() {
         rtol: 1e-6,
         atol: 1e-8,
         max_steps: 1000,
-        jac: None, // Use finite difference, but with sparsity
-        // jac_sparsity: Some(sparsity), // FIXME: jac_sparsity field doesn't exist in ODEOptions
+        jac: None, // Use finite difference
+        // Note: Sparsity pattern could be utilized in future versions
         ..Default::default()
     };
 

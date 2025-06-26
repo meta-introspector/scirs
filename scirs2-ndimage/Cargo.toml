@@ -1,11 +1,11 @@
 [package]
 name = "scirs2-ndimage"
 version.workspace = true
-edition = "2021"
-authors = ["SciRS2 Team"]
-license = "MIT OR Apache-2.0"
-description = "N-dimensional image processing module for SciRS2"
-repository = "https://github.com/cool-japan/scirs"
+edition.workspace = true
+authors.workspace = true
+description = "N-dimensional image processing module for SciRS2 (scirs2-ndimage)"
+license.workspace = true
+repository.workspace = true
 keywords = ["image", "processing", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 

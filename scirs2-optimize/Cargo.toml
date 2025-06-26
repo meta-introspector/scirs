@@ -1,11 +1,11 @@
 [package]
 name = "scirs2-optimize"
 version.workspace = true
-edition = "2021"
-authors = ["SciRS2 Team"]
-description = "Optimization module for SciRS2"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/cool-japan/scirs"
+edition.workspace = true
+authors.workspace = true
+description = "Optimization module for SciRS2 (scirs2-optimize)"
+license.workspace = true
+repository.workspace = true
 keywords = ["optimization", "minimize", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 

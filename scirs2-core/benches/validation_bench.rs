@@ -192,10 +192,8 @@ fn bench_large_or_constraint(c: &mut Criterion) {
 
 #[cfg(feature = "data_validation")]
 fn bench_cache_performance(c: &mut Criterion) {
-    // FIXME: ValidationConfig doesn't have with_cache_enabled method
+    // Note: Cache configuration would be done through default config
     let config = ValidationConfig::default();
-    // .with_cache_enabled(true)
-    // .with_cache_ttl(std::time::Duration::from_secs(60));
     let validator = Validator::new(config).unwrap();
 
     let schema = ValidationSchema::new()

@@ -22,7 +22,7 @@ pub use rayon::prelude::*;
 
 // Re-export ThreadPoolBuilder and ThreadPool when parallel is enabled
 #[cfg(feature = "parallel")]
-pub use rayon::{ThreadPoolBuilder, ThreadPool};
+pub use rayon::{ThreadPool, ThreadPoolBuilder};
 
 // When parallel is disabled, provide sequential fallbacks
 #[cfg(not(feature = "parallel"))]

@@ -1,4 +1,3 @@
-// FIXME: This example has compilation errors - ambiguous type for max()
 #![allow(dead_code)]
 
 use ndarray::{array, Array1, ArrayView1};

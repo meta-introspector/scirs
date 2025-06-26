@@ -2,7 +2,7 @@
 
 This module provides special functions similar to SciPy's special module.
 
-## Production Status (v0.1.0-alpha.6)
+## Production Status (v0.1.0-beta.1)
 
 ### Core Infrastructure ✅
 - [x] Set up module structure with comprehensive organization
