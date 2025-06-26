@@ -16,7 +16,7 @@ use std::fmt::Debug;
 use scirs2_core::parallel_ops::parallel_map;
 
 use super::{pad_array, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Apply a generic filter to an n-dimensional array
 ///
@@ -60,7 +60,7 @@ pub fn generic_filter<T, D, F>(
     size: &[usize],
     mode: Option<BorderMode>,
     cval: Option<T>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -136,7 +136,7 @@ fn generic_filter_1d<T, F>(
     size: usize,
     mode: BorderMode,
     cval: T,
-) -> Result<Array1<T>>
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
     F: Fn(&[T]) -> T + Send + Sync,
@@ -170,7 +170,7 @@ fn generic_filter_2d<T, F>(
     size: &[usize],
     mode: BorderMode,
     cval: T,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
     F: Fn(&[T]) -> T + Send + Sync + Clone + 'static,
@@ -229,7 +229,7 @@ fn generic_filter_2d_parallel<T, F>(
     size: &[usize],
     mode: BorderMode,
     cval: T,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
     F: Fn(&[T]) -> T + Send + Sync + Clone + 'static,
@@ -293,7 +293,7 @@ fn generic_filter_nd<T, F>(
     size: &[usize],
     mode: BorderMode,
     cval: T,
-) -> Result<Array<T, IxDyn>>
+) -> NdimageResult<Array<T, IxDyn>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
     F: Fn(&[T]) -> T + Send + Sync + Clone + 'static,

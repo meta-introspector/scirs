@@ -6,7 +6,7 @@ use std::fmt::Debug;
 
 use super::utils::{interpolate_linear, interpolate_nearest};
 use super::{BoundaryMode, InterpolationOrder};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Zoom an array using interpolation
 ///
@@ -29,7 +29,7 @@ pub fn zoom<T, D>(
     mode: Option<BoundaryMode>,
     cval: Option<T>,
     prefilter: Option<bool>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,
@@ -130,7 +130,7 @@ pub fn shift<T, D>(
     mode: Option<BoundaryMode>,
     cval: Option<T>,
     prefilter: Option<bool>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,
@@ -231,7 +231,7 @@ pub fn rotate<T, D>(
     mode: Option<BoundaryMode>,
     cval: Option<T>,
     prefilter: Option<bool>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,

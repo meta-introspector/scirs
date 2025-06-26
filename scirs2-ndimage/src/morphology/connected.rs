@@ -4,7 +4,7 @@ use ndarray::{Array, Dimension};
 // use std::fmt::Debug;
 
 use super::Connectivity;
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Label connected components in a binary array
 ///
@@ -23,7 +23,7 @@ pub fn label<D>(
     structure: Option<&Array<bool, D>>,
     connectivity: Option<Connectivity>,
     background: Option<bool>,
-) -> Result<(Array<usize, D>, usize)>
+) -> NdimageResult<(Array<usize, D>, usize)>
 where
     D: Dimension,
 {
@@ -68,7 +68,7 @@ pub fn find_boundaries<D>(
     input: &Array<usize, D>,
     connectivity: Option<Connectivity>,
     mode: Option<&str>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension,
 {
@@ -109,7 +109,7 @@ pub fn remove_small_objects<D>(
     input: &Array<bool, D>,
     min_size: usize,
     connectivity: Option<Connectivity>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension,
 {
@@ -147,7 +147,7 @@ pub fn remove_small_holes<D>(
     input: &Array<bool, D>,
     min_size: usize,
     connectivity: Option<Connectivity>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension,
 {

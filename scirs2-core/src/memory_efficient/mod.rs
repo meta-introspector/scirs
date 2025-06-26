@@ -39,6 +39,7 @@ mod zerocopy;
 
 pub use adaptive_chunking::{
     AdaptiveChunking, AdaptiveChunkingBuilder, AdaptiveChunkingParams, AdaptiveChunkingResult,
+    WorkloadType,
 };
 pub use adaptive_prefetch::{
     AdaptivePatternTracker, AdaptivePrefetchConfig, AdaptivePrefetchConfigBuilder,

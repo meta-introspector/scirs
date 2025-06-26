@@ -57,3 +57,7 @@ path = "examples/hypergraph_demo.rs"
 [[bench]]
 name = "graph_benchmarks"
 harness = false
+
+[[bench]]
+name = "memory_benchmarks"
+harness = false

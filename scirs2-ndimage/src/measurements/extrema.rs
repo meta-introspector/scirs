@@ -4,7 +4,7 @@ use ndarray::{Array, Dimension};
 use num_traits::{Float, FromPrimitive, NumAssign};
 use std::fmt::Debug;
 
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Find the extrema (min, max, min_loc, max_loc) of an array
 ///
@@ -15,7 +15,7 @@ use crate::error::{NdimageError, Result};
 /// # Returns
 ///
 /// * `Result<(T, T, Vec<usize>, Vec<usize>)>` - (min, max, min_loc, max_loc)
-pub fn extrema<T, D>(input: &Array<T, D>) -> Result<(T, T, Vec<usize>, Vec<usize>)>
+pub fn extrema<T, D>(input: &Array<T, D>) -> NdimageResult<(T, T, Vec<usize>, Vec<usize>)>
 where
     T: Float + FromPrimitive + Debug + NumAssign + PartialOrd,
     D: Dimension,
@@ -90,7 +90,7 @@ pub fn local_extrema<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
     mode: Option<&str>,
-) -> Result<(Array<bool, D>, Array<bool, D>)>
+) -> NdimageResult<(Array<bool, D>, Array<bool, D>)>
 where
     T: Float + FromPrimitive + Debug + NumAssign + PartialOrd,
     D: Dimension,
@@ -154,7 +154,7 @@ pub fn peak_prominences<T>(
     input: &Array<T, ndarray::Ix1>,
     peaks: &[usize],
     _wlen: Option<usize>,
-) -> Result<Vec<T>>
+) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
 {
@@ -199,7 +199,7 @@ pub fn peak_widths<T>(
     input: &Array<T, ndarray::Ix1>,
     peaks: &[usize],
     rel_height: Option<T>,
-) -> Result<PeakWidthsResult<T>>
+) -> NdimageResult<PeakWidthsResult<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
 {

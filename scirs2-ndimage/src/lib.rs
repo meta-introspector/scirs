@@ -24,10 +24,10 @@ pub use self::features::{
 
 // Filters module exports
 pub use self::filters::{
-    bilateral_filter, convolve, filter_functions, gaussian_filter, gaussian_filter_f32,
-    gaussian_filter_f64, gaussian_filter_chunked, generic_filter, laplace, maximum_filter, 
-    median_filter, median_filter_chunked, minimum_filter, percentile_filter, rank_filter, 
-    sobel, uniform_filter, uniform_filter_chunked, BorderMode,
+    bilateral_filter, convolve, filter_functions, gaussian_filter, gaussian_filter_chunked,
+    gaussian_filter_f32, gaussian_filter_f64, generic_filter, laplace, maximum_filter,
+    median_filter, median_filter_chunked, minimum_filter, percentile_filter, rank_filter, sobel,
+    uniform_filter, uniform_filter_chunked, BorderMode,
 };
 
 #[cfg(feature = "simd")]
@@ -62,6 +62,4 @@ pub use self::morphology::{
 };
 
 // Chunked processing exports
-pub use self::chunked::{
-    process_chunked, ChunkConfig, ChunkProcessor, GaussianChunkProcessor,
-};
+pub use self::chunked::{process_chunked, ChunkConfig, ChunkProcessor, GaussianChunkProcessor};

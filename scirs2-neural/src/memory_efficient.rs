@@ -15,10 +15,10 @@ use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
 
-#[cfg(feature = "memory_efficient")]
-use scirs2_core::memory_efficient::{chunk_wise_op, ChunkingStrategy};
 #[cfg(feature = "memory_management")]
 use scirs2_core::memory_efficient::BufferPool;
+#[cfg(feature = "memory_efficient")]
+use scirs2_core::memory_efficient::{chunk_wise_op, ChunkingStrategy};
 
 // Note: Using BufferPool for memory management instead of MemoryManager
 
@@ -519,7 +519,6 @@ pub struct MemoryEfficientLayer {
     chunk_size: usize,
 
     // Memory management handled through BufferPool
-
     /// Buffer pool for temporary allocations
     #[cfg(feature = "memory_management")]
     #[allow(dead_code)]
@@ -621,7 +620,7 @@ impl MemoryEfficientLayer {
         {
             let weights = &self.weights;
             let bias = &self.bias;
-            
+
             let result = chunk_wise_op(
                 &input_chunk.to_owned(),
                 |chunk| {
@@ -634,10 +633,10 @@ impl MemoryEfficientLayer {
             .map_err(|e| {
                 NeuralError::ComputationError(format!("Chunk-wise operation failed: {:?}", e))
             })?;
-            
+
             result
         }
-        
+
         #[cfg(not(feature = "memory_efficient"))]
         {
             // Fallback - simple matrix multiplication
@@ -675,10 +674,9 @@ impl MemoryEfficientLayer {
         let weights_2d = ndarray::Array2::<f32>::zeros((input_size, output_size));
 
         // Use scirs2-linalg for matrix multiplication
-        let result = scirs2_linalg::matmul(&input_2d.view(), &weights_2d.view())
-            .map_err(|e| NeuralError::RuntimeError(
-                format!("Matrix multiplication failed: {}", e)
-            ))?;
+        let result = scirs2_linalg::matmul(&input_2d.view(), &weights_2d.view()).map_err(|e| {
+            NeuralError::RuntimeError(format!("Matrix multiplication failed: {}", e))
+        })?;
 
         // Add bias
         for mut row in result.rows_mut() {

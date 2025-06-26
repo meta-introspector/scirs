@@ -5,7 +5,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::BorderMode;
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Apply padding to an array based on the specified border mode
 ///
@@ -24,7 +24,7 @@ pub fn pad_array<T, D>(
     pad_width: &[(usize, usize)],
     mode: &BorderMode,
     constant_value: Option<T>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,
@@ -451,7 +451,7 @@ fn pad_along_axis<T, D>(
     _axis: usize,
     _dest_idx: usize,
     _src_idx: usize,
-) -> Result<()>
+) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,
@@ -480,7 +480,7 @@ pub fn get_window<T, D>(
     window_size: &[usize],
     _mode: &BorderMode,
     _constant_value: Option<T>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,
@@ -562,7 +562,7 @@ fn copy_nd_array<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
     start_indices: &[usize],
-) -> Result<()>
+) -> NdimageResult<()>
 where
     T: Clone + Debug,
     S1: ndarray::DataMut<Elem = T>,
@@ -599,7 +599,7 @@ where
         in_indices: &mut Vec<usize>,
         dim: usize,
         start_indices: &[usize],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
@@ -655,7 +655,7 @@ fn pad_nd_array_reflect<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
     pad_width: &[(usize, usize)],
-) -> Result<()>
+) -> NdimageResult<()>
 where
     T: Clone + Debug,
     S1: ndarray::DataMut<Elem = T>,
@@ -694,7 +694,7 @@ where
         dim: usize,
         center_starts: &[usize],
         _pad_width: &[(usize, usize)],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
@@ -755,7 +755,7 @@ where
         dim: usize,
         center_starts: &[usize],
         pad_width: &[(usize, usize)],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == output.ndim() {
             // Check if current indices are in the center region
             let mut is_center = true;
@@ -842,7 +842,7 @@ fn pad_nd_array_mirror<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
     pad_width: &[(usize, usize)],
-) -> Result<()>
+) -> NdimageResult<()>
 where
     T: Clone + Debug,
     S1: ndarray::DataMut<Elem = T>,
@@ -881,7 +881,7 @@ where
         dim: usize,
         center_starts: &[usize],
         _pad_width: &[(usize, usize)],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
@@ -942,7 +942,7 @@ where
         dim: usize,
         center_starts: &[usize],
         pad_width: &[(usize, usize)],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == output.ndim() {
             // Check if current indices are in the center region
             let mut is_center = true;
@@ -1010,7 +1010,7 @@ fn pad_nd_array_wrap<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
     pad_width: &[(usize, usize)],
-) -> Result<()>
+) -> NdimageResult<()>
 where
     T: Clone + Debug,
     S1: ndarray::DataMut<Elem = T>,
@@ -1041,7 +1041,7 @@ where
         dim: usize,
         center_starts: &[usize],
         _pad_width: &[(usize, usize)],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
@@ -1102,7 +1102,7 @@ where
         dim: usize,
         center_starts: &[usize],
         pad_width: &[(usize, usize)],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == output.ndim() {
             // Check if current indices are in the center region
             let mut is_center = true;
@@ -1189,7 +1189,7 @@ fn pad_nd_array_nearest<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
     pad_width: &[(usize, usize)],
-) -> Result<()>
+) -> NdimageResult<()>
 where
     T: Clone + Debug,
     S1: ndarray::DataMut<Elem = T>,
@@ -1228,7 +1228,7 @@ where
         dim: usize,
         center_starts: &[usize],
         _pad_width: &[(usize, usize)],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == input.ndim() {
             // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
@@ -1289,7 +1289,7 @@ where
         dim: usize,
         center_starts: &[usize],
         pad_width: &[(usize, usize)],
-    ) -> Result<()> {
+    ) -> NdimageResult<()> {
         if dim == output.ndim() {
             // Check if current indices are in the center region
             let mut is_center = true;
@@ -1380,7 +1380,7 @@ pub fn apply_window_function<T, D, F>(
     _mode: &BorderMode,
     _constant_value: Option<T>,
     _func: F,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,

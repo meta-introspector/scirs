@@ -94,35 +94,35 @@ where
         F: FnMut(&ArrayBase<ViewRepr<&A>, D>, D),
     {
         use ndarray::{s, Slice};
-        
+
         // Get array shape and chunk shape as slices
         let array_shape = self.array.shape();
         let chunk_shape = self.chunk_shape.slice();
-        
+
         // Calculate number of chunks in each dimension
         let mut num_chunks_per_dim = vec![];
         for i in 0..array_shape.len() {
             let n_chunks = (array_shape[i] + chunk_shape[i] - 1) / chunk_shape[i];
             num_chunks_per_dim.push(n_chunks);
         }
-        
+
         // Iterate through all possible chunk positions
         let mut chunk_indices = vec![0; array_shape.len()];
         loop {
             // Calculate the slice for current chunk
             let mut slices = vec![];
             let mut position_vec = vec![];
-            
+
             for i in 0..array_shape.len() {
                 let start = chunk_indices[i] * chunk_shape[i];
                 let end = ((chunk_indices[i] + 1) * chunk_shape[i]).min(array_shape[i]);
                 slices.push(Slice::from(start..end));
                 position_vec.push(start);
             }
-            
+
             // Convert position vector to D
             let position = D::from_slice(&position_vec).expect("Position dimension mismatch");
-            
+
             // Get the chunk view and call the function
             // Since we can't directly use dynamic slicing with D dimension,
             // we'll use a workaround by calling the function with the view
@@ -136,7 +136,11 @@ where
                     f(&view.into_dyn().view(), position);
                 }
                 3 => {
-                    let view = self.array.slice(s![slices[0].clone(), slices[1].clone(), slices[2].clone()]);
+                    let view = self.array.slice(s![
+                        slices[0].clone(),
+                        slices[1].clone(),
+                        slices[2].clone()
+                    ]);
                     f(&view.into_dyn().view(), position);
                 }
                 _ => {
@@ -146,7 +150,7 @@ where
                     break;
                 }
             }
-            
+
             // Increment chunk indices
             let mut carry = true;
             for i in 0..chunk_indices.len() {
@@ -159,7 +163,7 @@ where
                     }
                 }
             }
-            
+
             // If we've wrapped around all dimensions, we're done
             if carry {
                 break;
@@ -171,13 +175,13 @@ where
     pub fn num_chunks(&self) -> usize {
         let array_shape = self.array.shape();
         let chunk_shape = self.chunk_shape.slice();
-        
+
         let mut total_chunks = 1;
         for i in 0..array_shape.len() {
             let n_chunks = (array_shape[i] + chunk_shape[i] - 1) / chunk_shape[i];
             total_chunks *= n_chunks;
         }
-        
+
         total_chunks
     }
 }

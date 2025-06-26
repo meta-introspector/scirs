@@ -204,14 +204,95 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
     };
 
     // Read audio data
-    // For now, we'll just create a dummy array, to be replaced with actual data reading
-    // TODO: Implement actual reading of audio samples
-    let _shape = ndarray::IxDyn(&[channels as usize, samples_per_channel]);
+    let shape = ndarray::IxDyn(&[channels as usize, samples_per_channel]);
+    let mut data = ndarray::Array::zeros(shape);
 
-    // For now, return a placeholder message
-    Err(IoError::Other(
-        "WAV file reading not fully implemented yet".to_string(),
-    ))
+    // Read samples based on bits per sample
+    match bits_per_sample {
+        8 => {
+            // 8-bit samples are unsigned
+            for sample_idx in 0..samples_per_channel {
+                for ch in 0..channels as usize {
+                    let byte = reader.read_u8().map_err(|e| {
+                        IoError::FormatError(format!("Failed to read 8-bit sample: {}", e))
+                    })?;
+                    // Convert from 0-255 to -1.0 to 1.0
+                    data[[ch, sample_idx]] = (byte as f64 - 128.0) / 127.0;
+                }
+            }
+        }
+        16 => {
+            // 16-bit samples are signed
+            for sample_idx in 0..samples_per_channel {
+                for ch in 0..channels as usize {
+                    let sample = reader.read_i16::<LittleEndian>().map_err(|e| {
+                        IoError::FormatError(format!("Failed to read 16-bit sample: {}", e))
+                    })?;
+                    // Convert from -32768 to 32767 to -1.0 to 1.0
+                    data[[ch, sample_idx]] = sample as f64 / 32767.0;
+                }
+            }
+        }
+        24 => {
+            // 24-bit samples require special handling
+            for sample_idx in 0..samples_per_channel {
+                for ch in 0..channels as usize {
+                    let mut bytes = [0u8; 3];
+                    reader.read_exact(&mut bytes).map_err(|e| {
+                        IoError::FormatError(format!("Failed to read 24-bit sample: {}", e))
+                    })?;
+                    // Convert 24-bit signed to i32
+                    let sample = if bytes[2] & 0x80 != 0 {
+                        // Sign extend for negative values
+                        ((bytes[2] as i32) << 16)
+                            | ((bytes[1] as i32) << 8)
+                            | (bytes[0] as i32)
+                            | 0xFF000000u32 as i32
+                    } else {
+                        ((bytes[2] as i32) << 16) | ((bytes[1] as i32) << 8) | (bytes[0] as i32)
+                    };
+                    // Convert to -1.0 to 1.0
+                    data[[ch, sample_idx]] = sample as f64 / 8388607.0;
+                }
+            }
+        }
+        32 => {
+            // 32-bit samples can be int or float
+            if format == 3 {
+                // IEEE float format
+                for sample_idx in 0..samples_per_channel {
+                    for ch in 0..channels as usize {
+                        let sample = reader.read_f32::<LittleEndian>().map_err(|e| {
+                            IoError::FormatError(format!(
+                                "Failed to read 32-bit float sample: {}",
+                                e
+                            ))
+                        })?;
+                        data[[ch, sample_idx]] = sample as f64;
+                    }
+                }
+            } else {
+                // 32-bit integer
+                for sample_idx in 0..samples_per_channel {
+                    for ch in 0..channels as usize {
+                        let sample = reader.read_i32::<LittleEndian>().map_err(|e| {
+                            IoError::FormatError(format!("Failed to read 32-bit sample: {}", e))
+                        })?;
+                        // Convert to -1.0 to 1.0
+                        data[[ch, sample_idx]] = sample as f64 / 2147483647.0;
+                    }
+                }
+            }
+        }
+        _ => {
+            return Err(IoError::FormatError(format!(
+                "Unsupported bits per sample: {}",
+                bits_per_sample
+            )));
+        }
+    }
+
+    Ok(data)
 }
 
 /// Writes audio data to a WAV file
@@ -321,9 +402,21 @@ pub fn write_wav<P: AsRef<Path>>(path: P, sample_rate: u32, data: &ArrayD<f32>) 
         .write_u32::<LittleEndian>(data_size as u32)
         .map_err(|e| IoError::FileError(format!("Failed to write data size: {}", e)))?;
 
-    // TODO: Implement actual writing of audio samples
-    // For now, return a placeholder message
-    Err(IoError::Other(
-        "WAV file writing not fully implemented yet".to_string(),
-    ))
+    // Write actual audio samples
+    // The data is expected to be in format [channels, samples]
+    for sample_idx in 0..samples_per_channel {
+        for ch in 0..channels as usize {
+            let sample = data[[ch, sample_idx]];
+            writer
+                .write_f32::<LittleEndian>(sample)
+                .map_err(|e| IoError::FileError(format!("Failed to write sample: {}", e)))?;
+        }
+    }
+
+    // Flush the writer to ensure all data is written
+    writer
+        .flush()
+        .map_err(|e| IoError::FileError(format!("Failed to flush writer: {}", e)))?;
+
+    Ok(())
 }

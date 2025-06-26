@@ -1242,14 +1242,18 @@ mod tests {
         // Test that we can call interpolate without errors
         let result = interp.interpolate(&points.view());
         assert!(result.is_ok());
-        
+
         let interpolated = result.unwrap();
-        
+
         // The interpolated values at the data points should approximately match the original values
         for i in 0..values.len() {
-            assert!((interpolated[i] - values[i]).abs() < 1e-5, 
-                    "Interpolated value at point {} differs from original: {} vs {}", 
-                    i, interpolated[i], values[i]);
+            assert!(
+                (interpolated[i] - values[i]).abs() < 1e-5,
+                "Interpolated value at point {} differs from original: {} vs {}",
+                i,
+                interpolated[i],
+                values[i]
+            );
         }
     }
 
@@ -1321,24 +1325,31 @@ mod tests {
         // Test that we can call interpolate without errors
         let result = interp.interpolate(&points.view());
         assert!(result.is_ok());
-        
+
         let interpolated = result.unwrap();
-        
+
         // Multiscale RBF uses multiple scales which can lead to less exact interpolation
         // at the data points but better overall approximation. We verify the general
         // behavior is reasonable rather than exact interpolation.
         let mean_error: f64 = (0..values.len())
             .map(|i| (interpolated[i] - values[i]).abs())
-            .sum::<f64>() / values.len() as f64;
-        
-        assert!(mean_error < 1.0, 
-                "Multiscale RBF mean error too large: {}", mean_error);
-        
+            .sum::<f64>()
+            / values.len() as f64;
+
+        assert!(
+            mean_error < 1.0,
+            "Multiscale RBF mean error too large: {}",
+            mean_error
+        );
+
         // Also verify the interpolated values are in a reasonable range
         for i in 0..interpolated.len() {
-            assert!(interpolated[i].is_finite() && interpolated[i] >= -0.5 && interpolated[i] <= 3.0,
-                    "Multiscale interpolated value at point {} is out of reasonable range: {}", 
-                    i, interpolated[i]);
+            assert!(
+                interpolated[i].is_finite() && interpolated[i] >= -0.5 && interpolated[i] <= 3.0,
+                "Multiscale interpolated value at point {} is out of reasonable range: {}",
+                i,
+                interpolated[i]
+            );
         }
     }
 
@@ -1366,16 +1377,20 @@ mod tests {
             Array2::from_shape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0]).unwrap();
         let result = interp.interpolate(&test_points.view());
         assert!(result.is_ok());
-        
+
         // Verify interpolation at original points
         let result_orig = interp.interpolate(&points.view());
         assert!(result_orig.is_ok());
         let interpolated = result_orig.unwrap();
-        
+
         for i in 0..values.len() {
-            assert!((interpolated[i] - values[i]).abs() < 1e-5, 
-                    "Polynomial RBF interpolated value at point {} differs from original: {} vs {}", 
-                    i, interpolated[i], values[i]);
+            assert!(
+                (interpolated[i] - values[i]).abs() < 1e-5,
+                "Polynomial RBF interpolated value at point {} differs from original: {} vs {}",
+                i,
+                interpolated[i],
+                values[i]
+            );
         }
     }
 

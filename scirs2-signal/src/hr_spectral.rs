@@ -663,25 +663,57 @@ fn find_polynomial_roots(coeffs: &[Complex64]) -> SignalResult<Vec<Complex64>> {
 
     if n == 0 {
         return Ok(vec![]);
-    } else if n == 1 {
+    }
+
+    // Check for degenerate cases
+    if coeffs.iter().all(|&c| c.norm() < 1e-12) {
+        // All coefficients are zero
+        return Ok(vec![]);
+    }
+
+    // Normalize coefficients to avoid numerical issues
+    let max_coeff = coeffs.iter().map(|c| c.norm()).fold(0.0, f64::max);
+    let normalized_coeffs: Vec<Complex64> = coeffs.iter().map(|&c| c / max_coeff).collect();
+
+    // Find the first non-zero coefficient (leading coefficient)
+    let first_nonzero = normalized_coeffs.iter().position(|&c| c.norm() > 1e-12);
+
+    if first_nonzero.is_none() {
+        return Ok(vec![]);
+    }
+
+    let first_idx = first_nonzero.unwrap();
+    let effective_coeffs = &normalized_coeffs[first_idx..];
+    let effective_n = effective_coeffs.len() - 1;
+
+    if effective_n == 0 {
+        return Ok(vec![]);
+    } else if effective_n == 1 {
         // Linear case: ax + b = 0 => x = -b/a
-        if coeffs[0].norm() > 1e-12 {
-            return Ok(vec![-coeffs[1] / coeffs[0]]);
+        if effective_coeffs[0].norm() > 1e-12 {
+            return Ok(vec![-effective_coeffs[1] / effective_coeffs[0]]);
         } else {
             return Ok(vec![]);
         }
     }
 
     // For higher order polynomials, use companion matrix method
-    let mut companion = Array2::zeros((n, n));
+    let mut companion = Array2::zeros((effective_n, effective_n));
 
     // Fill companion matrix
-    for i in 0..(n - 1) {
+    for i in 0..(effective_n - 1) {
         companion[[i + 1, i]] = Complex64::new(1.0, 0.0);
     }
 
-    for i in 0..n {
-        companion[[i, n - 1]] = -coeffs[n - i] / coeffs[0];
+    // Handle potential division by small leading coefficient
+    let leading_coeff = effective_coeffs[0];
+    if leading_coeff.norm() < 1e-12 {
+        // Try alternative formulation
+        return Ok(vec![]);
+    }
+
+    for i in 0..effective_n {
+        companion[[i, effective_n - 1]] = -effective_coeffs[effective_n - i] / leading_coeff;
     }
 
     // Find eigenvalues of companion matrix
@@ -757,7 +789,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix polynomial root finding for degenerate cases
     fn test_pisarenko() {
         // Create test signal with single sinusoid
         let n_samples = 64;
@@ -773,6 +804,15 @@ mod tests {
         assert_eq!(result.frequencies.len(), config.num_freqs);
         assert_eq!(result.spectrum.len(), config.num_freqs);
         assert!(result.source_frequencies.is_some());
+
+        // Check that source frequencies were found
+        if let Some(ref source_freqs) = result.source_frequencies {
+            // Should find at least one frequency near 0.1
+            let found_freq = source_freqs
+                .iter()
+                .any(|&f| (f - freq).abs() < 0.05 || (f - (1.0 - freq)).abs() < 0.05);
+            assert!(found_freq, "Expected to find frequency near {}", freq);
+        }
     }
 
     #[test]

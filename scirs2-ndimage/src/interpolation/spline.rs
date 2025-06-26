@@ -6,7 +6,7 @@ use std::fmt::Debug;
 
 // No need for these imports currently
 // use super::{BoundaryMode, InterpolationOrder};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Spline filter for use in interpolation
 ///
@@ -18,7 +18,7 @@ use crate::error::{NdimageError, Result};
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
-pub fn spline_filter<T, D>(input: &Array<T, D>, order: Option<usize>) -> Result<Array<T, D>>
+pub fn spline_filter<T, D>(input: &Array<T, D>, order: Option<usize>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,
@@ -58,7 +58,7 @@ pub fn spline_filter1d<T, D>(
     input: &Array<T, D>,
     order: Option<usize>,
     axis: Option<usize>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,
@@ -107,7 +107,7 @@ pub fn bspline<T>(
     positions: &Array<T, ndarray::Ix1>,
     order: Option<usize>,
     derivative: Option<usize>,
-) -> Result<Array<T, ndarray::Ix1>>
+) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug,
 {

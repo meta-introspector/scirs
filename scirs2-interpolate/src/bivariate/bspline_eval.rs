@@ -581,7 +581,11 @@ mod tests {
         // For a linear B-spline (degree 1), with 4 control points all set to 1.0,
         // the integral might be different than expected due to the basis functions
         // The actual value depends on the B-spline basis normalization
-        assert!(integral > 0.0 && integral < 10.0, "Integral should be positive and reasonable: {}", integral);
+        assert!(
+            integral > 0.0 && integral < 10.0,
+            "Integral should be positive and reasonable: {}",
+            integral
+        );
         assert!(integral.is_finite()); // Basic check that we get a valid number
 
         // Test integration over a smaller area
@@ -599,9 +603,12 @@ mod tests {
         );
 
         // The integral over a quarter of the domain should be roughly 1/4 of the full integral
-        assert!(integral_half > 0.0 && integral_half < integral, 
-                "Quarter domain integral should be positive and less than full: {} vs {}", 
-                integral_half, integral);
+        assert!(
+            integral_half > 0.0 && integral_half < integral,
+            "Quarter domain integral should be positive and less than full: {} vs {}",
+            integral_half,
+            integral
+        );
         assert!(integral_half.is_finite()); // Basic check that we get a valid number
     }
 }

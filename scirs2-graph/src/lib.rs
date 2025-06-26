@@ -26,6 +26,7 @@ pub mod generators;
 pub mod io;
 pub mod layout;
 pub mod measures;
+pub mod memory;
 pub mod performance;
 pub mod spectral;
 pub mod temporal;
@@ -75,6 +76,10 @@ pub use measures::{
     centrality, clustering_coefficient, graph_density, hits_algorithm, katz_centrality,
     katz_centrality_digraph, pagerank_centrality, pagerank_centrality_digraph, CentralityType,
     HitsScores,
+};
+pub use memory::{
+    suggest_optimizations, BitPackedGraph, CSRGraph, CompressedAdjacencyList, FragmentationReport,
+    HybridGraph, MemoryProfiler, MemoryStats, OptimizedGraphBuilder,
 };
 pub use performance::{
     LargeGraphIterator, LargeGraphOps, ParallelConfig, PerformanceMonitor, StreamingGraphProcessor,

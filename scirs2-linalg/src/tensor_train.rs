@@ -778,7 +778,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Complex TT decomposition algorithm - requires advanced SVD-based implementation
     fn test_tt_decomposition_simple() {
         // Create a rank-1 tensor (outer product)
         let tensor = array![[[1.0, 2.0], [3.0, 6.0]], [[2.0, 4.0], [6.0, 12.0]]];
@@ -853,7 +852,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Complex TT rounding algorithm - requires advanced SVD-based rank reduction
     fn test_tt_rounding() {
         // Create a tensor with some redundancy
         let tensor = array![[[1.0, 1.0], [1.0, 1.0]], [[1.0, 1.0], [1.0, 1.0]]];

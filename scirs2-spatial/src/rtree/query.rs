@@ -340,37 +340,38 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Test is failing due to implementation issues
     fn test_rtree_spatial_join() {
-        // This test is currently failing because no results are being returned from the spatial join
-        println!("Skipping test_rtree_spatial_join due to implementation issues");
-
         // Create two R-trees
         let mut rtree1: RTree<i32> = RTree::new(2, 2, 4).unwrap();
         let mut rtree2: RTree<char> = RTree::new(2, 2, 4).unwrap();
 
-        // Insert points into the first R-tree
-        let points1 = vec![
-            (array![0.0, 0.0], 0),
-            (array![1.0, 0.0], 1),
-            (array![0.0, 1.0], 2),
-            (array![1.0, 1.0], 3),
+        // Insert rectangles (not just points) into the first R-tree
+        // Using insert_rectangle to create proper rectangles with area
+        let rectangles1 = vec![
+            (array![0.0, 0.0], array![0.6, 0.6], 0),
+            (array![0.4, 0.0], array![1.0, 0.6], 1),
+            (array![0.0, 0.4], array![0.6, 1.0], 2),
+            (array![0.4, 0.4], array![1.0, 1.0], 3),
         ];
 
-        for (point, value) in points1 {
-            rtree1.insert(point, value).unwrap();
+        for (min_corner, max_corner, value) in rectangles1 {
+            rtree1
+                .insert_rectangle(min_corner, max_corner, value)
+                .unwrap();
         }
 
-        // Insert points into the second R-tree
-        let points2 = vec![
-            (array![0.5, 0.5], 'A'),
-            (array![1.5, 0.5], 'B'),
-            (array![0.5, 1.5], 'C'),
-            (array![1.5, 1.5], 'D'),
+        // Insert rectangles into the second R-tree
+        let rectangles2 = vec![
+            (array![0.3, 0.3], array![0.7, 0.7], 'A'),
+            (array![0.8, 0.3], array![1.2, 0.7], 'B'),
+            (array![0.3, 0.8], array![0.7, 1.2], 'C'),
+            (array![0.8, 0.8], array![1.2, 1.2], 'D'),
         ];
 
-        for (point, value) in points2 {
-            rtree2.insert(point, value).unwrap();
+        for (min_corner, max_corner, value) in rectangles2 {
+            rtree2
+                .insert_rectangle(min_corner, max_corner, value)
+                .unwrap();
         }
 
         // Perform a spatial join with an intersection predicate
@@ -379,13 +380,25 @@ mod tests {
             .unwrap();
 
         // There should be multiple pairs since several rectangles intersect
-        assert!(!join_results.is_empty());
+        assert!(
+            !join_results.is_empty(),
+            "Expected spatial join to find intersecting rectangles"
+        );
 
-        // Test a more restrictive join predicate
+        // Rectangle A should intersect with rectangles 0, 1, 2, and 3
+        // Rectangle B should intersect with rectangles 1 and 3
+        // Rectangle C should intersect with rectangles 2 and 3
+        // Rectangle D should intersect with rectangle 3
+        // So we expect at least 8 intersections
+        assert!(
+            join_results.len() >= 8,
+            "Expected at least 8 intersections, found {}",
+            join_results.len()
+        );
+
+        // Test a more restrictive join predicate (contains)
         let strict_join_results = rtree1
-            .spatial_join(&rtree2, |mbr1, mbr2| {
-                Ok(mbr1.intersects(mbr2)? && mbr1.contains_rectangle(mbr2)?)
-            })
+            .spatial_join(&rtree2, |mbr1, mbr2| mbr1.contains_rectangle(mbr2))
             .unwrap();
 
         // Should be fewer results than with just intersection

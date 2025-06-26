@@ -17,7 +17,7 @@
 //! ## Example Usage
 //!
 //! ```rust
-//! use scirs2_core::memory_efficient::memory_layout::{
+//! use scirs2_core::memory_efficient::{
 //!     MemoryLayout, ArrayLayout, LayoutOrder
 //! };
 //!
@@ -28,7 +28,7 @@
 //! let f_layout = MemoryLayout::new_f_order(&[100, 200]);
 //!
 //! // Convert between layouts
-//! let converted = c_layout.to_order(LayoutOrder::Fortran)?;
+//! let converted = c_layout.to_order(LayoutOrder::Fortran).unwrap();
 //!
 //! // Check if layout is contiguous
 //! assert!(c_layout.is_c_contiguous());

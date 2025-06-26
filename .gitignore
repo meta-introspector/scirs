@@ -20,6 +20,7 @@ scirs2-vision/examples/output/*
 !scirs2-vision/examples/output/.gitignore
 !scirs2-vision/examples/output/.gitkeep
 output/*
+*/example.bin
 
 # Documentation
 target/doc/
@@ -60,3 +61,4 @@ wheels/
 
 **/CLAUDE.local.md
 scirs2-core/audit_logs/audit_*.log
+scirs2-core/example.bin

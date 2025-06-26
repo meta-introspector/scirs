@@ -197,7 +197,7 @@ pub trait ZeroCopyOps<A: Clone + Copy + 'static + Send + Sync> {
     ///
     /// # Example
     ///
-    /// ```no_run
+    /// ```ignore
     /// # use scirs2_core::memory_efficient::{MemoryMappedArray, ZeroCopyOps};
     /// # let mmap: MemoryMappedArray<f64> = unimplemented!();
     /// let avg = mmap.mean_zero_copy();

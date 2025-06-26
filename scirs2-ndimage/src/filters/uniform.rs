@@ -9,7 +9,7 @@ use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 // use scirs2_core::parallel;
 
 /// Apply a uniform filter to an n-dimensional array
@@ -50,7 +50,7 @@ pub fn uniform_filter<T, D>(
     size: &[usize],
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
     D: Dimension + 'static,
@@ -158,7 +158,7 @@ fn uniform_filter_1d<T>(
     size: usize,
     mode: &BorderMode,
     origin: isize,
-) -> Result<Array1<T>>
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign,
 {
@@ -198,7 +198,7 @@ fn uniform_filter_2d<T>(
     size: &[usize],
     mode: &BorderMode,
     origin: &[isize],
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign,
 {
@@ -248,7 +248,7 @@ fn uniform_filter_nd<T, D>(
     size: &[usize],
     mode: &BorderMode,
     origin: &[isize],
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
     D: Dimension + 'static,
@@ -373,7 +373,7 @@ pub fn uniform_filter_separable<T, D>(
     size: &[usize],
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
     D: Dimension + 'static,
@@ -421,7 +421,7 @@ fn uniform_filter_along_axis<T, D>(
     size: usize,
     mode: &BorderMode,
     origin: isize,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
     D: Dimension + 'static,

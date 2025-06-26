@@ -27,7 +27,8 @@ mod utils;
 
 // Convolve module exports
 pub use convolve::{
-    convolve, convolve_fast,
+    convolve,
+    convolve_fast,
     // Re-export the uniform_filter from convolve with a different name
     uniform_filter as convolve_uniform_filter,
 };

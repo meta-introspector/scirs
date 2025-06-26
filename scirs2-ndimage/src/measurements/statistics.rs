@@ -4,7 +4,7 @@ use ndarray::{Array, Array1, Dimension};
 use num_traits::{Float, FromPrimitive, NumAssign};
 use std::fmt::Debug;
 
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Sum the values of an array for each labeled region
 ///
@@ -21,7 +21,7 @@ pub fn sum_labels<T, D>(
     input: &Array<T, D>,
     labels: &Array<usize, D>,
     index: Option<&[usize]>,
-) -> Result<Array1<T>>
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,
@@ -93,7 +93,7 @@ pub fn mean_labels<T, D>(
     input: &Array<T, D>,
     labels: &Array<usize, D>,
     index: Option<&[usize]>,
-) -> Result<Array1<T>>
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,
@@ -152,7 +152,7 @@ pub fn variance_labels<T, D>(
     input: &Array<T, D>,
     labels: &Array<usize, D>,
     _index: Option<&[usize]>,
-) -> Result<Array1<T>>
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,
@@ -184,7 +184,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - Count of elements for each label
-pub fn count_labels<D>(labels: &Array<usize, D>, index: Option<&[usize]>) -> Result<Array1<usize>>
+pub fn count_labels<D>(labels: &Array<usize, D>, index: Option<&[usize]>) -> NdimageResult<Array1<usize>>
 where
     D: Dimension,
 {
@@ -255,7 +255,7 @@ pub fn histogram<T, D>(
     bins: usize,
     labels: Option<&Array<usize, D>>,
     _index: Option<&[usize]>,
-) -> Result<(Array1<usize>, Array1<T>)>
+) -> NdimageResult<(Array1<usize>, Array1<T>)>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,

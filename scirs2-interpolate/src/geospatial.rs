@@ -1019,7 +1019,11 @@ mod tests {
 
         let fit_result =
             interpolator.fit(&latitudes.view(), &longitudes.view(), &elevations.view());
-        assert!(fit_result.is_ok(), "Failed to fit thin plate spline: {:?}", fit_result.err());
+        assert!(
+            fit_result.is_ok(),
+            "Failed to fit thin plate spline: {:?}",
+            fit_result.err()
+        );
 
         let query_lats = Array1::from_vec(vec![40.5]);
         let query_lons = Array1::from_vec(vec![-74.5]);

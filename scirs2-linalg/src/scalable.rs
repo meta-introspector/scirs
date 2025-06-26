@@ -648,24 +648,55 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // SVD implementation has numerical issues, skip for now
     fn test_randomized_svd() {
-        // Create a simple test matrix - identity-like
-        let matrix = Array2::from_shape_fn((6, 4), |(i, j)| if i == j { 2.0 } else { 0.0 });
+        // Create a well-conditioned test matrix with known rank
+        // A = U * S * V^T where U and V are orthogonal
+        let m = 6;
+        let n = 4;
+        let true_rank = 2;
 
-        let config = ScalableConfig::default().with_oversampling(2);
-        let (u_approx, s_approx, vt_approx) = randomized_svd(&matrix.view(), 2, &config).unwrap();
+        // Create a rank-2 matrix
+        let mut matrix = Array2::zeros((m, n));
+        // Add rank-1 components
+        for i in 0..m {
+            for j in 0..n {
+                matrix[[i, j]] = 3.0 * (i as f64 / m as f64) * (j as f64 / n as f64);
+                matrix[[i, j]] += 2.0 * ((i + 1) as f64 / m as f64) * ((n - j) as f64 / n as f64);
+            }
+        }
+
+        // Add small perturbation to avoid exact zeros
+        for i in 0..m {
+            for j in 0..n {
+                matrix[[i, j]] += 0.01 * rand::random::<f64>();
+            }
+        }
+
+        let config = ScalableConfig::default()
+            .with_oversampling(2)
+            .with_power_iterations(1);
+        let result = randomized_svd(&matrix.view(), true_rank, &config);
+
+        // Check if the function returns successfully
+        assert!(result.is_ok(), "Randomized SVD failed: {:?}", result.err());
+
+        let (u_approx, s_approx, vt_approx) = result.unwrap();
 
         // Check dimensions
-        assert_eq!(u_approx.dim(), (6, 2));
-        assert_eq!(s_approx.dim(), 2);
-        assert_eq!(vt_approx.dim(), (2, 4));
+        assert_eq!(u_approx.dim(), (m, true_rank));
+        assert_eq!(s_approx.dim(), true_rank);
+        assert_eq!(vt_approx.dim(), (true_rank, n));
 
         // Check that singular values are positive and in descending order
         assert!(s_approx[0] > 0.0);
         for i in 0..s_approx.len() - 1 {
             assert!(s_approx[i] >= s_approx[i + 1]);
         }
+
+        // Check reconstruction error
+        let reconstructed = u_approx.dot(&Array2::from_diag(&s_approx)).dot(&vt_approx);
+        let error = (&matrix - &reconstructed).mapv(|x| x.abs()).sum();
+        assert!(error / (m * n) as f64 < 0.1, "Reconstruction error too large: {}", error);
     }
 
     #[test]

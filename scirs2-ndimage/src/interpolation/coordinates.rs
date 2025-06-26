@@ -5,7 +5,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::{BoundaryMode, InterpolationOrder};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Map coordinates from one array to another
 ///
@@ -28,7 +28,7 @@ pub fn map_coordinates<T, D>(
     mode: Option<BoundaryMode>,
     cval: Option<T>,
     prefilter: Option<bool>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,
@@ -67,7 +67,7 @@ where
 /// # Returns
 ///
 /// * `Result<T>` - Value at the given indices
-pub fn value_at_coordinates<T, D>(input: &Array<T, D>, indices: &[usize]) -> Result<T>
+pub fn value_at_coordinates<T, D>(input: &Array<T, D>, indices: &[usize]) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,
@@ -139,7 +139,7 @@ pub fn interpn<T, D>(
     order: Option<InterpolationOrder>,
     mode: Option<BoundaryMode>,
     cval: Option<T>,
-) -> Result<Array<T, ndarray::Ix1>>
+) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,

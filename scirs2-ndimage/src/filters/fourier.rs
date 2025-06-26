@@ -10,7 +10,7 @@ use num_traits::{Float, FromPrimitive, NumCast};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 use scirs2_fft::{fft, fft2, fftfreq, ifft, ifft2, FFTError};
 
 // Conversion from FFTError to NdimageError
@@ -37,7 +37,7 @@ pub fn fourier_gaussian<T, D>(
     input: &Array<T, D>,
     sigma: &[T],
     _truncate: Option<T>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -66,77 +66,83 @@ where
     match input.ndim() {
         1 => {
             // 1D case
-            let input_1d = input.view().into_dimensionality::<ndarray::Ix1>()
+            let input_1d = input
+                .view()
+                .into_dimensionality::<ndarray::Ix1>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert to 1D".into()))?;
             let input_1d_owned = input_1d.to_owned();
             let result = fourier_gaussian_1d(&input_1d_owned, sigma[0])?;
-            result.into_dimensionality::<D>()
+            result
+                .into_dimensionality::<D>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert back".into()))
         }
         2 => {
             // 2D case
-            let input_2d = input.view().into_dimensionality::<ndarray::Ix2>()
+            let input_2d = input
+                .view()
+                .into_dimensionality::<ndarray::Ix2>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
             let input_2d_owned = input_2d.to_owned();
             let result = fourier_gaussian_2d(&input_2d_owned, sigma[0], sigma[1])?;
-            result.into_dimensionality::<D>()
+            result
+                .into_dimensionality::<D>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert back".into()))
         }
-        _ => {
-            Err(NdimageError::NotImplementedError(
-                "Fourier Gaussian filter for dimensions > 2 not yet implemented".into(),
-            ))
-        }
+        _ => Err(NdimageError::NotImplementedError(
+            "Fourier Gaussian filter for dimensions > 2 not yet implemented".into(),
+        )),
     }
 }
 
 /// Apply 1D Gaussian filter in Fourier domain
-fn fourier_gaussian_1d<T>(input: &Array1<T>, sigma: T) -> Result<Array1<T>>
+fn fourier_gaussian_1d<T>(input: &Array1<T>, sigma: T) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
     let n = input.len();
-    
+
     // Convert to f64 for FFT
-    let input_f64: Vec<f64> = input.iter()
+    let input_f64: Vec<f64> = input
+        .iter()
         .map(|&x| NumCast::from(x).unwrap_or(0.0))
         .collect();
-    
+
     // Perform FFT
     let mut spectrum = fft(&input_f64, None)?;
-    
+
     // Get frequencies
     let freqs = fftfreq(n, 1.0)?;
-    
+
     // Apply Gaussian filter
     let sigma_f64: f64 = NumCast::from(sigma).unwrap_or(1.0);
     let two_pi = 2.0 * PI;
-    
+
     for (i, freq) in freqs.iter().enumerate() {
         let factor = (-0.5 * (two_pi * freq * sigma_f64).powi(2)).exp();
         spectrum[i] *= factor;
     }
-    
+
     // Inverse FFT
     let result = ifft(&spectrum, None)?;
-    
+
     // Convert back to T and extract real part
     let output: Array1<T> = Array1::from_vec(
-        result.iter()
+        result
+            .iter()
             .map(|c| T::from(c.re).unwrap_or(T::zero()))
-            .collect()
+            .collect(),
     );
-    
+
     Ok(output)
 }
 
 /// Apply 2D Gaussian filter in Fourier domain
-fn fourier_gaussian_2d<T>(input: &Array2<T>, sigma_y: T, sigma_x: T) -> Result<Array2<T>>
+fn fourier_gaussian_2d<T>(input: &Array2<T>, sigma_y: T, sigma_x: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
     let (ny, nx) = input.dim();
-    
+
     // Convert to f64 Array2 for FFT
     let mut input_f64 = Array2::<f64>::zeros((ny, nx));
     for i in 0..ny {
@@ -144,19 +150,19 @@ where
             input_f64[[i, j]] = NumCast::from(input[[i, j]]).unwrap_or(0.0);
         }
     }
-    
+
     // Perform 2D FFT
     let spectrum = fft2(&input_f64, None, None, None)?;
-    
+
     // Get frequencies
     let freqs_y = fftfreq(ny, 1.0)?;
     let freqs_x = fftfreq(nx, 1.0)?;
-    
+
     // Apply Gaussian filter
     let sigma_y_f64: f64 = NumCast::from(sigma_y).unwrap_or(1.0);
     let sigma_x_f64: f64 = NumCast::from(sigma_x).unwrap_or(1.0);
     let two_pi = 2.0 * PI;
-    
+
     let mut filtered_spectrum = spectrum.clone();
     for (i, &fy) in freqs_y.iter().enumerate() {
         for (j, &fx) in freqs_x.iter().enumerate() {
@@ -165,10 +171,10 @@ where
             filtered_spectrum[[i, j]] *= factor_y * factor_x;
         }
     }
-    
+
     // Inverse FFT
     let result = ifft2(&filtered_spectrum, None, None, None)?;
-    
+
     // Convert back to T and extract real part
     let mut output = Array2::zeros((ny, nx));
     for i in 0..ny {
@@ -176,7 +182,7 @@ where
             output[[i, j]] = T::from(result[[i, j]].re).unwrap_or(T::zero());
         }
     }
-    
+
     Ok(output)
 }
 
@@ -190,10 +196,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
-pub fn fourier_uniform<T, D>(
-    input: &Array<T, D>,
-    size: &[usize],
-) -> Result<Array<T, D>>
+pub fn fourier_uniform<T, D>(input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -223,78 +226,80 @@ where
 
     match input.ndim() {
         1 => {
-            let input_1d = input.view().into_dimensionality::<ndarray::Ix1>()
+            let input_1d = input
+                .view()
+                .into_dimensionality::<ndarray::Ix1>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert to 1D".into()))?;
             let input_1d_owned = input_1d.to_owned();
             let result = fourier_uniform_1d(&input_1d_owned, size[0])?;
-            result.into_dimensionality::<D>()
+            result
+                .into_dimensionality::<D>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert back".into()))
         }
         2 => {
-            let input_2d = input.view().into_dimensionality::<ndarray::Ix2>()
+            let input_2d = input
+                .view()
+                .into_dimensionality::<ndarray::Ix2>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
             let input_2d_owned = input_2d.to_owned();
             let result = fourier_uniform_2d(&input_2d_owned, size[0], size[1])?;
-            result.into_dimensionality::<D>()
+            result
+                .into_dimensionality::<D>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert back".into()))
         }
-        _ => {
-            Err(NdimageError::NotImplementedError(
-                "Fourier uniform filter for dimensions > 2 not yet implemented".into(),
-            ))
-        }
+        _ => Err(NdimageError::NotImplementedError(
+            "Fourier uniform filter for dimensions > 2 not yet implemented".into(),
+        )),
     }
 }
 
 /// Apply 1D uniform filter in Fourier domain
-fn fourier_uniform_1d<T>(input: &Array1<T>, size: usize) -> Result<Array1<T>>
+fn fourier_uniform_1d<T>(input: &Array1<T>, size: usize) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
     let n = input.len();
-    
+
     // Convert to f64 for FFT
-    let input_f64: Vec<f64> = input.iter()
+    let input_f64: Vec<f64> = input
+        .iter()
         .map(|&x| NumCast::from(x).unwrap_or(0.0))
         .collect();
-    
+
     // Perform FFT
     let mut spectrum = fft(&input_f64, None)?;
-    
+
     // Get frequencies
     let freqs = fftfreq(n, 1.0)?;
-    
+
     // Apply sinc filter (Fourier transform of box function)
     for (i, freq) in freqs.iter().enumerate() {
         let x = size as f64 * freq * 2.0 * PI;
-        let sinc = if x.abs() < 1e-10 {
-            1.0
-        } else {
-            x.sin() / x
-        };
+        let sinc = if x.abs() < 1e-10 { 1.0 } else { x.sin() / x };
         spectrum[i] *= sinc;
     }
-    
+
     // Inverse FFT
     let result = ifft(&spectrum, None)?;
-    
+
     // Convert back to T and extract real part
     let output: Array1<T> = Array1::from_vec(
-        result.iter()
+        result
+            .iter()
             .map(|c| T::from(c.re).unwrap_or(T::zero()))
-            .collect()
+            .collect(),
     );
-    
+
     Ok(output)
 }
 
 /// Apply 2D uniform filter in Fourier domain
-fn fourier_uniform_2d<T>(input: &Array2<T>, size_y: usize, size_x: usize) -> Result<Array2<T>>
+fn fourier_uniform_2d<T>(input: &Array2<T>, size_y: usize, size_x: usize) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
     let (ny, nx) = input.dim();
-    
+
     // Convert to f64 Array2 for FFT
     let mut input_f64 = Array2::<f64>::zeros((ny, nx));
     for i in 0..ny {
@@ -302,31 +307,39 @@ where
             input_f64[[i, j]] = NumCast::from(input[[i, j]]).unwrap_or(0.0);
         }
     }
-    
+
     // Perform 2D FFT
     let spectrum = fft2(&input_f64, None, None, None)?;
-    
+
     // Get frequencies
     let freqs_y = fftfreq(ny, 1.0)?;
     let freqs_x = fftfreq(nx, 1.0)?;
-    
+
     // Apply sinc filter
     let mut filtered_spectrum = spectrum.clone();
     for (i, &fy) in freqs_y.iter().enumerate() {
         for (j, &fx) in freqs_x.iter().enumerate() {
             let x_y = size_y as f64 * fy * 2.0 * PI;
             let x_x = size_x as f64 * fx * 2.0 * PI;
-            
-            let sinc_y = if x_y.abs() < 1e-10 { 1.0 } else { x_y.sin() / x_y };
-            let sinc_x = if x_x.abs() < 1e-10 { 1.0 } else { x_x.sin() / x_x };
-            
+
+            let sinc_y = if x_y.abs() < 1e-10 {
+                1.0
+            } else {
+                x_y.sin() / x_y
+            };
+            let sinc_x = if x_x.abs() < 1e-10 {
+                1.0
+            } else {
+                x_x.sin() / x_x
+            };
+
             filtered_spectrum[[i, j]] *= sinc_y * sinc_x;
         }
     }
-    
+
     // Inverse FFT
     let result = ifft2(&filtered_spectrum, None, None, None)?;
-    
+
     // Convert back to T and extract real part
     let mut output = Array2::zeros((ny, nx));
     for i in 0..ny {
@@ -334,7 +347,7 @@ where
             output[[i, j]] = T::from(result[[i, j]].re).unwrap_or(T::zero());
         }
     }
-    
+
     Ok(output)
 }
 
@@ -351,11 +364,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
-pub fn fourier_ellipsoid<T, D>(
-    input: &Array<T, D>,
-    size: &[T],
-    mode: &str,
-) -> Result<Array<T, D>>
+pub fn fourier_ellipsoid<T, D>(input: &Array<T, D>, size: &[T], mode: &str) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -394,11 +403,14 @@ where
     };
 
     if input.ndim() == 2 {
-        let input_2d = input.view().into_dimensionality::<ndarray::Ix2>()
+        let input_2d = input
+            .view()
+            .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
         let input_2d_owned = input_2d.to_owned();
         let result = fourier_ellipsoid_2d(&input_2d_owned, size[0], size[1], is_lowpass)?;
-        result.into_dimensionality::<D>()
+        result
+            .into_dimensionality::<D>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert back".into()))
     } else {
         Err(NdimageError::NotImplementedError(
@@ -409,16 +421,16 @@ where
 
 /// Apply 2D ellipsoid filter in Fourier domain
 fn fourier_ellipsoid_2d<T>(
-    input: &Array2<T>, 
-    size_y: T, 
-    size_x: T, 
-    is_lowpass: bool
-) -> Result<Array2<T>>
+    input: &Array2<T>,
+    size_y: T,
+    size_x: T,
+    is_lowpass: bool,
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
     let (ny, nx) = input.dim();
-    
+
     // Convert to f64 Array2 for FFT
     let mut input_f64 = Array2::<f64>::zeros((ny, nx));
     for i in 0..ny {
@@ -426,37 +438,45 @@ where
             input_f64[[i, j]] = NumCast::from(input[[i, j]]).unwrap_or(0.0);
         }
     }
-    
+
     // Perform 2D FFT
     let spectrum = fft2(&input_f64, None, None, None)?;
-    
+
     // Get frequencies
     let freqs_y = fftfreq(ny, 1.0)?;
     let freqs_x = fftfreq(nx, 1.0)?;
-    
+
     // Convert sizes to f64
     let size_y_f64: f64 = NumCast::from(size_y).unwrap_or(1.0);
     let size_x_f64: f64 = NumCast::from(size_x).unwrap_or(1.0);
-    
+
     // Apply ellipsoid filter
     let mut filtered_spectrum = spectrum.clone();
     for (i, &fy) in freqs_y.iter().enumerate() {
         for (j, &fx) in freqs_x.iter().enumerate() {
             let dist_sq = (fy / size_y_f64).powi(2) + (fx / size_x_f64).powi(2);
-            
+
             let mask = if is_lowpass {
-                if dist_sq <= 1.0 { 1.0 } else { 0.0 }
+                if dist_sq <= 1.0 {
+                    1.0
+                } else {
+                    0.0
+                }
             } else {
-                if dist_sq > 1.0 { 1.0 } else { 0.0 }
+                if dist_sq > 1.0 {
+                    1.0
+                } else {
+                    0.0
+                }
             };
-            
+
             filtered_spectrum[[i, j]] *= mask;
         }
     }
-    
+
     // Inverse FFT
     let result = ifft2(&filtered_spectrum, None, None, None)?;
-    
+
     // Convert back to T and extract real part
     let mut output = Array2::zeros((ny, nx));
     for i in 0..ny {
@@ -464,7 +484,7 @@ where
             output[[i, j]] = T::from(result[[i, j]].re).unwrap_or(T::zero());
         }
     }
-    
+
     Ok(output)
 }
 
@@ -481,10 +501,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Shifted array
-pub fn fourier_shift<T, D>(
-    input: &Array<T, D>,
-    shift: &[T],
-) -> Result<Array<T, D>>
+pub fn fourier_shift<T, D>(input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -506,77 +523,83 @@ where
 
     match input.ndim() {
         1 => {
-            let input_1d = input.view().into_dimensionality::<ndarray::Ix1>()
+            let input_1d = input
+                .view()
+                .into_dimensionality::<ndarray::Ix1>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert to 1D".into()))?;
             let input_1d_owned = input_1d.to_owned();
             let result = fourier_shift_1d(&input_1d_owned, shift[0])?;
-            result.into_dimensionality::<D>()
+            result
+                .into_dimensionality::<D>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert back".into()))
         }
         2 => {
-            let input_2d = input.view().into_dimensionality::<ndarray::Ix2>()
+            let input_2d = input
+                .view()
+                .into_dimensionality::<ndarray::Ix2>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
             let input_2d_owned = input_2d.to_owned();
             let result = fourier_shift_2d(&input_2d_owned, shift[0], shift[1])?;
-            result.into_dimensionality::<D>()
+            result
+                .into_dimensionality::<D>()
                 .map_err(|_| NdimageError::DimensionError("Failed to convert back".into()))
         }
-        _ => {
-            Err(NdimageError::NotImplementedError(
-                "Fourier shift for dimensions > 2 not yet implemented".into(),
-            ))
-        }
+        _ => Err(NdimageError::NotImplementedError(
+            "Fourier shift for dimensions > 2 not yet implemented".into(),
+        )),
     }
 }
 
 /// Apply 1D shift in Fourier domain
-fn fourier_shift_1d<T>(input: &Array1<T>, shift: T) -> Result<Array1<T>>
+fn fourier_shift_1d<T>(input: &Array1<T>, shift: T) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
     let n = input.len();
-    
+
     // Convert to f64 for FFT
-    let input_f64: Vec<f64> = input.iter()
+    let input_f64: Vec<f64> = input
+        .iter()
         .map(|&x| NumCast::from(x).unwrap_or(0.0))
         .collect();
-    
+
     // Perform FFT
     let mut spectrum = fft(&input_f64, None)?;
-    
+
     // Get frequencies
     let freqs = fftfreq(n, 1.0)?;
-    
+
     // Apply phase shift
     let shift_f64: f64 = NumCast::from(shift).unwrap_or(0.0);
     let two_pi = 2.0 * PI;
-    
+
     for (i, freq) in freqs.iter().enumerate() {
         let phase = -two_pi * freq * shift_f64;
         let shift_factor = Complex64::new(phase.cos(), phase.sin());
         spectrum[i] *= shift_factor;
     }
-    
+
     // Inverse FFT
     let result = ifft(&spectrum, None)?;
-    
+
     // Convert back to T and extract real part
     let output: Array1<T> = Array1::from_vec(
-        result.iter()
+        result
+            .iter()
             .map(|c| T::from(c.re).unwrap_or(T::zero()))
-            .collect()
+            .collect(),
     );
-    
+
     Ok(output)
 }
 
 /// Apply 2D shift in Fourier domain
-fn fourier_shift_2d<T>(input: &Array2<T>, shift_y: T, shift_x: T) -> Result<Array2<T>>
+fn fourier_shift_2d<T>(input: &Array2<T>, shift_y: T, shift_x: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
     let (ny, nx) = input.dim();
-    
+
     // Convert to f64 Array2 for FFT
     let mut input_f64 = Array2::<f64>::zeros((ny, nx));
     for i in 0..ny {
@@ -584,19 +607,19 @@ where
             input_f64[[i, j]] = NumCast::from(input[[i, j]]).unwrap_or(0.0);
         }
     }
-    
+
     // Perform 2D FFT
     let spectrum = fft2(&input_f64, None, None, None)?;
-    
+
     // Get frequencies
     let freqs_y = fftfreq(ny, 1.0)?;
     let freqs_x = fftfreq(nx, 1.0)?;
-    
+
     // Convert shifts to f64
     let shift_y_f64: f64 = NumCast::from(shift_y).unwrap_or(0.0);
     let shift_x_f64: f64 = NumCast::from(shift_x).unwrap_or(0.0);
     let two_pi = 2.0 * PI;
-    
+
     // Apply phase shift
     let mut shifted_spectrum = spectrum.clone();
     for (i, &fy) in freqs_y.iter().enumerate() {
@@ -606,10 +629,10 @@ where
             shifted_spectrum[[i, j]] *= shift_factor;
         }
     }
-    
+
     // Inverse FFT
     let result = ifft2(&shifted_spectrum, None, None, None)?;
-    
+
     // Convert back to T and extract real part
     let mut output = Array2::zeros((ny, nx));
     for i in 0..ny {
@@ -617,15 +640,15 @@ where
             output[[i, j]] = T::from(result[[i, j]].re).unwrap_or(T::zero());
         }
     }
-    
+
     Ok(output)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{arr1, arr2, Array1, Array2};
     use approx::assert_abs_diff_eq;
+    use ndarray::{arr1, arr2, Array1, Array2};
 
     #[test]
     fn test_fourier_gaussian_1d() {
@@ -640,7 +663,7 @@ mod tests {
         // Check that the spike is smoothed
         assert!(filtered[32] < 1.0);
         assert!(filtered[32] > 0.0);
-        
+
         // Check symmetry
         for i in 1..10 {
             assert_abs_diff_eq!(filtered[32 - i], filtered[32 + i], epsilon = 1e-10);
@@ -660,7 +683,7 @@ mod tests {
         // Check that the spike is smoothed
         assert!(filtered[[16, 16]] < 1.0);
         assert!(filtered[[16, 16]] > 0.0);
-        
+
         // Check that surrounding pixels have non-zero values
         assert!(filtered[[15, 16]] > 0.0);
         assert!(filtered[[17, 16]] > 0.0);
@@ -690,15 +713,15 @@ mod tests {
     fn test_fourier_ellipsoid_lowpass() {
         // Create a 2D array with high and low frequency components
         let mut image = Array2::zeros((32, 32));
-        
+
         // Add a low frequency component (large scale structure)
         for i in 0..32 {
             for j in 0..32 {
-                image[[i, j]] = ((i as f64 / 32.0 * 2.0 * PI).sin() + 
-                                (j as f64 / 32.0 * 2.0 * PI).sin()) / 2.0;
+                image[[i, j]] =
+                    ((i as f64 / 32.0 * 2.0 * PI).sin() + (j as f64 / 32.0 * 2.0 * PI).sin()) / 2.0;
             }
         }
-        
+
         // Add high frequency noise
         for i in 0..32 {
             for j in 0..32 {

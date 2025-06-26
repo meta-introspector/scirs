@@ -6,7 +6,7 @@ use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Apply a median filter to an n-dimensional array
 ///
@@ -23,7 +23,7 @@ pub fn median_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
     D: Dimension,
@@ -98,7 +98,7 @@ where
 }
 
 /// Apply a median filter to a 1D array
-fn median_filter_1d<T>(input: &Array1<T>, size: usize, mode: &BorderMode) -> Result<Array1<T>>
+fn median_filter_1d<T>(input: &Array1<T>, size: usize, mode: &BorderMode) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
 {
@@ -130,7 +130,7 @@ where
 }
 
 /// Apply a median filter to a 2D array
-fn median_filter_2d<T>(input: &Array2<T>, size: &[usize], mode: &BorderMode) -> Result<Array2<T>>
+fn median_filter_2d<T>(input: &Array2<T>, size: &[usize], mode: &BorderMode) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
 {
@@ -178,7 +178,7 @@ fn median_filter_nd<T, D>(
     input: &Array<T, D>,
     size: &[usize],
     mode: &BorderMode,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
     D: Dimension,

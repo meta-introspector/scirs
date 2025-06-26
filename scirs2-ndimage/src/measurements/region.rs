@@ -5,7 +5,7 @@ use num_traits::{Float, FromPrimitive, NumAssign};
 use std::fmt::Debug;
 
 use super::RegionProperties;
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Extract properties of labeled regions
 ///
@@ -22,7 +22,7 @@ pub fn region_properties<T, D>(
     input: &Array<T, D>,
     labels: &Array<usize, D>,
     _properties: Option<Vec<&str>>,
-) -> Result<Vec<RegionProperties<T>>>
+) -> NdimageResult<Vec<RegionProperties<T>>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,
@@ -60,7 +60,7 @@ where
 /// # Returns
 ///
 /// * `Result<Vec<Vec<usize>>>` - List of bounding box slices for each object
-pub fn find_objects<D>(input: &Array<usize, D>) -> Result<Vec<Vec<usize>>>
+pub fn find_objects<D>(input: &Array<usize, D>) -> NdimageResult<Vec<Vec<usize>>>
 where
     D: Dimension,
 {

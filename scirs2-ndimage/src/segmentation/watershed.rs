@@ -2,7 +2,7 @@
 //!
 //! This module provides the watershed segmentation algorithm for image segmentation.
 
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 use ndarray::{Array, Ix2};
 use num_traits::{Float, NumAssign};
 use std::cmp::{Ordering, Reverse};
@@ -86,7 +86,7 @@ impl<T: PartialOrd> Ord for PriorityPoint<T> {
 ///
 /// let segmented = watershed(&image, &markers).unwrap();
 /// ```
-pub fn watershed<T>(image: &Array<T, Ix2>, markers: &Array<i32, Ix2>) -> Result<Array<i32, Ix2>>
+pub fn watershed<T>(image: &Array<T, Ix2>, markers: &Array<i32, Ix2>) -> NdimageResult<Array<i32, Ix2>>
 where
     T: Float + NumAssign + std::fmt::Debug,
 {
@@ -296,7 +296,7 @@ pub fn marker_watershed<T>(
     image: &Array<T, Ix2>,
     markers: &Array<i32, Ix2>,
     connectivity: usize,
-) -> Result<Array<i32, Ix2>>
+) -> NdimageResult<Array<i32, Ix2>>
 where
     T: Float + NumAssign + std::fmt::Debug + Copy,
 {

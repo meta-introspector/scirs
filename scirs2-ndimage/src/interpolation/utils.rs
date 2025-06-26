@@ -5,7 +5,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::BoundaryMode;
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Handle out-of-bounds coordinates according to the boundary mode
 ///
@@ -18,7 +18,7 @@ use crate::error::{NdimageError, Result};
 /// # Returns
 ///
 /// * `Result<T>` - Processed coordinate
-pub fn handle_boundary<T>(coord: T, size: usize, mode: BoundaryMode) -> Result<T>
+pub fn handle_boundary<T>(coord: T, size: usize, mode: BoundaryMode) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug,
 {

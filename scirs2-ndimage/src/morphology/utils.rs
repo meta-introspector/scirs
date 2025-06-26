@@ -5,7 +5,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::MorphBorderMode;
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Apply padding to an array based on the specified border mode for morphological operations
 ///
@@ -24,7 +24,7 @@ pub fn pad_array<T, D>(
     pad_width: &[(usize, usize)],
     _mode: &MorphBorderMode,
     _constant_value: T,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,
@@ -63,7 +63,7 @@ where
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, Error otherwise
-pub fn validate_structure<D>(structure: &Array<bool, D>) -> Result<()>
+pub fn validate_structure<D>(structure: &Array<bool, D>) -> NdimageResult<()>
 where
     D: Dimension,
 {
@@ -101,7 +101,7 @@ where
 pub fn get_structure_center<D>(
     structure: &Array<bool, D>,
     origin: Option<&[isize]>,
-) -> Result<Vec<isize>>
+) -> NdimageResult<Vec<isize>>
 where
     D: Dimension,
 {
@@ -158,7 +158,7 @@ where
 pub(crate) fn get_structure_center_dyn(
     structure: &Array<bool, ndarray::IxDyn>,
     origin: Option<&[isize]>,
-) -> Result<Vec<isize>> {
+) -> NdimageResult<Vec<isize>> {
     get_structure_center(structure, origin)
 }
 

@@ -503,13 +503,16 @@ where
 ///    assert_eq!(b.eval(g).unwrap().shape(), &[3, 2]);
 /// });
 ///    ```
-pub fn slice<'graph, A, F: Float>(x: A, starts: &[isize], ends: &[isize]) -> Tensor<'graph, F>
+pub fn slice<'graph, A, S, E, F: Float>(x: A, starts: S, ends: E) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
+    S: AsRef<[isize]>,
+    E: AsRef<[isize]>,
 {
     let x = x.as_ref();
     let g = x.graph();
-    // TODO: Make starts and ends ArrayLike
+    let starts = starts.as_ref();
+    let ends = ends.as_ref();
     assert_eq!(starts.len(), ends.len());
     let starts_ends = starts.iter().zip(ends.iter());
 

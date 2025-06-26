@@ -350,7 +350,7 @@ fn remove_comments(line: &str, in_multiline_comment: bool) -> (String, bool) {
     let mut result = String::new();
     let mut chars = line.chars().peekable();
     let mut in_comment = in_multiline_comment;
-    
+
     while let Some(ch) = chars.next() {
         if in_comment {
             // We're inside a multi-line comment, look for */
@@ -379,7 +379,7 @@ fn remove_comments(line: &str, in_multiline_comment: bool) -> (String, bool) {
             }
         }
     }
-    
+
     (result, in_comment)
 }
 

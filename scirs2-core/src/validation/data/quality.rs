@@ -389,63 +389,63 @@ impl QualityAnalyzer {
     {
         // Implement pattern consistency checking
         let array_size = array.len();
-        
+
         if array_size < 3 {
             // Too small to check patterns
             return Ok(1.0);
         }
-        
-        let values: Vec<f64> = array.iter()
-            .filter_map(|&x| x.to_f64())
-            .collect();
-        
+
+        let values: Vec<f64> = array.iter().filter_map(|&x| x.to_f64()).collect();
+
         if values.len() < 3 {
             // Not enough valid values to check patterns
             return Ok(1.0);
         }
-        
+
         // Check for consistent differences (arithmetic progression)
         let mut diff_scores = Vec::new();
         for i in 1..values.len() {
-            diff_scores.push(values[i] - values[i-1]);
+            diff_scores.push(values[i] - values[i - 1]);
         }
-        
+
         // Calculate variance of differences
         let mean_diff = diff_scores.iter().sum::<f64>() / diff_scores.len() as f64;
-        let variance = diff_scores.iter()
+        let variance = diff_scores
+            .iter()
             .map(|&d| (d - mean_diff).powi(2))
-            .sum::<f64>() / diff_scores.len() as f64;
-        
+            .sum::<f64>()
+            / diff_scores.len() as f64;
+
         // Check for periodic patterns
         let mut period_score = 1.0;
         for period in 2..((values.len() / 2).min(10)) {
             let mut matches = 0;
             let mut comparisons = 0;
-            
+
             for i in period..values.len() {
                 if (values[i] - values[i - period]).abs() < 1e-10 {
                     matches += 1;
                 }
                 comparisons += 1;
             }
-            
+
             if comparisons > 0 {
                 let current_score = matches as f64 / comparisons as f64;
                 period_score = period_score.max(current_score);
             }
         }
-        
+
         // Combine scores: lower variance in differences = higher consistency
         // Also consider periodic patterns
         let diff_consistency = if variance > 0.0 {
             (-variance.ln()).exp().min(1.0).max(0.0)
         } else {
-            1.0  // Perfect arithmetic progression
+            1.0 // Perfect arithmetic progression
         };
-        
+
         // Final score is weighted average
         let consistency_score = 0.7 * diff_consistency + 0.3 * period_score;
-        
+
         Ok(consistency_score.min(1.0).max(0.0))
     }
 

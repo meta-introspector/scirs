@@ -4,7 +4,7 @@ use ndarray::{Array, Dimension};
 use num_traits::{Float, FromPrimitive, NumAssign};
 use std::fmt::Debug;
 
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Find the center of mass of an array
 ///
@@ -15,7 +15,7 @@ use crate::error::{NdimageError, Result};
 /// # Returns
 ///
 /// * `Result<Vec<T>>` - Center of mass (centroid)
-pub fn center_of_mass<T, D>(input: &Array<T, D>) -> Result<Vec<T>>
+pub fn center_of_mass<T, D>(input: &Array<T, D>) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,
@@ -79,7 +79,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix2>>` - Moment of inertia tensor
-pub fn moments_inertia_tensor<T, D>(input: &Array<T, D>) -> Result<Array<T, ndarray::Ix2>>
+pub fn moments_inertia_tensor<T, D>(input: &Array<T, D>) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,
@@ -106,7 +106,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - Array of moments
-pub fn moments<T, D>(input: &Array<T, D>, order: usize) -> Result<Array<T, ndarray::Ix1>>
+pub fn moments<T, D>(input: &Array<T, D>, order: usize) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,
@@ -138,7 +138,7 @@ pub fn central_moments<T, D>(
     input: &Array<T, D>,
     order: usize,
     center: Option<&[T]>,
-) -> Result<Array<T, ndarray::Ix1>>
+) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,
@@ -175,7 +175,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - Array of normalized moments
-pub fn normalized_moments<T, D>(input: &Array<T, D>, order: usize) -> Result<Array<T, ndarray::Ix1>>
+pub fn normalized_moments<T, D>(input: &Array<T, D>, order: usize) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
     D: Dimension,

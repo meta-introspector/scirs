@@ -40,7 +40,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::MorphBorderMode;
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Internal enum for specifying morphological operation type
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -92,7 +92,7 @@ pub fn grey_erosion<T, D>(
     mode: Option<MorphBorderMode>,
     cval: Option<T>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension + 'static,
@@ -292,7 +292,7 @@ pub fn grey_dilation<T, D>(
     mode: Option<MorphBorderMode>,
     cval: Option<T>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension + 'static,
@@ -489,7 +489,7 @@ pub fn grey_opening<T, D>(
     mode: Option<MorphBorderMode>,
     cval: Option<T>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension + 'static,
@@ -543,7 +543,7 @@ pub fn grey_closing<T, D>(
     mode: Option<MorphBorderMode>,
     cval: Option<T>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension + 'static,
@@ -597,7 +597,7 @@ pub fn morphological_gradient<T, D>(
     mode: Option<MorphBorderMode>,
     cval: Option<T>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension + 'static,
@@ -689,7 +689,7 @@ pub fn morphological_laplace<T, D>(
     mode: Option<MorphBorderMode>,
     cval: Option<T>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension + 'static,
@@ -794,7 +794,7 @@ pub fn white_tophat<T, D>(
     mode: Option<MorphBorderMode>,
     cval: Option<T>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension + 'static,
@@ -884,7 +884,7 @@ pub fn black_tophat<T, D>(
     mode: Option<MorphBorderMode>,
     cval: Option<T>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension + 'static,
@@ -953,7 +953,7 @@ fn apply_grey_morphology_nd<T, D>(
     cval: Option<T>,
     origin: Option<isize>,
     operation: MorphOperation,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,

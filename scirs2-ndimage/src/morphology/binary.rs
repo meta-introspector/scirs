@@ -27,7 +27,7 @@ use ndarray::{Array, Array1, Array2, Dimension, Ix1, Ix2, IxDyn};
 
 use super::structuring::generate_binary_structure_dyn;
 use super::utils::get_structure_center_dyn;
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Erode a binary array using a structuring element
 ///
@@ -71,7 +71,7 @@ pub fn binary_erosion<D>(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     brute_force: Option<bool>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension + 'static,
 {
@@ -249,7 +249,7 @@ fn binary_erosion1d(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     brute_force: Option<bool>,
-) -> Result<Array1<bool>> {
+) -> NdimageResult<Array1<bool>> {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
     let border_val = border_value.unwrap_or(false);
@@ -347,7 +347,7 @@ fn binary_erosion2d(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     brute_force: Option<bool>,
-) -> Result<Array2<bool>> {
+) -> NdimageResult<Array2<bool>> {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
     let border_val = border_value.unwrap_or(false);
@@ -463,7 +463,7 @@ fn binary_erosion_dyn(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     _brute_force: Option<bool>,
-) -> Result<Array<bool, IxDyn>> {
+) -> NdimageResult<Array<bool, IxDyn>> {
     let iterations = iterations.unwrap_or(1);
     let border = border_value.unwrap_or(false);
 
@@ -586,7 +586,7 @@ pub fn binary_dilation<D>(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     brute_force: Option<bool>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension + 'static,
 {
@@ -764,7 +764,7 @@ fn binary_dilation1d(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     brute_force: Option<bool>,
-) -> Result<Array1<bool>> {
+) -> NdimageResult<Array1<bool>> {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
     let border_val = border_value.unwrap_or(false);
@@ -867,7 +867,7 @@ fn binary_dilation2d(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     brute_force: Option<bool>,
-) -> Result<Array2<bool>> {
+) -> NdimageResult<Array2<bool>> {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
     let border_val = border_value.unwrap_or(false);
@@ -993,7 +993,7 @@ fn binary_dilation_dyn(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     _brute_force: Option<bool>,
-) -> Result<Array<bool, IxDyn>> {
+) -> NdimageResult<Array<bool, IxDyn>> {
     let iterations = iterations.unwrap_or(1);
     let border = border_value.unwrap_or(false);
 
@@ -1117,7 +1117,7 @@ pub fn binary_opening<D>(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     brute_force: Option<bool>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension + 'static,
 {
@@ -1169,7 +1169,7 @@ pub fn binary_closing<D>(
     border_value: Option<bool>,
     origin: Option<&[isize]>,
     brute_force: Option<bool>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension + 'static,
 {
@@ -1212,7 +1212,7 @@ pub fn binary_fill_holes<D>(
     input: &Array<bool, D>,
     _structure: Option<&Array<bool, D>>,
     _origin: Option<&[isize]>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension + 'static,
 {
@@ -1267,7 +1267,7 @@ pub fn binary_hit_or_miss<D>(
     border_value: Option<bool>,
     origin1: Option<&[isize]>,
     origin2: Option<&[isize]>,
-) -> Result<Array<bool, D>>
+) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension + 'static,
 {
@@ -1327,7 +1327,7 @@ fn binary_hit_or_miss_1d<D>(
     _border_value: Option<bool>,
     _origin1: Option<&[isize]>,
     _origin2: Option<&[isize]>,
-) -> Result<Array<bool, ndarray::Ix1>>
+) -> NdimageResult<Array<bool, ndarray::Ix1>>
 where
     D: Dimension + 'static,
 {
@@ -1344,7 +1344,7 @@ fn binary_hit_or_miss_2d<D>(
     border_value: Option<bool>,
     origin1: Option<&[isize]>,
     origin2: Option<&[isize]>,
-) -> Result<Array<bool, ndarray::Ix2>>
+) -> NdimageResult<Array<bool, ndarray::Ix2>>
 where
     D: Dimension + 'static,
 {

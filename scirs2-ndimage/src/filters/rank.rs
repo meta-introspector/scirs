@@ -6,7 +6,7 @@ use scirs2_core::{parallel_ops, simd, CoreError};
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Apply a maximum filter to an n-dimensional array
 ///
@@ -23,7 +23,7 @@ pub fn maximum_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -76,7 +76,7 @@ pub fn minimum_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -128,7 +128,7 @@ pub fn percentile_filter<T, D>(
     percentile: f64,
     size: &[usize],
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -204,7 +204,7 @@ pub fn rank_filter<T, D>(
     rank: usize,
     size: &[usize],
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -308,7 +308,7 @@ fn rank_filter_1d<T>(
     rank: usize,
     size: usize,
     mode: &BorderMode,
-) -> Result<Array1<T>>
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + Zero + 'static,
 {
@@ -450,7 +450,7 @@ fn swap<T: PartialOrd>(arr: &mut [T], i: usize, j: usize) {
 }
 
 /// Optimization for f32 arrays with window size 3
-fn optimize_for_f32_size3<T>(input: &Array1<T>, rank: usize, mode: &BorderMode) -> Result<Array1<T>>
+fn optimize_for_f32_size3<T>(input: &Array1<T>, rank: usize, mode: &BorderMode) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
 {
@@ -628,7 +628,7 @@ where
 }
 
 /// Optimization for f32 arrays with window size 5
-fn optimize_for_f32_size5<T>(input: &Array1<T>, rank: usize, mode: &BorderMode) -> Result<Array1<T>>
+fn optimize_for_f32_size5<T>(input: &Array1<T>, rank: usize, mode: &BorderMode) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
 {
@@ -696,7 +696,7 @@ fn rank_filter_2d<T>(
     rank: usize,
     size: &[usize],
     mode: &BorderMode,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
 {
@@ -797,7 +797,7 @@ fn rank_filter_nd<T>(
     rank: usize,
     size: &[usize],
     mode: &BorderMode,
-) -> Result<Array<T, ndarray::IxDyn>>
+) -> NdimageResult<Array<T, ndarray::IxDyn>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
 {

@@ -2,7 +2,7 @@
 //!
 //! This module provides functions for thresholding images to create binary masks or segmentations.
 
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 use ndarray::{Array, Dimension, Ix2};
 use num_traits::{Float, NumAssign};
 
@@ -31,7 +31,7 @@ use num_traits::{Float, NumAssign};
 ///
 /// let mask = threshold_binary(&image, 0.5).unwrap();
 /// ```
-pub fn threshold_binary<T, D>(image: &Array<T, D>, threshold: T) -> Result<Array<T, D>>
+pub fn threshold_binary<T, D>(image: &Array<T, D>, threshold: T) -> NdimageResult<Array<T, D>>
 where
     T: Float + NumAssign + std::fmt::Debug,
     D: Dimension,
@@ -71,7 +71,7 @@ where
 /// let (binary, threshold) = otsu_threshold(&image, 256).unwrap();
 /// ```
 /// ```
-pub fn otsu_threshold<T, D>(image: &Array<T, D>, bins: usize) -> Result<(Array<T, D>, T)>
+pub fn otsu_threshold<T, D>(image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
 where
     T: Float + NumAssign + std::fmt::Debug,
     D: Dimension,
@@ -205,7 +205,7 @@ pub fn adaptive_threshold<T>(
     block_size: usize,
     method: AdaptiveMethod,
     c: T,
-) -> Result<Array<bool, Ix2>>
+) -> NdimageResult<Array<bool, Ix2>>
 where
     T: Float + NumAssign + std::fmt::Debug,
 {

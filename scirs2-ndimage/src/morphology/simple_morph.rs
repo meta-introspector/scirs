@@ -68,7 +68,7 @@ pub fn grey_erosion_2d<T>(
     iterations: Option<usize>,
     border_value: Option<T>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
@@ -176,7 +176,7 @@ pub fn grey_dilation_2d<T>(
     iterations: Option<usize>,
     border_value: Option<T>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
@@ -285,7 +285,7 @@ pub fn grey_opening_2d<T>(
     iterations: Option<usize>,
     border_value: Option<T>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
@@ -319,7 +319,7 @@ pub fn grey_closing_2d<T>(
     iterations: Option<usize>,
     border_value: Option<T>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
@@ -353,7 +353,7 @@ pub fn morphological_gradient_2d<T>(
     iterations: Option<usize>,
     border_value: Option<T>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
@@ -406,7 +406,7 @@ pub fn white_tophat_2d<T>(
     iterations: Option<usize>,
     border_value: Option<T>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
@@ -448,7 +448,7 @@ pub fn black_tophat_2d<T>(
     iterations: Option<usize>,
     border_value: Option<T>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
@@ -488,7 +488,7 @@ pub fn binary_erosion_2d(
     iterations: Option<usize>,
     border_value: Option<bool>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<bool>> {
+) -> NdimageResult<Array2<bool>> {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
     let border_val = border_value.unwrap_or(false);
@@ -582,7 +582,7 @@ pub fn binary_dilation_2d(
     iterations: Option<usize>,
     border_value: Option<bool>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<bool>> {
+) -> NdimageResult<Array2<bool>> {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
     let border_val = border_value.unwrap_or(false);
@@ -679,7 +679,7 @@ pub fn binary_opening_2d(
     iterations: Option<usize>,
     border_value: Option<bool>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<bool>> {
+) -> NdimageResult<Array2<bool>> {
     // Apply erosion first
     let eroded = binary_erosion_2d(input, structure, iterations, border_value, origin)?;
 
@@ -708,7 +708,7 @@ pub fn binary_closing_2d(
     iterations: Option<usize>,
     border_value: Option<bool>,
     origin: Option<&[isize; 2]>,
-) -> Result<Array2<bool>> {
+) -> NdimageResult<Array2<bool>> {
     // Apply dilation first
     let dilated = binary_dilation_2d(input, structure, iterations, border_value, origin)?;
 

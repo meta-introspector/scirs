@@ -371,26 +371,34 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test has race conditions with other tests that use global config
     fn test_global_config() {
-        // This test modifies global state which can cause race conditions
-        // when running tests in parallel. Should be refactored to use
-        // thread-local config or run in isolation.
-        let original = get_config();
-        let mut new_config = Config::default();
-        new_config.set("test_value", ConfigValue::String("global".to_string()));
+        // Use a unique test key to avoid conflicts with other tests
+        let test_key = format!("test_global_config_{}", std::process::id());
 
-        set_global_config(new_config);
+        // Store original value if it exists
+        let original_value = GLOBAL_CONFIG.read().unwrap().values.get(&test_key).cloned();
 
-        let config = get_config();
-        assert_eq!(config.get_string("test_value").unwrap(), "global");
+        // Set test value using a scoped lock to minimize interference
+        {
+            let mut global_config = GLOBAL_CONFIG.write().unwrap();
+            global_config.set(&test_key, ConfigValue::String("test_value".to_string()));
+        }
 
-        // Restore original config
-        set_global_config(original);
+        // Verify the value was set correctly
+        {
+            let config = get_config();
+            assert_eq!(config.get_string(&test_key).unwrap(), "test_value");
+        }
 
-        // Clean up by removing the test key
-        let mut final_config = GLOBAL_CONFIG.write().unwrap();
-        final_config.values.remove("test_value");
+        // Clean up by restoring original state
+        {
+            let mut global_config = GLOBAL_CONFIG.write().unwrap();
+            if let Some(original) = original_value {
+                global_config.set(&test_key, original);
+            } else {
+                global_config.values.remove(&test_key);
+            }
+        }
     }
 
     #[test]

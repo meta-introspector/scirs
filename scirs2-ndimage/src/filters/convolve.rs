@@ -5,7 +5,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::{convolve_optimized as convolve_opt, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Apply a uniform filter (box filter or moving average) to an n-dimensional array
 ///
@@ -22,7 +22,7 @@ pub fn uniform_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
     D: Dimension,
@@ -72,7 +72,7 @@ pub fn convolve<T, D, E>(
     input: &Array<T, D>,
     weights: &Array<T, E>,
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,
@@ -139,7 +139,7 @@ fn convolve_2d<T>(
     input: &Array<T, ndarray::Ix2>,
     weights: &Array<T, ndarray::Ix2>,
     mode: &BorderMode,
-) -> Result<Array<T, ndarray::Ix2>>
+) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -209,7 +209,7 @@ pub fn convolve_fast<T, D, E>(
     weights: &Array<T, E>,
     mode: Option<BorderMode>,
     use_optimization: bool,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone + Send + Sync,
     D: Dimension,
@@ -231,7 +231,7 @@ pub fn correlate1d<T, D>(
     axis: usize,
     mode: Option<BorderMode>,
     cval: Option<T>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,

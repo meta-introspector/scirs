@@ -56,4 +56,4 @@ pub enum NdimageError {
 // The #[from] attribute in the CoreError variant handles the conversion automatically
 
 /// Result type for ndimage operations
-pub type Result<T> = std::result::Result<T, NdimageError>;
+pub type NdimageResult<T> = std::result::Result<T, NdimageError>;

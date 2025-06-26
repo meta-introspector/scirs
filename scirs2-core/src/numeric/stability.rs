@@ -391,7 +391,7 @@ pub fn reduce_angle<T: Float>(angle: T) -> T {
 
     // Use remainder to get value in (-2π, 2π)
     let mut reduced = angle % two_pi;
-    
+
     // Normalize to [0, 2π)
     if reduced < T::zero() {
         reduced = reduced + two_pi;
@@ -720,7 +720,7 @@ mod tests {
         }
 
         let kahan_sum = kahan.sum();
-        
+
         // Expected result should be 1.0 + 4e-8
         let expected = 1.0 + 4e-8;
         assert_relative_eq!(kahan_sum, expected, epsilon = 1e-15);
@@ -733,7 +733,7 @@ mod tests {
             kahan2.add(v);
         }
         assert_relative_eq!(kahan2.sum(), 1.0, epsilon = 1e-15);
-        
+
         // Test accumulation of many small values
         let mut kahan3 = KahanSum::new();
         for _ in 0..10000 {

@@ -662,7 +662,7 @@ fn gradient_edges_impl(
 /// # Returns
 ///
 /// * Result containing the magnitude of edges
-pub fn sobel_edges(image: &ArrayD<f32>) -> Result<ArrayD<f32>> {
+pub fn sobel_edges(image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
     edge_detector_simple(image, Some(GradientMethod::Sobel), None)
 }
 
@@ -705,7 +705,7 @@ pub fn edge_detector_simple(
     image: &ArrayD<f32>,
     method: Option<GradientMethod>,
     mode: Option<BorderMode>,
-) -> Result<ArrayD<f32>> {
+) -> NdimageResult<ArrayD<f32>> {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
 
     // Map the gradient method to the corresponding string parameter for gradient_magnitude

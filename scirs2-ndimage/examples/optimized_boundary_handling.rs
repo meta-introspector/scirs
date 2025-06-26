@@ -66,13 +66,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .fold(0.0, f64::max);
 
         println!("  Max difference: {:.6e}", diff_max);
-        
+
         // Check a few boundary values
         println!("  Boundary values (top-left corner):");
-        println!("    Standard: [{:.4}, {:.4}, {:.4}]", 
-            result_standard[[0, 0]], result_standard[[0, 1]], result_standard[[0, 2]]);
-        println!("    Optimized: [{:.4}, {:.4}, {:.4}]", 
-            result_optimized[[0, 0]], result_optimized[[0, 1]], result_optimized[[0, 2]]);
+        println!(
+            "    Standard: [{:.4}, {:.4}, {:.4}]",
+            result_standard[[0, 0]],
+            result_standard[[0, 1]],
+            result_standard[[0, 2]]
+        );
+        println!(
+            "    Optimized: [{:.4}, {:.4}, {:.4}]",
+            result_optimized[[0, 0]],
+            result_optimized[[0, 1]],
+            result_optimized[[0, 2]]
+        );
         println!();
     }
 
@@ -83,10 +91,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a larger test array
     let large_size = 1000;
     let large_image: Array2<f64> = Array2::ones((large_size, large_size));
-    
+
     println!("Large image size: {}x{}", large_size, large_size);
-    println!("Memory for image: {:.2} MB", 
-        (large_size * large_size * 8) as f64 / 1_048_576.0);
+    println!(
+        "Memory for image: {:.2} MB",
+        (large_size * large_size * 8) as f64 / 1_048_576.0
+    );
 
     // Time the operations
     let start = Instant::now();
@@ -99,7 +109,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\nStandard (with padding): {:?}", time_standard);
     println!("Optimized (virtual boundaries): {:?}", time_optimized);
-    println!("Speedup: {:.2}x", time_standard.as_secs_f64() / time_optimized.as_secs_f64());
+    println!(
+        "Speedup: {:.2}x",
+        time_standard.as_secs_f64() / time_optimized.as_secs_f64()
+    );
 
     println!("\nThe optimized implementation avoids creating a padded copy of the array,");
     println!("saving memory and potentially improving performance for large arrays.");

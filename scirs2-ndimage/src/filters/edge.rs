@@ -5,7 +5,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use super::{convolve, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Apply a Sobel filter to calculate gradients in an n-dimensional array
 ///
@@ -42,7 +42,7 @@ pub fn sobel<T, D>(
     input: &Array<T, D>,
     axis: usize,
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,
@@ -136,7 +136,7 @@ pub fn laplace<T, D>(
     input: &Array<T, D>,
     mode: Option<BorderMode>,
     diagonal: Option<bool>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,
@@ -215,7 +215,7 @@ pub fn prewitt<T, D>(
     input: &Array<T, D>,
     axis: usize,
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,
@@ -311,7 +311,7 @@ pub fn roberts<T, D>(
     input: &Array<T, D>,
     mode: Option<BorderMode>,
     axis: Option<usize>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,
@@ -415,7 +415,7 @@ pub fn gradient_magnitude<T, D>(
     input: &Array<T, D>,
     mode: Option<BorderMode>,
     method: Option<&str>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,
@@ -494,7 +494,7 @@ where
 }
 
 // Helper function to apply Prewitt filter along y-axis (vertical gradient)
-fn prewitt_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn prewitt_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -515,7 +515,7 @@ where
 }
 
 // Helper function to apply Prewitt filter along x-axis (horizontal gradient)
-fn prewitt_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn prewitt_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -536,7 +536,7 @@ where
 }
 
 // Helper function to apply Sobel filter along y-axis (vertical gradient)
-fn sobel_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn sobel_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -557,7 +557,7 @@ where
 }
 
 // Helper function to apply Sobel filter along x-axis (horizontal gradient)
-fn sobel_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn sobel_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -578,7 +578,7 @@ where
 }
 
 // Helper function to apply Roberts Cross filter for the x-component
-fn roberts_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn roberts_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -594,7 +594,7 @@ where
 }
 
 // Helper function to apply Roberts Cross filter for the y-component
-fn roberts_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn roberts_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -610,7 +610,7 @@ where
 }
 
 // Helper function to apply 4-connected Laplace filter (for 2D arrays)
-fn laplace_2d_4connected<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn laplace_2d_4connected<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -630,7 +630,7 @@ where
 }
 
 // Helper function to apply 8-connected Laplace filter (for 2D arrays)
-fn laplace_2d_8connected<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn laplace_2d_8connected<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -1006,7 +1006,7 @@ pub fn scharr<T, D>(
     input: &Array<T, D>,
     axis: usize,
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,
@@ -1064,7 +1064,7 @@ where
 }
 
 // Helper function to apply Scharr filter along y-axis (vertical gradient)
-fn scharr_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn scharr_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -1085,7 +1085,7 @@ where
 }
 
 // Helper function to apply Scharr filter along x-axis (horizontal gradient)
-fn scharr_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> Result<Array<T, Ix2>>
+fn scharr_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -1106,7 +1106,7 @@ where
 }
 
 /// N-dimensional Sobel filter implementation
-fn sobel_nd<T, D>(input: &Array<T, D>, axis: usize, mode: &BorderMode) -> Result<Array<T, D>>
+fn sobel_nd<T, D>(input: &Array<T, D>, axis: usize, mode: &BorderMode) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,

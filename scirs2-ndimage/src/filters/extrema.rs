@@ -9,7 +9,7 @@ use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 // use scirs2_core::parallel;
 
 /// Apply a minimum filter to an n-dimensional array
@@ -46,7 +46,7 @@ pub fn minimum_filter<T, D>(
     size: &[usize],
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
     D: Dimension + 'static,
@@ -88,7 +88,7 @@ pub fn maximum_filter<T, D>(
     size: &[usize],
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
     D: Dimension + 'static,
@@ -110,7 +110,7 @@ fn extrema_filter<T, D>(
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
     filter_type: FilterType,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
     D: Dimension + 'static,
@@ -225,7 +225,7 @@ fn extrema_filter_1d<T>(
     mode: &BorderMode,
     origin: isize,
     filter_type: FilterType,
-) -> Result<Array1<T>>
+) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
 {
@@ -275,7 +275,7 @@ fn extrema_filter_2d<T>(
     mode: &BorderMode,
     origin: &[isize],
     filter_type: FilterType,
-) -> Result<Array2<T>>
+) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
 {
@@ -334,7 +334,7 @@ fn extrema_filter_nd<T, D>(
     mode: &BorderMode,
     origin: &[isize],
     filter_type: FilterType,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
     D: Dimension + 'static,

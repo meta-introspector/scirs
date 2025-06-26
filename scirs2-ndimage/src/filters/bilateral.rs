@@ -12,7 +12,7 @@ use std::fmt::{Debug, Display};
 use scirs2_core::simd::{simd_add_f32, simd_add_f64, simd_scalar_mul_f32, simd_scalar_mul_f64};
 
 use super::{pad_array, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 
 /// Apply a bilateral filter to preserve edges while smoothing
 ///
@@ -34,7 +34,7 @@ pub fn bilateral_filter<T, D>(
     sigma_spatial: T,
     sigma_color: T,
     mode: Option<BorderMode>,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + Debug + Clone + Send + Sync + Display + FromPrimitive,
     D: Dimension,
@@ -70,7 +70,7 @@ fn bilateral_filter_1d<T, D>(
     sigma_spatial: T,
     sigma_color: T,
     mode: &BorderMode,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + Debug + Clone + Display + FromPrimitive,
     D: Dimension,
@@ -143,7 +143,7 @@ fn bilateral_filter_2d<T, D>(
     sigma_spatial: T,
     sigma_color: T,
     mode: &BorderMode,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + Debug + Clone + Display + FromPrimitive,
     D: Dimension,
@@ -230,7 +230,7 @@ fn bilateral_filter_nd<T, D>(
     sigma_spatial: T,
     sigma_color: T,
     mode: &BorderMode,
-) -> Result<Array<T, D>>
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + Debug + Clone + Display + FromPrimitive,
     D: Dimension,
@@ -346,7 +346,7 @@ pub fn bilateral_filter_simd_f32<D>(
     sigma_spatial: f32,
     sigma_color: f32,
     mode: Option<BorderMode>,
-) -> Result<Array<f32, D>>
+) -> NdimageResult<Array<f32, D>>
 where
     D: Dimension,
 {
@@ -380,7 +380,7 @@ pub fn bilateral_filter_simd_f64<D>(
     sigma_spatial: f64,
     sigma_color: f64,
     mode: Option<BorderMode>,
-) -> Result<Array<f64, D>>
+) -> NdimageResult<Array<f64, D>>
 where
     D: Dimension,
 {
@@ -414,7 +414,7 @@ fn bilateral_filter_1d_simd_f32<D>(
     sigma_spatial: f32,
     sigma_color: f32,
     mode: &BorderMode,
-) -> Result<Array<f32, D>>
+) -> NdimageResult<Array<f32, D>>
 where
     D: Dimension,
 {
@@ -504,7 +504,7 @@ fn bilateral_filter_1d_simd_f64<D>(
     sigma_spatial: f64,
     sigma_color: f64,
     mode: &BorderMode,
-) -> Result<Array<f64, D>>
+) -> NdimageResult<Array<f64, D>>
 where
     D: Dimension,
 {
@@ -590,7 +590,7 @@ fn bilateral_filter_2d_simd_f32<D>(
     sigma_spatial: f32,
     sigma_color: f32,
     mode: &BorderMode,
-) -> Result<Array<f32, D>>
+) -> NdimageResult<Array<f32, D>>
 where
     D: Dimension,
 {
@@ -667,7 +667,7 @@ fn bilateral_filter_2d_simd_f64<D>(
     sigma_spatial: f64,
     sigma_color: f64,
     mode: &BorderMode,
-) -> Result<Array<f64, D>>
+) -> NdimageResult<Array<f64, D>>
 where
     D: Dimension,
 {

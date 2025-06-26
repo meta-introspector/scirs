@@ -293,15 +293,19 @@ pub mod gpu {
         #[cfg(feature = "gpu")]
         pub async fn new() -> SpecialResult<Self> {
             // Use scirs2_core::gpu for GPU operations
-            use scirs2_core::gpu::{GpuContext, GpuBackend};
-            
-            let context = GpuContext::new(GpuBackend::default())
-                .map_err(|e| SpecialError::ComputationError(format!("Failed to create GPU context: {}", e)))?;
-            
+            use scirs2_core::gpu::{GpuBackend, GpuContext};
+
+            let context = GpuContext::new(GpuBackend::default()).map_err(|e| {
+                SpecialError::ComputationError(format!("Failed to create GPU context: {}", e))
+            })?;
+
             // Register or get gamma kernel handle
-            let gamma_kernel = context.get_kernel("special_gamma")
-                .ok_or_else(|| SpecialError::ComputationError("Gamma kernel not registered in GPU context".to_string()))?;
-            
+            let gamma_kernel = context.get_kernel("special_gamma").ok_or_else(|| {
+                SpecialError::ComputationError(
+                    "Gamma kernel not registered in GPU context".to_string(),
+                )
+            })?;
+
             Ok(Self {
                 context: Some(context),
                 gamma_kernel: Some(gamma_kernel),
@@ -316,14 +320,14 @@ pub mod gpu {
         {
             // Use scirs2_core::gpu for GPU operations
             if let (Some(context), Some(kernel)) = (&self.context, &self.gamma_kernel) {
-                use scirs2_core::gpu::kernels::{KernelArgs, DataType};
-                
+                use scirs2_core::gpu::kernels::{DataType, KernelArgs};
+
                 // Prepare kernel arguments
                 let args = KernelArgs::new()
                     .with_input("input", input.as_slice().unwrap(), DataType::Float64)
                     .with_output("output", input.len(), DataType::Float64)
                     .with_workgroups((input.len() as u32).div_ceil(256), 1, 1);
-                
+
                 // Execute kernel
                 match context.execute_kernel(kernel, args) {
                     Ok(result) => {
@@ -332,9 +336,13 @@ pub mod gpu {
                             // Reconstruct array with original shape
                             Array::from_vec(output_data)
                                 .into_shape_with_order(input.dim())
-                                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))
+                                .map_err(|e| {
+                                    SpecialError::ComputationError(format!("Shape error: {}", e))
+                                })
                         } else {
-                            Err(SpecialError::ComputationError("Failed to get GPU output".to_string()))
+                            Err(SpecialError::ComputationError(
+                                "Failed to get GPU output".to_string(),
+                            ))
                         }
                     }
                     Err(e) => {
@@ -347,90 +355,6 @@ pub mod gpu {
                 // No GPU context available, use CPU
                 Ok(input.mapv(crate::gamma::gamma))
             }
-                contents: bytemuck::cast_slice(&data),
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
-            });
-
-            // Create output buffer
-            let output_buffer = self.device.create_buffer(&BufferDescriptor {
-                label: Some("Output Buffer"),
-                size: size as u64,
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_SRC,
-                mapped_at_creation: false,
-            });
-
-            // Create staging buffer for reading results
-            let staging_buffer = self.device.create_buffer(&BufferDescriptor {
-                label: Some("Staging Buffer"),
-                size: size as u64,
-                usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST,
-                mapped_at_creation: false,
-            });
-
-            // Create bind group
-            let bind_group_layout = self.pipeline.get_bind_group_layout(0);
-            let bind_group = self.device.create_bind_group(&BindGroupDescriptor {
-                label: Some("Compute Bind Group"),
-                layout: &bind_group_layout,
-                entries: &[
-                    BindGroupEntry {
-                        binding: 0,
-                        resource: input_buffer.as_entire_binding(),
-                    },
-                    BindGroupEntry {
-                        binding: 1,
-                        resource: output_buffer.as_entire_binding(),
-                    },
-                ],
-            });
-
-            // Dispatch compute shader
-            let mut encoder = self
-                .device
-                .create_command_encoder(&CommandEncoderDescriptor {
-                    label: Some("Compute Encoder"),
-                });
-
-            {
-                let mut compute_pass = encoder.begin_compute_pass(&ComputePassDescriptor {
-                    label: Some("Compute Pass"),
-                    timestamp_writes: None,
-                });
-                compute_pass.set_pipeline(&self.pipeline);
-                compute_pass.set_bind_group(0, &bind_group, &[]);
-                compute_pass.dispatch_workgroups((data.len() as u32).div_ceil(256), 1, 1);
-            }
-
-            encoder.copy_buffer_to_buffer(&output_buffer, 0, &staging_buffer, 0, size as u64);
-            self.queue.submit(Some(encoder.finish()));
-
-            // Read results
-            let buffer_slice = staging_buffer.slice(..);
-            let (sender, receiver) = futures::channel::oneshot::channel();
-            buffer_slice.map_async(MapMode::Read, move |result| {
-                sender.send(result).unwrap();
-            });
-
-            self.device.poll(Maintain::Wait);
-            receiver.await.unwrap().map_err(|e| {
-                SpecialError::ComputationError(format!("GPU buffer error: {:?}", e))
-            })?;
-
-            let buffer_view = buffer_slice.get_mapped_range();
-            let result_data: &[f32] = bytemuck::cast_slice(&buffer_view);
-            let result_f64: Vec<f64> = result_data.iter().map(|&x| x as f64).collect();
-
-            drop(buffer_view);
-            staging_buffer.unmap();
-
-            // Reconstruct array with original shape
-            let result_array = Array::from_vec(result_f64)
-                .into_shape_with_order(input.dim())
-                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?;
-            Ok(result_array)
-            */
-            // Fallback to CPU implementation until core GPU abstractions are used
-            Ok(input.mapv(crate::gamma::gamma))
         }
 
         /// Execute gamma function on CPU as fallback

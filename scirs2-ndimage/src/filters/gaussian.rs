@@ -3,7 +3,7 @@
 use ndarray::{Array, Array1, Array2, Dimension, Ix2, IxDyn};
 
 use super::{pad_array, BorderMode};
-use crate::error::{NdimageError, Result};
+use crate::error::{NdimageError, NdimageResult};
 use scirs2_core::{parallel_ops, CoreError};
 
 /// Apply a gaussian filter to an n-dimensional array of f64 values
@@ -23,7 +23,7 @@ pub fn gaussian_filter<D>(
     sigma: f64,
     mode: Option<BorderMode>,
     truncate: Option<f64>,
-) -> Result<Array<f64, D>>
+) -> NdimageResult<Array<f64, D>>
 where
     D: Dimension + 'static,
 {
@@ -82,7 +82,7 @@ pub fn gaussian_filter1d_f64<D>(
     sigma: f64,
     mode: Option<BorderMode>,
     truncate: Option<f64>,
-) -> Result<Array<f64, D>>
+) -> NdimageResult<Array<f64, D>>
 where
     D: Dimension + 'static,
 {
@@ -126,7 +126,7 @@ where
 
 /// Generate a 1D Gaussian kernel for f64 filtering
 /// This function uses manual caching to avoid Result Clone issues
-pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> Result<Array1<f64>> {
+pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> NdimageResult<Array1<f64>> {
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
 
@@ -174,7 +174,7 @@ fn apply_kernel1d_1d_f64(
     input: &Array1<f64>,
     kernel: &Array1<f64>,
     mode: &BorderMode,
-) -> Result<Array1<f64>> {
+) -> NdimageResult<Array1<f64>> {
     let input_len = input.len();
     let kernel_len = kernel.len();
     let radius = kernel_len / 2;
@@ -208,7 +208,7 @@ fn apply_gaussian_along_axis_f64<D>(
     sigma: f64,
     mode: &BorderMode,
     truncate: f64,
-) -> Result<Array<f64, D>>
+) -> NdimageResult<Array<f64, D>>
 where
     D: Dimension + 'static,
 {
@@ -292,7 +292,7 @@ fn apply_gaussian_along_axis_nd_f64<D>(
     sigma: f64,
     mode: &BorderMode,
     truncate: f64,
-) -> Result<Array<f64, D>>
+) -> NdimageResult<Array<f64, D>>
 where
     D: Dimension + 'static,
 {
@@ -520,7 +520,7 @@ pub fn gaussian_filter_f32<D>(
     sigma: f32,
     mode: Option<BorderMode>,
     truncate: Option<f32>,
-) -> Result<Array<f32, D>>
+) -> NdimageResult<Array<f32, D>>
 where
     D: Dimension + 'static,
 {
@@ -775,7 +775,7 @@ where
 /// Generate a 1D Gaussian kernel for f32 filtering
 /// This function uses manual caching to avoid Result Clone issues
 #[allow(dead_code)]
-pub fn gaussian_kernel1d_f32(sigma: f32, truncate: f32) -> Result<Array1<f32>> {
+pub fn gaussian_kernel1d_f32(sigma: f32, truncate: f32) -> NdimageResult<Array1<f32>> {
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
 
@@ -827,7 +827,7 @@ pub fn gaussian_filter_f64<D>(
     sigma: f64,
     mode: Option<BorderMode>,
     truncate: Option<f64>,
-) -> Result<Array<f64, D>>
+) -> NdimageResult<Array<f64, D>>
 where
     D: Dimension + 'static,
 {

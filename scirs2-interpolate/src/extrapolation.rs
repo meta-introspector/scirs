@@ -1004,17 +1004,17 @@ mod tests {
         assert!(result.is_finite());
         assert!(result > 0.0); // Should be positive for exponential function
         assert!(result < lower_value); // Should decay below the boundary value
-        
+
         // Test upper extrapolation
         let result = extrapolator.extrapolate(2.0).unwrap();
         assert!(result.is_finite());
         assert!(result > 0.0); // Should be positive for exponential function
         assert!(result > upper_value); // Should grow above the boundary value
-        
+
         // Verify the extrapolation approaches the boundary values as we approach from outside
         let result_near_lower = extrapolator.extrapolate(lower_bound - 1e-6).unwrap();
         assert_abs_diff_eq!(result_near_lower, lower_value, epsilon = 1e-3);
-        
+
         let result_near_upper = extrapolator.extrapolate(upper_bound + 1e-6).unwrap();
         assert_abs_diff_eq!(result_near_upper, upper_value, epsilon = 1e-3)
     }

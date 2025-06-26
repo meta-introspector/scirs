@@ -20,7 +20,9 @@
 //! There are three main ways to process chunks:
 //!
 //! 1. Using `process_chunks` for reading/processing chunks:
-//!    ```
+//!    ```no_run
+//!    # use scirs2_core::memory_efficient::{MemoryMappedArray, MemoryMappedChunks, ChunkingStrategy};
+//!    # let mmap: MemoryMappedArray<f64> = unimplemented!();
 //!    // Process chunks of a large array and collect results
 //!    let results = mmap.process_chunks(
 //!        ChunkingStrategy::Fixed(1000),
@@ -32,7 +34,9 @@
 //!    ```
 //!
 //! 2. Using `process_chunks_mut` for mutating chunks:
-//!    ```
+//!    ```no_run
+//!    # use scirs2_core::memory_efficient::{MemoryMappedArray, MemoryMappedChunks, ChunkingStrategy};
+//!    # let mut mmap: MemoryMappedArray<f64> = unimplemented!();
 //!    // Modify each chunk in-place
 //!    mmap.process_chunks_mut(
 //!        ChunkingStrategy::NumChunks(10),
@@ -46,7 +50,9 @@
 //!    ```
 //!
 //! 3. Using the `chunks` iterator for element-by-element processing:
-//!    ```
+//!    ```no_run
+//!    # use scirs2_core::memory_efficient::{MemoryMappedArray, MemoryMappedChunkIter, ChunkingStrategy};
+//!    # let mmap: MemoryMappedArray<f64> = unimplemented!();
 //!    // Process chunks using iterator
 //!    for chunk in mmap.chunks(ChunkingStrategy::Auto) {
 //!        // Each chunk is an Array1 of the appropriate type
@@ -55,7 +61,11 @@
 //!    ```
 //!
 //! 4. If you have the `parallel` feature enabled, you can also use parallel processing:
-//!    ```
+//!    ```no_run
+//!    # #[cfg(feature = "parallel")]
+//!    # {
+//!    # use scirs2_core::memory_efficient::{MemoryMappedChunks, ChunkingStrategy};
+//!    # let mmap: MemoryMappedChunks<f64> = unimplemented!();
 //!    // Process chunks in parallel
 //!    let results = mmap.process_chunks_parallel(
 //!        ChunkingStrategy::Fixed(1000),
@@ -63,6 +73,7 @@
 //!            chunk_data.iter().sum::<f64>()
 //!        }
 //!    );
+//!    # }
 //!    ```
 //!
 //! ## Chunking Strategies

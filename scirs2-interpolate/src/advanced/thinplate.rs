@@ -381,12 +381,16 @@ mod tests {
         let result = tps.evaluate(&points.view());
         assert!(result.is_ok());
         let interpolated = result.unwrap();
-        
+
         // Check exact fit at the data points
         for i in 0..values.len() {
-            assert!((interpolated[i] - values[i]).abs() < 1e-10, 
-                    "ThinPlateSpline should fit exactly at point {}: {} vs {}", 
-                    i, interpolated[i], values[i]);
+            assert!(
+                (interpolated[i] - values[i]).abs() < 1e-10,
+                "ThinPlateSpline should fit exactly at point {}: {} vs {}",
+                i,
+                interpolated[i],
+                values[i]
+            );
         }
     }
 
@@ -407,19 +411,23 @@ mod tests {
 
         assert!(tps_exact.is_ok());
         assert!(tps_smooth.is_ok());
-        
+
         let tps_exact = tps_exact.unwrap();
         let tps_smooth = tps_smooth.unwrap();
-        
+
         // Test evaluation at original points
         let _result_exact = tps_exact.evaluate(&points.view()).unwrap();
         let result_smooth = tps_smooth.evaluate(&points.view()).unwrap();
-        
+
         // With smoothing, the fit shouldn't be exact, but should still be reasonable
         for i in 0..values.len() {
-            assert!((result_smooth[i] - values[i]).abs() < 0.5, 
-                    "Smoothed TPS value at point {} should be close to original: {} vs {}", 
-                    i, result_smooth[i], values[i]);
+            assert!(
+                (result_smooth[i] - values[i]).abs() < 0.5,
+                "Smoothed TPS value at point {} should be close to original: {} vs {}",
+                i,
+                result_smooth[i],
+                values[i]
+            );
         }
     }
 }

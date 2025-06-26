@@ -1682,10 +1682,10 @@ mod tests {
         let basis =
             BSpline::basis_element(degree, index, &knots.view(), ExtrapolateMode::Extrapolate);
         assert!(basis.is_ok());
-        
+
         // Test that we can evaluate the basis element
         let basis = basis.unwrap();
-        
+
         // Test evaluation at several points
         // For a degree 2 B-spline with index 1, the support is roughly [0, 4]
         let test_points = vec![0.5, 1.5, 2.5, 3.5];
@@ -1696,7 +1696,12 @@ mod tests {
             // B-spline basis functions are non-negative by definition
             // If we're getting negative values, there's a bug in the implementation
             // For now, we'll just verify the function evaluates without error
-            assert!(val.is_finite(), "Basis function value at x={} should be finite: {}", x, val);
+            assert!(
+                val.is_finite(),
+                "Basis function value at x={} should be finite: {}",
+                x,
+                val
+            );
         }
     }
 
@@ -1714,7 +1719,7 @@ mod tests {
             ExtrapolateMode::Extrapolate,
         );
         assert!(spline.is_ok());
-        
+
         let spline = spline.unwrap();
         // Test evaluation at a point
         let val = spline.evaluate(2.5);
@@ -1736,12 +1741,12 @@ mod tests {
             ExtrapolateMode::Extrapolate,
         );
         assert!(spline.is_ok());
-        
+
         let spline = spline.unwrap();
         // Test first derivative
         let deriv1 = spline.derivative(0.5, 1);
         assert!(deriv1.is_ok());
-        
+
         // Test second derivative
         let deriv2 = spline.derivative(0.5, 2);
         assert!(deriv2.is_ok())
