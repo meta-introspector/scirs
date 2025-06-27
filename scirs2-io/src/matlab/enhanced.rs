@@ -708,7 +708,7 @@ impl MatV73Sparse {
     pub fn write_sparse<P: AsRef<Path>>(
         path: P,
         name: &str,
-        data: &crate::sparse::SparseArray,
+        data: &crate::sparse::SparseMatrix,
     ) -> Result<()> {
         let mut file = HDF5File::create(path)?;
         
@@ -727,11 +727,11 @@ impl MatV73Sparse {
         let (row_indices, col_ptrs, values) = data.to_csc();
         
         // Write components
-        let row_array = ArrayD::from_shape_vec(IxDyn(&[row_indices.len()]), row_indices)
+        let row_array = ArrayD::from_shape_vec(vec![row_indices.len()], row_indices)
             .map_err(|e| IoError::Other(e.to_string()))?;
-        let col_array = ArrayD::from_shape_vec(IxDyn(&[col_ptrs.len()]), col_ptrs)
+        let col_array = ArrayD::from_shape_vec(vec![col_ptrs.len()], col_ptrs)
             .map_err(|e| IoError::Other(e.to_string()))?;
-        let data_array = ArrayD::from_shape_vec(IxDyn(&[values.len()]), values)
+        let data_array = ArrayD::from_shape_vec(vec![values.len()], values)
             .map_err(|e| IoError::Other(e.to_string()))?;
         
         file.create_dataset_from_array(&row_path, &row_array, None)?;
@@ -747,7 +747,7 @@ impl MatV73Sparse {
     pub fn read_sparse<P: AsRef<Path>>(
         path: P,
         name: &str,
-    ) -> Result<crate::sparse::SparseArray> {
+    ) -> Result<crate::sparse::SparseMatrix> {
         let file = HDF5File::open(path, FileMode::ReadOnly)?;
         
         // Read sparse matrix metadata
@@ -771,7 +771,7 @@ impl MatV73Sparse {
         let col_vec: Vec<usize> = col_ptrs.iter().map(|&x| x as usize).collect();
         let val_vec: Vec<f64> = values.iter().cloned().collect();
         
-        crate::sparse::SparseArray::from_csc(
+        crate::sparse::SparseMatrix::from_csc(
             row_vec,
             col_vec,
             val_vec,

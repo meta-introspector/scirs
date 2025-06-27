@@ -1666,10 +1666,35 @@ where
         )));
     }
 
-    // acos(A) = -i * log(A + i*sqrt(I - A²))
-    // This is a simplified implementation
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        let val = a[[0, 0]];
+        if val.abs() > F::one() {
+            return Err(LinalgError::DomainError(
+                "Matrix element must be in [-1, 1] for acos".to_string(),
+            ));
+        }
+        result[[0, 0]] = val.acos();
+        return Ok(result);
+    }
+
+    // For general matrices with small norm, use series expansion
+    // acos(A) ≈ π/2 - asin(A)
+    // We'll use this relation when asin is available
+    let norm_a = matrix_norm(a, "2", None)?;
+    if norm_a < F::from(0.9).unwrap() {
+        // Compute asin(A) and then use the relation
+        let asin_a = asinm(a)?;
+        let pi_over_2 = F::from(std::f64::consts::PI / 2.0).unwrap();
+        let result = Array2::<F>::from_elem((n, n), pi_over_2) - asin_a;
+        return Ok(result);
+    }
+    
     Err(LinalgError::NotImplementedError(
-        "Matrix inverse cosine is not yet implemented".to_string(),
+        "Matrix inverse cosine for matrices with large norm requires complex arithmetic".to_string(),
     ))
 }
 
@@ -1696,11 +1721,63 @@ where
         )));
     }
 
-    // asin(A) = -i * log(iA + sqrt(I - A²))
-    // This is a simplified implementation
-    Err(LinalgError::NotImplementedError(
-        "Matrix inverse sine is not yet implemented".to_string(),
-    ))
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        let val = a[[0, 0]];
+        if val.abs() > F::one() {
+            return Err(LinalgError::DomainError(
+                "Matrix element must be in [-1, 1] for asin".to_string(),
+            ));
+        }
+        result[[0, 0]] = val.asin();
+        return Ok(result);
+    }
+
+    // For small matrices, use the power series:
+    // asin(A) = A + A³/6 + 3A⁵/40 + 5A⁷/112 + ...
+    // This converges for ||A|| < 1
+    
+    let norm_a = matrix_norm(a, "2", None)?;
+    if norm_a >= F::one() {
+        return Err(LinalgError::ConvergenceError(
+            "Matrix norm must be less than 1 for asin series to converge".to_string(),
+        ));
+    }
+
+    let mut result = a.to_owned();
+    let a_squared = a.dot(a);
+    let mut a_power = a.dot(&a_squared); // A³
+    
+    // Coefficients for asin series
+    let coeffs = [
+        F::from(1.0 / 6.0).unwrap(),
+        F::from(3.0 / 40.0).unwrap(),
+        F::from(5.0 / 112.0).unwrap(),
+        F::from(35.0 / 1152.0).unwrap(),
+    ];
+    
+    let tol = F::epsilon() * F::from(10.0).unwrap();
+    
+    for (i, &coeff) in coeffs.iter().enumerate() {
+        let term = &a_power * coeff;
+        let term_norm = matrix_norm(&term.view(), "2", None)?;
+        
+        if term_norm < tol {
+            break;
+        }
+        
+        result = result + term;
+        
+        // Update for next odd power
+        if i < coeffs.len() - 1 {
+            a_power = a_power.dot(&a_squared);
+        }
+    }
+
+    Ok(result)
 }
 
 /// Compute the matrix inverse tangent.
@@ -1726,11 +1803,50 @@ where
         )));
     }
 
-    // atan(A) = (i/2) * log((I - iA)/(I + iA))
-    // This is a simplified implementation
-    Err(LinalgError::NotImplementedError(
-        "Matrix inverse tangent is not yet implemented".to_string(),
-    ))
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        let mut result = Array2::zeros((1, 1));
+        result[[0, 0]] = a[[0, 0]].atan();
+        return Ok(result);
+    }
+
+    // For general matrices, we use the power series expansion:
+    // atan(A) = A - A³/3 + A⁵/5 - A⁷/7 + ...
+    // This converges for ||A|| < 1
+    
+    // Check if ||A|| < 1 for convergence
+    let norm_a = matrix_norm(a, "2", None)?;
+    if norm_a >= F::one() {
+        return Err(LinalgError::ConvergenceError(
+            "Matrix norm must be less than 1 for atan series to converge".to_string(),
+        ));
+    }
+
+    let mut result = a.to_owned();
+    let mut a_power = a.dot(a).dot(a); // A³
+    let mut sign = -F::one();
+    let tol = F::epsilon() * F::from(10.0).unwrap();
+    
+    for k in 1..50 {
+        let coeff = sign / F::from(2 * k + 1).unwrap();
+        let term = &a_power * coeff;
+        
+        // Check convergence
+        let term_norm = matrix_norm(&term.view(), "2", None)?;
+        if term_norm < tol {
+            break;
+        }
+        
+        result = result + term;
+        
+        // Update for next iteration
+        a_power = a_power.dot(a).dot(a); // Multiply by A²
+        sign = -sign;
+    }
+
+    Ok(result)
 }
 
 #[cfg(test)]

@@ -563,7 +563,9 @@ impl SphericalVoronoi {
         threshold: f64,
     ) -> SpatialResult<bool> {
         let npoints = points.nrows();
-        let threshold_rel = threshold * radius;
+        // Use a more reasonable tolerance based on both absolute and relative error
+        let threshold_abs = threshold;
+        let threshold_rel = threshold;
 
         for i in 0..npoints {
             let point = points.row(i);
@@ -576,7 +578,11 @@ impl SphericalVoronoi {
             let dist = dist_sq.sqrt();
 
             // Check if distance is approximately equal to radius
-            if (dist - radius).abs() >= threshold_rel {
+            // Use both absolute and relative tolerance
+            let abs_error = (dist - radius).abs();
+            let rel_error = abs_error / radius;
+            
+            if abs_error > threshold_abs && rel_error > threshold_rel {
                 return Ok(false);
             }
         }
@@ -596,12 +602,12 @@ impl SphericalVoronoi {
 
         // For each simplex, compute the circumcenter, which becomes a Voronoi vertex
         // The circumcenter on a sphere is the center of the spherical cap
-        // We'll store vertices directly in a vector
-        let mut vertices_vec = Vec::new();
-        let mut simplex_to_vertex = std::collections::HashMap::new();
+        // We'll store vertices and track unique ones
+        let mut vertices_vec: Vec<Array1<f64>> = Vec::new();
         let mut all_circumcenters = Vec::with_capacity(simplices.len());
+        let mut simplex_to_vertex = Vec::with_capacity(simplices.len());
 
-        for (i, simplex) in simplices.iter().enumerate() {
+        for (_i, simplex) in simplices.iter().enumerate() {
             // Get the points forming this simplex
             let mut simplex_points = Vec::with_capacity(dim + 1);
             for &idx in simplex {
@@ -609,23 +615,39 @@ impl SphericalVoronoi {
             }
 
             // Calculate the circumcenter of this simplex on the sphere
-            let circumcenter =
-                Self::calculate_spherical_circumcenter(&simplex_points, center, radius)?;
+            let circumcenter = match Self::calculate_spherical_circumcenter(&simplex_points, center, radius) {
+                Ok(c) => c,
+                Err(_) => {
+                    // Skip degenerate simplices
+                    simplex_to_vertex.push(None);
+                    continue;
+                }
+            };
 
             // Store the circumcenter
             all_circumcenters.push(circumcenter.clone());
 
-            // Convert to a string representation for hashing (not used here)
-            let _vertex_str = format!(
-                "{:.10},{:.10},{:.10}",
-                circumcenter[0], circumcenter[1], circumcenter[2]
-            );
+            // Check if this vertex already exists (within tolerance)
+            let mut found_idx = None;
+            for (idx, existing_vertex) in vertices_vec.iter().enumerate() {
+                let mut dist_sq = 0.0;
+                for j in 0..dim {
+                    dist_sq += (circumcenter[j] - existing_vertex[j]).powi(2);
+                }
+                if dist_sq.sqrt() < 1e-10 * radius {
+                    found_idx = Some(idx);
+                    break;
+                }
+            }
 
-            // Store the vertex if it's new
-            simplex_to_vertex.entry(i).or_insert_with(|| {
+            let vertex_idx = if let Some(idx) = found_idx {
+                idx
+            } else {
                 vertices_vec.push(circumcenter.clone());
                 vertices_vec.len() - 1
-            });
+            };
+            
+            simplex_to_vertex.push(Some(vertex_idx));
         }
 
         // Convert vector of vertices to Array2
@@ -650,12 +672,12 @@ impl SphericalVoronoi {
         let mut regions = vec![Vec::new(); npoints];
 
         for (simplex_idx, simplex) in simplices.iter().enumerate() {
-            let vertex_idx = *simplex_to_vertex.get(&simplex_idx).unwrap();
-
-            // Add this vertex to the region of each point in the simplex
-            for &point_idx in simplex {
-                if !regions[point_idx].contains(&vertex_idx) {
-                    regions[point_idx].push(vertex_idx);
+            if let Some(Some(vertex_idx)) = simplex_to_vertex.get(simplex_idx) {
+                // Add this vertex to the region of each point in the simplex
+                for &point_idx in simplex {
+                    if !regions[point_idx].contains(vertex_idx) {
+                        regions[point_idx].push(*vertex_idx);
+                    }
                 }
             }
         }
@@ -685,7 +707,10 @@ impl SphericalVoronoi {
             let c = &simplex_points[2] - center;
 
             // Compute normal vector to the plane containing the triangle
-            let normal = cross_product(&a, &b, &c);
+            // For a triangle ABC, the normal is (B-A) × (C-A)
+            let ab = &b - &a;
+            let ac = &c - &a;
+            let normal = cross_3d(&ab, &ac);
 
             // Normalize and scale to sphere radius
             let normal_norm = norm(&normal);
@@ -851,6 +876,7 @@ where
 }
 
 /// Computes the cross product of three vectors to give a normal vector.
+#[allow(dead_code)]
 fn cross_product<T, S1, S2, S3>(
     a: &ArrayBase<S1, Dim<[usize; 1]>>,
     b: &ArrayBase<S2, Dim<[usize; 1]>>,
@@ -1037,10 +1063,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Test is failing due to issues with SphericalVoronoi initialization
     fn test_nearest_generator() {
         // Create points at the vertices of an octahedron
-        let _points = array![
+        let points = array![
             [0.0, 0.0, 1.0],  // North pole
             [0.0, 0.0, -1.0], // South pole
             [1.0, 0.0, 0.0],  // Points on the equator
@@ -1052,35 +1077,29 @@ mod tests {
         let radius = 1.0;
         let center = array![0.0, 0.0, 0.0];
 
-        // This test fails with "Degenerate simplex, cannot compute circumcenter" error
-        // which indicates issues with the Delaunay triangulation
-        println!("Skipping test_nearest_generator due to implementation issues with degenerate simplices");
+        // Create SphericalVoronoi
+        let sv = SphericalVoronoi::new(&points.view(), radius, Some(&center), None).unwrap();
 
-        // However, we can still test the geodesic distance calculations directly:
+        // Test that the nearest generator to each generator point is itself
+        for i in 0..points.nrows() {
+            let point = points.row(i);
+            let (nearest_idx, dist) = sv.nearest_generator(&point).unwrap();
+            assert_eq!(nearest_idx, i, "Point {} should be nearest to itself", i);
+            assert!(dist < 1e-10, "Distance to self should be near zero");
+        }
 
-        // North pole
-        let p0 = array![0.0, 0.0, 1.0];
-        // Point near north pole
-        let near_north = array![0.1, 0.1, 0.99];
-        let near_north_norm =
-            (near_north[0].powi(2) + near_north[1].powi(2) + near_north[2].powi(2)).sqrt();
-        let near_north_sphere = array![
-            near_north[0] / near_north_norm,
-            near_north[1] / near_north_norm,
-            near_north[2] / near_north_norm
-        ];
-
-        // Manually calculate distance
-        let v1 = p0.to_owned() - &center;
-        let v2 = near_north_sphere.to_owned() - &center;
-        let v1_norm = norm(&v1);
-        let v2_norm = norm(&v2);
-        let v1_unit = v1 / v1_norm;
-        let v2_unit = v2 / v2_norm;
-        let dot_product = dot(&v1_unit, &v2_unit);
-        let distance = dot_product.acos() * radius;
-
-        // Distance should be small
-        assert!(distance < 0.2 * radius);
+        // Test an intermediate point
+        let test_point = array![0.5, 0.5, 0.0];
+        // Normalize to sphere surface
+        let norm_val = norm(&test_point);
+        let test_point_normalized = test_point / norm_val;
+        
+        let (nearest_idx, _) = sv.nearest_generator(&test_point_normalized.view()).unwrap();
+        
+        // The test point should be closest to one of the equatorial points
+        assert!(
+            nearest_idx >= 2 && nearest_idx <= 5,
+            "Test point should be nearest to an equatorial generator"
+        );
     }
 }

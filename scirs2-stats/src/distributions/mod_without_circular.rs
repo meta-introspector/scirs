@@ -81,7 +81,7 @@ pub use weibull::Weibull;
 /// ```
 pub fn norm<F>(loc: F, scale: F) -> StatsResult<Normal<F>>
 where
-    F: num_traits::Float + num_traits::NumCast,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Normal::new(loc, scale)
 }
@@ -366,7 +366,7 @@ where
 /// ```
 pub fn lognorm<F>(mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
-    F: num_traits::Float + num_traits::NumCast,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Lognormal::new(mu, sigma, loc)
 }

@@ -1,8 +1,9 @@
 //! Comprehensive benchmarks for linear algebra functions
-use std::hint::black_box;
 //!
 //! This benchmark suite covers all major operation categories in scirs2-linalg
 //! to ensure comprehensive performance monitoring.
+
+use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{s, Array1, Array2};
@@ -11,7 +12,7 @@ use scirs2_linalg::mixed_precision::{
     mixed_precision_dot, mixed_precision_matmul, mixed_precision_solve,
 };
 use scirs2_linalg::prelude::*;
-use scirs2_linalg::structured::{CirculantMatrix, ToeplitzMatrix, solve_toeplitz, solve_circulant};
+use scirs2_linalg::structured::{solve_toeplitz, solve_circulant};
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix
@@ -182,7 +183,6 @@ fn bench_structured_matrices(c: &mut Criterion) {
 
     for &size in &[50, 100, 200] {
         let first_row = create_test_vector(size);
-        let first_col = create_test_vector(size);
         let rhs = create_test_vector(size);
 
         group.throughput(Throughput::Elements(size as u64 * size as u64));
@@ -193,7 +193,6 @@ fn bench_structured_matrices(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let toeplitz = ToeplitzMatrix::new(r.view(), r.view()).unwrap();
                     solve_toeplitz(r.view(), r.view(), black_box(rhs.view())).unwrap()
                 })
             },
@@ -205,7 +204,6 @@ fn bench_structured_matrices(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(r.view()).unwrap();
                     solve_circulant(r.view(), black_box(rhs.view())).unwrap()
                 })
             },

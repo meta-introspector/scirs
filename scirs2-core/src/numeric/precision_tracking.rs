@@ -767,7 +767,7 @@ mod tests {
         let a = TrackedFloat::with_precision(1.0, 15.0);
         let b = TrackedFloat::with_precision(1e-12, 15.0);
 
-        let result = a.div(&b).unwrap();
+        let result = a.div(&b).expect("Division should succeed for test values");
         // Division by small number should show precision loss
         assert!(result.context.precision < 15.0);
     }
@@ -778,7 +778,7 @@ mod tests {
         let warning = context.check_precision_warning(5.0);
         assert!(warning.is_some());
 
-        let warning = warning.unwrap();
+        let warning = warning.expect("Warning should be present when precision is lost");
         assert_eq!(warning.current_precision, 2.0);
         assert_eq!(warning.required_precision, 5.0);
     }
@@ -788,17 +788,19 @@ mod tests {
         let registry = PrecisionRegistry::new();
         let context = PrecisionContext::new(10.0);
 
-        registry.register_computation("test", context).unwrap();
+        registry.register_computation("test", context)
+            .expect("Registering computation should succeed");
 
-        let retrieved = registry.get_computation_context("test").unwrap();
+        let retrieved = registry.get_computation_context("test")
+            .expect("Retrieving registered computation should succeed");
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().precision, 10.0);
+        assert_eq!(retrieved.expect("Retrieved context should exist").precision, 10.0);
     }
 
     #[test]
     fn test_sqrt_precision() {
         let a = TrackedFloat::with_precision(4.0, 15.0);
-        let result = a.sqrt().unwrap();
+        let result = a.sqrt().expect("Square root of positive number should succeed");
         assert_eq!(result.value, 2.0);
         assert!(result.context.precision < 15.0); // Some precision loss expected
     }
@@ -806,7 +808,7 @@ mod tests {
     #[test]
     fn test_ln_near_one() {
         let a = TrackedFloat::with_precision(1.0 + 1e-12, 15.0);
-        let result = a.ln().unwrap();
+        let result = a.ln().expect("Natural log of positive number should succeed");
         // Logarithm near 1 should show some precision loss
         assert!(
             result.context.precision < 15.0,
@@ -840,7 +842,7 @@ mod tests {
             "Should have precision loss sources after setting high condition number"
         );
         assert!(context.condition_number.is_some());
-        assert_eq!(context.condition_number.unwrap(), 1e15);
+        assert_eq!(context.condition_number.expect("Condition number should be set"), 1e15);
     }
 
     #[test]

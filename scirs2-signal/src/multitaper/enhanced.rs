@@ -511,11 +511,100 @@ pub fn enhanced_multitaper_spectrogram<T>(
 where
     T: Float + NumCast + Debug + Send + Sync,
 {
-    // Implementation details...
-    // This would include parallel processing of windows
-    // and SIMD-optimized FFT computations
+    // Validate input
+    if x.is_empty() {
+        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+    }
     
-    unimplemented!("Enhanced spectrogram implementation")
+    check_positive(config.window_size, "window_size")?;
+    check_positive(config.step, "step")?;
+    
+    // Convert input to f64
+    let x_f64: Vec<f64> = x
+        .iter()
+        .map(|&val| {
+            NumCast::from(val).ok_or_else(|| {
+                SignalError::ValueError(format!("Could not convert {:?} to f64", val))
+            })
+        })
+        .collect::<SignalResult<Vec<f64>>>()?;
+    
+    check_finite(&x_f64, "signal")?;
+    
+    let n = x_f64.len();
+    let window_size = config.window_size;
+    let step = config.step;
+    
+    // Calculate number of windows
+    if window_size > n {
+        return Err(SignalError::ValueError(
+            "Window size larger than signal length".to_string()
+        ));
+    }
+    
+    let n_windows = (n - window_size) / step + 1;
+    if n_windows == 0 {
+        return Err(SignalError::ValueError(
+            "No complete windows in signal".to_string()
+        ));
+    }
+    
+    // Prepare multitaper config for each window
+    let mut mt_config = config.multitaper.clone();
+    mt_config.nfft = Some(config.window_size);
+    
+    // Calculate time points
+    let times: Vec<f64> = (0..n_windows)
+        .map(|i| (i * step + window_size / 2) as f64 / config.fs)
+        .collect();
+    
+    // Process windows in parallel if enabled
+    let results: Vec<EnhancedMultitaperResult> = if config.multitaper.parallel 
+        && n_windows >= config.multitaper.parallel_threshold / window_size {
+        
+        let x_arc = Arc::new(x_f64);
+        
+        (0..n_windows)
+            .into_par_iter()
+            .map(|i| {
+                let start = i * step;
+                let end = start + window_size;
+                let window = &x_arc[start..end];
+                
+                enhanced_pmtm(window, &mt_config).unwrap()
+            })
+            .collect()
+    } else {
+        // Sequential processing
+        (0..n_windows)
+            .map(|i| {
+                let start = i * step;
+                let end = start + window_size;
+                let window = &x_f64[start..end];
+                
+                enhanced_pmtm(window, &mt_config)
+            })
+            .collect::<SignalResult<Vec<_>>>()?
+    };
+    
+    // Extract frequencies from first result
+    let frequencies = results[0].frequencies.clone();
+    let n_freqs = frequencies.len();
+    
+    // Build spectrogram matrix
+    let mut spectrogram = Array2::zeros((n_freqs, n_windows));
+    
+    for (j, result) in results.iter().enumerate() {
+        for (i, &psd_val) in result.psd.iter().enumerate() {
+            spectrogram[[i, j]] = psd_val;
+        }
+    }
+    
+    // Apply logarithmic scaling if requested (common for spectrograms)
+    let epsilon = 1e-10;
+    spectrogram.mapv_inplace(|x| (x + epsilon).log10() * 10.0); // Convert to dB
+    
+    Ok((times, frequencies, spectrogram))
 }
 
 /// Configuration for spectrogram computation

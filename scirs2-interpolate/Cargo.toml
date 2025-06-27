@@ -21,6 +21,8 @@ num-complex = { workspace = true }
 thiserror = { workspace = true }
 num_cpus = { workspace = true }
 ordered-float = { workspace = true }
+rand = { workspace = true }
+rand_distr = { workspace = true }
 
 [dev-dependencies]
 approx = { workspace = true }

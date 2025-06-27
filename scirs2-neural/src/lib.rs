@@ -29,8 +29,12 @@ pub mod data;
 pub mod distillation;
 pub mod error;
 pub mod evaluation;
+/// Federated learning module
+pub mod federated;
 /// GPU acceleration module (currently CPU fallback)
 pub mod gpu;
+/// Hardware acceleration module (FPGAs, custom accelerators)
+pub mod hardware;
 /// Framework interoperability module
 pub mod interop;
 /// Interpretation module
@@ -45,12 +49,16 @@ pub mod mobile;
 /// Enhanced model evaluation module
 pub mod model_evaluation;
 pub mod models;
+/// Neural Architecture Search (NAS) module
+pub mod nas;
 pub mod optimizers;
 /// Performance optimization module
 pub mod performance;
 pub mod prelude;
 /// Quantization module
 pub mod quantization;
+/// Reinforcement learning module
+pub mod reinforcement;
 pub mod serialization;
 /// Serving and deployment module
 pub mod serving;

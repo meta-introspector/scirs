@@ -312,7 +312,12 @@
 pub mod error;
 pub mod error_messages;
 pub mod error_context;
+pub mod error_suggestions;
 pub use error::{StatsError, StatsResult};
+pub use error_suggestions::{
+    SuggestionEngine, Suggestion, ErrorFormatter, diagnose_error, 
+    DiagnosisReport, ErrorType, Severity
+};
 
 // Module substructure following SciPy's organization
 pub mod bayesian; // Bayesian statistics
@@ -330,16 +335,36 @@ pub mod traits; // Trait definitions for distributions and statistical objects
 mod descriptive;
 mod descriptive_simd;
 mod parallel_stats;
+mod parallel_stats_enhanced;
 mod memory_efficient;
+mod memory_profiling;
+mod quantile_simd;
+mod dispersion_simd;
 pub use descriptive::*;
 pub use descriptive_simd::{mean_simd, variance_simd, std_simd, descriptive_stats_simd};
+pub use quantile_simd::{
+    quantile_simd, quantiles_simd, median_simd, percentile_simd, quickselect_simd
+};
+pub use dispersion_simd::{
+    mad_simd, iqr_simd, coefficient_of_variation_simd, range_simd, gini_simd,
+    sem_simd, median_abs_deviation_simd, percentile_range_simd
+};
 pub use parallel_stats::{
     mean_parallel, variance_parallel, quantiles_parallel, row_statistics_parallel,
     corrcoef_parallel, bootstrap_parallel
 };
+pub use parallel_stats_enhanced::{
+    AdaptiveThreshold, ParallelHistogram, kde_parallel, ParallelMovingStats,
+    pairwise_distances_parallel, ParallelCrossValidation
+};
 pub use memory_efficient::{
     streaming_mean, welford_variance, normalize_inplace, quantile_quickselect,
     covariance_chunked, StreamingHistogram
+};
+pub use memory_profiling::{
+    MemoryProfile, MemoryAdaptiveAlgorithm, AlgorithmChoice, 
+    RingBufferStats, LazyStatComputation, MemoryTracker,
+    zero_copy, memory_mapped, cache_friendly
 };
 
 // Statistical tests module

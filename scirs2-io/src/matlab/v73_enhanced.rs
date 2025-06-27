@@ -131,6 +131,7 @@ pub struct MatlabObject {
 /// Enhanced v7.3 MAT file handler
 pub struct V73MatFile {
     features: V73Features,
+    #[cfg(feature = "hdf5")]
     compression: Option<CompressionOptions>,
 }
 
@@ -139,11 +140,13 @@ impl V73MatFile {
     pub fn new(features: V73Features) -> Self {
         Self {
             features,
+            #[cfg(feature = "hdf5")]
             compression: None,
         }
     }
 
     /// Set compression options
+    #[cfg(feature = "hdf5")]
     pub fn with_compression(mut self, compression: CompressionOptions) -> Self {
         self.compression = Some(compression);
         self

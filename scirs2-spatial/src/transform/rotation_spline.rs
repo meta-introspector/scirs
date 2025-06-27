@@ -242,6 +242,7 @@ impl RotationSpline {
     }
 
     /// Compute the second derivatives for natural cubic spline interpolation
+    #[allow(dead_code)]
     fn compute_natural_spline_second_derivatives(&self, values: &[f64]) -> Vec<f64> {
         let n = values.len();
         if n <= 2 {
@@ -285,6 +286,7 @@ impl RotationSpline {
     }
 
     /// Solve a tridiagonal system using the Thomas algorithm
+    #[allow(dead_code)]
     fn solve_tridiagonal(
         &self,
         a: &[f64],     // Lower diagonal

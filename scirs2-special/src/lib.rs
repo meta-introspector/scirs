@@ -62,16 +62,21 @@
 
 // Export error types
 pub mod error;
+pub mod error_context;
+pub mod error_wrappers;
 pub use error::{SpecialError, SpecialResult};
 
 // Modules
 mod airy;
 pub mod array_ops;
 pub mod bessel;
+mod bessel_zeros;
 mod combinatorial;
 mod constants;
 pub mod convenience;
+pub mod cross_validation;
 mod coulomb;
+mod distributions;
 mod elliptic;
 mod erf;
 mod fresnel;
@@ -79,6 +84,8 @@ mod gamma;
 #[cfg(feature = "gpu")]
 pub mod gpu_ops;
 mod hypergeometric;
+mod incomplete_gamma;
+mod information_theory;
 mod kelvin;
 mod lambert;
 mod logint;
@@ -95,12 +102,18 @@ mod property_tests;
 pub mod python_interop;
 #[cfg(test)]
 mod quickcheck_tests;
+#[cfg(test)]
+mod extended_property_tests;
 mod simd_ops;
 mod spherical_harmonics;
 mod spheroidal;
+pub mod stability_analysis;
 mod statistical;
 mod struve;
+mod utility;
 mod validation;
+#[cfg(feature = "plotting")]
+pub mod visualization;
 mod wright;
 mod wright_bessel;
 mod wright_simplified;
@@ -139,11 +152,37 @@ pub use bessel::{
     yn,
     yn_prime,
 };
+pub use bessel_zeros::{
+    // Zeros of Bessel functions
+    j0_zeros, j1_zeros, jn_zeros, jnp_zeros,
+    y0_zeros, y1_zeros, yn_zeros,
+    jnyn_zeros, jnjnp_zeros,
+    // Bessel utilities
+    itj0y0, besselpoly,
+};
 pub use combinatorial::{
     bell_number, bernoulli_number, binomial, double_factorial, euler_number, factorial,
     permutations, stirling_first, stirling_second,
 };
 pub use coulomb::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
+pub use distributions::{
+    // Normal distribution
+    ndtr, log_ndtr, ndtri, ndtri_exp, ndtr_array,
+    // Binomial distribution
+    bdtr, bdtrc, bdtri, bdtr_array,
+    // Poisson distribution
+    pdtr, pdtrc,
+    // Chi-square distribution
+    chdtr, chdtrc,
+    // Student's t distribution
+    stdtr,
+    // F distribution
+    fdtr, fdtrc,
+    // Gamma distribution
+    gdtr, gdtrc,
+    // Kolmogorov-Smirnov distribution
+    kolmogorov, kolmogi,
+};
 pub use elliptic::{
     elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn,
     jacobi_sn,
@@ -153,6 +192,12 @@ pub use fresnel::{
 };
 pub use gamma::{
     beta, betainc, betainc_regularized, betaincinv, betaln, digamma, gamma, gammaln, loggamma,
+    // Safe versions with error handling
+    beta_safe, digamma_safe, gamma_safe,
+};
+pub use incomplete_gamma::{
+    gammainc, gammaincc, gammaincinv, gammainccinv, 
+    gammainc_lower, gammainc_upper, gammastar, gammasgn,
 };
 // Complex gamma functions
 pub use gamma::complex::{beta_complex, digamma_complex, gamma_complex, loggamma_complex};
@@ -161,6 +206,10 @@ pub use bessel::complex::{i0_complex, j0_complex, j1_complex, jn_complex, jv_com
 // Complex error functions
 pub use erf::complex::{erf_complex, erfc_complex, erfcx_complex, faddeeva_complex};
 pub use hypergeometric::{hyp1f1, hyp2f1, ln_pochhammer, pochhammer};
+pub use information_theory::{
+    entr, rel_entr, kl_div, huber, pseudo_huber,
+    entr_array, entropy, kl_divergence, huber_loss, binary_entropy, cross_entropy,
+};
 pub use kelvin::{bei, beip, ber, berp, kei, keip, kelvin, ker, kerp};
 pub use lambert::{lambert_w, lambert_w_real};
 pub use logint::{chi, ci, e1, expint, li, li_complex, polylog, shi, si};
@@ -182,6 +231,18 @@ pub use statistical::{
     sinc, sinc_array, softmax,
 };
 pub use struve::{it2_struve0, it_mod_struve0, it_struve0, mod_struve, struve};
+pub use utility::{
+    // Basic functions
+    cbrt, exp10, exp2, round,
+    // Trigonometric in degrees
+    radian, cosdg, sindg, tandg, cotdg,
+    // Accurate computations
+    cosm1, powm1, xlogy, xlog1py, exprel,
+    // Special functions
+    diric, agm, log_expit, softplus, owens_t,
+    // Array operations
+    cbrt_array, exp10_array, round_array,
+};
 pub use wright::{wright_omega_optimized, wright_omega_real_optimized};
 pub use wright_bessel::{wright_bessel, wright_bessel_complex, wright_bessel_zeros};
 pub use wright_simplified::{wright_omega, wright_omega_real};

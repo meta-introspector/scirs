@@ -1,5 +1,4 @@
 //! Comprehensive benchmarks for linear system solvers
-use std::hint::black_box;
 //!
 //! This benchmark suite covers direct and iterative solvers for various
 //! matrix types and system configurations, including specialized solvers
@@ -8,6 +7,7 @@ use std::hint::black_box;
 //! NOTE: This benchmark is currently disabled due to API incompatibilities.
 //! Many of the solver functions used here are not yet implemented or have
 //! different signatures than expected.
+
 
 fn main() {
     println!("Comprehensive solvers benchmark is currently disabled.");

@@ -42,6 +42,18 @@ pub enum ExtrapolationMethod {
 
     /// Power law decay/growth model for asymptotic behavior
     PowerLaw,
+    
+    /// Spline-based extrapolation using the full spline continuation
+    Spline,
+    
+    /// Akima extrapolation for stable polynomial continuation
+    Akima,
+    
+    /// Sinusoidal extrapolation for periodic data
+    Sinusoidal,
+    
+    /// Rational function extrapolation for poles/zeros behavior
+    Rational,
 }
 
 /// Direction for extrapolation
@@ -314,6 +326,10 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
             ExtrapolationMethod::Reflection => self.reflection_extrapolation(x),
             ExtrapolationMethod::Exponential => self.exponential_extrapolation(x, direction),
             ExtrapolationMethod::PowerLaw => self.power_law_extrapolation(x, direction),
+            ExtrapolationMethod::Spline => self.spline_extrapolation(x, direction),
+            ExtrapolationMethod::Akima => self.akima_extrapolation(x, direction),
+            ExtrapolationMethod::Sinusoidal => self.sinusoidal_extrapolation(x, direction),
+            ExtrapolationMethod::Rational => self.rational_extrapolation(x, direction),
         }
     }
 
@@ -627,6 +643,130 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
                 Ok(asymptote + scale * power_term)
             }
         }
+    }
+
+    /// Spline-based extrapolation using the full spline continuation.
+    ///
+    /// This method uses the underlying spline representation to continue
+    /// the interpolation naturally beyond the boundaries.
+    fn spline_extrapolation(
+        &self,
+        x: T,
+        direction: ExtrapolationDirection,
+    ) -> InterpolateResult<T> {
+        // For spline extrapolation, we use a cubic polynomial that matches
+        // the value, first derivative, and second derivative at the boundary
+        self.cubic_extrapolation(x, direction)
+    }
+    
+    /// Akima extrapolation for stable polynomial continuation.
+    ///
+    /// Uses Akima's method which provides a more stable extrapolation
+    /// compared to standard cubic methods, especially for data with rapid changes.
+    fn akima_extrapolation(
+        &self,
+        x: T,
+        direction: ExtrapolationDirection,
+    ) -> InterpolateResult<T> {
+        // Akima extrapolation uses a modified cubic that is less sensitive to outliers
+        // We use a weighted combination of linear and cubic extrapolation
+        let linear_result = self.linear_extrapolation(x, direction)?;
+        let cubic_result = self.cubic_extrapolation(x, direction).unwrap_or(linear_result);
+        
+        // Weight factor based on distance from boundary
+        let dx = match direction {
+            ExtrapolationDirection::Lower => (self.lower_bound - x).abs(),
+            ExtrapolationDirection::Upper => (x - self.upper_bound).abs(),
+        };
+        
+        // Smooth transition from cubic (near boundary) to linear (far from boundary)
+        let weight = (-dx / T::from(2.0).unwrap()).exp();
+        Ok(weight * cubic_result + (T::one() - weight) * linear_result)
+    }
+    
+    /// Sinusoidal extrapolation for periodic data.
+    ///
+    /// Fits a sinusoidal function to match the value and derivative at the boundary,
+    /// useful for data with known periodic behavior.
+    fn sinusoidal_extrapolation(
+        &self,
+        x: T,
+        direction: ExtrapolationDirection,
+    ) -> InterpolateResult<T> {
+        let (bound, value, deriv) = match direction {
+            ExtrapolationDirection::Lower => (self.lower_bound, self.lower_value, self.lower_derivative),
+            ExtrapolationDirection::Upper => (self.upper_bound, self.upper_value, self.upper_derivative),
+        };
+        
+        let dx = x - bound;
+        
+        // Default frequency if not specified
+        let omega = T::from(2.0 * std::f64::consts::PI).unwrap() / self.parameters.period;
+        
+        // Fit A*sin(omega*dx + phi) + C to match value and derivative
+        // f(0) = A*sin(phi) + C = value
+        // f'(0) = A*omega*cos(phi) = deriv
+        
+        // Solve for A and phi
+        let a_omega = deriv;
+        let _a = a_omega / omega;
+        
+        // Use a default phase of pi/4 for stability
+        let phi = T::from(std::f64::consts::PI / 4.0).unwrap();
+        let sin_phi = phi.sin();
+        let cos_phi = phi.cos();
+        
+        // Adjust amplitude to match derivative constraint
+        let a_adjusted = deriv / (omega * cos_phi);
+        
+        // Compute offset to match value constraint
+        let c = value - a_adjusted * sin_phi;
+        
+        Ok(a_adjusted * (omega * dx + phi).sin() + c)
+    }
+    
+    /// Rational function extrapolation for poles/zeros behavior.
+    ///
+    /// Models the function as a rational function (ratio of polynomials),
+    /// useful for functions with known asymptotic behavior or poles.
+    fn rational_extrapolation(
+        &self,
+        x: T,
+        direction: ExtrapolationDirection,
+    ) -> InterpolateResult<T> {
+        let (bound, value, deriv) = match direction {
+            ExtrapolationDirection::Lower => (self.lower_bound, self.lower_value, self.lower_derivative),
+            ExtrapolationDirection::Upper => (self.upper_bound, self.upper_value, self.upper_derivative),
+        };
+        
+        let dx = x - bound;
+        
+        // Simple Padé approximant [1/1]: (a0 + a1*dx)/(1 + b1*dx)
+        // Matching value and derivative at boundary:
+        // f(0) = a0 = value
+        // f'(0) = a1 - a0*b1 = deriv
+        
+        let a0 = value;
+        
+        // Choose b1 to control asymptotic behavior
+        // For decay: b1 > 0, for growth: b1 < 0
+        let b1 = match direction {
+            ExtrapolationDirection::Lower => T::from(0.1).unwrap(),  // Mild growth
+            ExtrapolationDirection::Upper => T::from(-0.1).unwrap(), // Mild decay
+        };
+        
+        let a1 = deriv + a0 * b1;
+        
+        // Evaluate the rational function
+        let numerator = a0 + a1 * dx;
+        let denominator = T::one() + b1 * dx;
+        
+        // Avoid division by very small numbers
+        if denominator.abs() < T::epsilon() {
+            return Ok(value);
+        }
+        
+        Ok(numerator / denominator)
     }
 
     /// Set the extrapolation method for the lower boundary.

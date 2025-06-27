@@ -95,8 +95,14 @@ pub fn batch_matmul<F: Float + Debug + Send + Sync + 'static>(
                 Some(Box::new(
                     move |grad: Array<F, IxDyn>| -> AutogradResult<Array<F, IxDyn>> {
                         // For 3D tensors: dL/dA[b,i,k] = sum_j dL/dC[b,i,j] * B[b,k,j]
-                        let grad_3d = grad.clone().into_shape((batch_size, n, p)).unwrap();
-                        let b_3d = b_data.clone().into_shape((batch_size, m, p)).unwrap();
+                        let grad_3d = grad.clone().into_shape((batch_size, n, p))
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                format!("Failed to reshape gradient to ({}, {}, {})", batch_size, n, p)
+                            ))?;
+                        let b_3d = b_data.clone().into_shape((batch_size, m, p))
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                format!("Failed to reshape B to ({}, {}, {})", batch_size, m, p)
+                            ))?;
 
                         let mut grad_a = Array::zeros((batch_size, n, m));
 
@@ -128,8 +134,14 @@ pub fn batch_matmul<F: Float + Debug + Send + Sync + 'static>(
                 Some(Box::new(
                     move |grad: Array<F, IxDyn>| -> AutogradResult<Array<F, IxDyn>> {
                         // For 3D tensors: dL/dB[b,k,j] = sum_i dL/dC[b,i,j] * A[b,i,k]
-                        let grad_3d = grad.clone().into_shape((batch_size, n, p)).unwrap();
-                        let a_3d = a_data.clone().into_shape((batch_size, n, m)).unwrap();
+                        let grad_3d = grad.clone().into_shape((batch_size, n, p))
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                format!("Failed to reshape gradient to ({}, {}, {})", batch_size, n, p)
+                            ))?;
+                        let a_3d = a_data.clone().into_shape((batch_size, n, m))
+                            .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                                format!("Failed to reshape A to ({}, {}, {})", batch_size, n, m)
+                            ))?;
 
                         let mut grad_b = Array::zeros((batch_size, m, p));
 
@@ -259,8 +271,14 @@ pub fn batch_matvec<F: Float + Debug + Send + Sync + 'static>(
             Some(Box::new(
                 move |grad: Array<F, IxDyn>| -> AutogradResult<Array<F, IxDyn>> {
                     // For batch matvec: dL/dA[b,i,j] = dL/dY[b,i] * X[b,j]
-                    let grad_2d = grad.clone().into_shape((batch_size, n)).unwrap();
-                    let x_2d = x_data.clone().into_shape((batch_size, m)).unwrap();
+                    let grad_2d = grad.clone().into_shape((batch_size, n))
+                        .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                            format!("Failed to reshape gradient to ({}, {})", batch_size, n)
+                        ))?;
+                    let x_2d = x_data.clone().into_shape((batch_size, m))
+                        .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                            format!("Failed to reshape x to ({}, {})", batch_size, m)
+                        ))?;
 
                     let mut grad_a = Array::zeros((batch_size, n, m));
 
@@ -288,8 +306,14 @@ pub fn batch_matvec<F: Float + Debug + Send + Sync + 'static>(
             Some(Box::new(
                 move |grad: Array<F, IxDyn>| -> AutogradResult<Array<F, IxDyn>> {
                     // For batch matvec: dL/dX[b,j] = sum_i dL/dY[b,i] * A[b,i,j]
-                    let grad_2d = grad.clone().into_shape((batch_size, n)).unwrap();
-                    let a_3d = a_data.clone().into_shape((batch_size, n, m)).unwrap();
+                    let grad_2d = grad.clone().into_shape((batch_size, n))
+                        .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                            format!("Failed to reshape gradient to ({}, {})", batch_size, n)
+                        ))?;
+                    let a_3d = a_data.clone().into_shape((batch_size, n, m))
+                        .map_err(|_| scirs2_autograd::error::AutogradError::ShapeMismatch(
+                            format!("Failed to reshape A to ({}, {}, {})", batch_size, n, m)
+                        ))?;
 
                     let mut grad_x = Array::zeros((batch_size, m));
 
@@ -395,6 +419,11 @@ pub fn batch_inv<F: Float + Debug + Send + Sync + 'static>(
         }
 
         // Compute inverse
+        if det_val == F::zero() {
+            return Err(scirs2_autograd::error::AutogradError::OperationError(
+                format!("Singular matrix encountered in batch inverse at index {}", batch_idx)
+            ));
+        }
         let inv_det = F::one() / det_val;
 
         if n == 1 {

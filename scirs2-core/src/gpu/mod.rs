@@ -431,16 +431,10 @@ impl GpuContext {
             GpuBackend::Cuda => {
                 #[cfg(feature = "cuda")]
                 {
-                    // This is just a stub - in a real implementation, we would use the cuda crate
-                    // to create a context and return it
-                    #[cfg(test)]
-                    {
-                        // For testing, we can use a mock implementation
-                        Arc::new(CpuContext::new()) as Arc<dyn GpuContextImpl>
-                    }
-                    #[cfg(not(test))]
-                    {
-                        return Err(GpuError::BackendNotImplemented(backend));
+                    use crate::gpu::backends::cuda::CudaContext;
+                    match CudaContext::new() {
+                        Ok(ctx) => Arc::new(ctx) as Arc<dyn GpuContextImpl>,
+                        Err(e) => return Err(e),
                     }
                 }
                 #[cfg(not(feature = "cuda"))]

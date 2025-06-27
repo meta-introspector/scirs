@@ -22,11 +22,15 @@ ndarray-rand = { workspace = true }
 approx = { workspace = true }
 cached = { workspace = true }
 tempfile = { workspace = true }
+lazy_static = { workspace = true }
+rayon = { workspace = true }
 
 [features]
 default = []
 simd = ["scirs2-core/simd"]
 parallel = ["scirs2-core/parallel"]
+cuda = []
+gpu = ["cuda"]
 
 [dev-dependencies]
 criterion = { workspace = true }

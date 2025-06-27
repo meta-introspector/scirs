@@ -133,6 +133,10 @@
 pub mod error;
 pub use error::{InterpolateError, InterpolateResult};
 
+// Common traits and API standards
+pub mod traits;
+pub mod api_standards;
+
 // Interpolation modules
 pub mod adaptive_gp;
 pub mod adaptive_learning;
@@ -176,6 +180,7 @@ pub mod smoothing;
 pub mod sparse_grid;
 pub mod spatial;
 pub mod spline;
+pub mod statistical;
 pub mod tension;
 pub mod tensor;
 pub mod timeseries;
@@ -338,6 +343,12 @@ pub use sparse_grid::{
     make_adaptive_sparse_grid_interpolator, make_sparse_grid_from_data,
     make_sparse_grid_interpolator, GridPoint, MultiIndex, SparseGridBuilder,
     SparseGridInterpolator, SparseGridStats,
+};
+pub use statistical::{
+    make_bayesian_interpolator, make_bootstrap_linear_interpolator, make_median_interpolator,
+    make_robust_interpolator, make_stochastic_interpolator, BayesianConfig, BayesianInterpolator,
+    BootstrapConfig, BootstrapInterpolator, BootstrapResult, QuantileInterpolator,
+    RobustInterpolator, StochasticInterpolator,
 };
 pub use spatial::balltree::BallTree;
 pub use spatial::kdtree::KdTree;

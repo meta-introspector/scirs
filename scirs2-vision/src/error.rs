@@ -45,6 +45,14 @@ pub enum VisionError {
     /// Dimension mismatch error
     #[error("Dimension mismatch: {0}")]
     DimensionMismatch(String),
+    
+    /// Invalid input error
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+    
+    /// Other error
+    #[error("{0}")]
+    Other(String),
 }
 
 /// Result type for vision operations

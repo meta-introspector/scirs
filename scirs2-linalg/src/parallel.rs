@@ -771,6 +771,7 @@ pub mod thread_pool {
             INIT.call_once(|| {
                 GLOBAL_POOL = Some(Arc::new(Mutex::new(ThreadPoolManager::new())));
             });
+            #[allow(static_mut_refs)]
             GLOBAL_POOL.as_ref().unwrap().clone()
         }
     }
@@ -840,6 +841,7 @@ pub mod thread_pool {
     /// Creates a temporary thread pool configuration that is restored
     /// when the scope ends.
     pub struct ScopedThreadPool {
+        #[allow(dead_code)]
         previous_config: WorkerConfig,
         _guard: ScopedThreadPoolGuard,
     }
@@ -1682,7 +1684,7 @@ pub mod algorithms {
             for i in (0..k).rev() {
                 let mut sum = g[i];
                 for j in (i + 1)..k {
-                    sum = sum - h_sub[[i, j]] * y[j];
+                    sum -= h_sub[[i, j]] * y[j];
                 }
                 y[i] = sum / h_sub[[i, i]];
             }
@@ -1864,7 +1866,7 @@ pub mod algorithms {
                     let mut sum = b[i];
                     for j in 0..n {
                         if i != j {
-                            sum = sum - matrix[[i, j]] * x[j];
+                            sum -= matrix[[i, j]] * x[j];
                         }
                     }
                     sum / diag[i]
@@ -1945,7 +1947,7 @@ pub mod algorithms {
                     let mut sum = b[i];
                     for j in 0..n {
                         if i != j {
-                            sum = sum - matrix[[i, j]] * x_old[j];
+                            sum -= matrix[[i, j]] * x_old[j];
                         }
                     }
                     let x_gs = sum / matrix[[i, i]];
@@ -1967,7 +1969,7 @@ pub mod algorithms {
                     let mut sum = b[i];
                     for j in 0..n {
                         if i != j {
-                            sum = sum - matrix[[i, j]] * x[j];
+                            sum -= matrix[[i, j]] * x[j];
                         }
                     }
                     let x_gs = sum / matrix[[i, i]];

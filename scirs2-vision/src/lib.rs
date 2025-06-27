@@ -25,6 +25,7 @@ extern crate image as image;
 pub mod color;
 pub mod error;
 pub mod feature;
+pub mod gpu_ops;
 /// Image preprocessing functionality
 ///
 /// Includes operations like filtering, histogram manipulation,
@@ -33,6 +34,8 @@ pub mod preprocessing;
 pub mod quality;
 pub mod registration;
 pub mod segmentation;
+pub mod simd_ops;
+pub mod streaming;
 pub mod transform;
 
 // Comment out problematic modules during tests to focus on fixing other issues
@@ -61,6 +64,7 @@ pub use feature::{
     orb::{detect_and_compute_orb, match_orb_descriptors, OrbConfig, OrbDescriptor},
     prewitt::prewitt_edges,
     sobel_edges,
+    sobel::sobel_edges_simd,
 };
 // Re-export with unique name to avoid ambiguity
 pub use feature::homography::warp_perspective as feature_warp_perspective;
@@ -84,3 +88,22 @@ pub use transform::{
 };
 // Re-export with unique name to avoid ambiguity
 pub use transform::perspective::warp_perspective as transform_warp_perspective;
+
+// Re-export SIMD operations
+pub use simd_ops::{
+    check_simd_support, simd_convolve_2d, simd_gaussian_blur, simd_histogram_equalization,
+    simd_normalize_image, simd_sobel_gradients, SimdPerformanceStats,
+};
+
+// Re-export GPU operations
+pub use gpu_ops::{
+    gpu_batch_process, gpu_convolve_2d, gpu_gaussian_blur, gpu_harris_corners,
+    gpu_sobel_gradients, GpuBenchmark, GpuMemoryStats, GpuVisionContext,
+};
+
+// Re-export streaming operations
+pub use streaming::{
+    BatchProcessor, BlurStage, EdgeDetectionStage, Frame, FrameMetadata, GrayscaleStage,
+    MotionDetectionStage, PerformanceMonitor, PipelineMetrics, ProcessingStage, StreamPipeline,
+    StreamProcessor, VideoStreamReader,
+};

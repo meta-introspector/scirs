@@ -228,8 +228,7 @@ impl SchrodingerSolver {
     
     /// Split-operator method step
     fn split_operator_step(&self, state: &mut QuantumState) -> Result<()> {
-        // TODO: Implement FFT-based split operator method
-        // For now, use a simplified approach without FFT
+        use scirs2_fft::{fft, ifft};
         
         let n = state.psi.len();
         
@@ -240,15 +239,40 @@ impl SchrodingerSolver {
             state.psi[i] *= Complex64::new(phase.cos(), phase.sin());
         }
         
-        // Simplified kinetic energy evolution using finite differences
-        // This is less accurate than FFT but works without dependencies
-        let mut new_psi = state.psi.clone();
-        for i in 1..n-1 {
-            let d2psi_dx2 = (state.psi[i+1] - 2.0 * state.psi[i] + state.psi[i-1]) / state.dx.powi(2);
-            let kinetic_evolution = Complex64::new(0.0, REDUCED_PLANCK * self.dt / (2.0 * state.mass)) * d2psi_dx2;
-            new_psi[i] = state.psi[i] + kinetic_evolution;
+        // Kinetic energy evolution in momentum space using FFT
+        // Transform to momentum space
+        let psi_k = fft(&state.psi.to_vec(), None)
+            .map_err(|e| crate::error::IntegrateError::ComputationError(
+                format!("FFT failed: {:?}", e)
+            ))?;
+        
+        // Calculate k-space grid (momentum values)
+        let dk = 2.0 * PI / (n as f64 * state.dx);
+        let mut k_values = vec![0.0; n];
+        for i in 0..n {
+            if i <= n / 2 {
+                k_values[i] = i as f64 * dk;
+            } else {
+                k_values[i] = (i as f64 - n as f64) * dk;
+            }
         }
-        state.psi = new_psi;
+        
+        // Apply kinetic energy operator in momentum space
+        let mut psi_k_evolved = psi_k;
+        for i in 0..n {
+            let k = k_values[i];
+            let kinetic_phase = -REDUCED_PLANCK * k * k * self.dt / (2.0 * state.mass);
+            psi_k_evolved[i] *= Complex64::new(kinetic_phase.cos(), kinetic_phase.sin());
+        }
+        
+        // Transform back to position space
+        let psi_evolved = ifft(&psi_k_evolved, None)
+            .map_err(|e| crate::error::IntegrateError::ComputationError(
+                format!("IFFT failed: {:?}", e)
+            ))?;
+        
+        // Update state with evolved wave function
+        state.psi = Array1::from_vec(psi_evolved);
         
         // Potential energy evolution (half step)
         for i in 0..n {
@@ -425,31 +449,121 @@ impl SchrodingerSolver {
         x_max: f64,
         n_states: usize,
     ) -> Result<(Array1<f64>, Array2<f64>)> {
-        // TODO: Implement proper eigenvalue solver
-        // For now, return a simplified result for the harmonic oscillator
-        
-        let _dx = (x_max - x_min) / (self.n_points - 1) as f64;
+        let dx = (x_max - x_min) / (self.n_points - 1) as f64;
         let x = Array1::linspace(x_min, x_max, self.n_points);
         
-        // For harmonic oscillator, we know the analytical eigenvalues
-        let mut energies = Array1::zeros(n_states);
-        let mut wavefunctions = Array2::zeros((self.n_points, n_states));
+        // Build the Hamiltonian matrix using finite difference method
+        let mut hamiltonian = Array2::<f64>::zeros((self.n_points, self.n_points));
         
-        // Simple approximation for testing
-        for n in 0..n_states {
-            // Energy levels for harmonic oscillator: E_n = ℏω(n + 1/2)
-            // Assuming ω = 1 for simplicity
-            energies[n] = REDUCED_PLANCK * (n as f64 + 0.5);
-            
-            // Approximate wavefunctions (not normalized)
-            for i in 0..self.n_points {
-                let xi = x[i];
-                // Simple Gaussian-like shape
-                wavefunctions[[i, n]] = (-(xi * xi) / (2.0 * (n + 1) as f64)).exp();
+        // Kinetic energy contribution (second derivative via finite differences)
+        let kinetic_factor = -REDUCED_PLANCK.powi(2) / (2.0 * 1.0 * dx.powi(2)); // mass = 1.0 for simplicity
+        
+        // Build tridiagonal kinetic energy matrix
+        for i in 0..self.n_points {
+            if i > 0 {
+                hamiltonian[[i, i-1]] = kinetic_factor;
+            }
+            hamiltonian[[i, i]] = -2.0 * kinetic_factor;
+            if i < self.n_points - 1 {
+                hamiltonian[[i, i+1]] = kinetic_factor;
             }
         }
         
-        Ok((energies, wavefunctions))
+        // Add potential energy contribution (diagonal)
+        let v = self.potential.evaluate_array(&x.view());
+        for i in 0..self.n_points {
+            hamiltonian[[i, i]] += v[i];
+        }
+        
+        // Apply boundary conditions (wave function vanishes at boundaries)
+        hamiltonian.row_mut(0).fill(0.0);
+        hamiltonian[[0, 0]] = 1e10; // Large value to force eigenfunction to zero
+        hamiltonian.row_mut(self.n_points - 1).fill(0.0);
+        hamiltonian[[self.n_points - 1, self.n_points - 1]] = 1e10;
+        
+        // Find eigenvalues and eigenvectors using a simple power iteration method
+        // for the lowest n_states eigenpairs
+        let mut energies = Array1::zeros(n_states);
+        let mut wavefunctions = Array2::zeros((self.n_points, n_states));
+        
+        // Use inverse power iteration with shifts to find lowest eigenvalues
+        for state in 0..n_states {
+            let mut psi = Array1::from_elem(self.n_points, 1.0);
+            psi[0] = 0.0;
+            psi[self.n_points - 1] = 0.0;
+            
+            // Normalize initial guess
+            let norm: f64 = psi.iter().map(|&x| x * x * dx).sum::<f64>().sqrt();
+            psi /= norm;
+            
+            // Gram-Schmidt orthogonalization against previous eigenstates
+            for j in 0..state {
+                let overlap: f64 = psi.iter()
+                    .zip(wavefunctions.column(j).iter())
+                    .map(|(&a, &b)| a * b * dx)
+                    .sum();
+                for i in 0..self.n_points {
+                    psi[i] -= overlap * wavefunctions[[i, j]];
+                }
+            }
+            
+            // Power iteration to find eigenvalue
+            let mut eigenvalue = 0.0;
+            for _ in 0..100 { // iterations
+                // Apply Hamiltonian
+                let mut h_psi = Array1::zeros(self.n_points);
+                for i in 1..self.n_points-1 {
+                    h_psi[i] = hamiltonian[[i, i]] * psi[i];
+                    if i > 0 {
+                        h_psi[i] += hamiltonian[[i, i-1]] * psi[i-1];
+                    }
+                    if i < self.n_points - 1 {
+                        h_psi[i] += hamiltonian[[i, i+1]] * psi[i+1];
+                    }
+                }
+                
+                // Calculate eigenvalue estimate
+                eigenvalue = psi.iter()
+                    .zip(h_psi.iter())
+                    .map(|(&a, &b)| a * b * dx)
+                    .sum::<f64>();
+                
+                // Update eigenvector
+                psi = h_psi;
+                
+                // Orthogonalize against previous states
+                for j in 0..state {
+                    let overlap: f64 = psi.iter()
+                        .zip(wavefunctions.column(j).iter())
+                        .map(|(&a, &b)| a * b * dx)
+                        .sum();
+                    for i in 0..self.n_points {
+                        psi[i] -= overlap * wavefunctions[[i, j]];
+                    }
+                }
+                
+                // Normalize
+                let norm: f64 = psi.iter().map(|&x| x * x * dx).sum::<f64>().sqrt();
+                if norm > 1e-10 {
+                    psi /= norm;
+                }
+            }
+            
+            energies[state] = eigenvalue;
+            wavefunctions.column_mut(state).assign(&psi);
+        }
+        
+        // Sort by energy
+        let mut indices: Vec<usize> = (0..n_states).collect();
+        indices.sort_by(|&i, &j| energies[i].partial_cmp(&energies[j]).unwrap());
+        
+        let sorted_energies = Array1::from_vec(indices.iter().map(|&i| energies[i]).collect());
+        let mut sorted_wavefunctions = Array2::zeros((self.n_points, n_states));
+        for (new_idx, &old_idx) in indices.iter().enumerate() {
+            sorted_wavefunctions.column_mut(new_idx).assign(&wavefunctions.column(old_idx));
+        }
+        
+        Ok((sorted_energies, sorted_wavefunctions))
     }
     
     /// Create initial Gaussian wave packet

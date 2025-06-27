@@ -10,6 +10,9 @@ use std::process::Command;
 use serde_json;
 
 // Backend implementation modules
+#[cfg(feature = "cuda")]
+pub mod cuda;
+
 #[cfg(all(feature = "metal", target_os = "macos"))]
 pub mod metal;
 
@@ -17,6 +20,9 @@ pub mod metal;
 pub mod metal_mps;
 
 // Re-export backend implementations
+#[cfg(feature = "cuda")]
+pub use cuda::{CudaContext, get_optimizer_kernels};
+
 #[cfg(all(feature = "metal", target_os = "macos"))]
 pub use metal::{MetalBufferOptions, MetalContext, MetalStorageMode};
 

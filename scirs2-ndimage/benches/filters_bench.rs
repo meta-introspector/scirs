@@ -3,6 +3,9 @@ use ndarray::{Array1, Array2, Array3};
 use scirs2_ndimage::filters::{
     bilateral_filter, filter_functions, gaussian_filter, generic_filter, maximum_filter,
     median_filter, minimum_filter, uniform_filter, BorderMode,
+    // Edge detection filters
+    sobel, laplace, gradient_magnitude,
+    sobel_2d_optimized, laplace_2d_optimized, gradient_magnitude_optimized,
 };
 use std::time::Duration;
 
@@ -228,12 +231,98 @@ fn bench_dimensionalities(c: &mut Criterion) {
     group.finish();
 }
 
+/// Benchmark edge detection filters: optimized vs standard
+fn bench_edge_detection(c: &mut Criterion) {
+    let mut group = c.benchmark_group("edge_detection");
+    group.measurement_time(Duration::from_secs(10));
+
+    // Test different sizes to see scaling behavior
+    let sizes = vec![100, 500, 1000];
+
+    for size in sizes {
+        let input = Array2::from_shape_fn((size, size), |(i, j)| {
+            ((i as f64 / 10.0).sin() + (j as f64 / 10.0).cos()) * 255.0
+        });
+
+        // Benchmark standard Sobel
+        group.bench_with_input(
+            BenchmarkId::new("sobel_standard", format!("{}x{}", size, size)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    sobel(black_box(input), 0, Some(BorderMode::Reflect)).unwrap()
+                })
+            },
+        );
+
+        // Benchmark optimized Sobel
+        group.bench_with_input(
+            BenchmarkId::new("sobel_optimized", format!("{}x{}", size, size)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    sobel_2d_optimized(black_box(&input.view()), 0, Some(BorderMode::Reflect)).unwrap()
+                })
+            },
+        );
+
+        // Benchmark standard Laplacian
+        group.bench_with_input(
+            BenchmarkId::new("laplace_standard", format!("{}x{}", size, size)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    laplace(black_box(input), false, Some(BorderMode::Reflect)).unwrap()
+                })
+            },
+        );
+
+        // Benchmark optimized Laplacian
+        group.bench_with_input(
+            BenchmarkId::new("laplace_optimized", format!("{}x{}", size, size)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    laplace_2d_optimized(black_box(&input.view()), false, Some(BorderMode::Reflect)).unwrap()
+                })
+            },
+        );
+
+        // Benchmark gradient magnitude computation
+        let grad_x = sobel(&input, 1, Some(BorderMode::Reflect)).unwrap();
+        let grad_y = sobel(&input, 0, Some(BorderMode::Reflect)).unwrap();
+
+        group.bench_with_input(
+            BenchmarkId::new("gradient_magnitude_standard", format!("{}x{}", size, size)),
+            &(&grad_x, &grad_y),
+            |b, (gx, gy)| {
+                b.iter(|| {
+                    gradient_magnitude(black_box(gx), black_box(gy)).unwrap()
+                })
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("gradient_magnitude_optimized", format!("{}x{}", size, size)),
+            &(&grad_x, &grad_y),
+            |b, (gx, gy)| {
+                b.iter(|| {
+                    gradient_magnitude_optimized(black_box(&gx.view()), black_box(&gy.view())).unwrap()
+                })
+            },
+        );
+    }
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     bench_generic_filter,
     bench_standard_filters,
     bench_bilateral_filter,
     bench_border_modes,
-    bench_dimensionalities
+    bench_dimensionalities,
+    bench_edge_detection
 );
 criterion_main!(benches);

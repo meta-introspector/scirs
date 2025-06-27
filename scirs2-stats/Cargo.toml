@@ -38,6 +38,8 @@ default = []
 openblas = ["scirs2-core/openblas"]
 intel-mkl = ["scirs2-core/intel-mkl"]
 netlib = ["scirs2-core/netlib"]
+# Memory mapping support for large files
+memmap = []
 
 [[bench]]
 name = "distributions"
@@ -49,4 +51,8 @@ harness = false
 
 [[bench]]
 name = "scipy_comparison"
+harness = false
+
+[[bench]]
+name = "comprehensive_scipy_comparison"
 harness = false

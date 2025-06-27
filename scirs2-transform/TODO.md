@@ -53,16 +53,16 @@
 ## Post-Alpha Release Roadmap 🚀
 
 ### Version 0.1.0 (Beta) - Enhanced Performance & Usability
-- [ ] **Pipeline API**: Sequential transformation chains and ColumnTransformer
-- [ ] **SIMD Acceleration**: Vectorized operations using scirs2-core::simd
-- [ ] **Benchmarking Suite**: Performance comparison with scikit-learn
-- [ ] **Memory Optimization**: Out-of-core processing for large datasets
+- [x] **Pipeline API**: Sequential transformation chains and ColumnTransformer
+- [x] **SIMD Acceleration**: Vectorized operations using scirs2-core::simd
+- [x] **Benchmarking Suite**: Performance comparison with scikit-learn
+- [x] **Memory Optimization**: Out-of-core processing for large datasets
 
 ### Version 0.2.0 - Advanced Algorithms
-- [ ] **Advanced Dimensionality Reduction**: UMAP, Isomap, Locally Linear Embedding
-- [ ] **Matrix Decomposition**: Non-negative Matrix Factorization (NMF), Dictionary Learning
-- [ ] **Time Series Features**: Fourier features, wavelet features, lag features
-- [ ] **Advanced Feature Selection**: Recursive Feature Elimination, mutual information
+- [x] **Advanced Dimensionality Reduction**: UMAP, Isomap, Locally Linear Embedding
+- [x] **Matrix Decomposition**: Non-negative Matrix Factorization (NMF), Dictionary Learning
+- [x] **Time Series Features**: Fourier features, wavelet features, lag features
+- [x] **Advanced Feature Selection**: Recursive Feature Elimination, mutual information
 
 ### Version 0.3.0 - Specialized Domains
 - [ ] **Text Processing**: CountVectorizer, TfidfVectorizer, HashingVectorizer

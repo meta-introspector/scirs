@@ -16,6 +16,8 @@ pub mod measurements;
 pub mod memory_management;
 pub mod mmap_io;
 pub mod morphology;
+pub mod profiling;
+pub mod scipy_compat;
 pub mod segmentation;
 pub mod streaming;
 pub mod threading;

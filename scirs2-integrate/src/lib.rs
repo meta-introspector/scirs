@@ -270,10 +270,20 @@ pub use specialized::{
 };
 // Export geometric integration methods
 pub use geometric::{
-    LieGroupIntegrator, LieAlgebra, ExponentialMap, SO3Integrator, SE3Integrator,
-    VolumePreservingIntegrator, DivergenceFreeFlow, IncompressibleFlow,
-    StructurePreservingIntegrator, ConservationChecker, GeometricInvariant,
+    // Lie group integration
+    LieGroupIntegrator, LieAlgebra, ExponentialMap, LieGroupMethod,
+    SO3, SO3Integrator, So3, SE3, SE3Integrator, Se3,
+    SLn, Sln, GLn, Gln, Sp2n, HeisenbergGroup, HeisenbergAlgebra,
+    // Volume-preserving integration
+    VolumePreservingIntegrator, VolumePreservingMethod, DivergenceFreeFlow, IncompressibleFlow,
+    CircularFlow2D, ABCFlow, DoubleGyre, VolumeChecker,
+    StreamFunction, StuartVortex, TaylorGreenVortex, HamiltonianFlow,
+    ModifiedMidpointIntegrator, VariationalIntegrator, DiscreteGradientIntegrator,
+    // Structure-preserving integration
+    StructurePreservingIntegrator, StructurePreservingMethod, ConservationChecker, GeometricInvariant,
     EnergyPreservingMethod, MomentumPreservingMethod,
+    SplittingIntegrator, EnergyMomentumIntegrator, ConstrainedIntegrator, MultiSymplecticIntegrator,
+    invariants::{EnergyInvariant, LinearMomentumInvariant, AngularMomentumInvariant2D},
 };
 // Implicit solvers will be exposed in a future update
 // pub use pde::implicit::{

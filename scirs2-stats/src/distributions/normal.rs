@@ -247,7 +247,7 @@ fn erf<F: Float>(x: F) -> F {
 // approximation directly in the ppf method
 
 // Implement the Distribution trait for Normal
-impl<F: Float + NumCast> Distribution<F> for Normal<F> {
+impl<F: Float + NumCast + std::fmt::Display> Distribution<F> for Normal<F> {
     fn mean(&self) -> F {
         self.loc
     }
@@ -261,7 +261,7 @@ impl<F: Float + NumCast> Distribution<F> for Normal<F> {
     }
 
     fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        self.rvs(size)
+        Normal::rvs(self, size)
     }
 
     fn entropy(&self) -> F {
@@ -275,24 +275,24 @@ impl<F: Float + NumCast> Distribution<F> for Normal<F> {
 }
 
 // Implement the ContinuousDistribution trait for Normal
-impl<F: Float + NumCast> ContinuousDistribution<F> for Normal<F> {
+impl<F: Float + NumCast + std::fmt::Display> ContinuousDistribution<F> for Normal<F> {
     fn pdf(&self, x: F) -> F {
-        self.pdf(x)
+        Normal::pdf(self, x)
     }
 
     fn cdf(&self, x: F) -> F {
-        self.cdf(x)
+        Normal::cdf(self, x)
     }
 
     fn ppf(&self, p: F) -> StatsResult<F> {
-        self.ppf(p)
+        Normal::ppf(self, p)
     }
 }
 
 /// Implementation of SampleableDistribution for Normal
-impl<F: Float + NumCast> SampleableDistribution<F> for Normal<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Normal<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let array = self.rvs(size)?;
+        let array = Normal::rvs(self, size)?;
         Ok(array.to_vec())
     }
 }

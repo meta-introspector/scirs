@@ -9,9 +9,13 @@ repository.workspace = true
 keywords = ["transform", "feature-engineering", "scientific", "ai", "machine-learning"]
 categories = ["science", "mathematics", "algorithms"]
 
+[[bench]]
+name = "transform_bench"
+harness = false
+
 [dependencies]
 # Core dependencies
-scirs2-core = { workspace = true, features = ["validation", "parallel"] }
+scirs2-core = { workspace = true, features = ["validation", "parallel", "simd"] }
 scirs2-linalg = { workspace = true }
 scirs2-stats = { workspace = true }
 ndarray = { workspace = true }
@@ -23,15 +27,20 @@ thiserror = { workspace = true }
 approx = { workspace = true }
 # rayon = { workspace = true }  # Now use scirs2-core parallel abstractions
 rand = { workspace = true }
+num_cpus = "1.16"
 
 # Future dependency for PandRS with appropriate abstractions
 # pandrs_wrapper = { path = "../wrappers/pandrs_wrapper", optional = true }
 
 [features]
 default = []
+simd = ["scirs2-core/simd"]
 # Enable external ML library wrappers
 # pandrs = ["dep:pandrs_wrapper"]
 
 [dev-dependencies]
 scirs2-datasets = { workspace = true }
 plotters = { workspace = true }
+criterion = { workspace = true }
+rand = { workspace = true }
+ndarray-rand = { workspace = true }

@@ -103,6 +103,8 @@ fn detect_hamiltonian_conservation<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],
     state_vars: &[Variable],
 ) -> IntegrateResult<Option<ConservationLaw<F>>> {
+    use SymbolicExpression::*;
+    
     let n = expressions.len();
     
     // For Hamiltonian systems, we need even dimension
@@ -110,22 +112,246 @@ fn detect_hamiltonian_conservation<F: IntegrateFloat>(
         return Ok(None);
     }
     
-    let _half_n = n / 2;
+    let half_n = n / 2;
     
     // Check if the system has the form:
     // dq/dt = ∂H/∂p
     // dp/dt = -∂H/∂q
     
-    // Generate Jacobian to analyze structure
-    let _jacobian = generate_jacobian(expressions, state_vars, None)?;
+    // Assume first half are position variables, second half are momentum
+    let q_vars: Vec<_> = state_vars[..half_n].to_vec();
+    let p_vars: Vec<_> = state_vars[half_n..].to_vec();
     
-    // Simplified check: look for skew-symmetric structure
-    // This is a simplified version - full detection would require
-    // solving for the Hamiltonian function
+    // Try to construct a Hamiltonian by integration
+    // For a Hamiltonian system, we need:
+    // dq_i/dt = ∂H/∂p_i  =>  H contains terms ∫ (dq_i/dt) dp_i
+    // dp_i/dt = -∂H/∂q_i  =>  H contains terms -∫ (dp_i/dt) dq_i
     
-    // For now, return None as full implementation requires
-    // solving partial differential equations
-    Ok(None)
+    // Start with kinetic energy term (quadratic in momenta)
+    let mut hamiltonian = Constant(F::zero());
+    
+    // Add kinetic energy terms by integrating dq/dt expressions
+    for (i, q_expr) in expressions[..half_n].iter().enumerate() {
+        // If dq/dt = p/m, then T = p²/(2m)
+        // Check if expression is linear in corresponding momentum
+        if let Some(coeff) = extract_linear_coefficient(q_expr, &p_vars[i]) {
+            // H += p²/(2*coeff)
+            hamiltonian = Add(
+                Box::new(hamiltonian),
+                Box::new(Div(
+                    Box::new(Pow(
+                        Box::new(Var(p_vars[i].clone())),
+                        Box::new(Constant(F::from(2.0).unwrap()))
+                    )),
+                    Box::new(Mul(
+                        Box::new(Constant(F::from(2.0).unwrap())),
+                        Box::new(Constant(coeff))
+                    ))
+                ))
+            );
+        }
+    }
+    
+    // Add potential energy terms by integrating -dp/dt expressions
+    for (i, p_expr) in expressions[half_n..].iter().enumerate() {
+        // If dp/dt = -∂V/∂q, then V = -∫ (dp/dt) dq
+        // For now, handle polynomial potentials
+        if let Some(potential_term) = integrate_expression(
+            &Neg(Box::new(p_expr.clone())), 
+            &q_vars[i]
+        ) {
+            hamiltonian = Add(
+                Box::new(hamiltonian),
+                Box::new(potential_term)
+            );
+        }
+    }
+    
+    // Verify that this is indeed a Hamiltonian by checking Hamilton's equations
+    let mut is_hamiltonian = true;
+    
+    // Check dq/dt = ∂H/∂p
+    for (i, q_expr) in expressions[..half_n].iter().enumerate() {
+        let h_deriv_p = hamiltonian.differentiate(&p_vars[i]);
+        let h_deriv_p_simplified = simplify(&h_deriv_p);
+        let q_expr_simplified = simplify(q_expr);
+        
+        if !expressions_equal(&q_expr_simplified, &h_deriv_p_simplified) {
+            is_hamiltonian = false;
+            break;
+        }
+    }
+    
+    // Check dp/dt = -∂H/∂q
+    if is_hamiltonian {
+        for (i, p_expr) in expressions[half_n..].iter().enumerate() {
+            let h_deriv_q = hamiltonian.differentiate(&q_vars[i]);
+            let neg_h_deriv_q = Neg(Box::new(h_deriv_q));
+            let neg_h_deriv_q_simplified = simplify(&neg_h_deriv_q);
+            let p_expr_simplified = simplify(p_expr);
+            
+            if !expressions_equal(&p_expr_simplified, &neg_h_deriv_q_simplified) {
+                is_hamiltonian = false;
+                break;
+            }
+        }
+    }
+    
+    if is_hamiltonian {
+        Ok(Some(ConservationLaw::new(
+            "Hamiltonian (Total Energy)",
+            simplify(&hamiltonian),
+            F::from(1e-10).unwrap()
+        )))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Extract linear coefficient if expression is linear in variable
+fn extract_linear_coefficient<F: IntegrateFloat>(
+    expr: &SymbolicExpression<F>,
+    var: &Variable
+) -> Option<F> {
+    use SymbolicExpression::*;
+    
+    match expr {
+        Var(v) if v == var => Some(F::one()),
+        Mul(a, b) => {
+            // Check if one side is the variable and other is constant
+            match (a.as_ref(), b.as_ref()) {
+                (Var(v), Constant(c)) if v == var => Some(*c),
+                (Constant(c), Var(v)) if v == var => Some(*c),
+                _ => None,
+            }
+        }
+        Div(a, b) => {
+            // Check if numerator is the variable and denominator is constant
+            match (a.as_ref(), b.as_ref()) {
+                (Var(v), Constant(c)) if v == var => Some(F::one() / *c),
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Simple symbolic integration for polynomial expressions
+fn integrate_expression<F: IntegrateFloat>(
+    expr: &SymbolicExpression<F>,
+    var: &Variable
+) -> Option<SymbolicExpression<F>> {
+    use SymbolicExpression::*;
+    
+    match expr {
+        Constant(c) => Some(Mul(
+            Box::new(Constant(*c)),
+            Box::new(Var(var.clone()))
+        )),
+        Var(v) if v == var => Some(Div(
+            Box::new(Pow(
+                Box::new(Var(var.clone())),
+                Box::new(Constant(F::from(2.0).unwrap()))
+            )),
+            Box::new(Constant(F::from(2.0).unwrap()))
+        )),
+        Pow(base, exp) => {
+            if let (Var(v), Constant(n)) = (base.as_ref(), exp.as_ref()) {
+                if v == var && (*n + F::one()).abs() > F::epsilon() {
+                    // ∫x^n dx = x^(n+1)/(n+1)
+                    return Some(Div(
+                        Box::new(Pow(
+                            Box::new(Var(var.clone())),
+                            Box::new(Constant(*n + F::one()))
+                        )),
+                        Box::new(Constant(*n + F::one()))
+                    ));
+                }
+            }
+            None
+        }
+        Mul(a, b) => {
+            // Try to integrate if one factor doesn't depend on var
+            if !depends_on_var(a, var) {
+                if let Some(b_int) = integrate_expression(b, var) {
+                    return Some(Mul(a.clone(), Box::new(b_int)));
+                }
+            } else if !depends_on_var(b, var) {
+                if let Some(a_int) = integrate_expression(a, var) {
+                    return Some(Mul(Box::new(a_int), b.clone()));
+                }
+            }
+            None
+        }
+        Add(a, b) => {
+            let a_int = integrate_expression(a, var)?;
+            let b_int = integrate_expression(b, var)?;
+            Some(Add(Box::new(a_int), Box::new(b_int)))
+        }
+        Sub(a, b) => {
+            let a_int = integrate_expression(a, var)?;
+            let b_int = integrate_expression(b, var)?;
+            Some(Sub(Box::new(a_int), Box::new(b_int)))
+        }
+        Neg(a) => {
+            let a_int = integrate_expression(a, var)?;
+            Some(Neg(Box::new(a_int)))
+        }
+        Sin(a) => {
+            if let Var(v) = a.as_ref() {
+                if v == var {
+                    // ∫sin(x)dx = -cos(x)
+                    return Some(Neg(Box::new(Cos(Box::new(Var(var.clone()))))));
+                }
+            }
+            None
+        }
+        Cos(a) => {
+            if let Var(v) = a.as_ref() {
+                if v == var {
+                    // ∫cos(x)dx = sin(x)
+                    return Some(Sin(Box::new(Var(var.clone()))));
+                }
+            }
+            None
+        }
+        _ => None,
+    }
+}
+
+/// Check if expression depends on variable
+fn depends_on_var<F: IntegrateFloat>(
+    expr: &SymbolicExpression<F>,
+    var: &Variable
+) -> bool {
+    expr.variables().contains(var)
+}
+
+/// Check if two expressions are structurally equal
+fn expressions_equal<F: IntegrateFloat>(
+    expr1: &SymbolicExpression<F>,
+    expr2: &SymbolicExpression<F>
+) -> bool {
+    use SymbolicExpression::*;
+    
+    match (expr1, expr2) {
+        (Constant(a), Constant(b)) => (a - b).abs() < F::epsilon(),
+        (Var(a), Var(b)) => a == b,
+        (Add(a1, b1), Add(a2, b2)) |
+        (Sub(a1, b1), Sub(a2, b2)) |
+        (Mul(a1, b1), Mul(a2, b2)) |
+        (Div(a1, b1), Div(a2, b2)) |
+        (Pow(a1, b1), Pow(a2, b2)) => {
+            expressions_equal(a1, a2) && expressions_equal(b1, b2)
+        }
+        (Neg(a), Neg(b)) |
+        (Sin(a), Sin(b)) |
+        (Cos(a), Cos(b)) |
+        (Exp(a), Exp(b)) |
+        (Ln(a), Ln(b)) |
+        (Sqrt(a), Sqrt(b)) => expressions_equal(a, b),
+        _ => false,
+    }
 }
 
 /// Detect linear conservation laws of the form c^T * y = constant

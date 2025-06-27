@@ -1,8 +1,9 @@
 //! Benchmarks for quantized matrix-free solvers
-use std::hint::black_box;
 //!
 //! This benchmark compares the performance of regular iterative solvers with
 //! specialized solvers for quantized matrices.
+
+use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, ArrayView1};

@@ -101,6 +101,114 @@ impl<F: IntegrateFloat> Dual<F> {
             -self
         }
     }
+
+    /// Compute tan(x)
+    pub fn tan(self) -> Self {
+        let cos_val = self.val.cos();
+        Dual {
+            val: self.val.tan(),
+            der: self.der / (cos_val * cos_val),
+        }
+    }
+
+    /// Compute tanh(x)
+    pub fn tanh(self) -> Self {
+        let tanh_val = self.val.tanh();
+        Dual {
+            val: tanh_val,
+            der: self.der * (F::one() - tanh_val * tanh_val),
+        }
+    }
+
+    /// Compute sinh(x)
+    pub fn sinh(self) -> Self {
+        Dual {
+            val: self.val.sinh(),
+            der: self.der * self.val.cosh(),
+        }
+    }
+
+    /// Compute cosh(x)
+    pub fn cosh(self) -> Self {
+        Dual {
+            val: self.val.cosh(),
+            der: self.der * self.val.sinh(),
+        }
+    }
+
+    /// Compute atan(x)
+    pub fn atan(self) -> Self {
+        Dual {
+            val: self.val.atan(),
+            der: self.der / (F::one() + self.val * self.val),
+        }
+    }
+
+    /// Compute asin(x)
+    pub fn asin(self) -> Self {
+        Dual {
+            val: self.val.asin(),
+            der: self.der / (F::one() - self.val * self.val).sqrt(),
+        }
+    }
+
+    /// Compute acos(x)
+    pub fn acos(self) -> Self {
+        Dual {
+            val: self.val.acos(),
+            der: -self.der / (F::one() - self.val * self.val).sqrt(),
+        }
+    }
+
+    /// Compute atan2(y, x)
+    pub fn atan2(self, x: Self) -> Self {
+        let r2 = self.val * self.val + x.val * x.val;
+        Dual {
+            val: self.val.atan2(x.val),
+            der: (self.der * x.val - self.val * x.der) / r2,
+        }
+    }
+
+    /// Compute max(self, other)
+    pub fn max(self, other: Self) -> Self {
+        if self.val > other.val {
+            self
+        } else if self.val < other.val {
+            other
+        } else {
+            // When values are equal, average the derivatives
+            Dual {
+                val: self.val,
+                der: (self.der + other.der) / F::from(2.0).unwrap(),
+            }
+        }
+    }
+
+    /// Compute min(self, other)
+    pub fn min(self, other: Self) -> Self {
+        if self.val < other.val {
+            self
+        } else if self.val > other.val {
+            other
+        } else {
+            // When values are equal, average the derivatives
+            Dual {
+                val: self.val,
+                der: (self.der + other.der) / F::from(2.0).unwrap(),
+            }
+        }
+    }
+
+    /// Compute x^y where both x and y are dual numbers
+    pub fn pow(self, other: Self) -> Self {
+        let val = self.val.powf(other.val);
+        let der = if self.val > F::zero() {
+            val * (other.der * self.val.ln() + other.val * self.der / self.val)
+        } else {
+            F::zero() // Handle edge case
+        };
+        Dual { val, der }
+    }
 }
 
 // Arithmetic operations for dual numbers

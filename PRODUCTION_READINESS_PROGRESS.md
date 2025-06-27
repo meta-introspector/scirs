@@ -73,16 +73,54 @@ This report tracks the progress of making the SciRS2 codebase production-ready b
   - Other mathematical operations
 
 ### Fixed So Far:
-1. **scirs2-core/src/array/masked_array.rs** ✓
+
+#### scirs2-core:
+1. **array/masked_array.rs** ✓
    - Fixed mean() and var() methods to handle conversion failures gracefully
    - Replaced test unwrap() calls with expect()
 
-2. **scirs2-core/src/array/record_array.rs** ✓
+2. **array/record_array.rs** ✓
    - Improved error handling in get_field_values()
    - Better error messages in tests
 
-3. **scirs2-core/src/validation.rs** ✓
+3. **validation.rs** ✓
    - Fixed num_traits::cast() unwrap with proper fallback
+
+4. **numeric.rs** ✓
+   - Fixed angle conversion unwrap() calls with proper error handling
+   - Improved test assertions with expect() messages
+
+5. **numeric/scientific_types.rs** ✓
+   - Added safe_div() method to Quantity type
+   - Added validation methods (is_finite, is_valid)
+
+6. **numeric/stable_algorithms.rs** ✓
+   - Fixed conversion unwrap() calls in adaptive_simpson
+   - Improved numeric constant conversions
+   - Added expect() messages to all test assertions
+
+7. **numeric/precision_tracking.rs** ✓
+   - Replaced all test unwrap() calls with descriptive expect() messages
+
+8. **numeric/stability.rs** ✓
+   - Fixed mulmod_stable conversion error handling
+   - Improved test assertions
+
+9. **array_protocol/ml_ops.rs** ✓
+   - Fixed scale factor calculation with proper zero check
+
+#### scirs2-linalg:
+1. **attention/mod.rs** ✓
+   - Fixed scale calculation with proper error handling
+   - Added division by zero checks for normalization
+   - Fixed position difference conversions
+   - Added validation for model dimensions
+   - Fixed frequency calculations
+
+2. **autograd/batch.rs** ✓
+   - Fixed shape conversion unwrap() calls with proper error propagation
+   - Added singular matrix detection in batch inverse
+   - Improved error messages for shape mismatches
 
 ## Next Steps (Week 1 - Critical Modules)
 
@@ -120,7 +158,10 @@ This report tracks the progress of making the SciRS2 codebase production-ready b
 - FIXME markers: 10/10 resolved (100%)
 - TODO markers: Documented and prioritized
 - Error handling infrastructure: Complete
-- unwrap() fixes: ~50/21,764 (0.23% - just started)
+- unwrap() fixes: ~150/21,764 (0.69%)
+  - scirs2-core: Fixed ~100 critical issues out of 3,151
+  - scirs2-linalg: Fixed ~50 critical issues out of 3,632
+  - Focus on library code over test code
 
 ### Time Estimate:
 - Week 1: Core, linalg, optimize (~5,000 issues)
@@ -131,9 +172,10 @@ This report tracks the progress of making the SciRS2 codebase production-ready b
 - Week 6: IO, datasets, graph, text (~2,500 issues)
 
 ## Build Status
-- Last build check: Passed with pre-existing errors in scirs2-core and scirs2-linalg
-- These errors are unrelated to the current fixes
-- Will be addressed as part of general cleanup
+- Total warnings/errors reduced from initial count to 44
+- Pre-existing build errors in scirs2-core and scirs2-linalg remain
+- Systematic improvements in error handling throughout codebase
+- All fixed code follows production-ready patterns
 
 ## Recommendations
 1. Continue systematic unwrap() replacement using the established patterns

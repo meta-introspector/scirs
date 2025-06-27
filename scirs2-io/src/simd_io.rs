@@ -5,8 +5,7 @@
 
 use crate::error::{IoError, Result};
 use ndarray::{Array1, ArrayView1, ArrayViewMut1};
-use scirs2_core::simd_ops::{SimdUnifiedOps, PlatformCapabilities};
-use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 
 /// SIMD-accelerated data transformation during I/O
 pub struct SimdIoProcessor;

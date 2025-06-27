@@ -40,7 +40,7 @@ pub use coloring::*;
 pub use community::{
     fluid_communities, greedy_modularity_optimization, hierarchical_communities,
     infomap_communities, label_propagation, louvain_communities, modularity,
-    modularity_optimization, CommunityStructure, InfomapResult,
+    modularity_optimization, CommunityResult, CommunityStructure, InfomapResult,
 };
 pub use connectivity::*;
 pub use decomposition::*;

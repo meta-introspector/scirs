@@ -4,9 +4,10 @@
 //! and related special functions with better handling of edge cases and numerical stability.
 
 use crate::error::{SpecialError, SpecialResult};
+use crate::validation;
 use num_traits::{Float, FromPrimitive};
 use std::f64;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 /// High-precision constants for gamma function computation
 mod constants {
@@ -181,6 +182,76 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
 
     // For other values, use the Lanczos approximation with enhanced accuracy
     improved_lanczos_gamma(x)
+}
+
+/// Gamma function with full error handling and validation.
+///
+/// This is the safe version of the gamma function that returns a Result type
+/// with comprehensive error handling and validation.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * `Ok(gamma(x))` if computation is successful
+/// * `Err(SpecialError)` if there's a domain error or computation failure
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::gamma_safe;
+///
+/// // Valid input
+/// let result = gamma_safe(5.0);
+/// assert!(result.is_ok());
+/// assert!((result.unwrap() - 24.0).abs() < 1e-10);
+///
+/// // Domain error at negative integer
+/// let result = gamma_safe(-1.0);
+/// assert!(result.is_err());
+/// ```
+pub fn gamma_safe<F>(x: F) -> SpecialResult<F>
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
+{
+    // Validate input
+    validation::check_finite(x, "x")?;
+    
+    // Special cases
+    if x.is_nan() {
+        return Ok(F::nan());
+    }
+    
+    if x == F::zero() {
+        return Ok(F::infinity()); // Gamma(0) = +infinity
+    }
+    
+    // For negative x, check if it's a negative integer (where gamma is undefined)
+    if x < F::zero() {
+        let x_f64 = x.to_f64().unwrap();
+        let nearest_int = x_f64.round() as i32;
+        if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-14 {
+            return Err(SpecialError::DomainError(format!(
+                "Gamma function is undefined at negative integer x = {}",
+                x
+            )));
+        }
+    }
+    
+    // Use the existing gamma implementation
+    let result = gamma(x);
+    
+    // Validate output
+    if result.is_nan() && !x.is_nan() {
+        return Err(SpecialError::ComputationError(format!(
+            "Gamma function computation failed for x = {}",
+            x
+        )));
+    }
+    
+    Ok(result)
 }
 
 /// Compute the natural logarithm of the gamma function with enhanced numerical stability.
@@ -414,6 +485,66 @@ pub fn digamma<
     rational_digamma_1_to_2(z) + result
 }
 
+/// Digamma function with full error handling and validation.
+///
+/// This is the safe version of the digamma function that returns a Result type
+/// with comprehensive error handling and validation.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * `Ok(digamma(x))` if computation is successful
+/// * `Err(SpecialError)` if there's a domain error or computation failure
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::digamma_safe;
+///
+/// // Valid input
+/// let result = digamma_safe(5.0);
+/// assert!(result.is_ok());
+///
+/// // Domain error at negative integer
+/// let result = digamma_safe(-1.0);
+/// assert!(result.is_err());
+/// ```
+pub fn digamma_safe<F>(x: F) -> SpecialResult<F>
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
+{
+    // Validate input
+    validation::check_finite(x, "x")?;
+    
+    // Check for poles (negative integers and zero)
+    if x <= F::zero() {
+        let x_f64 = x.to_f64().unwrap();
+        let nearest_int = x_f64.round() as i32;
+        if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-14 {
+            return Err(SpecialError::DomainError(format!(
+                "Digamma function has a pole at x = {}",
+                x
+            )));
+        }
+    }
+    
+    // Use the existing digamma implementation
+    let result = digamma(x);
+    
+    // Validate output
+    if result.is_nan() && !x.is_nan() {
+        return Err(SpecialError::ComputationError(format!(
+            "Digamma function computation failed for x = {}",
+            x
+        )));
+    }
+    
+    Ok(result)
+}
+
 /// Rational approximation for digamma function with x in (1,2)
 fn rational_digamma_1_to_2<F: Float + FromPrimitive>(z: F) -> F {
     // From Boost's implementation: rational approximation for x in [1, 2]
@@ -544,6 +675,56 @@ pub fn beta<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F) 
 
         g_a * g_b / g_ab
     }
+}
+
+/// Beta function with full error handling and validation.
+///
+/// This is the safe version of the beta function that returns a Result type
+/// with comprehensive error handling and validation.
+///
+/// # Arguments
+///
+/// * `a` - First parameter (must be positive)
+/// * `b` - Second parameter (must be positive)
+///
+/// # Returns
+///
+/// * `Ok(beta(a, b))` if computation is successful
+/// * `Err(SpecialError)` if there's a domain error or computation failure
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::beta_safe;
+///
+/// // Valid inputs
+/// let result = beta_safe(2.0, 3.0);
+/// assert!(result.is_ok());
+///
+/// // Domain error for negative input
+/// let result = beta_safe(-1.0, 2.0);
+/// assert!(result.is_err());
+/// ```
+pub fn beta_safe<F>(a: F, b: F) -> SpecialResult<F>
+where
+    F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
+{
+    // Validate inputs
+    validation::check_positive(a, "a")?;
+    validation::check_positive(b, "b")?;
+    
+    // Use the existing beta implementation
+    let result = beta(a, b);
+    
+    // Validate output
+    if result.is_nan() {
+        return Err(SpecialError::ComputationError(format!(
+            "Beta function computation failed for a = {}, b = {}",
+            a, b
+        )));
+    }
+    
+    Ok(result)
 }
 
 /// Natural logarithm of the beta function with enhanced numerical stability.

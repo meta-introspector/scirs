@@ -161,9 +161,9 @@ impl EnergyPreservingMethod {
         dt: f64,
     ) -> Result<(Array1<f64>, Array1<f64>)> {
         // Simplified AVF - uses quadrature to average the vector field
-        let n_quad = 3; // Number of quadrature points
-        let weights = vec![1.0/6.0, 4.0/6.0, 1.0/6.0]; // Simpson's rule weights
-        let nodes = vec![0.0, 0.5, 1.0]; // Quadrature nodes
+        let _n_quad = 3; // Number of quadrature points
+        let weights = [1.0/6.0, 4.0/6.0, 1.0/6.0]; // Simpson's rule weights
+        let nodes = [0.0, 0.5, 1.0]; // Quadrature nodes
         
         let mut q_avg = Array1::zeros(self.dim);
         let mut p_avg = Array1::zeros(self.dim);
@@ -327,6 +327,359 @@ impl ConservationChecker {
             .fold(0.0, f64::max);
         
         max_deviation / (1.0 + initial.abs())
+    }
+}
+
+/// Splitting method for separable Hamiltonians
+pub struct SplittingIntegrator {
+    /// Kinetic energy part T(p)
+    kinetic: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+    /// Potential energy part V(q)
+    potential: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+    /// System dimension
+    dim: usize,
+    /// Splitting coefficients
+    coefficients: Vec<(f64, f64)>,
+}
+
+impl SplittingIntegrator {
+    /// Create a new splitting integrator with Strang splitting
+    pub fn strang(
+        kinetic: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+        potential: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+        dim: usize,
+    ) -> Self {
+        let coefficients = vec![(0.5, 1.0), (0.5, 0.0)];
+        Self {
+            kinetic,
+            potential,
+            dim,
+            coefficients,
+        }
+    }
+    
+    /// Create with Yoshida 4th order coefficients
+    pub fn yoshida4(
+        kinetic: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+        potential: Box<dyn Fn(&ArrayView1<f64>) -> f64>,
+        dim: usize,
+    ) -> Self {
+        let x1 = 1.0 / (2.0 - 2.0_f64.powf(1.0/3.0));
+        let x0 = -2.0_f64.powf(1.0/3.0) * x1;
+        
+        let coefficients = vec![
+            (x1/2.0, x1),
+            ((x0+x1)/2.0, x0),
+            ((x0+x1)/2.0, x1),
+            (x1/2.0, 0.0),
+        ];
+        
+        Self {
+            kinetic,
+            potential,
+            dim,
+            coefficients,
+        }
+    }
+    
+    /// Perform one splitting step
+    pub fn step(
+        &self,
+        q: &ArrayView1<f64>,
+        p: &ArrayView1<f64>,
+        dt: f64,
+    ) -> Result<(Array1<f64>, Array1<f64>)> {
+        let mut q_current = q.to_owned();
+        let mut p_current = p.to_owned();
+        
+        for &(a, b) in &self.coefficients {
+            // Kick: p' = p - a*dt*∇V(q)
+            if a != 0.0 {
+                let grad_v = self.gradient_potential(&q_current.view());
+                p_current = p_current - grad_v * (a * dt);
+            }
+            
+            // Drift: q' = q + b*dt*∇T(p')
+            if b != 0.0 {
+                let grad_t = self.gradient_kinetic(&p_current.view());
+                q_current = q_current + grad_t * (b * dt);
+            }
+        }
+        
+        Ok((q_current, p_current))
+    }
+    
+    /// Compute gradient of kinetic energy
+    fn gradient_kinetic(&self, p: &ArrayView1<f64>) -> Array1<f64> {
+        let h = 1e-8;
+        let mut grad = Array1::zeros(self.dim);
+        
+        for i in 0..self.dim {
+            let mut p_plus = p.to_owned();
+            let mut p_minus = p.to_owned();
+            p_plus[i] += h;
+            p_minus[i] -= h;
+            
+            grad[i] = ((self.kinetic)(&p_plus.view()) - (self.kinetic)(&p_minus.view())) / (2.0 * h);
+        }
+        
+        grad
+    }
+    
+    /// Compute gradient of potential energy
+    fn gradient_potential(&self, q: &ArrayView1<f64>) -> Array1<f64> {
+        let h = 1e-8;
+        let mut grad = Array1::zeros(self.dim);
+        
+        for i in 0..self.dim {
+            let mut q_plus = q.to_owned();
+            let mut q_minus = q.to_owned();
+            q_plus[i] += h;
+            q_minus[i] -= h;
+            
+            grad[i] = ((self.potential)(&q_plus.view()) - (self.potential)(&q_minus.view())) / (2.0 * h);
+        }
+        
+        grad
+    }
+}
+
+/// Energy-momentum conserving integrator for nonlinear elastodynamics
+pub struct EnergyMomentumIntegrator {
+    /// Mass matrix
+    mass: Array1<f64>,
+    /// Stiffness function
+    stiffness: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+    /// System dimension
+    dim: usize,
+}
+
+impl EnergyMomentumIntegrator {
+    /// Create a new energy-momentum integrator
+    pub fn new(
+        mass: Array1<f64>,
+        stiffness: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+    ) -> Self {
+        let dim = mass.len();
+        Self {
+            mass,
+            stiffness,
+            dim,
+        }
+    }
+    
+    /// Integrate one step with energy-momentum conservation
+    pub fn step(
+        &self,
+        u: &ArrayView1<f64>,
+        v: &ArrayView1<f64>,
+        dt: f64,
+    ) -> Result<(Array1<f64>, Array1<f64>)> {
+        // Predict displacement
+        let u_pred = u + v * dt;
+        
+        // Compute average internal force
+        let f0 = (self.stiffness)(u);
+        let f1 = (self.stiffness)(&u_pred.view());
+        let f_avg = (&f0 + &f1) / 2.0;
+        
+        // Algorithmic acceleration
+        let a_alg = &f_avg / &self.mass;
+        
+        // Update
+        let u_new = u + v * dt + &a_alg * (dt * dt / 2.0);
+        let v_new = v + &a_alg * dt;
+        
+        // Energy-momentum correction
+        let momentum_error: f64 = (&v_new * &self.mass).sum() - (&v * &self.mass).sum();
+        if momentum_error.abs() > 1e-12 {
+            let v_corrected = &v_new - momentum_error / self.mass.sum();
+            Ok((u_new, v_corrected))
+        } else {
+            Ok((u_new, v_new))
+        }
+    }
+}
+
+/// Störmer-Verlet method for constrained systems
+pub struct ConstrainedIntegrator {
+    /// Constraint function g(q) = 0
+    constraints: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+    /// Constraint Jacobian
+    constraint_jacobian: Box<dyn Fn(&ArrayView1<f64>) -> ndarray::Array2<f64>>,
+    /// System dimension
+    dim: usize,
+    /// Number of constraints
+    n_constraints: usize,
+    /// Tolerance for constraint satisfaction
+    tol: f64,
+}
+
+impl ConstrainedIntegrator {
+    /// Create a new constrained integrator
+    pub fn new(
+        constraints: Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>,
+        constraint_jacobian: Box<dyn Fn(&ArrayView1<f64>) -> ndarray::Array2<f64>>,
+        dim: usize,
+        n_constraints: usize,
+    ) -> Self {
+        Self {
+            constraints,
+            constraint_jacobian,
+            dim,
+            n_constraints,
+            tol: 1e-10,
+        }
+    }
+    
+    /// SHAKE algorithm for position constraints
+    pub fn shake_step(
+        &self,
+        q: &ArrayView1<f64>,
+        p: &ArrayView1<f64>,
+        dt: f64,
+        force: &Array1<f64>,
+    ) -> Result<(Array1<f64>, Array1<f64>)> {
+        // Unconstrained step
+        let q_tilde = q + p * dt;
+        let p_tilde = p + force * dt;
+        
+        // SHAKE iteration for position constraints
+        let mut q_new = q_tilde.clone();
+        let mut lambda = Array1::zeros(self.n_constraints);
+        
+        for _ in 0..100 {
+            let g = (self.constraints)(&q_new.view());
+            if g.mapv(f64::abs).sum() < self.tol {
+                break;
+            }
+            
+            let G = (self.constraint_jacobian)(&q_new.view());
+            
+            // Solve for Lagrange multipliers
+            // G * G^T * λ = -g
+            let GGt = G.dot(&G.t());
+            lambda = self.solve_linear_system(&GGt, &(-&g))?;
+            
+            // Update position
+            let correction = G.t().dot(&lambda);
+            q_new = &q_new + &correction * dt * dt;
+        }
+        
+        // RATTLE for velocity constraints
+        let G_new = (self.constraint_jacobian)(&q_new.view());
+        let Gv = G_new.dot(&p_tilde);
+        
+        // Solve G * G^T * μ = -G * v
+        let GGt = G_new.dot(&G_new.t());
+        let mu = self.solve_linear_system(&GGt, &(-&Gv))?;
+        
+        let p_correction = G_new.t().dot(&mu);
+        let p_new = &p_tilde + &p_correction;
+        
+        Ok((q_new, p_new))
+    }
+    
+    /// Simple linear system solver (for small systems)
+    fn solve_linear_system(&self, A: &ndarray::Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+        // LU decomposition would be more robust
+        let n = b.len();
+        let mut x = Array1::zeros(n);
+        
+        // Simplified Gaussian elimination
+        let mut A_copy = A.clone();
+        let mut b_copy = b.clone();
+        
+        for i in 0..n {
+            // Pivot
+            let pivot = A_copy[[i, i]];
+            if pivot.abs() < 1e-14 {
+                return Err(crate::error::IntegrateError::ComputationError(
+                    "Singular constraint matrix".to_string()
+                ));
+            }
+            
+            // Eliminate
+            for j in (i+1)..n {
+                let factor = A_copy[[j, i]] / pivot;
+                for k in i..n {
+                    A_copy[[j, k]] -= factor * A_copy[[i, k]];
+                }
+                b_copy[j] -= factor * b_copy[i];
+            }
+        }
+        
+        // Back substitution
+        for i in (0..n).rev() {
+            let mut sum = b_copy[i];
+            for j in (i+1)..n {
+                sum -= A_copy[[i, j]] * x[j];
+            }
+            x[i] = sum / A_copy[[i, i]];
+        }
+        
+        Ok(x)
+    }
+}
+
+/// Multi-symplectic integrator for PDEs
+pub struct MultiSymplecticIntegrator {
+    /// Spatial dimension
+    spatial_dim: usize,
+    /// Number of fields
+    n_fields: usize,
+    /// Symplectic structure matrices
+    K: ndarray::Array2<f64>,
+    L: ndarray::Array2<f64>,
+}
+
+impl MultiSymplecticIntegrator {
+    /// Create a new multi-symplectic integrator
+    pub fn new(
+        spatial_dim: usize,
+        n_fields: usize,
+        K: ndarray::Array2<f64>,
+        L: ndarray::Array2<f64>,
+    ) -> Self {
+        Self {
+            spatial_dim,
+            n_fields,
+            K,
+            L,
+        }
+    }
+    
+    /// Preissman box scheme
+    pub fn preissman_step(
+        &self,
+        z: &ndarray::Array2<f64>,
+        S: &dyn Fn(&ArrayView1<f64>) -> Array1<f64>,
+        dt: f64,
+        dx: f64,
+    ) -> Result<ndarray::Array2<f64>> {
+        let (nx, _) = z.dim();
+        let mut z_new = z.clone();
+        
+        // Iterate through spatial grid
+        for i in 1..nx {
+            // Box average
+            let z_avg = (&z.row(i-1) + &z.row(i) + &z_new.row(i-1) + &z_new.row(i)) / 4.0;
+            
+            // Compute gradient of S
+            let grad_S = S(&z_avg.view());
+            
+            // Multi-symplectic conservation law
+            // K(z_t) + L(z_x) = ∇S(z)
+            let z_t = (&z_new.row(i) - &z.row(i) + &z_new.row(i-1) - &z.row(i-1)) / (2.0 * dt);
+            let z_x = (&z_new.row(i) + &z.row(i) - &z_new.row(i-1) - &z.row(i-1)) / (2.0 * dx);
+            
+            let residual = self.K.dot(&z_t) + self.L.dot(&z_x) - grad_S;
+            
+            // Newton iteration (simplified)
+            z_new.row_mut(i).assign(&(&z_new.row(i) - &residual * 0.5));
+        }
+        
+        Ok(z_new)
     }
 }
 

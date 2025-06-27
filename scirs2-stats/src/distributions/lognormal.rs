@@ -22,7 +22,7 @@ pub struct Lognormal<F: Float> {
     norm: Normal<F>,
 }
 
-impl<F: Float + NumCast> Lognormal<F> {
+impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// Create a new lognormal distribution with given parameters
     ///
     /// # Arguments
@@ -316,13 +316,13 @@ impl<F: Float + NumCast> Lognormal<F> {
 /// ```
 pub fn lognormal<F>(mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
-    F: Float + NumCast,
+    F: Float + NumCast + std::fmt::Display,
 {
     Lognormal::new(mu, sigma, loc)
 }
 
 /// Implementation of SampleableDistribution for Lognormal
-impl<F: Float + NumCast> SampleableDistribution<F> for Lognormal<F> {
+impl<F: Float + NumCast + std::fmt::Display> SampleableDistribution<F> for Lognormal<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs(size)
     }

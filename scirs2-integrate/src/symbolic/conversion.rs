@@ -273,6 +273,12 @@ impl<F: IntegrateFloat> SystemConverter<F> {
     }
 }
 
+impl<F: IntegrateFloat> Default for SystemConverter<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -29,5 +29,7 @@ approx = { workspace = true }
 
 [features]
 default = []
+# GPU acceleration support
+gpu = ["scirs2-core/gpu"]
 # Temporarily removed optim_integration to avoid circular dependency
 metrics_integration = ["dep:scirs2-metrics", "scirs2-metrics/optim_integration"]

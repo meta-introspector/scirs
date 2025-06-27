@@ -1,0 +1,402 @@
+//! SciPy ndimage compatibility layer
+//!
+//! This module provides a compatibility layer that mirrors SciPy's ndimage API,
+//! making it easier to migrate existing Python code to Rust.
+
+use ndarray::{Array, ArrayBase, ArrayView, ArrayViewMut, Data, DataMut, Dimension, Ix1, Ix2, IxDyn};
+use num_traits::{Float, FromPrimitive};
+use std::fmt::Debug;
+
+use crate::error::{NdimageError, NdimageResult};
+use crate::filters::{self, BoundaryMode};
+use crate::interpolation;
+use crate::measurements;
+use crate::morphology;
+
+/// Trait for ndarray types that can be used with SciPy-compatible functions
+pub trait NdimageArray<T>: Sized {
+    type Dim: Dimension;
+    
+    fn view(&self) -> ArrayView<T, Self::Dim>;
+    fn view_mut(&mut self) -> ArrayViewMut<T, Self::Dim>;
+}
+
+impl<T, S, D> NdimageArray<T> for ArrayBase<S, D>
+where
+    S: Data<Elem = T>,
+    D: Dimension,
+{
+    type Dim = D;
+    
+    fn view(&self) -> ArrayView<T, Self::Dim> {
+        self.view()
+    }
+    
+    fn view_mut(&mut self) -> ArrayViewMut<T, Self::Dim>
+    where
+        S: DataMut,
+    {
+        self.view_mut()
+    }
+}
+
+/// SciPy-compatible mode strings
+#[derive(Debug, Clone, Copy)]
+pub enum Mode {
+    Reflect,
+    Constant,
+    Nearest,
+    Mirror,
+    Wrap,
+}
+
+impl Mode {
+    /// Convert from string representation
+    pub fn from_str(s: &str) -> NdimageResult<Self> {
+        match s.to_lowercase().as_str() {
+            "reflect" => Ok(Mode::Reflect),
+            "constant" => Ok(Mode::Constant),
+            "nearest" | "edge" => Ok(Mode::Nearest),
+            "mirror" => Ok(Mode::Mirror),
+            "wrap" => Ok(Mode::Wrap),
+            _ => Err(NdimageError::InvalidInput(format!("Unknown mode: {}", s))),
+        }
+    }
+    
+    /// Convert to internal BoundaryMode
+    pub fn to_boundary_mode(self) -> BoundaryMode {
+        match self {
+            Mode::Reflect => BoundaryMode::Reflect,
+            Mode::Constant => BoundaryMode::Constant(0.0),
+            Mode::Nearest => BoundaryMode::Nearest,
+            Mode::Mirror => BoundaryMode::Mirror,
+            Mode::Wrap => BoundaryMode::Wrap,
+        }
+    }
+}
+
+/// Gaussian filter with SciPy-compatible interface
+///
+/// # Arguments
+/// * `input` - Input array
+/// * `sigma` - Standard deviation for Gaussian kernel. Can be a single float or a sequence
+/// * `order` - The order of the filter (0 for Gaussian, 1 for first derivative, etc.)
+/// * `mode` - How to handle boundaries (default: 'reflect')
+/// * `cval` - Value to use for constant mode
+/// * `truncate` - Truncate the filter at this many standard deviations
+///
+/// # Example
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_ndimage::scipy_compat::gaussian_filter;
+/// 
+/// let input = array![[1.0, 2.0], [3.0, 4.0]];
+/// let filtered = gaussian_filter(&input, 1.0, None, None, None, None).unwrap();
+/// ```
+pub fn gaussian_filter<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    sigma: impl Into<Vec<T>>,
+    order: Option<usize>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    truncate: Option<T>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let sigma = sigma.into();
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::filters::gaussian_filter(
+        input.to_owned(),
+        &sigma,
+        truncate,
+        Some(boundary_mode),
+        order.map(|o| vec![o; input.ndim()]).as_deref(),
+    )
+}
+
+/// Uniform filter with SciPy-compatible interface
+///
+/// # Arguments
+/// * `input` - Input array
+/// * `size` - The size of the uniform filter kernel
+/// * `mode` - How to handle boundaries
+/// * `cval` - Value to use for constant mode
+/// * `origin` - The origin parameter controls the placement of the filter
+pub fn uniform_filter<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    size: impl Into<Vec<usize>>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    origin: Option<Vec<isize>>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let size = size.into();
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::filters::uniform_filter(
+        input.view(),
+        size,
+        boundary_mode,
+        origin.unwrap_or_else(|| vec![0; input.ndim()]),
+    )
+}
+
+/// Median filter with SciPy-compatible interface
+pub fn median_filter<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    size: impl Into<Vec<usize>>,
+    mode: Option<&str>,
+    cval: Option<T>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + PartialOrd + Send + Sync + 'static,
+    D: Dimension,
+{
+    let size = size.into();
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::filters::median_filter(input.view(), size, boundary_mode)
+}
+
+/// Sobel filter with SciPy-compatible interface
+pub fn sobel<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    axis: Option<usize>,
+    mode: Option<&str>,
+    cval: Option<T>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::filters::sobel_filter(input.view(), axis, Some(boundary_mode))
+}
+
+/// Binary erosion with SciPy-compatible interface
+pub fn binary_erosion<D>(
+    input: &ArrayBase<impl Data<Elem = bool>, D>,
+    structure: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    iterations: Option<usize>,
+    mask: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    border_value: Option<bool>,
+) -> NdimageResult<Array<bool, D>>
+where
+    D: Dimension,
+{
+    let default_structure = Array::from_elem(vec![3; input.ndim()], true);
+    let structure = structure.unwrap_or(&default_structure);
+    
+    crate::morphology::binary_erosion(
+        input.view(),
+        structure.view(),
+        iterations.unwrap_or(1),
+        mask.map(|m| m.view()),
+        border_value.unwrap_or(true),
+    )
+}
+
+/// Binary dilation with SciPy-compatible interface
+pub fn binary_dilation<D>(
+    input: &ArrayBase<impl Data<Elem = bool>, D>,
+    structure: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    iterations: Option<usize>,
+    mask: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    border_value: Option<bool>,
+) -> NdimageResult<Array<bool, D>>
+where
+    D: Dimension,
+{
+    let default_structure = Array::from_elem(vec![3; input.ndim()], true);
+    let structure = structure.unwrap_or(&default_structure);
+    
+    crate::morphology::binary_dilation(
+        input.view(),
+        structure.view(),
+        iterations.unwrap_or(1),
+        mask.map(|m| m.view()),
+        border_value.unwrap_or(false),
+    )
+}
+
+/// Grayscale erosion with SciPy-compatible interface
+pub fn grey_erosion<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    size: Option<Vec<usize>>,
+    footprint: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+    mode: Option<&str>,
+    cval: Option<T>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + PartialOrd + Send + Sync + 'static,
+    D: Dimension,
+{
+    let structure = if let Some(fp) = footprint {
+        fp.to_owned()
+    } else {
+        let size = size.unwrap_or_else(|| vec![3; input.ndim()]);
+        Array::from_elem(size, true)
+    };
+    
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Reflect);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::morphology::grayscale_erosion(input.view(), structure.view(), Some(boundary_mode))
+}
+
+/// Label connected components with SciPy-compatible interface
+pub fn label<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    structure: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
+) -> NdimageResult<(Array<i32, D>, usize)>
+where
+    T: PartialOrd + Clone + num_traits::Zero,
+    D: Dimension,
+{
+    let default_structure = Array::from_elem(vec![3; input.ndim()], true);
+    let structure = structure.unwrap_or(&default_structure);
+    
+    crate::measurements::label(input.view(), Some(structure.view()))
+}
+
+/// Center of mass with SciPy-compatible interface
+pub fn center_of_mass<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    labels: Option<&ArrayBase<impl Data<Elem = i32>, D>>,
+    index: Option<Vec<i32>>,
+) -> NdimageResult<Vec<Vec<f64>>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    crate::measurements::center_of_mass(
+        input.view(),
+        labels.map(|l| l.view()),
+        index.as_deref(),
+    )
+}
+
+/// Affine transform with SciPy-compatible interface
+pub fn affine_transform<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    matrix: &Array2<f64>,
+    offset: Option<Vec<f64>>,
+    output_shape: Option<Vec<usize>>,
+    order: Option<usize>,
+    mode: Option<&str>,
+    cval: Option<T>,
+    prefilter: Option<bool>,
+) -> NdimageResult<Array<T, D>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    D: Dimension,
+{
+    let offset = offset.unwrap_or_else(|| vec![0.0; input.ndim()]);
+    let mode = mode.map(Mode::from_str).transpose()?.unwrap_or(Mode::Constant);
+    let boundary_mode = match mode {
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero())),
+        _ => mode.to_boundary_mode(),
+    };
+    
+    crate::interpolation::affine_transform(
+        input.view(),
+        matrix.view(),
+        &offset,
+        output_shape,
+        order.unwrap_or(3),
+        boundary_mode,
+        prefilter.unwrap_or(true),
+    )
+}
+
+/// Distance transform with SciPy-compatible interface
+pub fn distance_transform_edt<T, D>(
+    input: &ArrayBase<impl Data<Elem = T>, D>,
+    sampling: Option<Vec<f64>>,
+    return_distances: Option<bool>,
+    return_indices: Option<bool>,
+) -> NdimageResult<(Option<Array<f64, D>>, Option<Array<usize, D>>)>
+where
+    T: PartialEq + num_traits::Zero + Clone,
+    D: Dimension,
+{
+    let return_distances = return_distances.unwrap_or(true);
+    let return_indices = return_indices.unwrap_or(false);
+    
+    if return_distances && !return_indices {
+        let distances = crate::morphology::distance_transform_edt(
+            input.view(),
+            sampling.as_deref(),
+        )?;
+        Ok((Some(distances), None))
+    } else {
+        // For now, return error if indices are requested
+        Err(NdimageError::NotImplementedError(
+            "Returning indices is not yet implemented".into(),
+        ))
+    }
+}
+
+/// Helper module for common operations
+pub mod ndimage {
+    pub use super::{
+        affine_transform, binary_dilation, binary_erosion, center_of_mass,
+        distance_transform_edt, gaussian_filter, grey_erosion, label,
+        median_filter, sobel, uniform_filter,
+    };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::array;
+    
+    #[test]
+    fn test_scipy_compat_gaussian() {
+        let input = array![[1.0, 2.0], [3.0, 4.0]];
+        let result = gaussian_filter(&input, 1.0, None, None, None, None).unwrap();
+        assert_eq!(result.shape(), input.shape());
+    }
+    
+    #[test]
+    fn test_scipy_compat_modes() {
+        assert!(matches!(Mode::from_str("reflect"), Ok(Mode::Reflect)));
+        assert!(matches!(Mode::from_str("constant"), Ok(Mode::Constant)));
+        assert!(matches!(Mode::from_str("nearest"), Ok(Mode::Nearest)));
+        assert!(matches!(Mode::from_str("edge"), Ok(Mode::Nearest)));
+        assert!(Mode::from_str("invalid").is_err());
+    }
+    
+    #[test]
+    fn test_scipy_compat_binary_erosion() {
+        let input = array![[true, false], [false, true]];
+        let result = binary_erosion(&input, None, None, None, None).unwrap();
+        assert_eq!(result.shape(), input.shape());
+    }
+}

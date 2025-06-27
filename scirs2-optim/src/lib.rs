@@ -60,6 +60,8 @@ pub mod curriculum_optimization;
 pub mod distributed;
 pub mod domain_specific;
 pub mod error;
+#[cfg(feature = "gpu")]
+pub mod gpu;
 pub mod gradient_accumulation;
 pub mod gradient_processing;
 pub mod hardware_aware;
@@ -80,6 +82,20 @@ pub mod utils;
 
 // Re-exports for convenience
 pub use gradient_processing::*;
+#[cfg(feature = "gpu")]
+pub use gpu::{
+    adam_gpu::AdamGpu, 
+    adamw_gpu::AdamWGpu,
+    adagrad_gpu::AdagradGpu,
+    lamb_gpu::LAMBGpu, 
+    memory_pool::{CudaMemoryPool, ThreadSafeMemoryPool, MemoryPoolConfig, MemoryStats},
+    mixed_precision::{MixedPrecisionConfig, MixedPrecisionOptimizer, DynamicLossScaler},
+    multi_gpu::{MultiGpuConfig, MultiGpuSetup, MultiGpuSync, SyncStrategy},
+    rmsprop_gpu::RMSpropGpu,
+    rocm_backend::{RocmBackend, RocmConfig},
+    sgd_gpu::SGDGpu,
+    GpuOptimizer, GpuOptimizerConfig, GpuOptimizerError
+};
 #[cfg(feature = "metrics_integration")]
 pub use metrics::*;
 pub use optimizer_composition::*;

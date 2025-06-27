@@ -293,19 +293,40 @@ where
     Ok(Array::from_shape_vec((h, w), output_data)?)
 }
 
-// Placeholder functions for GPU buffer allocation
-// In a real implementation, these would be backend-specific
+// GPU buffer allocation functions that delegate to backend-specific implementations
 
-fn allocate_gpu_buffer<T>(_data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>> {
-    Err(NdimageError::NotImplementedError(
-        "GPU buffer allocation not implemented".into(),
-    ))
+fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
+where
+    T: 'static,
+{
+    #[cfg(feature = "cuda")]
+    {
+        return crate::backend::cuda::allocate_gpu_buffer(data);
+    }
+    
+    #[cfg(not(feature = "cuda"))]
+    {
+        Err(NdimageError::NotImplementedError(
+            "GPU buffer allocation not implemented (enable cuda feature)".into(),
+        ))
+    }
 }
 
-fn allocate_gpu_buffer_empty<T>(_size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>> {
-    Err(NdimageError::NotImplementedError(
-        "GPU buffer allocation not implemented".into(),
-    ))
+fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
+where
+    T: 'static,
+{
+    #[cfg(feature = "cuda")]
+    {
+        return crate::backend::cuda::allocate_gpu_buffer_empty(size);
+    }
+    
+    #[cfg(not(feature = "cuda"))]
+    {
+        Err(NdimageError::NotImplementedError(
+            "GPU buffer allocation not implemented (enable cuda feature)".into(),
+        ))
+    }
 }
 
 // Kernel source code would normally be in separate files

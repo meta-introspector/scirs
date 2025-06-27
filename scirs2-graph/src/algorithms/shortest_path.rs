@@ -88,6 +88,15 @@ impl<N: Node, E: EdgeWeight + std::ops::Add<Output = E> + Copy + PartialOrd> Par
 /// * `Ok(Some(Path))` - If a path exists
 /// * `Ok(None)` - If no path exists
 /// * `Err(GraphError)` - If the source or target node is not in the graph
+///
+/// # Deprecation Notice
+/// This function will be updated in v1.0 to return a standardized `PathResult` type
+/// that provides more detailed information about the path and search process.
+/// The current API will remain available but deprecated.
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `dijkstra_path` for future compatibility. This function will return PathResult in v1.0"
+)]
 pub fn shortest_path<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -187,6 +196,15 @@ where
 }
 
 /// Finds the shortest path in a directed graph
+///
+/// # Deprecation Notice
+/// This function will be updated in v1.0 to return a standardized `PathResult` type
+/// that provides more detailed information about the path and search process.
+/// The current API will remain available but deprecated.
+#[deprecated(
+    since = "0.1.0-beta.2",
+    note = "Use `dijkstra_path_digraph` for future compatibility. This function will return PathResult in v1.0"
+)]
 pub fn shortest_path_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,

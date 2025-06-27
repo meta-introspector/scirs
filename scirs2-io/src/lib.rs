@@ -24,6 +24,7 @@
 //! - `validation`: Utilities for data validation and integrity checking
 //! - `wavfile`: Support for WAV audio files
 //! - `error`: Error types for the IO module
+//! - `fortran`: Support for Fortran unformatted files
 
 #![warn(missing_docs)]
 // Allow specific Clippy warnings with justifications
@@ -50,7 +51,42 @@ pub mod compression;
 /// - Support for specialized data types (date, time, complex numbers)
 /// - Column-based operations with flexible configuration
 pub mod csv;
+/// Database connectivity
+///
+/// Provides interfaces for database operations:
+/// - Support for SQL databases (PostgreSQL, MySQL, SQLite)
+/// - NoSQL database support (MongoDB, Redis, Cassandra)
+/// - Time series databases (InfluxDB)
+/// - Query builder and ORM-like features
+/// - Bulk loading and export capabilities
+/// - Integration with scientific data formats
+pub mod database;
+/// Distributed I/O processing
+///
+/// Provides infrastructure for distributed processing of large datasets:
+/// - Distributed file reading with partitioning strategies
+/// - Parallel writing with merge capabilities
+/// - Distributed array operations
+/// - Load balancing and fault tolerance
+/// - Progress tracking for distributed operations
+pub mod distributed;
 pub mod error;
+/// Fortran unformatted file format module
+///
+/// Provides functionality for reading and writing Fortran unformatted files:
+/// - Sequential, direct, and stream access modes
+/// - Support for different endianness and record marker sizes
+/// - Automatic format detection
+/// - Arrays stored in column-major order (Fortran convention)
+/// - Support for all common Fortran data types
+pub mod fortran;
+/// Domain-specific file formats
+///
+/// Provides specialized support for scientific file formats:
+/// - Bioinformatics: FASTA, FASTQ, SAM/BAM, VCF
+/// - Geospatial: GeoTIFF, Shapefile, GeoJSON, KML
+/// - Astronomical: FITS, VOTable
+pub mod formats;
 /// Harwell-Boeing sparse matrix format module
 ///
 /// Provides functionality for reading and writing Harwell-Boeing sparse matrix files:
@@ -96,6 +132,16 @@ pub mod matlab;
 /// - Different matrix symmetry types (general, symmetric, hermitian, skew-symmetric)
 /// - Integration with ndarray for efficient matrix operations
 pub mod matrix_market;
+/// Advanced metadata management
+///
+/// Provides comprehensive metadata handling across different file formats:
+/// - Unified metadata interface for all formats
+/// - Metadata validation with schemas
+/// - Processing history tracking
+/// - Format conversion between JSON, YAML, TOML
+/// - Format-specific extensions
+/// - Standard metadata keys for scientific data
+pub mod metadata;
 /// Memory-mapped file I/O module
 ///
 /// Provides memory-mapped file operations for efficient handling of large arrays:
@@ -130,6 +176,15 @@ pub mod matrix_market;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 pub mod mmap;
+/// Machine learning framework compatibility
+///
+/// Provides conversion utilities and interfaces for ML frameworks:
+/// - Support for PyTorch, TensorFlow, ONNX, SafeTensors formats
+/// - Model and tensor serialization/deserialization
+/// - Data type conversions between frameworks
+/// - Dataset utilities for ML pipelines
+/// - Seamless integration with ndarray
+pub mod ml_framework;
 /// NetCDF file format module
 ///
 /// Provides functionality for reading and writing NetCDF files:
@@ -138,6 +193,15 @@ pub mod mmap;
 /// - Conversion between NetCDF and ndarray data structures
 /// - Memory-efficient access to large datasets
 pub mod netcdf;
+/// Out-of-core processing for terabyte-scale datasets
+///
+/// Provides infrastructure for processing datasets too large for memory:
+/// - Memory-mapped arrays with virtual memory management
+/// - Chunked processing with configurable chunk sizes
+/// - Disk-based algorithms for sorting and aggregation
+/// - Virtual arrays combining multiple data sources
+/// - Sliding window iterators for streaming operations
+pub mod out_of_core;
 /// Network I/O and cloud storage integration
 ///
 /// Provides functionality for reading and writing files over network protocols
@@ -159,6 +223,16 @@ pub mod netcdf;
 /// println!("Network client created for file operations");
 /// ```
 pub mod network;
+/// Data pipeline APIs
+///
+/// Provides a flexible framework for building data processing pipelines:
+/// - Composable pipeline stages for reading, transforming, and writing data
+/// - Multiple execution strategies (sequential, parallel, streaming, async)
+/// - Built-in transformations (normalization, encoding, aggregation)
+/// - Error handling and recovery mechanisms
+/// - Progress tracking and monitoring
+/// - Caching and checkpointing for long-running pipelines
+pub mod pipeline;
 /// Data serialization utilities
 ///
 /// Provides functionality for serializing and deserializing scientific data:
@@ -247,6 +321,17 @@ pub mod streaming;
 /// - Real-time progress monitoring for async operations
 #[cfg(feature = "async")]
 pub mod async_io;
+/// Real-time data streaming protocols
+///
+/// Provides infrastructure for real-time data streaming and processing:
+/// - WebSocket and Server-Sent Events support
+/// - gRPC and MQTT streaming protocols
+/// - Backpressure handling and flow control
+/// - Stream transformations and filtering
+/// - Multi-stream synchronization
+/// - Time series buffering and aggregation
+#[cfg(feature = "async")]
+pub mod realtime;
 /// Thread pool for parallel I/O operations
 ///
 /// Provides a high-performance thread pool optimized for I/O operations:
@@ -265,7 +350,26 @@ pub mod thread_pool;
 /// - Directory manifests for data validation
 /// - Integrity metadata for tracking data provenance
 pub mod validation;
+/// Visualization tool integration
+///
+/// Provides interfaces for integrating with visualization libraries:
+/// - Export to multiple visualization formats (Plotly, Matplotlib, Gnuplot, Vega-Lite)
+/// - Fluent API for building plots
+/// - Support for various plot types (line, scatter, histogram, heatmap)
+/// - Quick plotting functions for common use cases
+/// - Configurable styling and theming
+pub mod visualization;
 pub mod wavfile;
+/// Workflow automation tools
+///
+/// Provides framework for building automated data processing workflows:
+/// - Task definition and dependency management
+/// - Workflow scheduling and execution
+/// - Resource management and allocation
+/// - Retry policies and error handling
+/// - Progress monitoring and notifications
+/// - Common workflow templates (ETL, batch processing)
+pub mod workflow;
 /// Zero-copy I/O optimizations
 ///
 /// Provides zero-copy implementations for various I/O operations:

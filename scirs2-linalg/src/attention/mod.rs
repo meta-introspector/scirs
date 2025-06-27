@@ -600,8 +600,21 @@ where
     let num_heads = config.num_heads;
     let head_dim = config.head_dim;
     let scale = match config.scale {
-        Some(s) => F::from(s).unwrap_or_else(|| F::from(1.0 / (head_dim as f64).sqrt()).unwrap()),
-        None => F::from(1.0 / (head_dim as f64).sqrt()).unwrap(),
+        Some(s) => F::from(s).ok_or_else(|| LinalgError::ValueError(
+            "Failed to convert scale to target type".to_string()
+        ))?,
+        None => {
+            let head_dim_f64 = head_dim as f64;
+            if head_dim_f64 <= 0.0 {
+                return Err(LinalgError::ValueError(
+                    "Head dimension must be positive".to_string()
+                ));
+            }
+            let default_scale = 1.0 / head_dim_f64.sqrt();
+            F::from(default_scale).ok_or_else(|| LinalgError::ValueError(
+                "Failed to convert default scale to target type".to_string()
+            ))?
+        }
     };
 
     // Verify that d_model is compatible with num_heads and head_dim
@@ -841,7 +854,12 @@ where
 
                         // Update output with scaling
                         if l_block[i] > F::zero() {
-                            let scale_factor = (m_prev - m_new).exp() / l_block[i];
+                            let scale_factor = if l_block[i] != F::zero() {
+                    (m_prev - m_new).exp() / l_block[i]
+                } else {
+                    // Handle zero normalization factor
+                    F::zero()
+                };
                             for j in 0..d_model_v {
                                 output[[b, q_start + i, j]] *= scale_factor;
                             }
@@ -1117,7 +1135,10 @@ where
             for j in 0..seq_len_k {
                 // In ALiBi, the bias is -slope * |i - j|
                 // For simplicity, we'll use a single slope here
-                let pos_diff = F::from((i as isize - j as isize).abs() as f64).unwrap();
+                let pos_diff = F::from((i as isize - j as isize).abs() as f64)
+                .ok_or_else(|| LinalgError::ValueError(
+                    "Failed to convert position difference to target type".to_string()
+                ))?;
                 let slope = slopes[0]; // Using first slope for simplicity
                 scores[[i, j]] -= slope * pos_diff;
             }
@@ -1209,11 +1230,20 @@ where
     let mut result = Array3::<F>::zeros((batch_size, seq_len, d_model));
 
     // Create position frequencies
+    if d_model % 2 != 0 {
+        return Err(LinalgError::ValueError(
+            "Model dimension must be even for rotary embeddings".to_string()
+        ));
+    }
     let half_dim = d_model / 2;
     let mut freqs = Vec::with_capacity(half_dim);
 
     for i in 0..half_dim {
-        let freq = F::one() / (freq_base.powf(F::from(2.0 * i as f64 / d_model as f64).unwrap()));
+        let exponent = F::from(2.0 * i as f64 / d_model as f64)
+            .ok_or_else(|| LinalgError::ValueError(
+                "Failed to convert frequency exponent to target type".to_string()
+            ))?;
+        let freq = F::one() / freq_base.powf(exponent);
         freqs.push(freq);
     }
 
@@ -1228,7 +1258,11 @@ where
                 let x_i_plus_1 = x[[b, pos, i2 + 1]];
 
                 // Calculate rotation
-                let theta = F::from(pos as f64).unwrap() * freqs[i];
+                let pos_f = F::from(pos as f64)
+                    .ok_or_else(|| LinalgError::ValueError(
+                        "Failed to convert position to target type".to_string()
+                    ))?;
+                let theta = pos_f * freqs[i];
                 let cos_theta = theta.cos();
                 let sin_theta = theta.sin();
 
@@ -1339,7 +1373,12 @@ where
                 }
 
                 if z[i] > F::zero() {
-                    result[[b, i, j]] = sum / z[i];
+                    result[[b, i, j]] = if z[i] != F::zero() {
+                sum / z[i]
+            } else {
+                // Handle zero normalization - typically indicates all-masked row
+                F::zero()
+            };
                 }
             }
         }
@@ -1519,6 +1558,12 @@ where
         )));
     }
 
+    if num_heads % num_kv_heads != 0 {
+        return Err(LinalgError::ValueError(format!(
+            "Number of heads ({}) must be divisible by number of key-value heads ({})",
+            num_heads, num_kv_heads
+        )));
+    }
     let heads_per_kv = num_heads / num_kv_heads;
     let head_dim = d_model / num_heads;
     let kv_dim = num_kv_heads * head_dim;

@@ -7,6 +7,9 @@
 
 pub mod kernels;
 
+#[cfg(feature = "cuda")]
+pub mod cuda;
+
 use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
@@ -286,17 +289,34 @@ where
 
 #[cfg(feature = "cuda")]
 fn cuda_gaussian_filter<T, D>(
-    _input: &ArrayView<T, D>,
-    _sigma: &[T],
+    input: &ArrayView<T, D>,
+    sigma: &[T],
     _truncate: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
 {
-    // Placeholder for actual CUDA implementation
+    // Currently only support 2D arrays for GPU acceleration
+    if input.ndim() == 2 {
+        let input_2d = input.view().into_dimensionality::<ndarray::Ix2>()
+            .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D array".into()))?;
+        
+        if sigma.len() >= 2 {
+            let sigma_2d = [sigma[0], sigma[1]];
+            let cuda_ops = cuda::CudaOperations::new(None)?;
+            let result_2d = cuda_ops.gaussian_filter_2d(&input_2d, sigma_2d)?;
+            
+            // Convert back to original dimension
+            let result = result_2d.into_dimensionality::<D>()
+                .map_err(|_| NdimageError::DimensionError("Failed to convert result dimension".into()))?;
+            return Ok(result);
+        }
+    }
+    
+    // Fallback for non-2D or unsupported cases
     Err(NdimageError::NotImplementedError(
-        "CUDA Gaussian filter not yet implemented".into(),
+        "CUDA Gaussian filter currently only supports 2D arrays".into(),
     ))
 }
 

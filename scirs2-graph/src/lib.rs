@@ -10,8 +10,45 @@
 //! - Network analysis (centrality measures, community detection)
 //! - Spectral graph theory
 //! - Support for graph neural networks
+//!
+//! ## Stability
+//!
+//! This module follows semantic versioning. Most APIs are stable and covered
+//! by our compatibility guarantee. Experimental features are clearly marked.
 
 #![warn(missing_docs)]
+#![cfg_attr(feature = "unstable", feature(stability))]
+
+/// Stability attributes for API items
+///
+/// These macros help track API stability across the library
+#[cfg(feature = "unstable")]
+macro_rules! stable {
+    ($feature:expr, $since:expr) => {
+        #[stable(feature = $feature, since = $since)]
+    };
+}
+
+#[cfg(not(feature = "unstable"))]
+macro_rules! stable {
+    ($feature:expr, $since:expr) => {
+        // No-op when unstable feature is not enabled
+    };
+}
+
+#[cfg(feature = "unstable")]
+macro_rules! unstable {
+    ($feature:expr, $issue:expr) => {
+        #[unstable(feature = $feature, issue = $issue)]
+    };
+}
+
+#[cfg(not(feature = "unstable"))]
+macro_rules! unstable {
+    ($feature:expr, $issue:expr) => {
+        // No-op when unstable feature is not enabled
+    };
+}
 
 // Temporarily commenting out OpenBLAS to fix build issues
 // extern crate blas;
@@ -51,8 +88,8 @@ pub use algorithms::{
     personalized_pagerank, push_relabel_max_flow, radius, random_walk, shortest_path,
     shortest_path_digraph, stable_marriage, strongly_connected_components, subdigraph, subgraph,
     tensor_product, topological_sort, transition_matrix, weight_filtered_subgraph, AStarResult,
-    BipartiteMatching, BipartiteResult, CommunityStructure, EulerianType, GraphColoring,
-    InfomapResult, MaximumMatching, MotifType,
+    BipartiteMatching, BipartiteResult, CommunityResult, CommunityStructure, EulerianType, 
+    GraphColoring, InfomapResult, MaximumMatching, MotifType,
 };
 pub use attributes::{
     AttributeSummary, AttributeValue, AttributeView, AttributedDiGraph, AttributedGraph, Attributes,

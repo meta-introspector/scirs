@@ -1,8 +1,8 @@
 //! Performance benchmarks for SciPy compatibility layer
-use std::hint::black_box;
 //!
 //! This benchmark suite measures the performance of SciPy-compatible functions
 //! and compares them against pure Rust implementations where available.
+
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Axis};
@@ -492,7 +492,7 @@ fn bench_utility_functions(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("block_diag", num_blocks),
             &block_views,
-            |b, blocks| b.iter(|| compat::block_diag(&blocks).unwrap()),
+            |b, blocks| b.iter(|| compat::block_diag(blocks).unwrap()),
         );
     }
 

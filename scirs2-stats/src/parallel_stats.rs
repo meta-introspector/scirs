@@ -150,7 +150,7 @@ where
         let idx = pos.floor();
         let frac = pos - idx;
         
-        let idx_usize = NumCast::from(idx).unwrap();
+        let idx_usize: usize = NumCast::from(idx).unwrap();
         
         if frac == F::zero() {
             sorted[idx_usize]
@@ -189,11 +189,11 @@ where
     
     if nrows < PARALLEL_THRESHOLD / data.ncols() {
         // Sequential processing for small number of rows
-        let mut results = Array1::zeros(nrows);
+        let mut results = Vec::with_capacity(nrows);
         for i in 0..nrows {
-            results[i] = stat_fn(&data.slice(s![i, ..]))?;
+            results.push(stat_fn(&data.slice(s![i, ..]))?);
         }
-        return Ok(results);
+        return Ok(Array1::from_vec(results));
     }
 
     // Process rows in parallel

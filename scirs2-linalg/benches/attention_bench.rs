@@ -1,4 +1,3 @@
-#[macro_use]
 use std::hint::black_box;
 extern crate criterion;
 

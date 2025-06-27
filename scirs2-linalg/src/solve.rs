@@ -296,7 +296,11 @@ where
         let (u, s, vt) = svd(a, false, workers)?;
 
         // Determine effective rank by thresholding singular values
-        let threshold = s[0] * F::from(a.nrows().max(a.ncols())).unwrap() * F::epsilon();
+        let max_dim = a.nrows().max(a.ncols());
+        let max_dim_f = F::from(max_dim).ok_or_else(|| LinalgError::NumericalError(
+            format!("Failed to convert matrix dimension {} to numeric type", max_dim)
+        ))?;
+        let threshold = s[0] * max_dim_f * F::epsilon();
         let rank = s.iter().filter(|&&val| val > threshold).count();
 
         // Compute U^T * b
@@ -460,14 +464,16 @@ mod tests {
         // Identity matrix
         let a = array![[1.0, 0.0], [0.0, 1.0]];
         let b = array![2.0, 3.0];
-        let x = solve(&a.view(), &b.view(), None).unwrap();
+        let x = solve(&a.view(), &b.view(), None)
+            .expect("Solve should succeed for identity matrix");
         assert_relative_eq!(x[0], 2.0);
         assert_relative_eq!(x[1], 3.0);
 
         // General 2x2 matrix
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![5.0, 11.0];
-        let x = solve(&a.view(), &b.view(), None).unwrap();
+        let x = solve(&a.view(), &b.view(), None)
+            .expect("Solve should succeed for this test system");
         assert_relative_eq!(x[0], 1.0);
         assert_relative_eq!(x[1], 2.0);
     }
@@ -477,14 +483,16 @@ mod tests {
         // Lower triangular system
         let a = array![[1.0, 0.0], [2.0, 3.0]];
         let b = array![2.0, 8.0];
-        let x = solve_triangular(&a.view(), &b.view(), true, false).unwrap();
+        let x = solve_triangular(&a.view(), &b.view(), true, false)
+            .expect("Lower triangular solve should succeed");
         assert_relative_eq!(x[0], 2.0);
         assert_relative_eq!(x[1], 4.0 / 3.0);
 
         // With unit diagonal
         let a = array![[1.0, 0.0], [2.0, 1.0]];
         let b = array![2.0, 6.0];
-        let x = solve_triangular(&a.view(), &b.view(), true, true).unwrap();
+        let x = solve_triangular(&a.view(), &b.view(), true, true)
+            .expect("Upper triangular solve should succeed");
         assert_relative_eq!(x[0], 2.0);
         assert_relative_eq!(x[1], 2.0);
     }
@@ -494,14 +502,16 @@ mod tests {
         // Upper triangular system
         let a = array![[3.0, 2.0], [0.0, 1.0]];
         let b = array![8.0, 2.0];
-        let x = solve_triangular(&a.view(), &b.view(), false, false).unwrap();
+        let x = solve_triangular(&a.view(), &b.view(), false, false)
+            .expect("Lower triangular unit diagonal solve should succeed");
         assert_relative_eq!(x[0], 4.0 / 3.0);
         assert_relative_eq!(x[1], 2.0);
 
         // With unit diagonal
         let a = array![[1.0, 2.0], [0.0, 1.0]];
         let b = array![6.0, 2.0];
-        let x = solve_triangular(&a.view(), &b.view(), false, true).unwrap();
+        let x = solve_triangular(&a.view(), &b.view(), false, true)
+            .expect("Upper triangular unit diagonal solve should succeed");
         assert_relative_eq!(x[0], 2.0);
         assert_relative_eq!(x[1], 2.0);
     }

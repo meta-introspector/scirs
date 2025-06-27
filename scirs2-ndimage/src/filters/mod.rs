@@ -10,11 +10,18 @@ pub use bilateral::bilateral_filter;
 #[cfg(feature = "simd")]
 pub use bilateral::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
+// SIMD specialized exports
+#[cfg(feature = "simd")]
+pub use simd_specialized::{
+    simd_anisotropic_diffusion, simd_bilateral_filter, simd_non_local_means,
+};
+
 mod bilateral;
 mod boundary_handler;
 mod boundary_optimized;
 mod convolve;
 mod edge;
+mod edge_optimized;
 mod extrema;
 mod fourier;
 mod gaussian;
@@ -23,6 +30,8 @@ mod median;
 mod memory_efficient;
 mod memory_efficient_v2;
 mod rank;
+#[cfg(feature = "simd")]
+mod simd_specialized;
 mod tests;
 mod uniform;
 mod utils;
@@ -38,6 +47,11 @@ pub use convolve::{
 
 // Edge module exports
 pub use edge::{gradient_magnitude, laplace, prewitt, roberts, scharr, sobel};
+
+// Optimized edge detection exports
+pub use edge_optimized::{
+    gradient_magnitude_optimized, laplace_2d_optimized, sobel_2d_optimized,
+};
 
 // Extrema module exports (new implementation)
 pub use extrema::{maximum_filter, minimum_filter};

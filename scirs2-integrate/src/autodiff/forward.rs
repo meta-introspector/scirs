@@ -6,7 +6,7 @@
 use ndarray::{Array1, Array2, ArrayView1};
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
-use super::dual::Dual;
+use super::dual::{Dual, DualVector};
 
 /// Forward mode automatic differentiation engine
 pub struct ForwardAD<F: IntegrateFloat> {
@@ -198,6 +198,117 @@ impl<F: IntegrateFloat> ForwardODEJacobian<F> {
         Func: Fn(F, &[Dual<F>]) -> Vec<Dual<F>>,
     {
         self.ad_engine.jacobian(|dual_y| f(t, dual_y), y)
+    }
+}
+
+/// Vectorized forward mode AD for computing multiple directional derivatives
+pub struct VectorizedForwardAD<F: IntegrateFloat> {
+    n_vars: usize,
+    n_directions: usize,
+    tolerance: F,
+}
+
+impl<F: IntegrateFloat> VectorizedForwardAD<F> {
+    /// Create a new vectorized forward AD engine
+    pub fn new(n_vars: usize, n_directions: usize) -> Self {
+        VectorizedForwardAD {
+            n_vars,
+            n_directions,
+            tolerance: F::from(1e-12).unwrap(),
+        }
+    }
+
+    /// Compute multiple directional derivatives simultaneously
+    pub fn directional_derivatives<Func>(
+        &self,
+        f: Func,
+        x: ArrayView1<F>,
+        directions: &[ArrayView1<F>],
+    ) -> IntegrateResult<Array1<F>>
+    where
+        Func: Fn(&[DualVector<F>]) -> DualVector<F>,
+    {
+        if x.len() != self.n_vars {
+            return Err(IntegrateError::DimensionMismatch(
+                format!("Expected {} variables, got {}", self.n_vars, x.len())
+            ));
+        }
+
+        if directions.len() != self.n_directions {
+            return Err(IntegrateError::DimensionMismatch(
+                format!("Expected {} directions, got {}", self.n_directions, directions.len())
+            ));
+        }
+
+        // Create dual vectors with multiple derivative components
+        let mut dual_x = Vec::with_capacity(self.n_vars);
+        for i in 0..self.n_vars {
+            let mut derivatives = Array1::zeros(self.n_directions);
+            for (j, dir) in directions.iter().enumerate() {
+                derivatives[j] = dir[i];
+            }
+            dual_x.push(DualVector {
+                values: Array1::from_elem(1, x[i]),
+                jacobian: Array1::from_elem(1, derivatives),
+            });
+        }
+
+        let result = f(&dual_x);
+        Ok(result.jacobian[0].clone())
+    }
+
+    /// Compute Jacobian using vectorized forward mode
+    pub fn jacobian_vectorized<Func>(
+        &self,
+        f: Func,
+        x: ArrayView1<F>,
+        chunk_size: usize,
+    ) -> IntegrateResult<Array2<F>>
+    where
+        Func: Fn(&[DualVector<F>]) -> Vec<DualVector<F>> + Clone,
+    {
+        if x.len() != self.n_vars {
+            return Err(IntegrateError::DimensionMismatch(
+                format!("Expected {} variables, got {}", self.n_vars, x.len())
+            ));
+        }
+
+        // First, determine output dimension
+        let constant_x: Vec<_> = (0..self.n_vars)
+            .map(|i| DualVector::constant(Array1::from_elem(1, x[i])))
+            .collect();
+        let output = f(&constant_x);
+        let m = output.len();
+
+        let mut jacobian = Array2::zeros((m, self.n_vars));
+
+        // Process columns in chunks for better cache efficiency
+        for chunk_start in (0..self.n_vars).step_by(chunk_size) {
+            let chunk_end = (chunk_start + chunk_size).min(self.n_vars);
+            let chunk_width = chunk_end - chunk_start;
+
+            // Create dual vectors for this chunk
+            let mut dual_x = Vec::with_capacity(self.n_vars);
+            for i in 0..self.n_vars {
+                let mut derivatives = Array1::zeros(chunk_width);
+                if i >= chunk_start && i < chunk_end {
+                    derivatives[i - chunk_start] = F::one();
+                }
+                dual_x.push(DualVector {
+                    values: Array1::from_elem(1, x[i]),
+                    jacobian: Array1::from_elem(1, derivatives),
+                });
+            }
+
+            let result = f(&dual_x);
+            for (i, res) in result.iter().enumerate() {
+                for j in 0..chunk_width {
+                    jacobian[[i, chunk_start + j]] = res.jacobian[0][j];
+                }
+            }
+        }
+
+        Ok(jacobian)
     }
 }
 

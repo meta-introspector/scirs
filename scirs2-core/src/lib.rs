@@ -74,6 +74,7 @@
 
 // Re-export modules
 pub mod api_versioning;
+pub mod api_freeze;
 #[cfg(feature = "array")]
 pub mod array;
 pub mod array_protocol;
@@ -282,6 +283,31 @@ pub use crate::benchmarking::{
 pub const fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
+
+/// Initialize the library (called automatically)
+#[doc(hidden)]
+pub fn __init() {
+    use std::sync::Once;
+    static INIT: Once = Once::new();
+    
+    INIT.call_once(|| {
+        // Initialize API freeze registry
+        crate::api_freeze::initialize_api_freeze();
+    });
+}
+
+// Ensure initialization happens
+#[doc(hidden)]
+#[used]
+#[cfg_attr(target_os = "linux", link_section = ".init_array")]
+#[cfg_attr(target_os = "macos", link_section = "__DATA,__mod_init_func")]
+#[cfg_attr(target_os = "windows", link_section = ".CRT$XCU")]
+static __INIT: extern "C" fn() = {
+    extern "C" fn __init_wrapper() {
+        __init();
+    }
+    __init_wrapper
+};
 
 pub mod alpha6_api {
     //! Alpha 6 API consistency enhancements and comprehensive usage patterns

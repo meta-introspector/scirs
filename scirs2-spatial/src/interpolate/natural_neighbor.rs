@@ -272,92 +272,90 @@ impl NaturalNeighborInterpolator {
         let simplex_idx = simplex_idx.unwrap();
         let simplex = &self.delaunay.simplices()[simplex_idx];
 
-        // For small datasets or boundary cases, use barycentric coordinates directly
-        if self.n_points < 5 {
-            let bary_weights = self.barycentric_weights(point, simplex_idx)?;
-
-            // Convert from simplex indices to point indices
-            let mut weights = HashMap::new();
-            for (i, &idx) in simplex.iter().enumerate() {
-                weights.insert(idx, bary_weights[i]);
-            }
-
-            return Ok(weights);
-        }
-
-        // Get the neighboring points
-        let mut neighbors = Vec::new();
-        for &idx in simplex {
-            neighbors.push(idx);
-        }
-
-        // For 2D, we can also add the neighbors of the simplex vertices
-        let simplex_neighbors = &self.delaunay.neighbors()[simplex_idx];
-        for &neigh_idx in simplex_neighbors {
-            if neigh_idx >= 0 {
-                let neigh_simplex = &self.delaunay.simplices()[neigh_idx as usize];
-                for &idx in neigh_simplex {
-                    if !neighbors.contains(&idx) {
-                        neighbors.push(idx);
-                    }
-                }
-            }
-        }
-
-        // Compute the areas of the "stolen" regions
-        let mut weights = HashMap::new();
-        let mut total_area = 0.0;
-        let mut valid_regions = 0;
-
-        for &idx in &neighbors {
-            // Get the Voronoi region of this point
-            let region = &self.voronoi.regions()[idx];
-            match Self::get_voronoi_vertices(&self.voronoi, region) {
-                Ok(vertices) => {
-                    // Try to compute the area of the region
-                    if let Ok(original_area) = Self::polygon_area(&vertices) {
-                        if original_area > 0.0 {
-                            valid_regions += 1;
-
-                            // Compute the distance from query point to the data point
-                            let data_point = self.points.row(idx);
-                            let dist = Self::euclidean_distance(point, &data_point);
-
-                            // Compute the area that would be "stolen" by the query point
-                            // This is a heuristic based on the distance to the data point
-                            let stolen_area = original_area * (1.0 / (1.0 + dist * dist));
-
-                            weights.insert(idx, stolen_area);
-                            total_area += stolen_area;
-                        }
-                    }
-                }
+        // For 2D interpolation, implement proper Sibson natural neighbor interpolation
+        if self.dim == 2 {
+            // Get the natural neighbors - points whose Voronoi cells will be affected
+            let natural_neighbors = self.find_natural_neighbors(point, simplex)?;
+            
+            // Create augmented point set with the query point
+            let mut augmented_points = self.points.clone();
+            augmented_points.push_row(point.view()).map_err(|_| {
+                SpatialError::ComputationError("Failed to add query point".to_string())
+            })?;
+            
+            // Create new Voronoi diagram with the query point included
+            let augmented_voronoi = match Voronoi::new(&augmented_points.view(), false) {
+                Ok(v) => v,
                 Err(_) => {
-                    // Skip regions that can't be processed
-                    continue;
+                    // Fall back to barycentric coordinates if Voronoi fails
+                    return self.barycentric_weights_as_map(point, simplex_idx);
+                }
+            };
+            
+            // Compute the stolen areas
+            let mut weights = HashMap::new();
+            let mut total_weight = 0.0;
+            
+            // The query point is the last point in the augmented set
+            let query_idx = augmented_points.nrows() - 1;
+            let query_region = &augmented_voronoi.regions()[query_idx];
+            
+            // Get vertices of the query point's Voronoi cell
+            let _query_vertices = match Self::get_voronoi_vertices(&augmented_voronoi, query_region) {
+                Ok(v) => v,
+                Err(_) => {
+                    // Fall back to barycentric coordinates
+                    return self.barycentric_weights_as_map(point, simplex_idx);
+                }
+            };
+            
+            // For each natural neighbor, compute the intersection area
+            for &neighbor_idx in &natural_neighbors {
+                // Get the original Voronoi cell area
+                let orig_region = &self.voronoi.regions()[neighbor_idx];
+                let orig_vertices = match Self::get_voronoi_vertices(&self.voronoi, orig_region) {
+                    Ok(v) => v,
+                    Err(_) => continue,
+                };
+                let orig_area = match Self::polygon_area(&orig_vertices) {
+                    Ok(a) => a,
+                    Err(_) => continue,
+                };
+                
+                // Get the new Voronoi cell area after adding query point
+                let new_region = &augmented_voronoi.regions()[neighbor_idx];
+                let new_vertices = match Self::get_voronoi_vertices(&augmented_voronoi, new_region) {
+                    Ok(v) => v,
+                    Err(_) => continue,
+                };
+                let new_area = match Self::polygon_area(&new_vertices) {
+                    Ok(a) => a,
+                    Err(_) => continue,
+                };
+                
+                // The stolen area is the difference
+                let stolen_area = (orig_area - new_area).abs();
+                if stolen_area > 1e-10 {
+                    weights.insert(neighbor_idx, stolen_area);
+                    total_weight += stolen_area;
                 }
             }
-        }
-
-        // If we couldn't compute valid regions, fall back to barycentric coordinates
-        if valid_regions == 0 || total_area <= 0.0 {
-            let bary_weights = self.barycentric_weights(point, simplex_idx)?;
-
-            // Convert from simplex indices to point indices
-            let mut new_weights = HashMap::new();
-            for (i, &idx) in simplex.iter().enumerate() {
-                new_weights.insert(idx, bary_weights[i]);
+            
+            // If we couldn't compute any weights, fall back to barycentric
+            if weights.is_empty() || total_weight <= 1e-10 {
+                return self.barycentric_weights_as_map(point, simplex_idx);
             }
-
-            return Ok(new_weights);
+            
+            // Normalize the weights
+            for weight in weights.values_mut() {
+                *weight /= total_weight;
+            }
+            
+            Ok(weights)
+        } else {
+            // For dimensions other than 2, use barycentric coordinates
+            self.barycentric_weights_as_map(point, simplex_idx)
         }
-
-        // Normalize the weights
-        for weight in weights.values_mut() {
-            *weight /= total_area;
-        }
-
-        Ok(weights)
     }
 
     /// Compute barycentric weights for a point in a simplex
@@ -521,6 +519,90 @@ impl NaturalNeighborInterpolator {
         }
         sum_sq.sqrt()
     }
+    
+    /// Find the natural neighbors of a query point
+    ///
+    /// Natural neighbors are points whose Voronoi cells would be affected
+    /// by inserting the query point into the diagram.
+    fn find_natural_neighbors(
+        &self,
+        point: &ArrayView1<f64>,
+        simplex: &[usize],
+    ) -> SpatialResult<Vec<usize>> {
+        let mut neighbors = Vec::new();
+        
+        // Add vertices of the containing simplex
+        for &idx in simplex {
+            neighbors.push(idx);
+        }
+        
+        // Find additional neighbors by checking which Voronoi cells
+        // the query point would intersect
+        let circumradius = self.compute_circumradius(simplex)?;
+        
+        // Check points within a reasonable distance
+        for i in 0..self.n_points {
+            if !neighbors.contains(&i) {
+                let dist = Self::euclidean_distance(point, &self.points.row(i));
+                // Include points within 2x the circumradius as potential neighbors
+                if dist <= 2.0 * circumradius {
+                    neighbors.push(i);
+                }
+            }
+        }
+        
+        Ok(neighbors)
+    }
+    
+    /// Compute the circumradius of a simplex
+    fn compute_circumradius(&self, simplex: &[usize]) -> SpatialResult<f64> {
+        if simplex.len() != 3 || self.dim != 2 {
+            return Err(SpatialError::ValueError(
+                "Circumradius computation only supported for 2D triangles".to_string(),
+            ));
+        }
+        
+        let a = self.points.row(simplex[0]);
+        let b = self.points.row(simplex[1]);
+        let c = self.points.row(simplex[2]);
+        
+        // Compute side lengths
+        let ab = Self::euclidean_distance(&a, &b);
+        let bc = Self::euclidean_distance(&b, &c);
+        let ca = Self::euclidean_distance(&c, &a);
+        
+        // Compute area using Heron's formula
+        let s = (ab + bc + ca) / 2.0;
+        let area = (s * (s - ab) * (s - bc) * (s - ca)).sqrt();
+        
+        if area < 1e-10 {
+            return Err(SpatialError::ValueError(
+                "Degenerate triangle".to_string(),
+            ));
+        }
+        
+        // Circumradius = (abc) / (4 * Area)
+        Ok((ab * bc * ca) / (4.0 * area))
+    }
+    
+    /// Convert barycentric weights to a HashMap format
+    fn barycentric_weights_as_map(
+        &self,
+        point: &ArrayView1<f64>,
+        simplex_idx: usize,
+    ) -> SpatialResult<HashMap<usize, f64>> {
+        let simplex = &self.delaunay.simplices()[simplex_idx];
+        let bary_weights = self.barycentric_weights(point, simplex_idx)?;
+        
+        let mut weights = HashMap::new();
+        for (i, &idx) in simplex.iter().enumerate() {
+            if bary_weights[i] > 1e-10 {
+                weights.insert(idx, bary_weights[i]);
+            }
+        }
+        
+        Ok(weights)
+    }
 }
 
 #[cfg(test)]
@@ -529,19 +611,62 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    #[ignore] // This test is ignored due to implementation issues
     fn test_natural_neighbor_interpolator() {
-        // The implementation of natural neighbor interpolation currently has issues
-        // with small point sets. Until this is fixed, we'll skip this test.
-        println!("Natural neighbor interpolator test is skipped due to implementation issues");
+        // Create sample points in a square
+        let points = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+        ];
+        let values = array![0.0, 1.0, 2.0, 3.0];
+
+        // Create interpolator
+        let interp = NaturalNeighborInterpolator::new(&points.view(), &values.view()).unwrap();
+
+        // Test interpolation at center point
+        let query_point = array![0.5, 0.5];
+        let result = interp.interpolate(&query_point.view()).unwrap();
+        
+        // The center of the square should have equal weights from all corners
+        // Expected value: (0 + 1 + 2 + 3) / 4 = 1.5
+        assert!((result - 1.5).abs() < 0.1, "Expected ~1.5, got {}", result);
+        
+        // Test interpolation at a corner (should return exact value)
+        let corner = array![0.0, 0.0];
+        let corner_result = interp.interpolate(&corner.view()).unwrap();
+        assert!((corner_result - 0.0).abs() < 1e-6, "Expected 0.0 at corner, got {}", corner_result);
     }
 
     #[test]
-    #[ignore] // This test is ignored due to implementation issues
     fn test_outside_convex_hull() {
-        // This test is skipped due to the same implementation issues
-        // as test_natural_neighbor_interpolator
-        println!("Outside convex hull test is skipped due to implementation issues");
+        // Create triangle points
+        let points = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.5, 1.0],
+        ];
+        let values = array![0.0, 1.0, 2.0];
+        
+        let interp = NaturalNeighborInterpolator::new(&points.view(), &values.view()).unwrap();
+        
+        // Test point outside convex hull
+        let outside_point = array![2.0, 2.0];
+        let result = interp.interpolate(&outside_point.view());
+        
+        assert!(result.is_err(), "Expected error for point outside convex hull");
+        
+        // Test interpolate_many with mixed points
+        let query_points = array![
+            [0.5, 0.5],  // Inside
+            [2.0, 2.0],  // Outside
+            [0.25, 0.25], // Inside
+        ];
+        
+        let results = interp.interpolate_many(&query_points.view()).unwrap();
+        assert!(!results[0].is_nan(), "Inside point should have valid result");
+        assert!(results[1].is_nan(), "Outside point should return NaN");
+        assert!(!results[2].is_nan(), "Inside point should have valid result");
     }
 
     #[test]

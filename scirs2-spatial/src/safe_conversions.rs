@@ -36,6 +36,7 @@ pub fn safe_partial_cmp<T: PartialOrd>(a: &T, b: &T, context: &str) -> SpatialRe
 }
 
 /// Safely get the minimum of an iterator
+#[allow(dead_code)]
 pub fn safe_min<I, T>(iter: I, context: &str) -> SpatialResult<T>
 where
     I: Iterator<Item = T>,
@@ -51,6 +52,7 @@ where
 }
 
 /// Safely get the maximum of an iterator
+#[allow(dead_code)]
 pub fn safe_max<I, T>(iter: I, context: &str) -> SpatialResult<T>
 where
     I: Iterator<Item = T>,
@@ -66,6 +68,7 @@ where
 }
 
 /// Safely convert array view to slice
+#[allow(dead_code)]
 pub fn safe_as_slice<'a, T>(array: &'a ndarray::ArrayView1<'a, T>, context: &str) -> SpatialResult<&'a [T]> {
     array.as_slice().ok_or_else(|| {
         SpatialError::ComputationError(format!(
@@ -76,6 +79,7 @@ pub fn safe_as_slice<'a, T>(array: &'a ndarray::ArrayView1<'a, T>, context: &str
 }
 
 /// Safely get first element of a slice
+#[allow(dead_code)]
 pub fn safe_first<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
     slice.first().ok_or_else(|| {
         SpatialError::ComputationError(format!(
@@ -86,6 +90,7 @@ pub fn safe_first<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> 
 }
 
 /// Safely get last element of a slice
+#[allow(dead_code)]
 pub fn safe_last<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
     slice.last().ok_or_else(|| {
         SpatialError::ComputationError(format!(
@@ -96,6 +101,7 @@ pub fn safe_last<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
 }
 
 /// Safely index into an array with bounds checking
+#[allow(dead_code)]
 pub fn safe_index<T: Clone>(array: &[T], index: usize, context: &str) -> SpatialResult<T> {
     array.get(index).cloned().ok_or_else(|| {
         SpatialError::ComputationError(format!(

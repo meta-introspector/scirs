@@ -5,7 +5,9 @@
 
 use ndarray::{Array1, Array2, ArrayView1};
 use crate::error::{IntegrateError, IntegrateResult as Result};
+#[allow(unused_imports)]
 use scirs2_core::constants::PI;
+#[allow(unused_imports)]
 use std::f64::consts::SQRT_2;
 
 /// Trait for divergence-free vector fields
@@ -336,6 +338,290 @@ impl DivergenceFreeFlow for DoubleGyre {
             -PI * self.a * (PI * f).sin() * (PI * x[1]).cos(),
             PI * self.a * (PI * f).cos() * df_dx * (PI * x[1]).sin(),
         ])
+    }
+}
+
+/// Stream function based flow representation
+pub trait StreamFunction {
+    /// Evaluate stream function at a point
+    fn psi(&self, x: f64, y: f64, t: f64) -> f64;
+    
+    /// Compute velocity field from stream function
+    fn velocity(&self, x: f64, y: f64, t: f64) -> (f64, f64) {
+        let h = 1e-8;
+        
+        // u = ∂ψ/∂y
+        let u = (self.psi(x, y + h, t) - self.psi(x, y - h, t)) / (2.0 * h);
+        
+        // v = -∂ψ/∂x  
+        let v = -(self.psi(x + h, y, t) - self.psi(x - h, y, t)) / (2.0 * h);
+        
+        (u, v)
+    }
+}
+
+/// Stuart vortex flow
+pub struct StuartVortex {
+    /// Amplitude parameter
+    pub alpha: f64,
+    /// Wavenumber
+    pub k: f64,
+}
+
+impl StreamFunction for StuartVortex {
+    fn psi(&self, x: f64, y: f64, _t: f64) -> f64 {
+        -self.alpha.ln() * y.cos() + self.alpha * (self.k * x).cos() * y.sin()
+    }
+}
+
+impl DivergenceFreeFlow for StuartVortex {
+    fn dim(&self) -> usize {
+        2
+    }
+    
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
+        let (u, v) = self.velocity(x[0], x[1], t);
+        Array1::from_vec(vec![u, v])
+    }
+}
+
+/// Taylor-Green vortex
+pub struct TaylorGreenVortex {
+    /// Viscosity parameter
+    pub nu: f64,
+}
+
+impl StreamFunction for TaylorGreenVortex {
+    fn psi(&self, x: f64, y: f64, t: f64) -> f64 {
+        let decay = (-2.0 * self.nu * t).exp();
+        decay * x.sin() * y.sin()
+    }
+}
+
+impl DivergenceFreeFlow for TaylorGreenVortex {
+    fn dim(&self) -> usize {
+        2
+    }
+    
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
+        let (u, v) = self.velocity(x[0], x[1], t);
+        Array1::from_vec(vec![u, v])
+    }
+}
+
+/// Generalized Hamiltonian system with volume preservation
+pub struct HamiltonianFlow<H> 
+where
+    H: Fn(&ArrayView1<f64>) -> f64,
+{
+    /// Hamiltonian function
+    pub hamiltonian: H,
+    /// System dimension (must be even)
+    pub dim: usize,
+}
+
+impl<H> DivergenceFreeFlow for HamiltonianFlow<H>
+where
+    H: Fn(&ArrayView1<f64>) -> f64,
+{
+    fn dim(&self) -> usize {
+        self.dim
+    }
+    
+    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+        let n = self.dim / 2;
+        let h = 1e-8;
+        let mut dx = Array1::zeros(self.dim);
+        
+        // Compute gradients
+        let mut grad_h = Array1::zeros(self.dim);
+        for i in 0..self.dim {
+            let mut x_plus = x.to_owned();
+            let mut x_minus = x.to_owned();
+            x_plus[i] += h;
+            x_minus[i] -= h;
+            
+            grad_h[i] = ((self.hamiltonian)(&x_plus.view()) - (self.hamiltonian)(&x_minus.view())) / (2.0 * h);
+        }
+        
+        // Hamilton's equations: dq/dt = ∂H/∂p, dp/dt = -∂H/∂q
+        for i in 0..n {
+            dx[i] = grad_h[n + i];      // dq/dt = ∂H/∂p
+            dx[n + i] = -grad_h[i];     // dp/dt = -∂H/∂q
+        }
+        
+        dx
+    }
+}
+
+/// Modified midpoint method with volume error correction
+pub struct ModifiedMidpointIntegrator {
+    /// Base integrator
+    base: VolumePreservingIntegrator,
+    /// Volume correction strength
+    correction_factor: f64,
+}
+
+impl ModifiedMidpointIntegrator {
+    /// Create a new modified midpoint integrator
+    pub fn new(dt: f64, correction_factor: f64) -> Self {
+        Self {
+            base: VolumePreservingIntegrator::new(dt, VolumePreservingMethod::ImplicitMidpoint),
+            correction_factor,
+        }
+    }
+    
+    /// Step with volume correction
+    pub fn step_with_correction<F>(&self, x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    where
+        F: DivergenceFreeFlow,
+    {
+        // Take base step
+        let x_new = self.base.step(x, t, flow)?;
+        
+        // Compute divergence at midpoint
+        let x_mid = (x + &x_new) / 2.0;
+        let div = flow.verify_divergence_free(&x_mid.view(), t + self.base.dt / 2.0, 1e-8);
+        
+        // Apply correction if needed
+        if div.abs() > 1e-10 {
+            let correction = -self.correction_factor * div * self.base.dt;
+            let n = x.len();
+            let corrected = &x_new * (1.0 + correction / n as f64);
+            Ok(corrected)
+        } else {
+            Ok(x_new)
+        }
+    }
+}
+
+/// Variational integrator for volume-preserving systems
+pub struct VariationalIntegrator {
+    /// Time step
+    dt: f64,
+    /// Number of quadrature points
+    n_quad: usize,
+}
+
+impl VariationalIntegrator {
+    /// Create a new variational integrator
+    pub fn new(dt: f64, n_quad: usize) -> Self {
+        Self { dt, n_quad }
+    }
+    
+    /// Discrete Lagrangian for volume-preserving flow
+    pub fn discrete_lagrangian<F>(&self, x0: &ArrayView1<f64>, x1: &ArrayView1<f64>, t: f64, flow: &F) -> f64
+    where
+        F: DivergenceFreeFlow,
+    {
+        // Gauss-Legendre quadrature points
+        let (weights, nodes) = self.gauss_legendre_quadrature();
+        
+        let mut l_d = 0.0;
+        
+        for i in 0..self.n_quad {
+            let tau = nodes[i];
+            let x_tau = x0 * (1.0 - tau) + x1 * tau;
+            let t_tau = t + self.dt * tau;
+            
+            let f = flow.evaluate(&x_tau.view(), t_tau);
+            let v = (x1 - x0) / self.dt;
+            
+            // Lagrangian density
+            let l = 0.5 * v.dot(&v) - v.dot(&f);
+            l_d += weights[i] * l;
+        }
+        
+        l_d * self.dt
+    }
+    
+    /// Gauss-Legendre quadrature on [0,1]
+    fn gauss_legendre_quadrature(&self) -> (Vec<f64>, Vec<f64>) {
+        match self.n_quad {
+            1 => (vec![1.0], vec![0.5]),
+            2 => (
+                vec![0.5, 0.5],
+                vec![0.5 - 0.5 / 3.0_f64.sqrt(), 0.5 + 0.5 / 3.0_f64.sqrt()]
+            ),
+            3 => (
+                vec![5.0/18.0, 8.0/18.0, 5.0/18.0],
+                vec![
+                    0.5 - 0.5 * (0.6_f64).sqrt(),
+                    0.5,
+                    0.5 + 0.5 * (0.6_f64).sqrt()
+                ]
+            ),
+            _ => panic!("Quadrature order {} not implemented", self.n_quad),
+        }
+    }
+}
+
+/// Discrete gradient method for preserving multiple invariants
+pub struct DiscreteGradientIntegrator {
+    /// Time step
+    dt: f64,
+    /// Invariant functions
+    invariants: Vec<Box<dyn Fn(&ArrayView1<f64>) -> f64>>,
+}
+
+impl DiscreteGradientIntegrator {
+    /// Create a new discrete gradient integrator
+    pub fn new(dt: f64) -> Self {
+        Self {
+            dt,
+            invariants: Vec::new(),
+        }
+    }
+    
+    /// Add an invariant function to preserve
+    pub fn add_invariant<I>(mut self, invariant: I) -> Self
+    where
+        I: Fn(&ArrayView1<f64>) -> f64 + 'static,
+    {
+        self.invariants.push(Box::new(invariant));
+        self
+    }
+    
+    /// Compute discrete gradient
+    pub fn discrete_gradient(&self, x0: &ArrayView1<f64>, x1: &ArrayView1<f64>, invariant_idx: usize) -> Array1<f64> {
+        let h = &self.invariants[invariant_idx];
+        let h0 = h(x0);
+        let h1 = h(x1);
+        
+        if (x1 - x0).mapv(|x| x.abs()).sum() < 1e-14 {
+            // If x0 ≈ x1, use standard gradient
+            self.gradient(x0, invariant_idx)
+        } else {
+            // Average vector field
+            let g0 = self.gradient(x0, invariant_idx);
+            let g1 = self.gradient(x1, invariant_idx);
+            let g_avg = (&g0 + &g1) / 2.0;
+            
+            // Correction term
+            let dx = x1 - x0;
+            let correction = (h1 - h0 - g_avg.dot(&dx)) / dx.dot(&dx) * &dx;
+            
+            g_avg + correction
+        }
+    }
+    
+    /// Standard gradient computation
+    fn gradient(&self, x: &ArrayView1<f64>, invariant_idx: usize) -> Array1<f64> {
+        let h = &self.invariants[invariant_idx];
+        let eps = 1e-8;
+        let n = x.len();
+        let mut grad = Array1::zeros(n);
+        
+        for i in 0..n {
+            let mut x_plus = x.to_owned();
+            let mut x_minus = x.to_owned();
+            x_plus[i] += eps;
+            x_minus[i] -= eps;
+            
+            grad[i] = (h(&x_plus.view()) - h(&x_minus.view())) / (2.0 * eps);
+        }
+        
+        grad
     }
 }
 

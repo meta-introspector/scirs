@@ -669,13 +669,25 @@ pub trait AngleConversion {
 /// Implement AngleConversion for all RealNumber types
 impl<T: RealNumber> AngleConversion for T {
     fn to_radians(self) -> Self {
-        let pi = T::from_f64(std::f64::consts::PI).unwrap();
-        self * pi / T::from_f64(180.0).unwrap()
+        let pi = T::from_f64(std::f64::consts::PI).unwrap_or_else(|| {
+            // This should never fail for valid RealNumber types
+            panic!("Failed to convert PI constant to target type")
+        });
+        let one_eighty = T::from_f64(180.0).unwrap_or_else(|| {
+            panic!("Failed to convert 180.0 to target type")
+        });
+        self * pi / one_eighty
     }
 
     fn to_degrees(self) -> Self {
-        let pi = T::from_f64(std::f64::consts::PI).unwrap();
-        self * T::from_f64(180.0).unwrap() / pi
+        let pi = T::from_f64(std::f64::consts::PI).unwrap_or_else(|| {
+            // This should never fail for valid RealNumber types
+            panic!("Failed to convert PI constant to target type")
+        });
+        let one_eighty = T::from_f64(180.0).unwrap_or_else(|| {
+            panic!("Failed to convert 180.0 to target type")
+        });
+        self * one_eighty / pi
     }
 }
 
@@ -834,7 +846,7 @@ mod tests {
     #[test]
     fn test_numeric_conversion() {
         let a: f64 = 3.5;
-        let b: i32 = a.try_convert().unwrap();
+        let b: i32 = a.try_convert().expect("3.5 should convert to i32 as 3");
         assert_eq!(b, 3);
 
         let c: f32 = 100.5;

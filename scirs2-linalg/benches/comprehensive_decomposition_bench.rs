@@ -1,8 +1,9 @@
 //! Comprehensive benchmarks for matrix decompositions
-use std::hint::black_box;
 //!
 //! This benchmark suite covers all major matrix decomposition operations
 //! with various matrix sizes and types to provide thorough performance analysis.
+
+use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
@@ -395,7 +396,7 @@ fn bench_qz_decomposition(c: &mut Criterion) {
                 b.iter(|| {
                     // qz is not exported, skip this benchmark
                     // qz(black_box(&a.view()), black_box(&matrix_b.view())).unwrap()
-                    black_box((a.clone(), matrix_b.clone()))
+                    black_box((a, matrix_b))
                 })
             },
         );

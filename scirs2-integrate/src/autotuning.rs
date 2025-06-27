@@ -242,9 +242,24 @@ impl HardwareDetector {
 
     /// Detect GPU information
     fn detect_gpu() -> Option<GpuInfo> {
-        // Placeholder for GPU detection
-        // In practice, would use CUDA, OpenCL, or other GPU APIs
-        None
+        // Use scirs2-core's GPU detection functionality
+        let detection_result = scirs2_core::gpu::backends::detect_gpu_backends();
+        
+        // Find the first non-CPU device
+        detection_result.devices.into_iter()
+            .find(|device| device.backend != scirs2_core::gpu::GpuBackend::Cpu)
+            .map(|device| GpuInfo {
+                vendor: match device.backend {
+                    scirs2_core::gpu::GpuBackend::Cuda => "NVIDIA".to_string(),
+                    scirs2_core::gpu::GpuBackend::Rocm => "AMD".to_string(),
+                    scirs2_core::gpu::GpuBackend::Metal => "Apple".to_string(),
+                    scirs2_core::gpu::GpuBackend::OpenCL => "Unknown".to_string(),
+                    _ => "Unknown".to_string(),
+                },
+                model: device.device_name,
+                memory_size: device.memory_bytes.unwrap_or(0) as usize,
+                compute_units: if device.supports_tensors { 1 } else { 0 }, // Simplified
+            })
     }
 }
 

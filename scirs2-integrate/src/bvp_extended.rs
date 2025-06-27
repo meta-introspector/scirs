@@ -365,18 +365,441 @@ where
     F: IntegrateFloat,
     FunType: Fn(F, ArrayView1<F>) -> Array1<F> + Copy,
 {
-    // For now, this is a placeholder for multipoint BVP
-    // Full implementation would require more sophisticated collocation methods
-
     if multipoint.interior_points.is_empty() {
         // No interior points, solve as regular BVP
         solve_bvp_extended(fun, x_span, boundary_conditions, n_points, options)
     } else {
-        // TODO: Implement full multipoint BVP solver
-        Err(IntegrateError::ValueError(
-            "Multipoint BVP solver not yet fully implemented".to_string(),
-        ))
+        // Multipoint BVP using segmented collocation approach
+        
+        // Validate interior points are within domain and sorted
+        let [a, b] = x_span;
+        let mut all_points = vec![a];
+        all_points.extend(multipoint.interior_points.clone());
+        all_points.push(b);
+        
+        // Sort and check uniqueness
+        for i in 1..all_points.len() {
+            if all_points[i] <= all_points[i-1] {
+                return Err(IntegrateError::ValueError(
+                    "Interior points must be unique and in ascending order".to_string(),
+                ));
+            }
+        }
+        
+        // Determine dimensions
+        let n_dim = boundary_conditions.left.len();
+        let n_segments = all_points.len() - 1;
+        let points_per_segment = (n_points - 1) / n_segments + 1;
+        
+        // Build global mesh
+        let mut global_mesh = Vec::new();
+        for i in 0..n_segments {
+            let segment_start = all_points[i];
+            let segment_end = all_points[i + 1];
+            let n_seg_points = if i == n_segments - 1 { 
+                points_per_segment 
+            } else { 
+                points_per_segment - 1 // Avoid duplicating interior points
+            };
+            
+            for j in 0..n_seg_points {
+                let t = F::from_usize(j).unwrap() / F::from_usize(n_seg_points - 1).unwrap();
+                let x = segment_start + (segment_end - segment_start) * t;
+                global_mesh.push(x);
+            }
+        }
+        
+        // Initialize solution with zeros
+        let total_points = global_mesh.len();
+        let mut y_solution: Array2<F> = Array2::zeros((total_points, n_dim));
+        
+        // Apply boundary conditions at endpoints
+        apply_initial_boundary_values(&boundary_conditions, &mut y_solution, total_points, n_dim);
+        
+        // Set up collocation system
+        let options = options.unwrap_or_default();
+        let mut residuals = vec![F::zero(); total_points * n_dim];
+        
+        // Newton's method for solving the collocation system
+        for _iter in 0..options.max_iter {
+            // Compute residuals at all collocation points
+            compute_multipoint_residuals(
+                &fun,
+                &global_mesh,
+                &y_solution,
+                &boundary_conditions,
+                &multipoint,
+                &mut residuals,
+                n_dim,
+            )?;
+            
+            // Check convergence
+            let max_residual = residuals.iter()
+                .map(|&r| r.abs())
+                .fold(F::zero(), |a, b| if a > b { a } else { b });
+                
+            if max_residual < options.tol {
+                // Converged
+                let x = Array1::from_vec(global_mesh);
+                let y = transpose_solution(y_solution);
+                
+                return Ok(BVPResult {
+                    x,
+                    y,
+                    converged: true,
+                    iterations: _iter + 1,
+                });
+            }
+            
+            // Compute Jacobian and solve linear system
+            let jacobian = compute_multipoint_jacobian(
+                &fun,
+                &global_mesh,
+                &y_solution,
+                &boundary_conditions,
+                &multipoint,
+                n_dim,
+                options.jacobian_eps,
+            )?;
+            
+            // Solve J * delta_y = -residuals
+            let delta_y = solve_sparse_system(&jacobian, &residuals)?;
+            
+            // Update solution
+            for (i, delta) in delta_y.iter().enumerate() {
+                let row = i / n_dim;
+                let col = i % n_dim;
+                y_solution[[row, col]] -= *delta;
+            }
+        }
+        
+        // Did not converge
+        let x = Array1::from_vec(global_mesh);
+        let y = transpose_solution(y_solution);
+        
+        Ok(BVPResult {
+            x,
+            y,
+            converged: false,
+            iterations: options.max_iter,
+        })
     }
+}
+
+/// Apply initial boundary values to solution array
+fn apply_initial_boundary_values<F: IntegrateFloat>(
+    boundary_conditions: &ExtendedBoundaryConditions<F>,
+    y_solution: &mut Array2<F>,
+    n_points: usize,
+    n_dim: usize,
+) {
+    // Apply Dirichlet conditions at boundaries if available
+    for (dim, bc) in boundary_conditions.left.iter().enumerate() {
+        if let BoundaryConditionType::Dirichlet { value } = bc {
+            y_solution[[0, dim]] = *value;
+        }
+    }
+    
+    for (dim, bc) in boundary_conditions.right.iter().enumerate() {
+        if let BoundaryConditionType::Dirichlet { value } = bc {
+            y_solution[[n_points - 1, dim]] = *value;
+        }
+    }
+}
+
+/// Compute residuals for multipoint BVP
+fn compute_multipoint_residuals<F: IntegrateFloat, FunType>(
+    fun: &FunType,
+    mesh: &[F],
+    y_solution: &Array2<F>,
+    boundary_conditions: &ExtendedBoundaryConditions<F>,
+    multipoint: &MultipointBVP<F>,
+    residuals: &mut [F],
+    n_dim: usize,
+) -> IntegrateResult<()>
+where
+    FunType: Fn(F, ArrayView1<F>) -> Array1<F>,
+{
+    let n_points = mesh.len();
+    let h = mesh[1] - mesh[0]; // Assuming uniform spacing for simplicity
+    
+    // Interior point residuals (differential equations)
+    for i in 1..n_points - 1 {
+        let y_prev = y_solution.row(i - 1);
+        let y_curr = y_solution.row(i);
+        let y_next = y_solution.row(i + 1);
+        
+        // Compute derivatives using central differences
+        let dydt = (&y_next - &y_prev) / (F::from_f64(2.0).unwrap() * h);
+        
+        // Evaluate ODE
+        let f_val = fun(mesh[i], y_curr);
+        
+        // Residual: dy/dt - f(t, y) = 0
+        for j in 0..n_dim {
+            residuals[i * n_dim + j] = dydt[j] - f_val[j];
+        }
+    }
+    
+    // Boundary condition residuals
+    apply_boundary_residuals(
+        boundary_conditions,
+        y_solution,
+        residuals,
+        n_points,
+        n_dim,
+        h,
+    );
+    
+    // Interior point condition residuals
+    apply_interior_residuals(
+        multipoint,
+        mesh,
+        y_solution,
+        residuals,
+        n_dim,
+        h,
+    )?;
+    
+    Ok(())
+}
+
+/// Apply boundary condition residuals
+fn apply_boundary_residuals<F: IntegrateFloat>(
+    boundary_conditions: &ExtendedBoundaryConditions<F>,
+    y_solution: &Array2<F>,
+    residuals: &mut [F],
+    n_points: usize,
+    n_dim: usize,
+    h: F,
+) {
+    // Left boundary
+    let y_left = y_solution.row(0);
+    let y_left_next = y_solution.row(1);
+    let dydt_left = (&y_left_next - &y_left) / h;
+    
+    for (dim, bc) in boundary_conditions.left.iter().enumerate() {
+        residuals[dim] = bc.evaluate_residual(F::zero(), y_left, dydt_left.view(), dim);
+    }
+    
+    // Right boundary
+    let y_right = y_solution.row(n_points - 1);
+    let y_right_prev = y_solution.row(n_points - 2);
+    let dydt_right = (&y_right - &y_right_prev) / h;
+    
+    for (dim, bc) in boundary_conditions.right.iter().enumerate() {
+        residuals[(n_points - 1) * n_dim + dim] = 
+            bc.evaluate_residual(F::zero(), y_right, dydt_right.view(), dim);
+    }
+}
+
+/// Apply interior point condition residuals
+fn apply_interior_residuals<F: IntegrateFloat>(
+    multipoint: &MultipointBVP<F>,
+    mesh: &[F],
+    y_solution: &Array2<F>,
+    residuals: &mut [F],
+    n_dim: usize,
+    h: F,
+) -> IntegrateResult<()> {
+    // Find indices of interior condition points
+    for (point_idx, &interior_x) in multipoint.interior_points.iter().enumerate() {
+        // Find closest mesh point
+        let mesh_idx = mesh.iter()
+            .position(|&x| (x - interior_x).abs() < F::from_f64(1e-10).unwrap())
+            .ok_or_else(|| IntegrateError::ValueError(
+                format!("Interior point not found in mesh")
+            ))?;
+            
+        let y_at_point = y_solution.row(mesh_idx);
+        
+        // Compute derivative at interior point
+        let dydt_at_point = if mesh_idx > 0 && mesh_idx < mesh.len() - 1 {
+            let y_prev = y_solution.row(mesh_idx - 1);
+            let y_next = y_solution.row(mesh_idx + 1);
+            (&y_next - &y_prev) / (F::from_f64(2.0).unwrap() * h)
+        } else {
+            // Use one-sided difference at boundaries
+            if mesh_idx == 0 {
+                let y_next = y_solution.row(1);
+                (&y_next - &y_at_point) / h
+            } else {
+                let y_prev = y_solution.row(mesh_idx - 1);
+                (&y_at_point - &y_prev) / h
+            }
+        };
+        
+        // Apply each condition at this interior point
+        for (cond_idx, condition) in multipoint.interior_conditions[point_idx].iter().enumerate() {
+            residuals[mesh_idx * n_dim + cond_idx] = 
+                condition.evaluate_residual(interior_x, y_at_point, dydt_at_point.view(), cond_idx);
+        }
+    }
+    
+    Ok(())
+}
+
+/// Compute Jacobian for multipoint BVP (simplified version)
+fn compute_multipoint_jacobian<F: IntegrateFloat, FunType>(
+    fun: &FunType,
+    mesh: &[F],
+    y_solution: &Array2<F>,
+    boundary_conditions: &ExtendedBoundaryConditions<F>,
+    multipoint: &MultipointBVP<F>,
+    n_dim: usize,
+    eps: F,
+) -> IntegrateResult<Vec<Vec<F>>>
+where
+    FunType: Fn(F, ArrayView1<F>) -> Array1<F>,
+{
+    let n_points = mesh.len();
+    let total_size = n_points * n_dim;
+    let mut jacobian = vec![vec![F::zero(); total_size]; total_size];
+    
+    // Use finite differences to approximate Jacobian
+    let mut residuals_base = vec![F::zero(); total_size];
+    let mut residuals_pert = vec![F::zero(); total_size];
+    
+    // Compute base residuals
+    compute_multipoint_residuals(
+        fun,
+        mesh,
+        y_solution,
+        boundary_conditions,
+        multipoint,
+        &mut residuals_base,
+        n_dim,
+    )?;
+    
+    // Perturb each variable and compute Jacobian columns
+    let mut y_pert = y_solution.clone();
+    
+    for col in 0..total_size {
+        let row_idx = col / n_dim;
+        let dim_idx = col % n_dim;
+        
+        // Perturb
+        let original = y_pert[[row_idx, dim_idx]];
+        y_pert[[row_idx, dim_idx]] = original + eps;
+        
+        // Compute perturbed residuals
+        compute_multipoint_residuals(
+            fun,
+            mesh,
+            &y_pert,
+            boundary_conditions,
+            multipoint,
+            &mut residuals_pert,
+            n_dim,
+        )?;
+        
+        // Compute Jacobian column
+        for row in 0..total_size {
+            jacobian[row][col] = (residuals_pert[row] - residuals_base[row]) / eps;
+        }
+        
+        // Restore original value
+        y_pert[[row_idx, dim_idx]] = original;
+    }
+    
+    Ok(jacobian)
+}
+
+/// Solve sparse linear system (simplified dense solver)
+fn solve_sparse_system<F: IntegrateFloat>(
+    jacobian: &[Vec<F>],
+    residuals: &[F],
+) -> IntegrateResult<Vec<F>> {
+    // Convert to dense matrix and use LU decomposition
+    // In a real implementation, we'd use a sparse solver
+    let n = jacobian.len();
+    let mut a = Array2::zeros((n, n));
+    let mut b = Array1::zeros(n);
+    
+    for i in 0..n {
+        for j in 0..n {
+            a[[i, j]] = jacobian[i][j];
+        }
+        b[i] = residuals[i];
+    }
+    
+    // Use scirs2-linalg for solving
+    // For now, use a simple Gaussian elimination
+    let solution = gaussian_elimination(a, b)?;
+    
+    Ok(solution.to_vec())
+}
+
+/// Simple Gaussian elimination solver
+fn gaussian_elimination<F: IntegrateFloat>(
+    mut a: Array2<F>,
+    mut b: Array1<F>,
+) -> IntegrateResult<Array1<F>> {
+    let n = a.nrows();
+    
+    // Forward elimination
+    for k in 0..n-1 {
+        // Find pivot
+        let mut max_row = k;
+        for i in k+1..n {
+            if a[[i, k]].abs() > a[[max_row, k]].abs() {
+                max_row = i;
+            }
+        }
+        
+        // Swap rows
+        if max_row != k {
+            for j in 0..n {
+                let temp = a[[k, j]];
+                a[[k, j]] = a[[max_row, j]];
+                a[[max_row, j]] = temp;
+            }
+            let temp = b[k];
+            b[k] = b[max_row];
+            b[max_row] = temp;
+        }
+        
+        // Check for singular matrix
+        if a[[k, k]].abs() < F::from_f64(1e-12).unwrap() {
+            return Err(IntegrateError::ComputationError(
+                "Singular matrix in Gaussian elimination".to_string()
+            ));
+        }
+        
+        // Eliminate column
+        for i in k+1..n {
+            let factor = a[[i, k]] / a[[k, k]];
+            for j in k+1..n {
+                a[[i, j]] = a[[i, j]] - factor * a[[k, j]];
+            }
+            b[i] = b[i] - factor * b[k];
+        }
+    }
+    
+    // Back substitution
+    let mut x = Array1::zeros(n);
+    for i in (0..n).rev() {
+        x[i] = b[i];
+        for j in i+1..n {
+            x[i] = x[i] - a[[i, j]] * x[j];
+        }
+        x[i] = x[i] / a[[i, i]];
+    }
+    
+    Ok(x)
+}
+
+/// Transpose solution from row-major to column-major format
+fn transpose_solution<F: IntegrateFloat>(y_solution: Array2<F>) -> Vec<Array1<F>> {
+    let n_points = y_solution.nrows();
+    let n_dim = y_solution.ncols();
+    
+    let mut result = Vec::with_capacity(n_points);
+    for i in 0..n_points {
+        result.push(y_solution.row(i).to_owned());
+    }
+    
+    result
 }
 
 #[cfg(test)]

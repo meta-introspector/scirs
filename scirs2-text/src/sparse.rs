@@ -407,6 +407,313 @@ impl SparseMatrixBuilder {
     }
 }
 
+/// COO (Coordinate) sparse matrix format for efficient construction
+#[derive(Debug, Clone)]
+pub struct CooMatrix {
+    /// Row indices
+    row_indices: Vec<usize>,
+    /// Column indices
+    col_indices: Vec<usize>,
+    /// Values
+    values: Vec<f64>,
+    /// Number of rows
+    n_rows: usize,
+    /// Number of columns
+    n_cols: usize,
+}
+
+impl CooMatrix {
+    /// Create a new COO matrix
+    pub fn new(n_rows: usize, n_cols: usize) -> Self {
+        Self {
+            row_indices: Vec::new(),
+            col_indices: Vec::new(),
+            values: Vec::new(),
+            n_rows,
+            n_cols,
+        }
+    }
+    
+    /// Add a value to the matrix
+    pub fn push(&mut self, row: usize, col: usize, value: f64) -> Result<()> {
+        if row >= self.n_rows || col >= self.n_cols {
+            return Err(TextError::InvalidInput(
+                format!("Index ({}, {}) out of bounds for matrix shape ({}, {})", 
+                       row, col, self.n_rows, self.n_cols)
+            ));
+        }
+        
+        if value != 0.0 {
+            self.row_indices.push(row);
+            self.col_indices.push(col);
+            self.values.push(value);
+        }
+        
+        Ok(())
+    }
+    
+    /// Convert to CSR format (efficient for row operations)
+    pub fn to_csr(&self) -> CsrMatrix {
+        // Sort by row then column
+        let mut indices: Vec<usize> = (0..self.values.len()).collect();
+        indices.sort_by_key(|&i| (self.row_indices[i], self.col_indices[i]));
+        
+        let mut values = Vec::with_capacity(self.values.len());
+        let mut col_indices = Vec::with_capacity(self.values.len());
+        let mut row_ptrs = vec![0];
+        
+        let mut current_row = 0;
+        for &idx in &indices {
+            let row = self.row_indices[idx];
+            
+            // Fill row pointers for empty rows
+            while current_row < row {
+                row_ptrs.push(values.len());
+                current_row += 1;
+            }
+            
+            values.push(self.values[idx]);
+            col_indices.push(self.col_indices[idx]);
+        }
+        
+        // Fill remaining row pointers
+        while row_ptrs.len() <= self.n_rows {
+            row_ptrs.push(values.len());
+        }
+        
+        CsrMatrix {
+            values,
+            col_indices,
+            row_ptrs,
+            n_rows: self.n_rows,
+            n_cols: self.n_cols,
+        }
+    }
+    
+    /// Get number of non-zero elements
+    pub fn nnz(&self) -> usize {
+        self.values.len()
+    }
+}
+
+/// CSC (Compressed Sparse Column) format for efficient column operations
+#[derive(Debug, Clone)]
+pub struct CscMatrix {
+    /// Non-zero values
+    values: Vec<f64>,
+    /// Row indices for each value
+    row_indices: Vec<usize>,
+    /// Column pointers (cumulative sum of non-zeros per column)
+    col_ptrs: Vec<usize>,
+    /// Number of rows
+    n_rows: usize,
+    /// Number of columns
+    n_cols: usize,
+}
+
+impl CscMatrix {
+    /// Create from COO format
+    pub fn from_coo(coo: &CooMatrix) -> Self {
+        // Sort by column then row
+        let mut indices: Vec<usize> = (0..coo.values.len()).collect();
+        indices.sort_by_key(|&i| (coo.col_indices[i], coo.row_indices[i]));
+        
+        let mut values = Vec::with_capacity(coo.values.len());
+        let mut row_indices = Vec::with_capacity(coo.values.len());
+        let mut col_ptrs = vec![0];
+        
+        let mut current_col = 0;
+        for &idx in &indices {
+            let col = coo.col_indices[idx];
+            
+            // Fill column pointers for empty columns
+            while current_col < col {
+                col_ptrs.push(values.len());
+                current_col += 1;
+            }
+            
+            values.push(coo.values[idx]);
+            row_indices.push(coo.row_indices[idx]);
+        }
+        
+        // Fill remaining column pointers
+        while col_ptrs.len() <= coo.n_cols {
+            col_ptrs.push(values.len());
+        }
+        
+        Self {
+            values,
+            row_indices,
+            col_ptrs,
+            n_rows: coo.n_rows,
+            n_cols: coo.n_cols,
+        }
+    }
+    
+    /// Get a column as a sparse vector
+    pub fn get_col(&self, col_idx: usize) -> Result<SparseVector> {
+        if col_idx >= self.n_cols {
+            return Err(TextError::InvalidInput(
+                format!("Column index {} out of bounds for matrix with {} columns", col_idx, self.n_cols)
+            ));
+        }
+        
+        let start = self.col_ptrs[col_idx];
+        let end = self.col_ptrs[col_idx + 1];
+        
+        let indices: Vec<usize> = self.row_indices[start..end].to_vec();
+        let values: Vec<f64> = self.values[start..end].to_vec();
+        
+        Ok(SparseVector::from_indices_values(indices, values, self.n_rows))
+    }
+}
+
+/// Block sparse matrix for better cache efficiency
+#[derive(Debug, Clone)]
+pub struct BlockSparseMatrix {
+    /// Block size (square blocks)
+    block_size: usize,
+    /// Non-empty blocks stored as dense matrices
+    blocks: HashMap<(usize, usize), Array2<f64>>,
+    /// Number of rows
+    n_rows: usize,
+    /// Number of columns
+    n_cols: usize,
+}
+
+impl BlockSparseMatrix {
+    /// Create a new block sparse matrix
+    pub fn new(n_rows: usize, n_cols: usize, block_size: usize) -> Self {
+        Self {
+            block_size,
+            blocks: HashMap::new(),
+            n_rows,
+            n_cols,
+        }
+    }
+    
+    /// Set a value in the matrix
+    pub fn set(&mut self, row: usize, col: usize, value: f64) -> Result<()> {
+        if row >= self.n_rows || col >= self.n_cols {
+            return Err(TextError::InvalidInput(
+                format!("Index ({}, {}) out of bounds", row, col)
+            ));
+        }
+        
+        let block_row = row / self.block_size;
+        let block_col = col / self.block_size;
+        let local_row = row % self.block_size;
+        let local_col = col % self.block_size;
+        
+        let block = self.blocks
+            .entry((block_row, block_col))
+            .or_insert_with(|| Array2::zeros((self.block_size, self.block_size)));
+        
+        block[[local_row, local_col]] = value;
+        
+        Ok(())
+    }
+    
+    /// Get a value from the matrix
+    pub fn get(&self, row: usize, col: usize) -> f64 {
+        if row >= self.n_rows || col >= self.n_cols {
+            return 0.0;
+        }
+        
+        let block_row = row / self.block_size;
+        let block_col = col / self.block_size;
+        let local_row = row % self.block_size;
+        let local_col = col % self.block_size;
+        
+        self.blocks
+            .get(&(block_row, block_col))
+            .map(|block| block[[local_row, local_col]])
+            .unwrap_or(0.0)
+    }
+    
+    /// Get memory usage
+    pub fn memory_usage(&self) -> usize {
+        self.blocks.len() * self.block_size * self.block_size * std::mem::size_of::<f64>()
+    }
+}
+
+/// Quantized sparse vector for reduced memory usage
+#[derive(Debug, Clone)]
+pub struct QuantizedSparseVector {
+    /// Indices of non-zero elements
+    indices: Vec<u32>,
+    /// Quantized values (8-bit)
+    values: Vec<i8>,
+    /// Scale factor for dequantization
+    scale: f32,
+    /// Zero point for dequantization
+    zero_point: i8,
+    /// Total size
+    size: usize,
+}
+
+impl QuantizedSparseVector {
+    /// Quantize a sparse vector to 8-bit representation
+    pub fn from_sparse(sparse: &SparseVector) -> Self {
+        if sparse.values.is_empty() {
+            return Self {
+                indices: Vec::new(),
+                values: Vec::new(),
+                scale: 1.0,
+                zero_point: 0,
+                size: sparse.size,
+            };
+        }
+        
+        // Find min and max values
+        let min_val = sparse.values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = sparse.values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        
+        // Calculate quantization parameters
+        let range = max_val - min_val;
+        let scale = (range / 255.0) as f32;
+        let zero_point = (-min_val / range * 255.0).round() as i8;
+        
+        // Quantize values
+        let indices: Vec<u32> = sparse.indices.iter().map(|&i| i as u32).collect();
+        let values: Vec<i8> = sparse.values.iter()
+            .map(|&v| {
+                let scaled = ((v - min_val) / range * 255.0).round();
+                (scaled.max(0.0).min(255.0) as i16 - 128) as i8  // Center around 0
+            })
+            .collect();
+        
+        Self {
+            indices,
+            values,
+            scale,
+            zero_point,
+            size: sparse.size,
+        }
+    }
+    
+    /// Dequantize back to a regular sparse vector
+    pub fn to_sparse(&self) -> SparseVector {
+        let indices: Vec<usize> = self.indices.iter().map(|&i| i as usize).collect();
+        let values: Vec<f64> = self.values.iter()
+            .map(|&v| {
+                let dequantized = (v as f32 + 128.0 - self.zero_point as f32) * self.scale;
+                dequantized as f64
+            })
+            .collect();
+        
+        SparseVector::from_indices_values(indices, values, self.size)
+    }
+    
+    /// Get memory usage in bytes
+    pub fn memory_usage(&self) -> usize {
+        self.indices.len() * std::mem::size_of::<u32>() +
+        self.values.len() * std::mem::size_of::<i8>() +
+        std::mem::size_of::<f32>() * 2 +
+        std::mem::size_of::<usize>()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -503,5 +810,103 @@ mod tests {
                 (1.0 - sparse_memory as f64 / dense_memory as f64) * 100.0);
         
         assert!(sparse_memory < dense_memory / 10); // Should use less than 10% of dense memory
+    }
+    
+    #[test]
+    fn test_coo_matrix() {
+        let mut coo = CooMatrix::new(3, 3);
+        
+        coo.push(0, 0, 1.0).unwrap();
+        coo.push(1, 1, 2.0).unwrap();
+        coo.push(2, 0, 3.0).unwrap();
+        coo.push(1, 2, 4.0).unwrap();
+        
+        assert_eq!(coo.nnz(), 4);
+        
+        // Convert to CSR
+        let csr = coo.to_csr();
+        assert_eq!(csr.nnz(), 4);
+        assert_eq!(csr.shape(), (3, 3));
+        
+        // Verify values
+        let dense = csr.to_dense();
+        assert_eq!(dense[[0, 0]], 1.0);
+        assert_eq!(dense[[1, 1]], 2.0);
+        assert_eq!(dense[[2, 0]], 3.0);
+        assert_eq!(dense[[1, 2]], 4.0);
+    }
+    
+    #[test]
+    fn test_csc_matrix() {
+        let mut coo = CooMatrix::new(3, 3);
+        coo.push(0, 0, 1.0).unwrap();
+        coo.push(1, 1, 2.0).unwrap();
+        coo.push(2, 0, 3.0).unwrap();
+        
+        let csc = CscMatrix::from_coo(&coo);
+        
+        // Get column 0
+        let col0 = csc.get_col(0).unwrap();
+        assert_eq!(col0.nnz(), 2);
+        let dense_col0 = col0.to_dense();
+        assert_eq!(dense_col0[0], 1.0);
+        assert_eq!(dense_col0[2], 3.0);
+        
+        // Get column 1
+        let col1 = csc.get_col(1).unwrap();
+        assert_eq!(col1.nnz(), 1);
+        let dense_col1 = col1.to_dense();
+        assert_eq!(dense_col1[1], 2.0);
+    }
+    
+    #[test]
+    fn test_block_sparse_matrix() {
+        let mut block_sparse = BlockSparseMatrix::new(10, 10, 3);
+        
+        // Set some values
+        block_sparse.set(0, 0, 1.0).unwrap();
+        block_sparse.set(5, 5, 2.0).unwrap();
+        block_sparse.set(9, 9, 3.0).unwrap();
+        
+        // Get values
+        assert_eq!(block_sparse.get(0, 0), 1.0);
+        assert_eq!(block_sparse.get(5, 5), 2.0);
+        assert_eq!(block_sparse.get(9, 9), 3.0);
+        assert_eq!(block_sparse.get(3, 3), 0.0);
+        
+        // Check memory usage
+        let memory = block_sparse.memory_usage();
+        assert!(memory > 0);
+    }
+    
+    #[test]
+    fn test_quantized_sparse_vector() {
+        let mut sparse = SparseVector::new(10);
+        sparse.indices = vec![1, 3, 7];
+        sparse.values = vec![10.5, -5.2, 100.0];
+        
+        // Quantize
+        let quantized = QuantizedSparseVector::from_sparse(&sparse);
+        assert_eq!(quantized.indices.len(), 3);
+        assert_eq!(quantized.values.len(), 3);
+        
+        // Dequantize
+        let dequantized = quantized.to_sparse();
+        assert_eq!(dequantized.nnz(), 3);
+        
+        // Check values are approximately preserved
+        let orig_values = sparse.values();
+        let deq_values = dequantized.values();
+        for i in 0..3 {
+            let error = (orig_values[i] - deq_values[i]).abs();
+            let relative_error = error / orig_values[i].abs();
+            assert!(relative_error < 0.02); // Less than 2% error
+        }
+        
+        // Check memory savings
+        let orig_memory = sparse.indices.len() * std::mem::size_of::<usize>() +
+                         sparse.values.len() * std::mem::size_of::<f64>();
+        let quantized_memory = quantized.memory_usage();
+        assert!(quantized_memory < orig_memory);
     }
 }

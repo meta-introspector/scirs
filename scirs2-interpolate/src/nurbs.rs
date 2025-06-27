@@ -277,49 +277,129 @@ where
             return self.evaluate(t);
         }
 
-        // For first-order derivatives, use the quotient rule
-        if order == 1 {
-            // Compute the point and basis functions
-            let point = self.evaluate(t)?;
-            let basis_values = self.compute_basis_values(t)?;
-
-            // Compute the derivatives of the basis functions
-            let basis_derivs = self.compute_basis_derivatives(t, 1)?;
-
-            // Apply the quotient rule for rational curves
-            let mut numerator: Array1<T> = Array1::zeros(self.dimension);
-            let mut sum_basis_weights = T::zero();
-            let mut sum_basis_deriv_weights = T::zero();
-
-            for i in 0..self.weights.len() {
-                // For the numerator: w_i * N'_i(t) * P_i
-                for j in 0..self.dimension {
-                    numerator[j] += self.weights[i] * basis_derivs[i] * self.control_points[[i, j]];
-                }
-
-                // For the denominator parts
-                sum_basis_weights += self.weights[i] * basis_values[i];
-                sum_basis_deriv_weights += self.weights[i] * basis_derivs[i];
-            }
-
-            // Apply the quotient rule: (a'b - ab')/b²
-            let mut result: Array1<T> = Array1::zeros(self.dimension);
-            if sum_basis_weights > T::epsilon() {
-                for j in 0..self.dimension {
-                    result[j] =
-                        (numerator[j] - (point[j] * sum_basis_deriv_weights)) / (sum_basis_weights);
-                }
-            }
-
-            return Ok(result);
+        // For derivatives of order > degree, return zero
+        if order > self.degree() {
+            return Ok(Array1::zeros(self.dimension));
         }
 
-        // For higher order derivatives, we would need to implement more complex formulas
-        // This is a simplified approach for now
-        Err(InterpolateError::NotImplementedError(format!(
-            "Derivatives of order {} are not yet implemented",
-            order
-        )))
+        // Compute derivatives using the generalized formula for NURBS derivatives
+        // Based on "The NURBS Book" by Piegl and Tiller
+        let n = self.weights.len();
+        
+        // Compute all derivatives up to the requested order
+        let basis_derivs_all = self.compute_all_basis_derivatives(t, order)?;
+        
+        // Compute derivatives of the weighted control points (A^(k))
+        let mut a_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
+        let mut w_derivs = vec![T::zero(); order + 1];
+        
+        for k in 0..=order {
+            for i in 0..n {
+                let basis_k = basis_derivs_all[k][i];
+                w_derivs[k] += self.weights[i] * basis_k;
+                
+                for j in 0..self.dimension {
+                    a_derivs[k][j] += self.weights[i] * self.control_points[[i, j]] * basis_k;
+                }
+            }
+        }
+        
+        // Apply the generalized quotient rule
+        let mut result = Array1::zeros(self.dimension);
+        
+        // C^(k) = (1/w) * [A^(k) - sum_{i=1}^k (k choose i) * w^(i) * C^(k-i)]
+        let mut c_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
+        
+        // C^(0) is just the point itself
+        if w_derivs[0] > T::epsilon() {
+            for j in 0..self.dimension {
+                c_derivs[0][j] = a_derivs[0][j] / w_derivs[0];
+            }
+        }
+        
+        // Compute higher order derivatives recursively
+        for k in 1..=order {
+            let mut temp = a_derivs[k].clone();
+            
+            for i in 1..=k {
+                let binom_coeff = T::from(Self::binomial_coefficient(k, i)).unwrap();
+                for j in 0..self.dimension {
+                    temp[j] -= binom_coeff * w_derivs[i] * c_derivs[k - i][j];
+                }
+            }
+            
+            if w_derivs[0] > T::epsilon() {
+                for j in 0..self.dimension {
+                    c_derivs[k][j] = temp[j] / w_derivs[0];
+                }
+            }
+        }
+        
+        Ok(c_derivs[order].clone())
+    }
+    
+    /// Compute the definite integral of the NURBS curve over an interval
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - Lower bound of the interval
+    /// * `b` - Upper bound of the interval
+    ///
+    /// # Returns
+    ///
+    /// The definite integral of the NURBS curve over [a, b]
+    pub fn integrate(&self, a: T, b: T) -> InterpolateResult<Array1<T>> {
+        // Check bounds
+        let t_min = self.bspline.knot_vector()[self.degree()];
+        let t_max = self.bspline.knot_vector()[self.bspline.knot_vector().len() - self.degree() - 1];
+        
+        if a < t_min || b > t_max {
+            return Err(InterpolateError::DomainError(format!(
+                "Integration bounds [{}, {}] are outside the NURBS domain [{}, {}]",
+                a, b, t_min, t_max
+            )));
+        }
+        
+        if a > b {
+            // If a > b, swap and negate the result
+            let result = self.integrate(b, a)?;
+            return Ok(-result);
+        }
+        
+        // Use numerical integration (composite Simpson's rule)
+        let n_intervals = 100; // Number of intervals for integration
+        let h = (b - a) / T::from(n_intervals).unwrap();
+        
+        let mut result = Array1::zeros(self.dimension);
+        
+        // Add contributions from endpoints
+        let f_a = self.evaluate(a)?;
+        let f_b = self.evaluate(b)?;
+        result = result + &f_a;
+        result = result + &f_b;
+        
+        // Add contributions from odd indices (coefficient 4)
+        for i in 1..n_intervals {
+            if i % 2 == 1 {
+                let t = a + T::from(i).unwrap() * h;
+                let f_t = self.evaluate(t)?;
+                result = result + &(T::from(4.0).unwrap() * &f_t);
+            }
+        }
+        
+        // Add contributions from even indices (coefficient 2)
+        for i in 2..n_intervals {
+            if i % 2 == 0 {
+                let t = a + T::from(i).unwrap() * h;
+                let f_t = self.evaluate(t)?;
+                result = result + &(T::from(2.0).unwrap() * &f_t);
+            }
+        }
+        
+        // Apply Simpson's rule factor
+        result = (h / T::from(3.0).unwrap()) * result;
+        
+        Ok(result)
     }
 
     /// Insert a knot into the NURBS curve
@@ -477,6 +557,37 @@ where
         }
 
         Ok(basis_derivs)
+    }
+    
+    /// Compute all basis function derivatives up to a given order
+    fn compute_all_basis_derivatives(&self, t: T, max_order: usize) -> InterpolateResult<Vec<Vec<T>>> {
+        let n = self.weights.len();
+        let mut all_derivs = vec![vec![T::zero(); n]; max_order + 1];
+        
+        // Compute all derivatives up to max_order
+        for order in 0..=max_order {
+            for i in 0..n {
+                all_derivs[order][i] = self.basis_function_derivative(i, t, order)?;
+            }
+        }
+        
+        Ok(all_derivs)
+    }
+    
+    /// Compute binomial coefficient (n choose k)
+    fn binomial_coefficient(n: usize, k: usize) -> usize {
+        if k > n {
+            return 0;
+        }
+        if k == 0 || k == n {
+            return 1;
+        }
+        
+        let mut result = 1;
+        for i in 0..k.min(n - k) {
+            result = result * (n - i) / (i + 1);
+        }
+        result
     }
 
     /// Calculate a single basis function value

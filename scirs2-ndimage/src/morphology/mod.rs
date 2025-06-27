@@ -40,6 +40,7 @@ use std::fmt::Debug;
 mod connected;
 mod distance_transform;
 mod distance_transform_optimized;
+pub mod morphology_optimized;
 pub mod simple_morph;
 mod structuring;
 mod utils;
@@ -54,6 +55,7 @@ pub use connected::*;
 pub use distance_transform::*;
 pub use distance_transform_optimized::*;
 pub use grayscale::*;
+pub use morphology_optimized::*;
 pub use structuring::*;
 pub use utils::*;
 

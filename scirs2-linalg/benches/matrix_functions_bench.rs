@@ -1,9 +1,12 @@
 //! Comprehensive benchmarks for matrix functions
-use std::hint::black_box;
 //!
 //! This benchmark suite covers all matrix function operations including
 //! matrix exponential, logarithm, power, square root, trigonometric functions,
 //! and other matrix-valued functions.
+
+#![allow(clippy::needless_borrow)]
+
+use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array2;
@@ -220,7 +223,7 @@ fn bench_matrix_power(c: &mut Criterion) {
                         // matrix_power_real not available for fractional powers
                         // Use matrix_power for integer part only
                         if *p == (*p as i32) as f64 {
-                            matrix_power(black_box(&m.view()), *p as f64).unwrap()
+                            matrix_power(black_box(&m.view()), *p).unwrap()
                         } else {
                             // For fractional powers, use matrix_power as well
                             matrix_power(black_box(&m.view()), *p).unwrap()
@@ -234,7 +237,7 @@ fn bench_matrix_power(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("matrix_power_eig", size),
             &(&spd_matrix, 2.5),
-            |b, (m, p)| {
+            |b, (m, _p)| {
                 b.iter(|| {
                     // matrix_power_via_eig not available
                     // Just use identity as placeholder

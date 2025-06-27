@@ -185,6 +185,7 @@ gmp-mpfr-sys = { version = "1.6.5", default-features = false }
 tokio = { version = "1.45.1", features = ["full"] }
 futures = "0.3.31"
 futures-util = "0.3.31"
+async-trait = "0.1.83"
 
 # Logging
 log = "0.4"

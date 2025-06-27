@@ -20,6 +20,16 @@ pub enum IoError {
     DecompressionError(String),
     /// Unsupported compression algorithm
     UnsupportedCompressionAlgorithm(String),
+    /// Unsupported format
+    UnsupportedFormat(String),
+    /// Conversion error
+    ConversionError(String),
+    /// File not found
+    FileNotFound(String),
+    /// Parse error
+    ParseError(String),
+    /// Standard I/O error
+    Io(std::io::Error),
     /// Validation error
     ValidationError(String),
     /// Checksum error
@@ -46,6 +56,11 @@ impl fmt::Display for IoError {
             IoError::UnsupportedCompressionAlgorithm(algo) => {
                 write!(f, "Unsupported compression algorithm: {}", algo)
             }
+            IoError::UnsupportedFormat(fmt) => write!(f, "Unsupported format: {}", fmt),
+            IoError::ConversionError(msg) => write!(f, "Conversion error: {}", msg),
+            IoError::FileNotFound(path) => write!(f, "File not found: {}", path),
+            IoError::ParseError(msg) => write!(f, "Parse error: {}", msg),
+            IoError::Io(e) => write!(f, "I/O error: {}", e),
             IoError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
             IoError::ChecksumError(msg) => write!(f, "Checksum error: {}", msg),
             IoError::IntegrityError(msg) => write!(f, "Integrity error: {}", msg),

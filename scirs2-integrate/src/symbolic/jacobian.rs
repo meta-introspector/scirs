@@ -166,6 +166,12 @@ impl<F: IntegrateFloat> SymbolicODEBuilder<F> {
     }
 }
 
+impl<F: IntegrateFloat> Default for SymbolicODEBuilder<F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Example: Create a symbolic Jacobian for the Van der Pol oscillator
 pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<SymbolicJacobian<F>> {
     use SymbolicExpression::*;

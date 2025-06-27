@@ -222,9 +222,67 @@ impl PCA {
         n_components: usize,
         n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
-        // For now, fall back to full SVD
-        // TODO: Implement randomized SVD algorithm
-        self.pca_svd(data, n_components, n_samples)
+        use rand::{SeedableRng, rngs::StdRng};
+        use rand_distr::{Normal, Distribution};
+        use ndarray_linalg::{QR, SVD};
+        
+        let n_features = data.ncols();
+        let n_oversamples = 10.min((n_features - n_components) / 2);
+        let n_random = n_components + n_oversamples;
+        
+        // Initialize RNG
+        let mut rng: StdRng = match self.random_state {
+            Some(seed) => SeedableRng::seed_from_u64(seed),
+            None => SeedableRng::from_entropy(),
+        };
+        
+        // Generate random matrix
+        let normal = Normal::new(0.0, 1.0).map_err(|e| 
+            StatsError::ComputationError(format!("Failed to create normal distribution: {}", e)))?;
+        let omega = Array2::from_shape_fn((n_features, n_random), |_| normal.sample(&mut rng));
+        
+        // Power iterations for better approximation
+        let n_iter = 4;
+        let mut q = data.dot(&omega);
+        
+        for _ in 0..n_iter {
+            // QR decomposition
+            let (_q_mat, r) = q.qr()
+                .map_err(|e| StatsError::ComputationError(format!("QR decomposition failed: {}", e)))?;
+            q = _q_mat;
+            
+            // Project back
+            let z = data.t().dot(&q);
+            let (_q_mat, _r) = z.qr()
+                .map_err(|e| StatsError::ComputationError(format!("QR decomposition failed: {}", e)))?;
+            q = data.dot(&_q_mat);
+        }
+        
+        // Final QR decomposition
+        let (q_final, _) = q.qr()
+            .map_err(|e| StatsError::ComputationError(format!("Final QR decomposition failed: {}", e)))?;
+        
+        // Project data onto subspace
+        let b = q_final.t().dot(data);
+        
+        // SVD of small matrix B
+        let (_u_small, s, vt) = b.svd(true, true)
+            .map_err(|e| StatsError::ComputationError(format!("SVD of projected matrix failed: {}", e)))?;
+        
+        let v = vt.unwrap().t().to_owned();
+        
+        // Extract components
+        let components = v.slice(ndarray::s![.., ..n_components]).to_owned();
+        
+        // Compute explained variance
+        let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
+        let explained_variance = &singular_values * &singular_values / (n_samples - 1) as f64;
+        
+        // Compute explained variance ratio
+        let total_variance = explained_variance.sum();
+        let explained_variance_ratio = &explained_variance / total_variance;
+        
+        Ok((components.t().to_owned(), explained_variance, explained_variance_ratio, singular_values))
     }
 
     /// Transform data using the fitted PCA model
@@ -349,8 +407,14 @@ pub struct IncrementalPCA {
     mean: Option<Array1<f64>>,
     /// Running components
     components: Option<Array2<f64>>,
+    /// Singular values
+    singular_values: Option<Array1<f64>>,
     /// Number of samples seen
     n_samples_seen: usize,
+    /// Incremental SVD state
+    svd_u: Option<Array2<f64>>,
+    svd_s: Option<Array1<f64>>,
+    svd_v: Option<Array2<f64>>,
 }
 
 impl IncrementalPCA {
@@ -364,31 +428,130 @@ impl IncrementalPCA {
             batch_size,
             mean: None,
             components: None,
+            singular_values: None,
             n_samples_seen: 0,
+            svd_u: None,
+            svd_s: None,
+            svd_v: None,
         })
     }
 
     /// Partial fit on a batch of data
     pub fn partial_fit(&mut self, batch: ArrayView2<f64>) -> Result<()> {
         check_array_finite(&batch, "batch")?;
-        let (batch_size, _n_features) = batch.dim();
+        let (batch_size, n_features) = batch.dim();
         
         // Update mean incrementally
         let batch_mean = batch.mean_axis(Axis(0)).unwrap();
+        let old_n = self.n_samples_seen;
+        self.n_samples_seen += batch_size;
+        
         self.mean = match &self.mean {
-            None => Some(batch_mean),
+            None => Some(batch_mean.clone()),
             Some(mean) => {
-                let n_total = self.n_samples_seen + batch_size;
-                let updated = (mean * self.n_samples_seen as f64 + &batch_mean * batch_size as f64) 
-                            / n_total as f64;
+                let updated = (mean * old_n as f64 + &batch_mean * batch_size as f64) 
+                            / self.n_samples_seen as f64;
                 Some(updated)
             }
         };
         
-        self.n_samples_seen += batch_size;
+        // Center the batch
+        let mut centered_batch = batch.to_owned();
+        for mut row in centered_batch.rows_mut() {
+            row -= &batch_mean;
+        }
         
-        // TODO: Implement incremental SVD update
-        // For now, store batches and recompute (not truly incremental)
+        // Incremental SVD update using Brand's algorithm
+        let n_components = self.pca.n_components.unwrap_or(n_features.min(self.n_samples_seen));
+        
+        if self.svd_u.is_none() {
+            // First batch - initialize with standard SVD
+            use ndarray_linalg::SVD;
+            let (u, s, vt) = centered_batch.svd(true, true)
+                .map_err(|e| StatsError::ComputationError(format!("Initial SVD failed: {}", e)))?;
+            
+            let u = u.unwrap();
+            let vt = vt.unwrap();
+            
+            // Keep only n_components
+            self.svd_u = Some(u.slice(ndarray::s![.., ..n_components]).to_owned());
+            self.svd_s = Some(s.slice(ndarray::s![..n_components]).to_owned());
+            self.svd_v = Some(vt.slice(ndarray::s![..n_components, ..]).t().to_owned());
+            
+            self.components = Some(self.svd_v.as_ref().unwrap().t().to_owned());
+            self.singular_values = Some(self.svd_s.as_ref().unwrap().clone());
+        } else {
+            // Incremental update
+            let u_old = self.svd_u.as_ref().unwrap();
+            let s_old = self.svd_s.as_ref().unwrap();
+            let v_old = self.svd_v.as_ref().unwrap();
+            
+            // Project new data onto existing components
+            let projection = centered_batch.dot(v_old);
+            let residual = &centered_batch - &projection.dot(&v_old.t());
+            
+            // QR decomposition of residual
+            use ndarray_linalg::QR;
+            let (q_res, r_res) = residual.qr()
+                .map_err(|e| StatsError::ComputationError(format!("QR decomposition failed: {}", e)))?;
+            
+            // Build augmented matrix
+            let k = s_old.len();
+            let p = r_res.ncols();
+            
+            // Create block matrix [diag(s_old), projection^T; 0, r_res]
+            let mut augmented = Array2::zeros((k + p, k + p));
+            for i in 0..k {
+                augmented[[i, i]] = s_old[i];
+            }
+            for i in 0..projection.nrows() {
+                for j in 0..k {
+                    augmented[[j, k + i]] = projection[[i, j]];
+                }
+            }
+            for i in 0..p {
+                for j in 0..p {
+                    augmented[[k + i, k + j]] = r_res[[i, j]];
+                }
+            }
+            
+            // SVD of augmented matrix
+            use ndarray_linalg::SVD;
+            let (u_aug, s_aug, vt_aug) = augmented.svd(true, true)
+                .map_err(|e| StatsError::ComputationError(format!("Augmented SVD failed: {}", e)))?;
+            
+            let u_aug = u_aug.unwrap();
+            let vt_aug = vt_aug.unwrap();
+            
+            // Update U
+            let mut u_new = Array2::zeros((old_n + batch_size, n_components));
+            let u_aug_slice = u_aug.slice(ndarray::s![..n_components, ..n_components]);
+            
+            // Update old samples part
+            let u_old_part = u_old.dot(&u_aug_slice.t());
+            u_new.slice_mut(ndarray::s![..old_n, ..]).assign(&u_old_part);
+            
+            // Update new samples part  
+            let u_batch_part = projection.dot(&u_aug_slice.slice(ndarray::s![.., ..k]).t());
+            let u_res_part = q_res.dot(&u_aug_slice.slice(ndarray::s![.., k..]).t());
+            u_new.slice_mut(ndarray::s![old_n.., ..]).assign(&(&u_batch_part + &u_res_part));
+            
+            // Update singular values
+            self.svd_s = Some(s_aug.slice(ndarray::s![..n_components]).to_owned());
+            
+            // Update V
+            let v_aug_slice = vt_aug.slice(ndarray::s![..n_components, ..n_components]);
+            let mut v_new = Array2::zeros((n_features, n_components));
+            
+            let v_old_part = v_old.dot(&v_aug_slice.slice(ndarray::s![.., ..k]).t());
+            let v_res_part = q_res.t().dot(&centered_batch).t().dot(&v_aug_slice.slice(ndarray::s![.., k..]).t());
+            v_new.assign(&(&v_old_part + &v_res_part));
+            
+            self.svd_u = Some(u_new);
+            self.svd_v = Some(v_new.clone());
+            self.components = Some(v_new.t().to_owned());
+            self.singular_values = Some(self.svd_s.as_ref().unwrap().clone());
+        }
         
         Ok(())
     }

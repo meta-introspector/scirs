@@ -626,8 +626,12 @@ where
     T: Float + StableComputation,
     F: Fn(T) -> T,
 {
-    check_finite(a.to_f64().unwrap(), "Lower limit")?;
-    check_finite(b.to_f64().unwrap(), "Upper limit")?;
+    check_finite(a.to_f64().ok_or_else(|| CoreError::TypeError(
+        ErrorContext::new("Failed to convert lower limit to f64")
+    ))?, "Lower limit")?;
+    check_finite(b.to_f64().ok_or_else(|| CoreError::TypeError(
+        ErrorContext::new("Failed to convert upper limit to f64")
+    ))?, "Upper limit")?;
 
     if a >= b {
         return Err(CoreError::ValidationError(ErrorContext::new(
@@ -636,9 +640,16 @@ where
     }
 
     fn simpson_rule<T: Float, F: Fn(T) -> T>(f: &F, a: T, b: T) -> T {
-        let h = (b - a) / cast::<f64, T>(6.0).unwrap_or(T::one());
-        let mid = (a + b) / cast::<f64, T>(2.0).unwrap_or(T::one());
-        h * (f(a) + cast::<f64, T>(4.0).unwrap_or(T::one()) * f(mid) + f(b))
+        let six = cast::<f64, T>(6.0).unwrap_or_else(|| {
+            // This should work for all Float types
+            T::one() + T::one() + T::one() + T::one() + T::one() + T::one()
+        });
+        let two = cast::<f64, T>(2.0).unwrap_or_else(|| T::one() + T::one());
+        let four = cast::<f64, T>(4.0).unwrap_or_else(|| two + two);
+        
+        let h = (b - a) / six;
+        let mid = (a + b) / two;
+        h * (f(a) + four * f(mid) + f(b))
     }
 
     fn adaptive_simpson_recursive<T: Float + StableComputation, F: Fn(T) -> T>(
@@ -654,14 +665,20 @@ where
             return whole;
         }
 
-        let mid = (a + b) / cast::<f64, T>(2.0).unwrap_or(T::one());
+        let two = cast::<f64, T>(2.0).unwrap_or_else(|| T::one() + T::one());
+        let mid = (a + b) / two;
         let left = simpson_rule(f, a, mid);
         let right = simpson_rule(f, mid, b);
         let combined = left + right;
 
         let diff = (combined - whole).abs();
 
-        if diff <= cast::<f64, T>(15.0).unwrap_or(T::one()) * tolerance {
+        let fifteen = cast::<f64, T>(15.0).unwrap_or_else(|| {
+            // Build 15 from ones
+            let five = T::one() + T::one() + T::one() + T::one() + T::one();
+            five + five + five
+        });
+        if diff <= fifteen * tolerance {
             combined + diff / cast::<f64, T>(15.0).unwrap_or(T::one())
         } else {
             let half_tol = tolerance / cast::<f64, T>(2.0).unwrap_or(T::one());
@@ -772,7 +789,8 @@ mod tests {
         let a = array![[2.0, 1.0, -1.0], [-3.0, -1.0, 2.0], [-2.0, 1.0, 2.0]];
         let b = array![8.0, -11.0, -3.0];
 
-        let x = gaussian_elimination_stable(&a.view(), &b.view()).unwrap();
+        let x = gaussian_elimination_stable(&a.view(), &b.view())
+            .expect("Gaussian elimination should succeed for this test matrix");
 
         // Expected solution: [2, 3, -1]
         assert_relative_eq!(x[0], 2.0, epsilon = 1e-10);
@@ -784,7 +802,8 @@ mod tests {
     fn test_qr_decomposition() {
         let a = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
-        let (q, r) = qr_decomposition_stable(&a.view()).unwrap();
+        let (q, r) = qr_decomposition_stable(&a.view())
+            .expect("QR decomposition should succeed for this test matrix");
 
         // Verify Q is orthogonal
         let qt_q = q.t().dot(&q);
@@ -813,7 +832,8 @@ mod tests {
             [-16.0, -43.0, 98.0]
         ];
 
-        let l = cholesky_stable(&a.view()).unwrap();
+        let l = cholesky_stable(&a.view())
+            .expect("Cholesky decomposition should succeed for this positive definite matrix");
 
         // Verify A = L * L^T
         let reconstructed = l.dot(&l.t());
@@ -831,7 +851,8 @@ mod tests {
         let b = array![1.0, 2.0, 3.0];
 
         let config = IterativeConfig::default();
-        let result = conjugate_gradient(&a.view(), &b.view(), None, &config).unwrap();
+        let result = conjugate_gradient(&a.view(), &b.view(), None, &config)
+            .expect("Conjugate gradient should converge for this system");
 
         assert!(result.converged);
 
@@ -848,14 +869,16 @@ mod tests {
         let f = |x: f64| x * x;
 
         // Derivative at x = 2 should be 4
-        let derivative = richardson_derivative(f, 2.0, 0.1, 3).unwrap();
+        let derivative = richardson_derivative(f, 2.0, 0.1, 3)
+            .expect("Richardson extrapolation should succeed");
         assert_relative_eq!(derivative, 4.0, epsilon = 1e-10);
 
         // Test with sin(x)
         let g = |x: f64| x.sin();
 
         // Derivative at x = 0 should be 1 (cos(0) = 1)
-        let derivative = richardson_derivative(g, 0.0, 0.01, 4).unwrap();
+        let derivative = richardson_derivative(g, 0.0, 0.01, 4)
+            .expect("Richardson extrapolation should succeed for cos at 0");
         assert_relative_eq!(derivative, 1.0, epsilon = 1e-10);
     }
 
@@ -865,14 +888,16 @@ mod tests {
         let f = |x: f64| x * x;
 
         // Integral from 0 to 1 should be 1/3
-        let integral = adaptive_simpson(f, 0.0, 1.0, 1e-10, 10).unwrap();
+        let integral = adaptive_simpson(f, 0.0, 1.0, 1e-10, 10)
+            .expect("Adaptive Simpson integration should succeed");
         assert_relative_eq!(integral, 1.0 / 3.0, epsilon = 1e-10);
 
         // Test with sine function
         let g = |x: f64| x.sin();
 
         // Integral from 0 to π should be 2
-        let integral = adaptive_simpson(g, 0.0, std::f64::consts::PI, 1e-10, 10).unwrap();
+        let integral = adaptive_simpson(g, 0.0, std::f64::consts::PI, 1e-10, 10)
+            .expect("Adaptive Simpson integration should succeed for sin");
         assert_relative_eq!(integral, 2.0, epsilon = 1e-10);
     }
 
@@ -881,7 +906,8 @@ mod tests {
         // Test with diagonal matrix
         let a = array![[1.0, 0.0], [0.0, 2.0]];
 
-        let exp_a = matrix_exp_stable(&a.view(), None).unwrap();
+        let exp_a = matrix_exp_stable(&a.view(), None)
+            .expect("Matrix exponential should succeed for this small matrix");
 
         // exp(diagonal) should have exp of diagonal elements
         assert_relative_eq!(exp_a[[0, 0]], 1.0_f64.exp(), epsilon = 1e-8);

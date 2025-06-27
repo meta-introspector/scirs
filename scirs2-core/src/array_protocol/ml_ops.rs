@@ -634,7 +634,15 @@ array_function_dispatch!(
                 }
 
                 // Apply scaling
-                let _scale_factor = scale.unwrap_or((d_k as f64).sqrt());
+                let _scale_factor = scale.unwrap_or_else(|| {
+                    // Default scale factor is 1/sqrt(d_k)
+                    let d_k_f64 = d_k as f64;
+                    if d_k_f64 > 0.0 {
+                        d_k_f64.sqrt()
+                    } else {
+                        1.0 // Fallback for edge case
+                    }
+                });
 
                 // For a real implementation, we would compute:
                 // 1. scores = matmul(q, k.transpose) / scale_factor

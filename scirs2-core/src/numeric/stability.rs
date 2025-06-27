@@ -407,7 +407,10 @@ pub fn reduce_angle<T: Float>(angle: T) -> T {
 
 /// Stable computation of (a*b) % m avoiding overflow
 pub fn mulmod_stable<T: Float>(a: T, b: T, m: T) -> CoreResult<T> {
-    check_positive(m.to_f64().unwrap(), "modulus")?;
+    let m_f64 = m.to_f64().ok_or_else(|| CoreError::TypeError(
+        ErrorContext::new("Failed to convert modulus to f64 for validation")
+    ))?;
+    check_positive(m_f64, "modulus")?;
 
     if a.is_zero() || b.is_zero() {
         return Ok(T::zero());
@@ -768,9 +771,9 @@ mod tests {
             welford.add(v);
         }
 
-        assert_relative_eq!(welford.mean().unwrap(), 3.0, epsilon = 1e-10);
-        assert_relative_eq!(welford.variance().unwrap(), 2.5, epsilon = 1e-10);
-        assert_relative_eq!(welford.std_dev().unwrap(), 2.5_f64.sqrt(), epsilon = 1e-10);
+        assert_relative_eq!(welford.mean().expect("Mean should be available"), 3.0, epsilon = 1e-10);
+        assert_relative_eq!(welford.variance().expect("Variance should be available"), 2.5, epsilon = 1e-10);
+        assert_relative_eq!(welford.std_dev().expect("Std dev should be available"), 2.5_f64.sqrt(), epsilon = 1e-10);
     }
 
     #[test]
@@ -861,27 +864,28 @@ mod tests {
     #[test]
     fn test_binomial_stable() {
         // Test small values
-        assert_eq!(binomial_stable(5, 2).unwrap(), 10.0);
-        assert_eq!(binomial_stable(10, 3).unwrap(), 120.0);
+        assert_eq!(binomial_stable(5, 2).expect("Binomial coefficient should succeed"), 10.0);
+        assert_eq!(binomial_stable(10, 3).expect("Binomial coefficient should succeed"), 120.0);
 
         // Test edge cases
-        assert_eq!(binomial_stable(5, 0).unwrap(), 1.0);
-        assert_eq!(binomial_stable(5, 5).unwrap(), 1.0);
-        assert_eq!(binomial_stable(5, 6).unwrap(), 0.0);
+        assert_eq!(binomial_stable(5, 0).expect("Binomial coefficient should succeed"), 1.0);
+        assert_eq!(binomial_stable(5, 5).expect("Binomial coefficient should succeed"), 1.0);
+        assert_eq!(binomial_stable(5, 6).expect("Binomial coefficient should succeed"), 0.0);
 
         // Test large values
-        let large_result = binomial_stable(100, 50).unwrap();
+        let large_result = binomial_stable(100, 50)
+            .expect("Binomial coefficient should handle large values");
         assert!(large_result.is_finite() && large_result > 0.0);
     }
 
     #[test]
     fn test_factorial_stable() {
         // Test small values
-        assert_eq!(factorial_stable(0).unwrap(), 1.0);
-        assert_eq!(factorial_stable(1).unwrap(), 1.0);
-        assert_eq!(factorial_stable(5).unwrap(), 120.0);
+        assert_eq!(factorial_stable(0).expect("Factorial of 0 should succeed"), 1.0);
+        assert_eq!(factorial_stable(1).expect("Factorial of 1 should succeed"), 1.0);
+        assert_eq!(factorial_stable(5).expect("Factorial of 5 should succeed"), 120.0);
 
         // Test larger value
-        assert_relative_eq!(factorial_stable(10).unwrap(), 3628800.0, epsilon = 1e-10);
+        assert_relative_eq!(factorial_stable(10).expect("Factorial of 10 should succeed"), 3628800.0, epsilon = 1e-10);
     }
 }

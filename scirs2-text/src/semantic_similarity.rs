@@ -212,14 +212,29 @@ impl SoftCosineSimilarity {
                 let weight2 = tf2.get(word2).copied().unwrap_or(0.0);
                 let similarity = self.get_similarity(word1, word2);
                 
-                numerator += weight1 * weight2 * similarity;
-                
-                if text1 == text1 { // Computing norm1
-                    norm1 += weight1 * weight1 * similarity;
-                }
-                if text2 == text2 { // Computing norm2
-                    norm2 += weight2 * weight2 * similarity;
-                }
+                // Calculate numerator (cross-product between text1 and text2)
+                let w1_from_tf1 = tf1.get(word1).copied().unwrap_or(0.0);
+                let w2_from_tf2 = tf2.get(word2).copied().unwrap_or(0.0);
+                numerator += w1_from_tf1 * w2_from_tf2 * similarity;
+            }
+        }
+        
+        // Calculate norms separately
+        for word1 in &all_words {
+            let weight1 = tf1.get(word1).copied().unwrap_or(0.0);
+            for word2 in &all_words {
+                let weight2 = tf1.get(word2).copied().unwrap_or(0.0);
+                let similarity = self.get_similarity(word1, word2);
+                norm1 += weight1 * weight2 * similarity;
+            }
+        }
+        
+        for word1 in &all_words {
+            let weight1 = tf2.get(word1).copied().unwrap_or(0.0);
+            for word2 in &all_words {
+                let weight2 = tf2.get(word2).copied().unwrap_or(0.0);
+                let similarity = self.get_similarity(word1, word2);
+                norm2 += weight1 * weight2 * similarity;
             }
         }
 

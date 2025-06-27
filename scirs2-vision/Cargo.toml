@@ -11,7 +11,7 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
-scirs2-core = { workspace = true, features = ["parallel"] }
+scirs2-core = { workspace = true, features = ["parallel", "gpu"] }
 scirs2-linalg = { workspace = true }
 # Temporarily commented out for publishing
 # scirs2-ndimage = { workspace = true }
@@ -26,6 +26,8 @@ rand_distr = { workspace = true }
 
 # Vision specific dependencies
 image = { workspace = true }
+num_cpus = "1.16"
+crossbeam-channel = "0.5"
 # rayon = { workspace = true }  # Now use scirs2-core parallel abstractions
 
 [dev-dependencies]

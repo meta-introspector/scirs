@@ -6,6 +6,7 @@ use rand::Rng;
 use crate::error::{StatsResult as Result, StatsError};
 use scirs2_core::validation::*;
 use std::fmt::Debug;
+use scirs2_linalg::{inv, det};
 
 /// Target distribution trait for MCMC sampling
 pub trait TargetDistribution: Send + Sync {
@@ -257,13 +258,22 @@ impl MultivariateNormalTarget {
             ));
         }
         
-        // For now, just use identity precision matrix
-        // TODO: Use proper matrix inversion from scirs2-linalg
-        let precision = covariance.clone();
-        let det: f64 = 1.0; // Placeholder
+        // Compute precision matrix (inverse of covariance)
+        let precision = inv(&covariance.view(), None)
+            .map_err(|e| StatsError::ComputationError(format!("Failed to invert covariance matrix: {}", e)))?;
+        
+        // Compute determinant
+        let det_value = det(&covariance.view(), None)
+            .map_err(|e| StatsError::ComputationError(format!("Failed to compute determinant: {}", e)))?;
+        
+        if det_value <= 0.0 {
+            return Err(StatsError::InvalidArgument(
+                "Covariance matrix must be positive definite".to_string()
+            ));
+        }
         
         let d = mean.len() as f64;
-        let log_norm_const = -0.5 * (d * (2.0 * std::f64::consts::PI).ln() + det.ln());
+        let log_norm_const = -0.5 * (d * (2.0 * std::f64::consts::PI).ln() + det_value.ln());
         
         Ok(Self { mean, precision, log_norm_const })
     }
