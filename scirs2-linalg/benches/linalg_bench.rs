@@ -10,8 +10,7 @@ use scirs2_linalg::mixed_precision::{
     mixed_precision_dot, mixed_precision_matmul, mixed_precision_solve,
 };
 use scirs2_linalg::prelude::*;
-use scirs2_linalg::structured::{CirculantMatrix, ToeplitzMatrix};
-use scirs2_linalg::*;
+use scirs2_linalg::structured::{CirculantMatrix, ToeplitzMatrix, solve_toeplitz, solve_circulant};
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix
@@ -68,7 +67,7 @@ fn bench_blas_operations(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("matvec", mv_size),
                 &(&matrix, &v),
-                |b, (m, v)| b.iter(|| m.dot(v)), // Remove black_box from inside dot
+                |b, (m, v)| b.iter(|| m.dot(&v.view())), // Use view for proper reference type
             );
         }
     }
@@ -168,7 +167,7 @@ fn bench_mixed_precision(c: &mut Criterion) {
             BenchmarkId::new("mixed_solve", size),
             &(&matrix_f32, &vector_f32),
             |b, (m, v)| {
-                b.iter(|| mixed_precision_solve(black_box(&m.view()), black_box(&v.view())))
+                b.iter(|| mixed_precision_solve::<f32, f32, f32, f64>(black_box(&m.view()), black_box(&v.view())))
             },
         );
     }
@@ -193,8 +192,8 @@ fn bench_structured_matrices(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let toeplitz = ToeplitzMatrix::new(r.clone(), r.clone()).unwrap();
-                    toeplitz.solve(black_box(&rhs.view()))
+                    let toeplitz = ToeplitzMatrix::new(r.view(), r.view()).unwrap();
+                    solve_toeplitz(r.view(), r.view(), black_box(rhs.view())).unwrap()
                 })
             },
         );
@@ -205,8 +204,8 @@ fn bench_structured_matrices(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let mut circulant = CirculantMatrix::new(r.clone()).unwrap();
-                    circulant.solve(black_box(&rhs.view()))
+                    let circulant = CirculantMatrix::new(r.view()).unwrap();
+                    solve_circulant(r.view(), black_box(rhs.view())).unwrap()
                 })
             },
         );
@@ -235,9 +234,7 @@ fn bench_matrix_factorizations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cur_decomposition", size),
             &matrix,
-            |b, m| {
-                b.iter(|| cur_decomposition(black_box(&m.view()), 10, None, None, "deterministic"))
-            },
+            |b, m| b.iter(|| cur_decomposition(black_box(&m.view()), 10, None, None)),
         );
 
         // Rank-revealing QR
@@ -323,7 +320,7 @@ fn bench_random_matrices(c: &mut Criterion) {
 
         // Random orthogonal matrix
         group.bench_with_input(BenchmarkId::new("orthogonal", size), &size, |b, &s| {
-            b.iter(|| orthogonal(black_box(s), black_box(None)))
+            b.iter(|| orthogonal::<f64>(black_box(s), black_box(None)))
         });
 
         // Random SPD matrix
