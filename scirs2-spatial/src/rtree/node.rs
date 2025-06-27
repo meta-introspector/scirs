@@ -392,18 +392,18 @@ impl<T: Clone> Node<T> {
     }
 
     /// Calculate the bounding rectangle for the node
-    pub fn mbr(&self) -> Option<Rectangle> {
+    pub fn mbr(&self) -> SpatialResult<Option<Rectangle>> {
         if self.entries.is_empty() {
-            return None;
+            return Ok(None);
         }
 
         let mut result = self.entries[0].mbr().clone();
 
         for i in 1..self.size() {
-            result = result.enlarge(self.entries[i].mbr()).unwrap();
+            result = result.enlarge(self.entries[i].mbr())?;
         }
 
-        Some(result)
+        Ok(Some(result))
     }
 }
 

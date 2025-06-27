@@ -18,15 +18,17 @@ num-complex = { workspace = true }
 thiserror = { workspace = true }
 approx = { workspace = true }
 lazy_static = { workspace = true }
+regex = { version = "1.10", optional = true }
 
 [features]
-default = []
+default = ["python-interop"]
 parallel = ["scirs2-core/parallel", "ndarray/rayon"]  # rayon accessed through core
 simd = ["scirs2-core/simd"]
 lazy = ["futures"]
 gpu = ["scirs2-core/gpu"]  # GPU accessed through core
 # array-api = ["arrayfire", "candle"]  # Disabled - placeholder for future implementation
-# high-precision = ["rug"]             # Disabled - placeholder for future implementation
+high-precision = ["rug"]               # Arbitrary precision computations
+python-interop = ["regex"]             # Python interoperability features
 
 # Optional dependencies for advanced features
 [dependencies.futures]
@@ -56,10 +58,12 @@ optional = true
 # version = "0.6"
 # optional = true
 
-# [dependencies.rug]
-# version = "1.19"
-# optional = true
+[dependencies.rug]
+version = "1.19"
+optional = true
 
 [dev-dependencies]
 criterion = { workspace = true }
 tokio = { version = "1.0", features = ["full"] }
+quickcheck = "1.0"
+quickcheck_macros = "1.0"

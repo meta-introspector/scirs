@@ -12,6 +12,8 @@ use serde::{Deserialize, Serialize};
 
 use super::{compress_data, decompress_data, CompressionAlgorithm};
 use crate::error::{IoError, Result};
+use scirs2_core::simd_ops::PlatformCapabilities;
+use scirs2_core::parallel_ops::*;
 
 /// Metadata for compressed array data
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -439,7 +441,7 @@ where
 pub fn compress_array_zero_copy<A, S>(
     array: &ArrayBase<S, IxDyn>,
     algorithm: CompressionAlgorithm,
-    level: i32,
+    level: Option<u32>,
     chunk_size: usize,
 ) -> Result<CompressedArray>
 where
@@ -452,47 +454,98 @@ where
         ));
     }
 
-    let mut compressed_chunks = Vec::new();
-    let mut total_original_size = 0;
-    let mut total_compressed_size = 0;
+    let capabilities = PlatformCapabilities::detect();
+    let use_parallel = capabilities.simd_available && array.len() > 10000;
 
     // Get the raw slice for zero-copy access
     if let Some(slice) = array.as_slice() {
         let bytes = bytemuck::cast_slice(slice);
         let bytes_per_chunk = chunk_size * std::mem::size_of::<A>();
 
-        // Process the array in chunks without copying
-        for chunk_bytes in bytes.chunks(bytes_per_chunk) {
-            // Compress the chunk directly from the slice
-            let compressed_chunk = compress_data(chunk_bytes, algorithm, level)?;
+        let (compressed_chunks, total_original_size, total_compressed_size) = if use_parallel {
+            // Parallel compression for large arrays
+            let chunks: Vec<&[u8]> = bytes.chunks(bytes_per_chunk).collect();
+            let results: Vec<_> = chunks.into_par_iter()
+                .map(|chunk_bytes| {
+                    let compressed = compress_data(chunk_bytes, algorithm, level)
+                        .unwrap_or_else(|_| Vec::new());
+                    let original_size = chunk_bytes.len();
+                    let compressed_size = compressed.len();
+                    (compressed, original_size, compressed_size)
+                })
+                .collect();
 
-            // Track sizes
-            total_original_size += chunk_bytes.len();
-            total_compressed_size += compressed_chunk.len();
+            let mut compressed_chunks = Vec::new();
+            let mut total_original = 0;
+            let mut total_compressed = 0;
 
-            // Add to compressed chunks collection
-            compressed_chunks.push(compressed_chunk);
+            for (compressed, orig_size, comp_size) in results {
+                compressed_chunks.push(compressed);
+                total_original += orig_size;
+                total_compressed += comp_size;
+            }
+
+            (compressed_chunks, total_original, total_compressed)
+        } else {
+            // Sequential compression for smaller arrays
+            let mut compressed_chunks = Vec::new();
+            let mut total_original_size = 0;
+            let mut total_compressed_size = 0;
+
+            for chunk_bytes in bytes.chunks(bytes_per_chunk) {
+                let compressed_chunk = compress_data(chunk_bytes, algorithm, level)?;
+                total_original_size += chunk_bytes.len();
+                total_compressed_size += compressed_chunk.len();
+                compressed_chunks.push(compressed_chunk);
+            }
+
+            (compressed_chunks, total_original_size, total_compressed_size)
+        };
+
+        // Combine all compressed chunks into a single vector
+        let mut combined_data = Vec::with_capacity(total_compressed_size + compressed_chunks.len() * 8 + 8);
+        
+        // Write chunk count
+        combined_data.extend_from_slice(&(compressed_chunks.len() as u64).to_le_bytes());
+        
+        // Write chunk sizes
+        for chunk in &compressed_chunks {
+            combined_data.extend_from_slice(&(chunk.len() as u64).to_le_bytes());
         }
+        
+        // Write chunk data
+        for chunk in compressed_chunks {
+            combined_data.extend_from_slice(&chunk);
+        }
+
+        // Create metadata
+        let metadata = CompressedArrayMetadata {
+            shape: array.shape().to_vec(),
+            dtype: std::any::type_name::<A>().to_string(),
+            element_size: std::mem::size_of::<A>(),
+            algorithm: format!("{:?}", algorithm),
+            original_size: total_original_size,
+            compressed_size: combined_data.len(),
+            compression_ratio: total_original_size as f64 / combined_data.len() as f64,
+            compression_level: level.unwrap_or(6),
+            additional_metadata: {
+                let mut map = std::collections::HashMap::new();
+                map.insert("zero_copy".to_string(), "true".to_string());
+                map.insert("chunk_size".to_string(), chunk_size.to_string());
+                map.insert("parallel".to_string(), use_parallel.to_string());
+                map
+            },
+        };
+
+        Ok(CompressedArray {
+            metadata,
+            data: combined_data,
+        })
+    } else {
+        Err(IoError::FormatError(
+            "Array must be contiguous for zero-copy compression".to_string(),
+        ))
     }
-
-    // Create metadata
-    let metadata = CompressedArrayMetadata {
-        shape: array.shape().to_vec(),
-        dtype: std::any::type_name::<A>().to_string(),
-        element_size: std::mem::size_of::<A>(),
-        algorithm: format!("{:?}", algorithm),
-        original_size: total_original_size,
-        compressed_size: total_compressed_size,
-        compression_ratio: total_original_size as f64 / total_compressed_size as f64,
-        compression_level: level,
-        chunks: compressed_chunks.len(),
-        chunk_size,
-    };
-
-    Ok(CompressedArray {
-        metadata,
-        data: compressed_chunks,
-    })
 }
 
 /// Decompress array with zero-copy optimization for the output
@@ -507,7 +560,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<A, IxDyn>>` - Decompressed array or error
-pub fn decompress_array_zero_copy<A>(compressed: &CompressedArray) -> Result<Array<A, IxDyn>>
+pub fn decompress_array_zero_copy<A>(compressed: &CompressedArray) -> Result<ndarray::Array<A, IxDyn>>
 where
     A: for<'de> Deserialize<'de> + Clone + bytemuck::Pod,
 {
@@ -524,20 +577,79 @@ where
         }
     };
 
-    // Pre-allocate the output array with the exact size needed
-    let total_elements: usize = compressed.metadata.shape.iter().product();
-    let mut decompressed_data = Vec::with_capacity(total_elements);
-
-    // Decompress all chunks directly into the pre-allocated buffer
-    for chunk in &compressed.data {
-        let decompressed_chunk = decompress_data(chunk, algorithm)?;
-        
-        // Instead of deserializing to Vec<A> then copying, interpret bytes directly
-        let elements = bytemuck::cast_slice::<u8, A>(&decompressed_chunk);
-        decompressed_data.extend_from_slice(elements);
+    let capabilities = PlatformCapabilities::detect();
+    let data = &compressed.data;
+    
+    // Read chunk count
+    if data.len() < 8 {
+        return Err(IoError::DecompressionError("Invalid compressed data".to_string()));
+    }
+    
+    let chunk_count = u64::from_le_bytes(data[0..8].try_into().unwrap()) as usize;
+    
+    // Read chunk sizes
+    let header_size = 8 + chunk_count * 8;
+    if data.len() < header_size {
+        return Err(IoError::DecompressionError("Invalid chunk headers".to_string()));
+    }
+    
+    let mut chunk_sizes = Vec::with_capacity(chunk_count);
+    for i in 0..chunk_count {
+        let start = 8 + i * 8;
+        let size = u64::from_le_bytes(data[start..start + 8].try_into().unwrap()) as usize;
+        chunk_sizes.push(size);
+    }
+    
+    // Extract compressed chunks
+    let mut chunks = Vec::with_capacity(chunk_count);
+    let mut offset = header_size;
+    
+    for &size in &chunk_sizes {
+        if offset + size > data.len() {
+            return Err(IoError::DecompressionError("Truncated chunk data".to_string()));
+        }
+        chunks.push(&data[offset..offset + size]);
+        offset += size;
     }
 
+    // Pre-allocate the output array with the exact size needed
+    let total_elements: usize = compressed.metadata.shape.iter().product();
+    
+    let use_parallel = capabilities.simd_available && chunks.len() > 4 && total_elements > 10000;
+    
+    let decompressed_data = if use_parallel {
+        // Parallel decompression for large arrays
+        let decompressed_chunks: Vec<Vec<u8>> = chunks.into_par_iter()
+            .map(|chunk| decompress_data(chunk, algorithm).unwrap_or_else(|_| Vec::new()))
+            .collect();
+        
+        let mut result = Vec::with_capacity(total_elements);
+        for chunk_data in decompressed_chunks {
+            if chunk_data.len() % std::mem::size_of::<A>() != 0 {
+                return Err(IoError::DecompressionError("Invalid chunk alignment".to_string()));
+            }
+            let elements = bytemuck::cast_slice::<u8, A>(&chunk_data);
+            result.extend_from_slice(elements);
+        }
+        result
+    } else {
+        // Sequential decompression for smaller arrays
+        let mut decompressed_data = Vec::with_capacity(total_elements);
+        
+        for chunk in chunks {
+            let decompressed_chunk = decompress_data(chunk, algorithm)?;
+            
+            if decompressed_chunk.len() % std::mem::size_of::<A>() != 0 {
+                return Err(IoError::DecompressionError("Invalid chunk alignment".to_string()));
+            }
+            
+            let elements = bytemuck::cast_slice::<u8, A>(&decompressed_chunk);
+            decompressed_data.extend_from_slice(elements);
+        }
+        decompressed_data
+    };
+
     // Create array from the decompressed data without additional copying
-    Array::from_shape_vec(IxDyn(&compressed.metadata.shape), decompressed_data)
+    ndarray::Array::from_shape_vec(IxDyn(&compressed.metadata.shape), decompressed_data)
         .map_err(|e| IoError::DeserializationError(e.to_string()))
 }

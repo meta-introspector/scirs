@@ -25,6 +25,7 @@ use crate::distance::EuclideanDistance;
 use crate::error::{SpatialError, SpatialResult};
 use crate::kdtree::KDTree;
 use crate::pathplanning::astar::Path;
+// use crate::safe_conversions::*;
 
 /// Type alias for the collision checking function
 type CollisionCheckFn = Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> bool>;
@@ -166,24 +167,24 @@ impl RRTPlanner {
     }
 
     /// Sample a random point in the configuration space
-    fn sample_random_point(&mut self) -> Array1<f64> {
+    fn sample_random_point(&mut self) -> SpatialResult<Array1<f64>> {
         let (min_bounds, max_bounds) = self
             .bounds
             .as_ref()
-            .expect("Bounds must be set before sampling");
+            .ok_or_else(|| SpatialError::ValueError("Bounds must be set before sampling".to_string()))?;
         let mut point = Array1::zeros(self.dimension);
 
         for i in 0..self.dimension {
             point[i] = self.rng.random_range(min_bounds[i]..max_bounds[i]);
         }
 
-        point
+        Ok(point)
     }
 
     /// Sample a random point with goal bias
-    fn sample_with_goal_bias(&mut self, goal: &ArrayView1<f64>) -> Array1<f64> {
+    fn sample_with_goal_bias(&mut self, goal: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         if self.rng.random_range(0.0..1.0) < self.config.goal_bias {
-            goal.to_owned()
+            Ok(goal.to_owned())
         } else {
             self.sample_random_point()
         }
@@ -195,11 +196,11 @@ impl RRTPlanner {
         point: &ArrayView1<f64>,
         _nodes: &[RRTNode],
         kdtree: &KDTree<f64, EuclideanDistance<f64>>,
-    ) -> usize {
+    ) -> SpatialResult<usize> {
+        let point_vec = point.to_vec();
         let (indices, _) = kdtree
-            .query(point.as_slice().unwrap(), 1)
-            .expect("KDTree query failed");
-        indices[0]
+            .query(point_vec.as_slice(), 1)?;
+        Ok(indices[0])
     }
 
     /// Compute a new point that is step_size distance from nearest toward random_point
@@ -275,7 +276,7 @@ impl RRTPlanner {
 
         for _ in 0..self.config.max_iterations {
             // Sample random point with goal bias
-            let random_point = self.sample_with_goal_bias(&goal);
+            let random_point = self.sample_with_goal_bias(&goal)?;
 
             // Build KDTree for nearest neighbor search
             let points: Vec<_> = nodes.iter().map(|node| node.position.clone()).collect();
@@ -288,7 +289,7 @@ impl RRTPlanner {
                 .expect("Failed to build KDTree");
 
             // Find nearest node
-            let nearest_idx = self.find_nearest_node(&random_point.view(), &nodes, &kdtree);
+            let nearest_idx = self.find_nearest_node(&random_point.view(), &nodes, &kdtree)?;
 
             // Create temporary copies to avoid borrowing conflicts
             let nearest_position = nodes[nearest_idx].position.clone();
@@ -343,7 +344,7 @@ impl RRTPlanner {
 
         for _ in 0..self.config.max_iterations {
             // Sample random point with goal bias
-            let random_point = self.sample_with_goal_bias(&goal);
+            let random_point = self.sample_with_goal_bias(&goal)?;
 
             // Build KDTree for nearest neighbor search
             let points: Vec<_> = nodes.iter().map(|node| node.position.clone()).collect();
@@ -356,7 +357,7 @@ impl RRTPlanner {
                 .expect("Failed to build KDTree");
 
             // Find nearest node
-            let nearest_idx = self.find_nearest_node(&random_point.view(), &nodes, &kdtree);
+            let nearest_idx = self.find_nearest_node(&random_point.view(), &nodes, &kdtree)?;
 
             // Create temporary copies to avoid borrowing conflicts
             let nearest_position = nodes[nearest_idx].position.clone();
@@ -561,7 +562,7 @@ impl RRTPlanner {
             } else {
                 start.to_owned()
             };
-            let random_point = self.sample_with_goal_bias(&target.view());
+            let random_point = self.sample_with_goal_bias(&target.view())?;
 
             // Build KDTree for tree A
             let points_a: Vec<_> = tree_a.iter().map(|node| node.position.clone()).collect();
@@ -574,7 +575,7 @@ impl RRTPlanner {
                 .expect("Failed to build KDTree");
 
             // Find nearest node in tree A
-            let nearest_idx_a = self.find_nearest_node(&random_point.view(), tree_a, &kdtree_a);
+            let nearest_idx_a = self.find_nearest_node(&random_point.view(), tree_a, &kdtree_a)?;
 
             // Create temporary copy to avoid borrowing conflicts
             let nearest_position = tree_a[nearest_idx_a].position.clone();
@@ -606,7 +607,7 @@ impl RRTPlanner {
                     .expect("Failed to build KDTree");
 
                 // Find nearest node in tree B
-                let nearest_idx_b = self.find_nearest_node(&new_point.view(), tree_b, &kdtree_b);
+                let nearest_idx_b = self.find_nearest_node(&new_point.view(), tree_b, &kdtree_b)?;
 
                 // Create temporary copy to avoid borrowing conflicts
                 let nearest_position_b = tree_b[nearest_idx_b].position.clone();

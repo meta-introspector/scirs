@@ -21,6 +21,7 @@
 
 use crate::distance::{Distance, EuclideanDistance};
 use crate::error::{SpatialError, SpatialResult};
+use crate::safe_conversions::*;
 use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::Float;
 use std::cmp::Ordering;
@@ -112,7 +113,12 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         }
 
         // Clone the data array and create an array of indices
-        let data = data.to_owned();
+        // Ensure data is in standard memory layout for as_slice to work
+        let data = if data.is_standard_layout() {
+            data.to_owned()
+        } else {
+            data.as_standard_layout().to_owned()
+        };
         let indices = Array1::from_iter(0..n_samples);
 
         // Initialize empty nodes vector (will be filled during build)
@@ -177,7 +183,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         }
 
         for val in centroid.iter_mut().take(self.n_features) {
-            *val = *val / T::from(n_points).unwrap();
+            *val = *val / safe_from_usize::<T>(n_points, "balltree centroid calculation")?;
         }
 
         // Calculate radius (maximum distance from centroid to any point)
@@ -186,7 +192,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
             let point_idx = self.indices[i];
             let point = self.data.row(point_idx);
 
-            let dist = self.distance.distance(&centroid, point.as_slice().unwrap());
+            let dist = self.distance.distance(&centroid, point.to_vec().as_slice());
 
             if dist > radius {
                 radius = dist;
@@ -257,7 +263,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
             .map(|i| {
                 let point_idx = self.indices[i];
                 let point = self.data.row(point_idx);
-                let dist = self.distance.distance(centroid, point.as_slice().unwrap());
+                let dist = self.distance.distance(centroid, point.to_vec().as_slice());
                 (i, dist)
             })
             .collect();
@@ -321,7 +327,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         self.query_recursive(0, point, k, &mut nearest_neighbors, &mut max_dist);
 
         // Sort by distance
-        nearest_neighbors.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal));
+        nearest_neighbors.sort_by(|a, b| safe_partial_cmp(&a.0, &b.0, "balltree sort results").unwrap_or(Ordering::Equal));
 
         // Extract indices and distances
         let (distances, indices): (Vec<_>, Vec<_>) = nearest_neighbors.into_iter().unzip();
@@ -365,9 +371,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         if node.left_child.is_none() {
             for i in node.start_idx..node.end_idx {
                 let idx = self.indices[i];
+                let row_vec = self.data.row(idx).to_vec();
                 let dist = self
                     .distance
-                    .distance(point, self.data.row(idx).as_slice().unwrap());
+                    .distance(point, row_vec.as_slice());
 
                 if dist < *max_dist || nearest.len() < k {
                     // Add this point to nearest neighbors
@@ -380,10 +387,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                             .iter()
                             .enumerate()
                             .max_by(|(_, a), (_, b)| {
-                                a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal)
+                                safe_partial_cmp(&a.0, &b.0, "balltree max distance").unwrap_or(Ordering::Equal)
                             })
                             .map(|(idx, _)| idx)
-                            .unwrap();
+                            .unwrap_or(0);
 
                         // Remove that point
                         nearest.swap_remove(max_idx);
@@ -392,7 +399,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                         *max_dist = nearest
                             .iter()
                             .map(|(dist, _)| *dist)
-                            .max_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+                            .max_by(|a, b| safe_partial_cmp(a, b, "balltree update max_dist").unwrap_or(Ordering::Equal))
                             .unwrap_or(T::infinity());
                     }
                 }
@@ -402,8 +409,15 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // Otherwise, recursively search child nodes
         // Determine which child to search first (closest to the query point)
-        let left_idx = node.left_child.unwrap();
-        let right_idx = node.right_child.unwrap();
+        // Get child indices - we know they exist because this is not a leaf node
+        let left_idx = match node.left_child {
+            Some(idx) => idx,
+            None => return, // Should not happen if tree is properly built
+        };
+        let right_idx = match node.right_child {
+            Some(idx) => idx,
+            None => return, // Should not happen if tree is properly built
+        };
 
         let left_node = &self.nodes[left_idx];
         let right_node = &self.nodes[right_idx];
@@ -508,9 +522,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         if node.left_child.is_none() {
             for i in node.start_idx..node.end_idx {
                 let idx = self.indices[i];
+                let row_vec = self.data.row(idx).to_vec();
                 let dist = self
                     .distance
-                    .distance(point, self.data.row(idx).as_slice().unwrap());
+                    .distance(point, row_vec.as_slice());
 
                 if dist <= radius {
                     indices.push(idx);
@@ -521,8 +536,14 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         }
 
         // Otherwise, recursively search child nodes
-        let left_idx = node.left_child.unwrap();
-        let right_idx = node.right_child.unwrap();
+        let left_idx = match node.left_child {
+            Some(idx) => idx,
+            None => return, // Should not happen if tree is properly built
+        };
+        let right_idx = match node.right_child {
+            Some(idx) => idx,
+            None => return, // Should not happen if tree is properly built
+        };
 
         self.query_radius_recursive(left_idx, point, radius, indices, distances);
         self.query_radius_recursive(right_idx, point, radius, indices, distances);
@@ -595,9 +616,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                     let other_idx = other.indices[j];
                     let other_point = other.data.row(other_idx);
 
+                    let self_vec = self_point.to_vec();
+                    let other_vec = other_point.to_vec();
                     let dist = self.distance.distance(
-                        self_point.as_slice().unwrap(),
-                        other_point.as_slice().unwrap(),
+                        self_vec.as_slice(),
+                        other_vec.as_slice(),
                     );
 
                     if dist <= radius {
@@ -615,14 +638,26 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                 || (self_node.end_idx - self_node.start_idx)
                     > (other_node.end_idx - other_node.start_idx))
         {
-            let left_idx = self_node.left_child.unwrap();
-            let right_idx = self_node.right_child.unwrap();
+            let left_idx = match self_node.left_child {
+                Some(idx) => idx,
+                None => return, // Should not happen
+            };
+            let right_idx = match self_node.right_child {
+                Some(idx) => idx,
+                None => return, // Should not happen
+            };
 
             self.query_radius_tree_recursive(left_idx, other, other_node_idx, radius, pairs);
             self.query_radius_tree_recursive(right_idx, other, other_node_idx, radius, pairs);
         } else if other_node.left_child.is_some() {
-            let left_idx = other_node.left_child.unwrap();
-            let right_idx = other_node.right_child.unwrap();
+            let left_idx = match other_node.left_child {
+                Some(idx) => idx,
+                None => return, // Should not happen
+            };
+            let right_idx = match other_node.right_child {
+                Some(idx) => idx,
+                None => return, // Should not happen
+            };
 
             self.query_radius_tree_recursive(self_node_idx, other, left_idx, radius, pairs);
             self.query_radius_tree_recursive(self_node_idx, other, right_idx, radius, pairs);

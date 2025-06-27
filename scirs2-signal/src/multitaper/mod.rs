@@ -7,12 +7,20 @@
 
 // Import internal modules
 mod adaptive;
+pub mod enhanced;
+mod ftest;
+mod jackknife;
 mod psd;
 mod utils;
 mod windows;
 
 // Re-export public components
 pub use adaptive::adaptive_psd;
+pub use enhanced::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
+pub use ftest::{harmonic_ftest, multitaper_ftest, multitaper_ftest_complex};
+pub use jackknife::{
+    cross_spectrum_jackknife, jackknife_confidence_intervals, weighted_jackknife,
+};
 pub use psd::{multitaper_spectrogram, pmtm};
 pub use utils::{coherence, multitaper_filtfilt};
 pub use windows::dpss;

@@ -70,6 +70,7 @@ pub mod array_ops;
 pub mod bessel;
 mod combinatorial;
 mod constants;
+pub mod convenience;
 mod coulomb;
 mod elliptic;
 mod erf;
@@ -87,7 +88,13 @@ pub mod optimizations;
 mod orthogonal;
 mod parabolic;
 pub mod precision;
+#[cfg(feature = "high-precision")]
+pub mod arbitrary_precision;
+pub mod physics_engineering;
 mod property_tests;
+pub mod python_interop;
+#[cfg(test)]
+mod quickcheck_tests;
 mod simd_ops;
 mod spherical_harmonics;
 mod spheroidal;
@@ -199,6 +206,16 @@ pub use simd_ops::gamma_f32_simd_parallel;
 
 // Error function and related functions
 pub use erf::{erf, erfc, erfcinv, erfinv};
+
+// Arbitrary precision functions (when enabled)
+#[cfg(feature = "high-precision")]
+pub use arbitrary_precision::{
+    PrecisionContext,
+    gamma::{gamma_ap, gamma_mp, log_gamma_ap, log_gamma_mp},
+    bessel::{bessel_j_ap, bessel_j_mp, bessel_y_ap, bessel_y_mp},
+    error_function::{erf_ap, erf_mp, erfc_ap, erfc_mp},
+    to_f64, to_complex64, cleanup_cache,
+};
 
 #[cfg(test)]
 mod tests {

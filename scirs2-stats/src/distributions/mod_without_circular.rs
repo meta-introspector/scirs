@@ -334,7 +334,7 @@ where
 /// ```
 pub fn expon<F>(rate: F, loc: F) -> StatsResult<Exponential<F>>
 where
-    F: num_traits::Float + num_traits::NumCast + std::fmt::Debug,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Debug + std::fmt::Display,
 {
     Exponential::new(rate, loc)
 }

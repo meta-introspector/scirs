@@ -52,7 +52,7 @@
 //! println!("{}", format_memory_report());
 //! ```
 
-use ndarray::{ArrayBase, Data, Dimension, Ix2, ViewRepr};
+use ndarray::{ArrayBase, Data, Dimension, Ix2, ViewRepr, IxDyn};
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -89,11 +89,12 @@ where
     }
 
     /// Process the array in chunks, calling the provided function for each chunk
-    pub fn process_chunks<F>(&mut self, mut f: F)
+    /// The function receives a dynamic view of the chunk and the position as IxDyn
+    pub fn process_chunks_dyn<F>(&mut self, mut f: F)
     where
-        F: FnMut(&ArrayBase<ViewRepr<&A>, D>, D),
+        F: FnMut(&ArrayBase<ViewRepr<&A>, IxDyn>, IxDyn),
     {
-        use ndarray::{s, Slice};
+        use ndarray::{Slice, IntoDimension};
 
         // Get array shape and chunk shape as slices
         let array_shape = self.array.shape();
@@ -120,36 +121,31 @@ where
                 position_vec.push(start);
             }
 
-            // Convert position vector to D
-            let position = D::from_slice(&position_vec).expect("Position dimension mismatch");
+            // Convert position vector to IxDyn
+            let position = position_vec.into_dimension();
 
             // Get the chunk view and call the function
-            // Since we can't directly use dynamic slicing with D dimension,
-            // we'll use a workaround by calling the function with the view
-            match array_shape.len() {
-                1 => {
-                    let view = self.array.slice(s![slices[0].clone()]);
-                    f(&view.into_dyn().view(), position);
-                }
-                2 => {
-                    let view = self.array.slice(s![slices[0].clone(), slices[1].clone()]);
-                    f(&view.into_dyn().view(), position);
-                }
-                3 => {
-                    let view = self.array.slice(s![
-                        slices[0].clone(),
-                        slices[1].clone(),
-                        slices[2].clone()
-                    ]);
-                    f(&view.into_dyn().view(), position);
-                }
-                _ => {
-                    // For higher dimensions, fall back to processing the entire array
-                    // This is a limitation of the current implementation
-                    f(&self.array.view(), position);
-                    break;
-                }
-            }
+            // First convert the array to dynamic dimension, then slice
+            let dyn_array = self.array.view().into_dyn();
+            
+            // Create dynamic slice info
+            use ndarray::{SliceInfo, SliceInfoElem};
+            let slice_elems: Vec<SliceInfoElem> = slices
+                .into_iter()
+                .map(|s| SliceInfoElem::Slice {
+                    start: s.start,
+                    end: s.end,
+                    step: s.step,
+                })
+                .collect();
+            
+            let slice_info = unsafe {
+                SliceInfo::<Vec<SliceInfoElem>, IxDyn, IxDyn>::new(slice_elems)
+                    .expect("Failed to create slice info")
+            };
+            
+            let view = dyn_array.slice(slice_info);
+            f(&view, position);
 
             // Increment chunk indices
             let mut carry = true;

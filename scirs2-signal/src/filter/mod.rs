@@ -63,6 +63,7 @@ pub mod application;
 pub mod common;
 pub mod fir;
 pub mod iir;
+pub mod parallel;
 pub mod specialized;
 pub mod transform;
 
@@ -101,6 +102,11 @@ pub use transform::{
 pub use specialized::{
     allpass_filter, allpass_second_order, comb_filter, dc_blocker, differentiator_filter,
     fractional_delay_filter, hilbert_filter, integrator_filter, notch_filter, peak_filter,
+};
+
+// Re-export parallel filter functions
+pub use parallel::{
+    parallel_convolve, parallel_convolve2d, parallel_filtfilt, parallel_savgol_filter,
 };
 
 #[cfg(test)]

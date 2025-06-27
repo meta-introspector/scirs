@@ -69,6 +69,15 @@ pub mod harwell_boeing;
 /// - Chunking and compression options
 /// - Integration with ndarray for efficient array operations
 pub mod hdf5;
+/// IDL (Interactive Data Language) save file format module
+///
+/// Provides functionality for reading and writing IDL save files (.sav):
+/// - Support for all standard IDL data types
+/// - Arrays, strings, structures, and complex numbers
+/// - Automatic endianness detection and handling
+/// - Compatible with IDL 8.0 format
+/// - Commonly used in astronomy and remote sensing
+pub mod idl;
 /// Image file format module
 ///
 /// Provides functionality for reading and writing common image formats:
@@ -193,6 +202,15 @@ pub mod serialize;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 pub mod sparse;
+/// SIMD-accelerated I/O operations
+///
+/// Provides SIMD-optimized implementations of common I/O operations:
+/// - Data type conversions with SIMD
+/// - Audio normalization and processing
+/// - CSV parsing acceleration
+/// - Compression utilities with SIMD
+/// - Checksum calculations
+pub mod simd_io;
 /// Streaming and iterator interfaces for large data handling
 ///
 /// Provides memory-efficient streaming interfaces for processing large datasets:
@@ -248,3 +266,23 @@ pub mod thread_pool;
 /// - Integrity metadata for tracking data provenance
 pub mod validation;
 pub mod wavfile;
+/// Zero-copy I/O optimizations
+///
+/// Provides zero-copy implementations for various I/O operations:
+/// - Memory-mapped file access
+/// - Zero-copy array views
+/// - CSV parsing without allocation
+/// - Binary data reading without copying
+/// - Minimized memory allocations for large datasets
+pub mod zero_copy;
+/// GPU-accelerated I/O operations
+///
+/// Provides GPU-accelerated implementations of I/O operations using the scirs2-core GPU abstraction:
+/// - GPU-accelerated compression and decompression
+/// - GPU-accelerated data type conversions
+/// - GPU-accelerated matrix operations for file I/O
+/// - GPU-accelerated checksum computation
+/// - Support for multiple GPU backends (CUDA, Metal, OpenCL)
+/// - Automatic fallback to CPU when GPU is not available
+#[cfg(feature = "gpu")]
+pub mod gpu_io;

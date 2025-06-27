@@ -11,7 +11,7 @@
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use crate::memory_efficient::chunked::{ChunkedArray, ChunkingStrategy};
 use crate::memory_efficient::prefetch::PrefetchConfig;
-use ndarray::{ArrayBase, Dimension, OwnedRepr};
+use ndarray::{ArrayBase, Dimension, OwnedRepr, RemoveAxis};
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::thread::{self, JoinHandle};
@@ -1453,7 +1453,7 @@ impl<I: Clone + Send + 'static, O: Clone + Send + 'static> Clone for StageWrappe
 impl<A, D> StreamProcessor<ArrayBase<OwnedRepr<A>, D>, ArrayBase<OwnedRepr<A>, D>>
 where
     A: Clone + Send + Default + 'static,
-    D: Dimension + Clone + Send + 'static,
+    D: Dimension + Clone + Send + 'static + RemoveAxis,
 {
     /// Create a new array stream processor
     pub fn new_array<F>(config: StreamConfig, process_fn: F) -> Self

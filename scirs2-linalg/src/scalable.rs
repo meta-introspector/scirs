@@ -696,7 +696,11 @@ mod tests {
         // Check reconstruction error
         let reconstructed = u_approx.dot(&Array2::from_diag(&s_approx)).dot(&vt_approx);
         let error = (&matrix - &reconstructed).mapv(|x| x.abs()).sum();
-        assert!(error / (m * n) as f64 < 0.1, "Reconstruction error too large: {}", error);
+        assert!(
+            error / ((m * n) as f64) < 0.1,
+            "Reconstruction error too large: {}",
+            error
+        );
     }
 
     #[test]

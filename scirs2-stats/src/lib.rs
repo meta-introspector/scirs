@@ -38,6 +38,9 @@
 //!   - Goodness-of-fit tests (Chi-square)
 //! * Random number generation
 //! * Regression models (linear, regularized, robust)
+//! * Bayesian statistics (conjugate priors, Bayesian linear regression)
+//! * MCMC methods (Metropolis-Hastings, adaptive sampling)
+//! * Multivariate analysis (PCA, incremental PCA)
 //! * Contingency table functions
 //! * Masked array statistics
 //! * Quasi-Monte Carlo
@@ -308,13 +311,17 @@
 // Export error types
 pub mod error;
 pub mod error_messages;
+pub mod error_context;
 pub use error::{StatsError, StatsResult};
 
 // Module substructure following SciPy's organization
+pub mod bayesian; // Bayesian statistics
 pub mod contingency; // Contingency table functions
 #[path = "distributions/mod_without_circular.rs"]
 pub mod distributions; // Statistical distributions
+pub mod mcmc; // Markov Chain Monte Carlo methods
 pub mod mstats; // Masked array statistics
+pub mod multivariate; // Multivariate analysis (PCA, etc.)
 pub mod qmc; // Quasi-Monte Carlo
 pub mod sampling; // Sampling utilities
 pub mod traits; // Trait definitions for distributions and statistical objects
@@ -322,8 +329,18 @@ pub mod traits; // Trait definitions for distributions and statistical objects
 // Core functions for descriptive statistics
 mod descriptive;
 mod descriptive_simd;
+mod parallel_stats;
+mod memory_efficient;
 pub use descriptive::*;
 pub use descriptive_simd::{mean_simd, variance_simd, std_simd, descriptive_stats_simd};
+pub use parallel_stats::{
+    mean_parallel, variance_parallel, quantiles_parallel, row_statistics_parallel,
+    corrcoef_parallel, bootstrap_parallel
+};
+pub use memory_efficient::{
+    streaming_mean, welford_variance, normalize_inplace, quantile_quickselect,
+    covariance_chunked, StreamingHistogram
+};
 
 // Statistical tests module
 pub mod tests;
@@ -338,11 +355,13 @@ pub use tests::*;
 
 // Correlation measures
 mod correlation;
+mod correlation_simd;
 pub use correlation::intraclass::icc;
 pub use correlation::{
     corrcoef, kendall_tau, kendalltau, partial_corr, partial_corrr, pearson_r, pearsonr,
     point_biserial, point_biserialr, spearman_r, spearmanr,
 };
+pub use correlation_simd::{pearson_r_simd, corrcoef_simd, covariance_simd};
 
 // Dispersion and variability measures
 mod dispersion;

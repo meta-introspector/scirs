@@ -121,6 +121,8 @@ pub mod ufuncs;
 pub mod units;
 pub mod utils;
 pub mod validation;
+pub mod safe_ops;
+pub mod error_templates;
 
 // Production-level features for enterprise deployments
 pub mod observability;

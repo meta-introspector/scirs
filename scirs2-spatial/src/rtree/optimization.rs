@@ -1,5 +1,6 @@
 use crate::error::SpatialResult;
 use crate::rtree::node::{Entry, Node, RTree};
+use crate::rtree::Rectangle;
 use ndarray::Array1;
 
 impl<T: Clone> RTree<T> {
@@ -100,10 +101,10 @@ impl<T: Clone> RTree<T> {
             return Ok(rtree);
         }
 
-        // TODO: Implement Sort-Tile-Recursive (STR) bulk loading algorithm
-        // For now, just insert points one by one
-        for (i, (point, data)) in points.into_iter().enumerate() {
-            // Validate dimensions
+        // Implement Sort-Tile-Recursive (STR) bulk loading algorithm
+        
+        // Validate all points have correct dimensions
+        for (i, (point, _)) in points.iter().enumerate() {
             if point.len() != ndim {
                 return Err(crate::error::SpatialError::DimensionError(format!(
                     "Point at index {} has dimension {} but tree dimension is {}",
@@ -112,11 +113,125 @@ impl<T: Clone> RTree<T> {
                     ndim
                 )));
             }
-
-            rtree.insert(point, data)?;
+        }
+        
+        // Convert points to leaf entries
+        let mut entries: Vec<Entry<T>> = points
+            .into_iter()
+            .enumerate()
+            .map(|(index, (point, data))| Entry::Leaf {
+                mbr: Rectangle::from_point(&point.view()),
+                data,
+                index,
+            })
+            .collect();
+        
+        // Build the tree recursively
+        rtree.root = rtree.str_build_node(&mut entries, 0)?;
+        rtree.root.is_leaf = rtree.root.entries.is_empty() || matches!(rtree.root.entries[0], Entry::Leaf { .. });
+        
+        // Update tree height
+        let height = rtree.calculate_height(&rtree.root);
+        for _ in 1..height {
+            rtree.increment_height();
         }
 
         Ok(rtree)
+    }
+    
+    /// Build a node using the STR algorithm
+    fn str_build_node(&self, entries: &mut Vec<Entry<T>>, level: usize) -> SpatialResult<Node<T>> {
+        let n = entries.len();
+        
+        if n == 0 {
+            return Ok(Node::new(level == 0, level));
+        }
+        
+        // If we can fit all entries in one node, create it
+        if n <= self.max_entries {
+            let mut node = Node::new(level == 0, level);
+            node.entries = entries.drain(..).collect();
+            return Ok(node);
+        }
+        
+        // Calculate the number of leaf nodes needed
+        let leaf_capacity = self.max_entries;
+        let num_leaves = (n + leaf_capacity - 1) / leaf_capacity;
+        
+        // Calculate the number of slices along each dimension
+        let slice_count = (num_leaves as f64).powf(1.0 / self.ndim() as f64).ceil() as usize;
+        
+        // Sort entries by the first dimension
+        let dim = level % self.ndim();
+        entries.sort_by(|a, b| {
+            let a_center = (a.mbr().min[dim] + a.mbr().max[dim]) / 2.0;
+            let b_center = (b.mbr().min[dim] + b.mbr().max[dim]) / 2.0;
+            a_center.partial_cmp(&b_center).unwrap_or(std::cmp::Ordering::Equal)
+        });
+        
+        // Create child nodes
+        let mut children = Vec::new();
+        let entries_per_slice = (n + slice_count - 1) / slice_count;
+        
+        for i in 0..slice_count {
+            let start = i * entries_per_slice;
+            let end = ((i + 1) * entries_per_slice).min(n);
+            
+            if start >= n {
+                break;
+            }
+            
+            let mut slice_entries: Vec<Entry<T>> = entries[start..end].to_vec();
+            
+            // Recursively build child nodes
+            if level == 0 {
+                // These are leaf entries, group them into leaf nodes
+                while !slice_entries.is_empty() {
+                    let mut node = Node::new(true, 0);
+                    let take_count = slice_entries.len().min(self.max_entries);
+                    node.entries = slice_entries.drain(..take_count).collect();
+                    
+                    if let Ok(Some(mbr)) = node.mbr() {
+                        children.push(Entry::NonLeaf {
+                            mbr,
+                            child: Box::new(node),
+                        });
+                    }
+                }
+            } else {
+                // Build non-leaf nodes recursively
+                let child_node = self.str_build_node(&mut slice_entries, level - 1)?;
+                if let Ok(Some(mbr)) = child_node.mbr() {
+                    children.push(Entry::NonLeaf {
+                        mbr,
+                        child: Box::new(child_node),
+                    });
+                }
+            }
+        }
+        
+        // Clear the input entries as they've been moved to children
+        entries.clear();
+        
+        // If we have too many children, build another level
+        if children.len() > self.max_entries {
+            self.str_build_node(&mut children, level + 1)
+        } else {
+            let mut node = Node::new(false, level + 1);
+            node.entries = children;
+            Ok(node)
+        }
+    }
+    
+    /// Calculate the height of the tree
+    fn calculate_height(&self, node: &Node<T>) -> usize {
+        if node.is_leaf {
+            1
+        } else if let Some(Entry::NonLeaf { child, .. }) = node.entries.first() {
+            1 + self.calculate_height(child)
+        } else {
+            1
+        }
     }
 
     /// Calculate the total overlap in the R-tree
@@ -137,14 +252,14 @@ impl<T: Clone> RTree<T> {
             // Calculate overlap between nodes at this level
             for i in 0..current_level_nodes.len() - 1 {
                 let node_i_mbr = match current_level_nodes[i].mbr() {
-                    Some(mbr) => mbr,
-                    None => continue,
+                    Ok(Some(mbr)) => mbr,
+                    _ => continue,
                 };
 
                 for node_j in current_level_nodes.iter().skip(i + 1) {
                     let node_j_mbr = match node_j.mbr() {
-                        Some(mbr) => mbr,
-                        None => continue,
+                        Ok(Some(mbr)) => mbr,
+                        _ => continue,
                     };
 
                     // Check if MBRs intersect

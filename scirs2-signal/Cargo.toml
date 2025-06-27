@@ -27,6 +27,7 @@ scirs2-special = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
 plotly = { workspace = true }
+statrs = { workspace = true }
 # BLAS dependencies removed - using core abstractions
 # ndarray-linalg = { workspace = true }
 ndarray-rand = { workspace = true }

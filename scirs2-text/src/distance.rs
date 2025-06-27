@@ -22,51 +22,60 @@ use std::collections::{HashMap, HashSet};
 ///
 /// * The Levenshtein distance between the two strings
 pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
-    if s1.is_empty() {
-        return s2.chars().count();
+    // Use SIMD-accelerated version when available
+    #[cfg(feature = "simd")]
+    {
+        return crate::simd_ops::SimdEditDistance::levenshtein(s1, s2);
     }
-    if s2.is_empty() {
-        return s1.chars().count();
-    }
-
-    let s1_chars: Vec<char> = s1.chars().collect();
-    let s2_chars: Vec<char> = s2.chars().collect();
-
-    let m = s1_chars.len();
-    let n = s2_chars.len();
-
-    // Create distance matrix
-    let mut matrix = vec![vec![0; n + 1]; m + 1];
-
-    // Initialize first row and column
-    for (i, row) in matrix.iter_mut().enumerate().take(m + 1) {
-        row[0] = i;
-    }
-    if let Some(first_row) = matrix.first_mut() {
-        for (j, cell) in first_row.iter_mut().enumerate().take(n + 1) {
-            *cell = j;
+    
+    #[cfg(not(feature = "simd"))]
+    {
+        if s1.is_empty() {
+            return s2.chars().count();
         }
-    }
-
-    // Fill the matrix
-    for i in 1..=m {
-        for j in 1..=n {
-            let cost = if s1_chars[i - 1] == s2_chars[j - 1] {
-                0
-            } else {
-                1
-            };
-            matrix[i][j] = std::cmp::min(
-                std::cmp::min(
-                    matrix[i - 1][j] + 1, // deletion
-                    matrix[i][j - 1] + 1, // insertion
-                ),
-                matrix[i - 1][j - 1] + cost, // substitution
-            );
+        if s2.is_empty() {
+            return s1.chars().count();
         }
-    }
 
-    matrix[m][n]
+        let s1_chars: Vec<char> = s1.chars().collect();
+        let s2_chars: Vec<char> = s2.chars().collect();
+
+        let m = s1_chars.len();
+        let n = s2_chars.len();
+
+        // Create distance matrix
+        let mut matrix = vec![vec![0; n + 1]; m + 1];
+
+        // Initialize first row and column
+        for (i, row) in matrix.iter_mut().enumerate().take(m + 1) {
+            row[0] = i;
+        }
+        if let Some(first_row) = matrix.first_mut() {
+            for (j, cell) in first_row.iter_mut().enumerate().take(n + 1) {
+                *cell = j;
+            }
+        }
+
+        // Fill the matrix
+        for i in 1..=m {
+            for j in 1..=n {
+                let cost = if s1_chars[i - 1] == s2_chars[j - 1] {
+                    0
+                } else {
+                    1
+                };
+                matrix[i][j] = std::cmp::min(
+                    std::cmp::min(
+                        matrix[i - 1][j] + 1, // deletion
+                        matrix[i][j - 1] + 1, // insertion
+                    ),
+                    matrix[i - 1][j - 1] + cost, // substitution
+                );
+            }
+        }
+
+        matrix[m][n]
+    }
 }
 
 /// Compute the normalized Levenshtein distance between two strings
@@ -154,18 +163,37 @@ pub fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> Result<f64
         )));
     }
 
-    // Calculate dot product manually since direct multiplication isn't implemented for ArrayView1
-    let dot_product: f64 = v1.iter().zip(v2.iter()).map(|(&a, &b)| a * b).sum();
-
-    // Calculate norms manually
-    let norm1 = v1.iter().map(|&x| x * x).sum::<f64>().sqrt();
-    let norm2 = v2.iter().map(|&x| x * x).sum::<f64>().sqrt();
-
-    if norm1 == 0.0 || norm2 == 0.0 {
-        return Ok(if norm1 == norm2 { 1.0 } else { 0.0 });
+    #[cfg(feature = "simd")]
+    {
+        use scirs2_core::simd_ops::SimdUnifiedOps;
+        
+        // Use SIMD operations for dot product and norms
+        let dot_product = f64::simd_dot(&v1, &v2);
+        let norm1 = f64::simd_norm(&v1);
+        let norm2 = f64::simd_norm(&v2);
+        
+        if norm1 == 0.0 || norm2 == 0.0 {
+            return Ok(if norm1 == norm2 { 1.0 } else { 0.0 });
+        }
+        
+        Ok(dot_product / (norm1 * norm2))
     }
+    
+    #[cfg(not(feature = "simd"))]
+    {
+        // Calculate dot product manually since direct multiplication isn't implemented for ArrayView1
+        let dot_product: f64 = v1.iter().zip(v2.iter()).map(|(&a, &b)| a * b).sum();
 
-    Ok(dot_product / (norm1 * norm2))
+        // Calculate norms manually
+        let norm1 = v1.iter().map(|&x| x * x).sum::<f64>().sqrt();
+        let norm2 = v2.iter().map(|&x| x * x).sum::<f64>().sqrt();
+
+        if norm1 == 0.0 || norm2 == 0.0 {
+            return Ok(if norm1 == norm2 { 1.0 } else { 0.0 });
+        }
+
+        Ok(dot_product / (norm1 * norm2))
+    }
 }
 
 /// Compute the cosine similarity between two texts based on bag-of-words vectors

@@ -10,6 +10,8 @@
 
 /// Enhanced MATLAB format support with v7.3+ and HDF5 integration
 pub mod enhanced;
+/// Extended MATLAB v7.3+ format support with additional data types
+pub mod v73_enhanced;
 /// Internal MAT file writing implementation
 mod write_impl;
 
@@ -53,6 +55,12 @@ pub enum MatType {
     Cell(Vec<MatType>),
     /// Structure
     Struct(HashMap<String, MatType>),
+    /// Sparse double matrix
+    SparseDouble(crate::sparse::SparseMatrix<f64>),
+    /// Sparse single matrix
+    SparseSingle(crate::sparse::SparseMatrix<f32>),
+    /// Sparse logical matrix
+    SparseLogical(crate::sparse::SparseMatrix<bool>),
 }
 
 /// MATLAB header information

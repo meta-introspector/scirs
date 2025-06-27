@@ -1,4 +1,5 @@
 //! Performance benchmarks for SciPy compatibility layer
+use std::hint::black_box;
 //!
 //! This benchmark suite measures the performance of SciPy-compatible functions
 //! and compares them against pure Rust implementations where available.
@@ -6,11 +7,8 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Axis};
 use scirs2_linalg::matrix_functions::{expm, logm, sqrtm};
-use scirs2_linalg::norm::{matrix_norm, vector_norm};
-use scirs2_linalg::{
-    cholesky, compat, cond, det, eig, eigh, eigvals, eigvalsh, inv, lstsq, lu, matrix_rank, qr,
-    solve, svd,
-};
+use scirs2_linalg::{cholesky, eigen, lstsq, lu, qr, solve, svd};
+use scirs2_linalg::{compat, cond, det, inv, matrix_norm, matrix_rank, vector_norm};
 use std::time::Duration;
 
 /// Generate a well-conditioned test matrix of given size
@@ -36,7 +34,7 @@ fn create_test_vector(n: usize) -> Array1<f64> {
 /// Generate a symmetric positive definite matrix
 fn create_spd_matrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
-    a.t().dot(&a) + Array2::eye(n) * (n as f64) // A^T * A + n*I
+    a.t().dot(&a) + Array2::<f64>::eye(n) * (n as f64) // A^T * A + n*I
 }
 
 /// Benchmark basic matrix operations
@@ -88,7 +86,7 @@ fn bench_matrix_norms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("frobenius_basic", size),
             &matrix,
-            |b, m| b.iter(|| matrix_norm(&m.view(), "frobenius").unwrap()),
+            |b, m| b.iter(|| matrix_norm(&m.view(), "frobenius", None).unwrap()),
         );
 
         // 1-norm
@@ -97,7 +95,7 @@ fn bench_matrix_norms(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("norm_1_basic", size), &matrix, |b, m| {
-            b.iter(|| matrix_norm(&m.view(), "1").unwrap())
+            b.iter(|| matrix_norm(&m.view(), "1", None).unwrap())
         });
 
         // Infinity norm
@@ -108,7 +106,7 @@ fn bench_matrix_norms(c: &mut Criterion) {
         );
 
         group.bench_with_input(BenchmarkId::new("norm_inf_basic", size), &matrix, |b, m| {
-            b.iter(|| norm_mod::matrix_norm(&m.view(), "inf").unwrap())
+            b.iter(|| matrix_norm(&m.view(), "inf", None).unwrap())
         });
     }
 
@@ -134,7 +132,7 @@ fn bench_vector_norms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("vector_2norm_basic", size),
             &vector,
-            |b, v| b.iter(|| norm_mod::vector_norm(&v.view(), "2").unwrap()),
+            |b, v| b.iter(|| vector_norm(&v.view(), 2).unwrap()),
         );
 
         // 1-norm
@@ -147,7 +145,7 @@ fn bench_vector_norms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("vector_1norm_basic", size),
             &vector,
-            |b, v| b.iter(|| norm_mod::vector_norm(&v.view(), "1").unwrap()),
+            |b, v| b.iter(|| vector_norm(&v.view(), 1).unwrap()),
         );
 
         // Infinity norm
@@ -160,7 +158,7 @@ fn bench_vector_norms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("vector_infnorm_basic", size),
             &vector,
-            |b, v| b.iter(|| norm_mod::vector_norm(&v.view(), "inf").unwrap()),
+            |b, v| b.iter(|| vector_norm(&v.view(), 0).unwrap()),
         );
     }
 
@@ -185,7 +183,7 @@ fn bench_decompositions(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("lu_basic", size), &matrix, |b, m| {
-            b.iter(|| decomposition::lu(&m.view()).unwrap())
+            b.iter(|| lu(&m.view(), None).unwrap())
         });
 
         // QR decomposition
@@ -194,7 +192,7 @@ fn bench_decompositions(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("qr_basic", size), &matrix, |b, m| {
-            b.iter(|| decomposition::qr(&m.view()).unwrap())
+            b.iter(|| qr(&m.view(), None).unwrap())
         });
 
         // SVD (smaller sizes due to computational cost)
@@ -204,7 +202,7 @@ fn bench_decompositions(c: &mut Criterion) {
             });
 
             group.bench_with_input(BenchmarkId::new("svd_basic", size), &matrix, |b, m| {
-                b.iter(|| decomposition::svd(&m.view(), false).unwrap())
+                b.iter(|| svd(&m.view(), false, None).unwrap())
             });
         }
 
@@ -218,7 +216,7 @@ fn bench_decompositions(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cholesky_basic", size),
             &spd_matrix,
-            |b, m| b.iter(|| decomposition::cholesky(&m.view()).unwrap()),
+            |b, m| b.iter(|| cholesky(&m.view(), None).unwrap()),
         );
     }
 
@@ -263,7 +261,7 @@ fn bench_eigenvalues(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("eigvals_basic", size),
             &spd_matrix,
-            |b, m| b.iter(|| eigen::eigvalsh(&m.view()).unwrap()),
+            |b, m| b.iter(|| eigen::eigvalsh(&m.view(), None).unwrap()),
         );
 
         // Eigenvalues and eigenvectors (smaller sizes)
@@ -292,7 +290,7 @@ fn bench_eigenvalues(c: &mut Criterion) {
             );
 
             group.bench_with_input(BenchmarkId::new("eigh_basic", size), &spd_matrix, |b, m| {
-                b.iter(|| eigen::eigh(&m.view()).unwrap())
+                b.iter(|| eigen::eigh(&m.view(), None).unwrap())
             });
         }
     }
@@ -336,7 +334,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("solve_basic", size),
             &(&matrix, &rhs_1d),
-            |b, (m, r)| b.iter(|| solve::solve(&m.view(), &r.view()).unwrap()),
+            |b, (m, r)| b.iter(|| solve(&m.view(), &r.view(), None).unwrap()),
         );
 
         // Least squares (overdetermined system)
@@ -357,7 +355,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("lstsq_basic", size),
                 &(&overdetermined, &overdetermined_rhs.column(0).to_owned()),
-                |b, (m, r)| b.iter(|| solve::lstsq(&m.view(), &r.view()).unwrap()),
+                |b, (m, r)| b.iter(|| lstsq(&m.view(), &r.view(), None).unwrap()),
             );
         }
     }
@@ -379,20 +377,20 @@ fn bench_matrix_functions(c: &mut Criterion) {
 
         // Matrix exponential
         group.bench_with_input(BenchmarkId::new("expm_compat", size), &matrix, |b, m| {
-            b.iter(|| compat::expm(&m.view()).unwrap())
+            b.iter(|| compat::expm(&m.view(), None).unwrap())
         });
 
         group.bench_with_input(BenchmarkId::new("expm_basic", size), &matrix, |b, m| {
-            b.iter(|| matrix_functions::expm(&m.view()).unwrap())
+            b.iter(|| expm(&m.view(), None).unwrap())
         });
 
         // Matrix square root
         group.bench_with_input(BenchmarkId::new("sqrtm_compat", size), &matrix, |b, m| {
-            b.iter(|| compat::sqrtm(&m.view()).unwrap())
+            b.iter(|| compat::sqrtm(&m.view(), Some(true)).unwrap())
         });
 
         group.bench_with_input(BenchmarkId::new("sqrtm_basic", size), &matrix, |b, m| {
-            b.iter(|| matrix_functions::sqrtm(&m.view(), 100, 1e-12).unwrap())
+            b.iter(|| sqrtm(&m.view(), 100, 1e-12).unwrap())
         });
 
         // Matrix logarithm
@@ -403,7 +401,7 @@ fn bench_matrix_functions(c: &mut Criterion) {
             });
 
             group.bench_with_input(BenchmarkId::new("logm_basic", size), &matrix, |b, m| {
-                b.iter(|| matrix_functions::logm(&m.view()).unwrap())
+                b.iter(|| logm(&m.view()).unwrap())
             });
         }
     }
@@ -426,7 +424,7 @@ fn bench_matrix_properties(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("cond_basic", size), &matrix, |b, m| {
-            b.iter(|| norm_mod::cond(&m.view()).unwrap())
+            b.iter(|| cond(&m.view(), None, None).unwrap())
         });
 
         // Matrix rank
@@ -435,7 +433,7 @@ fn bench_matrix_properties(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("rank_basic", size), &matrix, |b, m| {
-            b.iter(|| norm_mod::matrix_rank(&m.view(), None).unwrap())
+            b.iter(|| matrix_rank(&m.view(), None, None).unwrap())
         });
 
         // Pseudoinverse (smaller sizes)

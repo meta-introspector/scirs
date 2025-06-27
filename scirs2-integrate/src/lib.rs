@@ -159,6 +159,18 @@ pub mod symplectic;
 // PDE solver module
 pub mod pde;
 
+// Symbolic integration support
+pub mod symbolic;
+
+// Enhanced automatic differentiation
+pub mod autodiff;
+
+// Specialized domain-specific solvers
+pub mod specialized;
+
+// Geometric integration methods
+pub mod geometric;
+
 // ODE module is now fully implemented in ode/
 
 pub mod qmc;
@@ -235,6 +247,33 @@ pub use pde::spectral::{
 pub use pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo, PDEType,
+};
+// Export symbolic integration types
+pub use symbolic::{
+    SymbolicJacobian, generate_jacobian, higher_order_to_first_order, HigherOrderODE,
+    FirstOrderSystem, ConservationLaw, detect_conservation_laws, ConservationEnforcer,
+    SymbolicExpression, Variable, simplify,
+};
+// Export automatic differentiation types
+pub use autodiff::{
+    ForwardAD, forward_gradient, forward_jacobian, ReverseAD, reverse_gradient, 
+    reverse_jacobian, TapeNode, SparsePattern, SparseJacobian, detect_sparsity, 
+    compress_jacobian, SensitivityAnalysis, ParameterSensitivity, compute_sensitivities,
+    Dual, DualVector,
+};
+// Export specialized domain-specific solvers
+pub use specialized::{
+    SchrodingerSolver, QuantumState, QuantumPotential, HarmonicOscillator, ParticleInBox,
+    HydrogenAtom, SchrodingerMethod, NavierStokesSolver, FluidState, FluidBoundaryCondition,
+    NavierStokesParams, StochasticPDESolver, FinancialOption, VolatilityModel, OptionType,
+    OptionStyle, FinanceMethod, JumpProcess, Greeks,
+};
+// Export geometric integration methods
+pub use geometric::{
+    LieGroupIntegrator, LieAlgebra, ExponentialMap, SO3Integrator, SE3Integrator,
+    VolumePreservingIntegrator, DivergenceFreeFlow, IncompressibleFlow,
+    StructurePreservingIntegrator, ConservationChecker, GeometricInvariant,
+    EnergyPreservingMethod, MomentumPreservingMethod,
 };
 // Implicit solvers will be exposed in a future update
 // pub use pde::implicit::{

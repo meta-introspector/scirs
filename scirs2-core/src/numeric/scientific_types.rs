@@ -4,6 +4,9 @@
 //! ensuring dimensional consistency and providing domain-specific operations.
 
 use crate::numeric::{RealNumber, ScientificNumber};
+use crate::error::CoreError;
+use crate::safe_ops::safe_divide;
+use num_traits::Float;
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -29,7 +32,7 @@ pub struct Quantity<T: ScientificNumber, U: Unit> {
     _unit: PhantomData<U>,
 }
 
-impl<T: ScientificNumber, U: Unit> Quantity<T, U> {
+impl<T: ScientificNumber + Float, U: Unit> Quantity<T, U> {
     /// Create a new quantity
     pub fn new(value: T) -> Self {
         Self {
@@ -47,6 +50,28 @@ impl<T: ScientificNumber, U: Unit> Quantity<T, U> {
     pub fn with_unit(&self) -> (T, &'static str) {
         (self.value, U::symbol())
     }
+
+    /// Safely divide this quantity by a scalar value
+    /// 
+    /// # Errors
+    /// Returns an error if the divisor is zero or near-zero
+    pub fn safe_div(self, divisor: T) -> Result<Self, CoreError> 
+    where 
+        T: fmt::Display + fmt::Debug,
+    {
+        let result = safe_divide(self.value, divisor)?;
+        Ok(Self::new(result))
+    }
+
+    /// Check if the value is finite (not NaN or infinite)
+    pub fn is_finite(&self) -> bool {
+        <T as ScientificNumber>::is_finite(self.value)
+    }
+
+    /// Check if the value is valid for scientific computation
+    pub fn is_valid(&self) -> bool {
+        <T as ScientificNumber>::is_finite(self.value) && !<T as Float>::is_nan(self.value)
+    }
 }
 
 impl<T: ScientificNumber, U: Unit> fmt::Display for Quantity<T, U>
@@ -59,7 +84,7 @@ where
 }
 
 // Arithmetic operations for quantities
-impl<T: ScientificNumber, U: Unit> Add for Quantity<T, U> {
+impl<T: ScientificNumber + Float, U: Unit> Add for Quantity<T, U> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -67,7 +92,7 @@ impl<T: ScientificNumber, U: Unit> Add for Quantity<T, U> {
     }
 }
 
-impl<T: ScientificNumber, U: Unit> Sub for Quantity<T, U> {
+impl<T: ScientificNumber + Float, U: Unit> Sub for Quantity<T, U> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -75,7 +100,7 @@ impl<T: ScientificNumber, U: Unit> Sub for Quantity<T, U> {
     }
 }
 
-impl<T: ScientificNumber, U: Unit> Mul<T> for Quantity<T, U> {
+impl<T: ScientificNumber + Float, U: Unit> Mul<T> for Quantity<T, U> {
     type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
@@ -83,15 +108,21 @@ impl<T: ScientificNumber, U: Unit> Mul<T> for Quantity<T, U> {
     }
 }
 
-impl<T: ScientificNumber, U: Unit> Div<T> for Quantity<T, U> {
+impl<T: ScientificNumber + Float, U: Unit> Div<T> for Quantity<T, U> {
     type Output = Self;
 
+    /// Divide the quantity by a scalar
+    /// 
+    /// # Note
+    /// This follows standard floating-point behavior:
+    /// - Division by zero produces ±Infinity
+    /// - Use `safe_div()` method for checked division
     fn div(self, rhs: T) -> Self::Output {
         Self::new(self.value / rhs)
     }
 }
 
-impl<T: ScientificNumber + Neg<Output = T>, U: Unit> Neg for Quantity<T, U> {
+impl<T: ScientificNumber + Float + Neg<Output = T>, U: Unit> Neg for Quantity<T, U> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -791,62 +822,62 @@ pub mod utils {
     use super::*;
 
     /// Create a length from meters
-    pub fn meters<T: ScientificNumber>(value: T) -> Length<T> {
+    pub fn meters<T: ScientificNumber + Float>(value: T) -> Length<T> {
         Length::new(value)
     }
 
     /// Create a time from seconds
-    pub fn seconds<T: ScientificNumber>(value: T) -> Time<T> {
+    pub fn seconds<T: ScientificNumber + Float>(value: T) -> Time<T> {
         Time::new(value)
     }
 
     /// Create a mass from kilograms
-    pub fn kilograms<T: ScientificNumber>(value: T) -> Mass<T> {
+    pub fn kilograms<T: ScientificNumber + Float>(value: T) -> Mass<T> {
         Mass::new(value)
     }
 
     /// Create a temperature from kelvin
-    pub fn kelvin<T: ScientificNumber>(value: T) -> Temperature<T> {
+    pub fn kelvin<T: ScientificNumber + Float>(value: T) -> Temperature<T> {
         Temperature::new(value)
     }
 
     /// Create an angle from radians
-    pub fn radians<T: ScientificNumber>(value: T) -> Angle<T> {
+    pub fn radians<T: ScientificNumber + Float>(value: T) -> Angle<T> {
         Angle::new(value)
     }
 
     /// Create an angle from degrees
-    pub fn degrees<T: ScientificNumber>(value: T) -> AngleDegrees<T> {
+    pub fn degrees<T: ScientificNumber + Float>(value: T) -> AngleDegrees<T> {
         AngleDegrees::new(value)
     }
 
     /// Create a frequency from hertz
-    pub fn hertz<T: ScientificNumber>(value: T) -> Frequency<T> {
+    pub fn hertz<T: ScientificNumber + Float>(value: T) -> Frequency<T> {
         Frequency::new(value)
     }
 
     /// Create a force from newtons
-    pub fn newtons<T: ScientificNumber>(value: T) -> Force<T> {
+    pub fn newtons<T: ScientificNumber + Float>(value: T) -> Force<T> {
         Force::new(value)
     }
 
     /// Create an energy from joules
-    pub fn joules<T: ScientificNumber>(value: T) -> Energy<T> {
+    pub fn joules<T: ScientificNumber + Float>(value: T) -> Energy<T> {
         Energy::new(value)
     }
 
     /// Create a power from watts
-    pub fn watts<T: ScientificNumber>(value: T) -> Power<T> {
+    pub fn watts<T: ScientificNumber + Float>(value: T) -> Power<T> {
         Power::new(value)
     }
 
     /// Create a pressure from pascals
-    pub fn pascals<T: ScientificNumber>(value: T) -> Pressure<T> {
+    pub fn pascals<T: ScientificNumber + Float>(value: T) -> Pressure<T> {
         Pressure::new(value)
     }
 
     /// Create a voltage from volts
-    pub fn volts<T: ScientificNumber>(value: T) -> Voltage<T> {
+    pub fn volts<T: ScientificNumber + Float>(value: T) -> Voltage<T> {
         Voltage::new(value)
     }
 }

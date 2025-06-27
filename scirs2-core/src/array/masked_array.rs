@@ -499,8 +499,7 @@ where
 {
     /// Compute the mean of all unmasked elements
     ///
-    /// # Panics
-    /// Panics if the count cannot be converted to type A.
+    /// Returns `None` if there are no unmasked elements or if count conversion fails.
     pub fn mean(&self) -> Option<A> {
         let count = self.count();
 
@@ -516,13 +515,13 @@ where
             .map(|(_, val)| *val)
             .sum();
 
-        Some(sum / A::from(count).unwrap())
+        // Safe conversion with proper error handling
+        A::from(count).map(|count_val| sum / count_val)
     }
 
     /// Compute the variance of all unmasked elements
     ///
-    /// # Panics
-    /// Panics if the count cannot be converted to type A.
+    /// Returns `None` if there are insufficient unmasked elements or if count conversion fails.
     pub fn var(&self, ddof: usize) -> Option<A> {
         let count = self.count();
 
@@ -542,8 +541,8 @@ where
             .map(|(_, val)| (*val - mean) * (*val - mean))
             .sum();
 
-        // Apply degrees of freedom correction
-        Some(sum_sq_diff / A::from(count - ddof).unwrap())
+        // Apply degrees of freedom correction with safe conversion
+        A::from(count - ddof).map(|denom| sum_sq_diff / denom)
     }
 
     /// Compute the standard deviation of all unmasked elements
@@ -926,7 +925,8 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let mask = array![false, true, false, true, false];
 
-        let ma = MaskedArray::new(data.clone(), Some(mask.clone()), None).unwrap();
+        let ma = MaskedArray::new(data.clone(), Some(mask.clone()), None)
+            .expect("Failed to create MaskedArray in test");
 
         assert_eq!(ma.data, data);
         assert_eq!(ma.mask, mask);
@@ -939,7 +939,8 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let mask = array![false, true, false, true, false];
 
-        let ma = MaskedArray::new(data, Some(mask), Some(999.0)).unwrap();
+        let ma = MaskedArray::new(data, Some(mask), Some(999.0))
+            .expect("Failed to create MaskedArray in test");
 
         let filled = ma.filled(None);
         assert_eq!(filled, array![1.0, 999.0, 3.0, 999.0, 5.0]);
@@ -982,14 +983,14 @@ mod tests {
             Some(array![false, true, false, false, false]),
             Some(0.0),
         )
-        .unwrap();
+        .expect("Failed to create MaskedArray in test");
 
         let b = MaskedArray::new(
             array![5.0, 4.0, 3.0, 2.0, 1.0],
             Some(array![false, false, false, true, false]),
             Some(0.0),
         )
-        .unwrap();
+        .expect("Failed to create MaskedArray in test");
 
         // Addition
         let c = &a + &b;
@@ -1017,14 +1018,14 @@ mod tests {
             Some(array![false, false, false]),
             Some(0.0),
         )
-        .unwrap();
+        .expect("Failed to create MaskedArray in test");
 
         let h = MaskedArray::new(
             array![1.0, 0.0, 3.0],
             Some(array![false, false, false]),
             Some(0.0),
         )
-        .unwrap();
+        .expect("Failed to create MaskedArray in test");
 
         let i = &g / &h;
         assert_eq!(i.mask, array![false, true, false]);
@@ -1037,7 +1038,7 @@ mod tests {
             Some(array![false, true, false, true, false]),
             Some(0.0),
         )
-        .unwrap();
+        .expect("Failed to create MaskedArray in test");
 
         let compressed = ma.compressed();
         assert_eq!(compressed, array![1.0, 3.0, 5.0]);

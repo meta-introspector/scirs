@@ -1,7 +1,8 @@
 #[macro_use]
+use std::hint::black_box;
 extern crate criterion;
 
-use criterion::{black_box, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array2, Array3};
 use scirs2_linalg::attention::{
     causal_attention, flash_attention, linear_attention, multi_head_attention,

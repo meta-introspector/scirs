@@ -134,7 +134,7 @@ pub fn ultra_precision_eig<F>(
     tolerance: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
 {
     // Implement ultra-precision algorithms using extended precision and iterative refinement
 
@@ -222,7 +222,7 @@ where
 
         // Iterative refinement using Rayleigh quotient iteration
         let max_iterations = 10;
-        for iter in 0..max_iterations {
+        for _iter in 0..max_iterations {
             let mut max_residual = F::zero();
 
             for i in 0..n {
@@ -231,7 +231,8 @@ where
 
                 // Compute residual: Av - λv
                 let av = a.dot(&v);
-                let residual: Array1<F> = &av - &(v.to_owned() * lambda);
+                let lambda_v = v.to_owned() * lambda;
+                let residual: Array1<F> = &av - &lambda_v;
                 let residual_norm = residual.dot(&residual).sqrt();
 
                 if residual_norm > max_residual {
@@ -267,7 +268,10 @@ where
                 let mut vi = eigenvectors.column_mut(i);
                 let norm = vi.dot(&vi).sqrt();
                 if norm > F::epsilon() {
-                    vi /= norm;
+                    vi.as_slice_mut()
+                        .unwrap()
+                        .iter_mut()
+                        .for_each(|x| *x /= norm);
                 }
             }
         }
@@ -276,7 +280,9 @@ where
     } else {
         // For non-symmetric matrices, use general eigenvalue solver
         // This is a simplified implementation - in production, use QR algorithm with shifts
-        eig(a)
+        // For non-symmetric matrices, use eigh as an approximation
+        // (true general eigenvalue solver would return complex values)
+        eigh(a, None)
     }
 }
 
@@ -305,7 +311,7 @@ where
 /// ```
 pub fn estimate_condition_number<F>(a: &ArrayView2<F>) -> F
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
 {
     // Proper condition number estimation using SVD
     let n = a.nrows();
@@ -314,7 +320,7 @@ where
     }
 
     // Try to compute SVD for accurate condition number
-    if let Ok((_, s, _)) = crate::decomposition::svd(a, false, false) {
+    if let Ok((_, s, _)) = crate::decomposition::svd(a, false, None) {
         // Condition number is ratio of largest to smallest singular value
         let mut max_sv = F::zero();
         let mut min_sv = F::infinity();

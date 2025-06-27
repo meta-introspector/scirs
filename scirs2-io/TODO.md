@@ -68,15 +68,15 @@ This module provides production-ready input/output functionality for scientific 
 ## Post-Release Roadmap (Future Versions)
 
 ### Enhanced Format Support
-- [ ] Extended MATLAB support (v7.3+ format, improved sparse matrices)
-- [ ] IDL save file format support
+- [x] Extended MATLAB support (v7.3+ format, improved sparse matrices) - Enhanced in v73_enhanced.rs with support for tables, categorical arrays, datetime arrays, string arrays, function handles, and objects
+- [x] IDL save file format support - Basic implementation in idl.rs supporting standard IDL data types
 - [ ] Fortran unformatted file support
 - [ ] Domain-specific formats (bioinformatics, geospatial, astronomical)
 
 ### Performance Optimizations
-- [ ] SIMD acceleration for numerical operations
-- [ ] Zero-copy optimizations
-- [ ] GPU acceleration integration
+- [x] SIMD acceleration for numerical operations - Implemented in simd_io.rs using scirs2-core SIMD operations
+- [x] Zero-copy optimizations - Enhanced in zero_copy.rs with SIMD-accelerated zero-copy operations
+- [x] GPU acceleration integration - Basic framework in gpu_io.rs with support for multiple backends (CUDA, Metal, OpenCL)
 - [ ] Distributed processing capabilities
 
 ### Advanced Features

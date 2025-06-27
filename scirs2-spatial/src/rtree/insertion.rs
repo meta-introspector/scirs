@@ -61,14 +61,14 @@ impl<T: Clone> RTree<T> {
                 let mut new_root = Node::new(false, 1);
 
                 // Add both split nodes as children
-                if let Some(mbr1) = node1.mbr() {
+                if let Ok(Some(mbr1)) = node1.mbr() {
                     new_root.entries.push(Entry::NonLeaf {
                         mbr: mbr1,
                         child: Box::new(node1),
                     });
                 }
 
-                if let Some(mbr2) = node2.mbr() {
+                if let Ok(Some(mbr2)) = node2.mbr() {
                     new_root.entries.push(Entry::NonLeaf {
                         mbr: mbr2,
                         child: Box::new(node2),
@@ -107,7 +107,7 @@ impl<T: Clone> RTree<T> {
             // If the child was split, add the new node as a sibling
             if let Some(split_node) = maybe_split {
                 // Create a new entry for the split node
-                if let Some(mbr) = split_node.mbr() {
+                if let Ok(Some(mbr)) = split_node.mbr() {
                     self.root.entries.push(Entry::NonLeaf {
                         mbr,
                         child: Box::new(split_node),
@@ -124,14 +124,14 @@ impl<T: Clone> RTree<T> {
                         let mut new_root = Node::new(false, root_level + 1);
 
                         // Add both split nodes as children
-                        if let Some(mbr1) = node1.mbr() {
+                        if let Ok(Some(mbr1)) = node1.mbr() {
                             new_root.entries.push(Entry::NonLeaf {
                                 mbr: mbr1,
                                 child: Box::new(node1),
                             });
                         }
 
-                        if let Some(mbr2) = node2.mbr() {
+                        if let Ok(Some(mbr2)) = node2.mbr() {
                             new_root.entries.push(Entry::NonLeaf {
                                 mbr: mbr2,
                                 child: Box::new(node2),
@@ -146,7 +146,7 @@ impl<T: Clone> RTree<T> {
 
             // Update the MBR of the parent entry
             if let Entry::NonLeaf { mbr, child } = &mut self.root.entries[subtree_index] {
-                if let Some(child_mbr) = child.mbr() {
+                if let Ok(Some(child_mbr)) = child.mbr() {
                     *mbr = child_mbr;
                 }
             }
@@ -198,7 +198,7 @@ impl<T: Clone> RTree<T> {
         // If the child was split, add the new node as a sibling
         if let Some(split_node) = maybe_split {
             // Create a new entry for the split node
-            if let Some(mbr) = split_node.mbr() {
+            if let Ok(Some(mbr)) = split_node.mbr() {
                 node.entries.push(Entry::NonLeaf {
                     mbr,
                     child: Box::new(split_node),
@@ -215,7 +215,7 @@ impl<T: Clone> RTree<T> {
 
         // Update the MBR of the parent entry
         if let Entry::NonLeaf { mbr, child } = &mut node.entries[subtree_index] {
-            if let Some(child_mbr) = child.mbr() {
+            if let Ok(Some(child_mbr)) = child.mbr() {
                 *mbr = child_mbr;
             }
         }

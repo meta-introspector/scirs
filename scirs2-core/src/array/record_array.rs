@@ -367,7 +367,11 @@ impl RecordArray {
         let values = self
             .records
             .iter()
-            .map(|record| record.get_field(field_name).unwrap().clone())
+            .map(|record| {
+                record.get_field(field_name)
+                    .expect("Field should exist based on validation")
+                    .clone()
+            })
             .collect();
 
         Ok(values)
@@ -647,7 +651,7 @@ impl RecordArray {
                     .field_names
                     .iter()
                     .position(|name| name == old_name)
-                    .unwrap();
+                    .expect("Failed to create RecordArray in test");
                 record.field_names[old_index] = new_name.to_string();
             }
         }

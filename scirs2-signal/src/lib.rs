@@ -63,6 +63,7 @@ pub mod adaptive;
 pub mod advanced_filter;
 pub mod bss;
 pub mod convolve;
+pub mod convolve_parallel;
 pub mod cqt;
 pub mod czt;
 pub mod deconvolution;
@@ -87,6 +88,8 @@ pub mod hr_spectral;
 pub mod interpolate;
 pub mod kalman;
 pub mod lombscargle;
+pub mod lombscargle_enhanced;
+pub mod lombscargle_simd;
 pub mod lti;
 pub mod lti_response;
 pub mod median;
@@ -95,6 +98,8 @@ pub mod multitaper;
 pub mod nlm;
 pub mod parallel_spectral;
 pub mod parametric;
+pub mod parametric_arma;
+pub mod parametric_enhanced;
 pub mod peak;
 pub mod phase_vocoder;
 pub mod realtime;
@@ -103,6 +108,7 @@ pub mod resample;
 pub mod robust;
 pub mod savgol;
 pub mod separation;
+pub mod simd_ops;
 pub mod sparse;
 pub mod spectral;
 pub mod spline;
@@ -192,6 +198,9 @@ pub use kalman::{
 pub use lombscargle::{
     find_peaks as find_ls_peaks, lombscargle, significance_levels, AutoFreqMethod,
 };
+pub use lombscargle_simd::{
+    simd_lombscargle, SimdLombScargleResult, ValidationMetrics,
+};
 pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
@@ -208,6 +217,10 @@ pub use parallel_spectral::{parallel_welch, ParallelSpectralConfig, ParallelSpec
 pub use parametric::{
     ar_spectrum, arma_spectrum, estimate_ar, estimate_arma, select_ar_order, ARMethod,
     OrderSelection,
+};
+pub use parametric_enhanced::{
+    enhanced_parametric_estimation, EnhancedParametricResult, ParametricConfig, 
+    ModelType, ModelSelectionResult, DiagnosticStats,
 };
 pub use peak::{find_peaks, peak_prominences, peak_widths};
 pub use realtime::{

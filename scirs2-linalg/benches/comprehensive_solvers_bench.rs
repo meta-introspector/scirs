@@ -1,4 +1,5 @@
 //! Comprehensive benchmarks for linear system solvers
+use std::hint::black_box;
 //!
 //! This benchmark suite covers direct and iterative solvers for various
 //! matrix types and system configurations, including specialized solvers

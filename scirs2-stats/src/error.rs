@@ -1,7 +1,6 @@
 //! Error types for the SciRS2 statistics module
 
 use scirs2_core::error::{CoreError, ErrorContext, ErrorLocation};
-use std::fmt;
 use thiserror::Error;
 
 /// Statistics error type

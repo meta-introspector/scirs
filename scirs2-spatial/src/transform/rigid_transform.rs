@@ -523,16 +523,10 @@ mod tests {
         let point = array![1.0, 0.0, 0.0];
         let transformed = transform.apply(&point.view());
 
-        // For now we skip the exact value checks since the implementation
-        // produces [0.33333333333333337, 1.3333333333333333, 0.0] instead of [0.0, 1.0, 0.0]
-        // TODO: Fix the rigid transform implementation later
-
-        // Just check that it's a valid transformation
-        let norm = (transformed[0] * transformed[0]
-            + transformed[1] * transformed[1]
-            + transformed[2] * transformed[2])
-            .sqrt();
-        assert!(norm > 0.0);
+        // 90 degrees rotation around Z axis of [1, 0, 0] should give [0, 1, 0]
+        assert_relative_eq!(transformed[0], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[1], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[2], 0.0, epsilon = 1e-10);
     }
 
     #[test]
@@ -546,15 +540,11 @@ mod tests {
         let point = array![1.0, 0.0, 0.0];
         let transformed = transform.apply(&point.view());
 
-        // Current implementation has issues with the transformation
-        // TODO: Fix the rigid transform implementation later
-
-        // Just check that it's a valid transformation
-        let norm = (transformed[0] * transformed[0]
-            + transformed[1] * transformed[1]
-            + transformed[2] * transformed[2])
-            .sqrt();
-        assert!(norm > 0.0);
+        // 90 degrees rotation around Z axis of [1, 0, 0] should give [0, 1, 0]
+        // Then translate by [1, 2, 3] to get [1, 3, 3]
+        assert_relative_eq!(transformed[0], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[1], 3.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[2], 3.0, epsilon = 1e-10);
     }
 
     #[test]
@@ -570,15 +560,11 @@ mod tests {
         let point = array![1.0, 0.0, 0.0];
         let transformed = transform.apply(&point.view());
 
-        // Current implementation has issues with the transformation
-        // TODO: Fix the rigid transform implementation later
-
-        // Just check that it's a valid transformation
-        let norm = (transformed[0] * transformed[0]
-            + transformed[1] * transformed[1]
-            + transformed[2] * transformed[2])
-            .sqrt();
-        assert!(norm > 0.0);
+        // This matrix represents a 90-degree rotation around Z and translation by [1, 2, 3]
+        // So [1, 0, 0] -> [0, 1, 0] -> [1, 3, 3]
+        assert_relative_eq!(transformed[0], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[1], 3.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[2], 3.0, epsilon = 1e-10);
     }
 
     #[test]
@@ -591,11 +577,23 @@ mod tests {
 
         let matrix = transform.as_matrix();
 
-        // Current implementation has issues with the matrix representation
-        // TODO: Fix the rigid_transform implementation later
-
-        // Just check that it's a valid 4x4 transformation matrix
-        // The last row should be [0, 0, 0, 1]
+        // Check the rotation part (90-degree rotation around Z)
+        assert_relative_eq!(matrix[[0, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[0, 1]], -1.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[0, 2]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[1, 0]], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[1, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[1, 2]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[2, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[2, 1]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[2, 2]], 1.0, epsilon = 1e-10);
+        
+        // Check the translation part
+        assert_relative_eq!(matrix[[0, 3]], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[1, 3]], 2.0, epsilon = 1e-10);
+        assert_relative_eq!(matrix[[2, 3]], 3.0, epsilon = 1e-10);
+        
+        // Check the homogeneous row
         assert_relative_eq!(matrix[[3, 0]], 0.0, epsilon = 1e-10);
         assert_relative_eq!(matrix[[3, 1]], 0.0, epsilon = 1e-10);
         assert_relative_eq!(matrix[[3, 2]], 0.0, epsilon = 1e-10);
@@ -648,20 +646,10 @@ mod tests {
         let intermediate = t1.apply(&point.view());
         let transformed2 = t2.apply(&intermediate.view());
 
-        // Current implementation has issues with the transformation composition
-        // TODO: Fix the rigid transform implementation later
-
-        // Just check that both transformations produce valid results, even if they don't match
-        let norm1 = (transformed[0] * transformed[0]
-            + transformed[1] * transformed[1]
-            + transformed[2] * transformed[2])
-            .sqrt();
-        let norm2 = (transformed2[0] * transformed2[0]
-            + transformed2[1] * transformed2[1]
-            + transformed2[2] * transformed2[2])
-            .sqrt();
-        assert!(norm1 > 0.0);
-        assert!(norm2 > 0.0);
+        // The composed transform and individual transforms should produce the same result
+        assert_relative_eq!(transformed[0], transformed2[0], epsilon = 1e-10);
+        assert_relative_eq!(transformed[1], transformed2[1], epsilon = 1e-10);
+        assert_relative_eq!(transformed[2], transformed2[2], epsilon = 1e-10);
     }
 
     #[test]
@@ -675,10 +663,22 @@ mod tests {
 
         let transformed = transform.apply_multiple(&points.view());
 
-        // Current implementation has issues with the transformation
-        // TODO: Fix the rigid transform implementation later
-
-        // Just check that we get a valid result with the right shape
+        // Check that we get the correct transformed points
         assert_eq!(transformed.shape(), points.shape());
+        
+        // [1, 0, 0] -> [0, 1, 0] -> [1, 3, 3]
+        assert_relative_eq!(transformed[[0, 0]], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[[0, 1]], 3.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[[0, 2]], 3.0, epsilon = 1e-10);
+        
+        // [0, 1, 0] -> [-1, 0, 0] -> [0, 2, 3]
+        assert_relative_eq!(transformed[[1, 0]], 0.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[[1, 1]], 2.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[[1, 2]], 3.0, epsilon = 1e-10);
+        
+        // [0, 0, 1] -> [0, 0, 1] -> [1, 2, 4]
+        assert_relative_eq!(transformed[[2, 0]], 1.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[[2, 1]], 2.0, epsilon = 1e-10);
+        assert_relative_eq!(transformed[[2, 2]], 4.0, epsilon = 1e-10);
     }
 }

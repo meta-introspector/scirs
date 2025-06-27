@@ -97,10 +97,9 @@ where
         // Compute (x - mean)
         let deviations = F::simd_sub(&x.view(), &mean_array.view());
         
-        // Compute (x - mean)²
-        F::simd_square(&deviations.view())
-            .iter()
-            .fold(F::zero(), |acc, &val| acc + val)
+        // Compute (x - mean)² using element-wise multiplication
+        let squared_devs = F::simd_mul(&deviations.view(), &deviations.view());
+        F::simd_sum(&squared_devs.view())
     } else {
         // Scalar fallback
         x.iter()
@@ -166,15 +165,15 @@ where
         let sum = F::simd_sum(&x.view());
         let mean = sum / F::from(n).unwrap();
         
-        // For min/max, we can use SIMD reduction operations
-        let min = F::simd_min(&x.view());
-        let max = F::simd_max(&x.view());
+        // For min/max, we use element reduction operations
+        let min = F::simd_min_element(&x.view());
+        let max = F::simd_max_element(&x.view());
         
         // Variance calculation
         let mean_array = ndarray::Array1::from_elem(x.len(), mean);
         let deviations = F::simd_sub(&x.view(), &mean_array.view());
-        let squared_devs = F::simd_square(&deviations.view());
-        let sum_sq_dev = squared_devs.iter().fold(F::zero(), |acc, &val| acc + val);
+        let squared_devs = F::simd_mul(&deviations.view(), &deviations.view());
+        let sum_sq_dev = F::simd_sum(&squared_devs.view());
         let variance = sum_sq_dev / F::from(n - 1).unwrap();
         
         Ok((mean, variance, min, max))

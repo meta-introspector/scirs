@@ -735,7 +735,7 @@ pub fn matrix_exp_stable<T: Float + StableComputation>(
         }
         term = new_term;
 
-        factorial = factorial * cast::<i32, T>(k as i32).unwrap_or(T::one());
+        factorial = factorial * cast::<i32, T>(k).unwrap_or(T::one());
 
         // Add term
         for i in 0..n {

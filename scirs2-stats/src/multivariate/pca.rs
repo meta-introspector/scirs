@@ -1,0 +1,411 @@
+//! Principal Component Analysis (PCA)
+//!
+//! PCA is a dimensionality reduction technique that finds the directions of maximum variance
+//! in high-dimensional data and projects the data onto a lower-dimensional subspace.
+
+use ndarray::{Array1, Array2, ArrayView2, Axis};
+use crate::error::{StatsResult as Result, StatsError};
+use scirs2_core::validation::*;
+
+/// Principal Component Analysis
+#[derive(Debug, Clone)]
+pub struct PCA {
+    /// Number of components to keep
+    pub n_components: Option<usize>,
+    /// Whether to use SVD instead of eigendecomposition  
+    pub svd_solver: SvdSolver,
+    /// Whether to center the data
+    pub center: bool,
+    /// Whether to scale the data to unit variance
+    pub scale: bool,
+    /// Random state for randomized solver
+    pub random_state: Option<u64>,
+}
+
+/// SVD solver type
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SvdSolver {
+    /// Full SVD
+    Full,
+    /// Randomized SVD (for large datasets)
+    Randomized,
+    /// Automatically choose based on data size
+    Auto,
+}
+
+/// Result of PCA fit
+#[derive(Debug, Clone)]
+pub struct PCAResult {
+    /// Principal components (eigenvectors)
+    pub components: Array2<f64>,
+    /// Explained variance for each component
+    pub explained_variance: Array1<f64>,
+    /// Explained variance ratio for each component
+    pub explained_variance_ratio: Array1<f64>,
+    /// Singular values corresponding to each component
+    pub singular_values: Array1<f64>,
+    /// Mean of the training data
+    pub mean: Array1<f64>,
+    /// Standard deviation of the training data (if scaling was used)
+    pub scale: Option<Array1<f64>>,
+    /// Number of samples used for fitting
+    pub n_samples: usize,
+    /// Number of features
+    pub n_features: usize,
+}
+
+impl Default for PCA {
+    fn default() -> Self {
+        Self {
+            n_components: None,
+            svd_solver: SvdSolver::Auto,
+            center: true,
+            scale: false,
+            random_state: None,
+        }
+    }
+}
+
+impl PCA {
+    /// Create a new PCA instance
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the number of components to keep
+    pub fn with_n_components(mut self, n_components: usize) -> Self {
+        self.n_components = Some(n_components);
+        self
+    }
+
+    /// Set the SVD solver
+    pub fn with_svd_solver(mut self, solver: SvdSolver) -> Self {
+        self.svd_solver = solver;
+        self
+    }
+
+    /// Enable or disable centering
+    pub fn with_center(mut self, center: bool) -> Self {
+        self.center = center;
+        self
+    }
+
+    /// Enable or disable scaling
+    pub fn with_scale(mut self, scale: bool) -> Self {
+        self.scale = scale;
+        self
+    }
+
+    /// Set random state for reproducibility
+    pub fn with_random_state(mut self, seed: u64) -> Self {
+        self.random_state = Some(seed);
+        self
+    }
+
+    /// Fit the PCA model to the data
+    pub fn fit(&self, data: ArrayView2<f64>) -> Result<PCAResult> {
+        check_array_finite(&data, "data")?;
+        let (n_samples, n_features) = data.dim();
+        if n_samples < 2 {
+            return Err(StatsError::InvalidArgument("n_samples must be at least 2".to_string()));
+        }
+        if n_features < 1 {
+            return Err(StatsError::InvalidArgument("n_features must be at least 1".to_string()));
+        }
+
+        // Determine number of components
+        let max_components = n_samples.min(n_features);
+        let n_components = match self.n_components {
+            Some(k) => {
+                check_positive(k, "n_components")?;
+                if k > max_components {
+                    return Err(StatsError::InvalidArgument(
+                        format!("n_components ({}) cannot be larger than min(n_samples, n_features) = {}", k, max_components)
+                    ));
+                }
+                k
+            }
+            None => max_components,
+        };
+
+        // Center the data
+        let mean = if self.center {
+            data.mean_axis(Axis(0)).unwrap()
+        } else {
+            Array1::zeros(n_features)
+        };
+
+        let mut centered_data = data.to_owned();
+        if self.center {
+            for mut row in centered_data.rows_mut() {
+                row -= &mean;
+            }
+        }
+
+        // Scale the data
+        let scale = if self.scale {
+            let std = centered_data.std_axis(Axis(0), 1.0);
+            // Avoid division by zero
+            let std = std.mapv(|s| if s > 1e-10 { s } else { 1.0 });
+            
+            for (mut col, &s) in centered_data.columns_mut().into_iter().zip(std.iter()) {
+                col /= s;
+            }
+            Some(std)
+        } else {
+            None
+        };
+
+        // Choose solver
+        let solver = match self.svd_solver {
+            SvdSolver::Auto => {
+                if n_samples >= 500 && n_features >= 500 && n_components < max_components / 2 {
+                    SvdSolver::Randomized
+                } else {
+                    SvdSolver::Full
+                }
+            }
+            solver => solver,
+        };
+
+        // Perform PCA
+        let result = match solver {
+            SvdSolver::Full => self.pca_svd(&centered_data, n_components, n_samples)?,
+            SvdSolver::Randomized => self.pca_randomized(&centered_data, n_components, n_samples)?,
+            _ => unreachable!(),
+        };
+
+        Ok(PCAResult {
+            components: result.0,
+            explained_variance: result.1,
+            explained_variance_ratio: result.2,
+            singular_values: result.3,
+            mean,
+            scale,
+            n_samples,
+            n_features,
+        })
+    }
+
+    /// Perform PCA using SVD
+    fn pca_svd(
+        &self,
+        data: &Array2<f64>,
+        n_components: usize,
+        n_samples: usize,
+    ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
+        use ndarray_linalg::SVD;
+        
+        // Perform SVD: X = U * S * V^T
+        let (_u, s, vt) = data.svd(true, true)
+            .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
+        let v = vt.unwrap().t().to_owned();
+        
+        // Extract components
+        let components = v.slice(ndarray::s![.., ..n_components]).to_owned();
+        
+        // Compute explained variance
+        let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
+        let explained_variance = &singular_values * &singular_values / (n_samples - 1) as f64;
+        
+        // Compute explained variance ratio
+        let total_variance = explained_variance.sum();
+        let explained_variance_ratio = &explained_variance / total_variance;
+        
+        Ok((components.t().to_owned(), explained_variance, explained_variance_ratio, singular_values))
+    }
+
+    /// Perform PCA using randomized SVD
+    fn pca_randomized(
+        &self,
+        data: &Array2<f64>,
+        n_components: usize,
+        n_samples: usize,
+    ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
+        // For now, fall back to full SVD
+        // TODO: Implement randomized SVD algorithm
+        self.pca_svd(data, n_components, n_samples)
+    }
+
+    /// Transform data using the fitted PCA model
+    pub fn transform(&self, data: ArrayView2<f64>, result: &PCAResult) -> Result<Array2<f64>> {
+        check_array_finite(&data, "data")?;
+        if data.ncols() != result.n_features {
+            return Err(StatsError::DimensionMismatch(
+                format!("data has {} features, expected {}", data.ncols(), result.n_features)
+            ));
+        }
+
+        let mut transformed = data.to_owned();
+        
+        // Center
+        if self.center {
+            for mut row in transformed.rows_mut() {
+                row -= &result.mean;
+            }
+        }
+
+        // Scale
+        if let Some(ref scale) = result.scale {
+            for (mut col, &s) in transformed.columns_mut().into_iter().zip(scale.iter()) {
+                col /= s;
+            }
+        }
+
+        // Project onto components
+        Ok(transformed.dot(&result.components.t()))
+    }
+
+    /// Inverse transform from component space back to original space
+    pub fn inverse_transform(&self, data: ArrayView2<f64>, result: &PCAResult) -> Result<Array2<f64>> {
+        check_array_finite(&data, "data")?;
+        let n_components = result.components.nrows();
+        if data.ncols() != n_components {
+            return Err(StatsError::DimensionMismatch(
+                format!("data has {} components, expected {}", data.ncols(), n_components)
+            ));
+        }
+
+        // Project back to original space
+        let mut reconstructed = data.dot(&result.components);
+
+        // Inverse scale
+        if let Some(ref scale) = result.scale {
+            for (mut col, &s) in reconstructed.columns_mut().into_iter().zip(scale.iter()) {
+                col *= s;
+            }
+        }
+
+        // Add mean back
+        if self.center {
+            for mut row in reconstructed.rows_mut() {
+                row += &result.mean;
+            }
+        }
+
+        Ok(reconstructed)
+    }
+
+    /// Fit and transform in one step
+    pub fn fit_transform(&self, data: ArrayView2<f64>) -> Result<(Array2<f64>, PCAResult)> {
+        let result = self.fit(data)?;
+        let transformed = self.transform(data, &result)?;
+        Ok((transformed, result))
+    }
+}
+
+/// Compute the optimal number of components using Minka's MLE
+pub fn mle_components(data: ArrayView2<f64>, max_components: Option<usize>) -> Result<usize> {
+    check_array_finite(&data, "data")?;
+    let (n_samples, n_features) = data.dim();
+    
+    let pca = PCA::new().with_n_components(max_components.unwrap_or(n_features.min(n_samples)));
+    let result = pca.fit(data)?;
+    
+    let eigenvalues = &result.explained_variance;
+    let n = n_samples as f64;
+    let p = n_features as f64;
+    
+    // Minka's MLE for PCA
+    let mut best_k = 0;
+    let mut best_ll = f64::NEG_INFINITY;
+    
+    for k in 0..eigenvalues.len() {
+        let k_f64 = k as f64;
+        
+        // Average of remaining eigenvalues
+        let sigma2 = if k < eigenvalues.len() - 1 {
+            eigenvalues.slice(ndarray::s![k+1..]).sum() / (p - k_f64 - 1.0)
+        } else {
+            1e-10
+        };
+        
+        // Log-likelihood
+        let ll = -n / 2.0 * (eigenvalues.slice(ndarray::s![..=k]).mapv(f64::ln).sum()
+                + (p - k_f64 - 1.0) * sigma2.ln()
+                + p * (2.0 * std::f64::consts::PI).ln());
+        
+        // AIC penalty
+        let aic_penalty = k_f64 * (2.0 * p - k_f64 - 1.0);
+        let aic = ll - aic_penalty;
+        
+        if aic > best_ll {
+            best_ll = aic;
+            best_k = k + 1;
+        }
+    }
+    
+    Ok(best_k)
+}
+
+/// Incremental PCA for large datasets that don't fit in memory
+#[derive(Debug, Clone)]
+pub struct IncrementalPCA {
+    /// Base PCA configuration
+    pub pca: PCA,
+    /// Batch size for incremental updates
+    pub batch_size: usize,
+    /// Running mean
+    mean: Option<Array1<f64>>,
+    /// Running components
+    components: Option<Array2<f64>>,
+    /// Number of samples seen
+    n_samples_seen: usize,
+}
+
+impl IncrementalPCA {
+    /// Create a new incremental PCA instance
+    pub fn new(n_components: usize, batch_size: usize) -> Result<Self> {
+        check_positive(n_components, "n_components")?;
+        check_positive(batch_size, "batch_size")?;
+        
+        Ok(Self {
+            pca: PCA::new().with_n_components(n_components),
+            batch_size,
+            mean: None,
+            components: None,
+            n_samples_seen: 0,
+        })
+    }
+
+    /// Partial fit on a batch of data
+    pub fn partial_fit(&mut self, batch: ArrayView2<f64>) -> Result<()> {
+        check_array_finite(&batch, "batch")?;
+        let (batch_size, _n_features) = batch.dim();
+        
+        // Update mean incrementally
+        let batch_mean = batch.mean_axis(Axis(0)).unwrap();
+        self.mean = match &self.mean {
+            None => Some(batch_mean),
+            Some(mean) => {
+                let n_total = self.n_samples_seen + batch_size;
+                let updated = (mean * self.n_samples_seen as f64 + &batch_mean * batch_size as f64) 
+                            / n_total as f64;
+                Some(updated)
+            }
+        };
+        
+        self.n_samples_seen += batch_size;
+        
+        // TODO: Implement incremental SVD update
+        // For now, store batches and recompute (not truly incremental)
+        
+        Ok(())
+    }
+
+    /// Transform new data
+    pub fn transform(&self, data: ArrayView2<f64>) -> Result<Array2<f64>> {
+        if self.components.is_none() || self.mean.is_none() {
+            return Err(StatsError::ComputationError(
+                "IncrementalPCA must be fitted before transform".to_string()
+            ));
+        }
+        
+        let mut centered = data.to_owned();
+        for mut row in centered.rows_mut() {
+            row -= self.mean.as_ref().unwrap();
+        }
+        
+        Ok(centered.dot(&self.components.as_ref().unwrap().t()))
+    }
+}

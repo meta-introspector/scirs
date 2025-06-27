@@ -67,7 +67,7 @@ pub use reporter::ChartFormat;
 pub use gpu::{setup_gpu_memory_tracking, TrackedGpuBuffer, TrackedGpuContext};
 
 use crate::memory::{BufferPool, ChunkProcessor, ChunkProcessor2D};
-use ndarray::{ArrayBase, Data, Dimension, ViewRepr};
+use ndarray::{ArrayBase, Data, Dimension, ViewRepr, IxDyn};
 use once_cell::sync::Lazy;
 use std::marker::PhantomData;
 use std::mem;
@@ -214,13 +214,13 @@ where
     }
 
     /// Process the array in chunks, tracking memory usage for each chunk
-    pub fn process_chunks<F>(&mut self, mut f: F)
+    pub fn process_chunks_dyn<F>(&mut self, mut f: F)
     where
-        F: FnMut(&ArrayBase<ViewRepr<&A>, D>, D),
+        F: FnMut(&ArrayBase<ViewRepr<&A>, IxDyn>, IxDyn),
     {
         // Create a wrapper function that tracks memory
         let component_name = self.component_name.clone();
-        let tracked_f = move |chunk: &ArrayBase<ViewRepr<&A>, D>, coords: D| {
+        let tracked_f = move |chunk: &ArrayBase<ViewRepr<&A>, IxDyn>, coords: IxDyn| {
             // Calculate memory size (approximate)
             let size = chunk.len() * mem::size_of::<A>();
 
@@ -236,7 +236,7 @@ where
         };
 
         // Process chunks with the tracked function
-        self.inner.process_chunks(tracked_f);
+        self.inner.process_chunks_dyn(tracked_f);
     }
 
     /// Get the total number of chunks

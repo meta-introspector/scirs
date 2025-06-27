@@ -443,7 +443,10 @@ where
 {
     let tol = tol.unwrap_or_else(|| {
         let eps: f64 = 1e-10;
-        num_traits::cast(eps).unwrap()
+        num_traits::cast(eps).unwrap_or_else(|| {
+            // Fallback to epsilon
+            S::Elem::epsilon()
+        })
     });
 
     check_probabilities(probs, name.to_string())?;

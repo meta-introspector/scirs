@@ -65,6 +65,26 @@ lazy_static! {
             "]"
         )
     ).unwrap();
+
+    // Number patterns for normalization
+    static ref NUMBER_PATTERN: Regex = Regex::new(
+        r"(?i)(?:(?:\b|\s|^)[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?(?:[eE][-+]?\d+)?(?:\b|\s|$))"
+    ).unwrap();
+    
+    // Currency pattern
+    static ref CURRENCY_PATTERN: Regex = Regex::new(
+        r"(?i)(?:[$€£¥₹])\s*(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?|(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?\s*(?:dollars?|euros?|pounds?|yen|rupees?|USD|EUR|GBP|JPY|INR)"
+    ).unwrap();
+    
+    // Percentage pattern
+    static ref PERCENTAGE_PATTERN: Regex = Regex::new(
+        r"(?i)(?:\b|\s|^)[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?%"
+    ).unwrap();
+    
+    // Ordinal pattern
+    static ref ORDINAL_PATTERN: Regex = Regex::new(
+        r"(?i)\b(\d+)(?:st|nd|rd|th)\b"
+    ).unwrap();
 }
 
 /// Advanced text cleaner with various cleaning options
@@ -78,9 +98,17 @@ pub struct AdvancedTextCleaner {
     remove_emojis: bool,
     normalize_unicode: bool,
     preserve_case: bool,
+    normalize_numbers: bool,
+    normalize_currencies: bool,
+    normalize_percentages: bool,
+    normalize_ordinals: bool,
     url_placeholder: String,
     email_placeholder: String,
     phone_placeholder: String,
+    number_placeholder: String,
+    currency_placeholder: String,
+    percentage_placeholder: String,
+    ordinal_placeholder: String,
 }
 
 impl AdvancedTextCleaner {
@@ -95,9 +123,17 @@ impl AdvancedTextCleaner {
             remove_emojis: false,
             normalize_unicode: true,
             preserve_case: false,
+            normalize_numbers: false,
+            normalize_currencies: false,
+            normalize_percentages: false,
+            normalize_ordinals: false,
             url_placeholder: "[URL]".to_string(),
             email_placeholder: "[EMAIL]".to_string(),
             phone_placeholder: "[PHONE]".to_string(),
+            number_placeholder: "[NUMBER]".to_string(),
+            currency_placeholder: "[CURRENCY]".to_string(),
+            percentage_placeholder: "[PERCENT]".to_string(),
+            ordinal_placeholder: "[ORDINAL]".to_string(),
         }
     }
 
@@ -112,9 +148,17 @@ impl AdvancedTextCleaner {
             remove_emojis: false,
             normalize_unicode: true,
             preserve_case: false,
+            normalize_numbers: false,
+            normalize_currencies: false,
+            normalize_percentages: false,
+            normalize_ordinals: false,
             url_placeholder: "[URL]".to_string(),
             email_placeholder: "[EMAIL]".to_string(),
             phone_placeholder: "[PHONE]".to_string(),
+            number_placeholder: "[NUMBER]".to_string(),
+            currency_placeholder: "[CURRENCY]".to_string(),
+            percentage_placeholder: "[PERCENT]".to_string(),
+            ordinal_placeholder: "[ORDINAL]".to_string(),
         }
     }
 
@@ -129,9 +173,17 @@ impl AdvancedTextCleaner {
             remove_emojis: false,
             normalize_unicode: true,
             preserve_case: true,
+            normalize_numbers: false,
+            normalize_currencies: false,
+            normalize_percentages: false,
+            normalize_ordinals: false,
             url_placeholder: "[URL]".to_string(),
             email_placeholder: "[EMAIL]".to_string(),
             phone_placeholder: "[PHONE]".to_string(),
+            number_placeholder: "[NUMBER]".to_string(),
+            currency_placeholder: "[CURRENCY]".to_string(),
+            percentage_placeholder: "[PERCENT]".to_string(),
+            ordinal_placeholder: "[ORDINAL]".to_string(),
         }
     }
 
@@ -171,6 +223,30 @@ impl AdvancedTextCleaner {
         self
     }
 
+    /// Set whether to normalize numbers
+    pub fn set_normalize_numbers(mut self, value: bool) -> Self {
+        self.normalize_numbers = value;
+        self
+    }
+
+    /// Set whether to normalize currencies
+    pub fn set_normalize_currencies(mut self, value: bool) -> Self {
+        self.normalize_currencies = value;
+        self
+    }
+
+    /// Set whether to normalize percentages
+    pub fn set_normalize_percentages(mut self, value: bool) -> Self {
+        self.normalize_percentages = value;
+        self
+    }
+
+    /// Set whether to normalize ordinals
+    pub fn set_normalize_ordinals(mut self, value: bool) -> Self {
+        self.normalize_ordinals = value;
+        self
+    }
+
     /// Set custom placeholders
     pub fn set_placeholders(
         mut self,
@@ -186,6 +262,29 @@ impl AdvancedTextCleaner {
         }
         if let Some(p) = phone {
             self.phone_placeholder = p;
+        }
+        self
+    }
+
+    /// Set custom number placeholders
+    pub fn set_number_placeholders(
+        mut self,
+        number: Option<String>,
+        currency: Option<String>,
+        percentage: Option<String>,
+        ordinal: Option<String>,
+    ) -> Self {
+        if let Some(n) = number {
+            self.number_placeholder = n;
+        }
+        if let Some(c) = currency {
+            self.currency_placeholder = c;
+        }
+        if let Some(p) = percentage {
+            self.percentage_placeholder = p;
+        }
+        if let Some(o) = ordinal {
+            self.ordinal_placeholder = o;
         }
         self
     }
@@ -228,6 +327,34 @@ impl AdvancedTextCleaner {
         // Remove emojis
         if self.remove_emojis {
             cleaned = EMOJI_PATTERN.replace_all(&cleaned, " ").to_string();
+        }
+
+        // Normalize currencies (before general numbers)
+        if self.normalize_currencies {
+            cleaned = CURRENCY_PATTERN
+                .replace_all(&cleaned, &self.currency_placeholder)
+                .to_string();
+        }
+
+        // Normalize percentages (before general numbers)
+        if self.normalize_percentages {
+            cleaned = PERCENTAGE_PATTERN
+                .replace_all(&cleaned, &self.percentage_placeholder)
+                .to_string();
+        }
+
+        // Normalize ordinals (before general numbers)
+        if self.normalize_ordinals {
+            cleaned = ORDINAL_PATTERN
+                .replace_all(&cleaned, &self.ordinal_placeholder)
+                .to_string();
+        }
+
+        // Normalize general numbers
+        if self.normalize_numbers {
+            cleaned = NUMBER_PATTERN
+                .replace_all(&cleaned, &self.number_placeholder)
+                .to_string();
         }
 
         // Normalize unicode
@@ -299,6 +426,18 @@ pub fn normalize_unicode(text: &str) -> Result<String> {
 
 /// Normalize whitespace (multiple spaces to single space, trim)
 pub fn normalize_whitespace(text: &str) -> String {
+    #[cfg(feature = "simd")]
+    {
+        // Use SIMD to find whitespace positions for ASCII text
+        if text.is_ascii() && crate::simd_ops::SimdStringOps::is_available() {
+            let positions = crate::simd_ops::SimdStringOps::find_whitespace_positions(text);
+            if positions.is_empty() {
+                return text.trim().to_string();
+            }
+            // Fall through to regex-based approach for complex whitespace normalization
+        }
+    }
+    
     lazy_static! {
         static ref WHITESPACE_PATTERN: Regex = Regex::new(r"\s+").unwrap();
     }
@@ -335,6 +474,26 @@ pub fn normalize_quotes(text: &str) -> String {
 
     let text = SINGLE_QUOTE_PATTERN.replace_all(text, "'");
     DOUBLE_QUOTE_PATTERN.replace_all(&text, "\"").to_string()
+}
+
+/// Normalize numbers in text
+pub fn normalize_numbers(text: &str, placeholder: &str) -> String {
+    NUMBER_PATTERN.replace_all(text, placeholder).to_string()
+}
+
+/// Normalize currency values in text
+pub fn normalize_currencies(text: &str, placeholder: &str) -> String {
+    CURRENCY_PATTERN.replace_all(text, placeholder).to_string()
+}
+
+/// Normalize percentage values in text
+pub fn normalize_percentages(text: &str, placeholder: &str) -> String {
+    PERCENTAGE_PATTERN.replace_all(text, placeholder).to_string()
+}
+
+/// Normalize ordinal numbers in text
+pub fn normalize_ordinals(text: &str, placeholder: &str) -> String {
+    ORDINAL_PATTERN.replace_all(text, placeholder).to_string()
 }
 
 #[cfg(test)]
@@ -400,5 +559,54 @@ mod tests {
         let text = "Call me at (555) 123-4567 or email john@example.com";
         let cleaned = cleaner.clean(text).unwrap();
         assert_eq!(cleaned, "call me at [phone] or email [email]");
+    }
+
+    #[test]
+    fn test_normalize_numbers() {
+        let text = "The price is 1,234.56 and the quantity is 42";
+        let normalized = normalize_numbers(text, "[NUM]");
+        assert_eq!(normalized, "The price is [NUM] and the quantity is [NUM]");
+
+        let text_scientific = "The value is 3.14e-10";
+        let normalized_sci = normalize_numbers(text_scientific, "[NUM]");
+        assert_eq!(normalized_sci, "The value is [NUM]");
+    }
+
+    #[test]
+    fn test_normalize_currencies() {
+        let text = "The cost is $45.99 or €50.00";
+        let normalized = normalize_currencies(text, "[MONEY]");
+        assert_eq!(normalized, "The cost is [MONEY] or [MONEY]");
+
+        let text_words = "It costs 100 dollars or 85 euros";
+        let normalized_words = normalize_currencies(text_words, "[MONEY]");
+        assert_eq!(normalized_words, "It costs [MONEY] or [MONEY]");
+    }
+
+    #[test]
+    fn test_normalize_percentages() {
+        let text = "The growth is 25% and the decline is -5.5%";
+        let normalized = normalize_percentages(text, "[PCT]");
+        assert_eq!(normalized, "The growth is [PCT] and the decline is [PCT]");
+    }
+
+    #[test]
+    fn test_normalize_ordinals() {
+        let text = "He came 1st, she was 2nd, and they were 3rd";
+        let normalized = normalize_ordinals(text, "[ORD]");
+        assert_eq!(normalized, "He came [ORD], she was [ORD], and they were [ORD]");
+    }
+
+    #[test]
+    fn test_number_normalization_in_cleaner() {
+        let cleaner = AdvancedTextCleaner::new()
+            .set_normalize_numbers(true)
+            .set_normalize_currencies(true)
+            .set_normalize_percentages(true)
+            .set_normalize_ordinals(true);
+
+        let text = "The 1st item costs $99.99 with a 15% discount, total: 84.99";
+        let cleaned = cleaner.clean(text).unwrap();
+        assert_eq!(cleaned, "the [ordinal] item costs [currency] with a [percent] discount, total: [number]");
     }
 }

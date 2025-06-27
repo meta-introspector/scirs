@@ -370,6 +370,9 @@
 pub mod error;
 pub use error::{SpatialError, SpatialResult};
 
+// Safe conversion utilities
+pub(crate) mod safe_conversions;
+
 // Distance metrics
 pub mod distance;
 pub use distance::{

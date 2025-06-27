@@ -1,9 +1,10 @@
 //! Comprehensive benchmarks for linear algebra functions
+use std::hint::black_box;
 //!
 //! This benchmark suite covers all major operation categories in scirs2-linalg
 //! to ensure comprehensive performance monitoring.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{s, Array1, Array2};
 use scirs2_linalg::blas::{dot, nrm2};
 use scirs2_linalg::mixed_precision::{

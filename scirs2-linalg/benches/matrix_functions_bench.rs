@@ -1,14 +1,14 @@
 //! Comprehensive benchmarks for matrix functions
+use std::hint::black_box;
 //!
 //! This benchmark suite covers all matrix function operations including
 //! matrix exponential, logarithm, power, square root, trigonometric functions,
 //! and other matrix-valued functions.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array2;
 use scirs2_linalg::matrix_functions;
 use scirs2_linalg::prelude::*;
-use scirs2_linalg::*;
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix scaled for matrix functions
@@ -222,8 +222,8 @@ fn bench_matrix_power(c: &mut Criterion) {
                         if *p == (*p as i32) as f64 {
                             matrix_power(black_box(&m.view()), *p as f64).unwrap()
                         } else {
-                            // For fractional powers, return the matrix itself
-                            m.clone()
+                            // For fractional powers, use matrix_power as well
+                            matrix_power(black_box(&m.view()), *p).unwrap()
                         }
                     })
                 },
@@ -346,7 +346,7 @@ fn bench_matrix_sign(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sign_function_controlled", size),
             &controlled_eigenvals,
-            |b, m| b.iter(|| matrix_sign(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| signm(black_box(&m.view())).unwrap()),
         );
 
         // Matrix sign function via Newton iteration
@@ -386,12 +386,12 @@ fn bench_matrix_trigonometric(c: &mut Criterion) {
 
         // Matrix sine
         group.bench_with_input(BenchmarkId::new("sinm", size), &matrix, |b, m| {
-            b.iter(|| sinm(black_box(&m.view()), None).unwrap())
+            b.iter(|| sinm(black_box(&m.view())).unwrap())
         });
 
         // Matrix tangent
         group.bench_with_input(BenchmarkId::new("tanm", size), &matrix, |b, m| {
-            b.iter(|| tanm(black_box(&m.view()), None).unwrap())
+            b.iter(|| tanm(black_box(&m.view())).unwrap())
         });
 
         // Matrix hyperbolic cosine
@@ -401,12 +401,12 @@ fn bench_matrix_trigonometric(c: &mut Criterion) {
 
         // Matrix hyperbolic sine
         group.bench_with_input(BenchmarkId::new("sinhm", size), &matrix, |b, m| {
-            b.iter(|| sinhm(black_box(&m.view()), None).unwrap())
+            b.iter(|| sinhm(black_box(&m.view())).unwrap())
         });
 
         // Matrix hyperbolic tangent
         group.bench_with_input(BenchmarkId::new("tanhm", size), &matrix, |b, m| {
-            b.iter(|| tanhm(black_box(&m.view()), None).unwrap())
+            b.iter(|| tanhm(black_box(&m.view())).unwrap())
         });
     }
 

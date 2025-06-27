@@ -3,7 +3,7 @@
 //! This module provides functionality for the Exponential distribution.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_messages::validation;
+use crate::error_messages::{helpers, validation};
 use crate::sampling::SampleableDistribution;
 use crate::traits::distribution::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
@@ -23,7 +23,7 @@ pub struct Exponential<F: Float> {
     rand_distr: RandExp<f64>,
 }
 
-impl<F: Float + NumCast + Debug> Exponential<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// Create a new exponential distribution with given rate and location parameters
     ///
     /// # Arguments
@@ -58,9 +58,7 @@ impl<F: Float + NumCast + Debug> Exponential<F> {
                 loc,
                 rand_distr,
             }),
-            Err(_) => Err(StatsError::ComputationError(
-                "Failed to create exponential distribution".to_string(),
-            )),
+            Err(_) => Err(helpers::numerical_error("exponential distribution creation")),
         }
     }
 
@@ -84,11 +82,7 @@ impl<F: Float + NumCast + Debug> Exponential<F> {
     /// assert_eq!(exp.rate, 0.5);
     /// ```
     pub fn from_scale(scale: F, loc: F) -> StatsResult<Self> {
-        if scale <= F::zero() {
-            return Err(StatsError::DomainError(
-                "Scale parameter must be positive".to_string(),
-            ));
-        }
+        validation::ensure_positive(scale, "scale")?;
 
         // Set rate = 1/scale
         let rate = F::one() / scale;
@@ -103,9 +97,7 @@ impl<F: Float + NumCast + Debug> Exponential<F> {
                 loc,
                 rand_distr,
             }),
-            Err(_) => Err(StatsError::ComputationError(
-                "Failed to create exponential distribution".to_string(),
-            )),
+            Err(_) => Err(helpers::numerical_error("exponential distribution creation")),
         }
     }
 
@@ -310,7 +302,7 @@ impl<F: Float + NumCast + Debug> Exponential<F> {
 }
 
 /// Implementation of the Distribution trait for Exponential
-impl<F: Float + NumCast + Debug> ScirsDist<F> for Exponential<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> ScirsDist<F> for Exponential<F> {
     fn mean(&self) -> F {
         self.mean()
     }
@@ -334,7 +326,7 @@ impl<F: Float + NumCast + Debug> ScirsDist<F> for Exponential<F> {
 }
 
 /// Implementation of the ContinuousDistribution trait for Exponential
-impl<F: Float + NumCast + Debug> ContinuousDistribution<F> for Exponential<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> ContinuousDistribution<F> for Exponential<F> {
     fn pdf(&self, x: F) -> F {
         self.pdf(x)
     }
@@ -349,7 +341,7 @@ impl<F: Float + NumCast + Debug> ContinuousDistribution<F> for Exponential<F> {
 }
 
 /// Implementation of SampleableDistribution for Exponential
-impl<F: Float + NumCast + Debug> SampleableDistribution<F> for Exponential<F> {
+impl<F: Float + NumCast + Debug + std::fmt::Display> SampleableDistribution<F> for Exponential<F> {
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs_vec(size)
     }

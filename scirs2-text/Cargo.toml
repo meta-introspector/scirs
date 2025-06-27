@@ -11,7 +11,7 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
-scirs2-core = { workspace = true, features = ["parallel"] }
+scirs2-core = { workspace = true, features = ["parallel", "simd"] }
 # Temporarily removed for publishing
 # scirs2-linalg = { workspace = true }
 ndarray = { workspace = true }
@@ -29,13 +29,16 @@ lazy_static = { workspace = true }
 tempfile = { workspace = true }
 # rayon = { workspace = true }  # Now use scirs2-core parallel abstractions
 num_cpus = { workspace = true }
+memmap2 = { workspace = true }
 
 # Feature-gated dependencies
 tokenizers = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
+wide = { workspace = true, optional = true }
 
 [features]
 default = []
 serde-support = ["dep:serde", "dep:serde_json"]
 tokenization = ["dep:tokenizers"]
+simd = ["dep:wide", "scirs2-core/simd"]

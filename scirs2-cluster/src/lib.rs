@@ -56,6 +56,7 @@ pub mod error;
 pub mod gmm;
 pub mod hierarchy;
 pub mod input_validation;
+pub mod leader;
 /// Mean Shift clustering implementation.
 ///
 /// This module provides the Mean Shift clustering algorithm, which is a centroid-based
@@ -69,6 +70,7 @@ pub mod meanshift;
 pub mod metrics;
 pub mod neighbor_search;
 pub mod preprocess;
+pub mod serialization;
 pub mod sparse;
 pub mod spectral;
 pub mod stability;
@@ -90,6 +92,10 @@ pub use input_validation::{
     validate_convergence_parameters, validate_distance_parameter, validate_integer_parameter,
     validate_n_clusters, validate_sample_weights, ValidationConfig,
 };
+pub use leader::{
+    euclidean_distance, leader_clustering, manhattan_distance, LeaderClustering, LeaderNode,
+    LeaderTree,
+};
 pub use meanshift::{estimate_bandwidth, get_bin_seeds, mean_shift, MeanShift, MeanShiftOptions};
 pub use metrics::{
     adjusted_rand_index, calinski_harabasz_score, davies_bouldin_score,
@@ -101,6 +107,14 @@ pub use neighbor_search::{
     NeighborSearchAlgorithm, NeighborSearchConfig, NeighborSearcher,
 };
 pub use preprocess::{min_max_scale, normalize, standardize, whiten, NormType};
+pub use serialization::{
+    affinity_propagation_to_model, birch_to_model, dbscan_to_model, gmm_to_model, hierarchy_to_model,
+    kmeans_to_model, leader_to_model, leader_tree_to_model, meanshift_to_model, save_affinity_propagation,
+    save_birch, save_gmm, save_hierarchy, save_kmeans, save_leader, save_leader_tree, save_spectral_clustering,
+    spectral_clustering_to_model, AffinityPropagationModel, BirchModel, DBSCANModel, GMMModel,
+    HierarchicalModel, KMeansModel, LeaderModel, LeaderNodeModel, LeaderTreeModel, MeanShiftModel,
+    SerializableModel, SpectralClusteringModel,
+};
 pub use sparse::{
     sparse_epsilon_graph, sparse_knn_graph, SparseDistanceMatrix, SparseHierarchicalClustering,
 };

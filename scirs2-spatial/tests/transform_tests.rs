@@ -296,28 +296,30 @@ fn test_rotation_spline_angular_velocity() {
     let spline = RotationSpline::new(&rotations, &times).unwrap();
 
     // Test angular velocity at midpoint
-    let _velocity = spline.angular_velocity(0.5);
+    let velocity = spline.angular_velocity(0.5);
 
-    // Current implementation gives [2.221441469079183, 0.0, 0.0] instead of [0, 0, PI]
-    // TODO: Fix the angular_velocity implementation later
-    // For now, just check that the velocity exists
+    // For 180-degree rotation around Z-axis in 1 second, angular velocity should be [0, 0, PI]
+    assert_relative_eq!(velocity[0], 0.0, epsilon = 1e-3);
+    assert_relative_eq!(velocity[1], 0.0, epsilon = 1e-3);
+    assert_relative_eq!(velocity[2], PI, epsilon = 1e-3);
 
-    // Test at the endpoints (should be zero or close to velocity at nearby points)
-    let _velocity_start = spline.angular_velocity(0.0);
-    let _velocity_end = spline.angular_velocity(1.0);
+    // Test at the endpoints (should be zero)
+    let velocity_start = spline.angular_velocity(0.0);
+    let velocity_end = spline.angular_velocity(1.0);
 
-    // Current implementation doesn't match expectations
-    // TODO: Fix the angular_velocity implementation later
+    assert_relative_eq!((velocity_start.dot(&velocity_start)).sqrt(), 0.0, epsilon = 1e-10);
+    assert_relative_eq!((velocity_end.dot(&velocity_end)).sqrt(), 0.0, epsilon = 1e-10);
 
     // Test with cubic interpolation
     let mut cubic_spline = RotationSpline::new(&rotations, &times).unwrap();
     cubic_spline.set_interpolation_type("cubic").unwrap();
 
     // Velocity with cubic interpolation
-    let _cubic_velocity = cubic_spline.angular_velocity(0.5);
+    let cubic_velocity = cubic_spline.angular_velocity(0.5);
 
-    // Current implementation doesn't match expectations
-    // TODO: Fix the cubic angular_velocity implementation later
+    // Cubic interpolation should also produce valid angular velocities
+    let cubic_magnitude = (cubic_velocity.dot(&cubic_velocity)).sqrt();
+    assert!(cubic_magnitude > 0.0); // Should have non-zero velocity at midpoint
 }
 
 #[test]

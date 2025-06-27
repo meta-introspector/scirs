@@ -3,6 +3,7 @@
 //! This module provides functionality for the Normal (Gaussian) distribution.
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_messages::{helpers, validation};
 use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousDistribution, Distribution};
 use ndarray::Array1;
@@ -19,7 +20,7 @@ pub struct Normal<F: Float> {
     rand_distr: RandNormal<f64>,
 }
 
-impl<F: Float + NumCast> Normal<F> {
+impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// Create a new normal distribution with given mean and standard deviation
     ///
     /// # Arguments
@@ -39,11 +40,8 @@ impl<F: Float + NumCast> Normal<F> {
     /// let norm = Normal::new(0.0f64, 1.0).unwrap();
     /// ```
     pub fn new(loc: F, scale: F) -> StatsResult<Self> {
-        if scale <= F::zero() {
-            return Err(StatsError::DomainError(
-                "Standard deviation must be positive".to_string(),
-            ));
-        }
+        // Validate scale parameter
+        validation::ensure_positive(scale, "scale")?;
 
         // Convert to f64 for rand_distr
         let loc_f64 = <f64 as NumCast>::from(loc).unwrap();
@@ -55,9 +53,7 @@ impl<F: Float + NumCast> Normal<F> {
                 scale,
                 rand_distr,
             }),
-            Err(_) => Err(StatsError::ComputationError(
-                "Failed to create normal distribution".to_string(),
-            )),
+            Err(_) => Err(helpers::numerical_error("normal distribution creation")),
         }
     }
 

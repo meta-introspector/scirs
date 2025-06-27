@@ -1,7 +1,9 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 use ndarray::array;
-use scirs2_linalg::norm::matrix_norm;
+use scirs2_linalg::matrix_norm;
 use scirs2_linalg::{det, inv};
+use std::hint::black_box;
 
 fn bench_det(c: &mut Criterion) {
     let a = array![[1.0, 2.0], [3.0, 4.0]];
@@ -20,7 +22,7 @@ fn bench_inv(c: &mut Criterion) {
 fn bench_norm(c: &mut Criterion) {
     let a = array![[1.0, 2.0], [3.0, 4.0]];
     c.bench_function("frobenius norm 2x2", |b| {
-        b.iter(|| matrix_norm(black_box(&a.view()), black_box("frobenius")))
+        b.iter(|| matrix_norm(black_box(&a.view()), black_box("frobenius"), None))
     });
 }
 
